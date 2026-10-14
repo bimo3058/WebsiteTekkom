@@ -18,7 +18,7 @@
                 <x-capstone::icon name="ChevronDown" class="size-4 text-muted-foreground" />
             </label>
             <details class="relative">
-                <summary class="inline-flex h-9 cursor-pointer list-none items-center gap-2 rounded-lg bg-[#1E2A5A] px-4 text-sm font-semibold text-white shadow-xs hover:bg-[#16204a] [&::-webkit-details-marker]:hidden"><x-capstone::icon name="Download" class="size-4" />Export<x-capstone::icon name="ChevronDown" class="size-4" /></summary>
+                <summary class="inline-flex h-9 cursor-pointer list-none items-center gap-2 rounded-lg bg-[#1E2A5A] px-4 text-sm font-semibold text-white shadow-xs hover:bg-[#16204a] [&::-webkit-details-marker]:hidden"><x-capstone::icon name="Download" class="size-4" />Ekspor<x-capstone::icon name="ChevronDown" class="size-4" /></summary>
                 <div class="absolute right-0 z-20 mt-2 flex w-44 flex-col gap-1 rounded-lg border border-border bg-white p-1.5 shadow-md">
                     <button type="button" class="rounded-md px-3 py-2 text-left text-sm hover:bg-accent" @click="doExport('excel')" :disabled="loading || saving || !periodId">Unduh Excel</button>
                     <button type="button" class="rounded-md px-3 py-2 text-left text-sm hover:bg-accent" @click="doExport('pdf')" :disabled="loading || saving || !periodId">Unduh PDF</button>
@@ -76,7 +76,7 @@
             <div class="flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2.5">
                     <span class="flex size-9 items-center justify-center rounded-full bg-[#EEF1FF] text-[#1E2A5A]"><x-capstone::icon name="User" class="size-4" /></span>
-                    <p class="text-sm font-medium text-foreground">Group Final</p>
+                    <p class="text-sm font-medium text-foreground">Kelompok Final</p>
                 </div>
                 <x-capstone::icon name="Info" class="size-4 text-muted-foreground" />
             </div>
@@ -144,7 +144,7 @@
             <div class="flex flex-wrap items-center gap-2.5">
                 <div class="relative">
                     <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"><x-capstone::icon name="Search" class="size-4" /></span>
-                    <input type="search" x-model="search" @input="onSearch()" placeholder="Search" aria-label="Cari daftar kerja" class="h-9 w-64 rounded-lg border border-input bg-white pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring">
+                    <input type="search" x-model="search" @input="onSearch()" placeholder="Cari" aria-label="Cari daftar kerja" class="h-9 w-64 rounded-lg border border-input bg-white pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring">
                 </div>
                 <div class="relative" x-data="{open:false}" @keydown.escape="open=false">
                     <button type="button" @click="open=!open" :aria-expanded="open" class="inline-flex h-9 items-center gap-2 rounded-lg border border-input bg-white px-3.5 text-sm text-muted-foreground shadow-xs hover:bg-accent">
@@ -242,12 +242,12 @@
         <div x-show="!loading && !error && items.length" x-cloak class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
             <div class="flex items-center gap-3">
                 <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
-                    <span class="px-2.5 text-muted-foreground">Per page</span>
+                    <span class="px-2.5 text-muted-foreground">Per halaman</span>
                     <select x-model.number="pageSize" @change="page=1;load()" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none">
                         <option :value="10">10</option><option :value="20">20</option><option :value="50">50</option>
                     </select>
                 </label>
-                <span class="text-foreground"><span x-text="'Showing '+showingFrom+' to '+showingTo+' of, '+pagination.total+' results'"></span></span>
+                <span class="text-foreground"><span x-text="'Menampilkan '+showingFrom+' sampai '+showingTo+' dari '+pagination.total+' data'"></span></span>
             </div>
             <div class="flex items-center gap-1.5">
                 <button type="button" @click="gotoPage(page-1)" :disabled="page<=1" aria-label="Halaman sebelumnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronLeft" class="size-4" /></button>
@@ -290,12 +290,12 @@
         <div x-show="!loading && !error && lecturers.length" x-cloak class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
             <div class="flex items-center gap-3">
                 <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
-                    <span class="px-2.5 text-muted-foreground">Per page</span>
+                    <span class="px-2.5 text-muted-foreground">Per halaman</span>
                     <select x-model.number="lecturerPageSize" @change="lecturerPage=1" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none">
                         <option :value="10">10</option><option :value="20">20</option><option :value="50">50</option>
                     </select>
                 </label>
-                <span class="text-foreground"><span x-text="'Showing '+lecturerShowingFrom+' to '+lecturerShowingTo+' of, '+lecturerTotal+' results'"></span></span>
+                <span class="text-foreground"><span x-text="'Menampilkan '+lecturerShowingFrom+' sampai '+lecturerShowingTo+' dari '+lecturerTotal+' data'"></span></span>
             </div>
             <div class="flex items-center gap-1.5">
                 <button type="button" @click="gotoLecturerPage(lecturerPage-1)" :disabled="lecturerPage<=1" aria-label="Halaman sebelumnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronLeft" class="size-4" /></button>

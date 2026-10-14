@@ -1,11 +1,11 @@
 <div x-data="lecturerExpoReview" class="space-y-6">
-    <a :href="backUrl" class="inline-flex items-center gap-2 text-sm hover:underline"><x-capstone::icon name="ArrowLeft" class="h-4 w-4" />Back to Evaluations</a>
-    <div><h1 class="text-3xl font-bold tracking-tight">Review EXPO</h1><p class="mt-2 text-muted-foreground">Persetujuan pengajuan self-evaluation &amp; dokumen EXPO kelompok (1 keputusan per kelompok)</p></div>
+    <a :href="backUrl" class="inline-flex items-center gap-2 text-sm hover:underline"><x-capstone::icon name="ArrowLeft" class="h-4 w-4" />Kembali ke Evaluasi</a>
+    <div><h1 class="text-3xl font-bold tracking-tight">Tinjau EXPO</h1><p class="mt-2 text-muted-foreground">Persetujuan pengajuan self-evaluation &amp; dokumen EXPO kelompok (1 keputusan per kelompok)</p></div>
     @include('capstone::partials.loading')
     <template x-if="data && !loading && !error"><div class="grid gap-6 lg:grid-cols-3">
         <aside class="space-y-4">
             <section class="rounded-xl border bg-card p-6">
-                <h2 class="font-semibold" x-text="data.group?.code||data.group?.name||'Group '+data.group?.id"></h2>
+                <h2 class="font-semibold" x-text="data.group?.code||data.group?.name||'Kelompok '+data.group?.id"></h2>
                 <p class="mt-1 text-sm text-muted-foreground" x-text="data.period?.name||''"></p>
                 <div class="mt-4 space-y-2 text-sm">
                     <p x-show="data.submitted_by">Perwakilan: <span class="font-medium" x-text="data.submitted_by?.name+' ('+data.submitted_by?.nim+')'"></span></p>

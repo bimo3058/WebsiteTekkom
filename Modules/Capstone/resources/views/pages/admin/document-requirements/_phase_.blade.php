@@ -1,5 +1,5 @@
 @extends('capstone::layouts.app')
-@section('title','Edit Persyaratan Dokumen')
+@section('title','Ubah Persyaratan Dokumen')
 @section('content')
 @php
     $phase = strtoupper($pageParams['phase'] ?? '');
@@ -12,7 +12,7 @@
     </div>
 
     <div>
-        <h1 class="text-2xl font-bold tracking-tight text-foreground">Edit Persyaratan Dokumen</h1>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground">Ubah Persyaratan Dokumen</h1>
         <p class="mt-1 text-sm text-muted-foreground">Konfigurasikan dokumen yang diperlukan untuk setiap tahapan pada setiap periode.</p>
     </div>
 

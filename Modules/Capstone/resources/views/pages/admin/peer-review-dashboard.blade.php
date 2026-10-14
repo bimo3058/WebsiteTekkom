@@ -1,11 +1,11 @@
 @extends('capstone::layouts.app')
-@section('title','Peer Review Dashboard')
+@section('title','Dashboard Telaah Sejawat')
 @section('content')
 <div x-data="adminPeerDashboard" @keydown.escape.window="closeMenu()" @scroll.window="closeMenu()" @resize.window="closeMenu()" class="space-y-5">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-foreground">Peer Review Dashboard</h1>
-            <p class="mt-1 text-sm text-muted-foreground">Pantau kelengkapan peer review setiap kelompok pada periode berjalan.</p>
+            <h1 class="text-2xl font-bold tracking-tight text-foreground">Dashboard Telaah Sejawat</h1>
+            <p class="mt-1 text-sm text-muted-foreground">Pantau kelengkapan telaah sejawat setiap kelompok pada periode berjalan.</p>
         </div>
     </div>
     @include('capstone::pages.admin.shared.toolbar')
@@ -37,14 +37,14 @@
                 </div>
             </div>
         </template>
-        <p x-show="!filtered.length" class="rounded-xl border border-border bg-white p-8 text-center text-sm text-muted-foreground">Belum ada kelompok pada tahap peer review.</p>
+        <p x-show="!filtered.length" class="rounded-xl border border-border bg-white p-8 text-center text-sm text-muted-foreground">Belum ada kelompok pada tahap telaah sejawat.</p>
         <div x-show="filtered.length" x-cloak class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-white px-5 py-3.5 text-sm shadow-xs">
             <div class="flex items-center gap-3">
                 <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
-                    <span class="px-2.5 text-muted-foreground">Per page</span>
+                    <span class="px-2.5 text-muted-foreground">Per halaman</span>
                     <select x-model.number="pageSize" @change="page=1" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none"><option>10</option><option>25</option><option>50</option></select>
                 </label>
-                <span class="text-foreground"><span x-text="'Showing '+showingFrom+' to '+showingTo+' of, '+filtered.length+' results'"></span></span>
+                <span class="text-foreground"><span x-text="'Menampilkan '+showingFrom+' sampai '+showingTo+' dari '+filtered.length+' data'"></span></span>
             </div>
             <div class="flex items-center gap-1.5">
                 <button type="button" @click="goPage(page-1)" :disabled="page<=1" aria-label="Halaman sebelumnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronLeft" class="size-4" /></button>
@@ -61,6 +61,6 @@
     <div x-show="openMenuItem" x-cloak @click.outside="closeMenu()" class="fixed z-50 w-48 rounded-lg border border-border bg-white p-1 shadow-lg" :style="menuStyle" role="menu">
         <button type="button" @click="confirm(openMenuItem);closeMenu()" :disabled="saving || (openMenuItem||{}).completed_count>=(openMenuItem||{}).total_members" class="block w-full rounded-md px-2 py-1.5 text-left text-sm text-foreground hover:bg-accent disabled:opacity-40">Kirim pengingat</button>
     </div>
-    <x-capstone::dialog id="peer-reminder" title="Kirim pengingat peer review"><p class="my-4" x-text="'Pengingat akan dikirim kepada anggota '+selected?.group_code+' yang belum menyelesaikan peer review.'"></p><x-capstone::button variant="outline" size="sm" @click="remind()" ::disabled="saving">Kirim Pengingat</x-capstone::button></x-capstone::dialog>
+    <x-capstone::dialog id="peer-reminder" title="Kirim pengingat telaah sejawat"><p class="my-4" x-text="'Pengingat akan dikirim kepada anggota '+selected?.group_code+' yang belum menyelesaikan telaah sejawat.'"></p><x-capstone::button variant="outline" size="sm" @click="remind()" ::disabled="saving">Kirim Pengingat</x-capstone::button></x-capstone::dialog>
 </div>
 @endsection

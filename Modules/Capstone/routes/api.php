@@ -224,6 +224,8 @@ Route::prefix('capstone')->group(function () {
             Route::get('/reports/summary', [ReportSummaryController::class, 'summary']);
             Route::get('/reports/assessments', [ReportDetailController::class, 'assessments']);
             Route::get('/reports/peer-reviews', [ReportDetailController::class, 'peerReviews']);
+            Route::get('/reports/peer-review-summary', [ReportDetailController::class, 'peerReviewSummary']);
+            Route::get('/reports/peer-review-summary/{studentId}', [ReportDetailController::class, 'peerReviewDetail']);
             Route::get('/reports/final-grades', [ReportDetailController::class, 'finalGrades']);
             Route::get('/reports/grade-consistency', [ReportDetailController::class, 'gradeConsistency']);
             Route::get('/reports/groups', [ReportDetailController::class, 'groups']);

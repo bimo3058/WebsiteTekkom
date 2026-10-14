@@ -1,8 +1,8 @@
 <div class="p-6 sm:p-8" x-init="$watch('step', v => { if (v === 2) setPeerContext(); })">
     <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
-            <h2 class="text-lg font-bold text-gray-900">Peer Review</h2>
-            <p class="mt-1 text-sm text-gray-500">Konfigurasikan komponen penilaian untuk PEER REVIEW pada setiap periode dengan memilih dari bank komponen.</p>
+            <h2 class="text-lg font-bold text-gray-900">Telaah Sejawat</h2>
+            <p class="mt-1 text-sm text-gray-500">Konfigurasikan komponen penilaian untuk TELAAH SEJAWAT pada setiap periode dengan memilih dari bank komponen.</p>
         </div>
         <button type="button" @click="simpanKonfigurasi()" :disabled="simpanDisabled" :class="simpanDisabled ? 'bg-slate-300 text-white' : 'bg-[#1E2A5A] text-white hover:bg-[#162040]'" class="inline-flex h-10 items-center rounded-lg px-5 text-sm font-medium disabled:cursor-not-allowed">Simpan Konfigurasi</button>
     </div>

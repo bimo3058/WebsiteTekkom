@@ -8,7 +8,7 @@
             <button type="button" x-show="step===5" @click="save()" :disabled="!editable" class="inline-flex h-10 items-center rounded-lg bg-[#1E2A5A] px-6 text-sm font-medium text-white hover:bg-[#162040] disabled:opacity-50" x-text="saving ? 'Menyimpan...' : 'Simpan'"></button>
         </div>
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">{{ $periodId ? 'Edit Periode' : 'Tambah Periode Baru' }}</h1>
+            <h1 class="text-2xl font-bold text-gray-900">{{ $periodId ? 'Ubah Periode' : 'Tambah Periode Baru' }}</h1>
             <p class="mt-1 text-sm text-gray-500">{{ $periodId ? 'Perbarui konfigurasi periode yang sudah ada.' : 'Buat periode baru dengan konfigurasi langkah demi langkah.' }}</p>
         </div>
         @include('capstone::partials.loading')
@@ -18,11 +18,11 @@
                 <x-capstone::icon name="ChevronRight" class="h-3.5 w-3.5 shrink-0 text-gray-400" />
                 <button type="button" @click="go(1)" class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 font-medium" :class="step===1 ? 'border-[#1E2A5A] bg-indigo-50 text-[#1E2A5A]' : (step>1 ? 'border-transparent text-[#1E2A5A]' : 'border-transparent text-gray-500')" :disabled="saving || copying"><x-capstone::icon name="Settings" class="h-4 w-4" />Setup Tipe Penilaian</button>
                 <x-capstone::icon name="ChevronRight" class="h-3.5 w-3.5 shrink-0 text-gray-400" />
-                <button type="button" @click="go(2)" class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 font-medium" :class="step===2 ? 'border-[#1E2A5A] bg-indigo-50 text-[#1E2A5A]' : (step>2 ? 'border-transparent text-[#1E2A5A]' : 'border-transparent text-gray-500')" :disabled="saving || copying"><x-capstone::icon name="Settings" class="h-4 w-4" />Peer Review</button>
+                <button type="button" @click="go(2)" class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 font-medium" :class="step===2 ? 'border-[#1E2A5A] bg-indigo-50 text-[#1E2A5A]' : (step>2 ? 'border-transparent text-[#1E2A5A]' : 'border-transparent text-gray-500')" :disabled="saving || copying"><x-capstone::icon name="Settings" class="h-4 w-4" />Telaah Sejawat</button>
                 <x-capstone::icon name="ChevronRight" class="h-3.5 w-3.5 shrink-0 text-gray-400" />
                 <button type="button" @click="go(3)" class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 font-medium" :class="step===3 ? 'border-[#1E2A5A] bg-indigo-50 text-[#1E2A5A]' : (step>3 ? 'border-transparent text-[#1E2A5A]' : 'border-transparent text-gray-500')" :disabled="saving || copying"><x-capstone::icon name="Calendar" class="h-4 w-4" />Tanggal Fase</button>
                 <x-capstone::icon name="ChevronRight" class="h-3.5 w-3.5 shrink-0 text-gray-400" />
-                <button type="button" @click="go(4)" class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 font-medium" :class="step===4 ? 'border-[#1E2A5A] bg-indigo-50 text-[#1E2A5A]' : (step>4 ? 'border-transparent text-[#1E2A5A]' : 'border-transparent text-gray-500')" :disabled="saving || copying"><x-capstone::icon name="Users" class="h-4 w-4" />Konfigurasi Group</button>
+                <button type="button" @click="go(4)" class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 font-medium" :class="step===4 ? 'border-[#1E2A5A] bg-indigo-50 text-[#1E2A5A]' : (step>4 ? 'border-transparent text-[#1E2A5A]' : 'border-transparent text-gray-500')" :disabled="saving || copying"><x-capstone::icon name="Users" class="h-4 w-4" />Konfigurasi Kelompok</button>
                 <x-capstone::icon name="ChevronRight" class="h-3.5 w-3.5 shrink-0 text-gray-400" />
                 <button type="button" @click="go(5)" class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 font-medium" :class="step===5 ? 'border-[#1E2A5A] bg-indigo-50 text-[#1E2A5A]' : 'border-transparent text-gray-500'" :disabled="saving || copying"><x-capstone::icon name="Eye" class="h-4 w-4" />Review</button>
             </nav>

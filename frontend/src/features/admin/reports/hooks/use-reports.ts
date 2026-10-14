@@ -12,6 +12,9 @@ import type {
   ReportPhase,
   FinalGrade,
   PeerReview,
+  PeerReviewDetail,
+  PeerReviewSummary,
+  PeerReviewSummarySortKey,
   ReportGroup,
   PaginationData,
   SortDir,
@@ -411,6 +414,118 @@ export function usePeerReviewsReport(periodId: string | undefined) {
     setPage,
     setPerPage,
   };
+}
+
+interface PeerReviewSummaryFilters {
+  groupId: string;
+  studentSearch: string;
+  sortBy: PeerReviewSummarySortKey;
+  sortOrder: SortDir;
+  page: number;
+  perPage: number;
+}
+
+export function usePeerReviewSummaryReport(periodId: string | undefined) {
+  const [filters, setFilters] = useState<PeerReviewSummaryFilters>({
+    groupId: "all",
+    studentSearch: "",
+    sortBy: "reviewee",
+    sortOrder: "asc",
+    page: 1,
+    perPage: 50,
+  });
+  const defaultPagination: PaginationData = {
+    current_page: 1,
+    last_page: 1,
+    per_page: 50,
+    total: 0,
+  };
+
+  const queryKey = [
+    ...REPORTS_QUERY_KEY,
+    "peer-review-summary",
+    periodId,
+    filters.groupId,
+    filters.studentSearch,
+    filters.sortBy,
+    filters.sortOrder,
+    filters.page,
+    filters.perPage,
+  ];
+
+  const { data: response, isLoading: loading } = useQuery({
+    queryKey,
+    queryFn: async () => {
+      if (!periodId) return null;
+      const params: Record<string, string | number> = {
+        period_id: periodId,
+        page: filters.page,
+        per_page: filters.perPage,
+        sort_by: filters.sortBy,
+        sort_order: filters.sortOrder,
+      };
+      if (filters.groupId !== "all") {
+        params.group_id = filters.groupId;
+      }
+      if (filters.studentSearch) {
+        params.student_search = filters.studentSearch;
+      }
+      const res = await api.get("/admin/reports/peer-review-summary", { params });
+      return res.data as { data: PeerReviewSummary[]; meta: PaginationData };
+    },
+    enabled: !!periodId,
+  });
+
+  const setGroupId = useCallback((value: string) => {
+    setFilters((prev) => ({ ...prev, groupId: value, page: 1 }));
+  }, []);
+
+  const setStudentSearch = useCallback((value: string) => {
+    setFilters((prev) => ({ ...prev, studentSearch: value, page: 1 }));
+  }, []);
+
+  const setSort = useCallback((key: PeerReviewSummarySortKey) => {
+    setFilters((prev) => {
+      if (prev.sortBy === key) {
+        return { ...prev, sortOrder: prev.sortOrder === "asc" ? "desc" : "asc" };
+      }
+      return { ...prev, sortBy: key, sortOrder: "asc", page: 1 };
+    });
+  }, []);
+
+  const setPage = useCallback((page: number) => {
+    setFilters((prev) => ({ ...prev, page }));
+  }, []);
+
+  const setPerPage = useCallback((perPage: number) => {
+    setFilters((prev) => ({ ...prev, perPage, page: 1 }));
+  }, []);
+
+  return {
+    summaries: response?.data ?? [],
+    loading,
+    pagination: response?.meta ?? defaultPagination,
+    filters,
+    setGroupId,
+    setStudentSearch,
+    setSort,
+    setPage,
+    setPerPage,
+  };
+}
+
+export function usePeerReviewDetail(periodId: string | undefined, studentId: string | undefined) {
+  return useQuery<PeerReviewDetail | null>({
+    queryKey: [...REPORTS_QUERY_KEY, "peer-review-detail", periodId, studentId],
+    queryFn: async () => {
+      if (!periodId || !studentId) return null;
+      const res = await api.get(`/admin/reports/peer-review-summary/${studentId}`, {
+        params: { period_id: periodId },
+      });
+      return res.data?.data ?? null;
+    },
+    enabled: !!periodId && !!studentId,
+  });
 }
 
 interface GroupsFilters {

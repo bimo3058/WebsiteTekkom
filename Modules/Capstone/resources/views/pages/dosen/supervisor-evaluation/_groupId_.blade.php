@@ -1,5 +1,5 @@
 @extends('capstone::layouts.app')
-@section('title','Supervisor Evaluation')
+@section('title','Evaluasi Pembimbing')
 @section('content')
 @if(request()->query('type') === 'EXPO')
     @include('capstone::pages.dosen.shared.expo-review')

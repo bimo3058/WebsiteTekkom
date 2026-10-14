@@ -47,7 +47,7 @@
                         <x-capstone::icon name="ArrowUpDown" class="size-4" />Urutkan
                     </button>
                     <div x-show="sortMenu" @click.away="sortMenu=false" x-cloak class="absolute right-0 z-20 mt-2 w-48 rounded-lg border bg-white p-1.5 shadow-md">
-                        <template x-for="opt in [{v:'',l:'Default'},{v:'nama-az',l:'Nama A-Z'},{v:'nama-za',l:'Nama Z-A'},{v:'bobot',l:'Bobot'}]" :key="opt.v">
+                        <template x-for="opt in [{v:'',l:'Bawaan'},{v:'nama-az',l:'Nama A-Z'},{v:'nama-za',l:'Nama Z-A'},{v:'bobot',l:'Bobot'}]" :key="opt.v">
                             <button type="button" @click="setSort(opt.v)" class="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-accent" :class="sortOption===opt.v?'font-semibold text-foreground':'text-muted-foreground'">
                                 <span x-text="opt.l"></span><span x-show="sortOption===opt.v">✓</span>
                             </button>
@@ -86,7 +86,7 @@
             <p x-show="!valid" class="text-sm text-red-600">Total bobot setiap fase harus 100%.</p>
             <p x-show="valid" class="text-sm text-muted-foreground">Semua fase berjumlah 100%.</p>
             <div class="flex items-center gap-2.5">
-                <button type="button" @click="document.getElementById('reset-grades').showModal()" :disabled="saving" class="inline-flex h-9 items-center rounded-lg border border-input bg-white px-4 text-sm font-semibold shadow-xs hover:bg-accent disabled:opacity-40">Reset ke default</button>
+                <button type="button" @click="document.getElementById('reset-grades').showModal()" :disabled="saving" class="inline-flex h-9 items-center rounded-lg border border-input bg-white px-4 text-sm font-semibold shadow-xs hover:bg-accent disabled:opacity-40">Atur Ulang ke default</button>
                 <button type="button" @click="save()" :disabled="saving || !valid" class="inline-flex h-9 items-center rounded-lg bg-[#1E2A5A] px-4 text-sm font-semibold text-white shadow-xs hover:bg-[#16204a] disabled:opacity-40">Simpan</button>
             </div>
         </div>
@@ -95,10 +95,10 @@
     <p x-show="error" x-text="error" class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"></p>
 
     <dialog id="reset-grades" class="fixed inset-0 m-auto h-fit w-[calc(100%-2rem)] max-w-md rounded-xl border border-border bg-white p-6 backdrop:bg-black/40">
-        <h2 class="text-lg font-semibold">Reset bobot nilai?</h2>
+        <h2 class="text-lg font-semibold">Atur Ulang bobot nilai?</h2>
         <p class="my-4 text-sm text-muted-foreground">Bobot pada periode yang dipilih akan diganti dengan bobot default sistem.</p>
         <div class="flex gap-2.5">
-            <button type="button" @click="reset()" :disabled="saving" class="inline-flex h-9 items-center rounded-lg bg-[#1E2A5A] px-4 text-sm font-semibold text-white hover:bg-[#16204a] disabled:opacity-40">Reset</button>
+            <button type="button" @click="reset()" :disabled="saving" class="inline-flex h-9 items-center rounded-lg bg-[#1E2A5A] px-4 text-sm font-semibold text-white hover:bg-[#16204a] disabled:opacity-40">Atur Ulang</button>
             <button type="button" @click="document.getElementById('reset-grades').close()" class="inline-flex h-9 items-center rounded-lg border border-input bg-white px-4 text-sm font-semibold shadow-xs hover:bg-accent">Batal</button>
         </div>
     </dialog>

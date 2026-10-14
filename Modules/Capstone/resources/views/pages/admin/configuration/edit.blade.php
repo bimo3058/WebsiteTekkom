@@ -1,6 +1,6 @@
 @php $peer = $peer ?? false; @endphp
 @extends('capstone::layouts.app')
-@section('title','Edit Tipe Penilaian')
+@section('title','Ubah Tipe Penilaian')
 @section('content')
 <div x-data="adminAssessmentConfig({{ $peer ? 'true' : 'false' }},true)" class="space-y-5">
     <div class="flex flex-wrap items-center justify-between gap-3">
@@ -11,7 +11,7 @@
     </div>
 
     <div>
-        <h1 class="text-2xl font-bold tracking-tight">Edit Tipe Penilaian</h1>
+        <h1 class="text-2xl font-bold tracking-tight">Ubah Tipe Penilaian</h1>
         <p class="mt-1 text-sm text-muted-foreground">Konfigurasikan Tipe penilaian <strong class="font-semibold uppercase text-foreground" x-text="type.replaceAll('_',' ')"></strong> untuk periode <strong class="font-semibold text-foreground" x-text="period?.name || ''"></strong> dengan memilih dari bank komponen penilaian.</p>
     </div>
 
@@ -89,7 +89,7 @@
                     <div class="flex flex-wrap items-center gap-2.5">
                         <div class="relative">
                             <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"><x-capstone::icon name="Search" class="size-4" /></span>
-                            <input type="search" x-model="search" @input="templatePage=1" placeholder="Search" aria-label="Cari komponen" class="h-9 w-56 rounded-lg border border-input bg-white pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring">
+                            <input type="search" x-model="search" @input="templatePage=1" placeholder="Cari" aria-label="Cari komponen" class="h-9 w-56 rounded-lg border border-input bg-white pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring">
                         </div>
                         <div class="relative">
                             <button type="button" @click="filterMenu=!filterMenu;sortMenu=false" class="inline-flex h-9 items-center gap-2 rounded-lg border border-input bg-white px-3.5 text-sm text-muted-foreground shadow-xs hover:bg-accent">
@@ -106,10 +106,10 @@
                         </div>
                         <div class="relative">
                             <button type="button" @click="sortMenu=!sortMenu;filterMenu=false" class="inline-flex h-9 items-center gap-2 rounded-lg border border-input bg-white px-3.5 text-sm text-muted-foreground shadow-xs hover:bg-accent">
-                                <x-capstone::icon name="ArrowUpDown" class="size-4" />Sort by
+                                <x-capstone::icon name="ArrowUpDown" class="size-4" />Urutkan
                             </button>
                             <div x-show="sortMenu" @click.away="sortMenu=false" x-cloak class="absolute right-0 z-20 mt-2 w-48 rounded-lg border bg-white p-1.5 shadow-md">
-                                <template x-for="opt in [{v:'',l:'Default'},{v:'nama-az',l:'Kode A-Z'},{v:'nama-za',l:'Kode Z-A'},{v:'bobot',l:'Bobot'}]" :key="opt.v">
+                                <template x-for="opt in [{v:'',l:'Bawaan'},{v:'nama-az',l:'Kode A-Z'},{v:'nama-za',l:'Kode Z-A'},{v:'bobot',l:'Bobot'}]" :key="opt.v">
                                     <button type="button" @click="sortOption=opt.v;templatePage=1;sortMenu=false" class="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-accent" :class="sortOption===opt.v?'font-semibold text-foreground':'text-muted-foreground'">
                                         <span x-text="opt.l"></span><span x-show="sortOption===opt.v">✓</span>
                                     </button>
@@ -150,12 +150,12 @@
                 <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
                     <div class="flex items-center gap-3">
                         <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
-                            <span class="px-2.5 text-muted-foreground">Per page</span>
+                            <span class="px-2.5 text-muted-foreground">Per halaman</span>
                             <select x-model.number="templatePageSize" @change="templatePage=1" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none">
                                 <option>10</option><option>25</option><option>50</option>
                             </select>
                         </label>
-                        <span class="text-foreground" x-text="'Showing '+((filteredTemplates.length?((Math.min(templatePage,templatePageCount)-1)*Number(templatePageSize)+1):0))+' to '+((Math.min(templatePage,templatePageCount)-1)*Number(templatePageSize)+templateVisible.length)+' of, '+filteredTemplates.length+' results'"></span>
+                        <span class="text-foreground" x-text="'Menampilkan '+((filteredTemplates.length?((Math.min(templatePage,templatePageCount)-1)*Number(templatePageSize)+1):0))+' sampai '+((Math.min(templatePage,templatePageCount)-1)*Number(templatePageSize)+templateVisible.length)+' dari '+filteredTemplates.length+' data'"></span>
                     </div>
                     <div class="flex items-center gap-1.5">
                         <button type="button" @click="templatePage=Math.max(1,Math.min(templatePage,templatePageCount)-1)" :disabled="templatePage<=1" aria-label="Halaman sebelumnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronLeft" class="size-4" /></button>

@@ -8,8 +8,8 @@
             <p class="mt-1 text-sm text-muted-foreground">Rekapitulasi nilai akhir mahasiswa pada periode berjalan.</p>
         </div>
         <div class="flex items-center gap-2">
-            <x-capstone::button href="/admin/reports" variant="outline">Reports</x-capstone::button>
-            <button type="button" @click="exportReport()" ::disabled="loading || saving || !periodId" class="inline-flex h-9 items-center gap-2 rounded-lg bg-[#1E2A5A] px-4 text-sm font-medium text-white shadow-xs hover:bg-[#16204a] disabled:opacity-40"><x-capstone::icon name="Download" class="size-4" />Export CSV</button>
+            <x-capstone::button href="/admin/reports" variant="outline">Laporan</x-capstone::button>
+            <button type="button" @click="exportReport()" ::disabled="loading || saving || !periodId" class="inline-flex h-9 items-center gap-2 rounded-lg bg-[#1E2A5A] px-4 text-sm font-medium text-white shadow-xs hover:bg-[#16204a] disabled:opacity-40"><x-capstone::icon name="Download" class="size-4" />Ekspor CSV</button>
         </div>
     </div>
     @include('capstone::pages.admin.shared.toolbar')
@@ -42,10 +42,10 @@
         <div x-show="items.length" x-cloak class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
             <div class="flex items-center gap-3">
                 <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
-                    <span class="px-2.5 text-muted-foreground">Per page</span>
+                    <span class="px-2.5 text-muted-foreground">Per halaman</span>
                     <select x-model.number="pageSize" @change="page=1;load()" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none"><option>10</option><option>25</option><option>50</option></select>
                 </label>
-                <span class="text-foreground"><span x-text="'Showing '+showingFrom+' to '+showingTo+' of '+(pagination.total ?? 0)+' results'"></span></span>
+                <span class="text-foreground"><span x-text="'Menampilkan '+showingFrom+' sampai '+showingTo+' dari '+(pagination.total ?? 0)+' data'"></span></span>
             </div>
             <div class="flex items-center gap-1.5">
                 <button type="button" @click="gotoPage(page-1)" :disabled="page<=1" aria-label="Halaman sebelumnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronLeft" class="size-4" /></button>

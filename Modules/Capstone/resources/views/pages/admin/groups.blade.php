@@ -1,9 +1,9 @@
 @extends('capstone::layouts.app')
-@section('title','Groups')
+@section('title','Kelompok')
 @section('content')
 <div x-data="adminGroups(false)" class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="text-xl font-bold tracking-tight text-foreground">Groups</h1>
+        <h1 class="text-xl font-bold tracking-tight text-foreground">Kelompok</h1>
     </div>
 
     @include('capstone::partials.loading')
@@ -12,11 +12,11 @@
 
     <div x-show="!loading && !error" x-cloak class="rounded-xl border border-border bg-card shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-100 p-3">
-            <h2 class="text-sm font-bold text-foreground">Total Groups</h2>
+            <h2 class="text-sm font-bold text-foreground">Total Kelompok</h2>
             <div class="flex items-center gap-2">
                 <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500">
                     <x-capstone::icon name="Search" size="15" />
-                    <input x-model.debounce.300ms="search" @input="page=1" type="search" placeholder="Search" class="w-28 bg-transparent outline-none placeholder:text-slate-400 sm:w-44" aria-label="Search groups">
+                    <input x-model.debounce.300ms="search" @input="page=1" type="search" placeholder="Cari" class="w-28 bg-transparent outline-none placeholder:text-slate-400 sm:w-44" aria-label="Cari kelompok">
                 </label>
                 <span x-data="{open:false}" @click.outside="open=false" @keydown.escape.window="open=false" class="relative">
                     <button type="button" @click="open=!open" :aria-expanded="open" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500 hover:bg-slate-50">
@@ -39,8 +39,8 @@
                 </span>
                 <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500" title="Urutkan">
                     <x-capstone::icon name="ArrowUpDown" size="15" />
-                    <select x-model="sortBy" @change="page=1" class="max-w-24 bg-transparent outline-none" aria-label="Sort groups">
-                        <option value="">Sort by</option>
+                    <select x-model="sortBy" @change="page=1" class="max-w-24 bg-transparent outline-none" aria-label="Urutkan kelompok">
+                        <option value="">Urutkan</option>
                         <option value="">Terbaru</option>
                         <option value="code">Kode</option>
                         <option value="status">Status</option>
@@ -60,14 +60,14 @@
                         <th class="px-4 py-2.5 font-medium">Dosen Pembimbing</th>
                         <th class="px-4 py-2.5 font-medium">Status</th>
                         <th class="px-4 py-2.5 font-medium">Judul Capstone</th>
-                        <th class="px-4 py-2.5 text-right font-medium">Action</th>
+                        <th class="px-4 py-2.5 text-right font-medium">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     <template x-for="(item,idx) in pagedGroups" :key="item.id">
                         <tr class="hover:bg-slate-50/60">
                             <td class="px-4 py-3 text-slate-500" x-text="(groupPage-1)*Number(pageSize)+idx+1"></td>
-                            <td class="whitespace-nowrap px-4 py-3 font-semibold text-slate-700" x-text="item.code || ('Group '+item.id)"></td>
+                            <td class="whitespace-nowrap px-4 py-3 font-semibold text-slate-700" x-text="item.code || ('Kelompok '+item.id)"></td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 py-0.5 pl-0.5 pr-2.5">
                                     <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-500" x-text="initials(ketuaName(item))"></span>
@@ -121,10 +121,10 @@
 
         <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 p-3 text-[13px]">
             <div class="flex items-center gap-2 text-slate-500">
-                <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1">Per page
+                <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1">Per halaman
                     <select x-model.number="pageSize" @change="page=1" class="bg-transparent font-semibold text-slate-700 outline-none" aria-label="Baris per halaman"><option>10</option><option>25</option><option>50</option></select>
                 </label>
-                <span x-text="'Showing '+groupFrom+' to '+groupTo+' of, '+groupTotal+' results'"></span>
+                <span x-text="'Menampilkan '+groupFrom+' sampai '+groupTo+' dari '+groupTotal+' data'"></span>
             </div>
             <div class="flex items-center gap-1">
                 <button type="button" @click="page=Math.max(1,groupPage-1)" :disabled="groupPage<=1" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman sebelumnya"><x-capstone::icon name="ChevronLeft" size="15" /></button>
@@ -139,7 +139,7 @@
 
     <x-capstone::dialog id="group-rename-title" title="Ubah Judul Capstone" description="Hanya teks judul yang diubah. Status kelompok tidak berubah.">
         <div class="mt-4 space-y-4">
-            <p class="text-sm text-slate-600">Kelompok <span class="font-semibold text-foreground" x-text="renameTarget ? (renameTarget.code || ('Group '+renameTarget.id)) : ''"></span></p>
+            <p class="text-sm text-slate-600">Kelompok <span class="font-semibold text-foreground" x-text="renameTarget ? (renameTarget.code || ('Kelompok '+renameTarget.id)) : ''"></span></p>
             <input x-model="renameText" type="text" maxlength="255" class="w-full rounded-lg border border-slate-200 p-3 text-sm" placeholder="Tulis judul baru..." aria-label="Judul baru">
             <div class="flex justify-end gap-2">
                 <x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button>

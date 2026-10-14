@@ -1,4 +1,4 @@
 @extends('capstone::pages.dosen.bimbingan')
-@section('title','TA Review')
+@section('title','Tinjau TA')
 @section('document-controller','lecturerDocuments(true)')
-@section('document-heading','TA Review')
+@section('document-heading','Tinjau TA')

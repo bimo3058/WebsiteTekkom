@@ -1,5 +1,5 @@
 @extends('capstone::layouts.app')
-@section('title','Schedule Dashboard')
+@section('title','Dasbor Jadwal')
 @section('content')
 <div x-data="capstoneSchedules" class="space-y-5">
     @include('capstone::partials.schedule-header')

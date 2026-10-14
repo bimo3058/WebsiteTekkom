@@ -4,5 +4,5 @@
         <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"><x-capstone::icon name="Search" class="size-4" /></span>
         <input type="search" x-model="search" @input.debounce.500ms="page=1;load()" @keydown.enter="load()" placeholder="Cari..." aria-label="Cari data" class="h-9 w-full rounded-lg border border-input bg-white pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring">
     </div>
-    <x-capstone::button variant="outline" @click="load()" ::disabled="loading || saving"><x-capstone::icon name="RefreshCw" size="15" />Refresh</x-capstone::button>
+    <x-capstone::button variant="outline" @click="load()" ::disabled="loading || saving"><x-capstone::icon name="RefreshCw" size="15" />Muat Ulang</x-capstone::button>
 </div>

@@ -1,37 +1,37 @@
 {
   "admin": [
     {
-      "title": "Master Data",
+      "title": "Data Master",
       "icon": "Settings",
       "items": [
         {
-          "title": "Users",
+          "title": "Pengguna",
           "url": "/admin/users",
           "icon": "Users"
         },
         {
-          "title": "Groups",
+          "title": "Kelompok",
           "url": "/admin/groups",
           "icon": "Users"
         },
         {
-          "title": "Locations",
+          "title": "Lokasi",
           "url": "/admin/locations",
           "icon": "MapPin"
         },
         {
-          "title": "Assessment Bank",
+          "title": "Bank Penilaian",
           "url": "/admin/assessment-bank",
           "icon": "Library"
         }
       ]
     },
     {
-      "title": "Period Setup",
+      "title": "Pengaturan Periode",
       "icon": "ListChecks",
       "items": [
         {
-          "title": "Periods",
+          "title": "Periode",
           "url": "/admin/periods",
           "icon": "CalendarIcon"
         },
@@ -41,33 +41,33 @@
           "icon": "ListChecks"
         },
         {
-          "title": "Peer Review",
+          "title": "Telaah Sejawat",
           "url": "/admin/peer-review",
           "icon": "Star"
         },
         {
-          "title": "Grade Config",
+          "title": "Konfigurasi Nilai",
           "url": "/admin/evaluation-setup/grade-configuration",
           "icon": "GraduationCap"
         },
         {
-          "title": "Document Requirements",
+          "title": "Syarat Dokumen",
           "url": "/admin/document-requirements",
           "icon": "FileText"
         },
         {
-          "title": "Finalization",
+          "title": "Finalisasi",
           "url": "/admin/finalization",
           "icon": "ShieldCheck"
         }
       ]
     },
     {
-      "title": "Management",
+      "title": "Pengelolaan",
       "icon": "Settings",
       "items": [
         {
-          "title": "Schedule",
+          "title": "Jadwal",
           "url": "/admin/schedule",
           "icon": "CalendarIcon"
         },
@@ -77,48 +77,48 @@
           "icon": "ClipboardCheck"
         },
         {
-          "title": "Expo Events",
+          "title": "Acara Expo",
           "url": "/admin/expo",
           "icon": "Presentation"
         },
         {
-          "title": "TA Defense",
+          "title": "Sidang TA",
           "url": "/admin/ta-defense",
           "icon": "GraduationCap"
         },
         {
-          "title": "Audit Log",
+          "title": "Log Audit",
           "url": "/admin/audit-logs",
           "icon": "ScrollText"
         },
         {
-          "title": "Approval",
+          "title": "Persetujuan",
           "url": "/admin/period-registrations",
           "icon": "UserPlus"
         }
       ]
     },
     {
-      "title": "Analytics",
+      "title": "Analitik",
       "icon": "BarChart3",
       "items": [
         {
-          "title": "Progress",
+          "title": "Progres",
           "url": "/admin/analytics/progress",
           "icon": "TrendingUp"
         },
         {
-          "title": "Peer Review Dashboard",
+          "title": "Dashboard Telaah Sejawat",
           "url": "/admin/peer-review-dashboard",
           "icon": "Users"
         },
         {
-          "title": "Reports",
+          "title": "Laporan",
           "url": "/admin/reports",
           "icon": "BarChart3"
         },
         {
-          "title": "Document Uploads",
+          "title": "Unggahan Dokumen",
           "url": "/admin/document-uploads",
           "icon": "FileText"
         }
@@ -127,58 +127,58 @@
   ],
   "mahasiswa": [
     {
-      "title": "Registration",
+      "title": "Pendaftaran",
       "url": "/mahasiswa/registration",
       "icon": "CalendarIcon"
     },
     {
-      "title": "Group & Titles",
+      "title": "Kelompok & Judul",
       "icon": "Users",
       "items": [
         {
-          "title": "My Group",
+          "title": "Kelompok Saya",
           "url": "/mahasiswa/group",
           "icon": "Users"
         },
         {
-          "title": "Titles Marketplace",
+          "title": "Bursa Judul",
           "url": "/mahasiswa/titles",
           "icon": "BookOpen"
         },
         {
-          "title": "Propose Title",
+          "title": "Usulkan Judul",
           "url": "/mahasiswa/propose-title",
           "icon": "PenLine"
         },
         {
-          "title": "Title Bids",
+          "title": "Bid Judul",
           "url": "/mahasiswa/bidding",
           "icon": "Gavel"
         }
       ]
     },
     {
-      "title": "Progress & Docs",
+      "title": "Progres & Dokumen",
       "icon": "FileText",
       "items": [
         {
-          "title": "Documents",
+          "title": "Dokumen",
           "url": "/mahasiswa/documents",
           "icon": "FileText"
         },
         {
-          "title": "TA Submission",
+          "title": "Pengumpulan TA",
           "url": "/mahasiswa/ta-submission",
           "icon": "FileCheck"
         }
       ]
     },
     {
-      "title": "Schedules",
+      "title": "Jadwal",
       "icon": "CalendarIcon",
       "items": [
         {
-          "title": "My Schedule",
+          "title": "Jadwal Saya",
           "url": "/mahasiswa/schedule",
           "icon": "ClipboardCheck"
         },
@@ -190,16 +190,16 @@
       ]
     },
     {
-      "title": "Evaluations",
+      "title": "Evaluasi",
       "icon": "GraduationCap",
       "items": [
         {
-          "title": "Peer Review",
+          "title": "Telaah Sejawat",
           "url": "/mahasiswa/peer-review",
           "icon": "Star"
         },
         {
-          "title": "My Grades",
+          "title": "Nilai Saya",
           "url": "/mahasiswa/grades",
           "icon": "GraduationCap"
         }
@@ -208,32 +208,32 @@
   ],
   "dosen": [
     {
-      "title": "Titles & Bids",
+      "title": "Judul & Bid",
       "icon": "BookOpen",
       "items": [
         {
-          "title": "My Titles",
+          "title": "Judul Saya",
           "url": "/dosen/titles",
           "icon": "BookOpen"
         },
         {
-          "title": "Title Approvals",
+          "title": "Persetujuan Judul",
           "url": "/dosen/title-approvals",
           "icon": "ClipboardCheck"
         },
         {
-          "title": "Bid Review",
+          "title": "Tinjau Bid",
           "url": "/dosen/bids",
           "icon": "Gavel"
         }
       ]
     },
     {
-      "title": "Mentoring",
+      "title": "Pendampingan",
       "icon": "Users",
       "items": [
         {
-          "title": "Supervised Groups",
+          "title": "Kelompok Bimbingan",
           "url": "/dosen/supervised-groups",
           "icon": "Users"
         },
@@ -245,21 +245,21 @@
       ]
     },
     {
-      "title": "Schedule & Review",
+      "title": "Jadwal & Tinjauan",
       "icon": "FileCheck",
       "items": [
         {
-          "title": "My Schedule",
+          "title": "Jadwal Saya",
           "url": "/dosen/schedule",
           "icon": "CalendarIcon"
         },
         {
-          "title": "Evaluate Students",
+          "title": "Nilai Mahasiswa",
           "url": "/dosen/evaluation",
           "icon": "GraduationCap"
         },
         {
-          "title": "Supervisor Evaluation",
+          "title": "Evaluasi Pembimbing",
           "url": "/dosen/supervisor-evaluation",
           "icon": "Star"
         }

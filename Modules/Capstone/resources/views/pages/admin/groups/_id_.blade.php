@@ -12,7 +12,7 @@
             <x-capstone::button variant="destructive" @click="openDelete()"><x-capstone::icon name="Trash2" size="16" /> Hapus Grup</x-capstone::button>
         </div>
 
-        <h1 class="text-2xl font-bold tracking-tight text-foreground" x-text="group.code || ('Group '+group.id)"></h1>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground" x-text="group.code || ('Kelompok '+group.id)"></h1>
 
         <div class="grid gap-x-10 gap-y-4 md:grid-cols-2">
             <div class="space-y-4">
@@ -21,11 +21,11 @@
                     <p class="text-sm font-medium text-slate-800" x-text="group.period?.name || '—'"></p>
                 </div>
                 <div class="grid grid-cols-[130px_1fr] items-center gap-3">
-                    <p class="text-sm text-slate-500">Group Status</p>
+                    <p class="text-sm text-slate-500">Kelompok Status</p>
                     <p><span class="rounded-full px-2.5 py-0.5 text-xs font-semibold" :class="groupStatusClass(group.status)" x-text="groupStatusLabel(group)"></span></p>
                 </div>
                 <div class="grid grid-cols-[130px_1fr] items-center gap-3">
-                    <p class="text-sm text-slate-500">Progress</p>
+                    <p class="text-sm text-slate-500">Progres</p>
                     <p class="flex items-center gap-2 text-sm font-medium text-slate-800"><span x-text="progressPct+'%'"></span><span class="h-2 w-32 overflow-hidden rounded-full bg-slate-200"><span class="block h-full rounded-full bg-primary" :style="'width:'+progressPct+'%'"></span></span></p>
                 </div>
                 <div class="grid grid-cols-[130px_1fr] items-center gap-3">
@@ -40,7 +40,7 @@
                     </template>
                 </div>
                 <div class="grid grid-cols-[130px_1fr] items-start gap-3">
-                    <p class="pt-1 text-sm text-slate-500">Team Members</p>
+                    <p class="pt-1 text-sm text-slate-500">Anggota Tim</p>
                     <span class="flex flex-wrap gap-2">
                         <template x-for="m in (group.members||[]).filter(m=>!m.is_leader)" :key="m.id">
                             <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 py-0.5 pl-1 pr-1.5">
@@ -86,7 +86,7 @@
                     </span></span>
                 </div>
                 <div class="grid grid-cols-[150px_1fr] items-center gap-3">
-                    <p class="text-sm text-slate-500">Created at</p>
+                    <p class="text-sm text-slate-500">Dibuat pada</p>
                     <p class="text-sm font-medium text-slate-800" x-text="longDate(group.created_at)"></p>
                 </div>
                 <div class="grid grid-cols-[150px_1fr] items-center gap-3">
@@ -181,7 +181,7 @@
 
     <x-capstone::dialog id="group-rename-title" title="Ubah Judul Capstone" description="Hanya teks judul yang diubah. Status kelompok tidak berubah.">
         <div class="mt-4 space-y-4">
-            <p class="text-sm text-slate-600">Kelompok <span class="font-semibold text-foreground" x-text="renameTarget ? (renameTarget.code || ('Group '+renameTarget.id)) : ''"></span></p>
+            <p class="text-sm text-slate-600">Kelompok <span class="font-semibold text-foreground" x-text="renameTarget ? (renameTarget.code || ('Kelompok '+renameTarget.id)) : ''"></span></p>
             <input x-model="renameText" type="text" maxlength="255" class="w-full rounded-lg border border-slate-200 p-3 text-sm" placeholder="Tulis judul baru..." aria-label="Judul baru">
             <div class="flex justify-end gap-2">
                 <x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button>

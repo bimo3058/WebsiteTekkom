@@ -1,19 +1,19 @@
 @extends('capstone::layouts.app')
-@section('title','Group Progress')
+@section('title','Progres Kelompok')
 @section('content')
 <div x-data="adminProgress" @keydown.escape.window="closeMenu()" @scroll.window="closeMenu()" @resize.window="closeMenu()" class="space-y-5">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-foreground">Group Progress</h1>
+            <h1 class="text-2xl font-bold tracking-tight text-foreground">Progres Kelompok</h1>
             <p class="mt-1 text-sm text-muted-foreground">Pantau progres setiap kelompok beserta status fase pada periode berjalan.</p>
         </div>
-        <button type="button" @click="exportCsv()" :disabled="loading || saving" class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#1E2A5A] px-4 text-sm font-medium text-white shadow-xs hover:bg-[#16204a] disabled:opacity-40"><x-capstone::icon name="Download" class="size-4" />Export CSV</button>
+        <button type="button" @click="exportCsv()" :disabled="loading || saving" class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#1E2A5A] px-4 text-sm font-medium text-white shadow-xs hover:bg-[#16204a] disabled:opacity-40"><x-capstone::icon name="Download" class="size-4" />Ekspor CSV</button>
     </div>
     @include('capstone::pages.admin.shared.toolbar')
     @include('capstone::partials.loading')
     <div x-show="!loading && !error" x-cloak class="overflow-hidden rounded-xl border border-border bg-white shadow-xs">
         <div class="flex flex-wrap items-center justify-between gap-3 px-5 pt-5">
-            <h3 class="text-base font-semibold">Tabel Group Progress</h3>
+            <h3 class="text-base font-semibold">Tabel Progres Kelompok</h3>
         </div>
         <div class="mt-4 overflow-x-auto">
             <table class="w-full min-w-[860px] text-left text-sm">
@@ -24,9 +24,9 @@
                         <th class="px-4 py-3 font-medium">Periode</th>
                         <th class="px-4 py-3 font-medium">Anggota</th>
                         <th class="px-4 py-3 font-medium">Status</th>
-                        <th class="px-4 py-3 font-medium">Progress</th>
+                        <th class="px-4 py-3 font-medium">Progres</th>
                         <th class="px-4 py-3 font-medium">Fase</th>
-                        <th class="px-5 py-3 text-right font-medium">Action</th>
+                        <th class="px-5 py-3 text-right font-medium">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-border">
@@ -49,10 +49,10 @@
         <div x-show="filtered.length" x-cloak class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
             <div class="flex items-center gap-3">
                 <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
-                    <span class="px-2.5 text-muted-foreground">Per page</span>
+                    <span class="px-2.5 text-muted-foreground">Per halaman</span>
                     <select x-model.number="pageSize" @change="page=1" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none"><option>10</option><option>25</option><option>50</option></select>
                 </label>
-                <span class="text-foreground"><span x-text="'Showing '+showingFrom+' to '+showingTo+' of, '+filtered.length+' results'"></span></span>
+                <span class="text-foreground"><span x-text="'Menampilkan '+showingFrom+' sampai '+showingTo+' dari '+filtered.length+' data'"></span></span>
             </div>
             <div class="flex items-center gap-1.5">
                 <button type="button" @click="goPage(page-1)" :disabled="page<=1" aria-label="Halaman sebelumnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronLeft" class="size-4" /></button>

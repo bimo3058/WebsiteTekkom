@@ -4,14 +4,14 @@
             <thead>
                 <tr class="border-b border-slate-200 bg-[#F6F8FA] text-left text-[13px] font-medium text-slate-500">
                     <th class="px-2 py-3 font-medium">No</th>
-                    <th class="px-4 py-3 font-medium">Date</th>
-                    <th class="px-4 py-3 font-medium">Time</th>
-                    <th class="px-4 py-3 font-medium">Type</th>
-                    <th class="px-4 py-3 font-medium">Group</th>
+                    <th class="px-4 py-3 font-medium">Tanggal</th>
+                    <th class="px-4 py-3 font-medium">Waktu</th>
+                    <th class="px-4 py-3 font-medium">Tipe</th>
+                    <th class="px-4 py-3 font-medium">Kelompok</th>
                     <th class="px-4 py-3 font-medium">Anggota</th>
                     <th class="px-4 py-3 font-medium">Ruangan</th>
                     <th class="px-4 py-3 font-medium">Status</th>
-                    <th class="px-4 py-3 text-right font-medium">Action</th>
+                    <th class="px-4 py-3 text-right font-medium">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -35,13 +35,13 @@
                             </div>
                             <span x-show="!memberNames(event).length" class="text-slate-400">-</span>
                         </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-slate-900" x-text="event.room || (event.mode === 'online' ? 'Online' : '-')"></td>
+                        <td class="whitespace-nowrap px-4 py-3 text-slate-900" x-text="event.room || (event.mode === 'online' ? 'Daring' : '-')"></td>
                         <td class="whitespace-nowrap px-4 py-3">
                             <span class="sched-status inline-block rounded-full px-2.5 py-0.5 text-xs font-medium" :class="statusPill(event.status)" x-text="statusLabel(event.status)"></span>
                         </td>
                         <td class="px-4 py-3 text-right" @click.stop>
                             <div x-data="{ open: false }" class="relative inline-block" @click.outside="open = false" @keydown.escape.window="open = false">
-                                <button type="button" @click="open = !open" :aria-expanded="open" aria-label="Schedule actions"
+                                <button type="button" @click="open = !open" :aria-expanded="open" aria-label="Aksi jadwal"
                                     class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900">
                                     <x-capstone::icon name="Ellipsis" class="h-4 w-4" />
                                 </button>
@@ -51,17 +51,17 @@
                                     </button>
                                     @if($activeRole === 'admin')
                                     <button type="button" x-show="canApprove(event)" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50" @click="open = false; approve(event)">
-                                        <x-capstone::icon name="Check" class="h-4 w-4" />Approve
+                                        <x-capstone::icon name="Check" class="h-4 w-4" />Setujui
                                     </button>
                                     <button type="button" x-show="canApprove(event)" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50" @click="open = false; reject(event)">
-                                        <x-capstone::icon name="X" class="h-4 w-4" />Reject
+                                        <x-capstone::icon name="X" class="h-4 w-4" />Tolak
                                     </button>
                                     @elseif($activeRole === 'dosen')
                                     <button type="button" x-show="canEdit(event)" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100" @click="open = false; $nextTick(() => edit(event))">
-                                        <x-capstone::icon name="SquarePen" class="h-4 w-4 text-slate-400" />Edit
+                                        <x-capstone::icon name="SquarePen" class="h-4 w-4 text-slate-400" />Ubah
                                     </button>
                                     <button type="button" x-show="canEdit(event)" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50" @click="open = false; confirmDelete(event)">
-                                        <x-capstone::icon name="Trash2" class="h-4 w-4" />Delete
+                                        <x-capstone::icon name="Trash2" class="h-4 w-4" />Hapus
                                     </button>
                                     @endif
                                 </div>
@@ -70,24 +70,24 @@
                     </tr>
                 </template>
                 <tr x-show="!tableRows.length">
-                    <td colspan="9" class="px-4 py-12 text-center text-sm text-slate-400">No results.</td>
+                    <td colspan="9" class="px-4 py-12 text-center text-sm text-slate-400">Tidak ada hasil.</td>
                 </tr>
             </tbody>
         </table>
     </div>
     <div class="flex flex-col gap-3 border-t border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex flex-wrap items-center gap-3 text-sm">
-            <label class="flex items-center gap-2 text-slate-600">Per page
-                <select x-model.number="perPage" @change="page = 1" aria-label="Rows per page" class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-900">
+            <label class="flex items-center gap-2 text-slate-600">Per halaman
+                <select x-model.number="perPage" @change="page = 1" aria-label="Baris per halaman" class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-900">
                     <option>10</option>
                     <option>20</option>
                     <option>50</option>
                 </select>
             </label>
-            <span class="font-medium text-slate-900" x-text="'Showing ' + showingFrom + ' to ' + showingTo + ' of, ' + tableRows.length + ' results'"></span>
+            <span class="font-medium text-slate-900" x-text="'Menampilkan ' + showingFrom + ' sampai ' + showingTo + ' dari ' + tableRows.length + ' data'"></span>
         </div>
         <div class="flex items-center gap-1.5">
-            <button type="button" @click="goto(currentPage - 1)" ::disabled="currentPage <= 1" aria-label="Previous page"
+            <button type="button" @click="goto(currentPage - 1)" ::disabled="currentPage <= 1" aria-label="Halaman Sebelumnya"
                 class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-40">
                 <x-capstone::icon name="ChevronLeft" class="h-4 w-4" />
             </button>
@@ -97,7 +97,7 @@
                     class="inline-flex h-9 min-w-9 items-center justify-center rounded-lg border border-slate-200 px-2 text-sm font-medium transition-colors" x-text="p"></button>
                 <span x-show="p === '…'" class="inline-flex h-9 min-w-9 items-center justify-center text-sm text-slate-400">…</span>
             </template>
-            <button type="button" @click="goto(currentPage + 1)" ::disabled="currentPage >= totalPages" aria-label="Next page"
+            <button type="button" @click="goto(currentPage + 1)" ::disabled="currentPage >= totalPages" aria-label="Halaman Berikutnya"
                 class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-40">
                 <x-capstone::icon name="ChevronRight" class="h-4 w-4" />
             </button>

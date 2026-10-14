@@ -1,10 +1,10 @@
 @extends('capstone::layouts.app')
-@section('title','Documents & Workflow')
+@section('title','Dokumen & Alur Kerja')
 @section('content')
 <div x-data="capstoneDocuments" class="space-y-6">
     <div>
-        <h1 class="text-3xl font-bold tracking-tight">Documents &amp; Workflow</h1>
-        <p class="text-muted-foreground">Complete each phase sequentially to progress toward graduation.</p>
+        <h1 class="text-3xl font-bold tracking-tight">Dokumen &amp; Alur Kerja</h1>
+        <p class="text-muted-foreground">Selesaikan setiap fase secara berurutan untuk maju menuju kelulusan.</p>
     </div>
 
     @include('capstone::partials.loading')
@@ -13,7 +13,7 @@
         <x-capstone::alert variant="warning" title="⏳ Menunggu Jadwal SEMPRO" x-show="workflow.current_phase==='SEMPRO' && !workflow.seminar_schedule?.exists">SEMPRO belum dijadwalkan oleh admin. Anda tidak dapat mengupload dokumen bukti SEMPRO hingga jadwal ditetapkan.</x-capstone::alert>
 
         <div x-show="workflow.is_graduated" class="p-4 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
-            <h2 class="text-xl font-bold text-green-600">🎓 Congratulations! All phases completed.</h2>
+            <h2 class="text-xl font-bold text-green-600">🎓 Selamat! Semua fase selesai.</h2>
         </div>
 
         {{-- Workflow Stepper Timeline (Single Row with Connecting Lines) --}}
@@ -72,11 +72,11 @@
                                         </div>
                                         <span class="text-[10px] px-1.5 py-0.5 rounded font-medium"
                                               :class="doc.status==='APPROVED' ? 'bg-emerald-100 text-emerald-700' : doc.status==='SUBMITTED' ? 'bg-blue-100 text-blue-700' : doc.status==='REJECTED' ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-600'"
-                                              x-text="doc.status==='missing' ? (phase.status==='locked' ? 'Locked' : 'Belum Ada') : doc.status">
+                                              x-text="doc.status==='missing' ? (phase.status==='locked' ? 'Terkunci' : 'Belum Ada') : doc.status">
                                         </span>
                                         <x-capstone::button size="sm" variant="outline" class="h-6 text-[10px] px-2 w-full mt-0.5 justify-center shadow-none hover:bg-white" x-show="doc.can_upload" ::disabled="!doc.can_upload" @click="openUpload(phase,doc)">
                                             <x-capstone::icon name="Upload" class="h-3 w-3 mr-1" />
-                                            <span x-text="doc.status==='missing' ? 'Upload' : 'Re-upload'"></span>
+                                            <span x-text="doc.status==='missing' ? 'Unggah' : 'Unggah Ulang'"></span>
                                         </x-capstone::button>
                                         <span class="text-[10px] text-amber-600 leading-tight" x-show="(phase.phase==='SEMPRO' && !workflow.seminar_schedule?.exists || phase.phase==='EXPO' && !workflow.expo_schedule?.exists) && phase.status!=='completed'">Menunggu jadwal</span>
                                     </div>
@@ -89,24 +89,24 @@
             </div>
         </div>
 
-        <x-capstone::data-table title="Submitted Documents" search-placeholder="Search documents..." empty-title="No documents uploaded yet." empty-description="Start by uploading your PDC 1 document above." :columns="['No','phase'=>'Phase','document_type'=>'Document Type','version'=>'Version','status'=>'Status','Uploaded By','created_at'=>'Uploaded At','Feedback','Aksi']">
-            <template x-for="(doc,index) in visible" :key="doc.id"><tr class="border-b hover:bg-muted/50"><td class="p-2" x-text="(page-1)*pageSize+index+1"></td><td class="p-2" x-text="label(doc.phase)"></td><td class="p-2" x-text="doc.document_type==='GENERAL' ? 'General' : doc.document_type"></td><td class="p-2 text-muted-foreground" x-text="'v'+doc.version"></td><td class="p-2"><span class="rounded-md px-2 py-0.5 text-xs capitalize" :class="color(doc.status)" x-text="doc.status.toLowerCase()"></span></td><td class="p-2 text-muted-foreground" x-text="doc.student?.name || 'Unknown'"></td><td class="p-2 whitespace-nowrap text-muted-foreground" x-text="date(doc.created_at,true)"></td><td class="p-2"><button type="button" :disabled="!doc.feedback" @click="openFeedback(doc)" :title="doc.feedback || ''" class="max-w-[200px] truncate text-left text-muted-foreground" :class="doc.feedback && 'cursor-pointer hover:text-foreground'"><span x-text="doc.feedback ? doc.feedback : '-'"></span></button></td><td class="p-2"><x-capstone::button variant="ghost" size="sm" @click="downloadDocument(doc)" aria-label="Download document"><x-capstone::icon name="Download" /></x-capstone::button></td></tr></template>
+        <x-capstone::data-table title="Dokumen Terkirim" search-placeholder="Cari dokumen..." empty-title="Belum ada dokumen yang diunggah." empty-description="Mulai dengan mengunggah dokumen PDC 1 Anda di atas." :columns="['No','phase'=>'Fase','document_type'=>'Jenis Dokumen','version'=>'Versi','status'=>'Status','Diunggah Oleh','created_at'=>'Diunggah Pada','Masukan','Aksi']">
+            <template x-for="(doc,index) in visible" :key="doc.id"><tr class="border-b hover:bg-muted/50"><td class="p-2" x-text="(page-1)*pageSize+index+1"></td><td class="p-2" x-text="label(doc.phase)"></td><td class="p-2" x-text="doc.document_type==='GENERAL' ? 'Umum' : doc.document_type"></td><td class="p-2 text-muted-foreground" x-text="'v'+doc.version"></td><td class="p-2"><span class="rounded-md px-2 py-0.5 text-xs capitalize" :class="color(doc.status)" x-text="doc.status.toLowerCase()"></span></td><td class="p-2 text-muted-foreground" x-text="doc.student?.name || 'Tidak diketahui'"></td><td class="p-2 whitespace-nowrap text-muted-foreground" x-text="date(doc.created_at,true)"></td><td class="p-2"><button type="button" :disabled="!doc.feedback" @click="openFeedback(doc)" :title="doc.feedback || ''" class="max-w-[200px] truncate text-left text-muted-foreground" :class="doc.feedback && 'cursor-pointer hover:text-foreground'"><span x-text="doc.feedback ? doc.feedback : '-'"></span></button></td><td class="p-2"><x-capstone::button variant="ghost" size="sm" @click="downloadDocument(doc)" aria-label="Unduh dokumen"><x-capstone::icon name="Download" /></x-capstone::button></td></tr></template>
         </x-capstone::data-table>
     </div>
 
-    <x-capstone::dialog id="document-upload" title="Upload Document" class="sm:max-w-[425px]">
-        <p class="text-sm text-muted-foreground mt-2">Upload your <strong x-text="label(uploadPhase?.phase)"></strong> document (PDF/DOCX, max 10MB).</p>
-        <form id="document-upload-form" @submit.prevent="upload"><div class="grid gap-4 py-4"><div x-show="uploadType?.type!=='GENERAL'" class="grid gap-2"><label class="text-sm font-medium" for="upload-document-type">Document Type</label><x-capstone::input id="upload-document-type" ::value="uploadType?.type" disabled /></div><div class="grid gap-2"><label for="document-file" class="text-sm font-medium">File</label><x-capstone::input id="document-file" type="file" @change="file=$event.target.files[0]" accept=".pdf,.doc,.docx" required /><p class="text-sm text-destructive" x-text="errors.file?.[0]"></p></div></div><div class="flex justify-end"><x-capstone::button type="submit" ::disabled="saving || !uploadType?.can_upload"><span x-text="saving ? 'Uploading...' : 'Upload'"></span></x-capstone::button></div></form>
+    <x-capstone::dialog id="document-upload" title="Unggah Dokumen" class="sm:max-w-[425px]">
+        <p class="text-sm text-muted-foreground mt-2">Unggah dokumen <strong x-text="label(uploadPhase?.phase)"></strong> (PDF/DOCX, maks 10MB).</p>
+        <form id="document-upload-form" @submit.prevent="upload"><div class="grid gap-4 py-4"><div x-show="uploadType?.type!=='GENERAL'" class="grid gap-2"><label class="text-sm font-medium" for="upload-document-type">Jenis Dokumen</label><x-capstone::input id="upload-document-type" ::value="uploadType?.type" disabled /></div><div class="grid gap-2"><label for="document-file" class="text-sm font-medium">Berkas</label><x-capstone::input id="document-file" type="file" @change="file=$event.target.files[0]" accept=".pdf,.doc,.docx" required /><p class="text-sm text-destructive" x-text="errors.file?.[0]"></p></div></div><div class="flex justify-end"><x-capstone::button type="submit" ::disabled="saving || !uploadType?.can_upload"><span x-text="saving ? 'Mengunggah...' : 'Unggah'"></span></x-capstone::button></div></form>
     </x-capstone::dialog>
 
-    <x-capstone::dialog id="document-feedback" title="Reviewer Feedback" class="sm:max-w-[425px]">
+    <x-capstone::dialog id="document-feedback" title="Masukan Reviewer" class="sm:max-w-[425px]">
         <template x-if="feedbackDoc">
             <div class="mt-2 space-y-2">
                 <p class="text-sm text-muted-foreground"><strong x-text="feedbackDoc.document_type"></strong> · <span x-text="'v'+feedbackDoc.version"></span> · <span class="capitalize" x-text="feedbackDoc.status.toLowerCase()"></span></p>
                 <p class="text-sm whitespace-pre-wrap" x-text="feedbackDoc.feedback"></p>
             </div>
         </template>
-        <div class="flex justify-end mt-4"><x-capstone::button @click="closeFeedback()">Close</x-capstone::button></div>
+        <div class="flex justify-end mt-4"><x-capstone::button @click="closeFeedback()">Tutup</x-capstone::button></div>
     </x-capstone::dialog>
 </div>
 @endsection

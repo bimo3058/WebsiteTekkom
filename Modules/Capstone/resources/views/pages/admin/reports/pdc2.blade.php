@@ -8,8 +8,8 @@
             <p class="mt-1 text-sm text-muted-foreground">Nilai tahap PDC 2 per mahasiswa pada periode berjalan.</p>
         </div>
         <div class="flex items-center gap-2">
-            <x-capstone::button href="/admin/reports" variant="outline">Reports</x-capstone::button>
-            <button type="button" @click="exportReport()" ::disabled="loading || saving || !periodId" class="inline-flex h-9 items-center gap-2 rounded-lg bg-[#1E2A5A] px-4 text-sm font-medium text-white shadow-xs hover:bg-[#16204a] disabled:opacity-40"><x-capstone::icon name="Download" class="size-4" />Export CSV</button>
+            <x-capstone::button href="/admin/reports" variant="outline">Laporan</x-capstone::button>
+            <button type="button" @click="exportReport()" ::disabled="loading || saving || !periodId" class="inline-flex h-9 items-center gap-2 rounded-lg bg-[#1E2A5A] px-4 text-sm font-medium text-white shadow-xs hover:bg-[#16204a] disabled:opacity-40"><x-capstone::icon name="Download" class="size-4" />Ekspor CSV</button>
         </div>
     </div>
     @include('capstone::pages.admin.shared.toolbar')
@@ -26,7 +26,7 @@
                     <tr class="bg-[#F8F9FB] text-[13px] font-medium text-[#666D80]">
                         <th class="w-12 px-4 py-3 font-medium">No</th>
                         <template x-for="column in columns" :key="column[0]"><th class="px-4 py-3 font-medium" x-text="column[1]"></th></template>
-                        <th class="px-5 py-3 text-right font-medium" x-show="['assessments','pdc1','pdc2','ta','student'].includes(kind)">Action</th>
+                        <th class="px-5 py-3 text-right font-medium" x-show="['assessments','pdc1','pdc2','ta','student'].includes(kind)">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-border">
@@ -46,10 +46,10 @@
         <div x-show="items.length" x-cloak class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
             <div class="flex items-center gap-3">
                 <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
-                    <span class="px-2.5 text-muted-foreground">Per page</span>
+                    <span class="px-2.5 text-muted-foreground">Per halaman</span>
                     <select x-model.number="pageSize" @change="page=1;load()" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none"><option>10</option><option>25</option><option>50</option></select>
                 </label>
-                <span class="text-foreground"><span x-text="'Showing '+showingFrom+' to '+showingTo+' of '+(pagination.total ?? 0)+' results'"></span></span>
+                <span class="text-foreground"><span x-text="'Menampilkan '+showingFrom+' sampai '+showingTo+' dari '+(pagination.total ?? 0)+' data'"></span></span>
             </div>
             <div class="flex items-center gap-1.5">
                 <button type="button" @click="gotoPage(page-1)" :disabled="page<=1" aria-label="Halaman sebelumnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronLeft" class="size-4" /></button>
@@ -90,7 +90,7 @@
     </div>
     <div x-show="!loading && !error && periodId" x-cloak class="overflow-hidden rounded-xl border border-border bg-white shadow-xs">
         <div class="flex flex-wrap items-center justify-between gap-3 px-5 pt-5">
-            <h3 class="text-base font-semibold">Peer Reviews</h3>
+            <h3 class="text-base font-semibold">Telaah Sejawat</h3>
             <a :href="link('/admin/reports/peer-reviews')" class="text-sm font-medium text-[#1E2A5A] hover:underline">Lihat semua</a>
         </div>
         <div class="mt-4 overflow-x-auto">
@@ -110,7 +110,7 @@
                     </template>
                 </tbody>
             </table>
-            <p x-show="!peerReviewsFiltered.length" class="p-8 text-center text-sm text-muted-foreground">Belum ada peer review pada periode ini.</p>
+            <p x-show="!peerReviewsFiltered.length" class="p-8 text-center text-sm text-muted-foreground">Belum ada telaah sejawat pada periode ini.</p>
         </div>
     </div>
     <div x-show="openMenuItem" x-cloak class="fixed z-50 w-48 overflow-hidden rounded-lg border border-border bg-white py-1 shadow-lg" :style="menuStyle">

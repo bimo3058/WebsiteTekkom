@@ -1,6 +1,6 @@
 <div class="grid grid-cols-1 gap-5 p-6 sm:p-8 lg:grid-cols-[280px_1fr]">
     <div>
-        <h2 class="text-base font-bold text-gray-900">Konfigurasi Group</h2>
+        <h2 class="text-base font-bold text-gray-900">Konfigurasi Kelompok</h2>
         <p class="mt-1 text-sm text-gray-500">Beban supervisi maksimum adalah jumlah maksimal kelompok yang dapat dibimbing oleh seorang dosen pada periode ini.</p>
     </div>
     <div>

@@ -7,7 +7,7 @@
             <h1 class="text-2xl font-bold tracking-tight text-foreground">Audit Log</h1>
             <p class="mt-1 text-sm text-muted-foreground">Jejak aktivitas admin termasuk penghapusan kelompok dan alasannya.</p>
         </div>
-        <x-capstone::button variant="outline" @click="load()" ::disabled="loading"><x-capstone::icon name="RefreshCw" size="15" />Refresh</x-capstone::button>
+        <x-capstone::button variant="outline" @click="load()" ::disabled="loading"><x-capstone::icon name="RefreshCw" size="15" />Muat Ulang</x-capstone::button>
     </div>
 
     @include('capstone::partials.loading')
@@ -32,7 +32,7 @@
                 </select>
                 <label class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-input bg-white px-2.5 text-sm text-muted-foreground">Dari <input type="date" x-model="dateFrom" @change="filter()" class="bg-transparent text-foreground outline-none"></label>
                 <label class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-input bg-white px-2.5 text-sm text-muted-foreground">Sampai <input type="date" x-model="dateTo" @change="filter()" class="bg-transparent text-foreground outline-none"></label>
-                <button type="button" @click="reset()" class="inline-flex h-9 items-center rounded-lg border border-input bg-white px-3 text-sm text-muted-foreground shadow-xs hover:bg-accent">Reset</button>
+                <button type="button" @click="reset()" class="inline-flex h-9 items-center rounded-lg border border-input bg-white px-3 text-sm text-muted-foreground shadow-xs hover:bg-accent">Atur Ulang</button>
             </div>
         </div>
 
@@ -85,10 +85,10 @@
         <div x-show="items.length" x-cloak class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
             <div class="flex items-center gap-3">
                 <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
-                    <span class="px-2.5 text-muted-foreground">Per page</span>
+                    <span class="px-2.5 text-muted-foreground">Per halaman</span>
                     <select x-model.number="pageSize" @change="page=1;load()" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none"><option>10</option><option>25</option><option>50</option></select>
                 </label>
-                <span class="text-foreground"><span x-text="'Showing '+showingFrom+' to '+showingTo+' of, '+(pagination.total ?? 0)+' results'"></span></span>
+                <span class="text-foreground"><span x-text="'Menampilkan '+showingFrom+' sampai '+showingTo+' dari '+(pagination.total ?? 0)+' data'"></span></span>
             </div>
             <div class="flex items-center gap-1.5">
                 <button type="button" @click="gotoPage(page-1)" :disabled="page<=1" aria-label="Halaman sebelumnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronLeft" class="size-4" /></button>

@@ -1,7 +1,7 @@
 {
-  "total": 83,
+  "total": 84,
   "counts": {
-    "implemented": 74,
+    "implemented": 75,
     "pending": 5,
     "session-redirect": 2,
     "page-redirect": 2
@@ -233,6 +233,12 @@
       "route": "/admin/reports/peer-reviews",
       "source": "frontend/src/app/admin/reports/peer-reviews/page.tsx",
       "view": "resources/views/pages/admin/reports/peer-reviews.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/admin/reports/peer-reviews/[studentId]",
+      "source": "frontend/src/app/admin/reports/peer-reviews/[studentId]/page.tsx",
+      "view": "resources/views/pages/admin/reports/peer-reviews/_studentId_.blade.php",
       "status": "implemented"
     },
     {

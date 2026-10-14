@@ -1,6 +1,6 @@
 <div class="border-t border-gray-100 p-6 sm:p-8">
     <h3 class="text-base font-bold text-gray-900">Kumpulan Komponen Penilaian</h3>
-    <p class="mt-1 text-sm text-gray-500">Pilih komponen yang akan digunakan dalam <span class="font-medium" x-text="step===2 ? 'PEER REVIEW' : typeLabel(evaluationType)"></span> untuk periode yang dipilih.</p>
+    <p class="mt-1 text-sm text-gray-500">Pilih komponen yang akan digunakan dalam <span class="font-medium" x-text="step===2 ? 'TELAAH SEJAWAT' : typeLabel(evaluationType)"></span> untuk periode yang dipilih.</p>
     <div class="mt-5 grid grid-cols-1 gap-6 xl:grid-cols-[380px_1fr]">
         <div class="h-fit rounded-2xl border border-gray-200 p-5">
             <h4 class="text-base font-bold text-gray-900">Ringkasan</h4>
@@ -25,7 +25,7 @@
                 <h4 class="mr-auto text-base font-bold text-gray-900">Pilih Komponen</h4>
                 <div class="relative">
                     <x-capstone::icon name="Search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                    <input x-model="search" @input="onSearch()" type="search" placeholder="Search" aria-label="Cari komponen" class="h-10 w-56 rounded-lg border border-gray-200 pl-9 pr-3 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#1E2A5A]" />
+                    <input x-model="search" @input="onSearch()" type="search" placeholder="Cari" aria-label="Cari komponen" class="h-10 w-56 rounded-lg border border-gray-200 pl-9 pr-3 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#1E2A5A]" />
                 </div>
                 <div class="relative">
                     <x-capstone::icon name="ListFilter" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
@@ -39,7 +39,7 @@
                 <div class="relative">
                     <x-capstone::icon name="ArrowUpDown" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
                     <select x-model="sortBy" @change="page=1" aria-label="Urutkan komponen" class="h-10 appearance-none rounded-lg border border-gray-200 bg-white pl-9 pr-8 text-sm text-gray-600 outline-none focus:border-[#1E2A5A]">
-                        <option value="default">Sort by</option>
+                        <option value="default">Urutkan</option>
                         <option value="kode">Kode A–Z</option>
                         <option value="nama">Nama A–Z</option>
                         <option value="bobot_desc">Bobot terbesar</option>
@@ -60,10 +60,10 @@
                 </tbody>
             </table>
             <div class="flex flex-wrap items-center gap-3 border-t border-gray-100 px-4 py-3 text-sm">
-                <span class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1 text-gray-600">Per page
+                <span class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1 text-gray-600">Per halaman
                     <select x-model.number="perPage" @change="setPerPage(perPage)" aria-label="Baris per halaman" class="bg-transparent outline-none"><option :value="10">10</option><option :value="20">20</option><option :value="50">50</option></select>
                 </span>
-                <span class="mx-auto text-gray-800">Showing <span x-text="pageFrom"></span> to <span x-text="pageTo"></span> of, <span x-text="totalResults"></span> results</span>
+                <span class="mx-auto text-gray-800">Menampilkan <span x-text="pageFrom"></span> sampai <span x-text="pageTo"></span> dari <span x-text="totalResults"></span> data</span>
                 <span class="inline-flex items-center gap-1">
                     <button type="button" @click="prevPage()" :disabled="page<=1" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40" aria-label="Halaman sebelumnya"><x-capstone::icon name="ChevronLeft" class="h-4 w-4" /></button>
                     <template x-for="(n, i) in pageNumbers" :key="i">
