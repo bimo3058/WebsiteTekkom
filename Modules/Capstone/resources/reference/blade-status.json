@@ -1,8 +1,8 @@
 {
   "total": 83,
   "counts": {
-    "implemented": 57,
-    "pending": 22,
+    "implemented": 74,
+    "pending": 5,
     "session-redirect": 2,
     "page-redirect": 2
   },
@@ -41,7 +41,7 @@
       "route": "/admin/audit-logs",
       "source": "frontend/src/app/admin/audit-logs/page.tsx",
       "view": "resources/views/pages/admin/audit-logs.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/dashboard",
@@ -158,6 +158,12 @@
       "status": "implemented"
     },
     {
+      "route": "/admin/period-registrations",
+      "source": "frontend/src/app/admin/period-registrations/page.tsx",
+      "view": "resources/views/pages/admin/period-registrations.blade.php",
+      "status": "implemented"
+    },
+    {
       "route": "/admin/periods/[id]/edit",
       "source": "frontend/src/app/admin/periods/[id]/edit/page.tsx",
       "view": "resources/views/pages/admin/periods/_id_/edit.blade.php",
@@ -266,16 +272,10 @@
       "status": "pending"
     },
     {
-      "route": "/admin/users/new",
-      "source": "frontend/src/app/admin/users/new/page.tsx",
-      "view": "resources/views/pages/admin/users/new.blade.php",
-      "status": "pending"
-    },
-    {
       "route": "/admin/users",
       "source": "frontend/src/app/admin/users/page.tsx",
       "view": "resources/views/pages/admin/users.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/users/[id]/edit",
@@ -287,7 +287,7 @@
       "route": "/admin/users/[id]",
       "source": "frontend/src/app/admin/users/[id]/page.tsx",
       "view": "resources/views/pages/admin/users/_id_.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/auth/exchange",
@@ -299,13 +299,13 @@
       "route": "/dosen/bids",
       "source": "frontend/src/app/dosen/bids/page.tsx",
       "view": "resources/views/pages/dosen/bids.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/dosen/bimbingan",
       "source": "frontend/src/app/dosen/bimbingan/page.tsx",
       "view": "resources/views/pages/dosen/bimbingan.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/dosen/dashboard",
@@ -317,19 +317,19 @@
       "route": "/dosen/evaluation",
       "source": "frontend/src/app/dosen/evaluation/page.tsx",
       "view": "resources/views/pages/dosen/evaluation.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/dosen/evaluation/[id]",
       "source": "frontend/src/app/dosen/evaluation/[id]/page.tsx",
       "view": "resources/views/pages/dosen/evaluation/_id_.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/dosen/requests",
       "source": "frontend/src/app/dosen/requests/page.tsx",
       "view": "resources/views/pages/dosen/requests.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/dosen/schedule",
@@ -341,49 +341,49 @@
       "route": "/dosen/supervised-groups",
       "source": "frontend/src/app/dosen/supervised-groups/page.tsx",
       "view": "resources/views/pages/dosen/supervised-groups.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/dosen/supervisor-evaluation",
       "source": "frontend/src/app/dosen/supervisor-evaluation/page.tsx",
       "view": "resources/views/pages/dosen/supervisor-evaluation.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/dosen/supervisor-evaluation/[groupId]",
       "source": "frontend/src/app/dosen/supervisor-evaluation/[groupId]/page.tsx",
       "view": "resources/views/pages/dosen/supervisor-evaluation/_groupId_.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/dosen/ta-evaluation/[id]",
       "source": "frontend/src/app/dosen/ta-evaluation/[id]/page.tsx",
       "view": "resources/views/pages/dosen/ta-evaluation/_id_.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/dosen/ta-review",
       "source": "frontend/src/app/dosen/ta-review/page.tsx",
       "view": "resources/views/pages/dosen/ta-review.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/dosen/title-approvals",
       "source": "frontend/src/app/dosen/title-approvals/page.tsx",
       "view": "resources/views/pages/dosen/title-approvals.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/dosen/titles",
       "source": "frontend/src/app/dosen/titles/page.tsx",
       "view": "resources/views/pages/dosen/titles.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/dosen/titles/[id]",
       "source": "frontend/src/app/dosen/titles/[id]/page.tsx",
       "view": "resources/views/pages/dosen/titles/_id_.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/login",
