@@ -26,7 +26,7 @@ export function adminGroups(detail=false){return mergePage(basePage(),{detail,gr
     phaseLabel(phase){return {PDC1:'PDC 1',SEMPRO:'Sempro',PDC2:'PDC 2',TA_DRAFT:'TA Draft',TA:'TA Draft',EXPO:'Expo',SIDANG:'Sidang TA'}[phase]||phase;},
     phasePill(status){return status==='completed'?'bg-emerald-50 text-emerald-600':['submitted','revision','draft','unlocked'].includes(status)?'bg-amber-50 text-amber-600':'bg-slate-100 text-slate-500';},
     phasePillLabel(status){return status==='completed'?'Selesai':['submitted','revision','draft','unlocked'].includes(status)?'Proses':'Belum';},
-    docRowClass(status){return status==='APPROVED'?'text-slate-700':status==='REJECTED'||status==='SUBMITTED'?'text-amber-600':'text-slate-400';},
+    docRowClass(status){return status==='APPROVED'?'text-slate-700':status==='REJECTED'||status==='SUBMITTED'||status==='REVISE'?'text-amber-600':'text-slate-400';},
     toggleMember(id){this.selectedMembers=this.selectedMembers.includes(id)?this.selectedMembers.filter(i=>i!==id):[...this.selectedMembers,id];},
     openMessage(){if(!this.selectedMembers.length)return;this.messageText='';dialog('group-message').showModal();},
     async sendMessage(){if(!this.messageText.trim()||!this.selectedMembers.length)return;const members=(this.group?.members||[]).filter(m=>this.selectedMembers.includes(m.id));const userIds=members.map(m=>m.student?.user_id).filter(Boolean);if(await this.run(()=>api(`/admin/groups/${this.group.id}/message`,{method:'POST',body:{user_ids:userIds,message:this.messageText.trim()}}),'Pesan dikirim.')){dialog('group-message').close();this.selectedMembers=[];this.messageText='';}},

@@ -26,7 +26,7 @@ export function registerDocuments(Alpine){
         get pageCount(){return Math.max(1,Math.ceil(this.filtered.length/this.pageSize));},
         get visible(){const from=(Math.min(this.page,this.pageCount)-1)*this.pageSize;return this.filtered.slice(from,from+this.pageSize);},
         sort(key){this.sortDirection=this.sortKey===key?-this.sortDirection:1;this.sortKey=key;},
-        color(status){return {APPROVED:'bg-green-500 text-white',REJECTED:'bg-destructive text-white',SUBMITTED:'bg-blue-500 text-white'}[status] || 'bg-secondary text-secondary-foreground';},
+        color(status){return {APPROVED:'bg-green-500 text-white',REVISE:'bg-amber-500 text-white',REJECTED:'bg-destructive text-white',SUBMITTED:'bg-blue-500 text-white'}[status] || 'bg-secondary text-secondary-foreground';},
         openUpload(phase,doc){
             if(!phase.can_upload || !doc.can_upload){notify(doc.locked_reason || phase.locked_reason || 'Upload locked',true);return;}
             this.uploadPhase=phase;this.uploadType=doc;this.file=null;this.errors={};

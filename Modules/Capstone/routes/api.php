@@ -336,6 +336,9 @@ Route::prefix('capstone')->group(function () {
             Route::get('/supervisor-evaluation/pending-count', [SupervisorEvaluationController::class, 'pendingCount']);
             Route::get('/supervisor-evaluation/form/{groupId}', [SupervisorEvaluationController::class, 'form']);
             Route::post('/supervisor-evaluation', [SupervisorEvaluationController::class, 'store']);
+            // Group-level EXPO submission review (approve/reject per group)
+            Route::get('/supervisor-evaluation/expo/{groupId}', [SupervisorEvaluationController::class, 'expoReview']);
+            Route::post('/supervisor-evaluation/expo/{groupId}/review', [SupervisorEvaluationController::class, 'reviewExpo']);
         });
 
         // â”€â”€ Mahasiswa â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

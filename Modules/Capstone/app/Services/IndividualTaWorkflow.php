@@ -51,11 +51,13 @@ class IndividualTaWorkflow
         foreach (['NILAI_DOSEN' => 'nilai_dosen', 'MILESTONE' => 'milestone', 'EXPO' => 'expo_evaluation'] as $type => $key) {
             $ids = $components->where('type', $type)->pluck('id');
             if ($type === 'EXPO') {
-                // EXPO grades come from the member's own self-evaluations in
-                // daftar expo (pembimbing EXPO evaluation was removed), so
-                // readiness is per-student, not per-supervisor.
+                // EXPO grades come from the group's approved self-evaluation
+                // submitted by the representative member (pembimbing EXPO
+                // evaluation was removed), so readiness is group-level and
+                // gated by the supervisor's approval, not per-student.
                 $submitted = $ids->isEmpty() ? collect() : ExpoSelfEvaluation::where('group_id', $group->id)
-                    ->where('student_id', $studentId)->whereIn('period_component_id', $ids)->pluck('period_component_id')->unique();
+                    ->whereHas('expoRegistration', fn ($q) => $q->where('review_status', 'APPROVED'))
+                    ->whereIn('period_component_id', $ids)->pluck('period_component_id')->unique();
                 $readiness[$key] = ['required' => true, 'configured' => $ids->isNotEmpty(), 'component_count' => $ids->count(), 'supervisors' => [], 'completed' => $ids->isNotEmpty() && $submitted->count() === $ids->count()];
 
                 continue;

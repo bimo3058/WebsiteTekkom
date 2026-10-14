@@ -98,6 +98,17 @@ class ExpoSelfEvalGradesTest extends TestCase
             $t->text('notes')->nullable();
             $t->timestamps();
         });
+        Schema::create('capstone_expo_registrations', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('expo_event_id')->nullable();
+            $t->unsignedBigInteger('group_id');
+            $t->string('status')->default('REGISTERED');
+            $t->string('review_status')->nullable();
+            $t->text('review_feedback')->nullable();
+            $t->unsignedBigInteger('reviewed_by')->nullable();
+            $t->timestamp('reviewed_at')->nullable();
+            $t->timestamps();
+        });
         Schema::create('capstone_expo_scores', function (Blueprint $t) {
             $t->id();
             $t->unsignedBigInteger('evaluator_id')->nullable();
@@ -127,25 +138,47 @@ class ExpoSelfEvalGradesTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_pdc2_expo_component_comes_from_member_self_evaluations(): void
+    /**
+     * Seed an EXPO group whose representative submitted both components on
+     * a REGISTERED registration left at $reviewStatus.
+     *
+     * @return array{int, int, int} [studentId, groupId, secondStudentId]
+     */
+    private function seedGroupWithApprovedSelfEvaluation(string $reviewStatus = 'APPROVED'): array
     {
         $userId = DB::table('users')->insertGetId(['name' => 'Sinta']);
         $studentId = DB::table('students')->insertGetId(['user_id' => $userId, 'student_number' => '001']);
+        $otherUserId = DB::table('users')->insertGetId(['name' => 'Bagas']);
+        $otherStudentId = DB::table('students')->insertGetId(['user_id' => $otherUserId, 'student_number' => '002']);
         $periodId = DB::table('capstone_periods')->insertGetId(['name' => 'P2']);
         $groupId = DB::table('capstone_groups')->insertGetId(['period_id' => $periodId, 'status' => 'EXPO_REGISTERED']);
-        DB::table('capstone_group_members')->insert(['group_id' => $groupId, 'student_id' => $studentId]);
+        DB::table('capstone_group_members')->insert([
+            ['group_id' => $groupId, 'student_id' => $studentId, 'is_leader' => true],
+            ['group_id' => $groupId, 'student_id' => $otherStudentId, 'is_leader' => false],
+        ]);
         DB::table('capstone_period_registrations')->insert(['user_id' => $studentId, 'period_id' => $periodId, 'status' => 'APPROVED']);
+        DB::table('capstone_period_registrations')->insert(['user_id' => $otherStudentId, 'period_id' => $periodId, 'status' => 'APPROVED']);
 
         $t1 = DB::table('capstone_assessment_component_templates')->insertGetId(['code' => 'EXPO-1', 'name' => 'Prototype', 'weight' => 60]);
         $t2 = DB::table('capstone_assessment_component_templates')->insertGetId(['code' => 'EXPO-2', 'name' => 'Poster', 'weight' => 40]);
         $c1 = DB::table('capstone_period_assessment_components')->insertGetId(['period_id' => $periodId, 'template_id' => $t1, 'type' => 'EXPO']);
         $c2 = DB::table('capstone_period_assessment_components')->insertGetId(['period_id' => $periodId, 'template_id' => $t2, 'type' => 'EXPO']);
 
-        ExpoSelfEvaluation::create(['group_id' => $groupId, 'student_id' => $studentId, 'period_component_id' => $c1, 'score' => 90]);
-        ExpoSelfEvaluation::create(['group_id' => $groupId, 'student_id' => $studentId, 'period_component_id' => $c2, 'score' => 75]);
+        $registrationId = DB::table('capstone_expo_registrations')->insertGetId([
+            'group_id' => $groupId, 'status' => 'REGISTERED', 'review_status' => $reviewStatus,
+        ]);
+        ExpoSelfEvaluation::create(['expo_registration_id' => $registrationId, 'group_id' => $groupId, 'student_id' => $studentId, 'period_component_id' => $c1, 'score' => 90]);
+        ExpoSelfEvaluation::create(['expo_registration_id' => $registrationId, 'group_id' => $groupId, 'student_id' => $studentId, 'period_component_id' => $c2, 'score' => 75]);
 
         // A legacy examiner ExpoScore row must NOT influence the grade.
         DB::table('capstone_expo_scores')->insert(['evaluator_id' => 999, 'group_id' => $groupId, 'student_id' => $studentId, 'period_component_id' => $c1, 'score' => 10]);
+
+        return [$studentId, $groupId, $otherStudentId];
+    }
+
+    public function test_pdc2_expo_component_comes_from_member_self_evaluations(): void
+    {
+        [$studentId, $groupId] = $this->seedGroupWithApprovedSelfEvaluation();
 
         $result = (new GradeCalculationService)->calculatePDC2ForStudent($studentId, $groupId);
 
@@ -156,5 +189,42 @@ class ExpoSelfEvalGradesTest extends TestCase
         $this->assertSame(1, $result['component_count']);
         $this->assertSame('PARTIAL', $result['status']);
         $this->assertSame([['name' => 'Sinta', 'role' => 'SELF', 'score' => 84.0]], $result['components']['EXPO']['evaluators']);
+    }
+
+    public function test_pdc2_expo_component_waits_for_supervisor_review_approval(): void
+    {
+        [$studentId, $groupId] = $this->seedGroupWithApprovedSelfEvaluation('SUBMITTED');
+
+        $result = (new GradeCalculationService)->calculatePDC2ForStudent($studentId, $groupId);
+
+        $this->assertTrue($result === null || ($result['components']['EXPO']['score'] ?? null) === null);
+    }
+
+    public function test_pdc2_expo_component_stays_locked_after_review_rejection(): void
+    {
+        [$studentId, $groupId] = $this->seedGroupWithApprovedSelfEvaluation('REJECTED');
+
+        $result = (new GradeCalculationService)->calculatePDC2ForStudent($studentId, $groupId);
+
+        $this->assertTrue($result === null || ($result['components']['EXPO']['score'] ?? null) === null);
+    }
+
+    public function test_member_without_own_scores_inherits_approved_representative_submission(): void
+    {
+        [, $groupId, $otherStudentId] = $this->seedGroupWithApprovedSelfEvaluation();
+
+        $result = (new GradeCalculationService)->calculatePDC2ForStudent($otherStudentId, $groupId);
+
+        $this->assertNotNull($result);
+        $this->assertEqualsWithDelta(84.0, $result['components']['EXPO']['score'], 0.01);
+    }
+
+    public function test_inheritance_is_blocked_while_review_is_pending(): void
+    {
+        [, $groupId, $otherStudentId] = $this->seedGroupWithApprovedSelfEvaluation('SUBMITTED');
+
+        $result = (new GradeCalculationService)->calculatePDC2ForStudent($otherStudentId, $groupId);
+
+        $this->assertTrue($result === null || ($result['components']['EXPO']['score'] ?? null) === null);
     }
 }

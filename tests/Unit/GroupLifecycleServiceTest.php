@@ -34,11 +34,13 @@ class GroupLifecycleServiceTest extends TestCase
             ['BIMBINGAN_SEMPRO', 'PDC2_ACTIVE', false],
             ['NILAI_DOSEN', 'PDC2_ACTIVE', true],
             ['NILAI_DOSEN', 'TA_DRAFT', true],
-            ['NILAI_DOSEN', 'PDC2_READY_FOR_EXPO', false],
+            // Matches Modules\Capstone\Tests\Unit\EditableStatusesTest: the
+            // NILAI_DOSEN window stays open through the whole EXPO review stage.
+            ['NILAI_DOSEN', 'PDC2_READY_FOR_EXPO', true],
             ['NILAI_DOSEN', 'READY_FOR_SEMPRO', false],
             ['MILESTONE', 'PDC2_ACTIVE', true],
             ['MILESTONE', 'TA_DRAFT', true],
-            ['MILESTONE', 'EXPO_DONE', false],
+            ['MILESTONE', 'EXPO_DONE', true],
             ['EXPO', 'EXPO_REGISTERED', true],
             ['EXPO', 'EXPO_DONE', true],
             ['EXPO', 'PDC2_READY_FOR_EXPO', false],

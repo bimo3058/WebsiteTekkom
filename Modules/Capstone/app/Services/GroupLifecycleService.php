@@ -15,14 +15,16 @@ class GroupLifecycleService
      *
      * NILAI_DOSEN and MILESTONE open at PDC2_ACTIVE and stay open through
      * every later status (no EXPO schedule or registration required).
-     * Pembimbing EXPO evaluation was removed — EXPO grades come from the
-     * members' self-evaluations instead, so EXPO has no editable window.
+     * Pembimbing EXPO scoring was removed — EXPO is now the group-level
+     * approve/reject review of the representative's self-evaluation and
+     * document submission, reviewable while the group is in the EXPO window.
      */
     public const EDITABLE_STATUSES = [
         'BIMBINGAN_SEMPRO' => ['PDC1_ACTIVE', 'READY_FOR_SEMPRO', 'SEMPRO_DONE'],
         'NILAI_DOSEN' => ['PDC2_ACTIVE', 'TA_DRAFT', 'PDC2_READY_FOR_EXPO', 'EXPO_REGISTERED', 'EXPO_DONE', 'PDC2_COMPLETED', 'READY_FOR_TA_INDIVIDUAL', 'TA_IN_PROGRESS'],
         'MILESTONE' => ['PDC2_ACTIVE', 'TA_DRAFT', 'PDC2_READY_FOR_EXPO', 'EXPO_REGISTERED', 'EXPO_DONE', 'PDC2_COMPLETED', 'READY_FOR_TA_INDIVIDUAL', 'TA_IN_PROGRESS'],
         'BIMBINGAN_TA' => ['READY_FOR_TA_INDIVIDUAL', 'TA_IN_PROGRESS', 'PDC2_COMPLETED'],
+        'EXPO' => ['EXPO_REGISTERED', 'EXPO_DONE'],
     ];
 
     public function __construct(

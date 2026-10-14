@@ -303,47 +303,49 @@ class WorkflowService
      */
     public function getFinalReadyForTaIndividual(Group $group, $allRequirements, $documents): array
     {
-        // Check per-student EXPO documents
+        // Group-level EXPO submission: one representative uploads the
+        // document; at least one APPROVED document unlocks the stage.
         $expoRegistration = ExpoRegistration::where('group_id', $group->id)
             ->where('status', '!=', 'CANCELLED')
             ->first();
 
         $studentCount = GroupMember::where('group_id', $group->id)->count();
+        $registrationApproved = $expoRegistration !== null && $expoRegistration->review_status === 'APPROVED';
 
         if ($expoRegistration) {
-            $uploadedCount = ExpoStudentDocument::where('expo_registration_id', $expoRegistration->id)
+            $approvedDocCount = ExpoStudentDocument::where('expo_registration_id', $expoRegistration->id)
+                ->where('status', 'APPROVED')
                 ->count();
-            $expoDocsComplete = $uploadedCount >= $studentCount && $studentCount > 0;
-            $pendingDocs = $expoDocsComplete ? [] : ['EXPO documents not uploaded by all students'];
+            $expoDocsComplete = $approvedDocCount > 0;
+            $pendingDocs = $expoDocsComplete
+                ? []
+                : [ExpoStudentDocument::where('expo_registration_id', $expoRegistration->id)->exists()
+                    ? 'Dokumen EXPO belum disetujui dosbing'
+                    : 'Dokumen EXPO belum diunggah perwakilan kelompok'];
         } else {
             $expoDocsComplete = false;
+            $approvedDocCount = 0;
             $pendingDocs = ['No active expo registration'];
         }
 
-        // Check EXPO self-evaluation from all students. EXPO grades come
-        // from the members' self-evaluations in daftar expo (pembimbing
-        // EXPO evaluation was removed), so readiness reads the
-        // ExpoSelfEvaluation write path, not the ExpoScore split table.
-        $studentIds = GroupMember::where('group_id', $group->id)->pluck('student_id')->toArray();
+        // Group-level EXPO self-evaluation: the representative's submission
+        // covers every member, and it only counts once the supervisor has
+        // APPROVED it (that approval also gates the PDC2 EXPO score).
         $expoComponentIds = PeriodAssessmentComponent::where('period_id', $group->period_id)
             ->where('type', 'EXPO')
             ->pluck('id');
-        $allStudentsEvaluated = true;
-        foreach ($studentIds as $studentId) {
-            $selfEvals = ExpoSelfEvaluation::where('group_id', $group->id)
-                ->where('student_id', $studentId);
-            if ($expoComponentIds->isNotEmpty()) {
-                $hasEvaluation = (clone $selfEvals)->whereIn('period_component_id', $expoComponentIds)
-                    ->distinct()
-                    ->count('period_component_id') >= $expoComponentIds->count();
-            } else {
-                $hasEvaluation = (clone $selfEvals)->exists();
-            }
-            if (! $hasEvaluation) {
-                $allStudentsEvaluated = false;
-                break;
-            }
+        $submittedComponentCount = 0;
+        if ($expoRegistration && $expoComponentIds->isNotEmpty()) {
+            $submittedComponentCount = ExpoSelfEvaluation::where('expo_registration_id', $expoRegistration->id)
+                ->whereIn('period_component_id', $expoComponentIds)
+                ->distinct()
+                ->count('period_component_id');
         }
+        $expoEvalSubmitted = $expoRegistration !== null
+            && ($expoComponentIds->isEmpty()
+                ? ExpoSelfEvaluation::where('expo_registration_id', $expoRegistration->id)->exists()
+                : $submittedComponentCount >= $expoComponentIds->count());
+        $expoEvalComplete = $expoEvalSubmitted && $registrationApproved;
 
         $nilaiDosen = $this->getSupervisorEvaluationStatus($group, 'NILAI_DOSEN');
         $milestone = $this->getSupervisorEvaluationStatus($group, 'MILESTONE');
@@ -363,7 +365,7 @@ class WorkflowService
 
         return [
             'ready' => $expoDocsComplete
-                && $allStudentsEvaluated
+                && $expoEvalComplete
                 && $nilaiDosenComplete
                 && $milestoneComplete
                 && $peerReviewStatus['configured']
@@ -371,16 +373,20 @@ class WorkflowService
             'expo_documents' => [
                 'completed' => $expoDocsComplete,
                 'pending_types' => $pendingDocs,
-                'total_required' => $studentCount,
-                'approved_count' => $expoRegistration
-                    ? ExpoStudentDocument::where('expo_registration_id', $expoRegistration->id)->count()
-                    : 0,
+                'total_required' => 1,
+                'approved_count' => $approvedDocCount,
             ],
             'expo_evaluation' => [
                 'required' => true,
-                'completed' => $allStudentsEvaluated && $studentCount > 0,
+                'configured' => $expoComponentIds->isNotEmpty(),
+                'completed' => $expoEvalComplete,
                 'type' => 'self_evaluation',
-                'students_completed' => $allStudentsEvaluated ? $studentCount : 0,
+                'submitted' => $expoEvalSubmitted,
+                'approved' => $registrationApproved,
+                'review_status' => $expoRegistration?->review_status,
+                'review_feedback' => $expoRegistration?->review_feedback,
+                'supervisors' => [],
+                'students_completed' => $expoEvalComplete ? $studentCount : 0,
                 'students_total' => $studentCount,
             ],
             'nilai_dosen' => [
@@ -410,12 +416,12 @@ class WorkflowService
     }
 
     /**
-     * Whether a group is finally ready for TA Individual: expo documents
-     * uploaded by every member, every member self-evaluated, NILAI_DOSEN
-     * and MILESTONE complete from every supervisor, and peer review
-     * configured + completed. Enforcement counterpart of the UI-only
-     * getFinalReadyForTaIndividual display; used by
-     * GroupLifecycleService to gate EXPO_DONE → PDC2_COMPLETED.
+     * Whether a group is finally ready for TA Individual: at least one expo
+     * document APPROVED, the representative's self-evaluation submitted and
+     * APPROVED by the supervisor, NILAI_DOSEN and MILESTONE complete from
+     * every supervisor, and peer review configured + completed. Enforcement
+     * counterpart of the UI-only getFinalReadyForTaIndividual display; used
+     * by GroupLifecycleService to gate EXPO_DONE → PDC2_COMPLETED.
      *
      * The display helper takes requirement/document collections but is
      * fully data-driven, so empty collections are passed here.
@@ -451,11 +457,12 @@ class WorkflowService
 
     /**
      * Whether a group's EXPO stage is fully complete: an active REGISTERED
-     * registration exists, every member's expo document is APPROVED, and
-     * every member submitted self-evaluation for every EXPO component.
-     * Reads ExpoSelfEvaluation (the member write path), not the ExpoScore
-     * split table. Enforcement counterpart used to gate EXPO_REGISTERED →
-     * EXPO_DONE so a group cannot proceed while members are pending.
+     * registration exists, the supervisor APPROVED the group submission, at
+     * least one expo document is APPROVED, and the representative member
+     * submitted self-evaluation for every EXPO component (one submission
+     * covers the whole group). Enforcement counterpart used to gate
+     * EXPO_REGISTERED → EXPO_DONE so a group cannot proceed while the
+     * submission is pending or rejected.
      */
     public function isExpoComplete(Group $group): bool
     {
@@ -475,18 +482,19 @@ class WorkflowService
             return false;
         }
 
-        $studentIds = GroupMember::where('group_id', $group->id)->pluck('student_id')->all();
-
-        if (empty($studentIds)) {
+        if ($registration->review_status !== 'APPROVED') {
             return false;
         }
 
-        $approvedDocs = ExpoStudentDocument::where('expo_registration_id', $registration->id)
-            ->where('status', 'APPROVED')
-            ->pluck('student_id')
-            ->all();
+        if (! GroupMember::where('group_id', $group->id)->exists()) {
+            return false;
+        }
 
-        if (array_diff($studentIds, $approvedDocs)) {
+        $hasApprovedDoc = ExpoStudentDocument::where('expo_registration_id', $registration->id)
+            ->where('status', 'APPROVED')
+            ->exists();
+
+        if (! $hasApprovedDoc) {
             return false;
         }
 
@@ -498,19 +506,12 @@ class WorkflowService
             return false;
         }
 
-        foreach ($studentIds as $studentId) {
-            $submitted = ExpoSelfEvaluation::where('expo_registration_id', $registration->id)
-                ->where('student_id', $studentId)
-                ->whereIn('period_component_id', $componentIds)
-                ->distinct()
-                ->count('period_component_id');
+        $submitted = ExpoSelfEvaluation::where('expo_registration_id', $registration->id)
+            ->whereIn('period_component_id', $componentIds)
+            ->distinct()
+            ->count('period_component_id');
 
-            if ($submitted < count($componentIds)) {
-                return false;
-            }
-        }
-
-        return true;
+        return $submitted >= count($componentIds);
     }
 
     /**

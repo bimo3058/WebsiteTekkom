@@ -482,7 +482,10 @@ class DocumentController extends Controller
         $lecturerId = CapstoneActor::lecturer($user)->id;
 
         $request->validate([
-            'status' => ['required', Rule::in(['APPROVED', 'REJECTED'])],
+            // 3-status review: APPROVED locks, REVISE and REJECTED both let
+            // the student re-upload (REJECTED additionally implies the
+            // supervisor refused the version outright).
+            'status' => ['required', Rule::in(['APPROVED', 'REVISE', 'REJECTED'])],
             'feedback' => ['nullable', 'string'],
         ]);
 

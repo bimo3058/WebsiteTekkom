@@ -6,7 +6,7 @@
     <div class="flex flex-wrap gap-3"><x-capstone::input type="search" x-model.debounce.200ms="search" @input="page=1" placeholder="Search by student, title, or phase..." aria-label="Search documents" class="min-w-48 flex-1" />
         <select x-model="selectedGroup" @change="page=1" aria-label="Filter by group" class="h-9 max-w-full rounded-md border bg-background px-3 text-sm"><option value="all">All Groups</option><template x-for="group in availableGroups" :key="group.id"><option :value="String(group.id)" x-text="group.code||'Group '+group.id"></option></template></select>
         <select x-model="phase" @change="page=1" aria-label="Filter by phase" class="h-9 rounded-md border bg-background px-3 text-sm"><option value="all">All Phases</option><template x-for="item in phases" :key="item"><option :value="item" x-text="item"></option></template></select>
-        <select x-model="status" @change="page=1" aria-label="Filter by status" class="h-9 rounded-md border bg-background px-3 text-sm"><option value="all">All Statuses</option><option>SUBMITTED</option><option>APPROVED</option><option>REJECTED</option></select>
+        <select x-model="status" @change="page=1" aria-label="Filter by status" class="h-9 rounded-md border bg-background px-3 text-sm"><option value="all">All Statuses</option><option>SUBMITTED</option><option>APPROVED</option><option>REVISE</option><option>REJECTED</option></select>
     </div>
     @include('capstone::partials.loading')
     <div x-show="!loading && !error" x-cloak class="space-y-4">
@@ -20,7 +20,7 @@
         @include('capstone::pages.dosen.shared.pagination')
     </div>
     <x-capstone::dialog id="document-review" title="Review Document"><p class="mt-3 text-sm text-muted-foreground" x-text="selected?(selected.document_type||selected.phase)+' · Version '+selected.version:''"></p><form @submit.prevent="submit()" class="mt-4 space-y-4">
-        <label class="grid gap-2 text-sm font-medium">Review Status<select x-model="reviewStatus" class="h-9 rounded-md border bg-background px-3"><option value="APPROVED">Approved</option><option value="REJECTED">Rejected / Needs Revision</option></select></label>
+        <label class="grid gap-2 text-sm font-medium">Review Status<select x-model="reviewStatus" class="h-9 rounded-md border bg-background px-3"><option value="APPROVED">Approved</option><option value="REVISE">Revise — Needs Revision (boleh upload ulang)</option><option value="REJECTED">Rejected</option></select></label>
         <label class="grid gap-2 text-sm font-medium">Feedback<textarea x-model="feedback" maxlength="500" rows="5" class="rounded-md border bg-background p-3 font-normal" placeholder="Enter your feedback here..."></textarea></label><p class="text-right text-xs text-muted-foreground" x-text="feedback.length+' / 500'"></p><p class="text-sm text-destructive" role="alert" x-text="errors.root"></p>
         <div class="flex justify-end gap-2"><x-capstone::button variant="outline" @click="close('document-review')">Cancel</x-capstone::button><x-capstone::button type="submit" ::disabled="saving"><span x-text="saving?'Saving...':'Submit Review'"></span></x-capstone::button></div>
     </form></x-capstone::dialog>

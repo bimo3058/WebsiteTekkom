@@ -22,4 +22,9 @@ class ExpoSelfEvaluation extends Model
     {
         return $this->belongsTo(PeriodAssessmentComponent::class, 'period_component_id');
     }
+
+    public function expoRegistration()
+    {
+        return $this->belongsTo(ExpoRegistration::class, 'expo_registration_id');
+    }
 }

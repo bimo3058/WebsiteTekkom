@@ -13,10 +13,19 @@ export function registerExpo(Alpine){
         get endpoint(){return `/mahasiswa/expo-events/${encodeURIComponent(context.params.expoId)}`;},
         async init(){await this.load();},
         async load(){this.loading=true;this.error='';try{this.data=unwrap(await api(this.endpoint+'/detail'));this.scores={};this.notes={};for(const s of this.data.my_scores){this.scores[s.period_component_id]=s.score===null?'':Number(s.score);this.notes[s.period_component_id]=s.notes || '';}}catch(e){this.error=e.message;}finally{this.loading=false;}},
-        get submitted(){return this.data?.my_scores?.some(s=>s.score!==null&&s.score!==undefined) || false;},
+        get evaluation(){return this.data?.group_evaluation || null;},
+        get submitted(){return !!this.evaluation?.submitted || (this.data?.my_scores || []).some(s=>s.score!==null&&s.score!==undefined);},
+        get reviewStatus(){return this.evaluation?.review_status || null;},
+        get rejected(){return this.reviewStatus === 'REJECTED';},
+        get approved(){return this.reviewStatus === 'APPROVED';},
+        get pending(){return this.reviewStatus === 'SUBMITTED';},
+        get reviewFeedback(){return this.evaluation?.review_feedback || null;},
+        get representative(){return this.evaluation?.submitted_by || null;},
+        get canSubmit(){return this.data?.can_submit !== false && !this.pending && !this.approved;},
+        get canUpload(){return this.data?.can_upload_document !== false;},
         get evaluationDone(){return !!this.data?.components?.length&&this.data.components.every(c=>Number(this.scores[c.id])>0)&&this.submitted;},
         get weighted(){return (this.data?.components || []).reduce((sum,c)=>sum+Number(this.scores[c.id] || 0)*Number(c.weight)/100,0).toFixed(2);},
-        async submit(){if(this.submitted||this.saving||!this.data?.components.length)return;if(this.data.components.some(c=>!(Number(this.scores[c.id])>=1&&Number(this.scores[c.id])<=100))){notify('Isi nilai 1–100 untuk setiap komponen.',true);return;}this.saving=true;try{await api(this.endpoint+'/evaluation',{method:'POST',body:{scores:this.data.components.map(c=>({period_component_id:c.id,score:Number(this.scores[c.id]),notes:this.notes[c.id] || ''}))}});notify('Self-evaluation berhasil disimpan');await this.load();}catch(e){notify(e.message,true);if(e.status===403)await this.load();}finally{this.saving=false;}},
-        async upload(file){if(!file||this.uploading||this.data?.my_document)return;if(file.size>10*1024*1024){notify('Ukuran file maksimal 10MB',true);return;}this.uploading=true;try{const body=new FormData();body.append('file',file);await api(this.endpoint+'/document',{method:'POST',body});notify('Dokumen berhasil diupload');await this.load();}catch(e){notify(e.message,true);}finally{this.uploading=false;const input=document.getElementById('expo-file');if(input)input.value='';}}
+        async submit(){if(this.saving||!this.data?.components.length)return;if(!this.canSubmit){notify(this.pending?'Self-evaluation sedang direview dosbing.':'Self-evaluation sudah disetujui dosbing.',true);await this.load();return;}if(this.data.components.some(c=>!(Number(this.scores[c.id])>=1&&Number(this.scores[c.id])<=100))){notify('Isi nilai 1–100 untuk setiap komponen.',true);return;}this.saving=true;try{await api(this.endpoint+'/evaluation',{method:'POST',body:{scores:this.data.components.map(c=>({period_component_id:c.id,score:Number(this.scores[c.id]),notes:this.notes[c.id] || ''}))}});notify('Self-evaluation kelompok berhasil disimpan');await this.load();}catch(e){notify(e.message,true);if(e.status===403)await this.load();}finally{this.saving=false;}},
+        async upload(file){if(!file||this.uploading)return;if(this.data && this.data.can_upload_document === false){notify(this.approved?'Dokumen sudah disetujui dosbing dan tidak dapat diganti.':'Dokumen sedang direview dosbing.',true);return;}if(file.size>10*1024*1024){notify('Ukuran file maksimal 10MB',true);return;}this.uploading=true;try{const body=new FormData();body.append('file',file);await api(this.endpoint+'/document',{method:'POST',body});notify('Dokumen berhasil diupload');await this.load();}catch(e){notify(e.message,true);if(e.status===403)await this.load();}finally{this.uploading=false;const input=document.getElementById('expo-file');if(input)input.value='';}}
     }));
 }

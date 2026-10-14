@@ -56,11 +56,15 @@ class EditableStatusesTest extends TestCase
         $this->assertFalse($service->formAccess($this->groupAt('CLOSED'), 'MILESTONE')['editable']);
     }
 
-    public function test_expo_has_no_supervisor_editable_window(): void
+    public function test_expo_review_window_covers_expo_registration_statuses(): void
     {
-        $this->assertArrayNotHasKey('EXPO', GroupLifecycleService::EDITABLE_STATUSES);
+        $this->assertSame(['EXPO_REGISTERED', 'EXPO_DONE'], GroupLifecycleService::EDITABLE_STATUSES['EXPO']);
 
-        $access = $this->service()->formAccess($this->groupAt('EXPO_REGISTERED'), 'EXPO');
-        $this->assertFalse($access['editable']);
+        $service = $this->service();
+        $this->assertTrue($service->formAccess($this->groupAt('EXPO_REGISTERED'), 'EXPO')['editable']);
+        $this->assertTrue($service->formAccess($this->groupAt('EXPO_DONE'), 'EXPO')['editable']);
+        $this->assertFalse($service->formAccess($this->groupAt('PDC2_READY_FOR_EXPO'), 'EXPO')['editable']);
+        $this->assertFalse($service->formAccess($this->groupAt('PDC2_COMPLETED'), 'EXPO')['editable']);
+        $this->assertFalse($service->formAccess($this->groupAt('CLOSED'), 'EXPO')['editable']);
     }
 }

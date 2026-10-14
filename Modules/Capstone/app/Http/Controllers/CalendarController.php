@@ -4,6 +4,7 @@ namespace Modules\Capstone\Http\Controllers;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Modules\Capstone\Models\ExpoEvent;
 use Modules\Capstone\Models\SeminarSchedule;
 use Modules\Capstone\Models\TaDefenseSchedule;
@@ -85,19 +86,21 @@ class CalendarController extends Controller
         // globals (period_id NULL) plus that period's own events. Status
         // PUBLISHED sits outside the approvable PENDING* set and the rows
         // are not BIMBINGAN, so the UI treats them as read-only.
-        $expoMasters = ExpoEvent::with('period')->where('is_published', true)
-            ->when($request->filled('period_id'), fn (Builder $q) => $q
-                ->where(fn (Builder $w) => $w->whereNull('period_id')->orWhere('period_id', $request->integer('period_id'))))
-            ->withCount(['registrations' => fn ($q) => $q->where('status', 'REGISTERED')])
-            ->orderBy('date')->orderBy('start_time')->get()->map(fn ($e) => [
-                'id' => 'expo_event_'.$e->id, 'type' => 'EXPO', 'status' => 'PUBLISHED',
-                'name' => $e->name, 'date' => $e->date->format('Y-m-d'),
-                'start_time' => $e->start_time, 'end_time' => $e->end_time,
-                'room' => $e->room, 'capacity' => $e->capacity,
-                'registrations_count' => $e->registrations_count,
-                'period_id' => $e->period_id, 'period_name' => $e->period?->name ?? 'Semua periode',
-                'is_master' => true,
-            ]);
+        $expoMasters = Schema::hasTable('capstone_expo_events')
+            ? ExpoEvent::with('period')->where('is_published', true)
+                ->when($request->filled('period_id'), fn (Builder $q) => $q
+                    ->where(fn (Builder $w) => $w->whereNull('period_id')->orWhere('period_id', $request->integer('period_id'))))
+                ->withCount(['registrations' => fn ($q) => $q->where('status', 'REGISTERED')])
+                ->orderBy('date')->orderBy('start_time')->get()->map(fn ($e) => [
+                    'id' => 'expo_event_'.$e->id, 'type' => 'EXPO', 'status' => 'PUBLISHED',
+                    'name' => $e->name, 'date' => $e->date->format('Y-m-d'),
+                    'start_time' => $e->start_time, 'end_time' => $e->end_time,
+                    'room' => $e->room, 'capacity' => $e->capacity,
+                    'registrations_count' => $e->registrations_count,
+                    'period_id' => $e->period_id, 'period_name' => $e->period?->name ?? 'Semua periode',
+                    'is_master' => true,
+                ])
+            : collect();
 
         return response()->json(['data' => $seminarEvents->concat($defenseEvents)->concat($expoMasters)->sortBy([
             ['date', 'asc'], ['start_time', 'asc'],

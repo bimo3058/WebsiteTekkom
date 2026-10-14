@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Modules\Capstone\Models\AssessmentComponent;
+use Modules\Capstone\Models\ExpoRegistration;
+use Modules\Capstone\Models\ExpoSelfEvaluation;
+use Modules\Capstone\Models\ExpoStudentDocument;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\PeriodAssessmentComponent;
@@ -72,7 +75,11 @@ class SupervisorEvaluationController extends Controller
                         'room' => $schedule['room'],
                         'deadline' => $schedule['deadline'],
                         'status' => strtolower((string) $schedule['status']),
-                        'editable' => in_array($group->status, $editableStatuses, true),
+                        // Schedule entries may carry a stricter editability
+                        // rule (e.g. EXPO review is only actionable while the
+                        // submission is pending).
+                        'editable' => $schedule['editable'] ?? in_array($group->status, $editableStatuses, true),
+                        'evaluation_type' => $evalType,
                     ];
                 }
             }
@@ -230,8 +237,8 @@ class SupervisorEvaluationController extends Controller
 
         // NILAI_DOSEN and MILESTONE open as soon as the group reaches
         // PDC2_ACTIVE — no EXPO schedule or registration is required.
-        // Pembimbing EXPO evaluation was removed: EXPO grades come from the
-        // members' self-evaluations (daftar expo) instead.
+        // EXPO is the group-level review (approve/reject) of the
+        // representative's self-evaluation + document submission.
         foreach (['NILAI_DOSEN', 'MILESTONE'] as $pdc2Type) {
             if (in_array($group->status, GroupLifecycleService::EDITABLE_STATUSES[$pdc2Type] ?? [], true)) {
                 $schedules[] = $this->formatScheduleLessEvaluationForSupervisor(
@@ -241,6 +248,21 @@ class SupervisorEvaluationController extends Controller
                     $pdc2Type
                 );
             }
+        }
+
+        // EXPO: show the review card only when a submission is on the table
+        // (submitted, previously approved, or rejected awaiting a re-submit).
+        $expoRegistration = ExpoRegistration::where('group_id', $group->id)
+            ->where('status', 'REGISTERED')
+            ->orderByDesc('id')
+            ->first();
+        if ($expoRegistration && $expoRegistration->review_status !== null) {
+            $schedules[] = $this->formatExpoReviewForSupervisor(
+                $expoRegistration,
+                $group,
+                $supervision,
+                $supervisorId
+            );
         }
 
         // TA_DEFENSE → BIMBINGAN_TA (per-student, only if student has TA_READY_FOR_SIDANG or higher status)
@@ -451,6 +473,55 @@ class SupervisorEvaluationController extends Controller
     }
 
     /**
+     * Format the group-level EXPO review card: the representative's
+     * self-evaluation + document submission, approved or rejected once per
+     * group. No scoring — status maps from the registration review state.
+     */
+    private function formatExpoReviewForSupervisor(ExpoRegistration $registration, $group, $supervision, int $supervisorId): array
+    {
+        $status = match ($registration->review_status) {
+            'APPROVED' => 'COMPLETED',
+            'REJECTED' => 'REJECTED',
+            default => 'PENDING',
+        };
+
+        $window = app(GroupLifecycleService::class)->formAccess($group, 'EXPO');
+
+        return [
+            'schedule_id' => null,
+            'schedule_type' => 'EXPO',
+            'evaluation_type' => 'EXPO',
+            'date' => $registration->registered_at?->toDateString(),
+            'start_time' => null,
+            'end_time' => null,
+            'room' => null,
+            'deadline' => null,
+            'group' => [
+                'id' => $group->id,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
+                'code' => $group->code,
+            ],
+            'students' => $group->members->map(fn ($m) => [
+                'id' => $m->student->id,
+                'name' => $m->student->name,
+                'nim' => $m->student->nim,
+                'is_leader' => $m->is_leader,
+            ])->values(),
+            'status' => $status,
+            // Review is only actionable while a fresh submission is pending
+            // review and the group is still inside the EXPO window.
+            'editable' => $status === 'PENDING' && $window['editable'],
+            'review_status' => $registration->review_status,
+            'review_feedback' => $registration->review_feedback,
+            'supervisor_role' => $supervision->role,
+            'period' => [
+                'id' => $group->period->id,
+                'name' => $group->period->name,
+            ],
+        ];
+    }
+
+    /**
      * Get evaluation form with components and existing scores
      */
     public function form(Request $request, int $groupId): JsonResponse
@@ -574,6 +645,238 @@ class SupervisorEvaluationController extends Controller
             'schedule' => $scheduleInfo,
             'components' => $components->toArray(),
             'students' => $students->values()->toArray(),
+        ]);
+    }
+
+    /**
+     * Group-level EXPO submission for review: the representative's
+     * self-evaluation scores + supporting document + review state.
+     * Read-only counterpart of form(); scoring via store() stays disabled
+     * for EXPO — approval/rejection happens through reviewExpo().
+     */
+    public function expoReview(Request $request, int $groupId): JsonResponse
+    {
+        $user = CapstoneActor::lecturer(Auth::user());
+
+        $supervision = Supervision::where('group_id', $groupId)
+            ->where('supervisor_id', $user->id)
+            ->first();
+
+        if (! $supervision) {
+            return $this->unauthorizedResponse('You are not a supervisor of this group');
+        }
+
+        $group = Group::with(['members.student', 'period'])->findOrFail($groupId);
+        $registration = ExpoRegistration::where('group_id', $groupId)
+            ->where('status', 'REGISTERED')
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $registration) {
+            return $this->errorResponse('No active expo registration for this group', 404);
+        }
+
+        // Cross-period (global) events grade on the group's own period.
+        $componentPeriodId = $registration->expoEvent?->period_id ?? $group->period_id;
+        $components = PeriodAssessmentComponent::with('template')
+            ->where('period_id', $componentPeriodId)
+            ->where('type', 'EXPO')
+            ->orderBy('sort_order')
+            ->get();
+        $scores = ExpoSelfEvaluation::where('expo_registration_id', $registration->id)->with('student')->get();
+        $scoresByComponent = $scores->keyBy('period_component_id');
+        $document = ExpoStudentDocument::where('expo_registration_id', $registration->id)->first();
+        $submitter = $scores->first()?->student;
+
+        $totalWeighted = 0.0;
+        $totalWeight = 0.0;
+        foreach ($components as $component) {
+            $score = $scoresByComponent->get($component->id);
+            if ($score !== null && $score->score !== null) {
+                $weight = (float) ($component->weight ?? 1);
+                $totalWeighted += $score->score * $weight;
+                $totalWeight += $weight;
+            }
+        }
+        $weighted = $totalWeight > 0 ? round($totalWeighted / $totalWeight, 2) : null;
+
+        $window = app(GroupLifecycleService::class)->formAccess($group, 'EXPO');
+
+        return $this->successResponse([
+            'group' => [
+                'id' => $group->id,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
+                'code' => $group->code,
+            ],
+            'period' => ['id' => $group->period->id, 'name' => $group->period->name],
+            'supervisor_role' => $supervision->role,
+            'registration' => [
+                'id' => $registration->id,
+                'registered_at' => $registration->registered_at,
+                'review_status' => $registration->review_status,
+                'review_feedback' => $registration->review_feedback,
+                'reviewed_at' => $registration->reviewed_at,
+            ],
+            'submitted_by' => $submitter
+                ? ['id' => $submitter->id, 'name' => $submitter->name, 'nim' => $submitter->nim]
+                : null,
+            'components' => $components->map(fn ($component) => [
+                'period_component_id' => $component->id,
+                'code' => $component->code,
+                'name' => $component->name,
+                'weight' => $component->weight,
+                'score' => $scoresByComponent->get($component->id)?->score,
+                'notes' => $scoresByComponent->get($component->id)?->notes,
+            ])->values(),
+            'weighted_score' => $weighted,
+            'document' => $document
+                ? [
+                    'id' => $document->id,
+                    'original_name' => $document->original_name,
+                    'status' => $document->status,
+                    'feedback' => $document->feedback,
+                    'uploaded_by' => $document->student
+                        ? ['id' => $document->student->id, 'name' => $document->student->name]
+                        : null,
+                    'created_at' => $document->created_at,
+                    // Same route the bimbingan review already uses for expo-{id}.
+                    'download_path' => "/dosen/documents/expo-{$document->id}/download",
+                ]
+                : null,
+            'members' => $group->members->map(fn ($m) => [
+                'id' => $m->student->id,
+                'name' => $m->student->name,
+                'nim' => $m->student->nim,
+                'is_leader' => $m->is_leader,
+                'is_representative' => $submitter !== null && $m->student->id === $submitter->id,
+            ])->values(),
+            'editable' => $registration->review_status === 'SUBMITTED' && (bool) $window['editable'],
+            'editable_reason' => $registration->review_status === 'SUBMITTED'
+                ? $window['reason']
+                : 'The submission is not awaiting review.',
+        ]);
+    }
+
+    /**
+     * Approve or reject the group's EXPO submission (one decision per
+     * group). APPROVED locks the submission and lets the EXPO score count
+     * towards PDC2; REJECTED reopens it so the representative can re-score
+     * and re-upload the document.
+     */
+    public function reviewExpo(Request $request, int $groupId): JsonResponse
+    {
+        $user = CapstoneActor::lecturer(Auth::user());
+
+        $validated = $request->validate([
+            'status' => 'required|in:APPROVED,REJECTED',
+            'feedback' => 'required_if:status,REJECTED|nullable|string|max:2000',
+        ]);
+
+        $supervision = Supervision::where('group_id', $groupId)
+            ->where('supervisor_id', $user->id)
+            ->first();
+
+        if (! $supervision) {
+            return $this->unauthorizedResponse('You are not a supervisor of this group');
+        }
+
+        $group = Group::with('members')->findOrFail($groupId);
+        $window = app(GroupLifecycleService::class)->formAccess($group, 'EXPO');
+
+        if (! $window['editable']) {
+            return $this->errorResponse(
+                $window['reason'] ?? 'The EXPO submission cannot be reviewed in the current group status.',
+                403
+            );
+        }
+
+        $result = DB::transaction(function () use ($groupId, $validated, $user) {
+            $registration = ExpoRegistration::where('group_id', $groupId)
+                ->where('status', 'REGISTERED')
+                ->orderByDesc('id')
+                ->lockForUpdate()
+                ->first();
+
+            if (! $registration) {
+                return ['error' => 'No active expo registration for this group', 'code' => 404];
+            }
+
+            if ($registration->review_status !== 'SUBMITTED') {
+                return ['error' => 'This submission is not awaiting review.', 'code' => 409];
+            }
+
+            if (! ExpoSelfEvaluation::where('expo_registration_id', $registration->id)->exists()) {
+                return ['error' => 'The representative has not submitted a self-evaluation yet.', 'code' => 422];
+            }
+
+            $registration->update([
+                'review_status' => $validated['status'],
+                'review_feedback' => $validated['feedback'] ?? null,
+                'reviewed_by' => $user->id,
+                'reviewed_at' => now(),
+            ]);
+
+            return ['registration' => $registration->fresh()];
+        });
+
+        if (isset($result['error'])) {
+            return $this->errorResponse($result['error'], $result['code']);
+        }
+
+        $groupName = $group->name ?? "Group {$groupId}";
+        $decision = $validated['status'] === 'APPROVED' ? 'approved' : 'rejected';
+        $feedback = $validated['feedback'] ?? null;
+
+        // Notify every member of the decision.
+        try {
+            $notificationService = app(NotificationService::class);
+            $memberUserIds = GroupMember::where('group_id', $groupId)
+                ->with('student')
+                ->get()
+                ->pluck('student.user_id')
+                ->filter()
+                ->unique()
+                ->values();
+            foreach ($memberUserIds as $memberUserId) {
+                $notificationService->send(
+                    $memberUserId,
+                    $validated['status'] === 'APPROVED' ? 'EXPO_APPROVED' : 'EXPO_REJECTED',
+                    $validated['status'] === 'APPROVED' ? 'EXPO Submission Approved' : 'EXPO Submission Rejected',
+                    $feedback
+                        ? "Your EXPO submission for {$groupName} was {$decision} by your supervisor. Feedback: {$feedback}"
+                        : "Your EXPO submission for {$groupName} was {$decision} by your supervisor.",
+                    'Group',
+                    $groupId
+                );
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send EXPO review notification: '.$e->getMessage());
+        }
+
+        // The EXPO score only counts towards PDC2 once approved.
+        if ($validated['status'] === 'APPROVED') {
+            try {
+                app(GradeCalculationService::class)->recalculateAndNotify($groupId, 'EXPO');
+            } catch (\Exception $e) {
+                Log::error("Failed to recalculate PDC2 grades for group {$groupId}: ".$e->getMessage());
+            }
+        }
+
+        // Centralized lifecycle advancement (idempotent; never blocks).
+        try {
+            $advancedTo = app(GroupLifecycleService::class)->advanceIfComplete($group);
+            if ($advancedTo) {
+                Log::info("Group {$groupId} advanced to {$advancedTo} after EXPO {$decision}");
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to advance lifecycle for group {$groupId}: ".$e->getMessage());
+        }
+
+        return $this->successResponse([
+            'message' => "EXPO submission {$decision} successfully",
+            'group_id' => $groupId,
+            'review_status' => $validated['status'],
+            'review_feedback' => $feedback,
         ]);
     }
 

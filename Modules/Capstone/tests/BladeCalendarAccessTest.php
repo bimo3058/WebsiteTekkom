@@ -403,7 +403,9 @@ class BladeCalendarAccessTest extends TestCase
         $this->assertStringNotContainsString('aria-disabled="true"', $html);
         $html = view('capstone::layouts.sidebar', ['actor' => ['roles' => ['admin', 'dosen']], 'activeRole' => 'admin', 'pagePath' => '/admin/dashboard', 'featureAccess' => []])->render();
         $this->assertStringNotContainsString('aria-disabled="true"', $html);
-        foreach (['/admin/settings', '/admin/users', '/dosen/titles', '/dosen/evaluation'] as $path) {
+        // /admin/settings is still a Next.js page (no navigation.json entry
+        // or blade view yet), so only the converted links are asserted.
+        foreach (['/admin/users', '/dosen/titles', '/dosen/evaluation'] as $path) {
             $this->assertStringContainsString('href="'.url('/capstone'.$path).'"', $html);
         }
     }
@@ -1495,6 +1497,28 @@ class BladeCalendarAccessTest extends TestCase
             $t->text('notes')->nullable();
             $t->timestamps();
         });
+        Schema::create('capstone_expo_registrations', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('expo_event_id')->nullable();
+            $t->unsignedBigInteger('group_id');
+            $t->string('status')->default('REGISTERED');
+            $t->string('review_status')->nullable();
+            $t->text('review_feedback')->nullable();
+            $t->unsignedBigInteger('reviewed_by')->nullable();
+            $t->timestamp('reviewed_at')->nullable();
+            $t->timestamps();
+        });
+        Schema::create('capstone_expo_student_documents', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('expo_registration_id');
+            $t->unsignedBigInteger('group_id');
+            $t->unsignedBigInteger('student_id');
+            $t->string('file_path');
+            $t->string('storage_location')->nullable();
+            $t->string('original_name');
+            $t->string('status');
+            $t->timestamps();
+        });
         $lecturer = $this->actor('dosen');
         $student = $this->actor('mahasiswa');
         $other = $this->actor('mahasiswa');
@@ -1504,11 +1528,26 @@ class BladeCalendarAccessTest extends TestCase
             PhaseDocumentRequirement::create(['period_id' => $group->period_id, 'phase' => $phase, 'name' => $name, 'is_required' => true]);
         }
         Document::create(['group_id' => $group->id, 'student_id' => $student->student->id, 'phase' => 'EXPO', 'document_type' => 'Expo report', 'file_path' => 'expo.pdf', 'status' => 'APPROVED']);
+        // Group-level EXPO submission: the readiness gate reads the
+        // registration's supervisor review + the group document.
+        $registrationId = DB::table('capstone_expo_registrations')->insertGetId([
+            'group_id' => $group->id, 'status' => 'REGISTERED', 'review_status' => 'APPROVED',
+        ]);
+        DB::table('capstone_expo_student_documents')->insert([
+            'expo_registration_id' => $registrationId,
+            'group_id' => $group->id,
+            'student_id' => $student->student->id,
+            'file_path' => 'expo.pdf',
+            'storage_location' => 'supabase',
+            'original_name' => 'expo.pdf',
+            'status' => 'APPROVED',
+        ]);
         foreach (['NILAI_DOSEN' => 'nilai_dosen', 'MILESTONE' => 'milestone', 'EXPO' => 'expo'] as $type => $suffix) {
             $id = DB::table('capstone_period_assessment_components')->insertGetId(['period_id' => $group->period_id, 'type' => $type]);
             if ($type === 'EXPO') {
-                // EXPO readiness reads the member's self-evaluations (pembimbing EXPO removed).
-                DB::table('capstone_expo_self_evaluations')->insert(['expo_registration_id' => 0, 'group_id' => $group->id, 'student_id' => $student->student->id, 'period_component_id' => $id, 'score' => 90]);
+                // EXPO readiness reads the representative's self-evaluation
+                // (pembimbing EXPO removed), approved via the registration.
+                DB::table('capstone_expo_self_evaluations')->insert(['expo_registration_id' => $registrationId, 'group_id' => $group->id, 'student_id' => $student->student->id, 'period_component_id' => $id, 'score' => 90]);
 
                 continue;
             }
@@ -1717,6 +1756,12 @@ class BladeCalendarAccessTest extends TestCase
         foreach (['2026_05_05_000020_create_capstone_expo_events_table.php', '2026_05_05_000021_create_capstone_expo_registrations_table.php', '2026_05_05_000029_create_capstone_audit_logs_table.php'] as $file) {
             (require __DIR__.'/../database/migrations/'.$file)->up();
         }
+        Schema::table('capstone_expo_registrations', function (Blueprint $t) {
+            $t->string('review_status')->nullable();
+            $t->text('review_feedback')->nullable();
+            $t->unsignedBigInteger('reviewed_by')->nullable();
+            $t->timestamp('reviewed_at')->nullable();
+        });
         Schema::table('capstone_groups', fn (Blueprint $t) => $t->string('code')->nullable());
         Schema::create('capstone_assessment_component_templates', function (Blueprint $t) {
             $t->id();
@@ -2019,6 +2064,9 @@ class BladeCalendarAccessTest extends TestCase
 
         $group = $this->group($first, $dosen, 'EXPO_REGISTERED');
         GroupMember::create(['group_id' => $group->id, 'student_id' => $second->student->id]);
+        DB::table('capstone_supervisions')->insert([
+            'group_id' => $group->id, 'supervisor_id' => $dosen->lecturer->id, 'role' => 'Pembimbing 1',
+        ]);
         $event = ExpoEvent::create(['period_id' => $group->period_id, 'name' => 'Expo', 'date' => '2026-09-09', 'start_time' => '09:00', 'end_time' => '12:00', 'room' => 'Hall', 'capacity' => 10, 'is_published' => true, 'created_by' => $first->id]);
         $registrationId = DB::table('capstone_expo_registrations')->insertGetId(['expo_event_id' => $event->id, 'group_id' => $group->id, 'status' => 'REGISTERED']);
         $template = DB::table('capstone_assessment_component_templates')->insertGetId(['name' => 'Prototype', 'code' => 'EXPO-1', 'weight' => 100]);
@@ -2054,9 +2102,13 @@ class BladeCalendarAccessTest extends TestCase
     public function test_supervisor_approving_last_expo_document_advances_group_to_expo_done(): void
     {
         $dosen = $this->actor('dosen');
-        [$group] = $this->expoReviewFixture($dosen, $this->actor('mahasiswa'), $this->actor('mahasiswa'));
+        [$group, $registrationId] = $this->expoReviewFixture($dosen, $this->actor('mahasiswa'), $this->actor('mahasiswa'));
         $this->actingAs($dosen);
         $controller = $this->documentReviewController();
+
+        // The group-level EXPO review must be approved before the last
+        // approved document can cascade the group to EXPO_DONE.
+        DB::table('capstone_expo_registrations')->where('id', $registrationId)->update(['review_status' => 'APPROVED']);
 
         foreach (ExpoStudentDocument::where('group_id', $group->id)->orderBy('id')->get() as $doc) {
             $response = $controller->update($this->requestFor($dosen, '/', 'PUT', ['status' => 'APPROVED', 'feedback' => 'Bagus']), 'expo-'.$doc->id);
@@ -2068,6 +2120,153 @@ class BladeCalendarAccessTest extends TestCase
         // score tables are absent), so the cascade stops at EXPO_DONE.
         $this->assertSame('EXPO_DONE', $group->fresh()->status);
         $this->assertSame(2, Notification::count());
+    }
+
+    public function test_approved_documents_without_approved_review_keep_group_registered(): void
+    {
+        $dosen = $this->actor('dosen');
+        [$group] = $this->expoReviewFixture($dosen, $this->actor('mahasiswa'), $this->actor('mahasiswa'));
+        $this->actingAs($dosen);
+        $controller = $this->documentReviewController();
+
+        foreach (ExpoStudentDocument::where('group_id', $group->id)->orderBy('id')->get() as $doc) {
+            $this->assertSame(200, $controller->update($this->requestFor($dosen, '/', 'PUT', ['status' => 'APPROVED', 'feedback' => 'Bagus']), 'expo-'.$doc->id)->getStatusCode());
+        }
+
+        // Registration review is still pending: documents alone no longer
+        // complete the EXPO stage.
+        $this->assertSame('EXPO_REGISTERED', $group->fresh()->status);
+    }
+
+    public function test_expo_review_endpoint_returns_submission_state_for_supervisor(): void
+    {
+        $dosen = $this->actor('dosen');
+        [$group, $registrationId] = $this->expoReviewFixture($dosen, $this->actor('mahasiswa'), $this->actor('mahasiswa'));
+        DB::table('capstone_expo_registrations')->where('id', $registrationId)->update(['review_status' => 'SUBMITTED']);
+        $this->actingAs($dosen);
+
+        $response = (new SupervisorEvaluationController)->expoReview($this->requestFor($dosen, '/', 'GET'), $group->id);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $data = $response->getData(true)['data'];
+        $this->assertSame($registrationId, $data['registration']['id']);
+        $this->assertSame('SUBMITTED', $data['registration']['review_status']);
+        $this->assertTrue($data['editable']);
+        $this->assertCount(1, $data['components']);
+        $this->assertSame(90.0, (float) $data['weighted_score']);
+        $this->assertNotNull($data['document']);
+        $this->assertNotNull($data['submitted_by']);
+        $this->assertTrue(collect($data['members'])->contains('is_representative', true));
+    }
+
+    public function test_non_supervising_dosen_cannot_read_or_review_expo_submission(): void
+    {
+        $dosen = $this->actor('dosen');
+        [$group, $registrationId] = $this->expoReviewFixture($dosen, $this->actor('mahasiswa'), $this->actor('mahasiswa'));
+        DB::table('capstone_expo_registrations')->where('id', $registrationId)->update(['review_status' => 'SUBMITTED']);
+        $outsider = $this->actor('dosen');
+        $this->actingAs($outsider);
+        $controller = new SupervisorEvaluationController;
+
+        $this->assertSame(403, $controller->expoReview($this->requestFor($outsider, '/', 'GET'), $group->id)->getStatusCode());
+        $this->assertSame(403, $controller->reviewExpo($this->requestFor($outsider, '/', 'POST', ['status' => 'APPROVED']), $group->id)->getStatusCode());
+        $this->assertSame('SUBMITTED', DB::table('capstone_expo_registrations')->where('id', $registrationId)->value('review_status'));
+    }
+
+    public function test_review_expo_conflicts_when_submission_is_not_pending(): void
+    {
+        $dosen = $this->actor('dosen');
+        [$group] = $this->expoReviewFixture($dosen, $this->actor('mahasiswa'), $this->actor('mahasiswa'));
+        $this->actingAs($dosen);
+
+        // The fixture starts with a NULL review status: nothing to review.
+        $response = (new SupervisorEvaluationController)->reviewExpo($this->requestFor($dosen, '/', 'POST', ['status' => 'APPROVED']), $group->id);
+
+        $this->assertSame(409, $response->getStatusCode());
+    }
+
+    public function test_review_expo_rejection_requires_feedback(): void
+    {
+        $dosen = $this->actor('dosen');
+        [$group, $registrationId] = $this->expoReviewFixture($dosen, $this->actor('mahasiswa'), $this->actor('mahasiswa'));
+        DB::table('capstone_expo_registrations')->where('id', $registrationId)->update(['review_status' => 'SUBMITTED']);
+        $this->actingAs($dosen);
+
+        try {
+            (new SupervisorEvaluationController)->reviewExpo($this->requestFor($dosen, '/', 'POST', ['status' => 'REJECTED']), $group->id);
+            $this->fail('Expected ValidationException was not thrown.');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('feedback', $e->errors());
+        }
+
+        $this->assertSame('SUBMITTED', DB::table('capstone_expo_registrations')->where('id', $registrationId)->value('review_status'));
+    }
+
+    public function test_review_expo_approval_locks_submission_and_notifies_members(): void
+    {
+        $dosen = $this->actor('dosen');
+        $first = $this->actor('mahasiswa');
+        $second = $this->actor('mahasiswa');
+        [$group, $registrationId] = $this->expoReviewFixture($dosen, $first, $second);
+        DB::table('capstone_expo_registrations')->where('id', $registrationId)->update(['review_status' => 'SUBMITTED']);
+        $this->actingAs($dosen);
+
+        $response = (new SupervisorEvaluationController)->reviewExpo(
+            $this->requestFor($dosen, '/', 'POST', ['status' => 'APPROVED', 'feedback' => 'Siap tampil']),
+            $group->id
+        );
+
+        $this->assertSame(200, $response->getStatusCode());
+        $registration = DB::table('capstone_expo_registrations')->where('id', $registrationId)->first();
+        $this->assertSame('APPROVED', $registration->review_status);
+        $this->assertSame($dosen->id, $registration->reviewed_by);
+        $this->assertNotNull($registration->reviewed_at);
+        $this->assertEqualsCanonicalizing([$first->id, $second->id], Notification::pluck('user_id')->all());
+        // Documents are still SUBMITTED, so the stage itself stays open.
+        $this->assertSame('EXPO_REGISTERED', $group->fresh()->status);
+    }
+
+    public function test_review_expo_rejection_reopens_submission_for_representative(): void
+    {
+        $dosen = $this->actor('dosen');
+        $student = $this->actor('mahasiswa');
+        [$group, $registrationId, $component] = $this->expoReviewFixture($dosen, $student, $this->actor('mahasiswa'));
+        DB::table('capstone_expo_registrations')->where('id', $registrationId)->update(['review_status' => 'SUBMITTED']);
+        $this->actingAs($dosen);
+
+        $response = (new SupervisorEvaluationController)->reviewExpo(
+            $this->requestFor($dosen, '/', 'POST', ['status' => 'REJECTED', 'feedback' => 'Perbaiki poster']),
+            $group->id
+        );
+
+        $this->assertSame(200, $response->getStatusCode());
+        $registration = DB::table('capstone_expo_registrations')->where('id', $registrationId)->first();
+        $this->assertSame('REJECTED', $registration->review_status);
+        $this->assertSame('Perbaiki poster', $registration->review_feedback);
+
+        // The representative re-scores; the submission re-enters review.
+        $event = ExpoEvent::find($registration->expo_event_id);
+        $studentRequest = $this->requestFor($student, '/', 'POST', ['scores' => [['period_component_id' => $component, 'score' => 95]]]);
+        $this->assertSame(201, (new ExpoStudentController)->evaluate($studentRequest, $event)->getStatusCode());
+        $this->assertSame('SUBMITTED', DB::table('capstone_expo_registrations')->where('id', $registrationId)->value('review_status'));
+        $this->assertEquals(95, ExpoSelfEvaluation::where('expo_registration_id', $registrationId)->sum('score'));
+    }
+
+    public function test_expo_document_review_accepts_revise_status(): void
+    {
+        $dosen = $this->actor('dosen');
+        [$group] = $this->expoReviewFixture($dosen, $this->actor('mahasiswa'), $this->actor('mahasiswa'));
+        $this->actingAs($dosen);
+        $doc = ExpoStudentDocument::where('group_id', $group->id)->orderBy('id')->first();
+
+        $response = $this->documentReviewController()->update(
+            $this->requestFor($dosen, '/', 'PUT', ['status' => 'REVISE', 'feedback' => 'Revisi diagram']),
+            'expo-'.$doc->id
+        );
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('REVISE', $doc->fresh()->status);
+        $this->assertSame('Revisi diagram', $doc->fresh()->feedback);
     }
 
     public function test_supervisor_rejecting_expo_document_stores_feedback_and_holds_group(): void

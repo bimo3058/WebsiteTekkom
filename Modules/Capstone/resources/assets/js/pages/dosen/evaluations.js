@@ -1,7 +1,7 @@
 import {workspace,api,rows,unwrap,notify} from './shared.js';
 import {context} from '../../api.js';
 
-export const evaluationLabels={BIMBINGAN_SEMPRO:'Bimbingan Sempro',NILAI_DOSEN:'Nilai Dosen',MILESTONE:'Milestone',BIMBINGAN_TA:'Bimbingan Sidang TA',SEMPRO:'Sempro',SIDANG_TA:'Sidang TA'};
+export const evaluationLabels={BIMBINGAN_SEMPRO:'Bimbingan Sempro',NILAI_DOSEN:'Nilai Dosen',MILESTONE:'Milestone',BIMBINGAN_TA:'Bimbingan Sidang TA',SEMPRO:'Sempro',SIDANG_TA:'Sidang TA',EXPO:'Expo'};
 export function lecturerEvaluations(){
     return workspace({items:[],type:'all',status:'all',
         async load(){this.loading=true;this.error='';try{const [result,periods]=await Promise.all([api('/dosen/seminar-schedules/examiner'),api('/periods-list')]);const data=unwrap(result);this.periods=rows(periods);this.items=[];
@@ -21,6 +21,34 @@ export function lecturerSupervisorEvaluations(){
         get filtered(){return this.items.filter(g=>this.inPeriod(g.period?.id)&&this.matches(g)&&this.entries(g).length);},
         get filteredSchedules(){return this.schedules.filter(s=>this.inPeriod(s.period?.id)&&this.matches(s)&&(this.type==='all'||s.evaluation_type===this.type)&&(this.status==='all'||String(s.status).toUpperCase()===this.status));},
         evaluationUrl(groupId,type,view=false,studentId=null){const query=new URLSearchParams({type});if(view)query.set('mode','view');if(studentId)query.set('student_id',studentId);return this.url('/dosen/supervisor-evaluation/'+groupId+'?'+query);},
+    });
+}
+
+/**
+ * Group-level EXPO submission review: read-only view of the representative's
+ * self-evaluation + document, with a single approve/reject decision per group.
+ * EXPO scoring stays disabled — approval gates the PDC2 EXPO score.
+ */
+export function lecturerExpoReview(){
+    return workspace({data:null,feedback:'',downloading:null,
+        async load(){this.loading=true;this.error='';try{this.data=unwrap(await api('/dosen/supervisor-evaluation/expo/'+encodeURIComponent(context.params.groupId)));}catch(e){this.error=e.message;}finally{this.loading=false;}},
+        get backUrl(){return this.url('/dosen/supervisor-evaluation');},
+        get reviewStatus(){return this.data?.registration?.review_status||null;},
+        get editable(){return !!this.data?.editable;},
+        get document(){return this.data?.document||null;},
+        get weighted(){const score=this.data?.weighted_score;return score===null||score===undefined?'—':Number(score).toFixed(2);},
+        async review(status){
+            if(this.saving)return;
+            if(status==='REJECTED'&&!String(this.feedback||'').trim()){this.errors={root:'Catatan wajib diisi saat menolak pengajuan.'};return;}
+            this.saving=true;this.errors={};
+            try{
+                await api('/dosen/supervisor-evaluation/expo/'+encodeURIComponent(context.params.groupId)+'/review',{method:'POST',body:{status,feedback:String(this.feedback||'').trim()||undefined}});
+                notify(status==='APPROVED'?'Pengajuan EXPO disetujui':'Pengajuan EXPO ditolak');
+                this.feedback='';
+                await this.load();
+            }catch(e){this.errors={...e.errors,root:e.message};notify(e.message,true);}finally{this.saving=false;}
+        },
+        async download(){if(!this.document||this.downloading)return;this.downloading=this.document.id;try{download(await api(this.document.download_path,{blob:true}),this.document.original_name||'dokumen-expo.pdf');}catch(e){notify(e.message,true);}finally{this.downloading=null;}},
     });
 }
 

@@ -34,8 +34,8 @@ export function registerDashboards(Alpine) {
             if(current>=last-1)return [1,'…',last-2,last-1,last];
             return [1,'…',current,'…',last];
         },
-        documentStatus(status){return {missing:'Belum Upload',SUBMITTED:'Terkirim',APPROVED:'Disetujui',REJECTED:'Perlu Revisi',DRAFT:'Draft'}[status] || status;},
-        documentStatusClass(status){return {missing:'border-red-200 bg-red-50 text-red-600',SUBMITTED:'border-blue-200 bg-blue-50 text-blue-600',APPROVED:'border-emerald-200 bg-emerald-50 text-emerald-700',REJECTED:'border-amber-200 bg-amber-50 text-amber-700'}[status] || 'border-slate-200 bg-slate-50 text-slate-600';},
+        documentStatus(status){return {missing:'Belum Upload',SUBMITTED:'Terkirim',APPROVED:'Disetujui',REVISE:'Perlu Revisi',REJECTED:'Ditolak',DRAFT:'Draft'}[status] || status;},
+        documentStatusClass(status){return {missing:'border-red-200 bg-red-50 text-red-600',SUBMITTED:'border-blue-200 bg-blue-50 text-blue-600',APPROVED:'border-emerald-200 bg-emerald-50 text-emerald-700',REVISE:'border-amber-200 bg-amber-50 text-amber-700',REJECTED:'border-red-200 bg-red-50 text-red-600'}[status] || 'border-slate-200 bg-slate-50 text-slate-600';},
         documentHref(doc){return url('/mahasiswa/documents')+'?phase='+encodeURIComponent(doc.phase)+'&type='+encodeURIComponent(doc.type)+(doc.latest_document?.id ? '&document='+encodeURIComponent(doc.latest_document.id) : '');},
         get activePeriodsCount(){return this.data.active_periods_count ?? (this.data.active_periods || []).length ?? 0;},
         get pendingApproval(){return this.data.pending_approval ?? this.data.pending_finalization ?? 0;},

@@ -118,6 +118,10 @@ class GroupLifecycleTest extends TestCase
             $t->unsignedBigInteger('expo_event_id')->nullable();
             $t->unsignedBigInteger('group_id');
             $t->string('status')->default('REGISTERED');
+            $t->string('review_status')->nullable();
+            $t->text('review_feedback')->nullable();
+            $t->unsignedBigInteger('reviewed_by')->nullable();
+            $t->timestamp('reviewed_at')->nullable();
             $t->timestamps();
         });
         Schema::create('capstone_expo_student_documents', function (Blueprint $t) {
@@ -341,11 +345,12 @@ class GroupLifecycleTest extends TestCase
     /**
      * Two-member EXPO fixture: COMPLETED expo schedule + REGISTERED
      * registration + one EXPO component. Members complete via
-     * approveExpoDocs()/submitExpoSelfEvaluations().
+     * approveExpoDocs()/submitExpoSelfEvaluations(). The supervisor review
+     * defaults to APPROVED; pass another status to exercise the review gate.
      *
      * @return array{Group, int, int} [group, registrationId, componentId]
      */
-    private function makeExpoGroup(bool $scheduleCompleted = true): array
+    private function makeExpoGroup(bool $scheduleCompleted = true, string $reviewStatus = 'APPROVED'): array
     {
         $group = $this->makeGroup('EXPO_REGISTERED');
         GroupMember::create(['group_id' => $group->id, 'student_id' => 2]);
@@ -369,7 +374,7 @@ class GroupLifecycleTest extends TestCase
         ]);
 
         $registrationId = DB::table('capstone_expo_registrations')->insertGetId([
-            'group_id' => $group->id, 'status' => 'REGISTERED',
+            'group_id' => $group->id, 'status' => 'REGISTERED', 'review_status' => $reviewStatus,
         ]);
 
         SeminarSchedule::create([
@@ -432,11 +437,43 @@ class GroupLifecycleTest extends TestCase
         $this->assertSame('EXPO_REGISTERED', $group->fresh()->status);
     }
 
-    public function test_stays_expo_registered_when_a_member_self_evaluation_pending(): void
+    public function test_stays_expo_registered_when_self_evaluation_components_incomplete(): void
     {
         [$group, $registrationId, $componentId] = $this->makeExpoGroup();
+        $secondComponentId = DB::table('capstone_period_assessment_components')->insertGetId([
+            'period_id' => $group->period_id, 'type' => 'EXPO', 'sort_order' => 2,
+        ]);
         $this->approveExpoDocs($group, $registrationId);
-        $this->submitExpoSelfEvaluations($group, $registrationId, $componentId, [1]);
+        $this->submitExpoSelfEvaluations($group, $registrationId, $componentId);
+
+        $advanced = app(GroupLifecycleService::class)->advanceIfComplete($group);
+
+        $this->assertNull($advanced);
+        $this->assertSame('EXPO_REGISTERED', $group->fresh()->status);
+
+        // Covering the remaining component completes the gate.
+        $this->submitExpoSelfEvaluations($group, $registrationId, $secondComponentId);
+        $this->assertSame('EXPO_DONE', app(GroupLifecycleService::class)->advanceIfComplete($group));
+        $this->assertSame('EXPO_DONE', $group->fresh()->status);
+    }
+
+    public function test_stays_expo_registered_when_review_not_approved(): void
+    {
+        [$group, $registrationId, $componentId] = $this->makeExpoGroup(reviewStatus: 'SUBMITTED');
+        $this->approveExpoDocs($group, $registrationId);
+        $this->submitExpoSelfEvaluations($group, $registrationId, $componentId);
+
+        $advanced = app(GroupLifecycleService::class)->advanceIfComplete($group);
+
+        $this->assertNull($advanced);
+        $this->assertSame('EXPO_REGISTERED', $group->fresh()->status);
+    }
+
+    public function test_stays_expo_registered_when_review_rejected(): void
+    {
+        [$group, $registrationId, $componentId] = $this->makeExpoGroup(reviewStatus: 'REJECTED');
+        $this->approveExpoDocs($group, $registrationId);
+        $this->submitExpoSelfEvaluations($group, $registrationId, $componentId);
 
         $advanced = app(GroupLifecycleService::class)->advanceIfComplete($group);
 

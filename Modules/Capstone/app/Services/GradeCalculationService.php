@@ -60,11 +60,15 @@ class GradeCalculationService
             $this->batchCache['assessment_scores'][$key][] = $score;
         }
 
-        // 2b. Batch load EXPO self-evaluations (the member write path in
-        // daftar expo). Pembimbing EXPO evaluation was removed, so these
-        // rows are the sole source for EXPO grades.
+        // 2b. Batch load EXPO self-evaluations (the representative member
+        // write path in daftar expo). Pembimbing EXPO evaluation was removed,
+        // so these rows are the sole source for EXPO grades — and only once
+        // the group's supervisor review has APPROVED them (PDC2 gate).
+        // Indexed twice: by student (own submission) and by group (so members
+        // without their own scores inherit the representative's submission).
         $selfEvals = ExpoSelfEvaluation::with('periodComponent.template')
             ->whereIn('group_id', $groupIds)
+            ->whereHas('expoRegistration', fn ($query) => $query->where('review_status', 'APPROVED'))
             ->get();
         foreach ($selfEvals as $eval) {
             $key = "{$eval->student_id}:{$eval->group_id}";
@@ -72,6 +76,10 @@ class GradeCalculationService
                 $this->batchCache['expo_self_evals'][$key] = [];
             }
             $this->batchCache['expo_self_evals'][$key][] = $eval;
+            if (! isset($this->batchCache['expo_self_evals_by_group'][$eval->group_id])) {
+                $this->batchCache['expo_self_evals_by_group'][$eval->group_id] = [];
+            }
+            $this->batchCache['expo_self_evals_by_group'][$eval->group_id][] = $eval;
         }
 
         // 3. Batch load ALL peer reviews
@@ -389,16 +397,21 @@ class GradeCalculationService
 
     /**
      * Get a student's EXPO self-evaluations from cache.
-     * EXPO grades come from the members' self-evaluations in daftar expo,
-     * not the ExpoScore split table.
+     * EXPO grades come from the group's approved self-evaluation submitted
+     * by the representative member, not the ExpoScore split table. Members
+     * without their own scores inherit the group's submission.
      *
      * @return array<int, ExpoSelfEvaluation>
      */
     private function getExpoSelfEvalsFromCache(int $studentId, int $groupId): array
     {
         $key = "{$studentId}:{$groupId}";
+        $own = $this->batchCache['expo_self_evals'][$key] ?? [];
+        if ($own !== []) {
+            return $own;
+        }
 
-        return $this->batchCache['expo_self_evals'][$key] ?? [];
+        return $this->batchCache['expo_self_evals_by_group'][$groupId] ?? [];
     }
 
     /**
@@ -410,17 +423,20 @@ class GradeCalculationService
     }
 
     /**
-     * EXPO evaluators display: the member themself with role SELF.
+     * EXPO evaluators display: the representative member who submitted the
+     * group's self-evaluation, with role SELF.
      */
     private function getExpoSelfEvaluatorsFromCache(int $studentId, int $groupId): array
     {
-        if ($this->getExpoSelfEvalsFromCache($studentId, $groupId) === []) {
+        $evals = $this->getExpoSelfEvalsFromCache($studentId, $groupId);
+        if ($evals === []) {
             return [];
         }
+        $submitterId = (int) reset($evals)->student_id;
 
         return [
             [
-                'name' => $this->resolveStudentName($studentId),
+                'name' => $this->resolveStudentName($submitterId),
                 'role' => 'SELF',
             ],
         ];
@@ -432,15 +448,17 @@ class GradeCalculationService
      */
     public function getExpoSelfEvaluatorsWithScoresFromCache(int $studentId, int $groupId): array
     {
-        $score = $this->getExpoSelfScoreFromCache($studentId, $groupId);
+        $evals = $this->getExpoSelfEvalsFromCache($studentId, $groupId);
+        $score = $this->calculateWeightedAverageFromCache($evals);
         if ($score === null) {
             return [];
         }
+        $submitterId = (int) reset($evals)->student_id;
 
         return [
             [
-                'evaluator_id' => $studentId,
-                'name' => $this->resolveStudentName($studentId),
+                'evaluator_id' => $submitterId,
+                'name' => $this->resolveStudentName($submitterId),
                 'role' => 'SELF',
                 'score' => round($score, 2),
             ],
@@ -461,7 +479,26 @@ class GradeCalculationService
     }
 
     /**
-     * Single-query EXPO average from the member's self-evaluations.
+     * Single-query EXPO self-evaluations for a student, limited to the
+     * group's APPROVED supervisor review. Prefers the student's own rows and
+     * falls back to the representative's (group-level) submission.
+     *
+     * @return \Illuminate\Support\Collection<int, ExpoSelfEvaluation>
+     */
+    private function approvedExpoSelfEvals(int $studentId, int $groupId)
+    {
+        $evals = ExpoSelfEvaluation::with('periodComponent.template')
+            ->where('group_id', $groupId)
+            ->whereHas('expoRegistration', fn ($query) => $query->where('review_status', 'APPROVED'))
+            ->get();
+        $own = $evals->where('student_id', $studentId)->values();
+
+        return $own->isNotEmpty() ? $own : $evals->values();
+    }
+
+    /**
+     * Single-query EXPO average from the approved group self-evaluation.
+     * Returns null until the supervisor approves the submission.
      */
     private function getStudentExpoSelfScore(int $studentId, int $groupId): ?float
     {
@@ -470,10 +507,7 @@ class GradeCalculationService
             return null;
         }
 
-        $evals = ExpoSelfEvaluation::with('periodComponent.template')
-            ->where('student_id', $studentId)
-            ->where('group_id', $groupId)
-            ->get();
+        $evals = $this->approvedExpoSelfEvals($studentId, $groupId);
 
         if ($evals->isEmpty()) {
             return null;
@@ -483,18 +517,30 @@ class GradeCalculationService
     }
 
     /**
-     * Single-query EXPO evaluators display (the member themself, role SELF).
+     * Single-query EXPO evaluators display (the representative member, role SELF).
      */
     private function getExpoSelfEvaluatorsForStudent(int $studentId, int $groupId): array
     {
-        $score = $this->getStudentExpoSelfScore($studentId, $groupId);
+        $flagService = app(StudentFlagService::class);
+        if (! $flagService->canBeScored($studentId, $groupId)) {
+            return [];
+        }
+
+        $evals = $this->approvedExpoSelfEvals($studentId, $groupId);
+        if ($evals->isEmpty()) {
+            return [];
+        }
+
+        $score = $this->calculateWeightedAverageFromScores($evals);
         if ($score === null) {
             return [];
         }
 
+        $submitterId = (int) ($evals->first()->student_id ?? $studentId);
+
         return [
             [
-                'name' => $this->resolveStudentName($studentId),
+                'name' => $this->resolveStudentName($submitterId),
                 'role' => 'SELF',
                 'score' => round($score, 2),
             ],
@@ -1279,10 +1325,12 @@ class GradeCalculationService
      */
     private function getAverageEvaluationScore(int $groupId, string $evaluationType): ?float
     {
-        // EXPO comes from the members' self-evaluations, not the split table.
+        // EXPO comes from the group's approved self-evaluations, not the
+        // split table (supervisor approval gates the grade).
         if ($evaluationType === 'EXPO') {
             $evals = ExpoSelfEvaluation::with('periodComponent.template')
                 ->where('group_id', $groupId)
+                ->whereHas('expoRegistration', fn ($query) => $query->where('review_status', 'APPROVED'))
                 ->get();
 
             if ($evals->isEmpty()) {
