@@ -15,6 +15,7 @@
     @include('capstone::pages.admin.shared.toolbar')
     @include('capstone::partials.loading')
     <div x-show="error" x-cloak class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-text="error"></div>
+    <div x-show="!loading && !error && !periodId" x-cloak class="rounded-xl border border-dashed border-border bg-white p-8 text-center text-sm text-muted-foreground">Pilih periode terlebih dahulu untuk menampilkan laporan.</div>
     <div x-show="!loading && !error && periodId" x-cloak class="overflow-hidden rounded-xl border border-border bg-white shadow-xs">
         <div class="flex flex-wrap items-center justify-between gap-3 px-5 pt-5">
             <h3 class="text-base font-semibold">Tabel Nilai Akhir</h3>
@@ -44,7 +45,7 @@
                     <span class="px-2.5 text-muted-foreground">Per page</span>
                     <select x-model.number="pageSize" @change="page=1;load()" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none"><option>10</option><option>25</option><option>50</option></select>
                 </label>
-                <span class="text-foreground"><span x-text="'Showing '+showingFrom+' to '+showingTo+' of, '+(pagination.total ?? 0)+' results'"></span></span>
+                <span class="text-foreground"><span x-text="'Showing '+showingFrom+' to '+showingTo+' of '+(pagination.total ?? 0)+' results'"></span></span>
             </div>
             <div class="flex items-center gap-1.5">
                 <button type="button" @click="gotoPage(page-1)" :disabled="page<=1" aria-label="Halaman sebelumnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronLeft" class="size-4" /></button>
