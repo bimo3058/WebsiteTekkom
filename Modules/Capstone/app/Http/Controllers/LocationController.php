@@ -2,9 +2,16 @@
 
 namespace Modules\Capstone\Http\Controllers;
 
-use Modules\Capstone\Models\Location;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
+use Modules\Capstone\Models\ExpoEvent;
+use Modules\Capstone\Models\Location;
+use Modules\Capstone\Models\SeminarSchedule;
+use Modules\Capstone\Models\TaDefenseSchedule;
+use Modules\Capstone\Services\EofficeAvailabilityService;
+use Modules\Capstone\Support\CapstoneActor;
+use Modules\EOffice\Models\Ruangan;
 
 class LocationController extends Controller
 {
@@ -60,7 +67,7 @@ class LocationController extends Controller
      */
     public function store(Request $request)
     {
-        if (! in_array('admin', \Modules\Capstone\Support\CapstoneActor::roles(Auth::user()), true)) {
+        if (! in_array('admin', CapstoneActor::roles(Auth::user()), true)) {
             return $this->unauthorizedResponse('Unauthorized');
         }
 
@@ -102,7 +109,7 @@ class LocationController extends Controller
      */
     public function update(Request $request, $id)
     {
-        if (! in_array('admin', \Modules\Capstone\Support\CapstoneActor::roles(Auth::user()), true)) {
+        if (! in_array('admin', CapstoneActor::roles(Auth::user()), true)) {
             return $this->unauthorizedResponse('Unauthorized');
         }
 
@@ -131,7 +138,7 @@ class LocationController extends Controller
      */
     public function destroy($id)
     {
-        if (! in_array('admin', \Modules\Capstone\Support\CapstoneActor::roles(Auth::user()), true)) {
+        if (! in_array('admin', CapstoneActor::roles(Auth::user()), true)) {
             return $this->unauthorizedResponse('Unauthorized');
         }
 
@@ -168,13 +175,13 @@ class LocationController extends Controller
         $startTime = $request->start_time;
         $endTime = $request->end_time;
 
-        $eoffice = app(\Modules\Capstone\Services\EofficeAvailabilityService::class);
+        $eoffice = app(EofficeAvailabilityService::class);
         $busyIds = $eoffice->busyEofficeIds($date, $startTime, $endTime);
 
         // Rooms taken by other Capstone schedules in the same slot.
         $capstoneBusyIds = [];
-        if (\Illuminate\Support\Facades\Schema::hasColumn('capstone_seminar_schedules', 'eoffice_ruangan_id')) {
-            $capstoneBusyIds = array_merge($capstoneBusyIds, \Modules\Capstone\Models\SeminarSchedule::where('date', $date)
+        if (Schema::hasColumn('capstone_seminar_schedules', 'eoffice_ruangan_id')) {
+            $capstoneBusyIds = array_merge($capstoneBusyIds, SeminarSchedule::where('date', $date)
                 ->where('status', '!=', 'CANCELLED')
                 ->where('start_time', '<', $endTime)
                 ->where('end_time', '>', $startTime)
@@ -182,8 +189,8 @@ class LocationController extends Controller
                 ->whereNotNull('eoffice_ruangan_id')
                 ->pluck('eoffice_ruangan_id')->all());
         }
-        if (\Illuminate\Support\Facades\Schema::hasColumn('capstone_ta_defense_schedules', 'eoffice_ruangan_id')) {
-            $capstoneBusyIds = array_merge($capstoneBusyIds, \Modules\Capstone\Models\TaDefenseSchedule::where('date', $date)
+        if (Schema::hasColumn('capstone_ta_defense_schedules', 'eoffice_ruangan_id')) {
+            $capstoneBusyIds = array_merge($capstoneBusyIds, TaDefenseSchedule::where('date', $date)
                 ->where('status', '!=', 'CANCELLED')
                 ->where('start_time', '<', $endTime)
                 ->where('end_time', '>', $startTime)
@@ -191,8 +198,8 @@ class LocationController extends Controller
                 ->whereNotNull('eoffice_ruangan_id')
                 ->pluck('eoffice_ruangan_id')->all());
         }
-        if (\Illuminate\Support\Facades\Schema::hasColumn('capstone_expo_events', 'eoffice_ruangan_id')) {
-            $capstoneBusyIds = array_merge($capstoneBusyIds, \Modules\Capstone\Models\ExpoEvent::where('date', $date)
+        if (Schema::hasColumn('capstone_expo_events', 'eoffice_ruangan_id')) {
+            $capstoneBusyIds = array_merge($capstoneBusyIds, ExpoEvent::where('date', $date)
                 ->where('start_time', '<', $endTime)
                 ->where('end_time', '>', $startTime)
                 ->when($request->exclude_expo_id, fn ($q) => $q->where('id', '!=', $request->exclude_expo_id))
@@ -202,7 +209,7 @@ class LocationController extends Controller
 
         $busyIds = array_values(array_unique(array_merge($busyIds, $capstoneBusyIds)));
 
-        $rooms = \Modules\EOffice\Models\Ruangan::orderBy('nama')
+        $rooms = Ruangan::orderBy('nama')
             ->get(['id', 'nama', 'lokasi', 'lantai', 'kapasitas'])
             ->map(fn ($room) => [
                 'id' => $room->id,
@@ -220,16 +227,17 @@ class LocationController extends Controller
 
     /**
      * List EOffice rooms (view-only single source of rooms).
-     * Used by the locations page and every schedule room picker.
+     * Used by the locations page and every schedule room picker,
+     * including the dosen BIMBINGAN form — hence admin + dosen.
      */
     public function eofficeRooms()
     {
-        if (! in_array('admin', \Modules\Capstone\Support\CapstoneActor::roles(Auth::user()), true)) {
+        if (empty(array_intersect(['admin', 'dosen'], CapstoneActor::roles(Auth::user())))) {
             return $this->unauthorizedResponse('Unauthorized');
         }
 
         $today = now()->format('Y-m-d');
-        $rooms = \Modules\EOffice\Models\Ruangan::orderBy('nama')
+        $rooms = Ruangan::orderBy('nama')
             ->withCount(['peminjamans as upcoming_bookings_count' => fn ($q) => $q
                 ->where('status', 'disetujui')
                 ->whereDate('tanggal_pinjam', '>=', $today)])

@@ -59,6 +59,7 @@ import {
   CalendarDays,
   ArrowRight,
   FileText,
+  Pencil,
   Settings,
   RotateCcw,
   XCircle,
@@ -70,9 +71,11 @@ import { useFinalizationDashboard } from '@/hooks/use-finalization-dashboard';
 import { useSupervisorLoad } from '@/hooks/use-supervisor-load';
 import { useFinalizationActions } from '@/hooks/use-finalization-actions';
 import { useManualGrouping } from '@/hooks/use-manual-grouping';
+import { useAdminTitleRename } from '@/hooks/use-admin-title-rename';
 import { useKeyboardShortcuts, focusSearchInput } from '@/hooks/use-keyboard-shortcuts';
 import { FinalizationExecuteDialog } from '@/components/finalization/finalization-execute-dialog';
 import { ManualGroupingDialog } from '@/components/finalization/manual-grouping-dialog';
+import { RenameTitleDialog } from '@/components/finalization/rename-title-dialog';
 import { BulkActionBar } from '@/components/finalization/bulk-action-bar';
 import { FilterPanel } from '@/components/finalization/filter-panel';
 import Link from 'next/link';
@@ -142,6 +145,8 @@ export function FinalizationFeature() {
   const [showGroupingDialog, setShowGroupingDialog] = useState(false);
   const [showAssignTitleDialog, setShowAssignTitleDialog] = useState(false);
   const [selectedGroupForAction, setSelectedGroupForAction] = useState<Group | null>(null);
+  const [showRenameTitleDialog, setShowRenameTitleDialog] = useState(false);
+  const [groupForRename, setGroupForRename] = useState<Group | null>(null);
   const [settingRow, setSettingRow] = useState<number | null>(null);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   const [showBulkMarkFinalDialog, setShowBulkMarkFinalDialog] = useState(false);
@@ -254,6 +259,25 @@ export function FinalizationFeature() {
       await fetchAvailableTitles(period.id);
     }
   }, [period, fetchAvailableTitles, isPeriodFinalized, canModifyByFlow]);
+
+  // Handler for renaming a title's text (never touches group status)
+  const { renameTitle, renamingTitle } = useAdminTitleRename();
+
+  const handleOpenRenameTitleDialog = useCallback((group: Group) => {
+    if (isPeriodFinalized || !canModifyByFlow || !group.title) return;
+    setGroupForRename(group);
+    setShowRenameTitleDialog(true);
+  }, [isPeriodFinalized, canModifyByFlow]);
+
+  const handleRenameTitleSubmit = useCallback(async (title: string) => {
+    if (!groupForRename?.title) return;
+    const success = await renameTitle(groupForRename.title.id, title);
+    if (success) {
+      setShowRenameTitleDialog(false);
+      setGroupForRename(null);
+      refresh();
+    }
+  }, [groupForRename, renameTitle, refresh]);
 
   const handleFinalizeGroup = useCallback(async (group: Group) => {
     if (isPeriodFinalized || !canModifyByFlow) return;
@@ -1387,9 +1411,22 @@ export function FinalizationFeature() {
                           </TableCell>
                           {/* Action: Mark KELOMPOK_FINAL */}
                           <TableCell>
-                            <Button
-                              size="sm"
-                              variant="default"
+                            <div className="flex items-center gap-1">
+                              {group.title && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0"
+                                  title="Ubah Judul (status grup tidak berubah)"
+                                  disabled={isPeriodFinalized || !canModifyByFlow}
+                                  onClick={() => handleOpenRenameTitleDialog(group)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="default"
                               disabled={settingRow === group.id || isPeriodFinalized || !canModifyByFlow || !(group.allowed_actions?.can_mark_kelompok_final ?? !!group.supervisor_1_id)}
                               onClick={() => handleMarkKelompokFinal(group.id)}
                               className="text-xs h-8"
@@ -1404,6 +1441,7 @@ export function FinalizationFeature() {
                                 </>
                               )}
                             </Button>
+                            </div>
                            </TableCell>
                           </TableRow>
                         );
@@ -1602,6 +1640,12 @@ export function FinalizationFeature() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                                {group.title && (
+                                  <DropdownMenuItem onClick={() => handleOpenRenameTitleDialog(group)} disabled={isPeriodFinalized || !canModifyByFlow}>
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Ubah Judul
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem onClick={() => handleCancelKelompokFinal(group)} disabled={isPeriodFinalized || !canModifyByFlow || !(group.allowed_actions?.can_cancel_kelompok_final ?? true)}>
                                   <XCircle className="mr-2 h-4 w-4" />
                                   Cancel Kelompok Final
@@ -1890,6 +1934,12 @@ export function FinalizationFeature() {
                                         Assign Judul
                                       </DropdownMenuItem>
                                     )}
+                                    {group.title && (
+                                      <DropdownMenuItem onClick={() => handleOpenRenameTitleDialog(group)} disabled={isPeriodFinalized || !canModifyByFlow}>
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        Ubah Judul
+                                      </DropdownMenuItem>
+                                    )}
                                     {group.status === 'TITLE_APPROVED' && (
                                       <DropdownMenuItem onClick={() => handleFinalizeGroup(group)} disabled={isPeriodFinalized || !canModifyByFlow || !(group.allowed_actions?.can_promote_to_ready_for_finalization ?? true)}>
                                         <CheckCircle className="mr-2 h-4 w-4" />
@@ -1995,6 +2045,19 @@ export function FinalizationFeature() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog for renaming a title's text (group status untouched) */}
+      <RenameTitleDialog
+        key={`rename-title-${groupForRename?.title?.id ?? 'none'}-${showRenameTitleDialog}`}
+        open={showRenameTitleDialog}
+        onOpenChange={(open) => {
+          setShowRenameTitleDialog(open);
+          if (!open) setGroupForRename(null);
+        }}
+        currentTitle={groupForRename?.title?.title ?? ''}
+        loading={renamingTitle}
+        onSubmit={handleRenameTitleSubmit}
+      />
 
       {/* Keyboard Shortcuts Help Dialog */}
       <Dialog open={showKeyboardHelp} onOpenChange={setShowKeyboardHelp}>
