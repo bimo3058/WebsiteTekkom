@@ -507,22 +507,32 @@
             </div>
 
 
+<<<<<<< HEAD
             <div class="mt-4 text-[12px] text-gray-500 font-medium">
                 💡 <strong>Tips:</strong> Klik kotak <span class="text-emerald-600 font-bold">hijau</span> untuk langsung
                 booking slot tersebut. Tanggal & jam otomatis terisi!
             </div>
+=======
+>>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
 
             {{-- =================== MONTHLY MODE =================== --}}
         @else
             {{-- Month Nav --}}
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center justify-between mb-4 gap-2">
                 @if($canGoBackMonth)
                     <a href="{{ request()->fullUrlWithQuery(['month' => $prevMonth]) }}"
-                        class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[130px]">
-                        ← Bulan Lalu
+                        class="inline-flex items-center justify-center text-[13px] font-semibold px-3 md:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all md:min-w-[130px]">
+                        <svg class="w-4 h-4 shrink-0 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        <span class="hidden md:inline">← Bulan Lalu</span>
                     </a>
                 @else
-                    <div class="px-4 py-2 min-w-[130px]"></div>
+                    <div class="px-3 md:px-4 py-2 md:min-w-[130px] invisible flex items-center justify-center">
+                        <svg class="w-4 h-4 shrink-0 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </div>
                 @endif
 
                 {{-- Month/Year Picker Dropdown (Monthly) --}}
@@ -602,27 +612,32 @@
                 </div>
 
                 <a href="{{ request()->fullUrlWithQuery(['month' => $nextMonth]) }}"
-                    class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[130px]">
-                    Bulan Depan →
+                    class="inline-flex items-center justify-center text-[13px] font-semibold px-3 md:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all md:min-w-[130px]">
+                    <svg class="w-4 h-4 shrink-0 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    <span class="hidden md:inline">Bulan Depan →</span>
                 </a>
             </div>
 
-            <div class="mp-card overflow-hidden">
-                <div class="mp-card-body" style="padding: 20px;">
-                    <p class="text-[12px] text-gray-500 mb-4"><strong>Heatmap Aktivitas:</strong> Semakin gelap warnanya,
+            <div class="mp-card overflow-hidden w-full">
+                <div class="mp-card-body p-3 md:p-5">
+                    <p class="text-[11px] md:text-[12px] text-gray-500 mb-4 leading-snug"><strong>Heatmap Aktivitas:</strong> Semakin gelap warnanya,
                         semakin banyak peminjaman di tanggal tersebut.</p>
 
-                    {{-- Day-of-week header --}}
-                    <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap: 4px; margin-bottom: 4px;">
-                        @foreach(['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] as $dayLabel)
-                            <div style="text-align:center; font-size:11px; font-weight:700; color:#6B7280; padding: 6px 0;">
-                                {{ $dayLabel }}
+                    <div class="overflow-x-auto w-full pb-2">
+                        <div class="min-w-[280px]">
+                            {{-- Day-of-week header --}}
+                            <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap: 2px md:gap-4; margin-bottom: 4px;">
+                                @foreach(['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] as $dayLabel)
+                                    <div style="text-align:center; font-size:11px; font-weight:700; color:#6B7280; padding: 4px 0;">
+                                        {{ $dayLabel }}
+                                    </div>
+                                @endforeach
                             </div>
-                        @endforeach
-                    </div>
 
-                    {{-- Calendar Cells --}}
-                    <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap: 4px;">
+                            {{-- Calendar Cells --}}
+                            <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap: 2px md:gap-4;">
                         @foreach($calendarDays as $cell)
                             @if($cell === null)
                                 <div></div>
@@ -659,9 +674,15 @@
                                 @endphp
                                 <a href="{{ $weekLink }}"
                                     title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
+<<<<<<< HEAD
                                     style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
                                                                                                                                                                                                                                                                                                                                                                                                                                                           background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
                                                                                                                                                                                                                                                                                                                                                                                                                                                           transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
+=======
+                                    class="block text-center py-1.5 px-1 md:py-2 md:px-1.5 rounded-md md:rounded-lg no-underline transition-all"
+                                    style="background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
+                                           {{ $isPast ? 'opacity:0.55;' : '' }}"
+>>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                     <div
@@ -684,6 +705,8 @@
                                 </a>
                             @endif
                         @endforeach
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -704,7 +727,7 @@
                 x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
                 x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
                 x-transition:leave-end="opacity-0"
-                class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" aria-hidden="true"
+                class="fixed inset-0 bg-slate-900/60 transition-opacity" aria-hidden="true"
                 @click="closeDetailModal"></div>
 
             {{-- Modal Panel --}}
@@ -714,7 +737,7 @@
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="relative bg-white rounded-xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden">
+                class="relative bg-white rounded-[20px] border border-gray-100 shadow-2xl w-full max-w-sm flex flex-col overflow-hidden">
 
                 <div class="px-5 py-4 flex flex-col items-center">
                     <div class="text-[#0B266E] font-extrabold text-[15px] mb-1 text-center w-full pb-3 border-b border-gray-100"
@@ -766,50 +789,56 @@
 
         {{-- =================== BOOKING MODAL =================== --}}
         <div x-show="showModal" x-cloak style="display: none;"
-            class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" aria-labelledby="modal-title"
-            role="dialog" aria-modal="true">
+            class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6 text-left whitespace-normal"
+            aria-labelledby="modal-title" role="dialog" aria-modal="true">
 
             {{-- Backdrop --}}
             <div x-show="showModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
                 x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" aria-hidden="true"
+                class="fixed inset-0 bg-slate-900/60 transition-opacity" aria-hidden="true"
                 @click="closeModal"></div>
 
             {{-- Modal Panel --}}
             <div x-show="showModal" x-transition:enter="ease-out duration-300"
-                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="relative bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden">
+                x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-[500px] max-h-[95vh] sm:max-h-[90vh] flex flex-col p-0 overflow-visible">
 
-                {{-- Header --}}
-                <div class="bg-white px-6 py-5 border-b border-gray-100 flex-shrink-0 flex justify-between items-start">
-                    <div>
-                        <h3 class="text-lg leading-6 font-bold text-gray-900" id="modal-title">Form Booking Ruangan</h3>
-                        <p class="text-sm text-gray-500 mt-1">Lengkapi data berikut untuk meminjam <span
-                                class="font-semibold text-emerald-600" x-text="bookingData.roomName"></span> pada <span
-                                class="font-semibold text-emerald-600" x-text="bookingData.waktu"></span>.</p>
+                <div class="p-4 sm:p-6 flex flex-col flex-1 min-h-0">
+                    {{-- Header --}}
+                    <div class="-mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-5 px-6 py-4 border-b border-[#0B266E]/10 flex items-center justify-between bg-[#0B266E]/[0.06] rounded-none sm:rounded-t-[20px]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-[#0B266E] flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-[#1A1C1E] tracking-tight" id="modal-title">Form Booking Ruangan</h3>
+                                <p class="text-[10px] text-[#0B266E] font-medium">Meminjam <span class="font-bold" x-text="bookingData.roomName"></span> pada <span class="font-bold" x-text="bookingData.waktu"></span></p>
+                            </div>
+                        </div>
+                        <button type="button" @click="closeModal"
+                            class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
+                            <span class="material-symbols-outlined" style="font-size:20px">close</span>
+                        </button>
                     </div>
-                    <button type="button" @click="closeModal"
-                        class="text-gray-400 hover:text-gray-500 rounded-md focus:outline-none cursor-pointer">
-                        <span class="sr-only">Close menu</span>
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
 
+<<<<<<< HEAD
                 {{-- Scrollable Body --}}
                 <div class="px-6 pt-2 pb-3 overflow-y-auto flex-1 bg-white">
+=======
+>>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                     <form id="bookingForm" method="POST" action="{{ route('eoffice.peminjaman.user.booking.store') }}"
-                        enctype="multipart/form-data">
+                        enctype="multipart/form-data" class="flex flex-col flex-1 min-h-0" autocomplete="off">
                         @csrf
                         <input type="hidden" name="ruangan_id" :value="selectedRoomId">
                         <input type="hidden" name="tanggal_pinjam" :value="selectedDate">
+<<<<<<< HEAD
                         <div class="grid grid-cols-2 gap-4 mt-0">
                                 <div>
                                     <label class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Jam Mulai</label>
@@ -825,23 +854,26 @@
                             </div>
 
                         <div class="space-y-3 mt-4">
+=======
+
+                        {{-- Scrollable Body --}}
+                        <div class="space-y-4 overflow-y-auto overflow-x-hidden flex-1 bg-white whitespace-normal -mx-4 sm:-mx-6 px-4 sm:px-6 pb-2">
+                            {{-- Waktu Peminjaman --}}
+>>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                             <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label
-                                        class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Nama
-                                        Lengkap</label>
-                                    <input type="text" class="mp-input w-full bg-gray-50 text-gray-700 font-medium"
-                                        value="{{ $user->name ?? 'Student' }}" readonly>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jam Mulai <span class="text-red-500">*</span></label>
+                                    <input type="time" name="jam_mulai" x-model="bookingData.jamMulai" required
+                                        class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
                                 </div>
-                                <div>
-                                    <label
-                                        class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">NIM
-                                        / NIP</label>
-                                    <input type="text" class="mp-input w-full bg-gray-50 text-gray-700 font-medium"
-                                        value="{{ $nim ?? '00000' }}" readonly>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jam Selesai <span class="text-red-500">*</span></label>
+                                    <input type="time" name="jam_selesai" x-model="bookingData.jamSelesai" required
+                                        class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
                                 </div>
                             </div>
 
+<<<<<<< HEAD
                             <div>
                                 <label
                                     class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">No.
@@ -851,15 +883,37 @@
                             </div>
 
 
+=======
+                            {{-- Identitas Peminjam --}}
+                            <div class="space-y-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div class="space-y-1.5">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
+                                        <input type="text" class="w-full bg-slate-100/80 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium text-gray-600 cursor-not-allowed outline-none"
+                                            value="{{ $user->name ?? 'Student' }}" readonly>
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">NIM / NIP</label>
+                                        <input type="text" class="w-full bg-slate-100/80 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium text-gray-600 cursor-not-allowed outline-none"
+                                            value="{{ $nim ?? '00000' }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">No. Telepon / WhatsApp <span class="text-red-500">*</span></label>
+                                    <input type="text" name="nomor_telepon" value="{{ $phone ?? '' }}" required maxlength="20" placeholder="Contoh: 08123456789"
+                                        class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
+                                </div>
+                            </div>
+>>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
 
-                            <div>
-                                <label
-                                    class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Nama
-                                    Kegiatan <span class="text-red-500">*</span></label>
-                                <input type="text" name="tujuan" class="mp-input w-full cursor-text"
-                                    placeholder="Misal: Rapat Kerja HIMASKOM" required>
+                            {{-- Detail Kegiatan --}}
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Kegiatan <span class="text-red-500">*</span></label>
+                                <input type="text" name="tujuan" placeholder="Misal: Rapat Kerja HIMASKOM" required maxlength="150"
+                                    class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
                             </div>
 
+<<<<<<< HEAD
                             <div class="bg-blue-50/30 border border-gray-200 p-4 rounded-lg">
                                 <label
                                     class="block text-[11px] uppercase tracking-wider font-bold text-[#0B266E] mb-1.5 flex items-center gap-1.5">
@@ -884,16 +938,35 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
+=======
+                            {{-- Berkas Pendukung (Opsional) --}}
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">File Berkas Proposal <span class="text-slate-400 font-normal lowercase tracking-normal">(opsional)</span></label>
+                                <div class="relative bg-white border border-slate-200 rounded-xl p-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all">
+                                    <input type="file" name="file_berkas" accept=".pdf"
+                                        class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-[#0B266E]/10 file:text-[#0B266E] hover:file:bg-[#0B266E]/20 cursor-pointer transition-all outline-none">
+                                </div>
+                                <p class="text-[10px] text-gray-400 ml-1 leading-relaxed">Format <strong class="text-gray-600 font-semibold">PDF</strong> maksimal <strong class="text-gray-600 font-semibold">2MB</strong>. Biasanya diperlukan untuk persetujuan acara berskala besar atau formal.</p>
+                                @error('file_berkas')
+                                    <p class="text-[11px] text-rose-600 mt-2 font-bold flex items-center gap-1.5 bg-rose-50 p-2.5 rounded-xl border border-rose-100">
+                                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+>>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                                         Ukuran maksimal 2MB dan wajib berformat PDF.
                                     </p>
                                 @enderror
                             </div>
 
+<<<<<<< HEAD
                             {{-- Persetujuan S&K --}}
                             <div class="pt-2 border-t border-gray-100 pb-0">
+=======
+                            {{-- Card 5: Persetujuan S&K --}}
+                            <div class="space-y-3 p-4 bg-blue-50/50 border border-blue-100 rounded-2xl">
+>>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                                 <label class="flex items-start gap-3 cursor-pointer group">
-                                    <div class="flex items-center h-5 mt-0.5">
+                                    <div class="flex items-center h-5 mt-0.5 shrink-0">
                                         <input type="checkbox" name="syarat_ketentuan" required
+<<<<<<< HEAD
                                             class="w-4 h-4 border border-gray-300 rounded bg-white text-[#0B266E] focus:ring-[#0B266E] focus:ring-2 transition-all cursor-pointer shadow-sm"
                                             style="scroll-margin-bottom: 80px; scroll-margin-top: 120px;">
                                     </div>
@@ -905,27 +978,42 @@
                                                 kerusakan</strong> barang atau fasilitas akibat kelalaian selama masa
                                             peminjaman.
                                         </span>
+=======
+                                            class="w-4 h-4 border border-blue-300 rounded bg-white text-[#0B266E] focus:ring-[#0B266E] focus:ring-2 transition-all cursor-pointer shadow-sm"
+                                            style="scroll-margin-bottom: 80px; scroll-margin-top: 120px;">
+>>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                                     </div>
+                                    <span class="text-[11px] text-gray-600 leading-relaxed block">
+                                        Saya setuju dan bersedia <strong class="text-gray-900 font-bold">merapikan kembali ruangan</strong> setelah digunakan serta siap <strong class="text-gray-900 font-bold">bertanggung jawab penuh mengganti kerusakan</strong> barang atau fasilitas akibat kelalaian selama peminjaman.
+                                    </span>
                                 </label>
+                            </div>
+
+                            <!-- Mobile Footer (Inside scrollable area so it doesn't follow keyboard) -->
+                            <div class="sm:hidden mt-6 pt-4 pb-2 border-t border-slate-100 flex items-center justify-end gap-3">
+                                <button type="button" @click="closeModal"
+                                    class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all text-center cursor-pointer">
+                                    Batal
+                                </button>
+                                <button type="submit"
+                                    class="px-6 py-2.5 text-sm font-semibold text-white bg-[#0B266E] rounded-xl hover:bg-[#091F5E] focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 shadow-lg shadow-[#0B266E]/20 transition-all text-center flex items-center justify-center cursor-pointer">
+                                    Kirim Pengajuan
+                                </button>
                             </div>
                         </div>
                     </form>
-                </div>
 
-                {{-- Footer / Actions --}}
-                <div class="bg-gray-50 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0">
-                    <button type="button" @click="closeModal"
-                        class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-colors focus:ring-2 focus:ring-gray-200 cursor-pointer">
-                        Batal
-                    </button>
-                    <button type="submit" form="bookingForm"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-[#0B266E] border border-transparent rounded-lg shadow-sm hover:bg-[#071946] transition-colors focus:ring-2 focus:ring-[#0B266E] focus:ring-offset-2 cursor-pointer">
-                        Kirim Pengajuan
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                        </svg>
-                    </button>
+                    <!-- Desktop Sticky Footer -->
+                    <div class="hidden sm:flex mt-5 items-center justify-end gap-3 shrink-0">
+                        <button type="button" @click="closeModal"
+                            class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all text-center cursor-pointer">
+                            Batal
+                        </button>
+                        <button type="submit" form="bookingForm"
+                            class="px-6 py-2.5 text-sm font-semibold text-white bg-[#0B266E] rounded-xl hover:bg-[#091F5E] focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 shadow-lg shadow-[#0B266E]/20 transition-all text-center flex items-center justify-center cursor-pointer">
+                            Kirim Pengajuan
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1149,7 +1237,11 @@
                         let d = new Date(this.dragDate);
                         let dateStr = d.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                         
+<<<<<<< HEAD
                         this.bookingData.waktu = dateStr + ' Pukul ' + startHStr + ' - ' + endHStr;
+=======
+                        this.bookingData.waktu = dateStr;
+>>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                         this.bookingData.jamMulai = startHStr;
                         this.bookingData.jamSelesai = endHStr;
                         
@@ -1191,11 +1283,14 @@
 
             toast.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 8px;">
+<<<<<<< HEAD
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                         <circle cx="12" cy="12" r="10" />
                         <line x1="12" y1="8" x2="12" y2="12" />
                         <line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
+=======
+>>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                     <span>${message}</span>
                 </div>
                 <button onclick="this.parentElement.style.opacity='0'; setTimeout(()=>this.parentElement.remove(), 300)" style="background:transparent; border:none; cursor:pointer; color:inherit; padding:0; display:flex; align-items:center; opacity:0.7;">

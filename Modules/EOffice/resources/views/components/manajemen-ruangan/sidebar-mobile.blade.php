@@ -18,6 +18,7 @@
     $iCal = "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z";
     $iPeminjaman = "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z";
     $iRiwayat = "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z";
+    $iProfile = "M19 21v-2a7 7 0 0 0-14 0v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8";
     $iLogout = "M13 8.73V8.14C13 6.58 12.19 5.24 11.07 4.94L7.87 4.06C6.39 3.66 5 5.21 5 7.27v9.46C5 18.79 6.39 20.34 7.87 19.94l3.2-.87C12.19 18.76 13 17.42 13 15.86v-.59M11 12h8M19 12l-2.5-2.72M19 12l-2.5 2.72";
     $iBack = "M19 12H5M5 12l7-7M5 12l7 7";
 @endphp
@@ -96,6 +97,15 @@
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 px-1 opacity-80">
                         Akun</p>
                     <div class="space-y-1">
+                        <a href="{{ route('profile.edit') }}" @click="openMenu = false"
+                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                            <svg class="w-5 h-5 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="{{ $iProfile }}" />
+                            </svg>
+                            <span class="text-[13px] font-semibold">Pengaturan Profil</span>
+                        </a>
+
                         <form method="POST" action="{{ route('logout') }}" data-no-loader>
                             @csrf
                             <button type="submit"

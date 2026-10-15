@@ -20,47 +20,105 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
             border-color: #d1d5db;
         }
+
+        /* Custom Stat Design Matching Prak */
+        .mp-stat-custom {
+            display: flex;
+            flex-direction: column;
+            padding: 16px 20px;
+        }
+        
+        .mp-stat-custom .mp-stat-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .mp-stat-custom .mp-stat-icon-new {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #F1F5F9;
+            border: none;
+            color: #0B266E;
+        }
+        
+        .mp-stat-custom .mp-stat-icon-new svg {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .mp-stat-custom .mp-stat-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748B;
+        }
+        
+        .mp-stat-custom .mp-stat-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: #0F172A;
+            line-height: 1;
+            margin-bottom: 4px;
+            font-family: 'Inter Tight', sans-serif;
+            letter-spacing: -0.02em;
+        }
     </style>
 
     <div class="mp-stats-grid cols-3" style="margin-top: 20px;">
-        <a href="{{ route('eoffice.peminjaman.admin.ruangan.index') }}" class="mp-stat clickable">
-            <div class="mp-stat-icon sky"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <path d="M4 19.5V4.5C4 3.11929 5.11929 2 6.5 2H20V22H6.5C5.11929 22 4 20.8807 4 19.5Z" />
-                </svg></div>
-            <div class="mp-stat-label">Total Ruangan Aktif</div>
+        <!-- Card 1 -->
+        <a href="{{ route('eoffice.peminjaman.admin.ruangan.index') }}" class="mp-stat mp-stat-custom clickable">
+            <div class="mp-stat-header">
+                <div class="mp-stat-icon-new">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M4 19.5V4.5C4 3.11929 5.11929 2 6.5 2H20V22H6.5C5.11929 22 4 20.8807 4 19.5Z" />
+                    </svg>
+                </div>
+                <div class="mp-stat-title">Total Ruangan Aktif</div>
+            </div>
             <div class="mp-stat-value">{{ number_format($totalRuangan ?? 0) }}</div>
-            <div class="mp-stat-sub">Siap dipinjam</div>
         </a>
-        <a href="{{ route('eoffice.peminjaman.admin.persetujuan.index') }}" class="mp-stat clickable">
-            <div class="mp-stat-icon yellow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                </svg></div>
-            <div class="mp-stat-label">Menunggu Approval</div>
+
+        <!-- Card 2 -->
+        <a href="{{ route('eoffice.peminjaman.admin.persetujuan.index') }}" class="mp-stat mp-stat-custom clickable">
+            <div class="mp-stat-header">
+                <div class="mp-stat-icon-new">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                </div>
+                <div class="mp-stat-title">Menunggu Approval</div>
+            </div>
             <div class="mp-stat-value" {!! ($pendingApproval ?? 0) > 0 ? 'style="color: #D97706;"' : '' !!}>
                 {{ number_format($pendingApproval ?? 0) }}
             </div>
-            <div class="mp-stat-sub">Butuh tindakan admin</div>
         </a>
-        <div class="mp-stat">
-            <div class="mp-stat-icon violet"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg></div>
-            <div class="mp-stat-label">Digunakan Hari Ini</div>
+
+        <!-- Card 3 -->
+        <div class="mp-stat mp-stat-custom">
+            <div class="mp-stat-header">
+                <div class="mp-stat-icon-new">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                </div>
+                <div class="mp-stat-title">Reservasi Aktif</div>
+            </div>
             <div class="mp-stat-value">{{ number_format($dipakaiHariIni ?? 0) }}</div>
-            <div class="mp-stat-sub">Jadwal disetujui hari ini</div>
         </div>
     </div>
 
     <div class="mp-card" style="margin-top: 24px;">
         <div class="mp-card-header">
-            <h3 class="mp-card-title">Jadwal Terdekat & Antrean Peminjaman</h3>
+            <h3 class="mp-card-title">Aktivitas Ruangan</h3>
             <div class="right">
                 <a href="{{ route('eoffice.peminjaman.admin.persetujuan.index') }}" class="mp-btn secondary sm">Kelola
                     Jadwal</a>

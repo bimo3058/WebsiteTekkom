@@ -21,8 +21,41 @@ class RuanganController extends Controller
             });
         }
 
-        $ruangans = $query->latest()->paginate($request->input('per_page', 10))->appends($request->query());
-        return view('eoffice::manajemen-ruangan.admin.ruangan.index', compact('ruangans'));
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->status === 'aktif');
+        }
+
+        if ($request->filled('lokasi')) {
+            $query->where('lokasi', $request->lokasi);
+        }
+
+        $sort = $request->input('sort', 'terbaru');
+        switch ($sort) {
+            case 'kapasitas_desc':
+                $query->orderBy('kapasitas', 'desc');
+                break;
+            case 'kapasitas_asc':
+                $query->orderBy('kapasitas', 'asc');
+                break;
+            case 'nama_asc':
+                $query->orderBy('nama', 'asc');
+                break;
+            case 'nama_desc':
+                $query->orderBy('nama', 'desc');
+                break;
+            case 'terlama':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'terbaru':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $ruangans = $query->paginate($request->input('per_page', 10))->appends($request->query());
+        $lokasis = Ruangan::select('lokasi')->distinct()->whereNotNull('lokasi')->where('lokasi', '!=', '')->orderBy('lokasi')->pluck('lokasi');
+
+        return view('eoffice::manajemen-ruangan.admin.ruangan.index', compact('ruangans', 'lokasis'));
     }
 
     public function create()

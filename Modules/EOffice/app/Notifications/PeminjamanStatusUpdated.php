@@ -3,12 +3,10 @@
 namespace Modules\EOffice\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Modules\EOffice\Models\Peminjaman;
 
-class PeminjamanStatusUpdated extends Notification implements ShouldQueue
+class PeminjamanStatusUpdated extends Notification
 {
     use Queueable;
 
@@ -28,7 +26,7 @@ class PeminjamanStatusUpdated extends Notification implements ShouldQueue
         $this->isCancelByAdmin = $isCancelByAdmin;
 
         if ($this->isCancelByAdmin) {
-            $this->statusMessage = 'dibatalkan oleh admin';
+            $this->statusMessage = 'yang sebelumnya disetujui, kini terpaksa dibatalkan oleh admin';
         } elseif ($this->peminjaman->status == 'disetujui') {
             $this->statusMessage = 'telah disetujui';
         } elseif ($this->peminjaman->status == 'ditolak') {
@@ -59,9 +57,12 @@ class PeminjamanStatusUpdated extends Notification implements ShouldQueue
     {
         $ruanganNama = $this->peminjaman->ruangan ? $this->peminjaman->ruangan->nama : 'Ruangan';
         $tanggal = \Carbon\Carbon::parse($this->peminjaman->tanggal_pinjam)->format('d M Y');
+        $jamMulai = \Carbon\Carbon::parse($this->peminjaman->jam_mulai)->format('H:i');
+        $jamSelesai = $this->peminjaman->jam_selesai ? \Carbon\Carbon::parse($this->peminjaman->jam_selesai)->format('H:i') : null;
+        $waktu = $jamSelesai ? "{$jamMulai} - {$jamSelesai}" : $jamMulai;
 
         $title = "Peminjaman Ruangan";
-        $message = "Pengajuan peminjaman {$ruanganNama} tanggal {$tanggal} {$this->statusMessage}.";
+        $message = "Pengajuan peminjaman {$ruanganNama} pada pukul {$waktu} tanggal {$tanggal} {$this->statusMessage}.";
 
         return [
             'peminjaman_id' => $this->peminjaman->id,

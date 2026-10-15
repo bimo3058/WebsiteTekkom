@@ -427,47 +427,10 @@ class JadwalController extends Controller
     {
         MrJadwalInternal::where('kategori', 'Jadwal Akademik (Kuliah)')->delete();
         return redirect()->route('eoffice.peminjaman.admin.jadwal-akademik.index')
-            ->with('success', 'Seluruh jadwal perkuliahan akademik berhasil dihapus (Reset Semester).');
+            ->with('success', 'Reset data berhasil. Seluruh jadwal akademik telah dihapus.');
     }
 
-    public function downloadTemplateCSV()
-    {
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="Template_Jadwal_Kuliah_E_Office.csv"',
-        ];
 
-        $callback = function () {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, [
-                'Hari (1=Sen, 7=Min)',
-                'Ruangan_ID (Lihat Daftar Ruang)',
-                'Jam_Mulai (HH:MM)',
-                'Jam_Selesai (HH:MM)',
-                'Mata_Kuliah',
-                'Kode_MK',
-                'Kelas',
-                'SKS',
-                'Kuota',
-                'Dosen_Pengampu'
-            ]);
-            fputcsv($file, [
-                '1',
-                '1',
-                '08:00',
-                '10:30',
-                'Pemrograman Web',
-                'TKK211',
-                'A',
-                '3',
-                '40',
-                'Dr. Budi'
-            ]);
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
-    }
 
     public function importPreview(Request $request)
     {
@@ -525,15 +488,49 @@ class JadwalController extends Controller
                 $roomIdx = $sheetWidth >= 10 ? 9 : 7;
                 $pengIdx = $sheetWidth >= 10 ? 8 : 6;
 
-                $rawRoom = strtoupper((string) ($row[$roomIdx] ?? ''));
-                $cleanRawRoom = str_replace([' ', '.', '-'], '', $rawRoom);
-
+                $rawRoom = (string) ($row[$roomIdx] ?? '');
+                $rawRoomUpper = strtoupper($rawRoom);
+                
                 $ruanganIdTarget = null;
-                foreach ($semuaRuangan as $r) {
-                    $cleanName = strtoupper(str_replace([' ', '.', '-'], '', $r->nama));
-                    if (!empty($cleanName) && strpos($cleanRawRoom, $cleanName) !== false) {
-                        $ruanganIdTarget = $r->id; // ID might be UUID string
-                        break;
+
+                if (strpos($rawRoomUpper, '|') !== false) {
+                    $parts = explode('|', $rawRoomUpper);
+                    $roomCode = trim($parts[0]);
+                    $buildingInfo = trim($parts[1] ?? '');
+                    
+                    // Bersihkan dari titik dan spasi untuk pengecekan keyword (contoh: 'T. Kom' menjadi 'TKOM')
+                    $cleanBuildingInfo = str_replace([' ', '.'], '', $buildingInfo);
+                    
+                    $isTekkom = false;
+                    if (strpos($cleanBuildingInfo, 'TKOM') !== false || 
+                        strpos($cleanBuildingInfo, 'TEKKOM') !== false || 
+                        strpos($cleanBuildingInfo, 'TEKNIKKOMPUTER') !== false) {
+                        $isTekkom = true;
+                    }
+                    
+                    if ($isTekkom) {
+                        $cleanRoomCode = str_replace([' ', '.', '-'], '', $roomCode);
+                        foreach ($semuaRuangan as $r) {
+                            $cleanName = strtoupper(str_replace([' ', '.', '-'], '', $r->nama));
+                            if (!empty($cleanName) && strpos($cleanRoomCode, $cleanName) !== false) {
+                                $ruanganIdTarget = $r->id;
+                                break;
+                            }
+                        }
+                    } else {
+                        // Jika bukan Tekkom (misal Teknik Mesin S1), ruanganIdTarget dibiarkan null 
+                        // agar muncul di sandbox dengan status kuning (unmapped).
+                        $ruanganIdTarget = null;
+                    }
+                } else {
+                    // Kasus tanpa delimiter '|' (misal 'R. Dexlite 401')
+                    $cleanRawRoom = str_replace([' ', '.', '-'], '', $rawRoomUpper);
+                    foreach ($semuaRuangan as $r) {
+                        $cleanName = strtoupper(str_replace([' ', '.', '-'], '', $r->nama));
+                        if (!empty($cleanName) && strpos($cleanRawRoom, $cleanName) !== false) {
+                            $ruanganIdTarget = $r->id;
+                            break;
+                        }
                     }
                 }
 
@@ -648,8 +645,62 @@ class JadwalController extends Controller
 
         MrJadwalInternal::insert($insertBatch);
 
+        // --- MULAI: LOGIKA SAPU BERSIH (AUTO-REJECT / AUTO-REVOKE) ---
+        // Cari semua peminjaman mahasiswa yang belum berlalu
+        $peminjamans = \Modules\EOffice\Models\Peminjaman::whereIn('status', ['menunggu', 'disetujui'])
+            ->where('tanggal_pinjam', '>=', \Carbon\Carbon::today()->format('Y-m-d'))
+            ->get();
+
+        $ditolakCount = 0;
+        $dibatalkanCount = 0;
+
+        foreach ($peminjamans as $p) {
+            $hariPinjam = \Carbon\Carbon::parse($p->tanggal_pinjam)->format('N');
+            
+            // Cek apakah ada di insertBatch yang bentrok
+            $isConflict = false;
+            foreach ($insertBatch as $jadwal) {
+                if ($jadwal['ruangan_id'] == $p->ruangan_id && $jadwal['hari'] == $hariPinjam) {
+                    // Cek rentang tanggal efektif akademik
+                    $startEfektif = $jadwal['tgl_mulai_efektif'];
+                    $endEfektif = $jadwal['tgl_selesai_efektif'];
+                    if ($p->tanggal_pinjam >= $startEfektif && $p->tanggal_pinjam <= $endEfektif) {
+                        // Cek irisan waktu (overlap jam)
+                        if ($p->jam_mulai < $jadwal['jam_selesai'] && $p->jam_selesai > $jadwal['jam_mulai']) {
+                            $isConflict = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if ($isConflict) {
+                if ($p->status === 'menunggu') {
+                    $p->update([
+                        'status' => 'ditolak',
+                        'alasan_penolakan' => 'Ditolak otomatis karena bentrok dengan Jadwal Akademik baru',
+                        'waktu_approval' => now()
+                    ]);
+                    $ditolakCount++;
+                } elseif ($p->status === 'disetujui') {
+                    $p->update([
+                        'status' => 'dibatalkan',
+                        'alasan_penolakan' => 'Dibatalkan sepihak oleh sistem. Ruangan dialihfungsikan secara mendadak untuk keperluan Akademik',
+                        'waktu_approval' => now()
+                    ]);
+                    $dibatalkanCount++;
+                }
+            }
+        }
+        // --- SELESAI: LOGIKA SAPU BERSIH ---
+
+        $msgInfo = 'Impor data berhasil. Sebanyak ' . count($insertBatch) . ' jadwal akademik telah ditambahkan ke dalam sistem.';
+        if ($ditolakCount > 0 || $dibatalkanCount > 0) {
+            $msgInfo .= " (Sistem telah melakukan sterilisasi: $ditolakCount permohonan baru ditolak otomatis & $dibatalkanCount jadwal disetujui dibatalkan otomatis karena bentrok).";
+        }
+
         return redirect()->route('eoffice.peminjaman.admin.jadwal-akademik.index')
-            ->with('success', count($insertBatch) . ' row jadwal kelas massal berhasil diimpor!');
+            ->with('success', $msgInfo);
     }
 
     /**

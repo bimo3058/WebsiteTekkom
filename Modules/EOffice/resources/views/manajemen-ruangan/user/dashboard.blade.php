@@ -8,9 +8,11 @@
 
         // Statistik
         $pendingCount = \Modules\EOffice\Models\Peminjaman::where('user_id', $user->id)
+            ->where('is_hidden_by_user', false)
             ->where('status', 'menunggu')->count();
 
         $approvedCount = \Modules\EOffice\Models\Peminjaman::where('user_id', $user->id)
+            ->where('is_hidden_by_user', false)
             ->where('status', 'disetujui')
             ->where(function ($q) use ($dateToday, $timeNow) {
                 $q->where('tanggal_pinjam', '>', $dateToday)
@@ -21,11 +23,13 @@
             })->count();
 
         $rejectedCount = \Modules\EOffice\Models\Peminjaman::where('user_id', $user->id)
+            ->where('is_hidden_by_user', false)
             ->where('status', 'ditolak')->count();
 
         // Jadwal Terdekat
         $upcomingBookings = \Modules\EOffice\Models\Peminjaman::with('ruangan')
             ->where('user_id', $user->id)
+            ->where('is_hidden_by_user', false)
             ->where('status', 'disetujui')
             ->where(function ($q) use ($dateToday, $timeNow) {
                 $q->where('tanggal_pinjam', '>', $dateToday)
@@ -42,6 +46,7 @@
         // Pengajuan Terakhir
         $recentBookings = \Modules\EOffice\Models\Peminjaman::with('ruangan')
             ->where('user_id', $user->id)
+            ->where('is_hidden_by_user', false)
             ->latest()
             ->take(5)
             ->get();
@@ -49,25 +54,36 @@
 
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-8">
         <div class="min-w-0">
-            <h1 class="text-[22px] font-bold text-gray-900 tracking-tight flex items-center gap-2">
-                Selamat datang, <span
-                    class="truncate block max-w-[200px] sm:max-w-xs">{{ array_pad(explode(' ', $user->name), 1, 'Mahasiswa')[0] }}</span>
+            <h1 class="text-[22px] font-bold text-gray-900 tracking-tight">
+                Dashboard Peminjaman
             </h1>
-            <p class="text-[13px] text-gray-500 mt-1.5">Kelola dan pantau pengajuan peminjaman ruangan Anda di sini.</p>
+            <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1 mt-1.5 text-[13px] text-gray-500">
+                <span>Selamat datang kembali, <strong class="font-semibold text-gray-900">{{ $user->name }}</strong></span>
+                <span class="text-gray-300" aria-hidden="true">&middot;</span>
+                <time datetime="{{ now()->toDateString() }}">{{ now()->locale('id')->translatedFormat('l, d F Y') }}</time>
+            </div>
         </div>
         <div class="flex flex-shrink-0 gap-3">
             <a href="{{ route('eoffice.peminjaman.user.kalender') }}"
-                class="inline-flex items-center justify-center bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-[13px] font-semibold px-4 py-[11px] rounded-xl transition-all shadow-sm">
-                Lihat Kalender
+               style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; background:#fff; border:1px solid #E2E8F0; border-radius:8px; font-size:12px; font-weight:600; color:#64748B; text-decoration:none; transition:all .15s; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,.04);"
+               onmouseover="this.style.background='#F8FAFC'; this.style.borderColor='#CBD5E1'; this.style.boxShadow='0 2px 6px rgba(0,0,0,.07)'"
+               onmouseout="this.style.background='#fff'; this.style.borderColor='#E2E8F0'; this.style.boxShadow='0 1px 2px rgba(0,0,0,.04)'">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>Lihat Kalender</span>
             </a>
             <a href="{{ route('eoffice.peminjaman.user.booking') }}"
-                class="inline-flex items-center justify-center bg-[#0B266E] hover:bg-[#071946] text-white text-[13px] font-semibold px-4 py-[11px] rounded-xl transition-all shadow-sm">
-                + Pinjam Ruangan
+               style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:#0B266E; border:1px solid #0B266E; border-radius:8px; font-size:12px; font-weight:600; color:#fff; text-decoration:none; transition:all .15s; white-space:nowrap; box-shadow:0 2px 6px rgba(11,38,110,0.3);"
+               onmouseover="this.style.background='#071946'; this.style.borderColor='#071946'; this.style.boxShadow='0 4px 12px rgba(11,38,110,0.4)'"
+               onmouseout="this.style.background='#0B266E'; this.style.borderColor='#0B266E'; this.style.boxShadow='0 2px 6px rgba(11,38,110,0.3)'">
+                <span>Pinjam Ruangan</span>
             </a>
         </div>
     </div>
 
     {{-- Stats Row --}}
+<<<<<<< HEAD
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
         <a href="{{ route('eoffice.peminjaman.user.saya') }}"
             class="block bg-white rounded-[16px] border border-gray-200 p-5 flex items-center gap-4 shadow-sm hover:shadow-md hover:border-gray-300 hover:-translate-y-0.5 transition-all cursor-pointer">
@@ -118,6 +134,52 @@
                 <div class="text-[13px] font-semibold text-gray-500 mb-0.5 tracking-wide">Ditolak</div>
                 <div class="text-2xl font-black text-gray-900 leading-none">{{ $rejectedCount }}</div>
             </div>
+=======
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        <a href="{{ route('eoffice.peminjaman.user.saya') }}"
+           class="block bg-white rounded-xl border border-gray-200 py-4 px-5 transition-colors hover:border-[#0B266E]">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-lg bg-slate-100 text-[#0B266E] flex items-center justify-center flex-shrink-0">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
+                <p class="text-[13px] font-medium text-slate-500">Menunggu</p>
+            </div>
+            <p class="text-[26px] font-[800] text-gray-900 leading-none tracking-tight">{{ $pendingCount }}</p>
+        </a>
+
+        <a href="{{ route('eoffice.peminjaman.user.saya') }}"
+           class="block bg-white rounded-xl border border-gray-200 py-4 px-5 transition-colors hover:border-[#0B266E]">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-lg bg-slate-100 text-[#0B266E] flex items-center justify-center flex-shrink-0">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                </div>
+                <p class="text-[13px] font-medium text-slate-500">Jadwal Aktif</p>
+            </div>
+            <p class="text-[26px] font-[800] text-gray-900 leading-none tracking-tight">{{ $approvedCount }}</p>
+        </a>
+
+        <a href="{{ route('eoffice.peminjaman.user.riwayat') }}"
+           class="block bg-white rounded-xl border border-gray-200 py-4 px-5 transition-colors hover:border-[#0B266E]">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-lg bg-slate-100 text-[#0B266E] flex items-center justify-center flex-shrink-0">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                </div>
+                <p class="text-[13px] font-medium text-slate-500">Ditolak</p>
+            </div>
+            <p class="text-[26px] font-[800] text-gray-900 leading-none tracking-tight">{{ $rejectedCount }}</p>
+>>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
         </a>
     </div>
 
@@ -136,7 +198,11 @@
             {{-- Table Header --}}
             <div
                 class="px-5 py-2.5 border-b border-gray-100 flex justify-between items-center text-[12px] font-medium text-gray-500 bg-gray-50/50">
+<<<<<<< HEAD
                 <div class="flex-1">Ruangan & Tujuan</div>
+=======
+                <div class="flex-1">Ruangan & Kegiatan</div>
+>>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                 <div class="w-32 text-right">Waktu</div>
             </div>
 
@@ -166,6 +232,7 @@
                     </div>
                 @empty
                     <div class="px-5 py-12 flex flex-col items-center justify-center text-center">
+<<<<<<< HEAD
                         <div class="w-10 h-10 flex items-center justify-center text-gray-300 mb-3">
                             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -176,6 +243,8 @@
                                 <polyline points="10 9 9 9 8 9"></polyline>
                             </svg>
                         </div>
+=======
+>>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                         <div class="text-[13px] font-medium text-gray-500 max-w-[240px]">
                             Jadwal ruangan yang disetujui dalam waktu dekat belum tersedia
                         </div>
@@ -202,8 +271,13 @@
                         <tr class="border-b border-gray-100 bg-gray-50/50">
                             <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap">Ruangan &
                                 Tanggal</th>
+<<<<<<< HEAD
                             <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap">Tujuan</th>
                             <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap text-right">
+=======
+                            <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap">Kegiatan</th>
+                            <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap text-left">
+>>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                                 Status</th>
                         </tr>
                     </thead>
@@ -222,6 +296,7 @@
                                     </div>
                                 </td>
                                 <td class="px-5 py-3.5 align-top text-[11px] text-gray-500">
+<<<<<<< HEAD
                                     <div class="line-clamp-2 max-w-[180px]" title="{{ $booking->tujuan }}">
                                         {{ $booking->tujuan }}
                                     </div>
@@ -239,6 +314,19 @@
                                     @endif
                                 </td>
                                 <td class="px-5 py-3.5 align-top text-right">
+=======
+                                    <div class="line-clamp-2 max-w-[120px]" title="{{ $booking->tujuan }}">
+                                        {{ $booking->tujuan }}
+                                    </div>
+                                    @if($booking->status === 'ditolak' && $booking->alasan_penolakan)
+                                        <div class="text-[10px] font-medium text-rose-600 mt-1"
+                                            title="{{ $booking->alasan_penolakan }}">
+                                            <span class="line-clamp-1">{{ $booking->alasan_penolakan }}</span>
+                                        </div>
+                                    @endif
+                                </td>
+                                <td class="px-5 py-3.5 align-top text-left">
+>>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                                     @php
                                         $st = ['bg' => '#F3F4F6', 'color' => '#374151', 'border' => '#E5E7EB'];
                                         if (strtolower($booking->status) === 'disetujui')
