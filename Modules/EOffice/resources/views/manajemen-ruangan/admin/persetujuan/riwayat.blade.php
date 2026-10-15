@@ -124,9 +124,9 @@
                     </div>
 
                     <!-- Wrapper for Filter & Sort to sit side-by-side on mobile -->
-                    <div class="flex flex-row items-stretch gap-2.5 w-full sm:w-auto">
+                    <div class="relative flex flex-row items-stretch gap-2.5 w-full sm:w-auto">
                         {{-- Filter --}}
-                        <div class="relative flex-1 sm:flex-none" x-data="{ open: false }">
+                        <div class="static sm:relative flex-1 sm:flex-none" x-data="{ open: false }" @click.outside="open = false">
                         <button type="button" @click="open = !open" 
                             class="flex items-center justify-center w-full sm:w-auto relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
                             :class="open ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-200 text-slate-700 hover:bg-gray-50'">
@@ -141,22 +141,28 @@
                             @endif
                         </button>
 
-                        <div x-show="open" @click.outside="open = false" style="display: none;"
+                        <div x-show="open" style="display: none;"
                             x-transition:enter="transition ease-out duration-100" 
                             x-transition:enter-start="opacity-0 scale-95" 
                             x-transition:enter-end="opacity-100 scale-100" 
                             x-transition:leave="transition ease-in duration-75" 
                             x-transition:leave-start="opacity-100 scale-100" 
                             x-transition:leave-end="opacity-0 scale-95"
-                            class="absolute left-0 sm:right-0 sm:left-auto top-full mt-2 origin-top sm:origin-top-right bg-white rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-gray-100 z-50 w-full sm:w-80 max-w-sm">
-                            <div class="p-4 space-y-4">
+                            class="absolute left-0 right-0 sm:right-0 sm:left-auto top-full mt-2 origin-top sm:origin-top-right bg-white rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-gray-100 z-50 w-full sm:w-80 max-h-[calc(100vh-190px)] overflow-y-auto">
+                            <div class="p-4 space-y-3.5">
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-700 mb-1.5 relative z-10 w-full bg-white">Rentang Waktu</label>
-                                    <div class="flex flex-col sm:flex-row gap-2">
-                                        <input type="date" name="start_date" value="{{ request('start_date') }}"
-                                            class="w-full sm:w-1/2 text-xs border border-gray-200 rounded block p-2 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] cursor-text">
-                                        <input type="date" name="end_date" value="{{ request('end_date') }}"
-                                            class="w-full sm:w-1/2 text-xs border border-gray-200 rounded block p-2 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] cursor-text">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <span class="text-[10px] font-medium text-gray-400 block mb-0.5">Dari Tanggal</span>
+                                            <input type="date" name="start_date" value="{{ request('start_date') }}"
+                                                class="w-full text-xs border border-gray-200 rounded-lg block p-2 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] cursor-text bg-white">
+                                        </div>
+                                        <div>
+                                            <span class="text-[10px] font-medium text-gray-400 block mb-0.5">Sampai Tanggal</span>
+                                            <input type="date" name="end_date" value="{{ request('end_date') }}"
+                                                class="w-full text-xs border border-gray-200 rounded-lg block p-2 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] cursor-text bg-white">
+                                        </div>
                                     </div>
                                 </div>
                                 <div>
@@ -175,7 +181,7 @@
                                         <input type="hidden" name="ruangan_id" :value="selectedId">
 
                                         <button type="button" @click="open = !open" 
-                                            class="w-full flex items-center justify-between text-[13px] border border-gray-200 rounded p-2 bg-white hover:border-[#0B266E] focus:outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] transition-colors cursor-pointer">
+                                            class="w-full flex items-center justify-between text-[13px] border border-gray-200 rounded-lg p-2 bg-white hover:border-[#0B266E] focus:outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] transition-colors cursor-pointer">
                                             <span x-text="selectedName" class="truncate text-gray-700"></span>
                                             <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -219,7 +225,7 @@
                                         <input type="hidden" name="status" :value="selectedVal">
 
                                         <button type="button" @click="open = !open" 
-                                            class="w-full flex items-center justify-between text-[13px] border border-gray-200 rounded p-2 bg-white hover:border-[#0B266E] focus:outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] transition-colors cursor-pointer">
+                                            class="w-full flex items-center justify-between text-[13px] border border-gray-200 rounded-lg p-2 bg-white hover:border-[#0B266E] focus:outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] transition-colors cursor-pointer">
                                             <span x-text="selectedName" class="truncate text-gray-700"></span>
                                             <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -238,11 +244,11 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="pt-2 flex justify-end gap-2 border-t border-gray-100">
+                                <div class="pt-2 flex items-center justify-end gap-2 border-t border-gray-100">
                                     <a href="{{ route('eoffice.peminjaman.admin.riwayat.index') }}"
-                                        class="px-3 py-1.5 text-[13px] font-medium text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">Reset</a>
+                                        class="px-3.5 py-1.5 text-[13px] font-medium text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer text-center">Reset</a>
                                     <button type="submit"
-                                        class="px-3 py-1.5 text-[13px] font-medium text-white bg-[#0B266E] rounded-lg hover:bg-[#091F5E] transition-colors cursor-pointer">Terapkan
+                                        class="px-4 py-1.5 text-[13px] font-medium text-white bg-[#0B266E] rounded-lg hover:bg-[#091F5E] transition-colors cursor-pointer whitespace-nowrap text-center">Terapkan
                                         Filter</button>
                                 </div>
                             </div>
