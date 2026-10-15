@@ -697,6 +697,7 @@
         </div>
             <div class="mp-card-body" x-data="{ 
                 selectedIds: [],
+                showBulkDeleteModal: false,
                 toggleAll() {
                     let checkboxes = document.querySelectorAll('.bulk-checkbox');
                     if (this.selectedIds.length === checkboxes.length) {
@@ -708,11 +709,6 @@
                 get allSelected() {
                     let checkboxes = document.querySelectorAll('.bulk-checkbox');
                     return checkboxes.length > 0 && this.selectedIds.length === checkboxes.length;
-                },
-                submitBulkDelete() {
-                    if (confirm('Yakin ingin menghapus permanen ' + this.selectedIds.length + ' jadwal terpilih?')) {
-                        $refs.bulkForm.submit();
-                    }
                 }
              }">
 
@@ -726,10 +722,54 @@
                         class="bg-red-50/80 px-4 py-2.5 border-b border-red-100 flex items-center justify-between">
                         <span class="text-red-700 text-[13px] font-bold"><span x-text="selectedIds.length"></span>
                             Jadwal Terpilih</span>
-                        <button type="button" @click="submitBulkDelete"
+                        <button type="button" @click="showBulkDeleteModal = true"
                             class="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-[12px] font-bold shadow-sm transition-colors cursor-pointer">
                             Hapus Terpilih
                         </button>
+                    </div>
+
+                    <!-- BULK DELETE MODAL -->
+                    <div x-show="showBulkDeleteModal" x-cloak style="display: none;"
+                        class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6 text-left whitespace-normal">
+
+                        <div x-show="showBulkDeleteModal" x-transition:enter="ease-out duration-300"
+                            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                            x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                            x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/60 transition-opacity"
+                            @click="showBulkDeleteModal = false"></div>
+
+                        <div x-show="showBulkDeleteModal" x-transition:enter="ease-out duration-300"
+                            x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                            x-transition:leave="ease-in duration-200"
+                            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                            x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                            class="relative bg-white rounded-t-[24px] sm:rounded-[20px] shadow-2xl w-full max-w-[400px] flex flex-col p-6 overflow-hidden z-10 text-center">
+
+                            <div
+                                class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4 border border-red-100">
+                                <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </div>
+                            <h3 class="font-bold text-gray-900 text-[16px] mb-2 tracking-tight">Konfirmasi Hapus</h3>
+                            <p class="text-[13.5px] text-gray-500 mb-6 leading-relaxed px-2">
+                                Kamu yakin ingin menghapus <span x-text="selectedIds.length" class="font-bold"></span>
+                                jadwal terpilih secara massal?
+                            </p>
+
+                            <div class="flex justify-center gap-3">
+                                <button type="button" @click="showBulkDeleteModal = false"
+                                    class="px-5 py-2.5 text-[13px] font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-colors focus:ring-2 focus:ring-gray-200 outline-none w-1/2 cursor-pointer">
+                                    Batal
+                                </button>
+                                <button type="button" @click="$refs.bulkForm.submit()"
+                                    class="px-5 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors shadow-sm focus:ring-2 focus:ring-red-500 focus:ring-offset-1 outline-none w-1/2 cursor-pointer">
+                                    Ya, Hapus
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </form>
                 <div class="mp-table-wrap" @scroll.passive="$dispatch('close-action-dropdowns')">

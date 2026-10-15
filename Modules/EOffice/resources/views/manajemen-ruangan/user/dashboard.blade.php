@@ -54,11 +54,14 @@
 
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-8">
         <div class="min-w-0">
-            <h1 class="text-[22px] font-bold text-gray-900 tracking-tight flex items-center gap-2">
-                Selamat datang, <span
-                    class="truncate block max-w-[200px] sm:max-w-xs">{{ array_pad(explode(' ', $user->name), 1, 'Mahasiswa')[0] }}</span>
+            <h1 class="text-[22px] font-bold text-gray-900 tracking-tight">
+                Dashboard Peminjaman
             </h1>
-            <p class="text-[13px] text-gray-500 mt-1.5">Kelola dan pantau pengajuan peminjaman ruangan Anda di sini.</p>
+            <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1 mt-1.5 text-[13px] text-gray-500">
+                <span>Selamat datang kembali, <strong class="font-semibold text-gray-900">{{ $user->name }}</strong></span>
+                <span class="text-gray-300" aria-hidden="true">&middot;</span>
+                <time datetime="{{ now()->toDateString() }}">{{ now()->locale('id')->translatedFormat('l, d F Y') }}</time>
+            </div>
         </div>
         <div class="flex flex-shrink-0 gap-3">
             <a href="{{ route('eoffice.peminjaman.user.kalender') }}"
@@ -142,7 +145,7 @@
             {{-- Table Header --}}
             <div
                 class="px-5 py-2.5 border-b border-gray-100 flex justify-between items-center text-[12px] font-medium text-gray-500 bg-gray-50/50">
-                <div class="flex-1">Ruangan & Tujuan</div>
+                <div class="flex-1">Ruangan & Kegiatan</div>
                 <div class="w-32 text-right">Waktu</div>
             </div>
 
@@ -198,7 +201,7 @@
                         <tr class="border-b border-gray-100 bg-gray-50/50">
                             <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap">Ruangan &
                                 Tanggal</th>
-                            <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap">Tujuan</th>
+                            <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap">Kegiatan</th>
                             <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap text-left">
                                 Status</th>
                         </tr>
@@ -222,15 +225,9 @@
                                         {{ $booking->tujuan }}
                                     </div>
                                     @if($booking->status === 'ditolak' && $booking->alasan_penolakan)
-                                        <div class="text-[10px] font-medium text-rose-600 mt-1 flex items-start gap-1">
-                                            <svg class="w-3 h-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <circle cx="12" cy="12" r="10"></circle>
-                                                <line x1="12" y1="8" x2="12" y2="12"></line>
-                                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                                            </svg>
-                                            <span class="line-clamp-1"
-                                                title="{{ $booking->alasan_penolakan }}">{{ $booking->alasan_penolakan }}</span>
+                                        <div class="text-[10px] font-medium text-rose-600 mt-1"
+                                            title="{{ $booking->alasan_penolakan }}">
+                                            <span class="line-clamp-1">{{ $booking->alasan_penolakan }}</span>
                                         </div>
                                     @endif
                                 </td>

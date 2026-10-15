@@ -353,26 +353,20 @@
 
                 <!-- Modal Header -->
                 <div
-                    class="px-6 py-4 border-b border-[#0B266E]/10 flex-shrink-0 flex justify-between items-center bg-[#0B266E]/[0.06] z-10">
+                    class="px-6 py-4 border-b border-[#0B266E]/10 flex-shrink-0 flex items-center justify-between bg-[#0B266E]/[0.06] z-10">
                     <div class="flex items-center gap-3">
-                        <div class="bg-[#0B266E] p-2.5 rounded-xl">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                </path>
-                            </svg>
+                        <div class="w-9 h-9 rounded-xl bg-[#0B266E] flex items-center justify-center">
+                            <span class="material-symbols-outlined text-white" style="font-size:20px">description</span>
                         </div>
                         <div>
-                            <h3 class="text-base font-semibold text-[#1A1C1E]">Detail Riwayat Peminjaman</h3>
-                            <p class="text-xs text-[#0B266E] mt-0.5">Riwayat peminjaman dari <span class="font-bold"
+                            <h3 class="text-sm font-bold text-[#1A1C1E] tracking-tight">Detail Riwayat Peminjaman</h3>
+                            <p class="text-[10px] text-[#0B266E] font-medium">Riwayat peminjaman dari <span class="font-bold"
                                     x-text="selected.nama || '{{ auth()->user()->name }}'"></span></p>
                         </div>
                     </div>
                     <button type="button" @click="$dispatch('close-detail')"
-                        class="text-[#0B266E] hover:bg-[#0B266E]/10 transition-colors cursor-pointer p-1.5 rounded-lg">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
+                        class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
+                        <span class="material-symbols-outlined" style="font-size:20px">close</span>
                     </button>
                 </div>
 

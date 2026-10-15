@@ -254,10 +254,7 @@
                     <div
                         class="text-center py-20 px-6 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
                         <h3 class="text-lg font-bold text-gray-900 mb-1">Peminjaman Kosong</h3>
-                        <p class="text-[13px] text-gray-500 max-w-sm mx-auto mb-6">Anda tidak memiliki pengajuan peminjaman ruangan yang sedang berjalan atau aktif saat ini.</p>
-                        <a href="{{ route('eoffice.peminjaman.user.booking') }}"
-                            class="inline-flex items-center justify-center bg-[#0B266E] hover:bg-[#071946] text-white text-[14px] font-semibold px-6 py-[11px] rounded-full transition-colors shadow-md shadow-blue-900/10">Mulai
-                            Ajukan Peminjaman</a>
+                        <p class="text-[13px] text-gray-500 max-w-sm mx-auto mb-0">Anda tidak memiliki pengajuan peminjaman ruangan yang sedang berjalan atau aktif saat ini.</p>
                     </div>
                 </div>
             @endif

@@ -395,23 +395,19 @@
                     class="relative bg-white rounded-t-[24px] sm:rounded-[20px] rounded-b-none sm:rounded-b-[20px] shadow-2xl w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col border-0 sm:border border-gray-100">
 
                     <div
-                        class="px-6 py-4 border-b border-[#0B266E]/10 flex-shrink-0 flex justify-between items-center bg-[#0B266E]/[0.06] z-10">
+                        class="px-6 py-4 border-b border-[#0B266E]/10 flex-shrink-0 flex items-center justify-between bg-[#0B266E]/[0.06] z-10">
                         <div class="flex items-center gap-3">
-                            <div class="bg-[#0B266E] p-2.5 rounded-xl">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                            <div class="w-9 h-9 rounded-xl bg-[#0B266E] flex items-center justify-center">
+                                <span class="material-symbols-outlined text-white" style="font-size:20px">verified</span>
                             </div>
                             <div>
-                                <h3 class="text-base font-semibold text-[#1A1C1E]">Verifikasi Peminjaman</h3>
-                                <p class="text-xs text-[#0B266E] mt-0.5">Penanganan peminjaman dari <span class="font-bold" x-text="selectedName"></span></p>
+                                <h3 class="text-sm font-bold text-[#1A1C1E] tracking-tight">Verifikasi Peminjaman</h3>
+                                <p class="text-[10px] text-[#0B266E] font-medium">Penanganan peminjaman dari <span class="font-bold" x-text="selectedName"></span></p>
                             </div>
                         </div>
                         <button type="button" @click="closeModal()"
-                            class="text-[#0B266E] hover:bg-[#0B266E]/10 transition-colors cursor-pointer p-1.5 rounded-lg">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
+                            class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
+                            <span class="material-symbols-outlined" style="font-size:20px">close</span>
                         </button>
                     </div>
 
