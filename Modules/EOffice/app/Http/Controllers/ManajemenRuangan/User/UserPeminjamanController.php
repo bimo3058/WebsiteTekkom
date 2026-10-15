@@ -229,7 +229,7 @@ class UserPeminjamanController extends Controller
         $bookingsRaw = Peminjaman::with('user:id,name')
             ->whereBetween('tanggal_pinjam', [$weekStart->format('Y-m-d'), $weekEnd->format('Y-m-d')])
             ->whereIn('status', ['menunggu', 'disetujui'])
-            ->get(['id', 'user_id', 'ruangan_id', 'tanggal_pinjam', 'jam_mulai', 'jam_selesai', 'status', 'tujuan']);
+            ->get(['id', 'user_id', 'ruangan_id', 'tanggal_pinjam', 'jam_mulai', 'jam_selesai', 'status', 'tujuan', 'source', 'source_id']);
 
         // For month heatmap - count bookings per day
         $monthStart = $monthDate->copy()->startOfMonth();
@@ -253,9 +253,8 @@ class UserPeminjamanController extends Controller
         $phone = ''; // User model currently may not have phone natively unless it does, we can leave blank.
 
         $internalSchedules = \Modules\EOffice\Models\MrJadwalInternal::all()->map(function ($jadwal) {
-            $publicCategories = ['Jadwal Akademik (Kuliah)', 'Pindah Kelas', 'Pindah / Pengganti Kelas'];
-            if (!in_array($jadwal->kategori, $publicCategories)) {
-                $jadwal->keterangan = 'Agenda Internal Terjadwal';
+            if (in_array($jadwal->kategori, ['Lainnya', 'Lainnya...', 'Event / Kegiatan', 'Rapat Internal'])) {
+                $jadwal->keterangan = 'Terpakai';
             }
             return $jadwal;
         });

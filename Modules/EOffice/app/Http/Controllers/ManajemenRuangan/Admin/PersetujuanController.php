@@ -84,6 +84,14 @@ class PersetujuanController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('source')) {
+            if ($request->source === 'umum') {
+                $query->whereNull('source');
+            } else {
+                $query->where('source', $request->source);
+            }
+        }
+
         if ($request->filled('ruangan_id')) {
             $query->where('ruangan_id', $request->ruangan_id);
         }
@@ -144,6 +152,14 @@ class PersetujuanController extends Controller
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        if ($request->filled('source')) {
+            if ($request->source === 'umum') {
+                $query->whereNull('source');
+            } else {
+                $query->where('source', $request->source);
+            }
         }
 
         if ($request->filled('ruangan_id')) {
