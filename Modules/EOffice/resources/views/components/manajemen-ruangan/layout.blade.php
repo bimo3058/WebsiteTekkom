@@ -9,14 +9,24 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
         rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css" />
     <style>
         [x-cloak] {
             display: none !important;
         }
 
         /* Custom NProgress Color (Biru Dongker) */
+        #nprogress {
+            pointer-events: none;
+        }
+
         #nprogress .bar {
             background: #0B266E !important;
+            position: fixed;
+            z-index: 9999;
+            top: 0;
+            left: 0;
+            width: 100%;
             height: 3px !important;
         }
 
@@ -1029,7 +1039,7 @@
                             loading: false,
                             error: false,
                             items: [],
-                            unreadCount: {{ auth()->check() ? auth()->user()->unreadNotifications->count() : 0 }},
+                            unreadCount: {{ auth()->check() ? auth()->user()->unreadNotifications()->count() : 0 }},
                             init() {
                                 setInterval(async () => {
                                     try {
