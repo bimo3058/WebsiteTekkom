@@ -84,7 +84,9 @@
         </a>
 
         <!-- Card 2 -->
-        <a href="{{ route('eoffice.peminjaman.admin.persetujuan.index') }}" class="mp-stat mp-stat-custom clickable">
+        <a href="{{ route('eoffice.peminjaman.admin.persetujuan.index') }}" class="mp-stat mp-stat-custom clickable"
+           x-data="{ count: {{ $pendingApproval ?? 0 }} }"
+           @pending-approval-updated.window="count = $event.detail">
             <div class="mp-stat-header">
                 <div class="mp-stat-icon-new">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -94,7 +96,7 @@
                 </div>
                 <div class="mp-stat-title">Menunggu Approval</div>
             </div>
-            <div class="mp-stat-value" {!! ($pendingApproval ?? 0) > 0 ? 'style="color: #D97706;"' : '' !!}>
+            <div class="mp-stat-value" :style="count > 0 ? 'color: #D97706;' : ''" x-text="count">
                 {{ number_format($pendingApproval ?? 0) }}
             </div>
         </a>
@@ -110,7 +112,7 @@
                         <line x1="3" y1="10" x2="21" y2="10"></line>
                     </svg>
                 </div>
-                <div class="mp-stat-title">Reservasi Aktif</div>
+                <div class="mp-stat-title">Kegiatan Hari Ini</div>
             </div>
             <div class="mp-stat-value">{{ number_format($dipakaiHariIni ?? 0) }}</div>
         </div>

@@ -955,7 +955,7 @@
                                     <span x-show="sidebarOpen">{{ $item['label'] }}</span>
                                     @if(isset($item['badge']))
                                         <span @if(isset($item['poll_url'])) x-data="{ count: {{ $item['badge'] }} }"
-                                            x-init="setInterval(async () => { try { let res = await fetch('{{ $item['poll_url'] }}'); let json = await res.json(); count = json.count; } catch(e) {} }, 30000);"
+                                            x-init="setInterval(async () => { try { let res = await fetch('{{ $item['poll_url'] }}'); let json = await res.json(); count = json.count; window.dispatchEvent(new CustomEvent('pending-approval-updated', { detail: json.count })); } catch(e) {} }, 15000);"
                                         x-show="sidebarOpen && count > 0" x-text="count > 99 ? '99+' : count" @else
                                             x-show="sidebarOpen" @endif
                                             class="inline-flex items-center justify-center px-1.5 min-w-[20px] h-[20px] rounded-full bg-rose-100 text-rose-600 text-[10px] font-bold shrink-0 ml-auto"
@@ -1030,6 +1030,19 @@
                             error: false,
                             items: [],
                             unreadCount: {{ auth()->check() ? auth()->user()->unreadNotifications->count() : 0 }},
+                            init() {
+                                setInterval(async () => {
+                                    try {
+                                        const res = await fetch('{{ route('eoffice.peminjaman.user.notifikasi.count') }}', {
+                                            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                                        });
+                                        if (res.ok) {
+                                            const data = await res.json();
+                                            this.unreadCount = data.count;
+                                        }
+                                    } catch (_) {}
+                                }, 10000);
+                            },
                             async toggle() {
                                 this.openNotif = !this.openNotif;
                                 if (!this.openNotif) return;
@@ -1083,7 +1096,15 @@
                                     <template x-if="unreadCount > 0">
                                         <form method="POST"
                                             action="{{ route('eoffice.peminjaman.user.notifikasi.read-all') }}"
-                                            class="m-0 shrink-0" id="mark-all-read-form">
+                                            class="m-0 shrink-0" id="mark-all-read-form"
+                                            @submit.prevent="
+                                                unreadCount = 0;
+                                                items.forEach(i => i.is_read = true);
+                                                fetch('{{ route('eoffice.peminjaman.user.notifikasi.read-all') }}', {
+                                                    method: 'POST',
+                                                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+                                                }).catch(() => {});
+                                            ">
                                             @csrf
                                             <button type="submit"
                                                 class="text-[12px] font-semibold text-[#0B266E] hover:underline cursor-pointer bg-transparent border-none p-0 whitespace-nowrap">Tandai
@@ -1298,36 +1319,6 @@
                     }).catch(err => console.error(err));
                 });
             }
-
-            // AJAX Polling khusus Notifikasi tiap 10 detik
-            setInterval(() => {
-                fetch('{{ route('eoffice.peminjaman.user.notifikasi.count') }}', {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        const count = data.count;
-                        let badge = document.getElementById('notif-badge');
-
-                        if (count > 0) {
-                            let displayCount = count > 99 ? '99+' : count;
-                            if (badge) {
-                                badge.innerText = displayCount;
-                                badge.style.display = 'flex';
-                            } else {
-                                // Buat badge jika belum ada (dari state 0 ke >0)
-                                const btn = document.querySelector('[x-data="{ openNotif: false }"] button');
-                                if (btn) {
-                                    btn.insertAdjacentHTML('beforeend', `<span id="notif-badge" class="absolute flex items-center justify-center rounded-full min-w-[18px] h-[18px] px-[4px] bg-[#F43F5E] border-2 border-white text-white text-[10px] font-bold top-[-5px] right-[-5px] shadow-sm leading-none">${displayCount}</span>`);
-                                }
-                            }
-                        } else {
-                            // Hilangkan jika 0
-                            if (badge) badge.style.display = 'none';
-                        }
-                    })
-                    .catch(err => console.error('Notif Polling Error:', err));
-            }, 10000);
         });
     </script>
 
