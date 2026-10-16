@@ -312,7 +312,7 @@ class UserPeminjamanController extends Controller
             })
             ->orderBy('tanggal_pinjam', 'asc')
             ->orderBy('jam_mulai', 'asc')
-            ->paginate((int) request('per_page', 10))->withQueryString();
+            ->get();
 
         return view('eoffice::manajemen-ruangan.user.peminjaman.index', compact('peminjamans'));
     }
