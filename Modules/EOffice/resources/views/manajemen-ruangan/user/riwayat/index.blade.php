@@ -152,7 +152,7 @@
                                     "jam" => \Carbon\Carbon::parse($riwayat->jam_mulai)->format("H:i") . " - " . \Carbon\Carbon::parse($riwayat->jam_selesai)->format("H:i") . " WIB",
                                     "status" => $riwayat->status,
                                     "alasan" => $riwayat->alasan_penolakan ?? "",
-                                    "berkas" => $riwayat->berkas_pendukung ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($riwayat->berkas_pendukung, "eoffice") : null,
+                                    "berkas" => $riwayat->berkas_pendukung ? \Illuminate\Support\Facades\URL::signedRoute('eoffice.peminjaman.user.saya.berkas', ['id' => $riwayat->id]) : null,
                                     "diajukan_pada" => $riwayat->created_at->translatedFormat("d M Y, H:i"),
                                     "nama" => auth()->user()->name
                                 ]) }})' class="w-full text-left px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-gray-100 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors cursor-pointer">

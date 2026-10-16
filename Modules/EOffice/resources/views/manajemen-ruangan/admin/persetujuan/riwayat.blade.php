@@ -503,7 +503,7 @@
                                             'jam' => \Carbon\Carbon::parse($pinjam->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($pinjam->jam_selesai)->format('H:i') . ' WIB',
                                             'durasi' => \Carbon\Carbon::parse($pinjam->jam_mulai)->diffInHours(\Carbon\Carbon::parse($pinjam->jam_selesai)) . ' Jam',
                                             'kegiatan' => $pinjam->tujuan,
-                                            'berkas' => $pinjam->berkas_pendukung ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) : null,
+                                            'berkas' => $pinjam->berkas_pendukung ? \Illuminate\Support\Facades\URL::signedRoute('eoffice.peminjaman.user.saya.berkas', ['id' => $pinjam->id]) : null,
                                             'waktu_pengajuan' => \Carbon\Carbon::parse($pinjam->created_at)->translatedFormat('d M Y, H:i'),
                                             'waktu_diproses' => $pinjam->waktu_approval ? \Carbon\Carbon::parse($pinjam->waktu_approval)->translatedFormat('d M Y, H:i') : '-',
                                             'diproses_oleh' => '-',

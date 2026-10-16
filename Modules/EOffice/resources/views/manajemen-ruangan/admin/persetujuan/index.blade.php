@@ -127,7 +127,7 @@
                     }">
                         @forelse($peminjamans as $pinjam)
                             @php
-                                $berkasUrl = $pinjam->berkas_pendukung ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) : '';
+                                $berkasUrl = $pinjam->berkas_pendukung ? \Illuminate\Support\Facades\URL::signedRoute('eoffice.peminjaman.user.saya.berkas', ['id' => $pinjam->id]) : '';
                             @endphp
                             <tr class="mp-tr">
                                 {{-- Kolom 1: Peminjam --}}

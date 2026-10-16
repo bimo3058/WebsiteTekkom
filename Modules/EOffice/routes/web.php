@@ -745,6 +745,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 // Transaksi
                 Route::get('/saya', [$MRUserPeminjamanController, 'saya'])->name('saya');
                 Route::post('/saya/batal/{id}', [$MRUserPeminjamanController, 'batalkanBooking'])->name('saya.batal');
+                Route::get('/saya/berkas/{id}', [$MRUserPeminjamanController, 'lihatBerkas'])->name('saya.berkas')->middleware('signed');
                 Route::get('/riwayat', [$MRUserPeminjamanController, 'riwayat'])->name('riwayat');
                 Route::post('/riwayat/{id}/hide', [$MRUserPeminjamanController, 'hideRiwayat'])->name('riwayat.hide');
 

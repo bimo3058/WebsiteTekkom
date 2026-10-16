@@ -67,7 +67,7 @@
                     @php
                         $isApproved = strtolower($booking->status) === 'disetujui';
                         $tgl = \Carbon\Carbon::parse($booking->tanggal_pinjam);
-                        $berkasUrl = $booking->berkas_pendukung ? ($booking->berkas_url ?? app(\App\Services\SupabaseStorage::class)->getPublicUrl($booking->berkas_pendukung, 'eoffice')) : null;
+                        $berkasUrl = $booking->berkas_pendukung ? \Illuminate\Support\Facades\URL::signedRoute('eoffice.peminjaman.user.saya.berkas', ['id' => $booking->id]) : null;
                     @endphp
 
                     <div class="bg-white rounded-xl border border-[#DFE1E7] hover:border-[#CBD5E1] shadow-sm hover:shadow transition-all overflow-hidden flex flex-col md:flex-row md:items-stretch relative"

@@ -334,6 +334,47 @@ class UserPeminjamanController extends Controller
         return redirect()->back()->withErrors('Aksi tidak diijinkan atau status sudah tidak bisa dibatalkan.');
     }
 
+    /**
+     * Tampilkan berkas pendukung secara aman dengan otorisasi dan URL bertanda tangan.
+     */
+    public function lihatBerkas($id, \App\Services\SupabaseStorage $storage)
+    {
+        $booking = Peminjaman::with('ruangan')->findOrFail($id);
+
+        $user = auth()->user();
+        $isOwner = (int) $booking->user_id === (int) $user->id;
+        $isAdmin = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['admin', 'superadmin', 'admin_eoffice']);
+
+        if (! $isOwner && ! $isAdmin) {
+            abort(403, 'Akses Ditolak: Anda tidak memiliki izin untuk melihat dokumen ini.');
+        }
+
+        if (! $booking->berkas_pendukung) {
+            abort(404, 'Berkas pendukung tidak ditemukan.');
+        }
+
+        $file = $storage->download($booking->berkas_pendukung, 'eoffice');
+
+        if (! $file || empty($file['content'])) {
+            abort(404, 'File tidak ditemukan di server penyimpanan.');
+        }
+
+        // Format nama file: Surat_Peminjaman_{NamaRuang}_{Tanggal}_{ShortHash}.pdf
+        $cleanRoomName = \Illuminate\Support\Str::slug($booking->ruangan->nama ?? 'Ruangan');
+        $dateStr = $booking->tanggal_pinjam ? \Carbon\Carbon::parse($booking->tanggal_pinjam)->format('Ymd') : date('Ymd');
+        $shortHash = substr(md5($booking->id . ($booking->created_at ?? '')), 0, 5);
+
+        $extension = pathinfo($booking->berkas_pendukung, PATHINFO_EXTENSION) ?: 'pdf';
+        $fileName = "Surat_Peminjaman_{$cleanRoomName}_{$dateStr}_{$shortHash}.{$extension}";
+        $mimeType = $file['mime_type'] ?? 'application/pdf';
+
+        return response($file['content'], 200, [
+            'Content-Type'        => $mimeType,
+            'Content-Disposition' => "inline; filename=\"{$fileName}\"",
+            'Cache-Control'       => 'private, max-age=3600',
+        ]);
+    }
+
     // Feature 5: Riwayat Peminjaman (Finished/Rejected/Canceled)
     // Feature 5: Riwayat Peminjaman (Finished/Rejected/Canceled)
     public function riwayat()
