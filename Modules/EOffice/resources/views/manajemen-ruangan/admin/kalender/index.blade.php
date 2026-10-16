@@ -25,7 +25,9 @@
                 'user_id' => $b->user_id,
                 'telepon' => $b->nomor_telepon ?? '-',
                 'jam_mulai' => substr($b->jam_mulai, 0, 5),
-                'jam_selesai' => substr($b->jam_selesai, 0, 5)
+                'jam_selesai' => substr($b->jam_selesai, 0, 5),
+                'source' => $b->source ?? null,
+                'source_label' => $b->source_label ?? 'Peminjaman Langsung',
             ];
         }
 
@@ -485,20 +487,41 @@
                                                     
                                                     if ($status === 'internal') {
                                                         $eventType = 'Jadwal Internal';
-                                                        if ($type === 'Jadwal Akademik (Kuliah)' || $type === 'Pindah Kelas' || $type === 'Pindah / Pengganti Kelas') {
+                                                        $isKuliah = in_array($type, ['Jadwal Akademik (Kuliah)', 'Kuliah Pengganti', 'Pindah Kelas', 'Pindah / Pengganti Kelas']);
+                                                        $isMaintenance = in_array($type, ['Pemeliharaan / Penutupan', 'Pemeliharaan/Penutupan', 'Maintenance / Perbaikan', 'Sterilisasi Ruangan', 'Penutupan Khusus']);
+                                                        $isUjian = in_array($type, ['Ujian & Evaluasi', 'Ujian / Evaluasi', 'Ujian / Evaluasi (UTS/UAS)']);
+
+                                                        if ($isKuliah) {
                                                             $bg = '#DBEAFE'; $border = '#60A5FA'; $text = '#1E40AF';
-                                                        } elseif ($type === 'Ujian / Evaluasi (UTS/UAS)' || $type === 'Lainnya...') {
-                                                            $bg = '#EDE9FE'; $border = '#C4B5FD'; $text = '#5B21B6';
-                                                        } else {
+                                                        } elseif ($isMaintenance) {
                                                             $bg = '#FEE2E2'; $border = '#F87171'; $text = '#991B1B';
+                                                        } else {
+                                                            $bg = '#EDE9FE'; $border = '#C4B5FD'; $text = '#5B21B6';
                                                         }
                                                         $label = trim(str_ireplace(['digunakan untuk', ' - Kelas ', ' (Kelas ', ')'], ['', '-', '-', ''], $tujuan));
                                                     } else {
+                                                        $source = $ev['source'] ?? null;
                                                         if ($isMenunggu) {
                                                             $bg = '#FEF9C3'; $border = '#FBBF24'; $text = '#B45309';
                                                             $label = 'Menunggu';
+                                                            $eventType = $ev['source_label'] ?? 'Peminjaman (Menunggu)';
                                                         } else {
-                                                            $label = substr($pengguna, 0, 15);
+                                                            if (in_array(strtolower((string)$source), ['kp', 'kerja_praktik'])) {
+                                                                $bg = '#E0F2FE'; $border = '#38BDF8'; $text = '#0369A1';
+                                                                $label = 'Seminar KP';
+                                                                $eventType = 'Seminar KP';
+                                                            } elseif (strtolower((string)$source) === 'capstone') {
+                                                                $bg = '#F3E8FF'; $border = '#C084FC'; $text = '#6B21A8';
+                                                                $label = 'Sidang Capstone';
+                                                                $eventType = 'Sidang Capstone';
+                                                            } elseif (strtolower((string)$source) === 'praktikum') {
+                                                                $bg = '#FFEDD5'; $border = '#FB923C'; $text = '#C2410C';
+                                                                $label = 'Praktikum';
+                                                                $eventType = 'Praktikum';
+                                                            } else {
+                                                                $label = substr($pengguna, 0, 15);
+                                                                $eventType = 'Peminjaman Langsung';
+                                                            }
                                                         }
                                                     }
                                                     
@@ -816,7 +839,7 @@
                 tanggal: '',
                 jam: '',
                 modeAction: 'internal',
-                kategoriType: 'Maintenance / Perbaikan',
+                kategoriType: 'Pemeliharaan / Penutupan',
                 keterangan: '',
                 nim: '',
                 jam_selesai: '',
@@ -969,12 +992,10 @@
                                                     open: false,
                                                     get selectedName() {
                                                         const map = {
-                                                            'Pindah Kelas': 'Pindah / Pengganti Kelas',
-                                                            'Maintenance / Perbaikan': 'Maintenance / Perbaikan Ruangan',
-                                                            'Sterilisasi Ruangan': 'Sterilisasi / Persiapan Ruangan',
-                                                            'Penutupan Khusus': 'Penutupan Khusus / Libur Nasional',
-                                                            'Ujian / Evaluasi': 'Ujian / Evaluasi (UTS/UAS)',
-                                                            'Lainnya': 'Lainnya...'
+                                                            'Pemeliharaan / Penutupan': 'Pemeliharaan / Penutupan',
+                                                            'Kuliah Pengganti': 'Kuliah Pengganti',
+                                                            'Ujian & Evaluasi': 'Ujian & Evaluasi',
+                                                            'Lainnya': 'Lainnya'
                                                         };
                                                         return map[kategoriType] || 'Pilih Kategori...';
                                                     },
@@ -1005,15 +1026,13 @@
                                                     x-transition:leave="transition ease-in duration-75"
                                                     x-transition:leave-start="opacity-100 scale-100"
                                                     x-transition:leave-end="opacity-0 scale-95"
-                                                    class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] overflow-y-auto max-h-48"
+                                                    class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] overflow-y-auto max-h-28 [scrollbar-width:thin] [scrollbar-color:#cbd5e1_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
                                                     style="display: none;">
                                                     <div class="p-1 flex flex-col">
-                                                        <button type="button" @click="selectItem('Pindah Kelas')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Pindah Kelas', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Pindah Kelas'}">Pindah / Pengganti Kelas</button>
-                                                        <button type="button" @click="selectItem('Maintenance / Perbaikan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Maintenance / Perbaikan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Maintenance / Perbaikan'}">Maintenance / Perbaikan Ruangan</button>
-                                                        <button type="button" @click="selectItem('Sterilisasi Ruangan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Sterilisasi Ruangan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Sterilisasi Ruangan'}">Sterilisasi / Persiapan Ruangan</button>
-                                                        <button type="button" @click="selectItem('Penutupan Khusus')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Penutupan Khusus', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Penutupan Khusus'}">Penutupan Khusus / Libur Nasional</button>
-                                                        <button type="button" @click="selectItem('Ujian / Evaluasi')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Ujian / Evaluasi', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Ujian / Evaluasi'}">Ujian / Evaluasi (UTS/UAS)</button>
-                                                        <button type="button" @click="selectItem('Lainnya')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Lainnya', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Lainnya'}">Lainnya...</button>
+                                                        <button type="button" @click="selectItem('Pemeliharaan / Penutupan')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Pemeliharaan / Penutupan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Pemeliharaan / Penutupan'}">Pemeliharaan / Penutupan</button>
+                                                        <button type="button" @click="selectItem('Kuliah Pengganti')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Kuliah Pengganti', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Kuliah Pengganti'}">Kuliah Pengganti</button>
+                                                        <button type="button" @click="selectItem('Ujian & Evaluasi')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Ujian & Evaluasi', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Ujian & Evaluasi'}">Ujian & Evaluasi</button>
+                                                        <button type="button" @click="selectItem('Lainnya')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Lainnya', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Lainnya'}">Lainnya</button>
                                                     </div>
                                                 </div>
                                             </div>

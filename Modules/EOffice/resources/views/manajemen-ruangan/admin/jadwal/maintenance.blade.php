@@ -4,7 +4,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
 
     <div
-        x-data="{ showModal: false, showImportModal: false, formType: '{{ $viewMode === 'akademik' ? 'rutin' : 'spesifik' }}', kategoriType: '{{ $viewMode === 'akademik' ? 'Jadwal Akademik (Kuliah)' : 'Maintenance / Perbaikan' }}' }">
+        x-data="{ showModal: false, showImportModal: false, formType: '{{ $viewMode === 'akademik' ? 'rutin' : 'spesifik' }}', kategoriType: '{{ $viewMode === 'akademik' ? 'Jadwal Akademik (Kuliah)' : 'Pemeliharaan / Penutupan' }}' }">
         <div class="mp-page-header flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 @if($viewMode === 'akademik')
@@ -77,7 +77,7 @@
                             x-data="{ 
                                 isMultiday: false,
                                 selectedRooms: [],
-                                selectedKategori: 'Maintenance / Perbaikan',
+                                selectedKategori: 'Pemeliharaan / Penutupan',
                                 tglSpesifik: '',
                                 tglMulai: '',
                                 tglSelesai: '',
@@ -133,7 +133,7 @@
                                     </div>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <!-- Bagian Kategori Kegiatan -->
-                                        <div x-data="{ open: false, options: ['Maintenance / Perbaikan', 'Sterilisasi Ruangan', 'Penutupan Khusus', 'Ujian / Evaluasi', 'Pindah Kelas', 'Lainnya'] }"
+                                        <div x-data="{ open: false, options: ['Pemeliharaan / Penutupan', 'Kuliah Pengganti', 'Ujian & Evaluasi', 'Lainnya'] }"
                                             class="relative space-y-1.5" :class="{'z-50': open, 'z-10': !open}">
                                             <label
                                                 class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori
@@ -197,7 +197,7 @@
                                             <div x-data="{ expanded: false }"
                                                 class="border-b border-slate-100 last:border-0">
                                                 <button type="button" @click="expanded = !expanded"
-                                                    class="w-full flex items-center justify-between px-3 py-2.5 hover:bg-slate-50 transition-colors">
+                                                    class="w-full flex items-center justify-between px-3 py-2.5 hover:bg-slate-50 transition-colors cursor-pointer select-none">
                                                     <div class="flex items-center gap-2">
                                                         <svg class="w-4 h-4 text-slate-400 transition-transform duration-200"
                                                             :class="{'rotate-90': expanded}" fill="none" viewBox="0 0 24 24"
@@ -213,14 +213,16 @@
                                                         Ruang</span>
                                                 </button>
                                                 <div x-show="expanded" style="display: none;"
-                                                    class="px-4 py-3 grid grid-cols-2 gap-3 bg-slate-50/50 border-t border-slate-100">
+                                                    class="px-4 py-3 grid grid-cols-2 gap-2.5 bg-slate-50/50 border-t border-slate-100">
                                                     @foreach($rooms->sortBy('nama') as $r)
-                                                        <label class="flex items-center gap-2.5 cursor-pointer group">
+                                                        <label class="flex items-center gap-2.5 px-3 py-2 rounded-lg border transition-all cursor-pointer select-none group"
+                                                            :class="selectedRooms.includes('{{ $r->id }}') ? 'bg-[#EFF6FF] border-[#0B266E]/40 shadow-xs' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/80'">
                                                             <input type="checkbox" name="ruangan_ids[]" value="{{ $r->id }}"
                                                                 x-model="selectedRooms"
-                                                                class="rounded border-slate-300 text-[#0B266E] focus:ring-[#0B266E]">
+                                                                class="w-4 h-4 rounded border-slate-300 text-[#0B266E] focus:ring-[#0B266E] cursor-pointer shrink-0">
                                                             <span
-                                                                class="text-[13px] font-bold text-slate-700 group-hover:text-[#0B266E] transition-colors leading-tight">{{ $r->nama }}</span>
+                                                                class="text-[12.5px] font-bold transition-colors leading-tight cursor-pointer"
+                                                                :class="selectedRooms.includes('{{ $r->id }}') ? 'text-[#0B266E]' : 'text-slate-700 group-hover:text-[#0B266E]'">{{ $r->nama }}</span>
                                                         </label>
                                                     @endforeach
                                                 </div>
@@ -234,12 +236,11 @@
                                     <div class="flex items-center justify-between border-b border-slate-200 pb-2 mb-1">
                                         <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Waktu & Tanggal</span>
                                         <label
-                                            class="flex items-center gap-2 cursor-pointer bg-white px-2.5 py-1 rounded-md border border-slate-200 shadow-sm">
+                                            class="flex items-center gap-2 cursor-pointer bg-white px-2.5 py-1 rounded-md border border-slate-200 shadow-sm select-none hover:bg-slate-50 transition-colors">
                                             <input type="hidden" name="is_multiday" value="0">
                                             <input type="checkbox" name="is_multiday" value="1" x-model="isMultiday"
-                                                class="rounded border-slate-300 text-[#0B266E] focus:ring-[#0B266E]">
-                                            <span class="text-[11px] font-bold text-slate-700">Rentang Waktu
-                                                (Multi-Hari)</span>
+                                                class="w-4 h-4 rounded border-slate-300 text-[#0B266E] focus:ring-[#0B266E] cursor-pointer shrink-0">
+                                            <span class="text-[11px] font-bold text-slate-700 cursor-pointer">Rentang Waktu (Multi-Hari)</span>
                                         </label>
                                     </div>
 
@@ -509,11 +510,10 @@
                                     @php
                                         $kategories = [
                                             '' => 'Semua Kategori',
-                                            'Maintenance / Perbaikan' => 'Maintenance / Perbaikan',
-                                            'Ujian / Evaluasi' => 'Ujian / Evaluasi',
-                                            'Penutupan Khusus' => 'Penutupan Khusus',
-                                            'Pindah Kelas' => 'Pindah / Pengganti Kelas',
-                                            'Lainnya' => 'Lainnya...'
+                                            'Pemeliharaan / Penutupan' => 'Pemeliharaan / Penutupan',
+                                            'Kuliah Pengganti' => 'Kuliah Pengganti',
+                                            'Ujian & Evaluasi' => 'Ujian & Evaluasi',
+                                            'Lainnya' => 'Lainnya'
                                         ];
                                     @endphp
                                     @foreach($kategories as $val => $label)
@@ -1079,104 +1079,28 @@
                                                                                 class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[9999] max-h-48 overflow-y-auto overflow-x-hidden"
                                                                                 style="display: none;">
                                                                                 <div class="p-1 flex flex-col">
-                                                                                    <button type="button"
-                                                                                        @click="selectItem('')"
-                                                                                        class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors whitespace-normal break-words"
-                                                                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': ruanganId == '', 'text-gray-700 hover:bg-gray-50': ruanganId != ''}">--
-                                                                                        Pilih Ruangan --</button>
-                                                                                    @foreach($ruangans as $r)
-                                                                                        <button type="button"
-                                                                                            @click="selectItem('{{ $r->id }}')"
-                                                                                            class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors whitespace-normal break-words"
-                                                                                            :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': ruanganId == '{{ $r->id }}', 'text-gray-700 hover:bg-gray-50': ruanganId != '{{ $r->id }}'}">
-                                                                                            {{ $r->nama }} - Lt. {{ $r->lantai }}
-                                                                                        </button>
-                                                                                    @endforeach
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <!-- Kategori -->
-                                                                    <div class="space-y-1.5">
-                                                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori Kegiatan</label>
-                                                                        <div x-data="{ 
-                                                                                        open: false,
-                                                                                        get selectedName() {
-                                                                                            const map = {
-                                                                                                'Pindah Kelas': 'Pindah / Pengganti Kelas',
-                                                                                                'Maintenance / Perbaikan': 'Maintenance / Perbaikan Ruangan',
-                                                                                                'Sterilisasi Ruangan': 'Sterilisasi / Persiapan Ruangan',
-                                                                                                'Penutupan Khusus': 'Penutupan Khusus / Libur Nasional',
-                                                                                                'Ujian / Evaluasi': 'Ujian / Evaluasi (UTS/UAS)',
-                                                                                                'Lainnya': 'Lainnya...'
-                                                                                            };
-                                                                                            return map[kategoriType] || 'Pilih Kategori...';
-                                                                                        },
-                                                                                        selectItem(val) { 
-                                                                                            kategoriType = val;
-                                                                                            this.open = false; 
-                                                                                        } 
-                                                                                    }" class="relative w-full"
-                                                                            :class="{'z-50': open, 'z-10': !open}"
-                                                                            @click.away="open = false">
-
-                                                                            <input type="hidden" name="kategori"
-                                                                                :value="kategoriType" required>
-
-                                                                            <button type="button" @click="open = !open"
-                                                                                class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]">
-                                                                                <span x-text="selectedName" class="truncate"
-                                                                                    :class="{'text-gray-400': !kategoriType, 'text-gray-800': kategoriType}"></span>
-                                                                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0"
-                                                                                    :class="{'rotate-180': open}" fill="none"
-                                                                                    stroke="currentColor" viewBox="0 0 24 24">
-                                                                                    <path stroke-linecap="round"
-                                                                                        stroke-linejoin="round" stroke-width="2"
-                                                                                        d="M19 9l-7 7-7-7" />
-                                                                                </svg>
-                                                                            </button>
-
-                                                                            <div x-show="open" x-cloak
-                                                                                x-transition:enter="transition ease-out duration-100"
-                                                                                x-transition:enter-start="opacity-0 scale-95"
-                                                                                x-transition:enter-end="opacity-100 scale-100"
-                                                                                x-transition:leave="transition ease-in duration-75"
-                                                                                x-transition:leave-start="opacity-100 scale-100"
-                                                                                x-transition:leave-end="opacity-0 scale-95"
-                                                                                class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[9999] max-h-48 overflow-y-auto"
-                                                                                style="display: none;">
-                                                                                <div class="p-1 flex flex-col">
-                                                                                    <button type="button"
-                                                                                        @click="selectItem('Pindah Kelas')"
-                                                                                        class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors"
-                                                                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Pindah Kelas', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Pindah Kelas'}">Pindah / Pengganti Kelas</button>
-                                                                                    <button type="button"
-                                                                                        @click="selectItem('Maintenance / Perbaikan')"
-                                                                                        class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Maintenance / Perbaikan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Maintenance / Perbaikan'}">Maintenance / Perbaikan Ruangan</button>
-                                                                                    <button type="button"
-                                                                                        @click="selectItem('Sterilisasi Ruangan')"
-                                                                                        class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Sterilisasi Ruangan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Sterilisasi Ruangan'}">Sterilisasi / Persiapan Ruangan</button>
-                                                                                    <button type="button"
-                                                                                        @click="selectItem('Penutupan Khusus')"
-                                                                                        class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Penutupan Khusus', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Penutupan Khusus'}">Penutupan Khusus / Libur Nasional</button>
-                                                                                    <button type="button"
-                                                                                        @click="selectItem('Ujian / Evaluasi')"
-                                                                                        class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Ujian / Evaluasi', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Ujian / Evaluasi'}">Ujian / Evaluasi (UTS/UAS)</button>
-                                                                                    <button type="button"
-                                                                                        @click="selectItem('Lainnya')"
-                                                                                        class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Lainnya', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Lainnya'}">Lainnya...</button>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    
-                                                                    <div class="space-y-1.5 sm:col-span-2">
+                                                                                     <button type="button"
+                                                                                         @click="selectItem('Pemeliharaan / Penutupan')"
+                                                                                         class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors"
+                                                                                         :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Pemeliharaan / Penutupan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Pemeliharaan / Penutupan'}">Pemeliharaan / Penutupan</button>
+                                                                                     <button type="button"
+                                                                                         @click="selectItem('Kuliah Pengganti')"
+                                                                                         class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
+                                                                                         :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Kuliah Pengganti', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Kuliah Pengganti'}">Kuliah Pengganti</button>
+                                                                                     <button type="button"
+                                                                                         @click="selectItem('Ujian & Evaluasi')"
+                                                                                         class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
+                                                                                         :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Ujian & Evaluasi', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Ujian & Evaluasi'}">Ujian & Evaluasi</button>
+                                                                                     <button type="button"
+                                                                                         @click="selectItem('Lainnya')"
+                                                                                         class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
+                                                                                         :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Lainnya', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Lainnya'}">Lainnya</button>
+                                                                                 </div>
+                                                                             </div>
+                                                                         </div>
+                                                                     </div>
+                                                                     
+                                                                     <div class="space-y-1.5 sm:col-span-2">
                                                                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Kegiatan</label>
                                                                         <input type="text" name="keterangan"
                                                                             value="{{ $j->keterangan }}" required autocomplete="off"

@@ -134,7 +134,7 @@
                                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                             </svg>
                             Filter
-                            @if(request()->hasAny(['status', 'ruangan_id', 'start_date', 'end_date']) && array_filter(request()->only(['status', 'ruangan_id', 'start_date', 'end_date'])))
+                            @if(request()->hasAny(['status', 'ruangan_id', 'start_date', 'end_date', 'source']) && array_filter(request()->only(['status', 'ruangan_id', 'start_date', 'end_date', 'source'])))
                                 <span class="absolute -top-1 -right-1 flex h-3 w-3">
                                     <span class="relative inline-flex rounded-full h-3 w-3 bg-[#0B266E] border-2 border-white"></span>
                                 </span>
@@ -240,6 +240,48 @@
                                                 <button type="button" @click="selectItem('ditolak')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'ditolak', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'ditolak'}">Ditolak</button>
                                                 <button type="button" @click="selectItem('dibatalkan')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'dibatalkan', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'dibatalkan'}">Dibatalkan</button>
                                                 <button type="button" @click="selectItem('selesai')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'selesai', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'selesai'}">Selesai</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1.5 relative z-10 w-full bg-white">Asal Pengajuan</label>
+                                    <div x-data="{ 
+                                            open: false, 
+                                            selectedVal: '{{ request('source') }}', 
+                                            get selectedName() {
+                                                const map = {
+                                                    'kp': 'Seminar KP',
+                                                    'capstone': 'Sidang Capstone',
+                                                    'praktikum': 'Praktikum',
+                                                    'umum': 'Peminjaman Langsung'
+                                                };
+                                                return map[this.selectedVal] || 'Semua Asal';
+                                            },
+                                            selectItem(val) { 
+                                                this.selectedVal = val; 
+                                                this.open = false; 
+                                            } 
+                                        }" class="relative w-full" @click.away="open = false">
+                                        
+                                        <input type="hidden" name="source" :value="selectedVal">
+
+                                        <button type="button" @click="open = !open" 
+                                            class="w-full flex items-center justify-between text-[13px] border border-gray-200 rounded-lg p-2 bg-white hover:border-[#0B266E] focus:outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] transition-colors cursor-pointer">
+                                            <span x-text="selectedName" class="truncate text-gray-700"></span>
+                                            <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            </svg>
+                                        </button>
+                                        
+                                        <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] overflow-hidden" style="display: none;">
+                                            <div class="py-2 px-1">
+                                                <button type="button" @click="selectItem('')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != ''}">Semua Asal</button>
+                                                <button type="button" @click="selectItem('kp')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'kp', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'kp'}">Seminar KP</button>
+                                                <button type="button" @click="selectItem('capstone')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'capstone', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'capstone'}">Sidang Capstone</button>
+                                                <button type="button" @click="selectItem('praktikum')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'praktikum', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'praktikum'}">Praktikum</button>
+                                                <button type="button" @click="selectItem('umum')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'umum', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'umum'}">Peminjaman Langsung</button>
                                             </div>
                                         </div>
                                     </div>
@@ -371,6 +413,17 @@
                                 <div class="text-[13px] font-medium text-[#111827] truncate" title="{{ $pinjam->ruangan->nama ?? 'Dihapus' }}">
                                     {{ $pinjam->ruangan->nama ?? 'Dihapus' }}
                                 </div>
+                                <div class="mt-1">
+                                    @if(in_array(strtolower((string)$pinjam->source), ['kp', 'kerja_praktik']))
+                                        <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Seminar KP</span>
+                                    @elseif(strtolower((string)$pinjam->source) === 'capstone')
+                                        <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">Sidang Capstone</span>
+                                    @elseif(strtolower((string)$pinjam->source) === 'praktikum')
+                                        <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Praktikum</span>
+                                    @else
+                                        <span class="inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200">Langsung</span>
+                                    @endif
+                                </div>
                             </td>
                             <td>
                                 <div class="text-[13px] font-medium text-[#111827]">
@@ -455,7 +508,8 @@
                                             'waktu_diproses' => $pinjam->waktu_approval ? \Carbon\Carbon::parse($pinjam->waktu_approval)->translatedFormat('d M Y, H:i') : '-',
                                             'diproses_oleh' => '-',
                                             'alasan_penolakan' => $pinjam->alasan_penolakan,
-                                            'status' => $pinjam->status
+                                            'status' => $pinjam->status,
+                                            'asal_modul' => $pinjam->source_label
                                         ]) }})"
                                             class="w-full text-left px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-gray-100 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors cursor-pointer">
                                             <svg class="w-[14px] h-[14px] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
@@ -708,6 +762,11 @@
                             Informasi Peminjaman
                         </h4>
                         <div class="grid grid-cols-[80px_1fr] sm:grid-cols-[90px_1fr] gap-x-2 gap-y-2 text-[13px] mb-3 border-b border-slate-100 pb-3">
+                            <div class="text-slate-500 font-medium">Asal Usul</div>
+                            <div>
+                                <span class="inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200" x-text="detailData.asal_modul || 'Peminjaman Langsung'"></span>
+                            </div>
+
                             <div class="text-slate-500 font-medium">Ruangan</div>
                             <div class="text-slate-800 font-bold" x-text="detailData.ruangan"></div>
 

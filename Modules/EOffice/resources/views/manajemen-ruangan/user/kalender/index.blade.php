@@ -24,7 +24,8 @@
                 'pengguna' => $b->user->name ?? 'Mahasiswa',
                 'user_id' => $b->user_id,
                 'jam_mulai' => substr($b->jam_mulai, 0, 5),
-                'jam_selesai' => substr($b->jam_selesai, 0, 5)
+                'jam_selesai' => substr($b->jam_selesai, 0, 5),
+                'source' => $b->source ?? null,
             ];
         }
 
@@ -435,29 +436,52 @@
 
                                                     $status = $ev['status'];
                                                     $type = $ev['type'] ?? '';
+                                                    $source = $ev['source'] ?? null;
+                                                    $isPraktikum = strtolower((string)$source) === 'praktikum';
                                                     $isOwn = ($ev['user_id'] ?? null) === auth()->id();
                                                     $tujuan = $ev['tujuan'];
                                                     
                                                     if ($status === 'disetujui') {
-                                                        $bg = 'rgba(237, 233, 254, 0.9)'; $border = '#C4B5FD'; $label = 'Terpakai'; $tColor = '#5B21B6';
-                                                        $onClick = "openDetailModal('Terpakai', '-', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'terpakai', '')";
-                                                    } elseif ($status === 'internal') {
-                                                        if ($type === 'Jadwal Akademik (Kuliah)' || $type === 'Pindah Kelas' || $type === 'Pindah / Pengganti Kelas') {
-                                                            $bg = 'rgba(219, 234, 254, 0.9)'; $border = '#60A5FA'; $tColor = '#1E40AF';
-                                                        } elseif ($type === 'Ujian / Evaluasi (UTS/UAS)' || $type === 'Lainnya...') {
-                                                            $bg = 'rgba(237, 233, 254, 0.9)'; $border = '#C4B5FD'; $tColor = '#5B21B6';
+                                                        if ($isPraktikum) {
+                                                            $bg = 'rgba(219, 234, 254, 0.95)'; $border = '#60A5FA'; $tColor = '#1E40AF';
+                                                            $label = $tujuan ?: 'Praktikum';
+                                                            $onClick = "openDetailModal('".addslashes($label)."', '-', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'praktikum', '')";
                                                         } else {
+                                                            $bg = 'rgba(237, 233, 254, 0.9)'; $border = '#C4B5FD'; $label = 'Terpakai'; $tColor = '#5B21B6';
+                                                            $onClick = "openDetailModal('Terpakai', '-', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'terpakai', '')";
+                                                        }
+                                                    } elseif ($status === 'internal') {
+                                                        $isKuliah = in_array($type, ['Jadwal Akademik (Kuliah)', 'Kuliah Pengganti', 'Pindah Kelas', 'Pindah / Pengganti Kelas']);
+                                                        $isMaintenance = in_array($type, ['Pemeliharaan / Penutupan', 'Pemeliharaan/Penutupan', 'Maintenance / Perbaikan', 'Sterilisasi Ruangan', 'Penutupan Khusus']);
+                                                        $isLainnya = in_array($type, ['Lainnya', 'Lainnya...', 'Event / Kegiatan', 'Rapat Internal']);
+                                                        $isUjian = in_array($type, ['Ujian & Evaluasi', 'Ujian / Evaluasi', 'Ujian / Evaluasi (UTS/UAS)']);
+
+                                                        if ($isKuliah) {
+                                                            $bg = 'rgba(219, 234, 254, 0.9)'; $border = '#60A5FA'; $tColor = '#1E40AF';
+                                                        } elseif ($isMaintenance) {
                                                             $bg = 'rgba(254, 226, 226, 0.9)'; $border = '#F87171'; $tColor = '#991B1B';
+                                                        } else {
+                                                            // Ujian & Evaluasi dan Lainnya -> UNGU
+                                                            $bg = 'rgba(237, 233, 254, 0.9)'; $border = '#C4B5FD'; $tColor = '#5B21B6';
                                                         }
-                                                        $cleanTujuan = trim(str_ireplace(['digunakan untuk', ' - Kelas ', ' (Kelas ', ')'], ['', '-', '-', ''], $tujuan));
-                                                        $label = $cleanTujuan ?: 'Jadwal Kuliah';
-                                                        $matkul = $label; $kelas = '-';
-                                                        if (strpos($label, '-') !== false) {
-                                                            $parts = explode('-', $label);
-                                                            $kelas = trim(array_pop($parts));
-                                                            $matkul = trim(implode('-', $parts));
+
+                                                        if ($isLainnya) {
+                                                            $label = 'Terpakai';
+                                                            $onClick = "openDetailModal('Terpakai', '-', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'terpakai', '')";
+                                                        } else {
+                                                            $cleanTujuan = trim(str_ireplace(['digunakan untuk', ' - Kelas ', ' (Kelas ', ')'], ['', '-', '-', ''], $tujuan));
+                                                            $label = $cleanTujuan ?: ($type ?: 'Kegiatan');
+                                                            $matkul = $label; $kelas = '-';
+                                                            if ($isKuliah && strpos($label, '-') !== false) {
+                                                                $parts = explode('-', $label);
+                                                                $kelas = trim(array_pop($parts));
+                                                                $matkul = trim(implode('-', $parts));
+                                                            }
+                                                            $onClick = "openDetailModal('".addslashes($matkul)."', '".addslashes($kelas)."', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'internal', '')";
                                                         }
-                                                        $onClick = "openDetailModal('".addslashes($matkul)."', '".addslashes($kelas)."', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'internal', '')";
+                                                    } elseif ($status === 'menunggu' && $isPraktikum) {
+                                                        $bg = 'rgba(219, 234, 254, 0.9)'; $border = '#60A5FA'; $label = 'Agenda Akademik'; $tColor = '#1E40AF';
+                                                        $onClick = "openDetailModal('Agenda Akademik', '-', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'agenda_akademik', '')";
                                                     } elseif ($status === 'menunggu' && $isOwn) {
                                                         $bg = 'rgba(254, 249, 195, 0.9)'; $border = '#FBBF24'; $label = 'Menunggu'; $tColor = '#B45309';
                                                         $onClick = "openDetailModal('Menunggu Konfirmasi', '-', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'menunggu', '".addslashes($tujuan)."')";
@@ -761,6 +785,14 @@
                         <div x-show="detailData.status === 'menunggu'" class="mt-2 pt-2 border-t border-amber-100">
                             <p class="text-[11px] text-amber-600 font-medium text-center">Peminjaman Anda sedang
                                 menunggu konfirmasi dari admin.</p>
+                        </div>
+                        {{-- Pesan untuk Agenda Akademik (Praktikum Menunggu) --}}
+                        <div x-show="detailData.status === 'agenda_akademik'" class="mt-2 pt-2 border-t border-blue-100">
+                            <p class="text-[11px] text-blue-700 font-medium text-center">Kegiatan akademik terjadwal sedang dalam tahap konfirmasi dan reservasi ruangan.</p>
+                        </div>
+                        {{-- Pesan untuk Praktikum Terjadwal --}}
+                        <div x-show="detailData.status === 'praktikum'" class="mt-2 pt-2 border-t border-blue-100">
+                            <p class="text-[11px] text-blue-700 font-medium text-center">Kegiatan Praktikum Laboratorium Terjadwal.</p>
                         </div>
                     </div>
                 </div>

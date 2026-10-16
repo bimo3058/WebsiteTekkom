@@ -674,6 +674,14 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
     Route::prefix('eoffice/peminjaman')->name('eoffice.peminjaman.')->group(function () use ($MRAdminRuanganController, $MRAdminPengaturanController) {
         Route::get('/dashboard', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\DashboardController::class, 'index'])->name('dashboard');
 
+        // ── INTEGRASI ANTAR-MODUL (API INTERNAL) ──────────────────────────────
+        $MRRoomIntegrationController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\Api\RoomIntegrationController::class;
+        Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () use ($MRRoomIntegrationController) {
+            Route::get('ketersediaan-ruangan', [$MRRoomIntegrationController, 'checkAvailability'])->name('ketersediaan-ruangan');
+            Route::post('booking-eksternal', [$MRRoomIntegrationController, 'bookRoom'])->name('booking-eksternal');
+            Route::post('batal-eksternal', [$MRRoomIntegrationController, 'cancelBooking'])->name('batal-eksternal');
+        });
+
         // ── ADMIN ────────────────────────────────────────────────────────────
         Route::middleware(['role:superadmin|admin_eoffice'])
             ->prefix('admin')->name('admin.')

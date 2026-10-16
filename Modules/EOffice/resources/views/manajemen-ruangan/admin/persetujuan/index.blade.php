@@ -102,8 +102,9 @@
                     <thead>
                         <tr style="border-bottom:1px solid #E2E8F0; background:#FAFAFA;">
                             <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Peminjam</th>
-                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Ruangan & Kegiatan</th>
-                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Waktu</th>
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Ruangan</th>
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Waktu Pemakaian</th>
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Kegiatan</th>
                             <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Status</th>
                             <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap; width:120px;">Aksi</th>
                         </tr>
@@ -125,7 +126,11 @@
                         }
                     }">
                         @forelse($peminjamans as $pinjam)
+                            @php
+                                $berkasUrl = $pinjam->berkas_pendukung ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) : '';
+                            @endphp
                             <tr class="mp-tr">
+                                {{-- Kolom 1: Peminjam --}}
                                 <td>
                                     <div class="text-[13px] font-medium text-[#111827] flex items-center gap-2">
                                         @php
@@ -176,35 +181,58 @@
                                         @endif
                                     </div>
                                 </td>
-                                <td class="max-w-[200px]">
+
+                                {{-- Kolom 2: Ruangan (nama ruangan dan dibawahnya asal usul) --}}
+                                <td class="max-w-[140px]">
                                     <div class="text-[13px] font-medium text-[#111827] truncate" title="{{ $pinjam->ruangan->nama ?? 'Dihapus' }}">
                                         {{ $pinjam->ruangan->nama ?? 'Dihapus' }}
                                     </div>
-                                    <div class="text-[11px] text-gray-500 truncate mt-0.5" title="{{ $pinjam->tujuan }}">
+                                    <div class="mt-1">
+                                        @if(in_array(strtolower((string)$pinjam->source), ['kp', 'kerja_praktik']))
+                                            <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Seminar KP</span>
+                                        @elseif(strtolower((string)$pinjam->source) === 'capstone')
+                                            <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">Sidang Capstone</span>
+                                        @elseif(strtolower((string)$pinjam->source) === 'praktikum')
+                                            <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Praktikum</span>
+                                        @else
+                                            <span class="inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200">Langsung</span>
+                                        @endif
+                                    </div>
+                                </td>
+
+                                {{-- Kolom 3: Waktu Pemakaian (tanggal dan bawahnya waktunya) --}}
+                                <td>
+                                    <div class="text-[13px] font-medium text-[#111827]">
+                                        {{ \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->translatedFormat('d M Y') }}
+                                    </div>
+                                    <div class="text-[11px] text-gray-500 mt-0.5">
+                                        {{ \Carbon\Carbon::parse($pinjam->jam_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($pinjam->jam_selesai)->format('H:i') }} WIB
+                                    </div>
+                                </td>
+
+                                {{-- Kolom 4: Kegiatan (nama kegiatan dan dibawahnya lihat berkas) --}}
+                                <td class="max-w-[140px]">
+                                    <div class="text-[12px] text-gray-600 truncate" title="{{ $pinjam->tujuan }}">
                                         {{ $pinjam->tujuan }}
                                     </div>
-                                        @if($pinjam->berkas_pendukung)
-                                            <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) }}"
+                                    @if($pinjam->berkas_pendukung)
+                                        <div class="mt-0.5">
+                                            <a href="{{ $berkasUrl }}"
                                                 target="_blank"
-                                                class="inline-flex items-center gap-1 text-[11px] font-medium text-[#0065ff] hover:text-[#0052cc] transition-colors mt-1">
-                                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                                                class="inline-flex items-center gap-1 text-[11px] text-[#0065ff] hover:text-[#0052cc] hover:underline transition-colors"
+                                                style="font-size: 11px;">
+                                                <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
                                                     </path>
                                                 </svg>
-                                                Lihat Berkas
+                                                <span>Lihat Berkas</span>
                                             </a>
-                                        @endif
-                                    </div>
+                                        </div>
+                                    @endif
                                 </td>
-                                <td>
-                                    <div class="text-[13px] font-medium text-[#111827]">
-                                        {{ \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->translatedFormat('d M Y') }}
-                                        <span class="text-gray-400 mx-1">•</span>
-                                        {{ \Carbon\Carbon::parse($pinjam->jam_mulai)->format('H:i') }} -
-                                        {{ \Carbon\Carbon::parse($pinjam->jam_selesai)->format('H:i') }} WIB
-                                    </div>
-                                </td>
+
+                                {{-- Kolom 5: Status --}}
                                 <td>
                                     @php
                                         $st = ['bg' => '#F3F4F6', 'color' => '#374151', 'border' => '#E5E7EB'];
@@ -212,16 +240,18 @@
                                             $st = ['bg' => '#ECFDF5', 'color' => '#047857', 'border' => '#A7F3D0'];
                                         elseif ($pinjam->status === 'menunggu')
                                             $st = ['bg' => '#FFF9E6', 'color' => '#B45309', 'border' => '#FFEBB3'];
-
-                                        $berkasUrl = $pinjam->berkas_pendukung ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) : '';
+                                        elseif ($pinjam->status === 'ditolak' || $pinjam->status === 'dibatalkan')
+                                            $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
                                     @endphp
                                     <span style="font-size:11px; font-weight:700; color:{{ $st['color'] }}; background:{{ $st['bg'] }}; border:1px solid {{ $st['border'] }}; padding:3px 12px; border-radius:9999px; white-space:nowrap; letter-spacing:0.02em; text-transform:uppercase; display:inline-block;">
                                         {{ $pinjam->status }}
                                     </span>
                                 </td>
+
+                                {{-- Kolom 6: Aksi --}}
                                 <td style="text-align: center;">
                                     <button
-                                        @click="openAction({{ $pinjam->id }}, '{{ addslashes($pinjam->user->name ?? "User") }}', '{{ addslashes($pinjam->user->student->student_number ?? $pinjam->user->external_id ?? "-") }}', '{{ addslashes($pinjam->nomor_telepon ?? $pinjam->user->whatsapp ?? "-") }}', '{{ $pinjam->status }}', '{{ $pinjam->ruangan_id }}', '{{ $pinjam->tanggal_pinjam }}', '{{ substr($pinjam->jam_mulai, 0, 5) }}', '{{ substr($pinjam->jam_selesai, 0, 5) }}', '{{ addslashes($pinjam->ruangan->nama ?? 'Ruangan Dihapus') }}', '{{ addslashes($pinjam->tujuan) }}', '{{ \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->translatedFormat('d M Y') }}', '{{ $berkasUrl }}')"
+                                        @click="openAction({{ $pinjam->id }}, '{{ addslashes($pinjam->user->name ?? "User") }}', '{{ addslashes($pinjam->user->student->student_number ?? $pinjam->user->external_id ?? "-") }}', '{{ addslashes($pinjam->nomor_telepon ?? $pinjam->user->whatsapp ?? "-") }}', '{{ $pinjam->status }}', '{{ $pinjam->ruangan_id }}', '{{ $pinjam->tanggal_pinjam }}', '{{ substr($pinjam->jam_mulai, 0, 5) }}', '{{ substr($pinjam->jam_selesai, 0, 5) }}', '{{ addslashes($pinjam->ruangan->nama ?? 'Ruangan Dihapus') }}', '{{ addslashes($pinjam->tujuan) }}', '{{ \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->translatedFormat('d M Y') }}', '{{ $berkasUrl }}', '{{ addslashes($pinjam->source_label) }}')"
                                         class="h-8 px-4 rounded-md bg-white border border-gray-200 text-[#0B266E] text-[12px] font-bold hover:bg-gray-50 shadow-sm transition-colors cursor-pointer">
                                         Kelola
                                     </button>
@@ -229,7 +259,7 @@
                             </tr>
                         @empty
                             <tr class="mp-tr">
-                                <td colspan="5" style="padding:40px; text-align:center;">
+                                <td colspan="6" style="padding:40px; text-align:center;">
                                     <div style="font-size:13px; font-weight:500; color:#666D80;">Belum ada antrean permohonan ruangan atau jadwal berjalan yang masuk.</div>
                                 </td>
                             </tr>
@@ -453,6 +483,11 @@
                                     class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2 mt-3">
                                     Informasi Peminjaman</h4>
                                 <div class="grid grid-cols-[80px_1fr] gap-x-2 gap-y-2 text-[13px]">
+                                    <div class="text-slate-500 font-medium">Asal Usul</div>
+                                    <div>
+                                        <span class="inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200" x-text="selectedSourceLabel"></span>
+                                    </div>
+
                                     <div class="text-slate-500 font-medium">Ruangan</div>
                                     <div class="text-slate-800 font-bold" x-text="selectedRuanganName"></div>
 
@@ -701,6 +736,7 @@
                 selectedTelp: '',
                 selectedStatus: '',
                 selectedAction: '',
+                selectedSourceLabel: '',
 
                 selectedRuanganName: '',
                 selectedKegiatan: '',
@@ -762,12 +798,13 @@
                     }
                 },
 
-                openAction(id, name, nim, telp, status, ruanganId, tanggal, jamMulai, jamSelesai, ruanganName, kegiatan, formatTanggal, berkasUrl) {
+                openAction(id, name, nim, telp, status, ruanganId, tanggal, jamMulai, jamSelesai, ruanganName, kegiatan, formatTanggal, berkasUrl, sourceLabel = 'Peminjaman Langsung') {
                     this.selectedId = id;
                     this.selectedName = name;
                     this.selectedNim = nim;
                     this.selectedTelp = telp;
                     this.selectedStatus = status;
+                    this.selectedSourceLabel = sourceLabel || 'Peminjaman Langsung';
                     this.selectedAction = '';
 
                     this.selectedRuanganName = ruanganName;
