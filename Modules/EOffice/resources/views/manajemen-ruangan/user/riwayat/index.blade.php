@@ -12,18 +12,15 @@
     showDetail = false; 
     document.body.style.overflow = '';
 ">
-        <div class="mp-page-header">
-            <div>
-                <h1 class="mp-page-title">Riwayat Peminjaman</h1>
-                <p class="mp-page-sub">Daftar arsip seluruh pengajuan peminjaman ruangan Anda yang telah selesai,
-                    ditolak,
-                    atau dibatalkan.</p>
+        <div class="flex flex-col xl:flex-row xl:items-center justify-between w-full gap-4 mb-5">
+            <div class="min-w-0">
+                <h1 class="text-[20px] md:text-[22px] font-bold text-gray-900 tracking-tight">Riwayat Peminjaman</h1>
+                <p class="text-[13px] text-gray-500 mt-1 max-w-2xl leading-relaxed">Daftar arsip seluruh pengajuan peminjaman ruangan Anda yang telah selesai, ditolak, atau dibatalkan.</p>
             </div>
         </div>
 
-        <div class="mp-card" style="margin-top: 15px;">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 border-b border-gray-100 gap-4 relative z-10 w-full"
-                style="padding-bottom: 20px;">
+        <div class="mp-card min-h-[380px] sm:min-h-[420px]" style="margin-top: 15px;">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 border-b border-gray-100 gap-4 relative z-10 w-full">
                 <h2 class="text-[16px] font-bold text-gray-800 tracking-tight">
                     Riwayat Peminjaman
                 </h2>
@@ -320,11 +317,10 @@
                     </div>
                 </div>
             @else
-                <div class="p-6">
-                    <div class="text-center py-20 px-6 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
-                        <h3 class="text-lg font-bold text-gray-900 mb-1">Riwayat Kosong</h3>
-                        <p class="text-[13px] text-gray-500 max-w-sm mx-auto mb-0">Belum ada riwayat peminjaman yang ditolak
-                            atau selesai pada akun Anda.</p>
+                <div class="flex-1 flex flex-col items-center justify-center text-center px-6 py-16">
+                    <div class="font-semibold text-[15px] text-gray-900">Belum Ada Riwayat Peminjaman</div>
+                    <div class="text-[13px] text-gray-500 mt-1.5 max-w-md mx-auto leading-relaxed">
+                        Arsip pengajuan peminjaman ruangan yang telah selesai, ditolak, atau dibatalkan akan otomatis tercatat di sini.
                     </div>
                 </div>
             @endif

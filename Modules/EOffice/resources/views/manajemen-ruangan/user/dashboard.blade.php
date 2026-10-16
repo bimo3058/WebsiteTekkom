@@ -52,229 +52,227 @@
             ->get();
     @endphp
 
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-8">
-        <div class="min-w-0">
-            <h1 class="text-[22px] font-bold text-gray-900 tracking-tight">
-                Dashboard Peminjaman
-            </h1>
-            <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1 mt-1.5 text-[13px] text-gray-500">
-                <span>Selamat datang kembali, <strong class="font-semibold text-gray-900">{{ $user->name }}</strong></span>
-                <span class="text-gray-300" aria-hidden="true">&middot;</span>
-                <time datetime="{{ now()->toDateString() }}">{{ now()->locale('id')->translatedFormat('l, d F Y') }}</time>
+    <div>
+        <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-5">
+            <div class="min-w-0">
+                <h1 class="text-[20px] md:text-[22px] font-bold text-gray-900 tracking-tight">
+                    Dashboard Peminjaman
+                </h1>
+                <p class="text-[13px] text-gray-500 mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span>Selamat datang kembali, <strong class="font-semibold text-gray-900">{{ $user->name }}</strong></span>
+                    <span class="text-gray-300" aria-hidden="true">&middot;</span>
+                    <time datetime="{{ now()->toDateString() }}">{{ now()->locale('id')->translatedFormat('l, d F Y') }}</time>
+                </p>
             </div>
-        </div>
-        <div class="flex flex-shrink-0 gap-3">
-            <a href="{{ route('eoffice.peminjaman.user.kalender') }}"
-               style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; background:#fff; border:1px solid #E2E8F0; border-radius:8px; font-size:12px; font-weight:600; color:#64748B; text-decoration:none; transition:all .15s; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,.04);"
-               onmouseover="this.style.background='#F8FAFC'; this.style.borderColor='#CBD5E1'; this.style.boxShadow='0 2px 6px rgba(0,0,0,.07)'"
-               onmouseout="this.style.background='#fff'; this.style.borderColor='#E2E8F0'; this.style.boxShadow='0 1px 2px rgba(0,0,0,.04)'">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-                <span>Lihat Kalender</span>
-            </a>
-            <a href="{{ route('eoffice.peminjaman.user.booking') }}"
-               style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:#0B266E; border:1px solid #0B266E; border-radius:8px; font-size:12px; font-weight:600; color:#fff; text-decoration:none; transition:all .15s; white-space:nowrap; box-shadow:0 2px 6px rgba(11,38,110,0.3);"
-               onmouseover="this.style.background='#071946'; this.style.borderColor='#071946'; this.style.boxShadow='0 4px 12px rgba(11,38,110,0.4)'"
-               onmouseout="this.style.background='#0B266E'; this.style.borderColor='#0B266E'; this.style.boxShadow='0 2px 6px rgba(11,38,110,0.3)'">
-                <span>Pinjam Ruangan</span>
-            </a>
-        </div>
-    </div>
-
-    {{-- Stats Row --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-        <a href="{{ route('eoffice.peminjaman.user.saya') }}"
-           class="block bg-white rounded-xl border border-gray-200 py-4 px-5 transition-colors hover:border-[#0B266E]">
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-8 h-8 rounded-lg bg-slate-100 text-[#0B266E] flex items-center justify-center flex-shrink-0">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
+            <div class="flex items-center gap-2.5 sm:gap-3 flex-wrap flex-shrink-0">
+                <a href="{{ route('eoffice.peminjaman.user.kalender') }}"
+                   class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-[#E2E8F0] rounded-lg text-[12px] font-semibold text-[#64748B] hover:bg-[#F8FAFC] hover:border-[#CBD5E1] transition-all whitespace-nowrap shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.07)]">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
                     </svg>
-                </div>
-                <p class="text-[13px] font-medium text-slate-500">Menunggu</p>
-            </div>
-            <p class="text-[26px] font-[800] text-gray-900 leading-none tracking-tight">{{ $pendingCount }}</p>
-        </a>
-
-        <a href="{{ route('eoffice.peminjaman.user.saya') }}"
-           class="block bg-white rounded-xl border border-gray-200 py-4 px-5 transition-colors hover:border-[#0B266E]">
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-8 h-8 rounded-lg bg-slate-100 text-[#0B266E] flex items-center justify-center flex-shrink-0">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                    </svg>
-                </div>
-                <p class="text-[13px] font-medium text-slate-500">Jadwal Aktif</p>
-            </div>
-            <p class="text-[26px] font-[800] text-gray-900 leading-none tracking-tight">{{ $approvedCount }}</p>
-        </a>
-
-        <a href="{{ route('eoffice.peminjaman.user.riwayat') }}"
-           class="block bg-white rounded-xl border border-gray-200 py-4 px-5 transition-colors hover:border-[#0B266E]">
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-8 h-8 rounded-lg bg-slate-100 text-[#0B266E] flex items-center justify-center flex-shrink-0">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="15" y1="9" x2="9" y2="15"></line>
-                        <line x1="9" y1="9" x2="15" y2="15"></line>
-                    </svg>
-                </div>
-                <p class="text-[13px] font-medium text-slate-500">Ditolak</p>
-            </div>
-            <p class="text-[26px] font-[800] text-gray-900 leading-none tracking-tight">{{ $rejectedCount }}</p>
-        </a>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {{-- Kolom Kiri: Jadwal Terdekat --}}
-        <div class="bg-white rounded-xl border border-gray-200 flex flex-col overflow-hidden">
-            {{-- Header --}}
-            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="text-[14px] font-bold text-gray-900">Jadwal Terdekat</h3>
-                <a href="{{ route('eoffice.peminjaman.user.saya') }}"
-                    class="text-[12px] font-medium text-[#0B266E] hover:underline flex items-center gap-1">
-                    Lihat Semua &rarr;
+                    <span>Lihat Kalender</span>
+                </a>
+                <a href="{{ route('eoffice.peminjaman.user.booking') }}"
+                   class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0B266E] border border-[#0B266E] rounded-lg text-[12px] font-semibold text-white hover:bg-[#071946] hover:border-[#071946] transition-all whitespace-nowrap shadow-[0_2px_6px_rgba(11,38,110,0.3)] hover:shadow-[0_4px_12px_rgba(11,38,110,0.4)]">
+                    <span>Pinjam Ruangan</span>
                 </a>
             </div>
-
-            {{-- Table Header --}}
-            <div
-                class="px-5 py-2.5 border-b border-gray-100 flex justify-between items-center text-[12px] font-medium text-gray-500 bg-gray-50/50">
-                <div class="flex-1">Ruangan & Kegiatan</div>
-                <div class="w-32 text-right">Waktu</div>
-            </div>
-
-            {{-- List --}}
-            <div class="flex-1 overflow-y-auto">
-                @forelse($upcomingBookings as $booking)
-                    <div
-                        class="px-5 py-3.5 border-b border-gray-100 last:border-b-0 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
-                        <div class="min-w-0 flex-1 pr-4">
-                            <h4 class="text-[13px] font-medium text-[#111827] leading-tight mb-0.5 truncate"
-                                title="{{ $booking->ruangan->nama }}">
-                                {{ $booking->ruangan->nama }}
-                            </h4>
-                            <div class="text-[11px] text-gray-500 line-clamp-1" title="{{ $booking->tujuan }}">
-                                {{ $booking->tujuan }}
-                            </div>
-                        </div>
-                        <div class="flex-shrink-0 w-32 text-right">
-                            <div class="text-[13px] font-medium text-[#111827]">
-                                {{ $booking->tanggal_pinjam?->translatedFormat('d M') }}
-                            </div>
-                            <div class="text-[11px] text-gray-400 mt-0.5">
-                                {{ \Carbon\Carbon::parse($booking->jam_mulai)->format('H:i') }} -
-                                {{ \Carbon\Carbon::parse($booking->jam_selesai)->format('H:i') }}
-                            </div>
-                        </div>
-                    </div>
-                @empty
-                    <div class="px-5 py-12 flex flex-col items-center justify-center text-center">
-                        <div class="text-[13px] font-medium text-gray-500 max-w-[240px]">
-                            Jadwal ruangan yang disetujui dalam waktu dekat belum tersedia
-                        </div>
-                    </div>
-                @endforelse
-            </div>
         </div>
 
-        {{-- Kolom Kanan: Pengajuan Terakhir --}}
-        <div class="bg-white rounded-xl border border-gray-200 flex flex-col overflow-hidden">
-            {{-- Header --}}
-            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="text-[14px] font-bold text-gray-900">Pengajuan Terakhir</h3>
-                <a href="{{ route('eoffice.peminjaman.user.riwayat') }}"
-                    class="text-[12px] font-medium text-[#0B266E] hover:underline flex items-center gap-1">
-                    Riwayat Lengkap &rarr;
-                </a>
+        {{-- Stats Row (Gap matched with riwayat menu) --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5" style="margin-top: 15px;">
+            <a href="{{ route('eoffice.peminjaman.user.saya') }}"
+               class="block bg-white rounded-xl border border-gray-200 py-4 px-5 transition-colors hover:border-[#0B266E]">
+                <div class="flex items-center gap-2.5 mb-3">
+                    <div class="w-8 h-8 rounded-lg bg-slate-100 text-[#0B266E] flex items-center justify-center flex-shrink-0">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                    <p class="text-[13px] font-medium text-slate-500">Menunggu</p>
+                </div>
+                <p class="text-[26px] font-[800] text-gray-900 leading-none tracking-tight">{{ $pendingCount }}</p>
+            </a>
+
+            <a href="{{ route('eoffice.peminjaman.user.saya') }}"
+               class="block bg-white rounded-xl border border-gray-200 py-4 px-5 transition-colors hover:border-[#0B266E]">
+                <div class="flex items-center gap-2.5 mb-3">
+                    <div class="w-8 h-8 rounded-lg bg-slate-100 text-[#0B266E] flex items-center justify-center flex-shrink-0">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                    </div>
+                    <p class="text-[13px] font-medium text-slate-500">Jadwal Aktif</p>
+                </div>
+                <p class="text-[26px] font-[800] text-gray-900 leading-none tracking-tight">{{ $approvedCount }}</p>
+            </a>
+
+            <a href="{{ route('eoffice.peminjaman.user.riwayat') }}"
+               class="block bg-white rounded-xl border border-gray-200 py-4 px-5 transition-colors hover:border-[#0B266E]">
+                <div class="flex items-center gap-2.5 mb-3">
+                    <div class="w-8 h-8 rounded-lg bg-slate-100 text-[#0B266E] flex items-center justify-center flex-shrink-0">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                    </div>
+                    <p class="text-[13px] font-medium text-slate-500">Ditolak</p>
+                </div>
+                <p class="text-[26px] font-[800] text-gray-900 leading-none tracking-tight">{{ $rejectedCount }}</p>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {{-- Kolom Kiri: Jadwal Terdekat --}}
+            <div class="bg-white rounded-xl border border-gray-200 flex flex-col overflow-hidden">
+                {{-- Header --}}
+                <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h3 class="text-[14px] font-bold text-gray-900">Jadwal Terdekat</h3>
+                    <a href="{{ route('eoffice.peminjaman.user.saya') }}"
+                        class="text-[12px] font-medium text-[#0B266E] hover:underline flex items-center gap-1">
+                        Lihat Semua &rarr;
+                    </a>
+                </div>
+
+                {{-- Table Header --}}
+                <div
+                    class="px-5 py-2.5 border-b border-gray-100 flex justify-between items-center text-[12px] font-medium text-gray-500 bg-gray-50/50">
+                    <div class="flex-1">Ruangan & Kegiatan</div>
+                    <div class="w-32 text-right">Waktu</div>
+                </div>
+
+                {{-- List --}}
+                <div class="flex-1 overflow-y-auto">
+                    @forelse($upcomingBookings as $booking)
+                        <div
+                            class="px-5 py-3.5 border-b border-gray-100 last:border-b-0 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
+                            <div class="min-w-0 flex-1 pr-4">
+                                <h4 class="text-[13px] font-medium text-[#111827] leading-tight mb-0.5 truncate"
+                                    title="{{ $booking->ruangan->nama }}">
+                                    {{ $booking->ruangan->nama }}
+                                </h4>
+                                <div class="text-[11px] text-gray-500 line-clamp-1" title="{{ $booking->tujuan }}">
+                                    {{ $booking->tujuan }}
+                                </div>
+                            </div>
+                            <div class="flex-shrink-0 w-32 text-right">
+                                <div class="text-[12px] font-medium text-[#111827]">
+                                    {{ $booking->tanggal_pinjam?->translatedFormat('d M') }}
+                                </div>
+                                <div class="text-[10px] text-gray-400 mt-0.5">
+                                    {{ \Carbon\Carbon::parse($booking->jam_mulai)->format('H:i') }} -
+                                    {{ \Carbon\Carbon::parse($booking->jam_selesai)->format('H:i') }}
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="px-5 py-12 flex flex-col items-center justify-center text-center">
+                            <div class="text-[13px] font-medium text-gray-500 max-w-[240px]">
+                                Jadwal ruangan yang disetujui dalam waktu dekat belum tersedia
+                            </div>
+                        </div>
+                    @endforelse
+                </div>
             </div>
 
-            {{-- Table --}}
-            <div class="flex-1 overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b border-gray-100 bg-gray-50/50">
-                            <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap">Ruangan &
-                                Tanggal</th>
-                            <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap">Kegiatan</th>
-                            <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap text-left">
-                                Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($recentBookings as $booking)
-                            <tr class="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
-                                <td class="px-5 py-3.5 align-top">
-                                    <div class="text-[13px] font-medium text-[#111827] mb-0.5 truncate max-w-[150px]"
-                                        title="{{ $booking->ruangan->nama }}">
-                                        {{ $booking->ruangan->nama }}
-                                    </div>
-                                    <div class="text-[11px] text-gray-500">
-                                        {{ $booking->tanggal_pinjam?->translatedFormat('d M Y') }}<br>
-                                        {{ \Carbon\Carbon::parse($booking->jam_mulai)->format('H:i') }} -
-                                        {{ \Carbon\Carbon::parse($booking->jam_selesai)->format('H:i') }}
-                                    </div>
-                                </td>
-                                <td class="px-5 py-3.5 align-top text-[11px] text-gray-500">
-                                    <div class="line-clamp-2 max-w-[120px]" title="{{ $booking->tujuan }}">
-                                        {{ $booking->tujuan }}
-                                    </div>
-                                    @if($booking->status === 'ditolak' && $booking->alasan_penolakan)
-                                        <div class="text-[10px] font-medium text-rose-600 mt-1"
-                                            title="{{ $booking->alasan_penolakan }}">
-                                            <span class="line-clamp-1">{{ $booking->alasan_penolakan }}</span>
-                                        </div>
-                                    @endif
-                                </td>
-                                <td class="px-5 py-3.5 align-top text-left">
-                                    @php
-                                        $st = ['bg' => '#F3F4F6', 'color' => '#374151', 'border' => '#E5E7EB'];
-                                        if (strtolower($booking->status) === 'disetujui')
-                                            $st = ['bg' => '#ECFDF5', 'color' => '#047857', 'border' => '#A7F3D0'];
-                                        elseif (strtolower($booking->status) === 'ditolak')
-                                            $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
-                                        elseif (strtolower($booking->status) === 'menunggu')
-                                            $st = ['bg' => '#FFF9E6', 'color' => '#B45309', 'border' => '#FFEBB3'];
-                                        elseif (strtolower($booking->status) === 'selesai')
-                                            $st = ['bg' => '#F1E9FF', 'color' => '#5E53F4', 'border' => '#D1BFFF'];
-                                        elseif (strtolower($booking->status) === 'dibatalkan')
-                                            $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
-                                    @endphp
-                                    <span
-                                        style="font-size:10px; font-weight:700; color:{{ $st['color'] }}; background:{{ $st['bg'] }}; border:1px solid {{ $st['border'] }}; padding:3px 10px; border-radius:9999px; white-space:nowrap; letter-spacing:0.02em; text-transform:uppercase; display:inline-block;">
-                                        {{ $booking->status }}
-                                    </span>
-                                </td>
+            {{-- Kolom Kanan: Pengajuan Terakhir --}}
+            <div class="bg-white rounded-xl border border-gray-200 flex flex-col overflow-hidden">
+                {{-- Header --}}
+                <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h3 class="text-[14px] font-bold text-gray-900">Pengajuan Terakhir</h3>
+                    <a href="{{ route('eoffice.peminjaman.user.riwayat') }}"
+                        class="text-[12px] font-medium text-[#0B266E] hover:underline flex items-center gap-1">
+                        Riwayat Lengkap &rarr;
+                    </a>
+                </div>
+
+                {{-- Table --}}
+                <div class="flex-1 overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-100 bg-gray-50/50">
+                                <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap">Ruangan &
+                                    Tanggal</th>
+                                <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap">Kegiatan</th>
+                                <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap text-left">
+                                    Status</th>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="3" class="px-5 py-12 text-center">
-                                    <div class="flex flex-col items-center justify-center">
-                                        <div class="w-10 h-10 flex items-center justify-center text-gray-300 mb-3">
-                                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                                stroke-linejoin="round">
-                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                                <polyline points="14 2 14 8 20 8"></polyline>
-                                                <line x1="16" y1="13" x2="8" y2="13"></line>
-                                                <line x1="16" y1="17" x2="8" y2="17"></line>
-                                                <polyline points="10 9 9 9 8 9"></polyline>
-                                            </svg>
+                        </thead>
+                        <tbody>
+                            @forelse($recentBookings as $booking)
+                                <tr class="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
+                                    <td class="px-5 py-3.5 align-top">
+                                        <div class="text-[13px] font-medium text-[#111827] mb-0.5 truncate max-w-[150px]"
+                                            title="{{ $booking->ruangan->nama }}">
+                                            {{ $booking->ruangan->nama }}
                                         </div>
-                                        <div class="text-[13px] font-medium text-gray-500 max-w-[240px] mx-auto">
-                                            Riwayat pengajuan peminjaman ruangan belum tersedia
+                                        <div class="text-[11px] text-gray-500">
+                                            {{ $booking->tanggal_pinjam?->translatedFormat('d M Y') }}<br>
+                                            {{ \Carbon\Carbon::parse($booking->jam_mulai)->format('H:i') }} -
+                                            {{ \Carbon\Carbon::parse($booking->jam_selesai)->format('H:i') }}
                                         </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                                    </td>
+                                    <td class="px-5 py-3.5 align-top text-[11px] text-gray-500">
+                                        <div class="line-clamp-2 max-w-[120px]" title="{{ $booking->tujuan }}">
+                                            {{ $booking->tujuan }}
+                                        </div>
+                                        @if($booking->status === 'ditolak' && $booking->alasan_penolakan)
+                                            <div class="text-[10px] font-medium text-rose-600 mt-1"
+                                                title="{{ $booking->alasan_penolakan }}">
+                                                <span class="line-clamp-1">{{ $booking->alasan_penolakan }}</span>
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td class="px-5 py-3.5 align-top text-left">
+                                        @php
+                                            $st = ['bg' => '#F3F4F6', 'color' => '#374151', 'border' => '#E5E7EB'];
+                                            if (strtolower($booking->status) === 'disetujui')
+                                                $st = ['bg' => '#ECFDF5', 'color' => '#047857', 'border' => '#A7F3D0'];
+                                            elseif (strtolower($booking->status) === 'ditolak')
+                                                $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
+                                            elseif (strtolower($booking->status) === 'menunggu')
+                                                $st = ['bg' => '#FFF9E6', 'color' => '#B45309', 'border' => '#FFEBB3'];
+                                            elseif (strtolower($booking->status) === 'selesai')
+                                                $st = ['bg' => '#F1E9FF', 'color' => '#5E53F4', 'border' => '#D1BFFF'];
+                                            elseif (strtolower($booking->status) === 'dibatalkan')
+                                                $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
+                                        @endphp
+                                        <span
+                                            style="font-size:10px; font-weight:700; color:{{ $st['color'] }}; background:{{ $st['bg'] }}; border:1px solid {{ $st['border'] }}; padding:3px 10px; border-radius:9999px; white-space:nowrap; letter-spacing:0.02em; text-transform:uppercase; display:inline-block;">
+                                            {{ $booking->status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="px-5 py-12 text-center">
+                                        <div class="flex flex-col items-center justify-center">
+                                            <div class="w-10 h-10 flex items-center justify-center text-gray-300 mb-3">
+                                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                                    stroke-linejoin="round">
+                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                                </svg>
+                                            </div>
+                                            <div class="text-[13px] font-medium text-gray-500 max-w-[240px] mx-auto">
+                                                Riwayat pengajuan peminjaman ruangan belum tersedia
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

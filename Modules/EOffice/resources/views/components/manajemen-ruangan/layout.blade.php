@@ -822,6 +822,13 @@
         $isAdmin = $user && ($user->hasRole('superadmin') || $user->hasRole('admin_eoffice'));
         $multiRole = false;
 
+        $accountRole = match (true) {
+            $user?->hasRole('superadmin')    => 'Superadmin',
+            $user?->hasRole('admin_eoffice') => 'Admin E-Office',
+            $user?->hasRole('dosen')         => 'Dosen',
+            default                          => 'Mahasiswa',
+        };
+
         // Icons
         $iHome = "M4.8787 8.90834L10.5858 3.54999C11.3669 2.81667 12.6332 2.81667 13.4142 3.54999L19.1213 8.90834M4.8787 8.90834C4.31629 9.43653 4.00002 10.1531 4.00002 10.9V18.1833C4.00002 19.7389 5.34317 21 7.00002 21H9V16C9 14.8954 9.89543 14 11 14H13C14.1046 14 15 14.8954 15 16V21H17C18.6569 21 20 19.7389 20 18.1833V10.9C20 10.153 19.684 9.43656 19.1213 8.90834M4.8787 8.90834L3.00031 10.6722M19.1213 8.90834L21 10.6722";
         $iUser = "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z";
@@ -939,7 +946,7 @@
         }
     @endphp
 
-    <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: localStorage.getItem('mr_sb') !== '0' }"
+    <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: window.innerWidth >= 1024 ? (localStorage.getItem('mr_sb') !== '0') : (localStorage.getItem('mr_sb') === '1') }"
         x-init="$watch('sidebarOpen', v => localStorage.setItem('mr_sb', v ? '1' : '0'))">
 
         {{-- SIDEBAR DESKTOP --}}
@@ -1196,17 +1203,24 @@
                         {{-- Separator --}}
                         <div class="hidden md:block w-px h-[24px] bg-[#DFE1E7]"></div>
 
-                        {{-- User Profile --}}
-                        <div class="flex items-center gap-1.5 md:gap-2.5">
-                            <div class="flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden rounded-full w-[30px] h-[30px] text-[10px] md:w-[36px] md:h-[36px] md:text-[13px]"
-                                style="background: linear-gradient(135deg, #1F2937, #111827);">
-                                {{ $initials }}
+                        {{-- User Profile (Matched with E-Office Global Dashboard) --}}
+                        <a href="{{ route('profile.edit') }}"
+                            class="flex items-center gap-2 md:gap-2.5 min-w-0 no-underline text-inherit group cursor-pointer"
+                            title="Pengaturan profil {{ $name }}" aria-label="Pengaturan profil {{ $name }}">
+                            <div class="flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden rounded-full w-[34px] h-[34px] text-[12px] shadow-sm"
+                                style="background: linear-gradient(135deg, #5C78B8, #0B266E);">
+                                @if($user?->avatar_url)
+                                    <img src="{{ $user->avatar_url }}" alt="" class="w-full h-full object-cover">
+                                @else
+                                    {{ $initials }}
+                                @endif
                             </div>
-                            <div class="hidden md:flex flex-col min-w-[100px]">
-                                <span class="text-[13px] font-semibold text-[#0D0D12] truncate">{{ $name }}</span>
-                                <span class="text-[11px] text-[#666D80] truncate">{{ $user?->email ?? '' }}</span>
+                            <div class="hidden md:flex flex-col min-w-0 max-w-[130px] lg:max-w-[190px] leading-tight text-left">
+                                <strong class="text-[13px] font-semibold text-[#0D0D12] group-hover:text-[#0B266E] truncate block transition-colors"
+                                    title="{{ $name }}">{{ $name }}</strong>
+                                <span class="text-[11px] text-[#666D80] truncate block mt-0.5">{{ $accountRole }}</span>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </div>

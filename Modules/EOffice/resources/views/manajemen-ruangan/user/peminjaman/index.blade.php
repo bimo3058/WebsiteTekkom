@@ -32,19 +32,19 @@
     }" @keydown.escape.window="closeCancelModal(); closeDetailModal();">
 
         {{-- =================== PAGE HEADER =================== --}}
-        <div class="mp-page-header">
-            <div>
-                <h1 class="mp-page-title">Peminjaman Saya</h1>
-                <p class="mp-page-sub">Pantau status pengajuan yang sedang diproses dan kelola jadwal pemakaian ruangan Anda yang akan datang.</p>
+        <div class="flex flex-col xl:flex-row xl:items-center justify-between w-full gap-4 mb-6">
+            <div class="min-w-0">
+                <h1 class="text-[20px] md:text-[22px] font-bold text-gray-900 tracking-tight">Peminjaman Saya</h1>
+                <p class="text-[13px] text-gray-500 mt-1 max-w-2xl leading-relaxed">Pantau status pengajuan yang sedang diproses dan kelola jadwal pemakaian ruangan Anda yang akan datang.</p>
             </div>
-            <div>
+            <div class="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
                 <a href="{{ route('eoffice.peminjaman.user.booking') }}"
-                   class="mp-btn primary md">
+                   class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0B266E] border border-[#0B266E] rounded-lg text-[12px] font-semibold text-white hover:bg-[#071946] hover:border-[#071946] transition-all whitespace-nowrap shadow-[0_2px_6px_rgba(11,38,110,0.3)] hover:shadow-[0_4px_12px_rgba(11,38,110,0.4)]">
                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
-                    Pinjam Ruang
+                    <span>Pinjam Ruang</span>
                 </a>
             </div>
         </div>
@@ -216,36 +216,11 @@
             </div>
 
         @else
-            {{-- Empty State --}}
-            <div class="bg-white rounded-2xl border-2 border-dashed border-[#DFE1E7] p-8 sm:p-14 text-center flex flex-col items-center justify-center mt-3">
-                <div class="w-16 h-16 rounded-2xl bg-blue-50 text-[#0B266E] flex items-center justify-center mb-4 shadow-sm">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-bold text-gray-900 mb-1">Belum Ada Peminjaman Aktif</h3>
-                <p class="text-[13px] text-gray-500 max-w-sm mx-auto mb-6 leading-relaxed">
+            {{-- Empty State Card (Matched with menu riwayat .mp-card style) --}}
+            <div class="mp-card min-h-[380px] sm:min-h-[420px] flex flex-col items-center justify-center text-center p-8 sm:p-12">
+                <div class="font-semibold text-[15px] text-gray-900">Belum Ada Peminjaman Aktif</div>
+                <div class="text-[13px] text-gray-500 mt-1.5 max-w-md mx-auto leading-relaxed">
                     Anda tidak memiliki jadwal peminjaman ruangan yang sedang menunggu persetujuan atau yang siap digunakan saat ini.
-                </p>
-                <div class="flex items-center gap-3">
-                    <a href="{{ route('eoffice.peminjaman.user.kalender') }}" class="mp-btn secondary sm">
-                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                        </svg>
-                        Lihat Kalender
-                    </a>
-                    <a href="{{ route('eoffice.peminjaman.user.booking') }}" class="mp-btn primary sm">
-                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        Pinjam Ruang Sekarang
-                    </a>
                 </div>
             </div>
         @endif
