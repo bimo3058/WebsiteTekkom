@@ -445,18 +445,18 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
             // Subbab: Alumni
             Route::prefix('alumni')->name('alumni.')->group(function () {
-                // Profil karir sendiri (role mahasiswa dan alumni)
+                // Profil sendiri (role mahasiswa dan alumni) — /profil kini hanya melempar
+                // ke halaman detail milik sendiri; edit lewat /{id}/edit di bawah.
                 Route::middleware('role:mahasiswa|alumni')->group(function () {
                     Route::get('/profil', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'profil'])
                         ->name('profil');
                     Route::get('/profil/cv', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'generateCvSelf'])
                         ->name('profil.cv');
-                    Route::put('/profil', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'updateProfil'])
-                        ->name('profil.update');
                 });
 
-                // Daftar semua alumni — admin kemahasiswaan, gpm, pengurus, dosen, mahasiswa, alumni
-                Route::middleware('role:superadmin|admin_kemahasiswaan|gpm|ketua_departemen|dosen|dpm|pengurus_himpunan|mahasiswa|alumni')
+                // Daftar semua alumni — role yang sama dengan Direktori Mahasiswa & menu di
+                // sidebar (dulu jabatan himpunan melihat menunya tapi ditolak 403 di sini).
+                Route::middleware('role:superadmin|admin_kemahasiswaan|gpm|ketua_departemen|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|dosen|dpm|mahasiswa|alumni')
                     ->group(function () {
                     Route::get('/', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'index'])
                         ->name('index');
@@ -473,8 +473,9 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('cv')->where('id', '[0-9]+');
                 });
 
-                // Edit data alumni — admin kemahasiswaan only
-                Route::middleware('role:superadmin|admin_kemahasiswaan')->group(function () {
+                // Edit data alumni — admin kemahasiswaan (semua alumni) + alumni (dirinya sendiri).
+                // Baris milik siapa ditentukan AlumniPolicy::update() di controller.
+                Route::middleware('role:superadmin|admin_kemahasiswaan|alumni')->group(function () {
                     Route::get('/{id}/edit', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'edit'])
                         ->name('edit')->where('id', '[0-9]+');
                     Route::put('/{id}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'update'])
@@ -491,11 +492,10 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('riwayat.update')->where('riwayatId', '[0-9]+');
                     Route::delete('/riwayat/{riwayatId}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'destroyRiwayat'])
                         ->name('riwayat.destroy')->where('riwayatId', '[0-9]+');
-                    // Prestasi
+                    // Prestasi — hanya tambah. Hapus sengaja tidak ada: prestasi/lomba
+                    // terverifikasi dikoreksi lewat Verifikasi Data, bukan dari direktori.
                     Route::post('/{id}/prestasi', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'storePrestasi'])
                         ->name('prestasi.store')->where('id', '[0-9]+');
-                    Route::delete('/prestasi/{prestasiId}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'destroyPrestasi'])
-                        ->name('prestasi.destroy')->where('prestasiId', '[0-9]+');
                 });
             });
         });

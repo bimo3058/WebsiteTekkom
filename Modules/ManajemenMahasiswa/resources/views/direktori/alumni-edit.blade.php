@@ -33,8 +33,14 @@
 </style>
 @endpush
 
-<x-manajemenmahasiswa::ui.page-header bordered title="Edit Data Alumni">
-    Admin — perbarui biodata dan karir alumni
+{{-- Dua wajah (pola Edit Direktori Mahasiswa): pengelola di baris orang lain →
+     "Edit Data Alumni" (+ Tahun Lulus, diaudit); alumni pemilik baris → "Edit Data Saya". --}}
+<x-manajemenmahasiswa::ui.page-header bordered :title="$sebagaiPengelola ? 'Edit Data Alumni' : 'Edit Data Saya'">
+    @if($sebagaiPengelola)
+        {{ $alumni->user->name ?? 'Alumni' }} — perubahan tercatat di audit log. NIM dan angkatan mengikuti SSO UNDIP.
+    @else
+        Perbarui kontak dan karir Anda. NIM dan angkatan mengikuti SSO UNDIP; tahun lulus diubah oleh admin kemahasiswaan.
+    @endif
     <x-slot:leading>
         <a href="{{ route('manajemenmahasiswa.direktori.alumni.show', $alumni->id) }}" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" title="Kembali" aria-label="Kembali">
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
@@ -42,20 +48,17 @@
     </x-slot:leading>
 </x-manajemenmahasiswa::ui.page-header>
 
+<x-manajemenmahasiswa::ui.flash type="error" :messages="$errors->all()" class="mb-3" />
+
 <div class="edit-card">
     <form action="{{ route('manajemenmahasiswa.direktori.alumni.update', $alumni->id) }}" method="POST">
         @csrf
         @method('PUT')
 
         @php
-            // Ambil kontak dari relasi user jika ada, atau kemahasiswaan
-            $userContact = $alumni->user ? $alumni->user->whatsapp : null;
-            if (!$userContact) {
-                $mhs = \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('user_id', $alumni->user_id)->first();
-                $userContact = $mhs ? $mhs->kontak : '';
-            }
-
-            $savedWa = old('kontak', $userContact ?? '');
+            // Urutan baca sama dengan sisi server (KontakPribadi::perubahan):
+            // users.whatsapp dulu, lalu mk_kemahasiswaan.kontak.
+            $savedWa = $alumni->user?->whatsapp ?? $kontakCadangan ?? '';
             $savedCode = '+62';
             $localNum = $savedWa;
 
@@ -98,13 +101,17 @@
             </div>
             <div class="col-md-6">
                 <label class="form-label-custom">Tahun Lulus</label>
-                <input type="number" name="tahun_lulus" class="form-control form-control-custom @error('tahun_lulus') is-invalid @enderror" value="{{ old('tahun_lulus', $alumni->tahun_lulus) }}" required min="2000" max="2099">
-                @error('tahun_lulus') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                @if($sebagaiPengelola)
+                    <input type="number" name="tahun_lulus" class="form-control form-control-custom @error('tahun_lulus') is-invalid @enderror" value="{{ old('tahun_lulus', $alumni->tahun_lulus) }}" required min="2000" max="2099">
+                    @error('tahun_lulus') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                @else
+                    <input type="number" class="form-control form-control-custom" value="{{ $alumni->tahun_lulus }}" disabled>
+                @endif
             </div>
 
             <!-- Kontak -->
             <div class="col-md-12" x-data="alumniPhoneCode('{{ $savedCode }}')">
-                <label class="form-label-custom">Kontak / WhatsApp</label>
+                <label class="form-label-custom">WhatsApp/Telepon</label>
                 <div class="d-flex position-relative form-control-custom p-0" style="overflow: visible; background: #fff;">
                     <button type="button" @click.prevent="toggle($el)"
                             class="btn border-0 d-flex align-items-center gap-2" style="background: var(--c-grey-0); color: var(--c-fg-sec); border-right: 1px solid var(--c-border-strong) !important; border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 7px; border-bottom-left-radius: 7px;">
@@ -113,7 +120,7 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                              :style="open ? 'transform:rotate(180deg)' : ''" style="transition: transform 0.2s;"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
-                    <input type="text" name="kontak" class="form-control border-0 shadow-none w-100"
+                    <input type="text" name="kontak" maxlength="15" inputmode="numeric" class="form-control border-0 shadow-none w-100"
                            value="{{ old('kontak', $localNum) }}" placeholder="8123456789"
                            @input="$el.value = $el.value.replace(/[^0-9]/g, '')"
                            style="background: transparent; font-size: 13px; font-weight: 600; color: var(--c-fg-sec);">
@@ -151,9 +158,10 @@
             <!-- Email Pribadi -->
             <div class="col-md-12">
                 <label class="form-label-custom">Email Pribadi</label>
-                <input type="email" name="personal_email" class="form-control form-control-custom @error('personal_email') is-invalid @enderror" value="{{ old('personal_email', $alumni->user->personal_email ?? '') }}" placeholder="nama@email.com">
-                @error('personal_email') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                <small class="d-block mt-1" style="font-size: 11px; color: var(--c-fg-muted);">Email pribadi alumni (di luar email kampus).</small>
+                {{-- Nama field sama dengan Edit Direktori Mahasiswa: aturan validasinya satu (KontakPribadi). --}}
+                <input type="email" name="email_pribadi" class="form-control form-control-custom @error('email_pribadi') is-invalid @enderror" value="{{ old('email_pribadi', $alumni->user->personal_email ?? '') }}" placeholder="nama@email.com">
+                @error('email_pribadi') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <small class="d-block mt-1" style="font-size: 11px; color: var(--c-fg-muted);">Di luar email UNDIP.</small>
             </div>
         </div>
 

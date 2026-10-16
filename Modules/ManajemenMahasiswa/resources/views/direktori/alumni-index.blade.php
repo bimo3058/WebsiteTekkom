@@ -174,6 +174,8 @@
 
 <!-- Flash Messages -->
 <x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
+{{-- Gangguan dari halaman ini sendiri ($error) atau dari halaman detail yang melempar balik ke sini --}}
+<x-manajemenmahasiswa::ui.flash type="error" :message="session('error') ?: ($error ?? null)" class="mb-3" />
 
 <!-- Stat Cards -->
 <div class="row g-3 mb-4 row-cols-2 row-cols-md-4">
@@ -403,7 +405,7 @@
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                         Detail
                                     </a>
-                                    @if($isAdmin)
+                                    @if($isAdmin || (int) $alm->user_id === $userId)
                                         <a href="{{ route('manajemenmahasiswa.direktori.alumni.edit', $alm->id) }}" class="mk-menu-item">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                             Edit

@@ -42,7 +42,7 @@
 <div class="row g-3 mb-3">
     {{-- ── Ketua Pelaksana (pilih satu) ── --}}
     <div class="col-md-6 mk-pilih" x-data="mkPilihSatu(@js($opsiMahasiswa), @js((string) ($ketuaId ?? '')))">
-        <label class="form-label-custom" for="ketuaPelaksanaSearch">Ketua Pelaksana</label>
+        <label class="form-label-custom" for="ketuaPelaksanaSearch">Ketua Pelaksana @if($ketuaWajib ?? false)<span class="required">*</span>@endif</label>
         <div class="search-select-wrapper" @click.outside="tutup()">
             <input type="hidden" name="ketua_pelaksana_id" id="ketuaPelaksanaId" :value="terpilih">
             <input type="text" class="form-control form-control-custom" id="ketuaPelaksanaSearch"

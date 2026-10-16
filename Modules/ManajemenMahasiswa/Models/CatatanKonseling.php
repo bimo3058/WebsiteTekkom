@@ -23,9 +23,9 @@ class CatatanKonseling extends Model
      * dan view (dropdown + badge).
      */
     public const KATEGORI_KASUS = [
+        'kaderisasi'        => 'Kaderisasi',
         'kesehatan_mental'  => 'Kesehatan Mental',
         'kekerasan_verbal'  => 'Kekerasan Verbal',
-        'kaderisasi'        => 'Kaderisasi',
         'kekerasan_seksual' => 'Kekerasan Seksual',
         'lainnya'           => 'Lainnya',
     ];

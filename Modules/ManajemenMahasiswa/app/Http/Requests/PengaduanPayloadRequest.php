@@ -54,23 +54,18 @@ class PengaduanPayloadRequest extends FormRequest
             'template.frekuensi'        => ['nullable', 'string', 'max:100'],
             'template.objek'            => ['nullable', 'string', 'max:255'],
             'template.pihak_terkait'    => ['nullable', 'string', Rule::in(PengaduanPertanyaan::PIHAK)],
-            'template.ketersediaan_bukti' => ['nullable', 'string', Rule::in(array_keys(PengaduanPertanyaan::BUKTI_OPSI))],
             // Bukti berupa berkas PDF (bukan link Drive yang membocorkan akun
-            // pemilik). Hanya diunggah pada langkah konfirmasi; lihat PengaduanBukti.
+            // pemilik), opsional di semua kategori. Hanya diunggah pada langkah
+            // konfirmasi; lihat PengaduanBukti.
             'bukti'                     => ['nullable', 'array', 'max:' . PengaduanBukti::MAX_FILES],
             'bukti.*'                   => ['file', 'mimes:' . implode(',', PengaduanBukti::MIMES), 'max:' . PengaduanBukti::MAX_KB],
+            // Dicentang saat kembali dari Konfirmasi: berkas yang sudah terunggah dibuang.
+            'bukti_hapus'               => ['nullable', 'boolean'],
         ];
 
         // Pertanyaan Detail Kejadian milik kategori terpilih wajib dijawab semua.
         foreach ($this->pertanyaanKategori() as $key => $field) {
             $rules['template.' . $key] = $this->wajib($rules['template.' . $key]);
-        }
-
-        // Ketersediaan bukti wajib dijawab, kecuali di kategori yang berkasnya
-        // selalu wajib (jawabannya diisi otomatis di normalizedTemplate).
-        $kategori = $this->kategoriValid();
-        if ($kategori !== null && ! PengaduanPertanyaan::buktiSelaluWajib($kategori)) {
-            $rules['template.ketersediaan_bukti'] = $this->wajib($rules['template.ketersediaan_bukti']);
         }
 
         return $rules;
@@ -89,8 +84,6 @@ class PengaduanPayloadRequest extends FormRequest
             'template.email_kontak.email'    => 'Format email kontak tidak valid.',
             'template.email_kontak.max'      => 'Email kontak maksimal 255 karakter.',
             'template.pihak_terkait.in'  => 'Pilihan pihak terkait tidak dikenali.',
-            'template.ketersediaan_bukti.required' => 'Pilih ketersediaan bukti.',
-            'template.ketersediaan_bukti.in'       => 'Pilihan ketersediaan bukti tidak dikenali.',
             'template.waktu_kejadian.date' => 'Waktu kejadian harus berupa tanggal yang valid.',
             'template.waktu_kejadian.before_or_equal'   => 'Waktu kejadian tidak boleh melebihi waktu saat ini.',
             'template.tanggal_kejadian.before_or_equal' => 'Waktu kejadian tidak boleh melebihi waktu saat ini.',
@@ -156,7 +149,7 @@ class PengaduanPayloadRequest extends FormRequest
         }
 
         $template = Arr::only($template, array_merge(
-            ['judul', 'kronologi', 'angkatan', 'email_kontak', 'ketersediaan_bukti'],
+            ['judul', 'kronologi', 'angkatan', 'email_kontak'],
             PengaduanPertanyaan::kunci($kategori)
         ));
 
@@ -165,10 +158,6 @@ class PengaduanPayloadRequest extends FormRequest
 
         if (isset($template['email_kontak'])) {
             $template['email_kontak'] = mb_strtolower(trim((string) $template['email_kontak'])) ?: null;
-        }
-
-        if (PengaduanPertanyaan::buktiSelaluWajib($kategori)) {
-            $template['ketersediaan_bukti'] = PengaduanPertanyaan::BUKTI_LAMPIRKAN;
         }
 
         return array_map(
@@ -180,15 +169,6 @@ class PengaduanPayloadRequest extends FormRequest
     public function isAnonim(): bool
     {
         return (bool) $this->validated('is_anonim', false);
-    }
-
-    /** Berkas bukti wajib dilampirkan untuk pengaduan yang sedang dikirim. */
-    public function lampirBukti(): bool
-    {
-        return PengaduanPertanyaan::lampirBukti(
-            (string) $this->validated('kategori'),
-            $this->normalizedTemplate()['ketersediaan_bukti'] ?? null
-        );
     }
 
     /** Kategori yang sedang dikirim bila dikenali; null bila tidak. */

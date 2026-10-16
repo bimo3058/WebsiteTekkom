@@ -30,6 +30,10 @@
     // Karena itu di tahap ini `tanggal_mulai` TIDAK boleh diberi atribut
     // `required` — itu akan memblokir penyimpanan draft di sisi browser.
     $tahapRencana = $tahapRencana ?? false;
+    // Tahap Pelaksanaan: Lokasi, Ketua Pelaksana, dan Anggaran sudah terisi sejak proker
+    // diajukan, jadi di sini tidak boleh dikosongkan lagi — boleh diubah, tetapi harus
+    // berisi realisasi di lapangan. Ditegakkan juga di PelaksanaanController::update().
+    $wajibRealisasi = $showDokumentasi && !$tahapRencana;
 @endphp
 
 <!-- Header -->
@@ -159,9 +163,10 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label-custom">Lokasi</label>
+            <label class="form-label-custom">Lokasi @if($wajibRealisasi)<span class="required">*</span>@endif</label>
             <input type="text" name="lokasi" class="form-control form-control-custom"
                    value="{{ old('lokasi', $proker->lokasi) }}" id="lokasiInput" maxlength="150"
+                   @if($wajibRealisasi) required placeholder="Lokasi sebenarnya kegiatan berlangsung" @endif
                    oninput="updateCharCount('lokasiInput','lokasiCount',150)">
             <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="lokasiCount">0</span>/150 karakter</div>
         </div>
@@ -178,6 +183,7 @@
                 ? $mahasiswaList->whereIn('id', old('panitia_ids'))
                 : $existingPanitia,
             'panitiaPeranLama' => old('panitia_peran', []),
+            'ketuaWajib'       => $wajibRealisasi,
         ])
     </div>
 
@@ -204,7 +210,7 @@
                         $anggaranValue = rtrim(rtrim($anggaranValue, '0'), '.');
                     }
                 @endphp
-                <label class="form-label-custom">Anggaran (Rp)</label>
+                <label class="form-label-custom">Anggaran (Rp) @if($wajibRealisasi)<span class="required">*</span>@endif</label>
                 {{--
                     step="any", BUKAN step="1000". Dengan step="1000" browser diam-diam
                     menolak angka yang bukan kelipatan seribu (mis. 750500): tombol Simpan
@@ -212,14 +218,15 @@
                     tanpa satu pun keterangan di form bahwa anggaran harus kelipatan 1000.
                 --}}
                 <input type="number" name="anggaran" class="form-control form-control-custom"
-                       value="{{ $anggaranValue }}" min="0" max="9999999999999" step="any">
+                       value="{{ $anggaranValue }}" min="0" max="9999999999999" step="any"
+                       @if($wajibRealisasi) required placeholder="Anggaran yang terpakai (isi 0 bila tanpa biaya)" @endif>
             </div>
         </div>
     </div>
 
     <!-- Banner -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg> Banner Kegiatan *</div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg> Banner Kegiatan <span style="color: var(--c-error);">*</span></div>
 
         @if($proker->banner)
             <div class="banner-current">
@@ -243,7 +250,7 @@
     @if($showDokumentasi)
     <!-- Foto Kegiatan -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Foto Kegiatan <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks 10 foto)</span></div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Foto Kegiatan <span style="color: var(--c-error);">*</span> <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(wajib minimal 1 sebelum diunggah ke arsip, maks 10 foto)</span></div>
 
         @if($existingFoto->count() > 0)
             <div class="existing-file-label">Foto yang sudah diupload</div>

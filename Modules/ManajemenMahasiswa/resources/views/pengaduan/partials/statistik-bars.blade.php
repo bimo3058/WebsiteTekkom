@@ -3,15 +3,12 @@
     (dipakai halaman pengaduan/statistik; gaya .ps-bar-* ada di halaman itu).
 
     Param:
-      $baris      [['label' => string, 'nilai' => int|null], ...]
-                  nilai null = disamarkan (di bawah MIN_TAMPIL), tampil "< 3" tanpa batang.
+      $baris      [['label' => string, 'nilai' => int], ...]
       $satuan     kata satuan untuk tooltip, mis. "pengaduan"
-      $tampilNol  true = baris bernilai 0 tetap ditampilkan (bawaan: disembunyikan)
+    Baris bernilai 0 tidak ditampilkan.
 --}}
 @php
-    $min = \Modules\ManajemenMahasiswa\Services\PengaduanStatistikService::MIN_TAMPIL;
-    $tampilNol = $tampilNol ?? false;
-    $baris = array_values(array_filter($baris, fn ($b) => $tampilNol || $b['nilai'] === null || $b['nilai'] > 0));
+    $baris = array_values(array_filter($baris, fn ($b) => $b['nilai'] > 0));
     $maks = max(1, max(array_map(fn ($b) => (int) $b['nilai'], $baris) ?: [0]));
 @endphp
 
@@ -20,16 +17,14 @@
 @else
     <div class="ps-bars">
         @foreach ($baris as $b)
-            @php $disamarkan = $b['nilai'] === null; @endphp
-            <div class="ps-bar-row" tabindex="0"
-                 data-tip="{{ $b['label'] }}: {{ $disamarkan ? 'kurang dari ' . $min . ' (disamarkan)' : $b['nilai'] . ' ' . $satuan }}">
+            <div class="ps-bar-row" tabindex="0" data-tip="{{ $b['label'] }}: {{ $b['nilai'] }} {{ $satuan }}">
                 <span class="ps-bar-label">{{ $b['label'] }}</span>
                 <span class="ps-bar-track">
-                    @unless ($disamarkan || $b['nilai'] === 0)
+                    @if ($b['nilai'] > 0)
                         <span class="ps-bar-fill" style="display: block; width: {{ $b['nilai'] / $maks * 100 }}%;"></span>
-                    @endunless
+                    @endif
                 </span>
-                <span class="ps-bar-value {{ $disamarkan ? 'is-hidden' : '' }}">{{ $disamarkan ? '< ' . $min : $b['nilai'] }}</span>
+                <span class="ps-bar-value">{{ $b['nilai'] }}</span>
             </div>
         @endforeach
     </div>

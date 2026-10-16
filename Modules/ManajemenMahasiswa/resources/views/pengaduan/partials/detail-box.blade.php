@@ -24,8 +24,6 @@
     $kategoriLabel = $kategoriLabel ?? \Modules\ManajemenMahasiswa\Models\Pengaduan::kategoriLabel((string) $pengaduan->kategori);
 
     $adaBukti = !empty(data_get($pengaduan, 'data_template.bukti')) || $tpl('link_bukti');
-    // Tiket sebelum Oktober 2026 belum ditanya ketersediaan bukti → null, baris tidak tampil.
-    $ketersediaanLabel = \Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan::labelBukti($tpl('ketersediaan_bukti'));
 
     $infoItems = [];
     if ($isStaff) {
@@ -173,9 +171,6 @@
             <p>{{ $adaBukti ? 'Berkas yang dilampirkan pelapor. Klik untuk melihat isinya.' : 'Pelapor tidak melampirkan berkas.' }}</p>
         </div>
         <div class="kf-main is-fields">
-            @if ($ketersediaanLabel)
-                <div class="kf-bukti-status">Ketersediaan bukti: <strong>{{ $ketersediaanLabel }}</strong></div>
-            @endif
             @php $buktiParams = ['pengaduan' => $pengaduan] + (!empty($buktiToken) ? ['token' => $buktiToken] : []); @endphp
             @include('manajemenmahasiswa::pengaduan.partials.bukti-list', $buktiParams)
         </div>

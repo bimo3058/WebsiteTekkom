@@ -271,10 +271,12 @@ class PelaksanaanController extends Controller
             // lolos ke query dan memunculkan halaman error saat disimpan.
             'jam_mulai'                 => 'nullable|date_format:H:i,H:i:s',
             'jam_selesai'               => $jamSelesaiRules,
-            'lokasi'                    => 'nullable|string|max:150',
+            // Lokasi, ketua pelaksana, dan anggaran sudah wajib sejak Ajukan Proker; di tahap
+            // Pelaksanaan boleh diubah sesuai realisasi tetapi tidak boleh dikosongkan lagi.
+            'lokasi'                    => 'required|string|max:150',
             'target_peserta'            => 'nullable|integer|min:1',
-            'anggaran'                  => 'nullable|numeric|min:0|max:9999999999999',
-            'ketua_pelaksana_id'        => 'nullable|exists:students,id',
+            'anggaran'                  => 'required|numeric|min:0|max:9999999999999',
+            'ketua_pelaksana_id'        => 'required|exists:students,id',
             'dosen_pendamping_ids'      => 'nullable|array',
             'dosen_pendamping_ids.*'    => 'exists:lecturers,id',
             'panitia_ids'               => 'nullable|array',
@@ -294,6 +296,9 @@ class PelaksanaanController extends Controller
             'bidang_id.min'                  => 'Bidang pemegang proker wajib dipilih, kecuali kegiatan ini murni Kegiatan Prodi.',
             'bidang_id.max'                  => 'Pilih satu bidang saja — satu proker dipegang satu bidang himpunan.',
             'tanggal_mulai.required'         => 'Tanggal mulai wajib diisi. Kegiatan yang sudah masuk tahap pelaksanaan harus punya tanggal pasti supaya bisa muncul di filter Tahun dan diarsipkan.',
+            'lokasi.required'                => 'Lokasi wajib diisi — tuliskan lokasi sebenarnya kegiatan berlangsung.',
+            'anggaran.required'              => 'Anggaran wajib diisi — isi sesuai realisasi, atau 0 bila kegiatan tanpa biaya.',
+            'ketua_pelaksana_id.required'    => 'Ketua pelaksana wajib dipilih.',
             'tanggal_selesai.after_or_equal' => 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.',
             'jam_mulai.date_format'          => 'Jam mulai harus berupa jam yang benar, contoh 09:00.',
             'jam_selesai.date_format'        => 'Jam selesai harus berupa jam yang benar, contoh 15:00.',
@@ -454,6 +459,31 @@ class PelaksanaanController extends Controller
             return redirect()
                 ->back()
                 ->with('error', 'Banner kegiatan wajib diunggah terlebih dahulu sebelum mengunggah ke arsip.');
+        }
+
+        // Lokasi, ketua pelaksana, dan anggaran juga dicek di sini (bukan hanya di form) supaya
+        // kegiatan lama yang formnya sudah pernah disimpan sebelum aturan ini tetap tertahan.
+        $kurang = [];
+        if (blank($proker->lokasi)) {
+            $kurang[] = 'lokasi';
+        }
+        if (empty($proker->ketua_pelaksana_id)) {
+            $kurang[] = 'ketua pelaksana';
+        }
+        if ($proker->anggaran === null) {
+            $kurang[] = 'anggaran';
+        }
+        if ($kurang) {
+            return redirect()
+                ->back()
+                ->with('error', 'Lengkapi dulu data pelaksanaan sebelum mengunggah ke arsip: ' . implode(', ', $kurang) . '.');
+        }
+
+        // Foto dokumentasi wajib ada: arsip kegiatan harus punya bukti kegiatan sudah berlangsung.
+        if (!$proker->repoMulmed()->where('tipe_file', 'image')->exists()) {
+            return redirect()
+                ->back()
+                ->with('error', 'Minimal satu foto kegiatan wajib diunggah terlebih dahulu sebelum mengunggah ke arsip.');
         }
 
         $proker->update(['status' => Kegiatan::STATUS_SELESAI]);

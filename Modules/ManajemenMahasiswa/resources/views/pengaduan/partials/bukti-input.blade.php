@@ -1,7 +1,8 @@
 {{--
     Input bukti dukung (khusus PDF). Pilihan berkas ditampilkan sebagai daftar ikon
     berikut tombol hapus dan pratinjau pop-up, seperti "Ajukan Riwayat Kegiatan" di Verifikasi Kegiatan.
-    Hanya ditampilkan bila berkas memang diminta (lihat form-fields), jadi labelnya selalu wajib.
+    Bukti opsional di semua kategori. Bukti yang sudah terunggah (saat kembali dari
+    Konfirmasi) bisa diganti dengan memilih berkas baru, atau dibuang lewat centang bukti_hapus.
     Param: $buktiPendingItems (bukti yang sudah terunggah, opsional).
 --}}
 @include('manajemenmahasiswa::pengaduan.partials.bukti-styles')
@@ -11,7 +12,7 @@
     $maxKb = \Modules\ManajemenMahasiswa\Support\PengaduanBukti::MAX_KB;
     $maxMb = $maxKb / 1024;
 @endphp
-<label class="pgd-label" for="buktiInput">Berkas PDF <span class="is-req">*</span></label>
+<label class="pgd-label" for="buktiInput">Berkas PDF <span class="is-opt">(opsional)</span></label>
 {{-- Input bawaan disembunyikan (tetap bisa difokus keyboard): tampilannya selalu
      menulis "Tidak ada file yang dipilih", padahal berkas terpilih sudah didaftar di bawah. --}}
 <input type="file" class="bk-file-native" name="bukti[]" id="buktiInput" accept="application/pdf,.pdf" multiple>
@@ -37,6 +38,10 @@
         {{ $pendingCount }} berkas sudah terunggah. Pilih berkas baru hanya bila ingin menggantinya.
     </div>
     @include('manajemenmahasiswa::pengaduan.partials.bukti-items', ['items' => $buktiPendingItems])
+    <label class="pgd-help" style="display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; cursor: pointer;">
+        <input type="checkbox" name="bukti_hapus" value="1" style="width: 15px; height: 15px; margin: 0; accent-color: var(--c-primary);">
+        Jangan lampirkan berkas ini
+    </label>
 @endif
 <script>
     (function () {

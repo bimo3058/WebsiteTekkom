@@ -20,7 +20,7 @@
 {{-- Header --}}
 <x-manajemenmahasiswa::ui.page-header bordered title="Detail Rencana Proker">
     Dibuat oleh <span style="color:var(--c-fg-sec);font-weight:600;">{{ $proker->creator?->name ?? '-' }}</span>
-    &bull; {{ $proker->created_at->translatedFormat('d M Y') }}
+    &bull; {{ $proker->created_at->locale('id')->translatedFormat('d M Y') }}
 
     <x-slot:leading>
         <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" aria-label="Kembali"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg></a>

@@ -5,7 +5,6 @@ namespace Modules\ManajemenMahasiswa\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 use Modules\ManajemenMahasiswa\Http\Requests\PengaduanPayloadRequest;
 use Modules\ManajemenMahasiswa\Models\Pengaduan;
 use Modules\ManajemenMahasiswa\Models\PengaduanLog;
@@ -21,7 +20,6 @@ class PengaduanController extends Controller
     /** Kunci bukti "pending" di session untuk form Buat Pengaduan (lihat PengaduanBukti). */
     private const BUKTI_SCOPE = 'reguler';
 
-    private const PESAN_BUKTI_WAJIB = 'Lampirkan minimal satu berkas bukti (PDF).';
 
     /**
      * Role yang berstatus mahasiswa dan boleh membuat pengaduan. Pengurus
@@ -92,16 +90,14 @@ class PengaduanController extends Controller
         // tidak, pelapor bisa menebak status tiketnya lewat ?status= di URL.
         $kategori = (string)$request->query('kategori', '');
         $status = $isStaff ? (string)$request->query('status', '') : '';
-        // Filter "melihat pola" (pihak terlapor & ketersediaan bukti) khusus staff.
+        // Filter "melihat pola" (pihak terlapor) khusus staff.
         $pihak = $isStaff ? (string)$request->query('pihak', '') : '';
-        $bukti = $isStaff ? (string)$request->query('bukti', '') : '';
 
         $filters = [
             'q' => trim((string)$request->query('q', '')),
             'kategori' => in_array($kategori, Pengaduan::KATEGORI_LIST, true) ? $kategori : '',
             'status' => in_array($status, ['baru', 'tercatat'], true) ? $status : '',
             'pihak' => in_array($pihak, PengaduanPertanyaan::PIHAK, true) ? $pihak : '',
-            'bukti' => array_key_exists($bukti, PengaduanPertanyaan::BUKTI_OPSI) ? $bukti : '',
         ];
 
         $query = Pengaduan::query();
@@ -133,18 +129,6 @@ class PengaduanController extends Controller
 
         if ($filters['pihak'] !== '') {
             $query->whereRaw("data_template->>'pihak_terkait' = ?", [$filters['pihak']]);
-        }
-
-        if ($filters['bukti'] !== '') {
-            $query->where(function ($sub) use ($filters) {
-                $sub->whereRaw("data_template->>'ketersediaan_bukti' = ?", [$filters['bukti']]);
-
-                // Tiket lama belum ditanya ketersediaan bukti; yang berlampiran
-                // tetap terhitung "Ada, saya lampirkan".
-                if ($filters['bukti'] === PengaduanPertanyaan::BUKTI_LAMPIRKAN) {
-                    $sub->orWhereRaw("(data_template->>'ketersediaan_bukti' IS NULL AND CASE WHEN jsonb_typeof(data_template->'bukti') = 'array' THEN jsonb_array_length(data_template->'bukti') ELSE 0 END > 0)");
-                }
-            });
         }
 
         if ($filters['q'] !== '') {
@@ -279,17 +263,11 @@ class PengaduanController extends Controller
                 ->with('error', PengaduanQuota::message($user->id));
         }
 
-        if ($request->lampirBukti()) {
-            // Berkas baru menggantikan bukti pending; tanpa berkas baru, yang lama dipertahankan.
-            if ($request->hasFile('bukti')) {
-                PengaduanBukti::stage($request->file('bukti'), self::BUKTI_SCOPE);
-            }
-
-            if (PengaduanBukti::pending(self::BUKTI_SCOPE) === []) {
-                throw ValidationException::withMessages(['bukti' => self::PESAN_BUKTI_WAJIB]);
-            }
-        } else {
-            // Jawaban "Ketersediaan Bukti" bukan "Ada, saya lampirkan": berkas tidak dilampirkan.
+        // Bukti opsional. Berkas baru menggantikan bukti pending; tanpa berkas baru,
+        // yang lama dipertahankan kecuali pelapor mencentang "jangan lampirkan".
+        if ($request->hasFile('bukti')) {
+            PengaduanBukti::stage($request->file('bukti'), self::BUKTI_SCOPE);
+        } elseif ($request->boolean('bukti_hapus')) {
             PengaduanBukti::discard(self::BUKTI_SCOPE);
         }
 
@@ -319,16 +297,8 @@ class PengaduanController extends Controller
 
         $template = $request->normalizedTemplate();
 
-        if ($request->lampirBukti()) {
-            // Bukti pending bisa hilang bila session kedaluwarsa di antara Konfirmasi dan Kirim.
-            if (PengaduanBukti::pending(self::BUKTI_SCOPE) === []) {
-                throw ValidationException::withMessages(['bukti' => self::PESAN_BUKTI_WAJIB])
-                    ->redirectTo(route('manajemenmahasiswa.pengaduan.create'));
-            }
-
+        if (PengaduanBukti::pending(self::BUKTI_SCOPE) !== []) {
             $template['bukti'] = PengaduanBukti::commit(self::BUKTI_SCOPE);
-        } else {
-            PengaduanBukti::discard(self::BUKTI_SCOPE);
         }
 
         $pengaduan = $this->pengaduanService->create(
@@ -439,9 +409,7 @@ class PengaduanController extends Controller
     }
 
     /**
-     * Statistik Layanan Pengaduan (staf saja). Dua tab sesuai kebutuhan peran:
-     * "Antrian Kerja" (admin kemahasiswaan) dan "Evaluasi Mutu" (GPM). Semua staf
-     * boleh membuka keduanya; tab awal mengikuti peran.
+     * Statistik Layanan Pengaduan (staf saja): bahan evaluasi mutu per periode.
      */
     public function statistik(Request $request, PengaduanStatistikService $statistik)
     {
@@ -452,18 +420,13 @@ class PengaduanController extends Controller
             abort(403, 'Statistik pengaduan hanya untuk pengelola.');
         }
 
-        $tabAwal = $user->hasAnyRole(['gpm', 'kaprodi', 'ketua_departemen']) ? 'evaluasi' : 'antrian';
-        $tab = in_array($request->query('tab'), ['antrian', 'evaluasi'], true) ? $request->query('tab') : $tabAwal;
-
         $periode = array_key_exists((string) $request->query('periode'), PengaduanStatistikService::PERIODE)
             ? (string) $request->query('periode')
-            : 'semester';
+            : PengaduanStatistikService::PERIODE_BAWAAN;
 
         return view('manajemenmahasiswa::pengaduan.statistik', [
-            'tab'         => $tab,
-            'periode'     => $periode,
-            'operasional' => $statistik->operasional(),
-            'evaluasi'    => $statistik->evaluasi($periode),
+            'periode'  => $periode,
+            'evaluasi' => $statistik->evaluasi($periode),
         ]);
     }
 

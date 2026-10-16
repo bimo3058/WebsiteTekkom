@@ -10,9 +10,8 @@
     - Detail Kejadian: empat pertanyaan yang menyesuaikan kategori terpilih
       (sumber: Support\PengaduanPertanyaan). Tiap kategori punya <fieldset> sendiri;
       yang tidak aktif disembunyikan DAN di-disable sehingga isiannya tidak ikut terkirim.
-    - Bukti Dukung: "Ketersediaan Bukti" wajib dijawab; berkas hanya diminta (dan wajib)
-      bila jawabannya "Ada, saya lampirkan", atau selalu untuk kategori di
-      PengaduanPertanyaan::KATEGORI_BUKTI_WAJIB.
+    - Bukti Dukung: opsional di semua kategori. Punya bukti → unggah PDF; tidak punya →
+      dikosongkan.
 
     Elemen <form>, @csrf, dan honeypot ada di halaman pemanggil (pengaduan/create).
 
@@ -23,7 +22,6 @@
       $backUrl            tujuan tombol kembali (daftar pengaduan)
 --}}
 @php
-    use Modules\ManajemenMahasiswa\Models\Pengaduan;
     use Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan;
 
     $pertanyaan     = PengaduanPertanyaan::semua();
@@ -38,21 +36,13 @@
     // kotaknya mulai kosong supaya email kampus tidak terkirim tanpa disadari.
     $emailAwal      = old('template.email_kontak', $anonAwal ? '' : $emailAkun);
 
-    $buktiWajibAwal  = $kategoriAktif !== null && PengaduanPertanyaan::buktiSelaluWajib($kategoriAktif);
-    $ketersediaanAwal = old('template.ketersediaan_bukti');
-    $lampirAwal      = $buktiWajibAwal || $ketersediaanAwal === PengaduanPertanyaan::BUKTI_LAMPIRKAN;
-    $pendingCount    = count($buktiPendingItems ?? []);
-
     // Kelas field bermasalah + pesan per-field, seperti @error di Edit User SITKOM.
     $invalid = fn (string $key) => $errors->has($key) ? 'is-invalid' : '';
 @endphp
 
 @include('manajemenmahasiswa::pengaduan.partials.box-styles')
 
-<div class="kf-box" id="pgdForm"
-     data-kategori-ppks="{{ Pengaduan::KATEGORI_TINDAKAN_TIDAK_MENYENANGKAN }}"
-     data-kategori-bukti-wajib='@json(PengaduanPertanyaan::KATEGORI_BUKTI_WAJIB)'
-     data-bukti-lampir="{{ PengaduanPertanyaan::BUKTI_LAMPIRKAN }}">
+<div class="kf-box" id="pgdForm">
     {{-- ── Bilah atas ── --}}
     <div class="kf-toolbar">
         <div class="kf-toolbar-lead">
@@ -165,16 +155,6 @@
                 @endforeach
             </div>
             @error('kategori') <div class="pgd-error">{{ $message }}</div> @enderror
-
-            {{-- Saran saja, kotak tidak dicentang otomatis: keputusan tetap di tangan pelapor. --}}
-            <div class="pgd-saran" data-pgd-saran-anon
-                 @unless ($kategoriAktif === Pengaduan::KATEGORI_TINDAKAN_TIDAK_MENYENANGKAN && ! $anonAwal) hidden @endunless>
-                <x-manajemenmahasiswa::ui.icon name="information-circle" size="16" />
-                <span>
-                    Untuk laporan perundungan, pelecehan, atau intimidasi, Anda disarankan mencentang
-                    <strong>Sembunyikan identitas saya</strong> di bagian Pelapor.
-                </span>
-            </div>
         </div>
     </div>
 
@@ -284,35 +264,12 @@
     <div class="kf-split">
         <div class="kf-side">
             <h3>Bukti Dukung</h3>
-            <p>Bukti membantu pengelola menindaklanjuti. Pengaduan tanpa bukti tetap dicatat.</p>
+            <p>Lampirkan bila ada. Pengaduan tanpa bukti tetap dicatat.</p>
         </div>
         <div class="kf-main is-fields">
-            {{-- Ketersediaan bukti: tidak ditanyakan di kategori yang berkasnya selalu wajib. --}}
-            <fieldset class="pgd-set" data-pgd-bukti-tanya @if ($buktiWajibAwal) hidden disabled @endif>
-                <legend class="pgd-label" id="pgdBuktiLabel">Ketersediaan Bukti <span class="is-req">*</span></legend>
-                <div class="pgd-opsi-grid" role="radiogroup" aria-labelledby="pgdBuktiLabel">
-                    @foreach (PengaduanPertanyaan::BUKTI_OPSI as $value => $label)
-                        <label class="pgd-opsi">
-                            <input type="radio" name="template[ketersediaan_bukti]" value="{{ $value }}"
-                                   @checked($ketersediaanAwal === $value) {{ $loop->first ? 'required' : '' }}>
-                            <span>{{ $label }}</span>
-                        </label>
-                    @endforeach
-                </div>
-                @error('template.ketersediaan_bukti') <div class="pgd-error">{{ $message }}</div> @enderror
-            </fieldset>
-
-            <div class="pgd-saran" data-pgd-bukti-wajib @unless ($buktiWajibAwal) hidden @endunless>
-                <x-manajemenmahasiswa::ui.icon name="information-circle" size="16" />
-                <span>Kategori ini wajib melampirkan bukti, misalnya foto kerusakan atau tangkapan layar galat yang digabung ke dalam PDF.</span>
-            </div>
-
-            {{-- Berkas hanya diminta bila dilampirkan; fieldset disabled = input berkas tidak ikut terkirim. --}}
-            <fieldset class="pgd-set pgd-berkas" data-pgd-berkas data-pending="{{ $pendingCount }}" @unless ($lampirAwal) hidden disabled @endunless>
-                @include('manajemenmahasiswa::pengaduan.partials.bukti-input', [
-                    'buktiPendingItems' => $buktiPendingItems ?? [],
-                ])
-            </fieldset>
+            @include('manajemenmahasiswa::pengaduan.partials.bukti-input', [
+                'buktiPendingItems' => $buktiPendingItems ?? [],
+            ])
         </div>
     </div>
 
@@ -326,10 +283,6 @@
         var root = document.getElementById('pgdForm');
         if (!root) return;
 
-        var KATEGORI_PPKS = root.dataset.kategoriPpks;
-        var KATEGORI_BUKTI_WAJIB = JSON.parse(root.dataset.kategoriBuktiWajib || '[]');
-        var LAMPIR = root.dataset.buktiLampir;
-
         var sets = root.querySelectorAll('[data-pgd-set]');
         var empty = root.querySelector('[data-pgd-empty]');
         var caption = root.querySelector('[data-pgd-caption]');
@@ -340,22 +293,6 @@
         var anon = document.getElementById('pgdAnonim');
         var nama = document.getElementById('pgdNama');
         var email = document.getElementById('pgdEmail');
-        var saranAnon = root.querySelector('[data-pgd-saran-anon]');
-
-        var tanya = root.querySelector('[data-pgd-bukti-tanya]');
-        var catatanWajib = root.querySelector('[data-pgd-bukti-wajib]');
-        var berkas = root.querySelector('[data-pgd-berkas]');
-        var inputBerkas = document.getElementById('buktiInput');
-
-        function kategori() {
-            var r = root.querySelector('input[name="kategori"]:checked');
-            return r ? r.value : null;
-        }
-
-        function ketersediaan() {
-            var r = root.querySelector('input[name="template[ketersediaan_bukti]"]:checked');
-            return r ? r.value : null;
-        }
 
         // Tampilkan hanya set pertanyaan kategori terpilih. Set lain di-disable
         // supaya isiannya tidak ikut terkirim (server juga membuangnya).
@@ -393,38 +330,17 @@
             }
             root.querySelectorAll('[data-pgd-anon-only]').forEach(function (el) { el.hidden = !on; });
             root.querySelectorAll('[data-pgd-biasa-only]').forEach(function (el) { el.hidden = on; });
-            if (saranAnon) saranAnon.hidden = !(kategori() === KATEGORI_PPKS && !on);
-        }
-
-        // Berkas diminta (dan wajib) bila kategori selalu wajib bukti atau jawabannya "Ada, saya lampirkan".
-        function perbaruiBukti() {
-            var wajib = KATEGORI_BUKTI_WAJIB.indexOf(kategori()) !== -1;
-            if (tanya) { tanya.hidden = wajib; tanya.disabled = wajib; }
-            if (catatanWajib) catatanWajib.hidden = !wajib;
-
-            var lampir = wajib || ketersediaan() === LAMPIR;
-            if (berkas) { berkas.hidden = !lampir; berkas.disabled = !lampir; }
-            // Bukti yang sudah terunggah di langkah sebelumnya ikut dihitung.
-            if (inputBerkas) inputBerkas.required = lampir && berkas.dataset.pending === '0';
         }
 
         root.querySelectorAll('input[name="kategori"]').forEach(function (radio) {
             radio.addEventListener('change', function () {
-                if (!radio.checked) return;
-                pilihKategori(radio);
-                perbaruiIdentitas();
-                perbaruiBukti();
+                if (radio.checked) pilihKategori(radio);
             });
-        });
-        root.querySelectorAll('input[name="template[ketersediaan_bukti]"]').forEach(function (radio) {
-            radio.addEventListener('change', perbaruiBukti);
         });
         if (anon) anon.addEventListener('change', function () { perbaruiIdentitas(true); });
 
         if (pesan && count) {
             pesan.addEventListener('input', function () { count.textContent = pesan.value.length + '/5000'; });
         }
-
-        perbaruiBukti();
     })();
 </script>

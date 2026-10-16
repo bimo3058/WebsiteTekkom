@@ -18,7 +18,6 @@
     $kategoriLabel = \Modules\ManajemenMahasiswa\Models\Pengaduan::kategoriLabel((string) $payload['kategori']);
     $buktiItems = (array) ($payload['bukti_items'] ?? []);
     $buktiCount = count($buktiItems);
-    $ketersediaanLabel = PengaduanPertanyaan::labelBukti($tpl('ketersediaan_bukti'));
 
     $infoItems = array_merge([
         // Istilah sama dengan daftar & detail staff: "Anonim".
@@ -110,9 +109,6 @@
                 <p>Berkas PDF yang dilampirkan. Metadata penulis dokumen sudah dikosongkan sebisanya.</p>
             </div>
             <div class="kf-main is-fields">
-                @if($ketersediaanLabel)
-                    <div class="kf-bukti-status">Ketersediaan bukti: <strong>{{ $ketersediaanLabel }}</strong></div>
-                @endif
                 @if($buktiCount > 0)
                     <div style="font-size: 13px; font-weight: 600; color: var(--c-fg-sec);">{{ $buktiCount }} berkas — klik untuk melihat isinya</div>
                     @include('manajemenmahasiswa::pengaduan.partials.bukti-items', ['items' => $buktiItems])

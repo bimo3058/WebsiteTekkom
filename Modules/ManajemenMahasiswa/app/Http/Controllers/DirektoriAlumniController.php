@@ -13,7 +13,9 @@ use Modules\ManajemenMahasiswa\Models\Alumni;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
+use Modules\ManajemenMahasiswa\Policies\KemahasiswaanPolicy;
 use Modules\ManajemenMahasiswa\Services\AlumniService;
+use Modules\ManajemenMahasiswa\Support\KontakPribadi;
 use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class DirektoriAlumniController extends Controller
@@ -345,11 +347,15 @@ class DirektoriAlumniController extends Controller
             // Sync gagal — lanjutkan
         }
 
-        $filters = $request->only(['tahun_lulus', 'status_karir', 'bidang_industri', 'search']);
-        $filters = array_filter($filters, fn($v) => $v !== 'semua' && $v !== null && $v !== '');
+        // `angkatan` ikut dibaca: filternya ada di panel, tapi dulu tidak pernah diteruskan
+        // ke query. Nilai berbentuk array (?search[]=...) dibuang, sama dengan Direktori Mahasiswa.
+        $filters = $request->only(['angkatan', 'tahun_lulus', 'status_karir', 'bidang_industri', 'search']);
+        $filters = array_filter($filters, fn($v) => is_string($v) && $v !== 'semua' && $v !== '');
 
         // Jumlah baris per halaman — pilihan yang sama dengan Direktori Mahasiswa.
         $perPage = PerPage::resolve($request);
+
+        $error = null;
 
         try {
             [
@@ -364,16 +370,23 @@ class DirektoriAlumniController extends Controller
                 $summary = $this->alumniService->getSummary();
                 return [$alumni, $angkatanList, $tahunLulusList, $summary];
             });
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            Log::error('Direktori alumni gagal memuat data', ['error' => $e->getMessage()]);
+
             $alumni = new \Illuminate\Pagination\LengthAwarePaginator([], 0, $perPage);
             $angkatanList = collect();
             $tahunLulusList = collect();
             $summary = ['total' => 0, 'per_status' => []];
+            // Tanpa pesan ini tabel kosong mudah dibaca sebagai "data alumni hilang".
+            $error = 'Koneksi database sedang tidak stabil sehingga data alumni belum bisa ditampilkan. '
+                . 'Data Anda aman — silakan muat ulang halaman dalam beberapa saat.';
         }
 
         $statusKarirOptions = Alumni::STATUS_LABELS;
         $bidangIndustriOptions = Alumni::BIDANG_INDUSTRI_LIST;
         $isAdmin = $this->hasRole('superadmin', 'admin_kemahasiswaan');
+        // Alumni melihat menu Edit pada barisnya sendiri.
+        $userId = (int) Auth::id();
 
         $totalAlumni = $summary['total'];
         $bekerja = $summary['per_status']['bekerja'] ?? 0;
@@ -388,11 +401,13 @@ class DirektoriAlumniController extends Controller
             'statusKarirOptions',
             'bidangIndustriOptions',
             'isAdmin',
+            'userId',
             'totalAlumni',
             'bekerja',
             'wirausaha',
             'studiLanjut',
-            'belumTerdata'
+            'belumTerdata',
+            'error',
         ))->with('layout', $this->resolveLayout());
     }
 
@@ -402,9 +417,21 @@ class DirektoriAlumniController extends Controller
 
     public function show(int $id)
     {
+        // find() (bukan findOrFail di dalam try) agar "data tidak ada" berakhir 404,
+        // bukan dilaporkan sebagai "koneksi database tidak stabil".
         try {
-            $alumni = $this->withRetry(fn() => $this->alumniService->findById($id));
+            $alumni = $this->withRetry(fn() => Alumni::with('user')->find($id));
+        } catch (\Throwable $e) {
+            Log::error('Detail alumni gagal dimuat', ['id' => $id, 'error' => $e->getMessage()]);
 
+            return redirect()
+                ->route('manajemenmahasiswa.direktori.alumni.index')
+                ->with('error', 'Koneksi database sedang tidak stabil. Silakan coba lagi dalam beberapa saat.');
+        }
+
+        abort_if(!$alumni, 404, 'Data alumni tidak ditemukan.');
+
+        try {
             // Ambil data kemahasiswaan (untuk prestasi) via user_id
             $kemahasiswaan = $this->withRetry(
                 fn() => Kemahasiswaan::with([
@@ -429,6 +456,12 @@ class DirektoriAlumniController extends Controller
             // Role yang boleh mengunduh CV alumni — sumber kebenarannya CvProfilePolicy,
             // sama dengan gerbang route dan Policy di generateCv().
             $canDownloadCv = $this->hasRole(...\App\Policies\CvProfilePolicy::PENGELOLA_CV);
+            // Halaman detail merangkap profil sendiri (sama dengan Direktori Mahasiswa):
+            // pemilik melihat tombol Download CV + Edit miliknya.
+            $isSelf = (int) $alumni->user_id === (int) Auth::id();
+            // Kontak pribadi alumni dibatasi sama persis dengan Direktori Mahasiswa —
+            // status lulus tidak membuat kontaknya terbuka untuk semua orang.
+            $bisaLihatKontakPribadi = $isSelf || $this->hasRole(...KemahasiswaanPolicy::LIHAT_KONTAK_PRIBADI);
 
             return view('manajemenmahasiswa::direktori.alumni-show', compact(
                 'alumni',
@@ -439,9 +472,13 @@ class DirektoriAlumniController extends Controller
                 'canSeeHistory',
                 'canManageHistory',
                 'canDownloadCv',
+                'isSelf',
+                'bisaLihatKontakPribadi',
             ))->with('layout', $this->resolveLayout());
 
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            Log::error('Detail alumni gagal dimuat', ['id' => $id, 'error' => $e->getMessage()]);
+
             return redirect()
                 ->route('manajemenmahasiswa.direktori.alumni.index')
                 ->with('error', 'Koneksi database sedang tidak stabil. Silakan coba lagi dalam beberapa saat.');
@@ -449,14 +486,19 @@ class DirektoriAlumniController extends Controller
     }
 
     // -------------------------------------------------------------------------
-    // Profil — Halaman profil karir untuk alumni sendiri
+    // Profil — Jalan pintas ke halaman detail milik sendiri
+    //
+    // Dulu halaman "Profil Karir" tersendiri yang tidak punya tautan di menu mana pun
+    // (sidebar alumni mengarah ke daftar), sehingga alumni praktis tidak bisa mengubah
+    // datanya. Kini edit lewat tombol Edit di halaman detail sendiri, sama dengan
+    // Direktori Mahasiswa; route ini dipertahankan sebagai redirect untuk tautan lama.
     // -------------------------------------------------------------------------
 
     public function profil()
     {
-        try {
-            $user = Auth::user();
+        $user = Auth::user();
 
+        try {
             $alumni = $this->withRetry(fn() => Alumni::where('user_id', $user->id)->first());
 
             if (!$alumni) {
@@ -464,147 +506,153 @@ class DirektoriAlumniController extends Controller
 
                 if ($mhs && $mhs->status === Kemahasiswaan::STATUS_ALUMNI) {
                     $alumni = $this->withRetry(fn() => Alumni::create([
-                        'user_id' => $user->id,
-                        'nim' => $mhs->nim,
-                        'angkatan' => $mhs->angkatan,
-                        'tahun_lulus' => $mhs->tahun_lulus ?? date('Y'),
-                        'program_studi' => 'Teknik Komputer',
+                        'user_id'       => $user->id,
+                        'nim'           => $mhs->nim,
+                        'angkatan'      => $mhs->angkatan,
+                        'tahun_lulus'   => $mhs->tahun_lulus ?? date('Y'),
+                        'program_studi' => 'S1 Teknik Komputer',
                     ]));
-                } else {
-                    return back()->with('error', 'Akses ditolak. Anda belum terdaftar sebagai alumni.');
                 }
             }
+        } catch (\Throwable $e) {
+            Log::warning('Profil alumni gagal dibuka', ['user_id' => $user->id, 'error' => $e->getMessage()]);
 
-            return view('manajemenmahasiswa::direktori.alumni-profil', compact('alumni'))
-                ->with('layout', $this->resolveLayout());
-
-        } catch (\Throwable) {
             return redirect()
-                ->route('manajemenmahasiswa.direktori.alumni.index')
+                ->route('manajemenmahasiswa.dashboard')
                 ->with('error', 'Koneksi database sedang tidak stabil. Silakan coba lagi dalam beberapa saat.');
         }
+
+        if (!$alumni) {
+            // Tujuan tetap, BUKAN back(): back() bisa menunjuk ke halaman ini sendiri
+            // dan membuat browser terjebak redirect berulang.
+            return redirect()
+                ->route('manajemenmahasiswa.dashboard')
+                ->with('error', 'Anda belum terdaftar sebagai alumni.');
+        }
+
+        return redirect()->route('manajemenmahasiswa.direktori.alumni.show', $alumni->id);
     }
 
     // -------------------------------------------------------------------------
-    // Update Profil — Simpan perubahan karir diri sendiri
-    // -------------------------------------------------------------------------
-
-    public function updateProfil(Request $request)
-    {
-        $user = Auth::user();
-
-        try {
-            $alumni = $this->withRetry(fn() => Alumni::where('user_id', $user->id)->firstOrFail());
-        } catch (\Throwable) {
-            return back()->with('error', 'Koneksi database sedang tidak stabil. Silakan coba lagi.');
-        }
-
-        $validated = $request->validate([
-            'status_karir' => 'nullable|string|in:' . implode(',', Alumni::STATUS_LIST),
-            'perusahaan' => 'nullable|string|max:255',
-            'jabatan' => 'nullable|string|max:255',
-            'bidang_industri' => 'nullable|string|in:' . implode(',', array_keys(Alumni::BIDANG_INDUSTRI_LIST)),
-            'tahun_mulai_bekerja' => 'nullable|integer|min:2000|max:' . date('Y'),
-            'linkedin' => 'nullable|url|max:255',
-        ]);
-
-        try {
-            $this->withRetry(fn() => $this->alumniService->update($alumni->id, $validated));
-        } catch (\Throwable) {
-            return back()->with('error', 'Koneksi database sedang tidak stabil. Silakan coba lagi.');
-        }
-
-        return redirect()->route('manajemenmahasiswa.direktori.alumni.profil')
-            ->with('success', 'Profil karir Anda berhasil diperbarui.');
-    }
-
-    // -------------------------------------------------------------------------
-    // Edit — Form edit data alumni (Admin only)
+    // Edit — Dua wajah, satu halaman (pola Direktori Mahasiswa):
+    //   • pengelola membuka baris ORANG LAIN → tahun lulus + kontak + karir,
+    //     tiap perubahan tercatat di audit log;
+    //   • pemilik baris (alumni itu sendiri) → kontak + karir miliknya.
+    // NIM dan Angkatan milik SSO dan tidak bisa diubah siapa pun di sini.
     // -------------------------------------------------------------------------
 
     public function edit(int $id)
     {
-        try {
-            $alumni = $this->withRetry(fn() => $this->alumniService->findById($id));
-        } catch (\Throwable) {
-            return redirect()
-                ->route('manajemenmahasiswa.direktori.alumni.index')
-                ->with('error', 'Koneksi database sedang tidak stabil. Silakan coba lagi.');
-        }
+        $alumni = Alumni::with('user')->findOrFail($id);
 
-        return view('manajemenmahasiswa::direktori.alumni-edit', compact('alumni'))
+        // Route menyaring "role apa"; ini menyaring "baris siapa".
+        $this->authorize('update', $alumni);
+
+        $sebagaiPengelola = Auth::user()->can('ubahDataAlumni', $alumni);
+        $kontakCadangan   = Kemahasiswaan::where('user_id', $alumni->user_id)->value('kontak');
+
+        return view('manajemenmahasiswa::direktori.alumni-edit', compact('alumni', 'sebagaiPengelola', 'kontakCadangan'))
             ->with('layout', $this->resolveLayout());
     }
 
     // -------------------------------------------------------------------------
-    // Update — Simpan perubahan data alumni (Admin only)
+    // Update — Simpan (pengelola: + tahun lulus & audit log; pemilik: kontak + karir)
     // -------------------------------------------------------------------------
 
     public function update(Request $request, int $id)
     {
-        $validated = $request->validate([
-            'tahun_lulus' => 'required|integer|min:2000|max:2099',
-            'program_studi' => 'nullable|string|max:255',
-            'status_karir' => 'nullable|string|in:' . implode(',', Alumni::STATUS_LIST),
-            'perusahaan' => 'nullable|string|max:255',
-            'jabatan' => 'nullable|string|max:255',
-            'bidang_industri' => 'nullable|string|in:' . implode(',', array_keys(Alumni::BIDANG_INDUSTRI_LIST)),
+        $alumni = Alumni::with('user')->findOrFail($id);
+
+        $this->authorize('update', $alumni);
+
+        $sebagaiPengelola = Auth::user()->can('ubahDataAlumni', $alumni);
+
+        $aturan = [
+            'status_karir'        => 'nullable|string|in:' . implode(',', Alumni::STATUS_LIST),
+            'perusahaan'          => 'nullable|string|max:255',
+            'jabatan'             => 'nullable|string|max:255',
+            'bidang_industri'     => 'nullable|string|in:' . implode(',', array_keys(Alumni::BIDANG_INDUSTRI_LIST)),
             'tahun_mulai_bekerja' => 'nullable|integer|min:2000|max:' . date('Y'),
-            'linkedin' => 'nullable|url|max:255',
-            'personal_email' => 'nullable|email|max:255',
-        ]);
+            'linkedin'            => 'nullable|url|max:255',
+        ];
+        // Tahun lulus = data akademik, hanya pengelola. Dari pemilik, kolomnya tidak
+        // divalidasi DAN tidak diteruskan — kiriman form yang diutak-atik tidak berefek.
+        if ($sebagaiPengelola) {
+            $aturan['tahun_lulus'] = 'required|integer|min:2000|max:2099';
+        }
 
-        // Email pribadi disimpan di tabel users (bukan kolom mk_alumni) — pisahkan dari payload alumni.
-        $personalEmail = $validated['personal_email'] ?? null;
-        unset($validated['personal_email']);
+        $data = $request->validate(
+            $aturan + KontakPribadi::aturan($alumni->user),
+            [
+                'tahun_lulus.required' => 'Tahun lulus wajib diisi.',
+                'linkedin.url'         => 'Tautan LinkedIn harus berupa URL lengkap (https://...).',
+            ] + KontakPribadi::pesan(),
+            KontakPribadi::atribut(),
+        );
 
-        try {
-            $alumni = $this->withRetry(fn() => $this->alumniService->update($id, $validated));
+        // Hanya kolom mk_alumni yang benar-benar berubah yang ditulis dan diaudit.
+        $kolomAlumni = array_keys($aturan);
+        $perubahanAlumni = [];
+        foreach ($kolomAlumni as $kolom) {
+            $lama = $alumni->{$kolom};
+            $baru = ($data[$kolom] ?? null) === '' ? null : ($data[$kolom] ?? null);
+            if ((string) $lama !== (string) $baru) {
+                $perubahanAlumni[$kolom] = [$lama, $baru];
+            }
+        }
 
-            // Sinkronisasi kontak ke tabel users dan cv_profiles
-            if ($request->has('kontak') || $request->has('phone_code')) {
-                $kontak = $request->kontak;
-                $phoneCode = $request->phone_code ?? '+62';
-                
-                if ($kontak) {
-                    // Bersihkan non-digit
-                    $kontak = preg_replace('/[^\d]/', '', $kontak);
-                    if ($phoneCode === '+62' && str_starts_with($kontak, '0')) {
-                        $kontak = ltrim($kontak, '0');
-                    }
-                    $fullWa = $phoneCode . $kontak;
-                } else {
-                    $fullWa = null;
+        $kontakCadangan = Kemahasiswaan::where('user_id', $alumni->user_id)->value('kontak');
+        $kontak = KontakPribadi::perubahan($request, $alumni->user, $kontakCadangan);
+
+        if (!$perubahanAlumni && !$kontak) {
+            return redirect()
+                ->route('manajemenmahasiswa.direktori.alumni.show', $id)
+                ->with('success', 'Tidak ada perubahan yang disimpan.');
+        }
+
+        // Penyimpanan, sinkron kontak, dan audit log satu transaksi: bila salah satu
+        // gagal, tidak ada yang berubah (dulu kontak bisa tersimpan setengah).
+        DB::transaction(function () use ($alumni, $perubahanAlumni, $kontak, $sebagaiPengelola) {
+            if ($perubahanAlumni) {
+                $alumni->update(array_map(fn ($nilai) => $nilai[1], $perubahanAlumni));
+
+                if (isset($perubahanAlumni['tahun_lulus'])) {
+                    Kemahasiswaan::where('user_id', $alumni->user_id)
+                        ->update(['tahun_lulus' => $perubahanAlumni['tahun_lulus'][1]]);
                 }
-
-                // Sync ke user
-                $userModel = \App\Models\User::find($alumni->user_id);
-                if ($userModel) {
-                    $userModel->updateQuietly(['whatsapp' => $fullWa]);
-                }
-                
-                // Sync ke cv_profiles
-                \App\Models\CvProfile::where('user_id', $alumni->user_id)->update(['cv_whatsapp' => $fullWa]);
-                
-                // Sync ke kemahasiswaan
-                \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('user_id', $alumni->user_id)->update(['kontak' => $fullWa]);
             }
 
-            // Sinkronisasi email pribadi ke tabel users
-            if ($request->has('personal_email')) {
-                $userModel = \App\Models\User::find($alumni->user_id);
-                if ($userModel) {
-                    $userModel->updateQuietly(['personal_email' => $personalEmail]);
-                }
-            }
+            KontakPribadi::tulis($alumni->user_id, $alumni->user, $kontak);
 
-        } catch (\Throwable $e) {
-            return back()->with('error', 'Koneksi database sedang tidak stabil. Silakan coba lagi.');
+            // Perubahan oleh pemilik sendiri tidak diaudit, sama dengan Direktori Mahasiswa.
+            if ($sebagaiPengelola) {
+                $semua = $perubahanAlumni + $kontak;
+                $ringkasan = array_merge(
+                    array_map(fn ($kolom) => str_replace('_', ' ', $kolom), array_keys($perubahanAlumni)),
+                    KontakPribadi::ringkasan($kontak),
+                );
+
+                \App\Services\AuditLogger::update(
+                    module:  'manajemen_mahasiswa',
+                    // Deskripsi ikut ke log terpusat: hanya nama kolom, tanpa nilai.
+                    desc:    "Mengubah data alumni {$alumni->user?->name} ({$alumni->nim}): " . implode(', ', $ringkasan),
+                    subject: $alumni,
+                    oldData: array_map(fn ($nilai) => $nilai[0], $semua),
+                    newData: array_map(fn ($nilai) => $nilai[1], $semua),
+                );
+            }
+        });
+
+        \Illuminate\Support\Facades\Cache::forget('mk.alumni.summary');
+        \Illuminate\Support\Facades\Cache::forget('mk.dashboard.snapshot');
+
+        if ($kontak) {
+            $alumni->user?->clearUserCache();
         }
 
         return redirect()
             ->route('manajemenmahasiswa.direktori.alumni.show', $id)
-            ->with('success', 'Data alumni berhasil diperbarui.');
+            ->with('success', $sebagaiPengelola ? 'Data alumni berhasil diperbarui.' : 'Data Anda berhasil diperbarui.');
     }
 
     // -------------------------------------------------------------------------
@@ -743,23 +791,13 @@ class DirektoriAlumniController extends Controller
     }
 
     // -------------------------------------------------------------------------
-    // Prestasi — Destroy
+    // Prestasi — TIDAK bisa dihapus dari Direktori Alumni.
+    //
+    // Prestasi/lomba yang tampil di sini sudah lolos Verifikasi Data dan bisa
+    // menjadi dasar klaim reward (SK 774). Menghapusnya dari direktori menghilangkan
+    // jejak verifikasi tanpa lewat alur resmi, jadi destroyPrestasi() dan route-nya
+    // dicabut. Koreksi prestasi dilakukan di Verifikasi Data.
     // -------------------------------------------------------------------------
-
-    public function destroyPrestasi(int $prestasiId)
-    {
-        $prestasi = \Modules\ManajemenMahasiswa\Models\Prestasi::findOrFail($prestasiId);
-
-        // Resolve alumni_id untuk redirect — lewat kemahasiswaan → user → alumni
-        $kemahasiswaan = Kemahasiswaan::find($prestasi->kemahasiswaan_id);
-        $alumni = $kemahasiswaan ? Alumni::where('user_id', $kemahasiswaan->user_id)->first() : null;
-
-        $prestasi->delete();
-
-        return redirect()
-            ->route('manajemenmahasiswa.direktori.alumni.show', $alumni?->id ?? 0)
-            ->with('success', 'Prestasi berhasil dihapus.');
-    }
 
     // -------------------------------------------------------------------------
     // Generate CV — Halaman CV print-ready (Alumni)

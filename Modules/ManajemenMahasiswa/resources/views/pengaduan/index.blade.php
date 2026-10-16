@@ -181,7 +181,7 @@
 
 @php
     $filterPanelAktif = $filters['kategori'] !== '' || $filters['status'] !== ''
-        || $filters['pihak'] !== '' || $filters['bukti'] !== '';
+        || $filters['pihak'] !== '';
     $adaFilter = $filters['q'] !== '' || $filterPanelAktif;
     // Pelapor tidak melihat status tiket (kolom Status & filternya khusus staff).
     $jumlahKolom = $isStaff ? 7 : 4;
@@ -259,16 +259,6 @@
                                     <option value="semua">Semua Pihak</option>
                                     @foreach(\Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan::PIHAK as $pihak)
                                         <option value="{{ $pihak }}" @selected($filters['pihak'] === $pihak)>{{ $pihak }}</option>
-                                    @endforeach
-                                </x-manajemenmahasiswa::ui.select>
-                            </div>
-
-                            <div>
-                                <label class="filter-pop-label" for="filterBukti">Ketersediaan Bukti</label>
-                                <x-manajemenmahasiswa::ui.select name="bukti" id="filterBukti">
-                                    <option value="semua">Semua</option>
-                                    @foreach(\Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan::BUKTI_OPSI as $value => $label)
-                                        <option value="{{ $value }}" @selected($filters['bukti'] === $value)>{{ $label }}</option>
                                     @endforeach
                                 </x-manajemenmahasiswa::ui.select>
                             </div>

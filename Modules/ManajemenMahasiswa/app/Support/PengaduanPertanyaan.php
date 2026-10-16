@@ -34,30 +34,6 @@ final class PengaduanPertanyaan
         'Tidak diketahui',
     ];
 
-    /**
-     * Pertanyaan "Ketersediaan Bukti" (kunci data_template: ketersediaan_bukti).
-     * Yang disimpan kuncinya, bukan labelnya, supaya filter staf tetap stabil.
-     * Berkas hanya dilampirkan bila jawabannya BUKTI_LAMPIRKAN.
-     */
-    public const BUKTI_LAMPIRKAN = 'lampir';
-
-    public const BUKTI_OPSI = [
-        self::BUKTI_LAMPIRKAN => 'Ada, saya lampirkan',
-        'belum'               => 'Ada, tetapi belum bisa saya lampirkan',
-        'saksi'               => 'Ada saksi',
-        'tidak'               => 'Tidak ada',
-    ];
-
-    /**
-     * Kategori yang selalu wajib melampirkan bukti: bukti di sini mudah dibuat
-     * (foto kerusakan, tangkapan layar galat) dan tidak membuka identitas pelapor.
-     * Kategori PPKS sengaja TIDAK di sini — banyak kasusnya tanpa bukti fisik.
-     */
-    public const KATEGORI_BUKTI_WAJIB = [
-        Pengaduan::KATEGORI_FASILITAS_KAMPUS,
-        Pengaduan::KATEGORI_LAYANAN_IT_SSO,
-    ];
-
     /** Label bawaan tiap kunci, dipakai untuk tiket lama yang menyimpan kunci di luar kategorinya. */
     private const LABEL_BAWAAN = [
         'objek'          => 'Objek Aduan',
@@ -180,24 +156,6 @@ final class PengaduanPertanyaan
     public static function kunci(string $kategori): array
     {
         return array_keys(self::untuk($kategori)['fields']);
-    }
-
-    /** Kategori yang tidak menanyakan ketersediaan bukti karena berkas selalu wajib. */
-    public static function buktiSelaluWajib(string $kategori): bool
-    {
-        return in_array(Pengaduan::normalizeKategori($kategori), self::KATEGORI_BUKTI_WAJIB, true);
-    }
-
-    /** Berkas bukti wajib (dan hanya boleh) dilampirkan pada pengaduan ini. */
-    public static function lampirBukti(string $kategori, ?string $ketersediaan): bool
-    {
-        return self::buktiSelaluWajib($kategori) || $ketersediaan === self::BUKTI_LAMPIRKAN;
-    }
-
-    /** Label jawaban ketersediaan bukti; null untuk tiket lama yang belum menanyakannya. */
-    public static function labelBukti(?string $ketersediaan): ?string
-    {
-        return $ketersediaan === null ? null : (self::BUKTI_OPSI[$ketersediaan] ?? null);
     }
 
     /**

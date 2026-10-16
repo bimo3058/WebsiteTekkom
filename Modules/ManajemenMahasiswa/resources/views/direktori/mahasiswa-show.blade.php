@@ -244,6 +244,7 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: var(--c-primary);" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
         Prestasi / Lomba
     </div>
+    <p style="font-size: 12px; color: var(--c-fg-muted); margin: -8px 0 14px 0;">Prestasi &amp; lomba yang diajukan mahasiswa dan sudah disetujui melalui verifikasi data</p>
     @if($mhs->prestasi->count() > 0)
         <div class="d-flex flex-column gap-2">
             @foreach($mhs->prestasi as $p)

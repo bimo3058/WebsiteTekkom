@@ -4,6 +4,17 @@
 
 @include('manajemenmahasiswa::partials.kegiatan-detail._styles')
 
+@php
+    // Didefinisikan di luar slot header karena modal konfirmasi di bawah juga memakainya.
+    $punyaFoto = $proker->repoMulmed->where('tipe_file', 'image')->isNotEmpty();
+    // Sama dengan PelaksanaanController::publishToArsip(): lokasi, ketua pelaksana, dan
+    // anggaran wajib berisi (anggaran 0 sah — kegiatan tanpa biaya).
+    $kurangRealisasi = collect([
+        'lokasi'          => blank($proker->lokasi),
+        'ketua pelaksana' => empty($proker->ketua_pelaksana_id),
+        'anggaran'        => $proker->anggaran === null,
+    ])->filter()->keys();
+@endphp
 
 <!-- Header with back button -->
 <x-manajemenmahasiswa::ui.page-header bordered
@@ -39,7 +50,7 @@
         @endif
         @if($proker->status !== 'selesai')
             @if($canArsip)
-                @if($proker->is_pelaksanaan_updated && $proker->banner)
+                @if($proker->is_pelaksanaan_updated && $proker->banner && $punyaFoto && $kurangRealisasi->isEmpty())
                     <button type="button" class="mk-btn mk-btn--primary mk-btn--sm"
                             onclick="document.getElementById('arsipModal').style.display='flex'">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -47,7 +58,7 @@
                     </button>
                 @else
                     <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm mk-btn--disabled" disabled
-                            title="{{ !$proker->is_pelaksanaan_updated ? 'Silakan edit/update data pelaksanaan kegiatan terlebih dahulu sebelum mengunggah ke arsip' : 'Banner kegiatan wajib diunggah terlebih dahulu sebelum mengunggah ke arsip' }}">
+                            title="{{ !$proker->is_pelaksanaan_updated ? 'Silakan edit/update data pelaksanaan kegiatan terlebih dahulu sebelum mengunggah ke arsip' : (!$proker->banner ? 'Banner kegiatan wajib diunggah terlebih dahulu sebelum mengunggah ke arsip' : ($kurangRealisasi->isNotEmpty() ? 'Lengkapi dulu ' . $kurangRealisasi->implode(', ') . ' sebelum mengunggah ke arsip' : 'Minimal satu foto kegiatan wajib diunggah terlebih dahulu sebelum mengunggah ke arsip')) }}">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                         Unggah ke Arsip
                     </button>
@@ -83,7 +94,7 @@
 
 
 <!-- Unggah ke Arsip Confirmation Modal -->
-@if($canArsip && $proker->status !== 'selesai' && $proker->is_pelaksanaan_updated && $proker->banner)
+@if($canArsip && $proker->status !== 'selesai' && $proker->is_pelaksanaan_updated && $proker->banner && ($punyaFoto ?? false) && ($kurangRealisasi ?? collect())->isEmpty())
 <div id="arsipModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;"
      onclick="if(event.target===this)this.style.display='none'">
     <div style="background: var(--c-surface); border-radius: 16px; padding: 32px; max-width: 440px; width: 90%; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.15);">

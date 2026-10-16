@@ -61,12 +61,12 @@
             <div class="meta-item-label">Tanggal Pelaksanaan</div>
             <div class="meta-item-value">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg> 
-                {{ $proker->tanggal_mulai ? $proker->tanggal_mulai->translatedFormat('d F Y') : 'Belum ditentukan' }}
+                {{ $proker->tanggal_mulai ? $proker->tanggal_mulai->locale('id')->translatedFormat('d F Y') : 'Belum ditentukan' }}
                 @if($proker->jam_mulai)
                     pukul {{ $proker->jam_mulai_formatted }}
                 @endif
                 @if($proker->tanggal_selesai)
-                    — {{ $proker->tanggal_selesai->translatedFormat('d F Y') }}
+                    — {{ $proker->tanggal_selesai->locale('id')->translatedFormat('d F Y') }}
                     @if($proker->jam_selesai)
                         pukul {{ $proker->jam_selesai_formatted }}
                     @endif
