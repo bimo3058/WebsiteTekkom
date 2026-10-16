@@ -15,6 +15,23 @@
             display: none !important;
         }
 
+        /* ── Touch & Tap Optimization (Mobile, Tablet & Touchscreens) ── */
+        a, button, [role="button"], input, select, textarea {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Prevent sticky pseudo-hover delay on touchscreens (iOS/Android/iPad) */
+        @media (hover: none) and (pointer: coarse) {
+            .mr-nav-link:hover:not(.is-active) {
+                background: transparent !important;
+            }
+            .safe-area-pb a:hover,
+            .safe-area-pb button:hover {
+                background-color: transparent !important;
+            }
+        }
+
         /* Custom NProgress Color (Biru Dongker) */
         #nprogress {
             pointer-events: none;
