@@ -115,16 +115,16 @@
 
     {{-- =================== PAGE HEADER =================== --}}
     <div class="mp-page-header">
-        <div class="flex flex-col md:flex-row md:items-center justify-between w-full gap-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between w-full gap-3 sm:gap-4">
             <div>
                 <h1 class="mp-page-title">Kalender Ruangan</h1>
                 <p class="mp-page-sub">Lihat ketersediaan seluruh ruangan dan langsung booking slot yang kosong.</p>
             </div>
 
-            <div class="flex flex-wrap items-center gap-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between lg:justify-end gap-2 sm:gap-3 w-full lg:w-auto">
                 {{-- Room Filter --}}
                 <form id="roomFilterForm" method="GET" action="{{ route('eoffice.peminjaman.user.kalender') }}"
-                    class="flex items-center">
+                    class="w-full sm:w-auto flex items-center">
                     <input type="hidden" name="mode" value="{{ $mode }}">
                     @if($mode === 'week') <input type="hidden" name="week_start"
                     value="{{ $weekStart->format('Y-m-d') }}"> @endif
@@ -133,81 +133,174 @@
 
                     <div x-data="{
                             open: false,
+                            search: '',
+                            activeTab: 'Semua',
                             selectedCat: '{{ $selectedKategori }}',
                             selectedRoomId: '{{ $selectedRoomId }}',
-                            selectedRoomName: '{{ $selectedRoomId ? addslashes($allRuangansDaftar->firstWhere('id', $selectedRoomId)->nama ?? 'Semua ' . $selectedKategori) : 'Semua ' . $selectedKategori }}',
+                            selectedRoomName: '{{ $selectedRoomId ? addslashes($allRuangansDaftar->firstWhere('id', $selectedRoomId)->nama ?? 'Semua Ruangan') : 'Semua Ruangan' }}',
                             rooms: {{ $allRuangansDaftar->map(fn($r) => ['id' => $r->id, 'nama' => $r->nama, 'kategori' => $r->kategori])->toJson() }},
                             categories: {{ $kategoriList->toJson() }},
+                            get displayLabel() {
+                                if (this.selectedRoomId && this.selectedRoomName && this.selectedRoomName !== 'Semua Ruangan') {
+                                    return this.selectedRoomName;
+                                }
+                                if (this.selectedCat && this.selectedCat !== 'Semua Kategori' && this.selectedCat !== 'Semua') {
+                                    return 'Kategori: ' + this.selectedCat;
+                                }
+                                return 'Semua Ruangan';
+                            },
+                            get filteredRooms() {
+                                let list = this.rooms;
+                                if (this.activeTab !== 'Semua') {
+                                    list = list.filter(r => r.kategori === this.activeTab);
+                                }
+                                if (this.search.trim() !== '') {
+                                    const q = this.search.toLowerCase().trim();
+                                    list = list.filter(r => r.nama.toLowerCase().includes(q) || (r.kategori && r.kategori.toLowerCase().includes(q)));
+                                }
+                                return list;
+                            },
                             selectCat(cat) {
                                 this.selectedCat = cat;
                                 this.selectedRoomId = '';
-                                this.selectedRoomName = 'Semua ' + cat;
+                                this.selectedRoomName = (cat === 'Semua' || cat === 'Semua Kategori') ? 'Semua Ruangan' : 'Semua ' + cat;
                                 $refs.ruanganInput.value = '';
-                                $refs.kategoriInput.value = cat;
+                                $refs.kategoriInput.value = (cat === 'Semua' ? 'Semua Kategori' : cat);
+                                this.open = false;
                                 document.getElementById('roomFilterForm').submit();
                             },
                             selectRoom(id, name, cat) {
-                                this.selectedCat = cat;
                                 this.selectedRoomId = id;
                                 this.selectedRoomName = name;
+                                this.selectedCat = cat || this.selectedCat;
                                 $refs.ruanganInput.value = id;
-                                $refs.kategoriInput.value = cat;
+                                $refs.kategoriInput.value = this.selectedCat;
+                                this.open = false;
                                 document.getElementById('roomFilterForm').submit();
+                            },
+                            init() {
+                                if (this.selectedRoomId !== '') {
+                                    let currentRoom = this.rooms.find(r => r.id == this.selectedRoomId);
+                                    if (currentRoom && currentRoom.kategori) {
+                                        this.selectedCat = currentRoom.kategori;
+                                        this.activeTab = currentRoom.kategori;
+                                        $refs.kategoriInput.value = currentRoom.kategori;
+                                    }
+                                } else if (this.selectedCat && this.selectedCat !== 'Semua Kategori' && this.selectedCat !== 'Semua') {
+                                    this.activeTab = this.selectedCat;
+                                }
                             }
-                        }" class="relative w-56 sm:w-64" @click.away="open = false">
+                        }" 
+                        class="relative w-full sm:w-auto" 
+                        @click.away="open = false"
+                        @keydown.escape.window="open = false">
 
                         <input type="hidden" name="ruangan_id" x-ref="ruanganInput" :value="selectedRoomId">
                         <input type="hidden" name="kategori" x-ref="kategoriInput" :value="selectedCat">
 
-                        <button type="button" @click="open = !open"
-                            class="w-full flex items-center justify-between py-1.5 px-3 text-[13px] font-medium bg-white border border-gray-300 rounded-lg shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0B266E]/20 transition-all cursor-pointer">
-                            <span x-text="selectedRoomId ? selectedRoomName : 'Kategori: ' + selectedCat"
-                                class="truncate pr-2 text-gray-800"></span>
-                            <svg class="w-4 h-4 text-gray-500 transition-transform duration-200 shrink-0"
+                        <!-- Trigger Button (Ukuran Asli/Natural) -->
+                        <button type="button" 
+                            @click="open = !open; if(open && window.innerWidth >= 768 && window.matchMedia('(pointer: fine)').matches) { $nextTick(() => $refs.searchInput && $refs.searchInput.focus()); }"
+                            class="w-full sm:w-auto min-w-[190px] sm:min-w-[210px] flex items-center justify-between gap-2.5 px-3 py-1.5 text-[13px] text-slate-800 font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0B266E]/20 shadow-sm transition-all cursor-pointer">
+                            <span x-text="displayLabel" class="truncate font-semibold"></span>
+                            <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0"
                                 :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
 
-                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
-                            x-transition:enter-start="transform opacity-0 scale-95"
-                            x-transition:enter-end="transform opacity-100 scale-100"
-                            x-transition:leave="transition ease-in duration-75"
-                            x-transition:leave-start="transform opacity-100 scale-100"
-                            x-transition:leave-end="transform opacity-0 scale-95"
-                            class="absolute right-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 max-h-60 overflow-y-auto"
+                        <!-- Combobox Popover -->
+                        <div x-show="open" x-cloak 
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="opacity-0 scale-95" 
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75" 
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            class="absolute left-0 top-full mt-1.5 w-full bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-2.5 text-left"
                             style="display: none;">
-                            <div class="p-1.5">
+                            
+                            <!-- Search Input (Formal, No Icons) -->
+                            <div class="relative mb-2">
+                                <input type="text"
+                                    x-ref="searchInput"
+                                    x-model="search"
+                                    placeholder="Cari nama ruangan..."
+                                    class="w-full pl-3 pr-7 py-1.5 text-[12px] bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0B266E] focus:border-[#0B266E] text-slate-800 placeholder-slate-400 transition-all">
+                                <button x-show="search.length > 0" 
+                                    @click="search = ''; $refs.searchInput.focus()" 
+                                    type="button" 
+                                    class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
+                                    &#x2715;
+                                </button>
+                            </div>
+
+                            <!-- Category Filter Tabs / Pills -->
+                            <div class="flex items-center gap-1 overflow-x-auto pb-1.5 mb-1.5 border-b border-slate-100 text-[11px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                                <button type="button" 
+                                    @click="activeTab = 'Semua'"
+                                    class="px-2.5 py-1 rounded-md transition-colors cursor-pointer shrink-0"
+                                    :class="activeTab === 'Semua' ? 'bg-[#0B266E] text-white font-semibold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'">
+                                    Semua
+                                </button>
                                 <template x-for="cat in categories" :key="cat">
-                                    <div class="mb-1">
-                                        <!-- Category Header -->
-                                        <button type="button" @click="selectCat(cat)"
-                                            class="w-full text-left px-2 py-1.5 rounded-md text-[13px] font-bold transition-colors cursor-pointer flex items-center gap-2"
-                                            :class="{'bg-[#EFF6FF] text-[#0B266E]': selectedCat === cat && !selectedRoomId, 'text-gray-800 hover:bg-gray-50': !(selectedCat === cat && !selectedRoomId)}">
-                                            <span x-text="getIcon(cat)"></span>
-                                            <span x-text="'Kategori: ' + cat"></span>
-                                        </button>
-                                        <!-- Rooms in Category -->
-                                        <div class="pl-6 border-l border-gray-100 ml-3 my-0.5 space-y-0.5">
-                                            <template x-for="r in rooms.filter(room => room.kategori === cat)"
-                                                :key="r.id">
-                                                <button type="button" @click="selectRoom(r.id, r.nama, cat)"
-                                                    class="w-full text-left px-2 py-1.5 rounded-md text-[12px] font-medium transition-colors cursor-pointer"
-                                                    :class="{'bg-[#0B266E] text-white': selectedRoomId == r.id, 'text-gray-600 hover:bg-gray-50': selectedRoomId != r.id}">
-                                                    - <span x-text="r.nama"></span>
-                                                </button>
-                                            </template>
-                                        </div>
-                                    </div>
+                                    <button type="button" 
+                                        @click="activeTab = cat"
+                                        class="px-2.5 py-1 rounded-md transition-colors cursor-pointer shrink-0"
+                                        :class="activeTab === cat ? 'bg-[#0B266E] text-white font-semibold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                        x-text="cat">
+                                    </button>
                                 </template>
+                            </div>
+
+                            <!-- Macro View: Tampilkan Semua Kategori Ini -->
+                            <div class="mb-1">
+                                <button type="button" 
+                                    @click="selectCat(activeTab)"
+                                    class="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md text-[12px] font-semibold text-left transition-colors cursor-pointer"
+                                    :class="(activeTab === 'Semua' ? (selectedCat === 'Semua Kategori' && !selectedRoomId) : (selectedCat === activeTab && !selectedRoomId))
+                                        ? 'bg-blue-50 text-[#0B266E]' 
+                                        : 'text-slate-700 hover:bg-slate-50'">
+                                    <span class="text-left" x-text="activeTab === 'Semua' ? 'Tampilkan Semua' : 'Tampilkan Semua ' + activeTab"></span>
+                                    <template x-if="activeTab === 'Semua' ? (selectedCat === 'Semua Kategori' && !selectedRoomId) : (selectedCat === activeTab && !selectedRoomId)">
+                                        <svg class="w-4 h-4 text-[#0B266E] shrink-0 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </template>
+                                </button>
+                            </div>
+
+                            <div class="h-px bg-slate-100 my-1"></div>
+
+                            <!-- List of Rooms with Checkmark and Badges -->
+                            <div class="max-h-52 overflow-y-auto space-y-0.5">
+                                <template x-for="r in filteredRooms" :key="r.id">
+                                    <button type="button" 
+                                        @click="selectRoom(r.id, r.nama, r.kategori)"
+                                        class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[12px] transition-colors cursor-pointer group"
+                                        :class="selectedRoomId == r.id ? 'bg-blue-50 text-[#0B266E] font-semibold' : 'text-slate-700 hover:bg-slate-50'">
+                                        
+                                        <span x-text="r.nama" class="truncate"></span>
+
+                                        <template x-if="selectedRoomId == r.id">
+                                            <svg class="w-4 h-4 text-[#0B266E] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </template>
+                                    </button>
+                                </template>
+
+                                <div x-show="filteredRooms.length === 0" class="py-4 text-center text-xs text-slate-400">
+                                    Ruangan tidak ditemukan
+                                </div>
                             </div>
                         </div>
                     </div>
                 </form>
 
                 {{-- Navigation Actions --}}
-                <div class="flex items-center gap-2">
+                <div class="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
                     {{-- Hari Ini Button --}}
                     @php
                         if ($mode === 'week') {
