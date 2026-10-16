@@ -780,16 +780,23 @@
             open = true;
          ">
             <div x-show="open" style="display: none;"
-                class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" aria-labelledby="modal-title"
-                role="dialog" aria-modal="true">
-                <div x-show="open" x-transition.opacity
-                    class="fixed inset-0 transition-opacity bg-gray-500/20 backdrop-blur-md" @click="open = false">
+                class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" aria-labelledby="modal-title"
+                role="dialog" aria-modal="true" x-cloak>
+                {{-- Backdrop --}}
+                <div x-show="open" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0"
+                    class="fixed inset-0 bg-slate-900/60 transition-opacity" aria-hidden="true"
+                    @click="open = false">
                 </div>
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
                 <div x-show="open" x-transition:enter="ease-out duration-300"
                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                    class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-gray-100 z-50">
+                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    class="relative bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-gray-100 z-50">
                     
                     <div class="bg-white px-5 pt-5 pb-6 sm:p-6 sm:pb-5">
                         <div class="text-[#0B266E] font-extrabold text-[15px] mb-1 text-center w-full pb-3 border-b border-gray-100" x-text="tujuan || title"></div>
