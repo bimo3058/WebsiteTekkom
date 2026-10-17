@@ -1,10 +1,25 @@
 <x-eoffice::manajemen-ruangan.layout pageTitle="Dashboard Admin">
 
-    <div class="mp-page-header">
-        <div>
-            <h1 class="mp-page-title">Dashboard Admin Ruangan</h1>
-            <p class="mp-page-sub">Pantau aktivitas peminjaman, jumlah ruangan terpakai, dan tiket approval hari ini.
+    <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        <div class="min-w-0">
+            <h1 class="text-[20px] md:text-[22px] font-bold text-gray-900 tracking-tight">
+                Dashboard Admin Ruangan
+            </h1>
+            <p class="text-[13px] text-gray-500 mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span>Selamat datang kembali, <strong class="font-semibold text-gray-900">{{ auth()->user()->name }}</strong></span>
+                <span class="text-gray-300" aria-hidden="true">&middot;</span>
+                <time datetime="{{ now()->toDateString() }}">{{ now()->locale('id')->translatedFormat('l, d F Y') }}</time>
             </p>
+        </div>
+        <div class="flex items-center gap-2.5 sm:gap-3 flex-wrap flex-shrink-0">
+            <a href="{{ route('eoffice.peminjaman.admin.kalender-global.index') }}"
+               class="inline-flex items-center justify-center px-3.5 py-2 bg-white border border-[#E2E8F0] rounded-lg text-[12px] font-semibold text-[#64748B] hover:bg-[#F8FAFC] hover:border-[#CBD5E1] transition-all whitespace-nowrap shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.07)]">
+                <span>Lihat Kalender</span>
+            </a>
+            <a href="{{ route('eoffice.peminjaman.admin.persetujuan.index') }}"
+               class="inline-flex items-center justify-center px-4 py-2 bg-[#0B266E] border border-[#0B266E] rounded-lg text-[12px] font-semibold text-white hover:bg-[#071946] hover:border-[#071946] transition-all whitespace-nowrap shadow-[0_2px_6px_rgba(11,38,110,0.3)] hover:shadow-[0_4px_12px_rgba(11,38,110,0.4)]">
+                <span>Kelola Persetujuan</span>
+            </a>
         </div>
     </div>
     <style>
@@ -69,7 +84,7 @@
         }
     </style>
 
-    <div class="mp-stats-grid cols-3" style="margin-top: 20px;">
+    <div class="mp-stats-grid cols-3" style="margin-top: 0px;">
         <!-- Card 1 -->
         <a href="{{ route('eoffice.peminjaman.admin.ruangan.index') }}" class="mp-stat mp-stat-custom clickable">
             <div class="mp-stat-header">

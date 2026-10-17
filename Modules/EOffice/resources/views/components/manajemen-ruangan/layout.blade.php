@@ -989,7 +989,7 @@
                                     <span x-show="sidebarOpen">{{ $item['label'] }}</span>
                                     @if(isset($item['badge']))
                                         <span @if(isset($item['poll_url'])) x-data="{ count: {{ $item['badge'] }} }"
-                                            x-init="setInterval(async () => { try { let res = await fetch('{{ $item['poll_url'] }}'); let json = await res.json(); count = json.count; window.dispatchEvent(new CustomEvent('pending-approval-updated', { detail: json.count })); } catch(e) {} }, 15000);"
+                                            x-init="setInterval(async () => { try { let res = await fetch('{{ $item['poll_url'] }}'); let json = await res.json(); count = json.count; window.dispatchEvent(new CustomEvent('pending-approval-updated', { detail: json.count })); } catch(e) {} }, 60000);"
                                         x-show="sidebarOpen && count > 0" x-text="count > 99 ? '99+' : count" @else
                                             x-show="sidebarOpen" @endif
                                             class="inline-flex items-center justify-center px-1.5 min-w-[20px] h-[20px] rounded-full bg-rose-100 text-rose-600 text-[10px] font-bold shrink-0 ml-auto"
@@ -1075,7 +1075,7 @@
                                             this.unreadCount = data.count;
                                         }
                                     } catch (_) {}
-                                }, 10000);
+                                }, 60000);
                             },
                             async toggle() {
                                 this.openNotif = !this.openNotif;
