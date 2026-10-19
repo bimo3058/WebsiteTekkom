@@ -121,21 +121,17 @@
 
     {{-- =================== PAGE HEADER =================== --}}
     <div class="mp-page-header">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between w-full gap-3 sm:gap-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-3 sm:gap-4">
             <div>
                 <h1 class="mp-page-title">Kalender Ruangan</h1>
-                <p class="mp-page-sub">Pantau ketersediaan dan agenda ruang secara komprehensif.</p>
+                <p class="mp-page-sub hidden sm:block">Pantau ketersediaan dan agenda ruang secara komprehensif.</p>
             </div>
 
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between lg:justify-end gap-2 sm:gap-3 w-full lg:w-auto">
+            <div class="w-full sm:w-auto flex justify-start sm:justify-end">
                 {{-- Room Filter --}}
                 <form id="roomFilterForm" method="GET"
-                    action="{{ route('eoffice.peminjaman.admin.kalender-global.index') }}" class="w-full sm:w-auto flex items-center">
-                    <input type="hidden" name="mode" value="{{ $mode }}">
-                    @if($mode === 'week') <input type="hidden" name="week_start"
-                    value="{{ $weekStart->format('Y-m-d') }}"> @endif
-                    @if($mode === 'month') <input type="hidden" name="month" value="{{ $monthDate->format('Y-m') }}">
-                    @endif
+                    action="{{ route('eoffice.peminjaman.admin.kalender-global.index') }}" class="w-full sm:w-auto">
+                    <input type="hidden" name="week_start" value="{{ $weekStart->format('Y-m-d') }}">
 
                     <div x-data="{
                             open: false,
@@ -204,10 +200,10 @@
                         <input type="hidden" name="ruangan_id" x-ref="ruanganInput" :value="selectedRoomId">
                         <input type="hidden" name="kategori" x-ref="kategoriInput" :value="selectedCat">
                         
-                        <!-- Trigger Button (Ukuran Asli/Natural) -->
+                        <!-- Trigger Button -->
                         <button type="button" 
                             @click="open = !open; if(open && window.innerWidth >= 768 && window.matchMedia('(pointer: fine)').matches) { $nextTick(() => $refs.searchInput && $refs.searchInput.focus()); }"
-                            class="w-full sm:w-auto min-w-[190px] sm:min-w-[210px] flex items-center justify-between gap-2.5 px-3 py-1.5 text-[13px] text-slate-800 font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0B266E]/20 shadow-sm transition-all cursor-pointer">
+                            class="w-full sm:w-64 md:w-72 flex items-center justify-between gap-2.5 px-3 py-1.5 text-[13px] text-slate-800 font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0B266E]/20 shadow-sm transition-all cursor-pointer">
                             <span x-text="displayLabel" class="truncate font-semibold"></span>
                             <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -302,43 +298,6 @@
                         </div>
                     </div>
                 </form>
-
-                {{-- Navigation Actions --}}
-                <div class="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
-                    {{-- Hari Ini Button --}}
-                    @php
-                        if ($mode === 'week') {
-                            $todayDate = \Carbon\Carbon::now()->format('Y-m-d');
-                            $isTodayView = $todayDate === $weekStart->format('Y-m-d');
-                            $todayUrl = request()->fullUrlWithQuery(['week_start' => $todayDate]);
-                        } else {
-                            $todayMonth = \Carbon\Carbon::now()->format('Y-m');
-                            $isTodayView = $todayMonth === $monthDate->format('Y-m');
-                            $todayUrl = request()->fullUrlWithQuery(['month' => $todayMonth]);
-                        }
-                    @endphp
-                    <a href="{{ $todayUrl }}"
-                        class="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all border {{ $isTodayView ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-default' : 'bg-white text-[#0B266E] border-gray-200 hover:bg-[#EFF6FF] hover:border-[#0B266E]/30 shadow-sm' }}"
-                        {{ $isTodayView ? 'onclick="return false;"' : '' }} title="Kembali ke Hari Ini">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        Hari Ini
-                    </a>
-
-                    {{-- Mode Toggle --}}
-                    <div class="flex bg-gray-100 rounded-lg p-1 gap-1">
-                        <a href="{{ request()->fullUrlWithQuery(['mode' => 'week', 'week_start' => $weekStart->format('Y-m-d')]) }}"
-                            class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'week' ? 'bg-white text-[#0B266E] shadow-sm' : 'text-gray-500 hover:text-[#0B266E]' }}">
-                            Mingguan
-                        </a>
-                        <a href="{{ request()->fullUrlWithQuery(['mode' => 'month', 'month' => $monthDate->format('Y-m')]) }}"
-                            class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'month' ? 'bg-white text-[#0B266E] shadow-sm' : 'text-gray-500 hover:text-[#0B266E]' }}">
-                            Bulanan
-                        </a>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -365,28 +324,46 @@
             </div>
         </div>
 
-        {{-- =================== WEEKLY MODE =================== --}}
-        @if($mode === 'week')
+        {{-- =================== JADWAL KALENDER =================== --}}
             {{-- Week Nav --}}
-            <div class="flex items-center justify-between mb-4 mt-2">
-                @if($canGoBackWeek)
-                    <a href="{{ request()->fullUrlWithQuery(['week_start' => $prevWeek]) }}"
-                        class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-3 md:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[36px] md:min-w-[130px]">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                        </svg>
-                        <span class="hidden md:inline">Minggu Lalu</span>
+            <div class="flex items-center justify-between mb-4 mt-2 gap-1.5 sm:gap-3">
+                <div class="flex items-center gap-1 sm:gap-2">
+                    @if($canGoBackWeek)
+                        <a href="{{ request()->fullUrlWithQuery(['week_start' => $prevWeek]) }}"
+                            class="inline-flex items-center justify-center gap-1.5 text-[12px] sm:text-[13px] font-semibold px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[34px] sm:min-w-[40px] md:min-w-[120px]"
+                            title="Minggu Lalu">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                            <span class="hidden md:inline">Minggu Lalu</span>
+                        </a>
+                    @else
+                        <div class="w-8 sm:w-auto"></div>
+                    @endif
+
+                    {{-- Hari Ini Button --}}
+                    @php
+                        $todayDate = \Carbon\Carbon::now()->format('Y-m-d');
+                        $isTodayView = $todayDate === $weekStart->format('Y-m-d');
+                        $todayUrl = request()->fullUrlWithQuery(['week_start' => $todayDate]);
+                    @endphp
+                    <a href="{{ $todayUrl }}"
+                        class="inline-flex items-center justify-center px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-[12px] font-bold transition-all border {{ $isTodayView ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-default pointer-events-none' : 'bg-white text-[#0B266E] border-gray-200 hover:bg-[#EFF6FF] hover:border-[#0B266E]/30 shadow-sm' }}"
+                        {{ $isTodayView ? 'onclick="return false;"' : '' }} title="Kembali ke Hari Ini">
+                        Hari Ini
                     </a>
-                @else
-                    <div class="min-w-[36px] md:min-w-[130px]"></div>
-                @endif
+                </div>
 
                 {{-- Date Picker Dropdown (Weekly) --}}
-                <div x-data="{ open: false }" class="relative flex-1 flex justify-center">
+                <div x-data="{ open: false }" class="relative flex-1 flex justify-center min-w-0">
                     <button @click="open = !open" type="button"
-                        class="flex items-center gap-1 md:gap-2 text-[12px] md:text-[15px] font-bold text-[#0B266E] hover:bg-gray-100 px-1 md:px-3 py-1.5 rounded-lg transition-colors cursor-pointer text-center">
-                        {{ $weekStart->translatedFormat('d M') }} — {{ $weekEnd->translatedFormat('d M Y') }}
-                        <svg class="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-500 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}"
+                        class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[12px] sm:text-[13px] md:text-[14px] font-bold text-[#0B266E] bg-slate-50 hover:bg-white border border-slate-200 hover:border-slate-300 shadow-sm rounded-lg sm:rounded-xl transition-all cursor-pointer truncate max-w-full group focus:outline-none focus:ring-2 focus:ring-[#0B266E]/15">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0B266E] shrink-0 opacity-80 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span class="truncate">{{ $weekStart->translatedFormat('d M') }} — {{ $weekEnd->translatedFormat('d M Y') }}</span>
+                        <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 group-hover:text-[#0B266E]" :class="{'rotate-180': open}"
                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
@@ -401,9 +378,11 @@
                         <p class="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2 text-center">Pindah ke
                             Tanggal</p>
                         <form method="GET" action="{{ url()->current() }}" class="flex flex-col gap-2">
-                            <input type="hidden" name="mode" value="week">
                             @if(request('ruangan_id'))
                                 <input type="hidden" name="ruangan_id" value="{{ request('ruangan_id') }}">
+                            @endif
+                            @if(request('kategori'))
+                                <input type="hidden" name="kategori" value="{{ request('kategori') }}">
                             @endif
                             <input type="date" name="week_start" value="{{ $weekStart->format('Y-m-d') }}"
                                 class="w-full text-[13px] border-gray-300 rounded-md shadow-sm focus:ring-[#0B266E] focus:border-[#0B266E] cursor-pointer">
@@ -413,8 +392,10 @@
                     </div>
                 </div>
 
+                {{-- Right: Next Week --}}
                 <a href="{{ request()->fullUrlWithQuery(['week_start' => $nextWeek]) }}"
-                    class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-3 md:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[36px] md:min-w-[130px]">
+                    class="inline-flex items-center justify-center gap-1.5 text-[12px] sm:text-[13px] font-semibold px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[34px] sm:min-w-[40px] md:min-w-[120px]"
+                    title="Minggu Depan">
                     <span class="hidden md:inline">Minggu Depan</span>
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -437,9 +418,11 @@
                             <tr style="background: #F1F3F9;">
                                 <th style="width: 64px; min-width:64px; border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; background:#F8F9FB; color: #4B5563; font-weight: 700; position: sticky; left: 0; z-index: 30; border-right: 2px solid #D1D5DB;">Jam</th>
                                 @foreach($weekDays as $day)
-                                    <th colspan="{{ $ruangans->count() }}" style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; font-weight: 700; color: #0B266E; {{ $day->isToday() ? 'background: #EFF6FF;' : 'background: #F8F9FB;' }}">
-                                        <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
-                                        <div style="font-size:11px; font-weight:500; color: #0B266E; margin-top:2px;">{{ $day->format('d/m') }}</div>
+                                    <th colspan="{{ $ruangans->count() }}" style="border: 1px solid #E5E7EB; padding: 8px 6px; text-align:center; font-weight: 700; color: #0B266E; {{ $day->isToday() ? 'background: #EFF6FF;' : 'background: #F8F9FB;' }}">
+                                        <div style="position: sticky; left: 74px; width: fit-content; margin: 0 auto; display: inline-flex; flex-direction: column; align-items: center; justify-content: center;">
+                                            <div style="font-size:13px; font-weight: 700;">{{ $day->translatedFormat('D') }}</div>
+                                            <div style="font-size:11px; font-weight:600; color: #0B266E; margin-top:1px;">{{ $day->format('d/m') }}</div>
+                                        </div>
                                     </th>
                                 @endforeach
                             </tr>
@@ -640,190 +623,6 @@
                 </div>
             </div>
 
-
-
-
-            {{-- =================== MONTHLY MODE =================== --}}
-        @else
-            {{-- Month Nav --}}
-            <div class="flex items-center justify-between mb-4">
-                @if($canGoBackMonth)
-                    <a href="{{ request()->fullUrlWithQuery(['month' => $prevMonth]) }}"
-                        class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[130px]">
-                        ← Bulan Lalu
-                    </a>
-                @else
-                    <div class="px-4 py-2 min-w-[130px]"></div>
-                @endif
-
-                {{-- Month/Year Picker Dropdown (Monthly) --}}
-                <div x-data="{ open: false, selectedYear: {{ $monthDate->format('Y') }} }" class="relative">
-                    <button @click="open = !open" type="button"
-                        class="flex items-center gap-2 text-[15px] font-bold text-[#0B266E] hover:bg-[#EFF6FF] px-4 py-1.5 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-[#0B266E]/20">
-                        {{ $monthDate->translatedFormat('F Y') }}
-                        <svg class="w-4 h-4 text-[#0B266E] transition-transform duration-200" :class="{'rotate-180': open}"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-
-                    <div x-show="open" @click.away="open = false" x-cloak
-                        x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95"
-                        x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75"
-                        x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                        class="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[280px] bg-white border border-gray-200 rounded-xl shadow-lg z-50 p-4"
-                        style="display: none;">
-
-                        <!-- Year selector -->
-                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
-                            <button type="button" @click="selectedYear--"
-                                class="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-[#0B266E] transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 19l-7-7 7-7" />
-                                </svg>
-                            </button>
-                            <span class="font-bold text-[16px] text-[#0B266E]" x-text="selectedYear"></span>
-                            <button type="button" @click="selectedYear++"
-                                class="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-[#0B266E] transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        <!-- Months grid -->
-                        <div class="grid grid-cols-3 gap-2">
-                            @php
-                                $months = [
-                                    '01' => 'Jan',
-                                    '02' => 'Feb',
-                                    '03' => 'Mar',
-                                    '04' => 'Apr',
-                                    '05' => 'Mei',
-                                    '06' => 'Jun',
-                                    '07' => 'Jul',
-                                    '08' => 'Agu',
-                                    '09' => 'Sep',
-                                    '10' => 'Okt',
-                                    '11' => 'Nov',
-                                    '12' => 'Des'
-                                ];
-                                $currentMonthNum = $monthDate->format('m');
-                                $currentYearNum = $monthDate->format('Y');
-                            @endphp
-
-                            @foreach($months as $num => $name)
-                                <button type="button" @click="
-                                                            let url = new URL(window.location.href);
-                                                            url.searchParams.set('mode', 'month');
-                                                            url.searchParams.set('month', selectedYear + '-{{ $num }}');
-                                                            window.location.href = url.href;
-                                                        "
-                                    class="py-2 text-center text-[13px] rounded-lg transition-colors cursor-pointer" :class="{
-                                                            'bg-[#0B266E] text-white font-bold shadow-md': selectedYear == {{ $currentYearNum }} && '{{ $num }}' == '{{ $currentMonthNum }}',
-                                                            'text-gray-600 hover:bg-[#EFF6FF] hover:text-[#0B266E] hover:font-bold': !(selectedYear == {{ $currentYearNum }} && '{{ $num }}' == '{{ $currentMonthNum }}')
-                                                        }">
-                                    {{ $name }}
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-
-                <a href="{{ request()->fullUrlWithQuery(['month' => $nextMonth]) }}"
-                    class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[130px]">
-                    Bulan Depan →
-                </a>
-            </div>
-
-            <div class="mp-card overflow-hidden">
-                <div class="mp-card-body" style="padding: 20px;">
-                    <p class="text-[12px] text-gray-500 mb-4"><strong>Heatmap Aktivitas:</strong> Semakin gelap warnanya,
-                        semakin banyak peminjaman di tanggal tersebut.</p>
-
-                    {{-- Day-of-week header --}}
-                    <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap: 4px; margin-bottom: 4px;">
-                        @foreach(['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] as $dayLabel)
-                            <div style="text-align:center; font-size:11px; font-weight:700; color:#6B7280; padding: 6px 0;">
-                                {{ $dayLabel }}
-                            </div>
-                        @endforeach
-                    </div>
-
-                    {{-- Calendar Cells --}}
-                    <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap: 4px;">
-                        @foreach($calendarDays as $cell)
-                            @if($cell === null)
-                                <div></div>
-                            @else
-                                @php
-                                    $dateKey = $cell->format('Y-m-d');
-                                    $count = $monthBookings[$dateKey] ?? 0;
-                                    $isToday = $cell->isToday();
-                                    $isPast = $cell->isPast() && !$isToday;
-
-                                    $isHoliday = isset($holidays[$dateKey]);
-                                    $isClosedWeekend = !$bukaAkhirPekan && $cell->isWeekend();
-                                    $isClosed = $isHoliday || $isClosedWeekend;
-
-                                    // Heatmap color by booking density
-                                    if ($isClosed) {
-                                        $cellBg = '#F3F4F6'; // Gray out
-                                        $countClr = '#9CA3AF';
-                                    } elseif ($count == 0) {
-                                        $cellBg = '#F9FAFB';
-                                        $countClr = '#9CA3AF';
-                                    } elseif ($count <= 2) {
-                                        $cellBg = '#D1FAE5';
-                                        $countClr = '#059669';
-                                    } elseif ($count <= 5) {
-                                        $cellBg = '#FEF9C3';
-                                        $countClr = '#B45309';
-                                    } else {
-                                        $cellBg = '#FEE2E2';
-                                        $countClr = '#DC2626';
-                                    }
-
-                                    $weekLink = request()->fullUrlWithQuery(['mode' => 'week', 'week_start' => $cell->copy()->startOfWeek(\Carbon\Carbon::MONDAY)->format('Y-m-d')]);
-                                @endphp
-                                <a href="{{ $weekLink }}"
-                                    title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
-                                    style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                                                                                                                                                                                                                                                                                                              background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
-                                                                                                                                                                                                                                                                                                                                              transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
-                                    onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
-                                    onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
-                                    <div
-                                        style="font-size:13px; font-weight:700; color: {{ $isToday ? '#0B266E' : ($isClosed ? '#9CA3AF' : '#111827') }};">
-                                        {{ $cell->format('d') }}
-                                    </div>
-                                    @if($isHoliday)
-                                        <div style="font-size:10px; font-weight:600; color:#DC2626; margin-top:3px;">
-                                            Libur
-                                        </div>
-                                    @elseif($isClosedWeekend)
-                                        <div style="font-size:10px; font-weight:600; color:#9CA3AF; margin-top:3px;">
-                                            Tutup
-                                        </div>
-                                    @elseif($count > 0)
-                                        <div style="font-size:10px; font-weight:600; color:{{ $countClr }}; margin-top:3px;">
-                                            {{ $count }} booking
-                                        </div>
-                                    @endif
-                                </a>
-                            @endif
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-4 text-[12px] text-gray-500 font-medium">
-                💡 <strong>Tips:</strong> Klik tanggal manapun untuk beralih ke tampilan <span
-                    class="text-[#0B266E] font-bold">Mingguan</span> di minggu tersebut secara detail.
-            </div>
-        @endif
 
 
         <!-- Alpine.js Event Detail Modal -->
