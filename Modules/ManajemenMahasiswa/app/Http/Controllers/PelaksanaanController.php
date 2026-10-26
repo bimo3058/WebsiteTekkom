@@ -41,6 +41,9 @@ class PelaksanaanController extends Controller
         // Ikut menghitung kegiatan yang kolom `tahun`-nya belum terisi lewat
         // tanggal mulainya — lihat Kegiatan::daftarTahun().
         $tahunList = Kegiatan::daftarTahun(Kegiatan::STATUS_DISETUJUI);
+        // Opsi "Belum ada tanggal" hanya dirender bila memang ada isinya (proker lama
+        // yang diajukan sebelum tanggal mulai jadi syarat Ajukan Proker).
+        $adaTanpaTahun = Kegiatan::where('status', Kegiatan::STATUS_DISETUJUI)->tanpaTahun()->exists();
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
@@ -48,7 +51,8 @@ class PelaksanaanController extends Controller
         $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
         $canManage = $roles->intersect(['superadmin', 'admin_kemahasiswaan'])->isNotEmpty() || $isPengurus; // GPM, Kadep & DPM view-only
 
-        $query = Kegiatan::with(['bidangs', 'kategoris', 'ketuaPelaksana.user'])
+        // Relasi yang dibutuhkan kartu bersama (kegiatan-list/_kartu) — sama di ketiga subbab.
+        $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'ketuaPelaksana.user'])
             ->where('status', Kegiatan::STATUS_DISETUJUI)
             ->orderBy('created_at', 'desc');
 
@@ -89,7 +93,7 @@ class PelaksanaanController extends Controller
 
 
         return view('manajemenmahasiswa::pelaksanaan.index', compact(
-            'pelaksanaanList', 'bidangList', 'tahunList',
+            'pelaksanaanList', 'bidangList', 'tahunList', 'adaTanpaTahun',
             'isAdmin', 'isPengurus', 'canManage'
         ));
     }

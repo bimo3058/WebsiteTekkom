@@ -88,7 +88,7 @@ class CatatanKonselingController extends Controller
 
         return $request->validate([
             'nama_mahasiswa' => ['required', 'string', 'max:150'],
-            'nim'            => ['nullable', 'string', 'max:30'],
+            'nim'            => ['nullable', 'regex:/^[0-9]+$/', 'max:30'],
             'angkatan'       => [
                 'bail', 'nullable', 'integer', 'min:1990', 'max:' . $tahunIni,
                 // Mahasiswa baru bisa dikonseling setelah angkatannya masuk:
@@ -105,11 +105,11 @@ class CatatanKonselingController extends Controller
             'status_kasus'      => ['required', Rule::in(array_keys(CatatanKonseling::STATUS_KASUS))],            'kronologi'        => ['nullable', 'string', 'max:5000'],
             'keinginan_pelapor' => ['nullable', 'string', 'max:5000'],
             'tindak_lanjut'     => ['nullable', 'string', 'max:5000'],
-            'catatan'           => ['nullable', 'string', 'max:5000'],
         ], [
             'nama_mahasiswa.required'  => 'Nama mahasiswa wajib diisi.',
             'nama_mahasiswa.max'       => 'Nama mahasiswa maksimal 150 karakter.',
-            'nim.max'                  => 'NIM maksimal 30 karakter.',
+            'nim.regex'                => 'NIM hanya boleh berisi angka.',
+            'nim.max'                  => 'NIM maksimal 30 angka.',
             'angkatan.integer'         => 'Angkatan harus berupa tahun, mis. 2022.',
             'angkatan.min'             => 'Angkatan paling lama 1990.',
             'angkatan.max'             => 'Angkatan ' . ($tahunIni + 1) . ' belum ada. Angkatan terbaru adalah ' . $tahunIni . '.',
@@ -122,7 +122,6 @@ class CatatanKonselingController extends Controller
             'status_kasus.in'          => 'Status kasus tidak valid.',            'kronologi.max'            => 'Kronologi maksimal 5000 karakter.',
             'keinginan_pelapor.max'    => 'Keinginan pelapor maksimal 5000 karakter.',
             'tindak_lanjut.max'        => 'Tindak lanjut maksimal 5000 karakter.',
-            'catatan.max'              => 'Catatan maksimal 5000 karakter.',
         ]);
     }
 }

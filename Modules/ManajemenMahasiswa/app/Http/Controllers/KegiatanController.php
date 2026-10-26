@@ -46,7 +46,8 @@ class KegiatanController extends Controller
         // Opsi "Belum ada tanggal" hanya dirender bila memang ada isinya.
         $adaTanpaTahun = Kegiatan::where('status', Kegiatan::STATUS_SELESAI)->tanpaTahun()->exists();
 
-        $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'ketuaPelaksana.user', 'dosenPendampings.user'])
+        // Relasi yang dibutuhkan kartu bersama (kegiatan-list/_kartu) — sama di ketiga subbab.
+        $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'ketuaPelaksana.user'])
             ->where('status', Kegiatan::STATUS_SELESAI)
             ->orderBy('created_at', 'desc');
 
@@ -149,7 +150,18 @@ class KegiatanController extends Controller
             ? $this->pengelolaService->pesanTolak($kegiatan)
             : null;
 
-        return view('manajemenmahasiswa::kegiatan.show', compact('kegiatan', 'canEdit', 'canDelete', 'pesanBukanPengelola'));
+        // Badan halaman memakai partial bersama Rencana Proker & Pelaksanaan
+        // (kegiatan-detail/_body), jadi variabelnya disiapkan dengan cara yang sama
+        // seperti PelaksanaanController::show(). Anggaran & dokumen tampil untuk
+        // semua role kecuali mahasiswa & alumni murni.
+        $canViewRestricted = $roles->diff(['mahasiswa', 'alumni'])->isNotEmpty();
+        $images    = $kegiatan->repoMulmed->where('tipe_file', 'image');
+        $documents = $kegiatan->repoMulmed->where('tipe_file', 'document');
+
+        return view('manajemenmahasiswa::kegiatan.show', compact(
+            'kegiatan', 'canEdit', 'canDelete', 'pesanBukanPengelola',
+            'canViewRestricted', 'images', 'documents'
+        ));
     }
 
     /**
@@ -260,8 +272,9 @@ class KegiatanController extends Controller
         // Handle foto uploads
         $this->handleFileUploads($request, $kegiatan);
 
+        // Ke halaman detail, sama dengan simpan di Rencana Proker & Pelaksanaan.
         return redirect()
-            ->route('manajemenmahasiswa.kegiatan.index')
+            ->route('manajemenmahasiswa.kegiatan.show', $kegiatan->id)
             ->with('success', 'Kegiatan berhasil ditambahkan.');
     }
 
@@ -413,8 +426,9 @@ class KegiatanController extends Controller
         // Handle new file uploads
         $this->handleFileUploads($request, $kegiatan);
 
+        // Ke halaman detail, sama dengan simpan di Rencana Proker & Pelaksanaan.
         return redirect()
-            ->route('manajemenmahasiswa.kegiatan.index')
+            ->route('manajemenmahasiswa.kegiatan.show', $kegiatan->id)
             ->with('success', 'Kegiatan berhasil diperbarui.');
     }
 
@@ -434,6 +448,11 @@ class KegiatanController extends Controller
 
         if ($kegiatan->banner) {
             $this->supabase->delete($kegiatan->banner);
+        }
+        // Surat proker dari alur tanda tangan lama — ikut dihapus seperti di Rencana
+        // Proker & Pelaksanaan supaya tidak tertinggal sebagai file yatim di storage.
+        if ($kegiatan->surat_proker) {
+            $this->supabase->delete($kegiatan->surat_proker);
         }
 
         // Delete all associated files

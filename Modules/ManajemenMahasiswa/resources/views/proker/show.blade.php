@@ -2,14 +2,9 @@
 
 @include('manajemenmahasiswa::partials.kegiatan-theme')
 
-{{-- Kartu, badge, meta grid & lightbox dipakai bersama dengan Pelaksanaan --}}
+{{-- Kartu, badge, meta grid & lightbox dipakai bersama dengan Pelaksanaan dan Laporan & Arsip.
+     Konfirmasi Hapus & Ajukan memakai dialog SITKOM bersama (mkConfirmSubmit). --}}
 @include('manajemenmahasiswa::partials.kegiatan-detail._styles')
-
-<style>
-/* Khusus Rencana Proker: modal. Tombol memakai komponen bersama kegiatan. */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center}
-.modal-box{background:var(--c-surface);border-radius:16px;padding:32px;max-width:440px;width:90%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.15)}
-</style>
 
 @php
     // Field yang masih kosong — dipakai untuk tooltip tombol Ajukan
@@ -50,24 +45,26 @@
                 </a>
             @endif
             @if($canDelete && $proker->status === 'draft')
-                <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm"
-                        onclick="document.getElementById('deleteModal').style.display='flex'">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                    Hapus
-                </button>
+                @include('manajemenmahasiswa::partials.kegiatan-detail._tombol-hapus', [
+                    'action'   => route('manajemenmahasiswa.proker.destroy', $proker->id),
+                    'jenis'    => 'Rencana Proker',
+                    'judul'    => $proker->judul,
+                    'lampiran' => 'banner-nya',
+                ])
             @endif
             {{-- staff_himpunan & role pengawas tidak melihat tombol ini sama sekali --}}
             @if($proker->status === 'draft' && $canSeeAjukan)
                 @if($canAjukan)
                     @if($rencanaLengkap)
-                        <button type="button" class="mk-btn mk-btn--primary mk-btn--sm"
-                                onclick="document.getElementById('ajukanModal').style.display='flex'">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9 22 2z"/></svg>
-                            Ajukan Proker
-                        </button>
+                        <form action="{{ route('manajemenmahasiswa.proker.ajukan', $proker->id) }}" method="POST" class="m-0"
+                              onsubmit="return mkConfirmSubmit(this, @js('Rencana proker "' . $proker->judul . '" akan diajukan dan masuk ke tahap Pelaksanaan Kegiatan.'), { title: 'Ajukan Proker', variant: 'primary', confirmText: 'Ya, Ajukan' })">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9 22 2z"/></svg>
+                                Ajukan Proker
+                            </button>
+                        </form>
                     @else
                         <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm mk-btn--disabled" disabled
                                 title="Lengkapi dulu: {{ $kelengkapanKurang->implode(', ') }}">
@@ -131,49 +128,6 @@
 </div>
 @endif
 
-{{-- Modals --}}
-@if($canAjukan && $canSeeAjukan && $proker->status === 'draft' && $rencanaLengkap)
-<div id="ajukanModal" class="modal-overlay" style="display:none;">
-    <div class="modal-box">
-        <div style="width:56px;height:56px;border-radius:50%;background:var(--c-primary-subtle);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9 22 2z"/></svg>
-        </div>
-        <h5 class="fw-bold mb-2">Ajukan Proker?</h5>
-        <p style="color:var(--c-fg-muted);font-size:14px;">Rencana proker "<strong>{{ $proker->judul }}</strong>" akan diajukan dan masuk ke tahap <strong>Pelaksanaan Kegiatan</strong>.</p>
-        <div class="d-flex gap-2 justify-content-center mt-3">
-            <button type="button" class="mk-btn mk-btn--secondary" onclick="document.getElementById('ajukanModal').style.display='none'">Batal</button>
-            <form action="{{ route('manajemenmahasiswa.proker.ajukan', $proker->id) }}" method="POST" style="margin:0;">
-                @csrf @method('PATCH')
-                <button type="submit" class="mk-btn mk-btn--primary">Ajukan</button>
-            </form>
-        </div>
-    </div>
-</div>
-@endif
-
-@if($canDelete && $proker->status === 'draft')
-<div id="deleteModal" class="modal-overlay" style="display:none;">
-    <div class="modal-box">
-        <div style="width:56px;height:56px;border-radius:50%;background:var(--c-error-subtle);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--c-error);"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
-        <h5 class="fw-bold mb-2">Hapus Proker?</h5>
-        <p style="color:var(--c-fg-muted);font-size:14px;">Data proker "<strong>{{ $proker->judul }}</strong>" akan dihapus permanen.</p>
-        <div class="d-flex gap-2 justify-content-center mt-3">
-            <button type="button" class="mk-btn mk-btn--secondary" onclick="document.getElementById('deleteModal').style.display='none'">Batal</button>
-            <form action="{{ route('manajemenmahasiswa.proker.destroy', $proker->id) }}" method="POST">
-                @csrf @method('DELETE')
-                <button type="submit" class="mk-btn mk-btn--primary">Hapus</button>
-            </form>
-        </div>
-    </div>
-</div>
-@endif
-
 @include('manajemenmahasiswa::partials.kegiatan-detail._lightbox')
 
-<script>
-// Tutup modal konfirmasi saat klik area gelap
-document.querySelectorAll('.modal-overlay').forEach(m => {
-    m.addEventListener('click', e => { if (e.target === m) m.style.display = 'none'; });
-});
-</script>
 </x-manajemenmahasiswa::layouts.mahasiswa>

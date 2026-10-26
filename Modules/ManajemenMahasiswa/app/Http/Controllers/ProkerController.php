@@ -44,6 +44,10 @@ class ProkerController extends Controller
     {
         $bidangList   = Bidang::orderBy('nama_bidang')->get();
         $kategoriList = KategoriKegiatan::orderBy('nama_kategori')->get();
+        // Filter Tahun sama dengan Pelaksanaan & Laporan/Arsip (panel kegiatan-list/_filter).
+        // Draft boleh belum bertanggal, jadi opsi "Belum ada tanggal" cukup sering terpakai.
+        $tahunList     = Kegiatan::daftarTahun(Kegiatan::STATUS_DRAFT);
+        $adaTanpaTahun = Kegiatan::where('status', Kegiatan::STATUS_DRAFT)->tanpaTahun()->exists();
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
@@ -59,7 +63,8 @@ class ProkerController extends Controller
             'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
 
-        $query = Kegiatan::with(['bidangs', 'kategoris', 'ketuaPelaksana.user'])
+        // Relasi yang dibutuhkan kartu bersama (kegiatan-list/_kartu) — sama di ketiga subbab.
+        $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'ketuaPelaksana.user'])
             ->where('status', Kegiatan::STATUS_DRAFT)
             ->orderBy('created_at', 'desc');
 
@@ -75,6 +80,14 @@ class ProkerController extends Controller
             }
         }
 
+        // Filter tahun — scope yang sama dengan Pelaksanaan & Laporan/Arsip.
+        if ($request->filled('tahun') && $request->tahun !== 'semua') {
+            if ($request->tahun === Kegiatan::FILTER_TANPA_TAHUN) {
+                $query->tanpaTahun();
+            } else {
+                $query->filterTahun($request->tahun);
+            }
+        }
 
         // Search judul + deskripsi
         // Dibungkus closure supaya orWhere tidak "membocorkan" filter bidang di atas.
@@ -90,7 +103,7 @@ class ProkerController extends Controller
 
 
         return view('manajemenmahasiswa::proker.index', compact(
-            'prokerList', 'bidangList', 'kategoriList',
+            'prokerList', 'bidangList', 'kategoriList', 'tahunList', 'adaTanpaTahun',
             'isAdmin', 'isPengurus', 'canManage'
         ));
     }

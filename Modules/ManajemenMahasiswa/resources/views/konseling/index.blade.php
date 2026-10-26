@@ -60,7 +60,6 @@
     .ksl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .ksl-grid .full { grid-column: 1 / -1; }
     @media (max-width: 576px) { .ksl-grid { grid-template-columns: 1fr; } }
-    .ksl-hint { font-size: 11px; color: var(--c-fg-muted); margin-top: 4px; }
     .ksl-err { font-size: 11px; color: var(--c-error); margin-top: 4px; font-weight: 500; }
 
     .ksl-detail dt { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--c-fg-muted); margin-bottom: 4px; }
@@ -203,7 +202,6 @@
                             'kronologi'         => $item->kronologi,
                             'keinginan_pelapor' => $item->keinginan_pelapor,
                             'tindak_lanjut'     => $item->tindak_lanjut,
-                            'catatan'           => $item->catatan,
                             'pencatat'          => optional($item->pencatat)->name,
                             'update_url'        => route('manajemenmahasiswa.konseling.update', $item->id),
                         ];
@@ -319,8 +317,10 @@
                     </div>
                     <div>
                         <label class="form-label-custom" for="kslNim">NIM</label>
-                        <input type="text" id="kslNim" name="nim" maxlength="30"
-                               class="form-control-custom @error('nim') is-invalid @enderror" placeholder="Opsional">
+                        {{-- Hanya angka: huruf/spasi langsung dibuang saat diketik atau ditempel. --}}
+                        <input type="text" id="kslNim" name="nim" maxlength="30" inputmode="numeric" autocomplete="off"
+                               oninput="this.value = this.value.replace(/\D/g, '')"
+                               class="form-control-custom @error('nim') is-invalid @enderror" placeholder="Opsional, angka saja">
                         @error('nim') <div class="ksl-err">{{ $message }}</div> @enderror
                     </div>
                     <div>
@@ -360,7 +360,6 @@
                                   class="form-control-custom @error('kronologi') is-invalid @enderror"
                                   style="font-weight: 500; resize: vertical;"
                                   placeholder="Ceritakan kejadian dari sudut pandang mahasiswa… (opsional)"></textarea>
-                        <div class="ksl-hint">Disimpan terenkripsi.</div>
                         @error('kronologi') <div class="ksl-err">{{ $message }}</div> @enderror
                     </div>
 
@@ -371,7 +370,6 @@
                                   class="form-control-custom @error('keinginan_pelapor') is-invalid @enderror"
                                   style="font-weight: 500; resize: vertical;"
                                   placeholder="Apa yang diharapkan/diinginkan oleh pelapor… (opsional)"></textarea>
-                        <div class="ksl-hint">Disimpan terenkripsi.</div>
                         @error('keinginan_pelapor') <div class="ksl-err">{{ $message }}</div> @enderror
                     </div>
 
@@ -382,19 +380,7 @@
                                   class="form-control-custom @error('tindak_lanjut') is-invalid @enderror"
                                   style="font-weight: 500; resize: vertical;"
                                   placeholder="Arahan, rekomendasi, atau langkah selanjutnya… (opsional)"></textarea>
-                        <div class="ksl-hint">Disimpan terenkripsi.</div>
                         @error('tindak_lanjut') <div class="ksl-err">{{ $message }}</div> @enderror
-                    </div>
-
-                    {{-- ── Catatan Tambahan ── --}}
-                    <div class="full">
-                        <label class="form-label-custom" for="kslCatatan">Catatan Tambahan</label>
-                        <textarea id="kslCatatan" name="catatan" rows="3" maxlength="5000"
-                                  class="form-control-custom @error('catatan') is-invalid @enderror"
-                                  style="font-weight: 500; resize: vertical;"
-                                  placeholder="Catatan internal dosen, mis. observasi pribadi… (opsional)"></textarea>
-                        <div class="ksl-hint">Disimpan terenkripsi.</div>
-                        @error('catatan') <div class="ksl-err">{{ $message }}</div> @enderror
                     </div>
                 </div>
             </div>
@@ -437,8 +423,6 @@
 
                     <hr class="ksl-section-sep">
 
-                    <dt>Catatan Tambahan</dt>
-                    <dd><div class="ksl-isi" id="kslDCatatan"></div></dd>
                     <dt>Dicatat oleh</dt>
                     <dd id="kslDPencatat" style="margin-bottom: 0;"></dd>
                 </dl>
@@ -483,7 +467,6 @@
             $('kslKronologi').value = d.kronologi || '';
             $('kslKeinginan').value = d.keinginan_pelapor || '';
             $('kslTindakLanjut').value = d.tindak_lanjut || '';
-            $('kslCatatan').value = d.catatan || '';
             batasiAngkatan();
         }
 
@@ -536,7 +519,6 @@
             $('kslDKronologi').textContent = d.kronologi || 'Tidak diisi.';
             $('kslDKeinginan').textContent = d.keinginan_pelapor || 'Tidak diisi.';
             $('kslDTindakLanjut').textContent = d.tindak_lanjut || 'Tidak diisi.';
-            $('kslDCatatan').textContent = d.catatan || 'Tidak ada catatan tambahan.';
             $('kslDPencatat').textContent = d.pencatat || '—';
             modal('kslDetailModal').show();
         };

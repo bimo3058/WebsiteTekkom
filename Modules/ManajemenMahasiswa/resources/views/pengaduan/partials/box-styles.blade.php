@@ -6,7 +6,7 @@
         .kf-toolbar    bilah atas: tombol kembali + judul huruf besar | aksi
         .kf-profile    ikon 56px + judul + badge + grid label–nilai dua kolom
         .kf-split      bagian terbelah: kolom keterangan 240px | isi
-        .kf-footer     kaki kotak berlatar abu tipis
+        .kf-footer     kaki kotak (tombol aksi), latar putih
 
     Dipakai halaman Detail, Lacak (magic link), Konfirmasi, dan form Buat Pengaduan.
     Gaya field form (.pgd-field / .pgd-input) mengikuti .input-group/.input-field
@@ -88,10 +88,13 @@
         .kf-main.is-fields { white-space: normal; line-height: normal; }
         .kf-empty { color: var(--c-border-strong); }
 
+        /* Latar putih seperti bagian lain di kotak. Garis atas hanya bila bagian
+           sebelumnya tidak sudah bergaris bawah (kf-split), supaya tidak dobel. */
         .kf-footer {
             display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px;
-            background: #FAFAFA; border-top: 1px solid var(--c-border);
+            background: #ffffff; border-top: 1px solid var(--c-border);
         }
+        .kf-split + .kf-footer { border-top: none; }
 
         /* ── Field form, meniru redesign Edit User SITKOM (superadmin/users/_edit-style):
               label 12px huruf biasa, kotak 38px radius 7px ── */

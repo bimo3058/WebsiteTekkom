@@ -2,10 +2,12 @@
 
 @include('manajemenmahasiswa::partials.kegiatan-theme')
 
+{{-- Kartu, badge, meta grid & lightbox dipakai bersama dengan Rencana Proker dan Laporan & Arsip.
+     Konfirmasi Hapus & Unggah ke Arsip memakai dialog SITKOM bersama (mkConfirmSubmit). --}}
 @include('manajemenmahasiswa::partials.kegiatan-detail._styles')
 
 @php
-    // Didefinisikan di luar slot header karena modal konfirmasi di bawah juga memakainya.
+    // Syarat tombol "Unggah ke Arsip" — dihitung di sini agar tidak memenuhi slot header.
     $punyaFoto = $proker->repoMulmed->where('tipe_file', 'image')->isNotEmpty();
     // Sama dengan PelaksanaanController::publishToArsip(): lokasi, ketua pelaksana, dan
     // anggaran wajib berisi (anggaran 0 sah — kegiatan tanpa biaya).
@@ -39,23 +41,24 @@
             </a>
         @endif
         @if($canDelete && $proker->status !== 'selesai')
-            <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm"
-                    onclick="document.getElementById('deleteModal').style.display='flex'">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-                Hapus
-            </button>
+            @include('manajemenmahasiswa::partials.kegiatan-detail._tombol-hapus', [
+                'action'   => route('manajemenmahasiswa.pelaksanaan.destroy', $proker->id),
+                'jenis'    => 'Kegiatan',
+                'judul'    => $proker->judul,
+                'lampiran' => 'banner, foto, dan dokumennya',
+            ])
         @endif
         @if($proker->status !== 'selesai')
             @if($canArsip)
                 @if($proker->is_pelaksanaan_updated && $proker->banner && $punyaFoto && $kurangRealisasi->isEmpty())
-                    <button type="button" class="mk-btn mk-btn--primary mk-btn--sm"
-                            onclick="document.getElementById('arsipModal').style.display='flex'">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        Unggah ke Arsip
-                    </button>
+                    <form action="{{ route('manajemenmahasiswa.pelaksanaan.publish', $proker->id) }}" method="POST" class="m-0"
+                          onsubmit="return mkConfirmSubmit(this, @js('Semua data kegiatan "' . $proker->judul . '" akan tersinkron ke subbab Laporan & Arsip dan ditandai sebagai Selesai.'), { title: 'Unggah ke Laporan & Arsip', variant: 'primary', confirmText: 'Ya, Unggah' })">
+                        @csrf
+                        <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            Unggah ke Arsip
+                        </button>
+                    </form>
                 @else
                     <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm mk-btn--disabled" disabled
                             title="{{ !$proker->is_pelaksanaan_updated ? 'Silakan edit/update data pelaksanaan kegiatan terlebih dahulu sebelum mengunggah ke arsip' : (!$proker->banner ? 'Banner kegiatan wajib diunggah terlebih dahulu sebelum mengunggah ke arsip' : ($kurangRealisasi->isNotEmpty() ? 'Lengkapi dulu ' . $kurangRealisasi->implode(', ') . ' sebelum mengunggah ke arsip' : 'Minimal satu foto kegiatan wajib diunggah terlebih dahulu sebelum mengunggah ke arsip')) }}">
@@ -89,70 +92,9 @@
      halaman ini hanya menampilkan pesan sukses, jadi redirect dengan error jatuh diam-diam. --}}
 <x-manajemenmahasiswa::ui.flash type="error" :message="session('error')" class="mb-3" />
 
-{{-- Badan detail dipakai bersama dengan Rencana Proker; $showDokumentasi = true --}}
+{{-- Badan detail dipakai bersama dengan Rencana Proker dan Laporan & Arsip; $showDokumentasi = true --}}
 @include('manajemenmahasiswa::partials.kegiatan-detail._body', ['showDokumentasi' => true])
 
-
-<!-- Unggah ke Arsip Confirmation Modal -->
-@if($canArsip && $proker->status !== 'selesai' && $proker->is_pelaksanaan_updated && $proker->banner && ($punyaFoto ?? false) && ($kurangRealisasi ?? collect())->isEmpty())
-<div id="arsipModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;"
-     onclick="if(event.target===this)this.style.display='none'">
-    <div style="background: var(--c-surface); border-radius: 16px; padding: 32px; max-width: 440px; width: 90%; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.15);">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--c-primary-subtle); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        </div>
-        <h5 style="font-weight: 700; color: var(--c-fg); margin-bottom: 8px;">Unggah ke Laporan & Arsip?</h5>
-        <p style="color: var(--c-fg-muted); font-size: 14px; margin-bottom: 24px;">
-            Semua data kegiatan <strong>{{ $proker->judul }}</strong> akan tersinkron ke subbab Laporan &amp; Arsip dan ditandai sebagai <strong>Selesai</strong>.
-        </p>
-        <div class="d-flex gap-3 justify-content-center">
-            <button type="button" class="mk-btn mk-btn--secondary"
-                    onclick="document.getElementById('arsipModal').style.display='none'">
-                Batal
-            </button>
-            <form action="{{ route('manajemenmahasiswa.pelaksanaan.publish', $proker->id) }}" method="POST">
-                @csrf
-                <button type="submit" class="mk-btn mk-btn--primary">
-                    Unggah
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
-@endif
-
-<!-- Delete Confirmation Modal -->
-@if($canDelete)
-<div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
-    <div style="background: var(--c-surface); border-radius: 16px; padding: 32px; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.15);">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--c-error-subtle); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--c-error)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                <line x1="10" y1="11" x2="10" y2="17"></line>
-                <line x1="14" y1="11" x2="14" y2="17"></line>
-            </svg>
-        </div>
-        <h5 style="font-weight: 700; color: var(--c-fg); margin-bottom: 8px;">Hapus Kegiatan?</h5>
-        <p style="color: var(--c-fg-muted); font-size: 14px; margin-bottom: 24px;">
-            Kegiatan <strong>{{ $proker->judul }}</strong> akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.
-        </p>
-        <div class="d-flex gap-3 justify-content-center">
-            <button type="button" class="mk-btn mk-btn--secondary"
-                    onclick="document.getElementById('deleteModal').style.display='none'">
-                Batal
-            </button>
-            <form action="{{ route('manajemenmahasiswa.pelaksanaan.destroy', $proker->id) }}" method="POST">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="mk-btn mk-btn--primary">
-                    Ya, Hapus
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
-@endif
 @include('manajemenmahasiswa::partials.kegiatan-detail._lightbox')
 
 </x-manajemenmahasiswa::layouts.mahasiswa>

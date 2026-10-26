@@ -47,7 +47,6 @@ class CatatanKonseling extends Model
         'kronologi',
         'keinginan_pelapor',
         'tindak_lanjut',
-        'catatan',
         'dicatat_oleh',
     ];
 
@@ -55,7 +54,6 @@ class CatatanKonseling extends Model
         'tanggal'          => 'date',
         'angkatan'         => 'integer',
         // Isi konseling bersifat pribadi: disimpan terenkripsi di database.
-        'catatan'          => 'encrypted',
         'kronologi'        => 'encrypted',
         'keinginan_pelapor' => 'encrypted',
         'tindak_lanjut'    => 'encrypted',

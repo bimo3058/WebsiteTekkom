@@ -2,9 +2,12 @@
     Badan halaman detail kegiatan — dipakai bersama oleh:
       • Rencana Proker (show)          → $showDokumentasi = false
       • Pelaksanaan Kegiatan (show)    → $showDokumentasi = true
+      • Laporan & Arsip (show)         → $showDokumentasi = true ($proker = $kegiatan)
 
-    Galeri foto & daftar dokumen hanya muncul di Pelaksanaan: keduanya
+    Galeri foto & daftar dokumen hanya muncul mulai Pelaksanaan: keduanya
     dokumentasi acara yang sudah berlangsung, diunggah di subbab tersebut.
+    NIM/NIP sengaja tidak ditampilkan di kartu meta (keputusan 17 Okt 2026, sama
+    di ketiga subbab); NIM panitia tetap ada di daftar lengkap "+ lainnya".
 
     Variabel wajib: $proker, $canViewRestricted, $showDokumentasi.
     Hanya saat $showDokumentasi: $images, $documents.
