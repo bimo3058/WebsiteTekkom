@@ -20,44 +20,46 @@
 
 
         <div class="mp-card" style="margin-top: 15px;">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 border-b border-gray-100 gap-4 relative z-10 w-full" style="padding-bottom: 20px;">
-                <h2 class="text-[16px] font-bold text-gray-800 tracking-tight">Daftar Ruangan</h2>
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between px-4 sm:px-5 py-3.5 border-b border-gray-100 gap-2.5 lg:gap-4 relative z-10 w-full">
+                <h2 class="text-[15px] sm:text-base font-bold text-gray-900 tracking-tight shrink-0 m-0">Daftar Ruangan</h2>
 
-                <form action="{{ route('eoffice.peminjaman.admin.ruangan.index') }}" method="GET"
-                    class="flex flex-wrap items-center gap-2.5">
-                    {{-- Search --}}
-                    <div class="relative w-full sm:w-auto" x-data="{ searchQuery: '{{ addslashes(request('search')) }}' }">
-                        <button type="submit" class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-400 hover:text-[#0B266E] transition-colors bg-transparent border-0 outline-none">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
-                            </svg>
-                        </button>
-                        <input type="text" name="search" x-model="searchQuery" 
-                            @input.debounce.500ms="$el.form.submit()"
-                            @scroll.window.capture="$el.blur()"
-                            @touchmove.window.capture="$el.blur()"
-                            placeholder="Search..."
-                            class="w-full sm:w-56 h-[38px] pl-9 pr-8 text-[13px] bg-white border border-gray-200 rounded-lg focus:border-[#0B266E] focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder-gray-400">
-                        
-                        <!-- Clear Search (X) -->
-                        <button type="button" x-show="searchQuery.length > 0" x-cloak
-                            @click="searchQuery = ''; $nextTick(() => $el.closest('form').submit())"
-                            class="absolute inset-y-0 right-0 pr-2.5 flex items-center cursor-pointer text-gray-400 hover:text-gray-700 transition-colors bg-transparent border-0 outline-none">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <!-- Wrapper for Filter & Sort to sit side-by-side on mobile -->
-                    <div class="flex flex-row items-stretch gap-2 w-full md:w-auto" x-data="{ openFilter: false, openSort: false }">
-                        <!-- Filter Button -->
-                        <div class="relative flex-1 md:flex-none" @click.away="openFilter = false">
-                            <button type="button" @click="openFilter = !openFilter; openSort = false"
-                                class="relative w-full inline-flex justify-center items-center gap-2 px-3 h-[38px] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-[13px] font-semibold text-slate-700 transition-colors focus:outline-none focus:ring-1 focus:ring-[#0B266E] whitespace-nowrap cursor-pointer">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
+                    <form action="{{ route('eoffice.peminjaman.admin.ruangan.index') }}" method="GET"
+                        class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 m-0 relative w-full lg:w-auto">
+                        {{-- Search --}}
+                        <div class="relative w-full sm:flex-1 lg:w-auto lg:flex-none" x-data="{ searchQuery: '{{ addslashes(request('search')) }}' }">
+                            <button type="submit" class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-400 hover:text-[#0B266E] transition-colors bg-transparent border-0 outline-none">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
                                 </svg>
+                            </button>
+                            <input type="text" name="search" x-model="searchQuery" 
+                                @input.debounce.500ms="$el.form.submit()"
+                                @scroll.window.capture="$el.blur()"
+                                @touchmove.window.capture="$el.blur()"
+                                placeholder="Search..."
+                                class="w-full lg:w-56 h-[38px] pl-9 pr-8 text-[13px] bg-white border border-gray-200 rounded-lg focus:border-[#0B266E] focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder-gray-400">
+                            
+                            <!-- Clear Search (X) -->
+                            <button type="button" x-show="searchQuery.length > 0" x-cloak
+                                @click="searchQuery = ''; $nextTick(() => $el.closest('form').submit())"
+                                class="absolute inset-y-0 right-0 pr-2.5 flex items-center cursor-pointer text-gray-400 hover:text-gray-700 transition-colors bg-transparent border-0 outline-none">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Wrapper for Filter & Sort to sit side-by-side on mobile -->
+                        <div class="relative flex flex-row items-stretch gap-2 w-full sm:w-auto shrink-0" x-data="{ openFilter: false, openSort: false }">
+                            <!-- Filter Button -->
+                            <div class="relative flex-1 sm:flex-none" @click.away="openFilter = false">
+                                <button type="button" @click="openFilter = !openFilter; openSort = false"
+                                    class="flex items-center justify-center w-full sm:w-auto relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer whitespace-nowrap"
+                                    :class="openFilter ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-200 text-slate-700 hover:bg-gray-50'">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                                    </svg>
                                 Filter
                                 @if(request('status') || request('lokasi'))
                                     <span class="absolute -top-1 -right-1 flex h-3 w-3">
@@ -72,7 +74,7 @@
                                 x-transition:leave="transition ease-in duration-75"
                                 x-transition:leave-start="transform opacity-100 scale-100"
                                 x-transition:leave-end="transform opacity-0 scale-95"
-                                class="absolute left-0 md:left-auto md:right-0 z-50 mt-2 w-52 origin-top-left md:origin-top-right rounded-xl bg-white shadow-md border border-gray-200 focus:outline-none overflow-hidden max-h-[320px] overflow-y-auto"
+                                class="absolute left-0 sm:left-auto sm:right-0 z-50 mt-2 w-52 origin-top-left sm:origin-top-right rounded-xl bg-white shadow-md border border-gray-200 focus:outline-none overflow-hidden max-h-[320px] overflow-y-auto"
                                 style="display:none;">
                                 
                                 <input type="hidden" name="status" x-ref="statusInput" value="{{ request('status') }}">
@@ -129,9 +131,10 @@
                         </div>
 
                         <!-- Sort By Button -->
-                        <div class="relative flex-1 md:flex-none" @click.away="openSort = false">
+                        <div class="relative flex-1 sm:flex-none" @click.away="openSort = false">
                             <button type="button" @click="openSort = !openSort; openFilter = false"
-                                class="w-full inline-flex justify-center items-center gap-2 px-3 h-[38px] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-[13px] font-semibold text-slate-700 transition-colors focus:outline-none focus:ring-1 focus:ring-[#0B266E] whitespace-nowrap cursor-pointer">
+                                class="flex items-center justify-center w-full sm:w-auto relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer outline-none whitespace-nowrap"
+                                :class="openSort ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-200 text-slate-700 hover:bg-gray-50'">
                                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                                     <line x1="4" y1="6" x2="20" y2="6"></line>
                                     <line x1="4" y1="12" x2="14" y2="12"></line>
@@ -184,6 +187,7 @@
                     </div>
                 </form>
             </div>
+        </div>
 
             <div class="mp-table-wrap" @scroll.passive="$dispatch('close-action-dropdowns')">
                 <table class="mp-table" style="table-layout: auto; width: 100%;">
@@ -329,11 +333,13 @@
                 </table>
             </div>
 
-            {{-- Pagination (Arsip & Rekap Style) --}}
-            <div class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-[12px]">
-                <div class="flex flex-col md:flex-row items-center gap-4 text-[13px] text-slate-500 w-full md:w-auto">
-                    <div class="flex items-center justify-center gap-2 w-full md:w-auto">
-                        <span class="font-medium">Per halaman</span>
+            {{-- Pagination --}}
+            <div
+                class="border-t border-slate-200 bg-white px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 rounded-b-[12px]">
+                {{-- Left: Per page selector + Showing text --}}
+                <div class="flex items-center gap-2.5 sm:gap-3 text-xs text-slate-500 flex-wrap shrink-0">
+                    <div class="flex items-center gap-1.5">
+                        <span class="font-medium text-slate-500">Per halaman</span>
                         <div x-data="{ 
                             open: false, 
                             selectedVal: '{{ request('per_page', 10) }}',
@@ -344,74 +350,75 @@
                             }
                         }" class="relative" @click.away="open = false">
                             <button type="button" @click="open = !open"
-                                class="flex items-center justify-between px-3 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm gap-2 min-w-[64px] transition-colors">
+                                class="flex items-center justify-center gap-1.5 h-[28px] px-2 bg-white border border-slate-200 rounded-md text-xs font-bold text-slate-800 whitespace-nowrap cursor-pointer transition-colors shadow-sm hover:bg-slate-50">
                                 <span x-text="selectedVal"></span>
-                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
+                                <svg class="w-3 h-3 text-slate-400 transition-transform duration-200 shrink-0"
                                     :class="{'rotate-180': open}" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
-    
+
                             <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
                                 x-transition:enter-start="opacity-0 scale-95"
                                 x-transition:enter-end="opacity-100 scale-100"
                                 x-transition:leave="transition ease-in duration-75"
                                 x-transition:leave-start="opacity-100 scale-100"
                                 x-transition:leave-end="opacity-0 scale-95"
-                                class="absolute left-0 bottom-full mb-1 w-full bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden"
+                                class="absolute left-0 bottom-full mb-1 bg-white border border-slate-200 rounded-lg shadow-lg min-w-[70px] z-50 overflow-hidden"
                                 style="display: none;">
                                 <div class="p-1">
                                     <button type="button"
                                         @click="selectItem(10, '{{ request()->fullUrlWithQuery(['per_page' => 10, 'page' => 1]) }}')"
-                                        class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors cursor-pointer"
+                                        class="w-full text-left px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer"
                                         :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 10, 'text-slate-700 hover:bg-slate-50': selectedVal != 10}">10</button>
                                     <button type="button"
                                         @click="selectItem(25, '{{ request()->fullUrlWithQuery(['per_page' => 25, 'page' => 1]) }}')"
-                                        class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors cursor-pointer"
+                                        class="w-full text-left px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer"
                                         :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 25, 'text-slate-700 hover:bg-slate-50': selectedVal != 25}">25</button>
                                     <button type="button"
                                         @click="selectItem(50, '{{ request()->fullUrlWithQuery(['per_page' => 50, 'page' => 1]) }}')"
-                                        class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors cursor-pointer"
+                                        class="w-full text-left px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer"
                                         :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 50, 'text-slate-700 hover:bg-slate-50': selectedVal != 50}">50</button>
                                 </div>
                             </div>
                         </div>
                     </div>
-    
-                    <div class="hidden md:block w-px h-4 bg-slate-200"></div>
-    
-                    <p class="hidden md:block font-medium text-slate-500">
-                        Menampilkan <span class="font-bold text-slate-800">{{ $ruangans->firstItem() ?? 0 }}</span>
-                        sampai <span class="font-bold text-slate-800">{{ $ruangans->lastItem() ?? 0 }}</span>
-                        dari <span class="font-bold text-slate-800">{{ $ruangans->total() }}</span> entri
-                    </p>
+
+                    <div class="w-px h-3.5 bg-slate-200"></div>
+
+                    <span class="text-xs text-slate-500 whitespace-nowrap">
+                        Menampilkan <strong class="font-bold text-slate-800">{{ $ruangans->firstItem() ?? 0 }}</strong>
+                        sampai <strong class="font-bold text-slate-800">{{ $ruangans->lastItem() ?? 0 }}</strong>
+                        dari <strong class="font-bold text-slate-800">{{ number_format($ruangans->total()) }}</strong> entri
+                    </span>
                 </div>
-    
-                <div class="flex items-center justify-center gap-1.5 w-full md:w-auto">
+
+                {{-- Right: Page buttons --}}
+                <div class="flex items-center gap-1 sm:gap-1.5">
                     @if ($ruangans->onFirstPage())
-                        <button disabled
-                            class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <span
+                            class="text-slate-300 cursor-not-allowed w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15 19l-7-7 7-7" />
                             </svg>
-                        </button>
+                        </span>
                     @else
                         <a href="{{ $ruangans->previousPageUrl() }}"
-                            class="text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15 19l-7-7 7-7" />
                             </svg>
                         </a>
                     @endif
-    
+
                     @php
                         $startPage = max(1, $ruangans->currentPage() - 1);
                         $endPage = min($ruangans->lastPage(), $ruangans->currentPage() + 1);
-    
+
                         if ($endPage - $startPage < 2) {
                             if ($startPage == 1) {
                                 $endPage = min($ruangans->lastPage(), 3);
@@ -420,51 +427,51 @@
                             }
                         }
                     @endphp
-    
+
                     @if($startPage > 1)
                         <a href="{{ $ruangans->url(1) }}"
-                            class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">1</a>
+                            class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-xs w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">1</a>
                         @if($startPage > 2)
                             <span
-                                class="text-slate-400 font-medium text-[13px] w-6 flex items-center justify-center">...</span>
+                                class="text-slate-400 font-medium text-xs w-5 flex items-center justify-center">...</span>
                         @endif
                     @endif
-    
+
                     @foreach ($ruangans->getUrlRange($startPage, $endPage) as $page => $url)
                         @if ($page == $ruangans->currentPage())
                             <span
-                                class="bg-[#0f1b40] shadow-md shadow-[#0f1b40]/20 text-white font-bold text-[13px] w-8 h-8 flex items-center justify-center rounded-lg transition-colors">{{ $page }}</span>
+                                class="bg-[#0f1b40] shadow-sm text-white font-bold text-xs w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg transition-colors">{{ $page }}</span>
                         @else
                             <a href="{{ $url }}"
-                                class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">{{ $page }}</a>
+                                class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-xs w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">{{ $page }}</a>
                         @endif
                     @endforeach
-    
+
                     @if($endPage < $ruangans->lastPage())
                         @if($endPage < $ruangans->lastPage() - 1)
                             <span
-                                class="text-slate-400 font-medium text-[13px] w-6 flex items-center justify-center">...</span>
+                                class="text-slate-400 font-medium text-xs w-5 flex items-center justify-center">...</span>
                         @endif
                         <a href="{{ $ruangans->url($ruangans->lastPage()) }}"
-                            class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">{{ $ruangans->lastPage() }}</a>
+                            class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-xs w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">{{ $ruangans->lastPage() }}</a>
                     @endif
-    
+
                     @if ($ruangans->hasMorePages())
                         <a href="{{ $ruangans->nextPageUrl() }}"
-                            class="text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 5l7 7-7 7" />
                             </svg>
                         </a>
                     @else
-                        <button disabled
-                            class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <span
+                            class="text-slate-300 cursor-not-allowed w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 5l7 7-7 7" />
                             </svg>
-                        </button>
+                        </span>
                     @endif
                 </div>
             </div>
