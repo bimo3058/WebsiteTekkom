@@ -3,7 +3,8 @@
     Kegiatan, dan Laporan & Arsip (keputusan 17 Okt 2026: isi kartu disamakan, versi
     lengkap). Badge mengikuti aturan halaman detail (kegiatan-detail/_body): bidang,
     atau "Prodi" bila tanpa bidang, lalu kategori. Isian yang kosong tidak ditampilkan,
-    jadi kartu draft yang belum lengkap tetap rapi.
+    jadi kartu draft yang belum lengkap tetap rapi. Badge tahap (Draft / Di Pelaksanaan /
+    Diarsipkan / Tidak terlaksana) tidak dipakai — dicabut 27 Okt 2026.
 
     Variabel: $item (Kegiatan — muat relasi bidang, bidangs, kategoriKegiatan,
     kategoris, ketuaPelaksana.user), $href.

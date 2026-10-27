@@ -576,9 +576,9 @@
         <div class="mb-3">
             <label class="form-label-custom">Judul Kegiatan <span class="required">*</span></label>
             <input type="text" name="judul" id="judulInput" class="form-control form-control-custom"
-                   placeholder="Contoh: Seminar Nasional IT 2026" value="{{ old('judul') }}" required maxlength="100"
-                   oninput="updateCharCount('judulInput','judulCount',100)">
-            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="judulCount">0</span>/100 karakter</div>
+                   placeholder="Contoh: Seminar Nasional IT 2026" value="{{ old('judul') }}" required maxlength="{{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_JUDUL }}"
+                   oninput="updateCharCount('judulInput','judulCount',{{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_JUDUL }})">
+            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="judulCount">0</span>/{{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_JUDUL }} karakter</div>
         </div>
 
         <div class="row g-3 mb-3">
@@ -737,7 +737,7 @@
         <div class="file-upload-area" id="dokumenUploadArea" onclick="document.getElementById('dokumenInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></div>
             <p>Klik atau drag & drop dokumen ke sini</p>
-            <small>Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX • Maks: 5MB per file</small>
+            <small>Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX • Maks: {{ intdiv(\Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_UKURAN_DOKUMEN_KB, 1024) }} MB per file</small>
         </div>
         <input type="file" name="dokumen_kegiatan[]" id="dokumenInput"
                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
@@ -1019,6 +1019,8 @@ document.addEventListener('DOMContentLoaded', function() {
     handleKategoriChange();
 });
 </script>
+
+@include('manajemenmahasiswa::partials.kegiatan-form._batas-kirim')
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </x-manajemenmahasiswa::layouts.mahasiswa>

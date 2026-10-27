@@ -74,6 +74,20 @@ class KegiatanPolicy
     public const JABATAN_KETUA = ['ketua_himpunan', 'ketua_bidang', 'ketua_unit'];
 
     /**
+     * Boleh MELIHAT anggaran dan mengunduh dokumen kegiatan (proposal, RAB, surat,
+     * LPJ) di ketiga subbab — sama dengan role yang boleh membuka Rencana Proker &
+     * Pelaksanaan (middleware di routes/web.php).
+     *
+     * Daftar putih, bukan "semua kecuali mahasiswa/alumni": role menumpuk, jadi
+     * mahasiswa yang merangkap asprak/praktikan dan seluruh akun dosen dulu ikut
+     * bisa mengunduh LPJ yang memuat NIM, tanda tangan, dan nomor HP.
+     */
+    public const LIHAT_INTERNAL = [
+        'superadmin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'ketua_departemen',
+        'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan',
+    ];
+
+    /**
      * Apakah akun ini memenuhi syarat sebagai pengelola tambahan.
      *
      * Dipakai dua kali: saat menawarkan calon di form (PengelolaKegiatanService)

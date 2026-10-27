@@ -9,10 +9,12 @@
 
     Variabel: $action (URL destroy), $jenis ('Rencana Proker' | 'Kegiatan'),
     $judul (judul kegiatan), $lampiran (file yang ikut terhapus, mis. 'banner-nya').
+    Opsional: $catatan — kalimat tambahan, mis. "rencana awalnya tetap tersimpan" saat
+    menghapus salinan Pelaksanaan/Arsip (S-49).
 --}}
 @php
     $pesanHapus = $jenis . ' "' . $judul . '" akan dihapus permanen beserta ' . $lampiran
-        . '. Tindakan ini tidak dapat dibatalkan.';
+        . '. Tindakan ini tidak dapat dibatalkan.' . (!empty($catatan) ? ' ' . $catatan : '');
 @endphp
 <form action="{{ $action }}" method="POST" class="m-0"
       onsubmit="return mkConfirmSubmit(this, @js($pesanHapus), { title: @js('Hapus ' . $jenis), confirmText: 'Ya, Hapus' })">

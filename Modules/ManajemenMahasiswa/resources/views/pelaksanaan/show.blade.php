@@ -46,6 +46,7 @@
                 'jenis'    => 'Kegiatan',
                 'judul'    => $proker->judul,
                 'lampiran' => 'banner, foto, dan dokumennya',
+                'catatan'  => $proker->rencana_id ? 'Rencana awalnya di Rencana Proker tetap tersimpan, tetapi tidak bisa diajukan ulang.' : null,
             ])
         @endif
         @if($proker->status !== 'selesai')

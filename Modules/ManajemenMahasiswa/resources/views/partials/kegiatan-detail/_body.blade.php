@@ -1,19 +1,21 @@
 {{--
     Badan halaman detail kegiatan — dipakai bersama oleh:
-      • Rencana Proker (show)          → $showDokumentasi = false
+      • Rencana Proker (show)          → $showDokumentasi = false, $showDokumen = true
       • Pelaksanaan Kegiatan (show)    → $showDokumentasi = true
       • Laporan & Arsip (show)         → $showDokumentasi = true ($proker = $kegiatan)
 
-    Galeri foto & daftar dokumen hanya muncul mulai Pelaksanaan: keduanya
-    dokumentasi acara yang sudah berlangsung, diunggah di subbab tersebut.
+    Galeri foto hanya muncul mulai Pelaksanaan: dokumentasi acara yang sudah
+    berlangsung. Rencana Proker menampilkan Dokumen Rencana (proposal, RAB, surat)
+    sejak S-49; dokumen itu ikut disalin ke Pelaksanaan saat diajukan.
     NIM/NIP sengaja tidak ditampilkan di kartu meta (keputusan 17 Okt 2026, sama
     di ketiga subbab); NIM panitia tetap ada di daftar lengkap "+ lainnya".
 
     Variabel wajib: $proker, $canViewRestricted, $showDokumentasi.
-    Hanya saat $showDokumentasi: $images, $documents.
+    Saat $showDokumentasi: $images, $documents. Saat $showDokumen: $documents.
 --}}
 @php
     $showDokumentasi = $showDokumentasi ?? false;
+    $showDokumen     = $showDokumen ?? false;
 @endphp
 
 <!-- Banner -->
@@ -102,6 +104,9 @@
             <div class="meta-item-label">Dosen Pendamping</div>
             @foreach($proker->dosenPendampings as $dosenItem)
             <div class="meta-item-value" @if(!$loop->first) style="margin-top:4px;" @endif><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> {{ $dosenItem->user->name ?? '-' }}
+                @if(filled($dosenItem->pivot->peran ?? null))
+                    <span style="font-size: 11px; font-weight: 600; color: var(--c-primary); background: var(--c-primary-subtle); padding: 1px 8px; border-radius: 20px; margin-left: 4px;">{{ $dosenItem->pivot->peran }}</span>
+                @endif
             </div>
             @endforeach
         </div>
@@ -266,51 +271,8 @@
     </div>
     @endif
 
-    {{-- ─── Document Download Section ────────────────────────────────── --}}
-    @if($documents->count() > 0 && isset($canViewRestricted) && $canViewRestricted)
-    <div class="detail-card">
-        <div class="gallery-header">
-            <div class="detail-card-title" style="margin-bottom: 0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen & Laporan</div>
-            <span class="gallery-count">{{ $documents->count() }} dokumen</span>
-        </div>
-        <div class="document-list">
-            @foreach($documents as $doc)
-                @php
-                    $ext = strtolower(pathinfo($doc->nama_file, PATHINFO_EXTENSION));
-                    $iconMap = [
-                        'pdf'  => ['PDF', 'doc-icon-pdf', 'ext-pdf'],
-                        'doc'  => ['DOC', 'doc-icon-word', 'ext-doc'],
-                        'docx' => ['DOC', 'doc-icon-word', 'ext-docx'],
-                        'xls'  => ['XLS', 'doc-icon-excel', 'ext-xls'],
-                        'xlsx' => ['XLS', 'doc-icon-excel', 'ext-xlsx'],
-                        'ppt'  => ['PPT', 'doc-icon-ppt', 'ext-ppt'],
-                        'pptx' => ['PPT', 'doc-icon-ppt', 'ext-pptx'],
-                    ];
-                    $iconInfo = $iconMap[$ext] ?? ['FILE', 'doc-icon-other', 'ext-default'];
-                @endphp
-                <a href="{{ $doc->url }}" target="_blank" class="document-card" download>
-                    <div class="doc-icon-wrapper {{ $iconInfo[1] }}">
-                        {{ $iconInfo[0] }}
-                    </div>
-                    <div class="doc-details">
-                        <div class="doc-title">{{ $doc->judul_file ?: $doc->nama_file }}</div>
-                        <div class="doc-meta">
-                            <span class="doc-ext-badge {{ $iconInfo[2] }}">{{ strtoupper($ext) }}</span>
-                            <span>Klik untuk mengunduh</span>
-                        </div>
-                    </div>
-                    <div class="doc-download-btn">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                    </div>
-                </a>
-            @endforeach
-        </div>
-    </div>
-    @endif
+    {{-- ─── Document Download Section ── (partial bersama, dipakai juga Rencana Proker) --}}
+    @include('manajemenmahasiswa::partials.kegiatan-detail._dokumen')
 
 @else
     {{-- Empty state when no files uploaded --}}
@@ -323,4 +285,9 @@
         </div>
     </div>
 @endif
+@endif
+
+{{-- Dokumen Rencana (S-49): proposal, RAB, surat undangan & peminjaman di detail Rencana Proker --}}
+@if(!$showDokumentasi && $showDokumen)
+    @include('manajemenmahasiswa::partials.kegiatan-detail._dokumen', ['judulKartu' => 'Dokumen Rencana'])
 @endif

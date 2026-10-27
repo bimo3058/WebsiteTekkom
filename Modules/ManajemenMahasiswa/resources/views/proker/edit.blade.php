@@ -8,10 +8,12 @@
     Rencana Proker — Edit.
     Bisa diakses ketua himpunan/bidang/unit, admin, dan staff_himpunan
     (staff hanya boleh mengedit, tidak membuat/mengajukan/menghapus).
-    $showDokumentasi = false → Foto & Dokumen Kegiatan diisi di subbab Pelaksanaan.
+    $showDokumentasi = false → Foto diisi di subbab Pelaksanaan; $showDokumen = true →
+    Dokumen Rencana (proposal, RAB, surat) yang ikut disalin saat diajukan (S-49).
 --}}
 @include('manajemenmahasiswa::partials.kegiatan-form._fields', [
     'showDokumentasi' => false,
+    'showDokumen'     => true,
     'tahapRencana'    => true,
     'formAction'      => route('manajemenmahasiswa.proker.update', $proker->id),
     'formMethod'      => 'PUT',
@@ -23,6 +25,7 @@
 
 @include('manajemenmahasiswa::partials.kegiatan-form._scripts', [
     'showDokumentasi' => false,
+    'showDokumen'     => true,
 ])
 
 </x-manajemenmahasiswa::layouts.mahasiswa>

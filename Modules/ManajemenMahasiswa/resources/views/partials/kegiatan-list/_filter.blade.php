@@ -8,11 +8,15 @@
 
     Variabel: $action (URL daftar), $placeholder, $bidangList, $tahunList,
     $adaTanpaTahun (opsi "Belum ada tanggal" hanya dirender bila memang ada isinya).
+    Opsional: $tahapList (Kegiatan::TAHAP_RENCANA_LABELS) — hanya Rencana Proker,
+    memunculkan filter Tahap (Draft / Di Pelaksanaan / Diarsipkan / Tidak terlaksana).
 --}}
 @php
+    $tahapList         = $tahapList ?? null;
     $filterBidangAktif = request()->filled('bidang') && request('bidang') !== 'semua';
     $filterTahunAktif  = request()->filled('tahun') && request('tahun') !== 'semua';
-    $adaFilterApaPun   = $filterBidangAktif || $filterTahunAktif || request()->filled('search');
+    $filterTahapAktif  = $tahapList && request()->filled('status_rencana') && array_key_exists(request('status_rencana'), $tahapList);
+    $adaFilterApaPun   = $filterBidangAktif || $filterTahunAktif || $filterTahapAktif || request()->filled('search');
     $tanpaTahun        = \Modules\ManajemenMahasiswa\Models\Kegiatan::FILTER_TANPA_TAHUN;
 @endphp
 <form method="GET" action="{{ $action }}" id="filterForm">
@@ -35,7 +39,7 @@
                         <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
                     </svg>
                     <span style="line-height: 1;">Filter</span>
-                    @if($filterBidangAktif || $filterTahunAktif)
+                    @if($filterBidangAktif || $filterTahunAktif || $filterTahapAktif)
                         <span class="filter-pop-dot"></span>
                     @endif
                 </button>
@@ -79,6 +83,18 @@
                                 @endif
                             </x-manajemenmahasiswa::ui.select>
                         </div>
+
+                        @if($tahapList)
+                            <div>
+                                <label class="filter-pop-label" for="filterTahap">Tahap Rencana</label>
+                                <x-manajemenmahasiswa::ui.select name="status_rencana" id="filterTahap">
+                                    <option value="">Semua Tahap</option>
+                                    @foreach($tahapList as $kunci => $label)
+                                        <option value="{{ $kunci }}" {{ request('status_rencana') === $kunci ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </x-manajemenmahasiswa::ui.select>
+                            </div>
+                        @endif
 
                         <div class="filter-pop-actions">
                             <button type="submit" class="filter-pop-submit">Terapkan</button>

@@ -23,14 +23,9 @@
 
     <x-slot:actions>
     {{--
-        Badge status sengaja TIDAK dirender di sini. Daftar Rencana Proker hanya
-        memuat proker berstatus draft, jadi badge-nya selalu bertuliskan "Draft"
-        — nol informasi, tapi tingginya (28px + jarak 8px) menjadikan blok kanan
-        dua tingkat dan mendorong baris tombol turun sampai menempel banner
-        (jaraknya terukur 0px). Tanpa badge, tombol naik sejajar judul dan banner
-        dapat jarak 34px. Untuk proker yang sudah diajukan/diarsipkan, statusnya
-        tetap terbaca dari hilangnya semua tombol di bawah ini plus kartu
-        "Proker Diajukan!" / "Kegiatan Selesai & Diarsipkan" di bagian bawah.
+        Badge status sengaja TIDAK dirender di sini: tingginya (28px + jarak 8px)
+        menjadikan blok kanan dua tingkat dan mendorong baris tombol turun sampai
+        menempel banner. Badge tahap di kartu daftar juga sudah dicabut (27 Okt 2026).
     --}}
     <div class="d-flex flex-column align-items-end">
         <div class="d-flex gap-2 flex-wrap align-items-start justify-content-end">
@@ -44,12 +39,13 @@
                     Edit
                 </a>
             @endif
-            @if($canDelete && $proker->status === 'draft')
+            {{-- $canDelete sudah memuat aturan tahap: draft, atau rencana diajukan tanpa salinan --}}
+            @if($canDelete)
                 @include('manajemenmahasiswa::partials.kegiatan-detail._tombol-hapus', [
                     'action'   => route('manajemenmahasiswa.proker.destroy', $proker->id),
                     'jenis'    => 'Rencana Proker',
                     'judul'    => $proker->judul,
-                    'lampiran' => 'banner-nya',
+                    'lampiran' => $documents->isNotEmpty() ? 'banner dan dokumen rencananya' : 'banner-nya',
                 ])
             @endif
             {{-- staff_himpunan & role pengawas tidak melihat tombol ini sama sekali --}}
@@ -57,7 +53,7 @@
                 @if($canAjukan)
                     @if($rencanaLengkap)
                         <form action="{{ route('manajemenmahasiswa.proker.ajukan', $proker->id) }}" method="POST" class="m-0"
-                              onsubmit="return mkConfirmSubmit(this, @js('Rencana proker "' . $proker->judul . '" akan diajukan dan masuk ke tahap Pelaksanaan Kegiatan.'), { title: 'Ajukan Proker', variant: 'primary', confirmText: 'Ya, Ajukan' })">
+                              onsubmit="return mkAjukanProker(this, @js('Rencana proker "' . $proker->judul . '" akan diajukan. Rencana ini dikunci dan tetap tersimpan di Rencana Proker, sedangkan salinannya beserta dokumen rencana dibuat di Pelaksanaan Kegiatan. Rencana yang sudah diajukan tidak bisa diubah lagi.'))">
                             @csrf
                             @method('PATCH')
                             <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">
@@ -94,10 +90,10 @@
 <x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
 <x-manajemenmahasiswa::ui.flash type="error" :message="session('error')" class="mb-3" />
 
-{{-- Badan detail dipakai bersama dengan Pelaksanaan; $showDokumentasi = false --}}
-@include('manajemenmahasiswa::partials.kegiatan-detail._body', ['showDokumentasi' => false])
+{{-- Badan detail dipakai bersama dengan Pelaksanaan; tanpa galeri foto, dengan Dokumen Rencana --}}
+@include('manajemenmahasiswa::partials.kegiatan-detail._body', ['showDokumentasi' => false, 'showDokumen' => true])
 
-{{-- Link ke Pelaksanaan / Arsip --}}
+{{-- Baris lama (sebelum S-49) yang berpindah status: link ke barisnya sendiri --}}
 @if($proker->status === 'disetujui')
 <div class="detail-card" style="background:var(--c-primary-subtle);border:1px solid var(--c-primary-border);">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
@@ -129,5 +125,24 @@
 @endif
 
 @include('manajemenmahasiswa::partials.kegiatan-detail._lightbox')
+
+<script>
+// Ajukan menyalin banner & dokumen rencana ke Pelaksanaan (S-49) dan bisa makan waktu
+// belasan detik. Tanpa keterangan, halaman tampak macet dan tombol rawan diklik ulang.
+function mkAjukanProker(form, pesan) {
+    window.mkConfirm({ message: pesan, title: 'Ajukan Proker', variant: 'primary', confirmText: 'Ya, Ajukan' })
+        .then(function (ok) {
+            if (!ok) return;
+            const tombol = form.querySelector('button[type="submit"]');
+            if (tombol) {
+                tombol.disabled = true;
+                tombol.textContent = 'Menyalin data & dokumen…';
+            }
+            form.submit();
+        });
+
+    return false;
+}
+</script>
 
 </x-manajemenmahasiswa::layouts.mahasiswa>

@@ -7,11 +7,13 @@
 {{--
     Rencana Proker — Buat.
     Form memakai partial bersama dengan Pelaksanaan Kegiatan.
-    $showDokumentasi = false → kartu Foto & Dokumen Kegiatan tidak dirender:
-    keduanya dokumentasi acara yang sudah berlangsung, diisi di subbab Pelaksanaan.
+    $showDokumentasi = false → kartu Foto tidak dirender (dokumentasi acara, diisi di
+    Pelaksanaan). $showDokumen = true → Dokumen Rencana (proposal, RAB, surat) yang
+    ikut disalin ke Pelaksanaan saat diajukan (S-49).
 --}}
 @include('manajemenmahasiswa::partials.kegiatan-form._fields', [
     'showDokumentasi' => false,
+    'showDokumen'     => true,
     'tahapRencana'    => true,
     'formAction'      => route('manajemenmahasiswa.proker.store'),
     'formMethod'      => 'POST',
@@ -23,6 +25,7 @@
 
 @include('manajemenmahasiswa::partials.kegiatan-form._scripts', [
     'showDokumentasi' => false,
+    'showDokumen'     => true,
 ])
 
 </x-manajemenmahasiswa::layouts.mahasiswa>

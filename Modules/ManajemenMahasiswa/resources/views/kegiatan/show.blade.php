@@ -36,6 +36,7 @@
                 'jenis'    => 'Kegiatan',
                 'judul'    => $kegiatan->judul,
                 'lampiran' => 'banner, foto, dan dokumennya',
+                'catatan'  => $kegiatan->rencana_id ? 'Rencana awalnya di Rencana Proker tetap tersimpan, tetapi tidak bisa diajukan ulang.' : null,
             ])
         @endif
         {{-- Role-nya boleh mengelola, tapi bukan pengelola kegiatan ini (KegiatanPolicy) --}}

@@ -47,7 +47,7 @@ function closeLightbox(e) {
     document.body.style.overflow = 'auto';
 }
 
-@if($showDokumentasi)
+@if($showDokumentasi || ($showDokumen ?? false))
 // ── File Deletion (existing files) ──
 function markFileForDeletion(fileId) {
     const el = document.getElementById('existingFile' + fileId);
@@ -272,3 +272,5 @@ document.addEventListener('DOMContentLoaded', function() {
     handleKategoriChange();
 });
 </script>
+
+@include('manajemenmahasiswa::partials.kegiatan-form._batas-kirim')

@@ -24,6 +24,7 @@
 @include('manajemenmahasiswa::partials.kegiatan-list._filter', [
     'action'      => route('manajemenmahasiswa.proker.index'),
     'placeholder' => 'Cari judul atau deskripsi rencana proker...',
+    'tahapList'   => $tahapList,
 ])
 
 @if($prokerList->count() > 0)

@@ -37,6 +37,12 @@
     foreach ($panitiaTerpilih as $pan) {
         $panitiaPeranAwal[$pan->id] = $panitiaPeranLama[$pan->id] ?? $pan->pivot->peran ?? '';
     }
+
+    $dosenPeranLama = old('dosen_peran', []);
+    $dosenPeranAwal = [];
+    foreach ($dosenTerpilih as $dos) {
+        $dosenPeranAwal[$dos->id] = $dosenPeranLama[$dos->id] ?? $dos->pivot->peran ?? '';
+    }
 @endphp
 
 <div class="row g-3 mb-3">
@@ -77,9 +83,10 @@
             </div>
         </div>
     </div>
+</div>
 
-    {{-- ── Dosen Pendamping (pilih banyak) ── --}}
-    <div class="col-md-6 mk-pilih" x-data="mkPilihBanyak(@js($opsiDosen), @js($dosenTerpilih->pluck('id')->values()))">
+{{-- ── Dosen Pendamping (pilih banyak + peran), sejajar dengan Panitia ── --}}
+<div class="mb-3 mk-pilih" x-data="mkPilihBanyak(@js($opsiDosen), @js($dosenTerpilih->pluck('id')->values()))">
         <label class="form-label-custom" for="dosenSearchInput">
             Dosen Pendamping <span style="color: var(--c-fg-muted); font-weight: 400;">(opsional)</span>
             <span class="panitia-count-badge" x-show="terpilih.length" x-text="terpilih.length + ' dipilih'" style="display: none;"></span>
@@ -131,7 +138,23 @@
             </template>
         </div>
         <div class="checkbox-hint">Bisa lebih dari satu. Ketik nama atau NIP untuk mencari.</div>
-    </div>
+
+        {{-- Peran tiap dosen, diketik bebas seperti jabatan panitia. Disimpan per id, jadi isian
+             tidak hilang walau dosennya sempat dilepas lalu dipilih lagi. --}}
+        <div class="mt-3 d-flex flex-column gap-2" x-data="{ peran: @js((object) $dosenPeranAwal) }">
+            <template x-for="o in daftarTerpilih" :key="'peran-dosen-' + o.id">
+                <div class="d-flex align-items-center gap-3 p-2 border rounded bg-light">
+                    <div style="flex: 1; font-size: 13px; font-weight: 600; color: var(--c-fg-sec);" x-text="o.nama"></div>
+                    <div style="flex: 2;">
+                        <input type="text" class="form-control form-control-sm"
+                               :name="'dosen_peran[' + o.id + ']'"
+                               placeholder="Masukkan peran (misal: Pendamping, Narasumber, Juri, dll)"
+                               maxlength="60"
+                               x-model="peran[o.id]">
+                    </div>
+                </div>
+            </template>
+        </div>
 </div>
 
 {{-- ── Panitia Kegiatan (pilih banyak + jabatan) ── --}}

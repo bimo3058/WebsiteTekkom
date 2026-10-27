@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Kegiatan extends Model
@@ -34,28 +35,15 @@ class Kegiatan extends Model
         'ketua_pelaksana_id',
         'target_peserta',
         'status',
-        // Kolom realisasi (Subbab 2 — disimpan terpisah dari rencana)
-        'realisasi_tanggal_mulai',
-        'realisasi_tanggal_selesai',
-        'realisasi_lokasi',
-        'realisasi_peserta',
-        'realisasi_anggaran',
-        'catatan_pelaksanaan',
-        'catatan_penolakan',
-        'disetujui_oleh',
-        'disetujui_at',
+        'rencana_id',
         'is_pelaksanaan_updated',
     ];
 
     protected $casts = [
-        'tanggal_mulai'             => 'date',
-        'tanggal_selesai'           => 'date',
-        'realisasi_tanggal_mulai'   => 'date',
-        'realisasi_tanggal_selesai' => 'date',
-        'anggaran'                  => 'decimal:2',
-        'realisasi_anggaran'        => 'decimal:2',
-        'disetujui_at'              => 'datetime',
-        'is_pelaksanaan_updated'    => 'boolean',
+        'tanggal_mulai'          => 'date',
+        'tanggal_selesai'        => 'date',
+        'anggaran'               => 'decimal:2',
+        'is_pelaksanaan_updated' => 'boolean',
     ];
 
     // -------------------------------------------------------------------------
@@ -78,12 +66,11 @@ class Kegiatan extends Model
 
     // ── Status Aktif (alur yang digunakan saat ini) ────────────────────────
     const STATUS_DRAFT     = 'draft';      // Subbab 1 — baru dibuat, belum diajukan
-    const STATUS_DISETUJUI = 'disetujui';  // Subbab 2 — sudah diajukan, siap dilaksanakan
+    const STATUS_DIAJUKAN  = 'diajukan';   // Subbab 1 — rencana sudah diajukan & terkunci (S-49)
+    const STATUS_DISETUJUI = 'disetujui';  // Subbab 2 — salinan rencana, siap dilaksanakan
     const STATUS_SELESAI   = 'selesai';    // Subbab 3 — selesai, masuk arsip
 
     // ── Status Legacy (tidak digunakan lagi, disimpan untuk backward compat) ─
-    /** @deprecated Tidak digunakan dalam alur bisnis aktif */
-    const STATUS_DIAJUKAN    = 'diajukan';
     /** @deprecated Tidak digunakan dalam alur bisnis aktif */
     const STATUS_AKAN_DATANG = 'akan_datang';
     /** @deprecated Tidak digunakan dalam alur bisnis aktif */
@@ -103,6 +90,37 @@ class Kegiatan extends Model
         self::STATUS_DRAFT,
     ];
 
+    /**
+     * Isi daftar Rencana Proker (S-49): draft + rencana yang sudah diajukan.
+     *
+     * Rencana yang sudah diajukan tetap tampil di Subbab 1 (terkunci) — Pelaksanaan
+     * bekerja pada salinannya. Sengaja konstanta terpisah dari STATUS_PERENCANAAN,
+     * yang dipakai Dashboard Analitik untuk "proker terbaru".
+     */
+    const STATUS_DAFTAR_RENCANA = [
+        self::STATUS_DRAFT,
+        self::STATUS_DIAJUKAN,
+    ];
+
+    /**
+     * Tahap sebuah rencana dilihat dari salinannya (badge & filter Rencana Proker).
+     * Kunci = nilai ?status_rencana= di daftar.
+     */
+    const TAHAP_RENCANA_LABELS = [
+        'draft'            => 'Draft',
+        'pelaksanaan'      => 'Di Pelaksanaan',
+        'arsip'            => 'Diarsipkan',
+        'tidak_terlaksana' => 'Tidak terlaksana',
+    ];
+
+    /** Warna badge tahap — kelas .mm-status--{nada} di partials/sitkom-ui. */
+    const TAHAP_RENCANA_NADA = [
+        'draft'            => 'neutral',
+        'pelaksanaan'      => 'sky',
+        'arsip'            => 'success',
+        'tidak_terlaksana' => 'error',
+    ];
+
     /** Status yang sudah disetujui / dalam proses pelaksanaan (Subbab 2) */
     const STATUS_PELAKSANAAN = [
         self::STATUS_DISETUJUI,
@@ -111,6 +129,7 @@ class Kegiatan extends Model
     /** Label status untuk ditampilkan di UI */
     const STATUS_LABELS = [
         self::STATUS_DRAFT     => 'Draft',
+        self::STATUS_DIAJUKAN  => 'Rencana Diajukan',
         self::STATUS_DISETUJUI => 'Pelaksanaan',
         self::STATUS_SELESAI   => 'Selesai',
     ];
@@ -118,6 +137,7 @@ class Kegiatan extends Model
     /** Warna badge per status */
     const STATUS_COLORS = [
         self::STATUS_DRAFT     => 'secondary',
+        self::STATUS_DIAJUKAN  => 'secondary',
         self::STATUS_DISETUJUI => 'primary',
         self::STATUS_SELESAI   => 'success',
     ];
@@ -168,7 +188,23 @@ class Kegiatan extends Model
     public function dosenPendampings(): BelongsToMany
     {
         return $this->belongsToMany(\App\Models\Lecturer::class, 'mk_kegiatan_dosen_pendamping', 'kegiatan_id', 'lecturer_id')
+                    ->withPivot('peran')
                     ->withTimestamps();
+    }
+
+    /**
+     * Simpan daftar dosen beserta perannya (isian bebas, boleh kosong).
+     *
+     * @param  array<int|string>  $ids
+     * @param  array<int|string, string|null>  $peran  dikunci per id dosen
+     */
+    public function syncDosenPendamping(array $ids, array $peran = []): void
+    {
+        $data = [];
+        foreach ($ids as $id) {
+            $data[$id] = ['peran' => filled($peran[$id] ?? null) ? trim($peran[$id]) : null];
+        }
+        $this->dosenPendampings()->sync($data);
     }
 
     /**
@@ -201,14 +237,27 @@ class Kegiatan extends Model
         return $this->hasMany(RiwayatKegiatan::class, 'kegiatan_id');
     }
 
-    public function disetujuiOleh(): \Illuminate\Database\Eloquent\Relations\BelongsTo
-    {
-        return $this->belongsTo(\App\Models\User::class, 'disetujui_oleh');
-    }
-
     public function repoMulmed(): HasMany
     {
         return $this->hasMany(RepoMulmed::class, 'kegiatan_id');
+    }
+
+    /**
+     * Rencana asal salinan ini (S-49). Hanya terisi pada baris Pelaksanaan/Arsip yang
+     * lahir dari "Ajukan Proker"; kegiatan lama & tambahan langsung ke Arsip NULL.
+     */
+    public function rencana(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'rencana_id');
+    }
+
+    /**
+     * Salinan Pelaksanaan/Arsip milik rencana ini (S-49) — paling banyak satu,
+     * karena rencana tidak bisa diajukan ulang.
+     */
+    public function salinan(): HasOne
+    {
+        return $this->hasOne(self::class, 'rencana_id');
     }
 
     // -------------------------------------------------------------------------
@@ -290,12 +339,13 @@ class Kegiatan extends Model
      * scopeFilterTahun(): tanpa itu, tahun milik kegiatan ber-`tahun` NULL tidak
      * pernah muncul sebagai pilihan sehingga kegiatannya mustahil ditemukan.
      *
+     * @param  string|array<int, string>  $status
      * @return array<int, int> tahun terbaru lebih dulu; minimal berisi tahun berjalan
      */
-    public static function daftarTahun(string $status): array
+    public static function daftarTahun(string|array $status): array
     {
         $daftar = static::query()
-            ->where('status', $status)
+            ->whereIn('status', (array) $status)
             ->where(fn($q) => $q->whereNotNull('tahun')->orWhereNotNull('tanggal_mulai'))
             ->get(['tahun', 'tanggal_mulai'])
             ->map(fn($kegiatan) => $kegiatan->tahun ?? $kegiatan->tanggal_mulai?->year)
@@ -374,11 +424,23 @@ class Kegiatan extends Model
     }
 
     /**
-     * Sudah ada data realisasi yang diinput?
+     * Tahap rencana untuk badge Rencana Proker (kunci TAHAP_RENCANA_LABELS), atau null
+     * bila baris ini bukan rencana. Di daftar, muat relasi `salinan` lebih dulu.
      */
-    public function getHasRealisasiAttribute(): bool
+    public function getTahapRencanaAttribute(): ?string
     {
-        return !is_null($this->realisasi_tanggal_mulai) || !is_null($this->catatan_pelaksanaan);
+        if ($this->status === self::STATUS_DRAFT) {
+            return 'draft';
+        }
+        if ($this->status !== self::STATUS_DIAJUKAN) {
+            return null;
+        }
+
+        return match ($this->salinan?->status) {
+            self::STATUS_DISETUJUI => 'pelaksanaan',
+            self::STATUS_SELESAI   => 'arsip',
+            default                => 'tidak_terlaksana',
+        };
     }
 
     // ── Scopes ────────────────────────────────────────────────────────────────
@@ -396,5 +458,22 @@ class Kegiatan extends Model
     public function scopeSelesai($query)
     {
         return $query->where('status', self::STATUS_SELESAI);
+    }
+
+    /**
+     * Filter daftar Rencana Proker per tahap (kunci TAHAP_RENCANA_LABELS).
+     * Kunci yang tidak dikenal diabaikan.
+     */
+    public function scopeTahapRencana($query, string $tahap)
+    {
+        $diajukan = fn ($q) => $q->where('status', self::STATUS_DIAJUKAN);
+
+        return match ($tahap) {
+            'draft'            => $query->where('status', self::STATUS_DRAFT),
+            'pelaksanaan'      => $diajukan($query)->whereHas('salinan', fn ($s) => $s->where('status', self::STATUS_DISETUJUI)),
+            'arsip'            => $diajukan($query)->whereHas('salinan', fn ($s) => $s->where('status', self::STATUS_SELESAI)),
+            'tidak_terlaksana' => $diajukan($query)->doesntHave('salinan'),
+            default            => $query,
+        };
     }
 }

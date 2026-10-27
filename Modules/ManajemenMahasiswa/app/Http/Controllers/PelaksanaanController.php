@@ -7,14 +7,13 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\ValidationException;
 use App\Models\Student;
 use App\Models\Lecturer;
 use App\Services\SupabaseStorage;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\Bidang;
 use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
-use Modules\ManajemenMahasiswa\Models\RepoMulmed;
+use Modules\ManajemenMahasiswa\Policies\KegiatanPolicy;
 use Modules\ManajemenMahasiswa\Services\PengelolaKegiatanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
 use Modules\ManajemenMahasiswa\Support\PerPage;
@@ -108,7 +107,7 @@ class PelaksanaanController extends Controller
         $proker = Kegiatan::with([
             'bidangs', 'kategoris',
             'ketuaPelaksana.user', 'dosenPendampings.user',
-            'panitia.user', 'creator', 'disetujuiOleh',
+            'panitia.user', 'creator',
             'repoMulmed',
         ])->find($id);
 
@@ -126,9 +125,8 @@ class PelaksanaanController extends Controller
         $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
         $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
         $canManage = $roles->intersect(['superadmin', 'admin_kemahasiswaan'])->isNotEmpty() || $isPengurus; // GPM, Kadep & DPM view-only
-        // Anggaran & Dokumen tampil untuk SEMUA role kecuali mahasiswa & alumni murni.
-        // (denylist agar konsisten dengan halaman Arsip dan tidak ada role pengelola yang terlewat — mis. DPM)
-        $canViewRestricted = $roles->diff(['mahasiswa', 'alumni'])->isNotEmpty();
+        // Anggaran & Dokumen hanya untuk role pengelola & pemantau (KegiatanPolicy::LIHAT_INTERNAL).
+        $canViewRestricted = $user->hasAnyRole(KegiatanPolicy::LIHAT_INTERNAL);
         // Hanya role tertentu yang boleh menekan "Unggah ke Arsip"
         // (staff_himpunan TIDAK termasuk, dosen DPM/GPM juga tidak — hanya pengurus inti + admin)
         $canArsip = $roles->intersect([
@@ -262,7 +260,7 @@ class PelaksanaanController extends Controller
         }
 
         $validated = $request->validate([
-            'judul'                     => 'required|string|max:100',
+            'judul'                     => 'required|string|max:' . KegiatanController::MAKS_JUDUL,
             // Disamakan dengan aturan di Laporan & Arsip agar kegiatan yang diarsipkan
             // selalu lolos validasi saat diedit di subbab Arsip (hindari "jebakan" validasi).
             'kategori_kegiatan_id'      => 'required|array|min:1|max:2',
@@ -284,6 +282,8 @@ class PelaksanaanController extends Controller
             'ketua_pelaksana_id'        => 'required|exists:students,id',
             'dosen_pendamping_ids'      => 'nullable|array',
             'dosen_pendamping_ids.*'    => 'exists:lecturers,id',
+            'dosen_peran'               => 'nullable|array',
+            'dosen_peran.*'             => 'nullable|string|max:60',
             'panitia_ids'               => 'nullable|array',
             'panitia_ids.*'             => 'exists:students,id',
             'panitia_peran'             => 'nullable|array',
@@ -292,7 +292,7 @@ class PelaksanaanController extends Controller
             'foto_kegiatan'             => 'nullable|array|max:10',
             'foto_kegiatan.*'           => 'image|mimes:jpg,jpeg,png,webp|max:5120',
             'dokumen_kegiatan'          => 'nullable|array|max:' . self::MAKS_DOKUMEN,
-            'dokumen_kegiatan.*'        => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:5120',
+            'dokumen_kegiatan.*'        => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:' . KegiatanController::MAKS_UKURAN_DOKUMEN_KB,
             'hapus_file'                => 'nullable|array',
             'hapus_file.*'              => 'integer|exists:mk_repo_mulmed,id',
         ], [
@@ -308,10 +308,10 @@ class PelaksanaanController extends Controller
             'jam_mulai.date_format'          => 'Jam mulai harus berupa jam yang benar, contoh 09:00.',
             'jam_selesai.date_format'        => 'Jam selesai harus berupa jam yang benar, contoh 15:00.',
             'jam_selesai.after'              => 'Jam selesai harus lebih lambat dari jam mulai. Kalau kegiatannya lintas hari, isi dulu tanggal selesainya.',
-        ]);
+        ] + KegiatanController::pesanValidasiDokumen());
 
         // Batas 10 file berlaku untuk TOTAL yang tersimpan, bukan per sekali simpan.
-        $this->pastikanKuotaFile($request, $proker);
+        $this->repoMulmedService->pastikanKuota($request, $proker, self::MAKS_FILE, self::MAKS_DOKUMEN);
 
         // Update data utama
         $proker->update([
@@ -376,7 +376,7 @@ class PelaksanaanController extends Controller
         $proker->panitia()->sync($panitiaSyncData);
 
         // Sync dosen pendamping (many-to-many)
-        $proker->dosenPendampings()->sync($validated['dosen_pendamping_ids'] ?? []);
+        $proker->syncDosenPendamping($validated['dosen_pendamping_ids'] ?? [], $request->input('dosen_peran', []));
 
         // Daftar pengelola — hanya diproses bila penyimpan berhak mengatur akses
         $this->pengelolaService->sync($proker, $request);
@@ -392,17 +392,8 @@ class PelaksanaanController extends Controller
             ]);
         }
 
-        // Handle file deletions
-        if ($request->filled('hapus_file')) {
-            foreach ($request->hapus_file as $fileId) {
-                $file = RepoMulmed::where('kegiatan_id', $proker->id)->find($fileId);
-                if ($file) {
-                    $this->repoMulmedService->deletePermanent($file->id);
-                }
-            }
-        }
-
-        $this->handleFileUploads($request, $proker);
+        $this->repoMulmedService->hapusTerpilih($request, $proker);
+        $this->repoMulmedService->simpanUnggahan($request, $proker);
 
         return redirect()
             ->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
@@ -541,11 +532,16 @@ class PelaksanaanController extends Controller
             }
         }
 
+        // Salinan hasil Ajukan Proker (S-49): rencana & dokumennya berupa baris dan file
+        // terpisah, jadi tidak ikut terhapus.
+        $punyaRencana = (bool) $proker->rencana_id;
         $proker->delete();
 
         return redirect()
             ->route('manajemenmahasiswa.pelaksanaan.index')
-            ->with('success', 'Data pelaksanaan kegiatan berhasil dihapus.');
+            ->with('success', $punyaRencana
+                ? 'Data pelaksanaan kegiatan berhasil dihapus. Rencana awalnya tetap tersimpan di Rencana Proker.'
+                : 'Data pelaksanaan kegiatan berhasil dihapus.');
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -614,67 +610,5 @@ class PelaksanaanController extends Controller
         return redirect()
             ->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
             ->with('error', $this->pengelolaService->pesanTolak($proker));
-    }
-
-    /**
-     * Batas foto & dokumen berlaku untuk TOTAL file yang tersimpan pada kegiatan.
-     *
-     * Aturan `max:10` di validasi hanya membatasi satu kali unggah, sehingga user
-     * bisa mengunggah 10 foto → Simpan → buka Edit → unggah 10 lagi, berulang tanpa
-     * batas. Di sini sisa file lama (setelah dikurangi yang ditandai hapus pada
-     * form yang sama) dijumlahkan dengan file baru, dan diperiksa sebelum ada satu
-     * pun file yang benar-benar diunggah ke penyimpanan.
-     *
-     * @throws ValidationException
-     */
-    private function pastikanKuotaFile(Request $request, Kegiatan $proker): void
-    {
-        $akanDihapus = collect($request->input('hapus_file', []))->map(fn($fileId) => (int) $fileId);
-
-        $sisaFileLama = fn(string $tipe) => $proker->repoMulmed
-            ->where('tipe_file', $tipe)
-            ->reject(fn($file) => $akanDihapus->contains($file->id))
-            ->count();
-
-        $pesan = [];
-
-        $totalFoto = $sisaFileLama('image') + count($request->file('foto_kegiatan', []));
-        if ($totalFoto > self::MAKS_FILE) {
-            $pesan['foto_kegiatan'] = 'Total foto kegiatan maksimal ' . self::MAKS_FILE
-                . ", sedangkan unggahan ini membuatnya menjadi {$totalFoto}. Hapus dulu sebagian foto lama.";
-        }
-
-        $totalDokumen = $sisaFileLama('document') + count($request->file('dokumen_kegiatan', []));
-        if ($totalDokumen > self::MAKS_DOKUMEN) {
-            $pesan['dokumen_kegiatan'] = 'Total dokumen kegiatan maksimal ' . self::MAKS_DOKUMEN
-                . ", sedangkan unggahan ini membuatnya menjadi {$totalDokumen}. Hapus dulu sebagian dokumen lama.";
-        }
-
-        if ($pesan) {
-            throw ValidationException::withMessages($pesan);
-        }
-    }
-
-    private function handleFileUploads(Request $request, Kegiatan $proker): void
-    {
-        if ($request->hasFile('foto_kegiatan')) {
-            foreach ($request->file('foto_kegiatan') as $foto) {
-                $this->repoMulmedService->upload($foto, [
-                    'kegiatan_id'       => $proker->id,
-                    'judul_file'        => pathinfo($foto->getClientOriginalName(), PATHINFO_FILENAME),
-                    'visibility_status' => 'public',
-                ]);
-            }
-        }
-
-        if ($request->hasFile('dokumen_kegiatan')) {
-            foreach ($request->file('dokumen_kegiatan') as $doc) {
-                $this->repoMulmedService->upload($doc, [
-                    'kegiatan_id'       => $proker->id,
-                    'judul_file'        => pathinfo($doc->getClientOriginalName(), PATHINFO_FILENAME),
-                    'visibility_status' => 'public',
-                ]);
-            }
-        }
     }
 }

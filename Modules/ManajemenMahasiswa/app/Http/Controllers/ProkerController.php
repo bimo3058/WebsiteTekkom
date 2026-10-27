@@ -13,7 +13,10 @@ use App\Services\SupabaseStorage;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\Bidang;
 use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
+use Modules\ManajemenMahasiswa\Policies\KegiatanPolicy;
 use Modules\ManajemenMahasiswa\Services\PengelolaKegiatanService;
+use Modules\ManajemenMahasiswa\Services\RencanaProkerService;
+use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
 use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class ProkerController extends Controller
@@ -33,7 +36,9 @@ class ProkerController extends Controller
 
     public function __construct(
         private SupabaseStorage $supabase,
-        private PengelolaKegiatanService $pengelolaService
+        private PengelolaKegiatanService $pengelolaService,
+        private RepoMulmedService $repoMulmedService,
+        private RencanaProkerService $rencanaService
     ) {}
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -46,8 +51,11 @@ class ProkerController extends Controller
         $kategoriList = KategoriKegiatan::orderBy('nama_kategori')->get();
         // Filter Tahun sama dengan Pelaksanaan & Laporan/Arsip (panel kegiatan-list/_filter).
         // Draft boleh belum bertanggal, jadi opsi "Belum ada tanggal" cukup sering terpakai.
-        $tahunList     = Kegiatan::daftarTahun(Kegiatan::STATUS_DRAFT);
-        $adaTanpaTahun = Kegiatan::where('status', Kegiatan::STATUS_DRAFT)->tanpaTahun()->exists();
+        // Daftar berisi draft + rencana yang sudah diajukan (S-49): rencana tetap di sini
+        // walau salinannya sudah di Pelaksanaan/Arsip.
+        $tahunList     = Kegiatan::daftarTahun(Kegiatan::STATUS_DAFTAR_RENCANA);
+        $adaTanpaTahun = Kegiatan::whereIn('status', Kegiatan::STATUS_DAFTAR_RENCANA)->tanpaTahun()->exists();
+        $tahapList     = Kegiatan::TAHAP_RENCANA_LABELS;
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
@@ -65,8 +73,13 @@ class ProkerController extends Controller
 
         // Relasi yang dibutuhkan kartu bersama (kegiatan-list/_kartu) — sama di ketiga subbab.
         $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'ketuaPelaksana.user'])
-            ->where('status', Kegiatan::STATUS_DRAFT)
+            ->whereIn('status', Kegiatan::STATUS_DAFTAR_RENCANA)
             ->orderBy('created_at', 'desc');
+
+        // Filter tahap rencana (Draft / Di Pelaksanaan / Diarsipkan / Tidak terlaksana)
+        if ($request->filled('status_rencana') && array_key_exists($request->status_rencana, $tahapList)) {
+            $query->tahapRencana($request->status_rencana);
+        }
 
         // Filter bidang
         if ($request->filled('bidang') && $request->bidang !== 'semua') {
@@ -103,7 +116,7 @@ class ProkerController extends Controller
 
 
         return view('manajemenmahasiswa::proker.index', compact(
-            'prokerList', 'bidangList', 'kategoriList', 'tahunList', 'adaTanpaTahun',
+            'prokerList', 'bidangList', 'kategoriList', 'tahunList', 'adaTanpaTahun', 'tahapList',
             'isAdmin', 'isPengurus', 'canManage'
         ));
     }
@@ -117,11 +130,11 @@ class ProkerController extends Controller
         $proker = Kegiatan::with([
             'bidangs', 'kategoris',
             'ketuaPelaksana.user', 'dosenPendampings.user',
-            'panitia.user', 'creator', 'disetujuiOleh',
+            'panitia.user', 'creator', 'repoMulmed',
         ])->findOrFail($id);
         // Catatan: TIDAK difilter status agar detail proker tetap bisa dibuka
-        // setelah diajukan (disetujui) / diarsipkan (selesai). Sebelumnya findOrFail
-        // dibatasi STATUS_DRAFT sehingga URL proker/{id} 404 begitu proker diajukan.
+        // setelah diajukan (rencana terkunci, S-49) maupun untuk baris lama yang
+        // berpindah status ke Pelaksanaan/Arsip sebelum S-49.
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
@@ -165,11 +178,14 @@ class ProkerController extends Controller
         $canEdit      = $canEdit && $bolehUbah;
         $canAjukan    = $canAjukan && $bolehUbah;
         $canSeeAjukan = $canSeeAjukan && $bolehUbah;
-        $canDelete    = $canDelete && Gate::allows('delete', $proker);
+        // Hapus juga bergantung pada tahap: draft, atau rencana diajukan yang salinannya
+        // sudah tidak ada (sama dengan aturan di destroy()).
+        $canDelete    = $canDelete && Gate::allows('delete', $proker) && $this->bolehDihapus($proker);
 
-        // Anggaran disembunyikan dari mahasiswa & alumni — konsisten dengan Pelaksanaan & Arsip.
-        $canViewRestricted = $roles->diff(['mahasiswa', 'alumni'])->isNotEmpty();
+        // Anggaran & Dokumen hanya untuk role pengelola & pemantau — sama di ketiga subbab.
+        $canViewRestricted = $user->hasAnyRole(KegiatanPolicy::LIHAT_INTERNAL);
         $isCreator = $proker->user_id === Auth::id();
+        $documents = $proker->repoMulmed->where('tipe_file', 'document');
 
         // Dipakai view untuk mengaktifkan/menonaktifkan tombol "Ajukan Proker"
         // sekaligus menyusun tooltip berisi field yang masih kosong.
@@ -177,7 +193,7 @@ class ProkerController extends Controller
 
         return view('manajemenmahasiswa::proker.show', compact(
             'proker', 'isAdmin', 'isPengurus', 'isCreator', 'canAjukan', 'canEdit', 'canDelete',
-            'canSeeAjukan', 'canViewRestricted', 'kelengkapan', 'pesanBukanPengelola'
+            'canSeeAjukan', 'canViewRestricted', 'kelengkapan', 'pesanBukanPengelola', 'documents'
         ));
     }
 
@@ -201,12 +217,13 @@ class ProkerController extends Controller
         $selectedBidangIds   = old('bidang_id', []);
         // Chip dosen pendamping di-pre-populate lewat JS dari koleksi ini
         $existingDosen       = $dosenList->whereIn('id', old('dosen_pendamping_ids', []));
+        $existingDokumen     = collect();
 
         return view('manajemenmahasiswa::proker.create', compact(
             'proker', 'bidangList', 'kategoriList',
             'mahasiswaList', 'dosenList',
             'existingPanitia', 'existingPanitiaIds', 'existingDosen',
-            'selectedKategoriIds', 'selectedBidangIds'
+            'selectedKategoriIds', 'selectedBidangIds', 'existingDokumen'
         ) + $this->pengelolaService->dataForm($proker));
     }
 
@@ -232,6 +249,7 @@ class ProkerController extends Controller
 
         $this->syncRelasiKegiatan($proker, $validated, $request);
         $this->pengelolaService->sync($proker, $request);
+        $this->repoMulmedService->simpanUnggahan($request, $proker, ['dokumen_kegiatan']);
 
         return redirect()
             ->route('manajemenmahasiswa.proker.show', $proker->id)
@@ -247,7 +265,7 @@ class ProkerController extends Controller
         $proker = Kegiatan::with([
             'bidangs', 'kategoris',
             'ketuaPelaksana.user', 'dosenPendampings.user',
-            'panitia.user',
+            'panitia.user', 'repoMulmed',
         ])->findOrFail($id);
 
         if ($tolak = $this->tolakBilaBukanDraft($proker)) {
@@ -256,6 +274,8 @@ class ProkerController extends Controller
         if ($tolak = $this->tolakBilaBukanPengelola($proker)) {
             return $tolak;
         }
+
+        $existingDokumen = $proker->repoMulmed->where('tipe_file', 'document');
 
         $bidangList    = Bidang::orderBy('nama_bidang')->get();
         $kategoriList  = KategoriKegiatan::orderBy('nama_kategori')->get();
@@ -275,13 +295,13 @@ class ProkerController extends Controller
             'proker', 'bidangList', 'kategoriList',
             'mahasiswaList', 'dosenList',
             'existingPanitia', 'existingPanitiaIds', 'existingDosen',
-            'selectedKategoriIds', 'selectedBidangIds'
+            'selectedKategoriIds', 'selectedBidangIds', 'existingDokumen'
         ) + $this->pengelolaService->dataForm($proker));
     }
 
     public function update(Request $request, $id)
     {
-        $proker = Kegiatan::findOrFail($id);
+        $proker = Kegiatan::with('repoMulmed')->findOrFail($id);
 
         if ($tolak = $this->tolakBilaBukanDraft($proker)) {
             return $tolak;
@@ -291,6 +311,10 @@ class ProkerController extends Controller
         }
 
         $validated = $this->validateProker($request);
+
+        // Rencana hanya menyimpan dokumen (foto = dokumentasi acara, di Pelaksanaan),
+        // jadi kuota foto 0; batas dokumen sama dengan Pelaksanaan & Arsip.
+        $this->repoMulmedService->pastikanKuota($request, $proker, 0, KegiatanController::MAKS_DOKUMEN);
 
         $proker->update($this->kolomKegiatan($validated));
 
@@ -307,6 +331,8 @@ class ProkerController extends Controller
 
         $this->syncRelasiKegiatan($proker, $validated, $request);
         $this->pengelolaService->sync($proker, $request);
+        $this->repoMulmedService->hapusTerpilih($request, $proker);
+        $this->repoMulmedService->simpanUnggahan($request, $proker, ['dokumen_kegiatan']);
 
         return redirect()
             ->route('manajemenmahasiswa.proker.show', $proker->id)
@@ -318,7 +344,9 @@ class ProkerController extends Controller
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Pengurus mengajukan proker — status berubah ke disetujui dan masuk Subbab 2.
+     * Ketua mengajukan proker (S-49): rencana dikunci dan tetap tampil di Rencana
+     * Proker, sedangkan Pelaksanaan Kegiatan mendapat salinannya — termasuk dokumen
+     * rencana (lihat RencanaProkerService::ajukan()).
      */
     public function ajukan($id)
     {
@@ -333,7 +361,14 @@ class ProkerController extends Controller
                 ->with('error', 'Anda tidak memiliki izin untuk mengajukan proker.');
         }
 
-        $proker = Kegiatan::where('status', Kegiatan::STATUS_DRAFT)->findOrFail($id);
+        // Dicari by id dulu, statusnya diperiksa sesudahnya: klik Ajukan kedua kali
+        // (tombol Back, tab lain) harus berakhir di pesan, bukan halaman 404.
+        $proker = Kegiatan::findOrFail($id);
+        if ($proker->status !== Kegiatan::STATUS_DRAFT) {
+            return redirect()
+                ->route('manajemenmahasiswa.proker.show', $proker->id)
+                ->with('error', 'Rencana proker ini sudah diajukan.');
+        }
 
         // Mengajukan = mengubah status proker, jadi butuh hak ubah atas proker ini.
         if ($tolak = $this->tolakBilaBukanPengelola($proker)) {
@@ -351,11 +386,23 @@ class ProkerController extends Controller
                 ->with('error', 'Rencana proker belum lengkap. Lengkapi dulu: ' . $kurang->implode(', ') . '.');
         }
 
-        $proker->update(['status' => Kegiatan::STATUS_DISETUJUI]);
+        try {
+            $this->rencanaService->ajukan($proker);
+        } catch (\DomainException $e) {
+            return redirect()
+                ->route('manajemenmahasiswa.proker.show', $proker->id)
+                ->with('error', $e->getMessage());
+        } catch (\Throwable $e) {
+            report($e);
+
+            return redirect()
+                ->route('manajemenmahasiswa.proker.show', $proker->id)
+                ->with('error', 'Gagal menyalin data dan dokumen rencana ke Pelaksanaan. Rencana tetap tersimpan sebagai draft — coba ajukan lagi.');
+        }
 
         return redirect()
             ->route('manajemenmahasiswa.pelaksanaan.index')
-            ->with('success', 'Rencana Proker berhasil diajukan dan masuk ke tahap pelaksanaan kegiatan.');
+            ->with('success', 'Rencana Proker berhasil diajukan. Rencananya tetap tersimpan di Rencana Proker, dan salinannya kini ada di Pelaksanaan Kegiatan.');
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -369,14 +416,17 @@ class ProkerController extends Controller
         // status proker bukan 'draft' lagi (mis. halaman daftar/detail basi karena
         // bfcache), DELETE melempar ModelNotFoundException → handler global
         // mengalihkan ke /error/404 alih-alih kembali ke daftar rencana proker.
-        $proker = Kegiatan::findOrFail($id);
+        $proker = Kegiatan::with('repoMulmed')->findOrFail($id);
 
-        // Hanya proker berstatus draft yang boleh dihapus. Jika sudah diajukan/
-        // diarsipkan, kembalikan ke daftar dengan pesan, bukan halaman 404.
-        if ($proker->status !== Kegiatan::STATUS_DRAFT) {
+        // Draft boleh dihapus; rencana yang sudah diajukan hanya bila salinan
+        // Pelaksanaan/Arsip-nya sudah tidak ada (S-49). Selain itu kembali dengan pesan,
+        // bukan halaman 404.
+        if (!$this->bolehDihapus($proker)) {
             return redirect()
-                ->route('manajemenmahasiswa.proker.index')
-                ->with('error', 'Hanya rencana proker berstatus draft yang dapat dihapus.');
+                ->route('manajemenmahasiswa.proker.show', $proker->id)
+                ->with('error', $proker->status === Kegiatan::STATUS_DIAJUKAN
+                    ? 'Rencana yang sudah diajukan baru bisa dihapus setelah data Pelaksanaan atau Arsip-nya dihapus.'
+                    : 'Hanya rencana proker yang dapat dihapus dari halaman ini.');
         }
 
         if ($tolak = $this->tolakBilaBukanPengelola($proker, 'delete')) {
@@ -388,6 +438,11 @@ class ProkerController extends Controller
         }
         if ($proker->surat_proker) {
             $this->supabase->delete($proker->surat_proker);
+        }
+        // Dokumen rencana (proposal, RAB, surat) — salinannya di Pelaksanaan/Arsip
+        // adalah file terpisah, jadi aman dihapus di sini.
+        foreach ($proker->repoMulmed as $file) {
+            $this->repoMulmedService->deletePermanent($file->id);
         }
 
         $proker->delete();
@@ -426,6 +481,17 @@ class ProkerController extends Controller
         return redirect()
             ->route('manajemenmahasiswa.proker.show', $proker->id)
             ->with('error', 'Rencana proker ini sudah diajukan, jadi tidak bisa lagi diubah dari halaman Rencana Proker. Perubahan datanya sekarang dilakukan di subbab ' . $lanjutanNya . '.');
+    }
+
+    /**
+     * Rencana boleh dihapus selama masih draft, atau sudah diajukan tetapi salinan
+     * Pelaksanaan/Arsip-nya tidak ada lagi (S-49, keputusan Surya 27 Okt 2026).
+     * Rencana yang salinannya dihapus tidak bisa diajukan ulang — buat rencana baru.
+     */
+    private function bolehDihapus(Kegiatan $proker): bool
+    {
+        return $proker->status === Kegiatan::STATUS_DRAFT
+            || ($proker->status === Kegiatan::STATUS_DIAJUKAN && !$proker->salinan()->exists());
     }
 
     /**
@@ -477,10 +543,12 @@ class ProkerController extends Controller
         // kelengkapan baru ditegakkan di ajukan() — ketua bisa menyimpan kerangka,
         // staff_himpunan yang melengkapi kemudian.
         //
-        // Foto & dokumen kegiatan TIDAK ada di sini: keduanya dokumentasi acara
-        // yang sudah berlangsung, diunggah di Subbab 2 (Pelaksanaan Kegiatan).
+        // Foto kegiatan TIDAK ada di sini: dokumentasi acara yang sudah berlangsung,
+        // diunggah di Subbab 2. Dokumen ada sejak S-49: proposal, RAB, surat undangan,
+        // dan surat peminjaman disusun di tahap rencana, lalu ikut disalin ke
+        // Pelaksanaan saat proker diajukan.
         return $request->validate([
-            'judul'                  => 'required|string|max:100',
+            'judul'                  => 'required|string|max:' . KegiatanController::MAKS_JUDUL,
             'deskripsi'              => 'required|string|min:20|max:3000',
             'kategori_kegiatan_id'   => 'required|array|min:1|max:2',
             'kategori_kegiatan_id.*' => 'integer|exists:mk_kategori_kegiatan,id',
@@ -502,11 +570,17 @@ class ProkerController extends Controller
             'ketua_pelaksana_id'     => 'nullable|exists:students,id',
             'dosen_pendamping_ids'   => 'nullable|array',
             'dosen_pendamping_ids.*' => 'exists:lecturers,id',
+            'dosen_peran'            => 'nullable|array',
+            'dosen_peran.*'          => 'nullable|string|max:60',
             'panitia_ids'            => 'nullable|array',
             'panitia_ids.*'          => 'exists:students,id',
             'panitia_peran'          => 'nullable|array',
             'panitia_peran.*'        => 'nullable|string|max:60',
             'banner'                 => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'dokumen_kegiatan'       => 'nullable|array|max:' . KegiatanController::MAKS_DOKUMEN,
+            'dokumen_kegiatan.*'     => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:' . KegiatanController::MAKS_UKURAN_DOKUMEN_KB,
+            'hapus_file'             => 'nullable|array',
+            'hapus_file.*'           => 'integer|exists:mk_repo_mulmed,id',
         ], [
             // Pesan bawaan Laravel masih berbahasa Inggris dan menyebut nama kolom
             // mentah ("The tanggal mulai field is required when..."), jadi aturan
@@ -519,7 +593,7 @@ class ProkerController extends Controller
             'jam_mulai.date_format'          => 'Jam mulai harus berupa jam yang benar, contoh 09:00.',
             'jam_selesai.date_format'        => 'Jam selesai harus berupa jam yang benar, contoh 15:00.',
             'jam_selesai.after'              => 'Jam selesai harus lebih lambat dari jam mulai. Kalau kegiatannya lintas hari, isi dulu tanggal selesainya.',
-        ]);
+        ] + KegiatanController::pesanValidasiDokumen());
     }
 
     /**
@@ -595,7 +669,7 @@ class ProkerController extends Controller
         $proker->panitia()->sync($panitiaSyncData);
 
         // Dosen pendamping (many-to-many)
-        $proker->dosenPendampings()->sync($validated['dosen_pendamping_ids'] ?? []);
+        $proker->syncDosenPendamping($validated['dosen_pendamping_ids'] ?? [], $request->input('dosen_peran', []));
     }
 
     /**

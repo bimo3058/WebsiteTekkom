@@ -1,17 +1,19 @@
 {{--
     Partial form kegiatan — dipakai bersama oleh:
-      • Rencana Proker (create & edit)  → $showDokumentasi = false
+      • Rencana Proker (create & edit)  → $showDokumentasi = false, $showDokumen = true
       • Pelaksanaan Kegiatan (edit)     → $showDokumentasi = true
 
-    Foto & Dokumen Kegiatan sengaja HANYA muncul di Pelaksanaan: keduanya
-    dokumentasi acara yang sudah berlangsung, bukan bagian dari rencana.
+    Foto Kegiatan HANYA di Pelaksanaan: dokumentasi acara yang sudah berlangsung.
+    Dokumen ada di keduanya sejak S-49: proposal, RAB, surat undangan, dan surat
+    peminjaman disusun di tahap rencana lalu ikut disalin ke Pelaksanaan saat diajukan.
+    $showFoto / $showDokumen bawaannya mengikuti $showDokumentasi.
 
     Variabel wajib: $proker (boleh instance kosong untuk mode create),
     $formAction, $formMethod ('POST'|'PUT'), $backUrl, $headerTitle,
     $headerSubtitle, $submitLabel, $showDokumentasi, $tahapRencana,
     $bidangList, $kategoriList, $mahasiswaList, $dosenList,
     $selectedKategoriIds, $selectedBidangIds, $existingPanitia, $existingPanitiaIds.
-    Hanya saat $showDokumentasi: $existingFoto, $existingDokumen.
+    Saat $showFoto: $existingFoto. Saat $showDokumen: $existingDokumen.
 
     Bagian "Akses Kelola" (_akses_kelola.blade.php, di-include dari sini) butuh
     $bolehAturAkses, $calonPengelola, $pengelolaTerpilih, $namaPembuat — semuanya
@@ -23,6 +25,8 @@
 --}}
 @php
     $showDokumentasi = $showDokumentasi ?? false;
+    $showFoto        = $showFoto ?? $showDokumentasi;
+    $showDokumen     = $showDokumen ?? $showDokumentasi;
     // Tahap Rencana Proker: SEMUA detail boleh dikosongkan saat menyimpan draft —
     // ketua membuat kerangka, pengurus melengkapi kemudian. Kelengkapan baru
     // ditegakkan saat "Ajukan Proker" (lihat ProkerController::SYARAT_AJUKAN):
@@ -62,9 +66,9 @@
         <div class="mb-3">
             <label class="form-label-custom">Judul Kegiatan <span class="required">*</span></label>
             <input type="text" name="judul" id="judulInput" class="form-control form-control-custom"
-                   value="{{ old('judul', $proker->judul) }}" required maxlength="100"
-                   oninput="updateCharCount('judulInput','judulCount',100)">
-            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="judulCount">0</span>/100 karakter</div>
+                   value="{{ old('judul', $proker->judul) }}" required maxlength="{{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_JUDUL }}"
+                   oninput="updateCharCount('judulInput','judulCount',{{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_JUDUL }})">
+            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="judulCount">0</span>/{{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_JUDUL }} karakter</div>
         </div>
 
         <div class="row g-3 mb-3">
@@ -246,8 +250,8 @@
         <img id="bannerPreview" class="banner-preview" alt="Preview Banner" style="display: none;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
     </div>
 
-    {{-- Foto & Dokumen hanya di Pelaksanaan — dokumentasi acara yang sudah berlangsung --}}
-    @if($showDokumentasi)
+    {{-- Foto hanya di Pelaksanaan — dokumentasi acara yang sudah berlangsung --}}
+    @if($showFoto)
     <!-- Foto Kegiatan -->
     <div class="form-card">
         <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Foto Kegiatan <span style="color: var(--c-error);">*</span> <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(wajib minimal 1 sebelum diunggah ke arsip, maks 10 foto)</span></div>
@@ -274,10 +278,15 @@
                multiple style="display: none;" onchange="handleFotoSelect(this)">
         <div class="file-preview-grid" id="fotoPreviewGrid"></div>
     </div>
+    @endif
 
+    @if($showDokumen)
     <!-- Dokumen Kegiatan -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen Kegiatan <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks {{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_DOKUMEN }} dokumen)</span></div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> {{ $tahapRencana ? 'Dokumen Rencana' : 'Dokumen Kegiatan' }} <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks {{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_DOKUMEN }} dokumen)</span></div>
+        @if($tahapRencana)
+            <p style="font-size: 13px; color: var(--c-fg-muted); margin: -4px 0 12px;">Proposal, RAB, surat undangan, dan surat peminjaman. Dokumen ini ikut disalin ke Pelaksanaan Kegiatan saat proker diajukan, dan rencananya tetap tersimpan di sini.</p>
+        @endif
 
         @if($existingDokumen->count() > 0)
             <div class="existing-file-label">Dokumen yang sudah diupload</div>
@@ -303,14 +312,16 @@
         <div class="file-upload-area" id="dokumenUploadArea" onclick="document.getElementById('dokumenInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></div>
             <p>Klik atau drag & drop dokumen baru ke sini</p>
-            <small>Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX • Maks: 5MB per file</small>
+            <small>Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX • Maks: {{ intdiv(\Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_UKURAN_DOKUMEN_KB, 1024) }} MB per file</small>
         </div>
         <input type="file" name="dokumen_kegiatan[]" id="dokumenInput"
                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
                multiple style="display: none;" onchange="handleDokumenSelect(this)">
         <div id="dokumenPreviewList"></div>
     </div>
+    @endif
 
+    @if($showFoto || $showDokumen)
     <!-- Hidden inputs for file deletion -->
     <div id="deleteFileInputs"></div>
     @endif
