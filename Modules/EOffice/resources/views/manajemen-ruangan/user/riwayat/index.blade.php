@@ -19,7 +19,7 @@
             </div>
         </div>
 
-        <div class="mp-card min-h-[380px] sm:min-h-[420px]" style="margin-top: 15px;">
+        <div class="mp-card" style="margin-top: 15px;">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 border-b border-gray-100 gap-4 relative z-10 w-full">
                 <h2 class="text-[16px] font-bold text-gray-800 tracking-tight">
                     Riwayat Peminjaman
@@ -185,23 +185,24 @@
 
                 {{-- PAGINATION CONTAINER --}}
                 <div
-                    class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 mt-2 rounded-b-[12px]">
-                    <div class="flex flex-col md:flex-row items-center gap-4 text-[13px] text-slate-500 w-full md:w-auto">
-                        <div class="flex items-center justify-center gap-2 w-full md:w-auto">
-                            <span class="font-medium">Per halaman</span>
+                    class="border-t border-slate-200 bg-white px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 rounded-b-[12px]">
+                    {{-- Left: Per page selector + Showing text --}}
+                    <div class="flex items-center gap-2.5 sm:gap-3 text-xs text-slate-500 flex-wrap shrink-0">
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-medium text-slate-500">Per halaman</span>
                             <div x-data="{ 
-                                                open: false, 
-                                                selectedVal: '{{ request('per_page', 10) }}',
-                                                selectItem(val, url) {
-                                                    this.selectedVal = val;
-                                                    this.open = false;
-                                                    window.location.href = url;
-                                                }
-                                            }" class="relative" @click.away="open = false">
+                                    open: false, 
+                                    selectedVal: '{{ request('per_page', 10) }}',
+                                    selectItem(val, url) {
+                                        this.selectedVal = val;
+                                        this.open = false;
+                                        window.location.href = url;
+                                    }
+                                }" class="relative" @click.away="open = false">
                                 <button type="button" @click="open = !open"
-                                    class="flex items-center justify-between px-3 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm gap-2 min-w-[64px] transition-colors">
+                                    class="flex items-center justify-center gap-1.5 h-[28px] px-2 bg-white border border-slate-200 rounded-md text-xs font-bold text-slate-800 whitespace-nowrap cursor-pointer transition-colors shadow-sm hover:bg-slate-50">
                                     <span x-text="selectedVal"></span>
-                                    <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
+                                    <svg class="w-3 h-3 text-slate-400 transition-transform duration-200 shrink-0"
                                         :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M19 9l-7 7-7-7" />
@@ -214,47 +215,48 @@
                                     x-transition:leave="transition ease-in duration-75"
                                     x-transition:leave-start="opacity-100 scale-100"
                                     x-transition:leave-end="opacity-0 scale-95"
-                                    class="absolute left-0 bottom-full mb-1 w-full bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden"
+                                    class="absolute left-0 bottom-full mb-1 bg-white border border-slate-200 rounded-lg shadow-lg min-w-[70px] z-50 overflow-hidden"
                                     style="display: none;">
                                     <div class="p-1">
                                         <button type="button"
                                             @click="selectItem(10, '{{ request()->fullUrlWithQuery(['per_page' => 10, 'page' => 1]) }}')"
-                                            class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors cursor-pointer"
+                                            class="w-full text-left px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer"
                                             :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 10, 'text-slate-700 hover:bg-slate-50': selectedVal != 10}">10</button>
                                         <button type="button"
                                             @click="selectItem(25, '{{ request()->fullUrlWithQuery(['per_page' => 25, 'page' => 1]) }}')"
-                                            class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors cursor-pointer"
+                                            class="w-full text-left px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer"
                                             :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 25, 'text-slate-700 hover:bg-slate-50': selectedVal != 25}">25</button>
                                         <button type="button"
                                             @click="selectItem(50, '{{ request()->fullUrlWithQuery(['per_page' => 50, 'page' => 1]) }}')"
-                                            class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors cursor-pointer"
+                                            class="w-full text-left px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer"
                                             :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 50, 'text-slate-700 hover:bg-slate-50': selectedVal != 50}">50</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="hidden md:block w-px h-4 bg-slate-200"></div>
+                        <div class="w-px h-3.5 bg-slate-200"></div>
 
-                        <p class="hidden md:block font-medium text-slate-500">
-                            Menampilkan <span class="font-bold text-slate-800">{{ $riwayats->firstItem() ?? 0 }}</span>
-                            sampai <span class="font-bold text-slate-800">{{ $riwayats->lastItem() ?? 0 }}</span>
-                            dari <span class="font-bold text-slate-800">{{ $riwayats->total() }}</span> entri
-                        </p>
+                        <span class="text-xs text-slate-500 whitespace-nowrap">
+                            Menampilkan <strong class="font-bold text-slate-800">{{ $riwayats->firstItem() ?? 0 }}</strong>
+                            sampai <strong class="font-bold text-slate-800">{{ $riwayats->lastItem() ?? 0 }}</strong>
+                            dari <strong class="font-bold text-slate-800">{{ number_format($riwayats->total()) }}</strong> entri
+                        </span>
                     </div>
 
-                    <div class="flex items-center justify-center gap-1.5 w-full md:w-auto">
+                    {{-- Right: Page buttons --}}
+                    <div class="flex items-center gap-1 sm:gap-1.5">
                         @if ($riwayats->onFirstPage())
-                            <button disabled
-                                class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <span
+                                class="text-slate-300 cursor-not-allowed w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                                 </svg>
-                            </button>
+                            </span>
                         @else
                             <a href="{{ $riwayats->previousPageUrl() }}"
-                                class="text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                class="text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                                 </svg>
                             </a>
@@ -264,6 +266,7 @@
                             $startPage = max(1, $riwayats->currentPage() - 1);
                             $endPage = min($riwayats->lastPage(), $riwayats->currentPage() + 1);
 
+                            // Adjust start and end to always show at least 3 pages if possible
                             if ($endPage - $startPage < 2) {
                                 if ($startPage == 1) {
                                     $endPage = min($riwayats->lastPage(), 3);
@@ -275,49 +278,49 @@
 
                         @if($startPage > 1)
                             <a href="{{ $riwayats->url(1) }}"
-                                class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">1</a>
+                                class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-xs w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">1</a>
                             @if($startPage > 2)
-                                <span class="text-slate-400 font-medium text-[13px] w-6 flex items-center justify-center">...</span>
+                                <span class="text-slate-400 font-medium text-xs w-5 flex items-center justify-center">...</span>
                             @endif
                         @endif
 
                         @foreach ($riwayats->getUrlRange($startPage, $endPage) as $page => $url)
                             @if ($page == $riwayats->currentPage())
                                 <span
-                                    class="bg-[#0f1b40] shadow-md shadow-[#0f1b40]/20 text-white font-bold text-[13px] w-8 h-8 flex items-center justify-center rounded-lg transition-colors">{{ $page }}</span>
+                                    class="bg-[#0f1b40] shadow-sm text-white font-bold text-xs w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg transition-colors">{{ $page }}</span>
                             @else
                                 <a href="{{ $url }}"
-                                    class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">{{ $page }}</a>
+                                    class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-xs w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">{{ $page }}</a>
                             @endif
                         @endforeach
 
                         @if($endPage < $riwayats->lastPage())
                             @if($endPage < $riwayats->lastPage() - 1)
-                                <span class="text-slate-400 font-medium text-[13px] w-6 flex items-center justify-center">...</span>
+                                <span class="text-slate-400 font-medium text-xs w-5 flex items-center justify-center">...</span>
                             @endif
                             <a href="{{ $riwayats->url($riwayats->lastPage()) }}"
-                                class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">{{ $riwayats->lastPage() }}</a>
+                                class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-xs w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">{{ $riwayats->lastPage() }}</a>
                         @endif
 
                         @if ($riwayats->hasMorePages())
                             <a href="{{ $riwayats->nextPageUrl() }}"
-                                class="text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                class="text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                 </svg>
                             </a>
                         @else
-                            <button disabled
-                                class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <span
+                                class="text-slate-300 cursor-not-allowed w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                 </svg>
-                            </button>
+                            </span>
                         @endif
                     </div>
                 </div>
             @else
-                <div class="flex-1 flex flex-col items-center justify-center text-center px-6 py-16">
+                <div class="flex-1 flex flex-col items-center justify-center text-center px-6 py-16 min-h-[300px]">
                     <div class="font-semibold text-[15px] text-gray-900">Belum Ada Riwayat Peminjaman</div>
                     <div class="text-[13px] text-gray-500 mt-1.5 max-w-md mx-auto leading-relaxed">
                         Arsip pengajuan peminjaman ruangan yang telah selesai, ditolak, atau dibatalkan akan otomatis tercatat di sini.

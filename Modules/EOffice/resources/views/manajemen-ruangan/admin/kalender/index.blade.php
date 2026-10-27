@@ -303,7 +303,7 @@
     </div>
 
     {{-- Alpine Wrapper Start --}}
-    <div x-data="bookingKalender()" @mouseup.window="stopDrag()" class="w-full min-w-0 max-w-full">
+    <div x-data="bookingKalender()" @mouseup.window="stopDragAbsolute()" class="w-full min-w-0 max-w-full">
 
         {{-- =================== LEGEND =================== --}}
         <div class="flex flex-wrap items-center gap-4 mt-3 mb-5 text-[12px] font-medium text-gray-600">
@@ -477,6 +477,9 @@
                                                 @mousedown.prevent="startDragAbsolute($event, '{{ $ruang->id }}', '{{ addslashes($ruang->nama) }}', '{{ $dateStr }}', {{ $bukaInt }}, {{ $totalHours }}, {{ $eventBoundsJson }})"
                                                 @mousemove.prevent="doDragAbsolute($event)"
                                                 @mouseup.prevent="stopDragAbsolute()"
+                                                @touchstart.passive="handleTouchStart($event)"
+                                                @touchmove.passive="handleTouchMove($event)"
+                                                @touchend="handleTouchEnd($event, '{{ $ruang->id }}', '{{ addslashes($ruang->nama) }}', '{{ $dateStr }}', {{ $bukaInt }}, {{ $totalHours }}, {{ $eventBoundsJson }})"
                                                 @mouseenter="hoverCol = '{{ $dateStr }}_{{ $ruang->id }}'"
                                                 @mouseleave="hoverCol = null; if(isDragging) stopDragAbsolute()"
                                                 :style="hoverCol === '{{ $dateStr }}_{{ $ruang->id }}' && !isDragging ? 'background: #F8FAFC;' : ''"
@@ -713,6 +716,21 @@
                 isSearching: false,
                 suggestions: [],
                 showSuggestions: false,
+                get isPastTime() {
+                    if (!this.tanggal || !this.jam) return false;
+                    let today = new Date();
+                    let todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+                    if (this.tanggal < todayStr) return true;
+                    if (this.tanggal === todayStr) {
+                        let currentHM = String(today.getHours()).padStart(2, '0') + ':' + String(today.getMinutes()).padStart(2, '0');
+                        return this.jam <= currentHM;
+                    }
+                    return false;
+                },
+                get isInvalidTimeRange() {
+                    if (!this.jam || !this.jam_selesai) return false;
+                    return this.jam_selesai <= this.jam;
+                },
                 searchUsers() {
                     if (this.searchQuery.length < 2) {
                         this.suggestions = [];
@@ -787,7 +805,9 @@
                             </button>
                         </div>
 
-                        <form id="expressBookingForm" method="POST" action="{{ route('eoffice.peminjaman.admin.kalender-global.express') }}" class="flex flex-col flex-1 min-h-0" autocomplete="off">
+                        <form id="expressBookingForm" method="POST" action="{{ route('eoffice.peminjaman.admin.kalender-global.express') }}"
+                            @submit="if(isInvalidTimeRange) { $event.preventDefault(); return false; }"
+                            class="flex flex-col flex-1 min-h-0" autocomplete="off">
                             @csrf
                             <input type="hidden" name="ruangan_id" x-model="ruangan_id">
                             <input type="hidden" name="tanggal" x-model="tanggal">
@@ -843,6 +863,16 @@
                                                     class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800"
                                                     :required="modeAction === 'internal'" :disabled="modeAction !== 'internal'">
                                             </div>
+                                        </div>
+
+                                        <div x-show="isInvalidTimeRange" x-cloak
+                                            class="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl font-medium mt-2">
+                                            Jam selesai tidak boleh mendahului atau sama dengan jam mulai.
+                                        </div>
+
+                                        <div x-show="!isInvalidTimeRange && isPastTime" x-cloak
+                                            class="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl font-medium mt-2">
+                                            <strong>Perhatian:</strong> Waktu jadwal telah berlalu. Tetap dapat disimpan sebagai rekap susulan (privilege Admin).
                                         </div>
                                     </div>
 
@@ -974,6 +1004,16 @@
                                         </div>
                                     </div>
 
+                                    <div x-show="isInvalidTimeRange" x-cloak
+                                        class="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl font-medium mt-2">
+                                        Jam selesai tidak boleh mendahului atau sama dengan jam mulai.
+                                    </div>
+
+                                    <div x-show="!isInvalidTimeRange && isPastTime" x-cloak
+                                        class="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl font-medium mt-2">
+                                        <strong>Perhatian:</strong> Waktu peminjaman telah berlalu. Tetap dapat disimpan sebagai rekap susulan (privilege Admin).
+                                    </div>
+
                                     {{-- Nama Kegiatan --}}
                                     <div class="space-y-1.5">
                                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Kegiatan <span class="text-red-500">*</span></label>
@@ -1041,7 +1081,9 @@
                                     Batal
                                 </button>
                                 <button type="submit"
-                                    class="px-6 py-2.5 text-sm font-semibold text-white bg-[#0B266E] rounded-xl hover:bg-[#091F5E] focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 shadow-lg shadow-[#0B266E]/20 transition-all text-center flex items-center justify-center cursor-pointer">
+                                    :disabled="isInvalidTimeRange"
+                                    :class="isInvalidTimeRange ? 'opacity-50 cursor-not-allowed bg-slate-400 shadow-none' : 'bg-[#0B266E] hover:bg-[#091F5E] shadow-lg shadow-[#0B266E]/20 cursor-pointer'"
+                                    class="px-6 py-2.5 text-sm font-semibold text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 transition-all text-center flex items-center justify-center">
                                     Simpan
                                 </button>
                             </div>
@@ -1055,7 +1097,9 @@
                             Batal
                         </button>
                         <button type="submit" form="expressBookingForm"
-                            class="px-6 py-2.5 text-sm font-semibold text-white bg-[#0B266E] rounded-xl hover:bg-[#091F5E] focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 shadow-lg shadow-[#0B266E]/20 transition-all text-center flex items-center justify-center cursor-pointer">
+                            :disabled="isInvalidTimeRange"
+                            :class="isInvalidTimeRange ? 'opacity-50 cursor-not-allowed bg-slate-400 shadow-none' : 'bg-[#0B266E] hover:bg-[#091F5E] shadow-lg shadow-[#0B266E]/20 cursor-pointer'"
+                            class="px-6 py-2.5 text-sm font-semibold text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 transition-all text-center flex items-center justify-center">
                             Simpan
                         </button>
                     </div>
@@ -1101,6 +1145,11 @@
                         if (newScrollWrapper) {
                             newScrollWrapper.scrollLeft = currentScroll;
                         }
+
+                        // Inisialisasi ulang Alpine agar tombol dan event handler tetap aktif
+                        if (window.Alpine) {
+                            window.Alpine.initTree(currentContainer);
+                        }
                     }
                 })
                 .catch(err => console.error('Polling error:', err));
@@ -1122,6 +1171,94 @@
                 dragCurrentY: 0,
                 bukaJam: 0,
                 totalDurasiJam: 0,
+
+                // Touch tracking for mobile
+                touchStartX: 0,
+                touchStartY: 0,
+                touchMoved: false,
+
+                handleTouchStart(e) {
+                    if (e.touches && e.touches.length === 1) {
+                        this.touchStartX = e.touches[0].clientX;
+                        this.touchStartY = e.touches[0].clientY;
+                        this.touchMoved = false;
+                    }
+                },
+
+                handleTouchMove(e) {
+                    if (e.touches && e.touches.length === 1) {
+                        let dx = Math.abs(e.touches[0].clientX - this.touchStartX);
+                        let dy = Math.abs(e.touches[0].clientY - this.touchStartY);
+                        if (dx > 8 || dy > 8) {
+                            this.touchMoved = true;
+                        }
+                    }
+                },
+
+                handleTouchEnd(e, roomId, roomName, date, bukaInt, totalHours, eventBounds = []) {
+                    // Jika layar sedang di-scroll (horizontal/vertikal), abaikan
+                    if (this.touchMoved) return;
+
+                    // Jika menyentuh kotak event yang sudah ada, biarkan event box yang membuka modal detail
+                    if (e.target && e.target.closest && e.target.closest('.cursor-pointer') && e.target !== e.currentTarget) {
+                        return;
+                    }
+
+                    let rect = e.currentTarget.getBoundingClientRect();
+                    let y = this.touchStartY - rect.top;
+
+                    this.selectSingleTap(roomId, roomName, date, bukaInt, totalHours, y, eventBounds);
+                },
+
+                selectSingleTap(roomId, roomName, date, bukaInt, totalHours, y, eventBounds = []) {
+                    let snapMin = Math.floor(y / 15) * 15;
+                    if (snapMin < 0) snapMin = 0;
+                    if (snapMin >= totalHours * 60) snapMin = (totalHours * 60) - 15;
+
+                    // Cek apakah klik berada di dalam event yang sudah ada
+                    for (let bound of eventBounds) {
+                        if (snapMin >= bound[0] && snapMin < bound[1]) {
+                            return;
+                        }
+                    }
+
+                    // Tentukan durasi default 1 jam (60 menit)
+                    let startMin = snapMin;
+                    let endMin = startMin + 60;
+
+                    // Batasi jika menabrak event lain di bawahnya atau jam tutup
+                    let maxAllowedY = totalHours * 60;
+                    for (let bound of eventBounds) {
+                        if (bound[0] >= startMin && bound[0] < maxAllowedY) {
+                            maxAllowedY = bound[0];
+                        }
+                    }
+                    if (endMin > maxAllowedY) {
+                        endMin = maxAllowedY;
+                    }
+                    if (endMin <= startMin) {
+                        return;
+                    }
+
+                    let sH = Math.floor(startMin / 60) + bukaInt;
+                    let sM = Math.floor(startMin % 60);
+                    let eH = Math.floor(endMin / 60) + bukaInt;
+                    let eM = Math.floor(endMin % 60);
+
+                    let startHStr = String(sH).padStart(2, '0') + ':' + String(sM).padStart(2, '0');
+                    let endHStr = String(eH).padStart(2, '0') + ':' + String(eM).padStart(2, '0');
+
+                    // Dispatch event for Admin Modal (Jalur Tol)
+                    window.dispatchEvent(new CustomEvent('open-jalur-tol', {
+                        detail: {
+                            ruangan_id: roomId,
+                            ruangan_nama: roomName,
+                            tanggal: date,
+                            jam: startHStr,
+                            jam_selesai: endHStr
+                        }
+                    }));
+                },
                 
                 get dragTop() {
                     return Math.min(this.dragStartY, this.dragCurrentY);

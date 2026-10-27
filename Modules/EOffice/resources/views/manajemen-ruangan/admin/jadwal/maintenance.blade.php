@@ -678,7 +678,7 @@
                                                 <polyline points="14 15 17 18 20 15" />
                                                 <line x1="17" y1="18" x2="17" y2="10" />
                                             </svg>
-                                            Baru Dibuat
+                                            Baru Ditambahkan
                                         </div>
                                         @if(request('sort', 'terbaru') === 'terbaru')
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

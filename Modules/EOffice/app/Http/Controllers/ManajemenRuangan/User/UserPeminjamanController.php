@@ -110,6 +110,15 @@ class UserPeminjamanController extends Controller
             return redirect()->back()->withErrors("Peminjaman gagal! Pengajuan harus dilakukan sekurang-kurangnya H-{$batasHMinBooking} dari tanggal pemakaian.");
         }
 
+        // Cek peminjaman jam lampau pada hari yang sama
+        $todayDate = now()->format('Y-m-d');
+        $currentTime = now()->format('H:i');
+        if ($request->tanggal_pinjam === $todayDate && $request->jam_mulai <= $currentTime) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['Jam Terlewat' => 'Waktu mulai peminjaman tidak boleh menggunakan jam yang telah berlalu hari ini.']);
+        }
+
         // Pengecekan Bentrok Jadwal Peminjaman (Global Checks)
         $isConflict = Peminjaman::where('ruangan_id', $request->ruangan_id)
             ->where('tanggal_pinjam', $request->tanggal_pinjam)
@@ -185,7 +194,6 @@ class UserPeminjamanController extends Controller
     {
         Peminjaman::autoExpirePending();
 
-        $mode = $request->get('mode', 'week'); // 'week' or 'month'
         $today = \Carbon\Carbon::today();
 
         // --- Week Mode ---
@@ -193,11 +201,6 @@ class UserPeminjamanController extends Controller
             ? \Carbon\Carbon::parse($request->get('week_start'))
             : $today->copy();
         $weekEnd = $weekStart->copy()->addDays(6);
-
-        // --- Month Mode ---
-        $monthDate = $request->get('month')
-            ? \Carbon\Carbon::parse($request->get('month') . '-01')
-            : $today->copy()->startOfMonth();
 
         // Handle Room Filter & Sensible Default
         $selectedRoomId = $request->get('ruangan_id');
@@ -231,17 +234,8 @@ class UserPeminjamanController extends Controller
             ->whereIn('status', ['menunggu', 'disetujui'])
             ->get(['id', 'user_id', 'ruangan_id', 'tanggal_pinjam', 'jam_mulai', 'jam_selesai', 'status', 'tujuan', 'source', 'source_id']);
 
-        // For month heatmap - count bookings per day
-        $monthStart = $monthDate->copy()->startOfMonth();
-        $monthEnd = $monthDate->copy()->endOfMonth();
-        $monthBookings = Peminjaman::whereBetween('tanggal_pinjam', [$monthStart->format('Y-m-d'), $monthEnd->format('Y-m-d')])
-            ->whereIn('status', ['menunggu', 'disetujui'])
-            ->selectRaw('tanggal_pinjam, count(*) as total')
-            ->groupBy('tanggal_pinjam')
-            ->pluck('total', 'tanggal_pinjam');
-
-        // Ambil Data Hari Libur dan Jam Operasional
-        $holidays = TanggalLibur::whereBetween('tanggal', [$monthStart->format('Y-m-d'), $monthEnd->format('Y-m-d')])
+        // Ambil Data Hari Libur (khusus rentang minggu aktif) dan Jam Operasional
+        $holidays = TanggalLibur::whereBetween('tanggal', [$weekStart->format('Y-m-d'), $weekEnd->format('Y-m-d')])
             ->pluck('keterangan', 'tanggal')->toArray();
         $jamBuka = Pengaturan::where('key', 'jam_buka')->value('value') ?? '08:00';
         $jamTutup = Pengaturan::where('key', 'jam_tutup')->value('value') ?? '16:00';
@@ -269,12 +263,7 @@ class UserPeminjamanController extends Controller
             'internalSchedules',
             'weekStart',
             'weekEnd',
-            'mode',
             'today',
-            'monthDate',
-            'monthStart',
-            'monthEnd',
-            'monthBookings',
             'holidays',
             'jamBuka',
             'jamTutup',
@@ -322,6 +311,16 @@ class UserPeminjamanController extends Controller
         $peminjaman = Peminjaman::where('id', $id)
             ->where('user_id', auth()->id())
             ->firstOrFail();
+
+        // Validasi apakah waktu mulai peminjaman sudah berlalu atau sedang berlangsung
+        $tglPinjam = is_string($peminjaman->tanggal_pinjam)
+            ? $peminjaman->tanggal_pinjam
+            : $peminjaman->tanggal_pinjam->format('Y-m-d');
+        $waktuMulai = \Carbon\Carbon::parse("{$tglPinjam} {$peminjaman->jam_mulai}");
+
+        if (now()->gte($waktuMulai)) {
+            return redirect()->back()->withErrors('Peminjaman yang sedang berlangsung atau sudah lampau tidak dapat dibatalkan. Silakan hubungi Admin jika perlu penyesuaian jadwal.');
+        }
 
         if ($peminjaman->status == 'menunggu' || $peminjaman->status == 'disetujui') {
             $peminjaman->update([

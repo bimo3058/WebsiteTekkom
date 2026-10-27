@@ -68,6 +68,10 @@
                         $isApproved = strtolower($booking->status) === 'disetujui';
                         $tgl = \Carbon\Carbon::parse($booking->tanggal_pinjam);
                         $berkasUrl = $booking->berkas_pendukung ? \Illuminate\Support\Facades\URL::signedRoute('eoffice.peminjaman.user.saya.berkas', ['id' => $booking->id]) : null;
+
+                        $tglStr = is_string($booking->tanggal_pinjam) ? $booking->tanggal_pinjam : $booking->tanggal_pinjam->format('Y-m-d');
+                        $waktuMulai = \Carbon\Carbon::parse("{$tglStr} {$booking->jam_mulai}");
+                        $bisaDibatalkan = now()->lt($waktuMulai);
                     @endphp
 
                     <div class="bg-white rounded-xl border border-[#DFE1E7] hover:border-[#CBD5E1] shadow-sm hover:shadow transition-all overflow-hidden flex flex-col md:flex-row md:items-stretch relative"
@@ -174,19 +178,19 @@
                             <div class="flex items-center gap-2 w-full md:w-auto justify-end">
                                 {{-- Tombol Detail --}}
                                 <button type="button"
-                                        @click='openDetailModal({
-                                            ruangan: "{{ addslashes($booking->ruangan->nama) }}",
-                                            lokasi: "{{ addslashes($booking->ruangan->lokasi ?? 'Gedung Utama') }}",
-                                            lantai: "{{ $booking->ruangan->lantai ?? '-' }}",
-                                            kapasitas: "{{ $booking->ruangan->kapasitas ?? '-' }}",
-                                            tanggal: "{{ $tgl->locale('id')->translatedFormat('l, d F Y') }}",
-                                            jam: "{{ \Carbon\Carbon::parse($booking->jam_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($booking->jam_selesai)->format('H:i') }} WIB",
-                                            tujuan: "{{ addslashes($booking->tujuan) }}",
-                                            telepon: "{{ $booking->nomor_telepon ?? '-' }}",
-                                            status: "{{ $booking->status }}",
-                                            berkas: "{{ $berkasUrl }}",
-                                            diajukan_pada: "{{ $booking->created_at->locale('id')->translatedFormat('d M Y, H:i') }}"
-                                        })'
+                                        @click='openDetailModal({{ json_encode([
+                                            "ruangan" => $booking->ruangan->nama,
+                                            "lokasi" => $booking->ruangan->lokasi ?? "Gedung Utama",
+                                            "lantai" => (string) ($booking->ruangan->lantai ?? "-"),
+                                            "kapasitas" => (string) ($booking->ruangan->kapasitas ?? "-"),
+                                            "tanggal" => $tgl->locale("id")->translatedFormat("l, d F Y"),
+                                            "jam" => \Carbon\Carbon::parse($booking->jam_mulai)->format("H:i") . " - " . \Carbon\Carbon::parse($booking->jam_selesai)->format("H:i") . " WIB",
+                                            "tujuan" => $booking->tujuan,
+                                            "telepon" => $booking->nomor_telepon ?? "-",
+                                            "status" => $booking->status,
+                                            "berkas" => $berkasUrl,
+                                            "diajukan_pada" => $booking->created_at->locale("id")->translatedFormat("d M Y, H:i"),
+                                        ]) }})'
                                         class="h-[34px] px-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-[12px] font-semibold transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
                                         title="Lihat Detail Peminjaman">
                                     <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -198,15 +202,27 @@
 
                                 {{-- Tombol Batalkan --}}
                                 @if(!in_array(strtolower($booking->status), ['dibatalkan', 'ditolak', 'selesai']))
-                                    <button type="button"
-                                            @click="openCancelModal('{{ route('eoffice.peminjaman.user.saya.batal', $booking->id) }}', '{{ addslashes($booking->ruangan->nama) }}', '{{ $tgl->locale('id')->translatedFormat('d M Y') }}')"
-                                            class="h-[34px] px-3 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-600 text-[12px] font-semibold transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
-                                            title="Batalkan Peminjaman">
-                                        <svg class="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                        Batal
-                                    </button>
+                                    @if($bisaDibatalkan)
+                                        <button type="button"
+                                                @click="openCancelModal('{{ route('eoffice.peminjaman.user.saya.batal', $booking->id) }}', '{{ addslashes($booking->ruangan->nama) }}', '{{ $tgl->locale('id')->translatedFormat('d M Y') }}')"
+                                                class="h-[34px] px-3 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-600 text-[12px] font-semibold transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+                                                title="Batalkan Peminjaman">
+                                            <svg class="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                            Batal
+                                        </button>
+                                    @else
+                                        <button type="button"
+                                                disabled
+                                                class="h-[34px] px-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-400 text-[12px] font-semibold flex items-center gap-1.5 cursor-not-allowed opacity-60 shadow-none"
+                                                title="Kegiatan sedang berlangsung atau telah dimulai. Hubungi Admin jika ingin mengubah jadwal.">
+                                            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                            Batal
+                                        </button>
+                                    @endif
                                 @endif
                             </div>
                         </div>

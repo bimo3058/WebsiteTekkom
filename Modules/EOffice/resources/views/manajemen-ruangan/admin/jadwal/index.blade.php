@@ -898,7 +898,7 @@
                                                 'matkul_asc' => 'Mata Kuliah (A-Z)',
                                                 'matkul_desc' => 'Mata Kuliah (Z-A)',
                                                 'ruangan' => 'Ruangan (A-Z)',
-                                                'terbaru' => 'Waktu Ditambahkan'
+                                                'terbaru' => 'Baru Ditambahkan'
                                             ];
                                             $currentSort = request('sort', 'waktu');
                                         @endphp

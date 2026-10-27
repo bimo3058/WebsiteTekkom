@@ -88,29 +88,13 @@
             }
         }
         
-// Month grid
-        $calendarDays = [];
-        $firstDayOfWeek = (int) $monthStart->format('N'); // 1=Mon ... 7=Sun
-        for ($i = 1; $i < $firstDayOfWeek; $i++)
-            $calendarDays[] = null; // Pad empty cells
-        $curDate = $monthStart->copy();
-        while ($curDate->lte($monthEnd)) {
-            $calendarDays[] = $curDate->copy();
-            $curDate->addDay();
-        }
-
         $prevWeek = $weekStart->copy()->subWeek()->format('Y-m-d');
         $nextWeek = $weekStart->copy()->addWeek()->format('Y-m-d');
-        $prevMonth = $monthDate->copy()->subMonth()->format('Y-m');
-        $nextMonth = $monthDate->copy()->addMonth()->format('Y-m');
 
         // Time travel restrictions
         $now = \Carbon\Carbon::now();
         $currentWeekStart = $now->copy()->startOfWeek(\Carbon\Carbon::MONDAY)->format('Y-m-d');
-        $currentMonthStart = $now->copy()->startOfMonth()->format('Y-m');
-
         $canGoBackWeek = $weekStart->format('Y-m-d') > $currentWeekStart;
-        $canGoBackMonth = $monthDate->format('Y-m') > $currentMonthStart;
     @endphp
 
     {{-- =================== PAGE HEADER =================== --}}
@@ -299,7 +283,7 @@
     </div>
 
     {{-- Alpine Wrapper Start --}}
-    <div x-data="bookingKalender()" @mouseup.window="stopDrag()">
+    <div x-data="bookingKalender()" @mouseup.window="stopDragAbsolute()">
 
         {{-- =================== LEGEND =================== --}}
         <div class="flex flex-wrap items-center gap-4 mt-3 mb-5 text-[12px] font-medium text-gray-600">
@@ -479,6 +463,9 @@
                                                     @mousedown.prevent="startDragAbsolute($event, '{{ $ruang->id }}', '{{ addslashes($ruang->nama) }}', '{{ $dateStr }}', {{ $bukaInt }}, {{ $totalHours }}, {{ $eventBoundsJson }})"
                                                 @mousemove.prevent="doDragAbsolute($event)"
                                                 @mouseup.prevent="stopDragAbsolute()"
+                                                @touchstart.passive="handleTouchStart($event)"
+                                                @touchmove.passive="handleTouchMove($event)"
+                                                @touchend="handleTouchEnd($event, '{{ $ruang->id }}', '{{ addslashes($ruang->nama) }}', '{{ $dateStr }}', {{ $bukaInt }}, {{ $totalHours }}, {{ $eventBoundsJson }})"
                                                 @mouseenter="hoverCol = '{{ $dateStr }}_{{ $ruang->id }}'"
                                                 @mouseleave="hoverCol = null; if(isDragging) stopDragAbsolute()"
                                                 :style="hoverCol === '{{ $dateStr }}_{{ $ruang->id }}' && !isDragging ? 'background: #F8FAFC;' : ''"
@@ -730,6 +717,7 @@
                     </div>
 
                     <form id="bookingForm" method="POST" action="{{ route('eoffice.peminjaman.user.booking.store') }}"
+                        @submit="if(isSubmitDisabled) { $event.preventDefault(); return false; }"
                         enctype="multipart/form-data" class="flex flex-col flex-1 min-h-0" autocomplete="off">
                         @csrf
                         <input type="hidden" name="ruangan_id" :value="selectedRoomId">
@@ -749,6 +737,16 @@
                                     <input type="time" name="jam_selesai" x-model="bookingData.jamSelesai" required
                                         class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
                                 </div>
+                            </div>
+
+                            <div x-show="isInvalidTimeRange" x-cloak
+                                class="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl font-medium">
+                                Jam selesai tidak boleh mendahului atau sama dengan jam mulai.
+                            </div>
+
+                            <div x-show="!isInvalidTimeRange && isPastTimeToday" x-cloak
+                                class="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl font-medium">
+                                Waktu mulai tidak boleh menggunakan jam yang telah berlalu hari ini.
                             </div>
 
                             {{-- Identitas Peminjam --}}
@@ -816,7 +814,9 @@
                                     Batal
                                 </button>
                                 <button type="submit"
-                                    class="px-6 py-2.5 text-sm font-semibold text-white bg-[#0B266E] rounded-xl hover:bg-[#091F5E] focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 shadow-lg shadow-[#0B266E]/20 transition-all text-center flex items-center justify-center cursor-pointer">
+                                    :disabled="isSubmitDisabled"
+                                    :class="isSubmitDisabled ? 'opacity-50 cursor-not-allowed bg-slate-400 shadow-none' : 'bg-[#0B266E] hover:bg-[#091F5E] shadow-lg shadow-[#0B266E]/20 cursor-pointer'"
+                                    class="px-6 py-2.5 text-sm font-semibold text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 transition-all text-center flex items-center justify-center">
                                     Kirim Pengajuan
                                 </button>
                             </div>
@@ -830,7 +830,9 @@
                             Batal
                         </button>
                         <button type="submit" form="bookingForm"
-                            class="px-6 py-2.5 text-sm font-semibold text-white bg-[#0B266E] rounded-xl hover:bg-[#091F5E] focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 shadow-lg shadow-[#0B266E]/20 transition-all text-center flex items-center justify-center cursor-pointer">
+                            :disabled="isSubmitDisabled"
+                            :class="isSubmitDisabled ? 'opacity-50 cursor-not-allowed bg-slate-400 shadow-none' : 'bg-[#0B266E] hover:bg-[#091F5E] shadow-lg shadow-[#0B266E]/20 cursor-pointer'"
+                            class="px-6 py-2.5 text-sm font-semibold text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 transition-all text-center flex items-center justify-center">
                             Kirim Pengajuan
                         </button>
                     </div>
@@ -874,6 +876,11 @@
                             let newScrollWrapper = currentContainer.querySelector('#table-scroll-container');
                             if (newScrollWrapper) {
                                 newScrollWrapper.scrollLeft = currentScroll;
+                            }
+
+                            // Inisialisasi ulang Alpine agar tombol dan event handler tetap aktif
+                            if (window.Alpine) {
+                                window.Alpine.initTree(currentContainer);
                             }
                         }
                     })
@@ -923,6 +930,24 @@
                     return `${String(sH).padStart(2,'0')}:${String(sM).padStart(2,'0')} - ${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}`;
                 },
                 
+                get isPastTimeToday() {
+                    if (!this.selectedDate || !this.bookingData.jamMulai) return false;
+                    let today = new Date();
+                    let todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+                    if (this.selectedDate !== todayStr) return false;
+                    let currentHM = String(today.getHours()).padStart(2, '0') + ':' + String(today.getMinutes()).padStart(2, '0');
+                    return this.bookingData.jamMulai <= currentHM;
+                },
+
+                get isInvalidTimeRange() {
+                    if (!this.bookingData.jamMulai || !this.bookingData.jamSelesai) return false;
+                    return this.bookingData.jamSelesai <= this.bookingData.jamMulai;
+                },
+
+                get isSubmitDisabled() {
+                    return this.isPastTimeToday || this.isInvalidTimeRange;
+                },
+
                 bookingData: {
                     roomName: '',
                     waktu: '',
@@ -939,9 +964,115 @@
                 },
                 closeDetailModal() { this.showDetailModal = false; },
 
+                // Touchscreen Tap Properties & Methods
+                touchStartX: 0,
+                touchStartY: 0,
+                touchMoved: false,
+
+                handleTouchStart(e) {
+                    if (e.touches && e.touches.length === 1) {
+                        this.touchStartX = e.touches[0].clientX;
+                        this.touchStartY = e.touches[0].clientY;
+                        this.touchMoved = false;
+                    }
+                },
+
+                handleTouchMove(e) {
+                    if (e.touches && e.touches.length === 1) {
+                        let dx = Math.abs(e.touches[0].clientX - this.touchStartX);
+                        let dy = Math.abs(e.touches[0].clientY - this.touchStartY);
+                        if (dx > 8 || dy > 8) {
+                            this.touchMoved = true;
+                        }
+                    }
+                },
+
+                handleTouchEnd(e, roomId, roomName, date, bukaInt, totalHours, eventBounds = []) {
+                    // Jika layar sedang di-scroll (horizontal/vertikal), abaikan
+                    if (this.touchMoved) return;
+
+                    // Jika menyentuh kotak event yang sudah ada, biarkan event box yang membuka modal detail
+                    if (e.target && e.target.closest && e.target.closest('.cursor-pointer') && e.target !== e.currentTarget) {
+                        return;
+                    }
+
+                    let rect = e.currentTarget.getBoundingClientRect();
+                    let y = this.touchStartY - rect.top;
+
+                    this.selectSingleTap(roomId, roomName, date, bukaInt, totalHours, y, eventBounds);
+                },
+
+                selectSingleTap(roomId, roomName, date, bukaInt, totalHours, y, eventBounds = []) {
+                    let snapMin = Math.floor(y / 15) * 15;
+                    if (snapMin < 0) snapMin = 0;
+                    if (snapMin >= totalHours * 60) snapMin = (totalHours * 60) - 15;
+
+                    // Cek batas waktu lampau hari ini
+                    let today = new Date();
+                    let todayYmd = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+                    let minAllowedY = 0;
+                    if (date === todayYmd) {
+                        minAllowedY = (today.getHours() * 60 + today.getMinutes()) - (bukaInt * 60);
+                    }
+                    if (snapMin < minAllowedY) {
+                        if (typeof showCustomToast === 'function') {
+                            showCustomToast('Slot waktu telah berlalu hari ini.');
+                        }
+                        return;
+                    }
+
+                    // Cek apakah klik berada di dalam event yang sudah ada
+                    for (let bound of eventBounds) {
+                        if (snapMin >= bound[0] && snapMin < bound[1]) {
+                            return;
+                        }
+                    }
+
+                    // Tentukan durasi default 1 jam (60 menit)
+                    let startMin = snapMin;
+                    let endMin = startMin + 60;
+
+                    // Batasi jika menabrak event lain di bawahnya atau jam tutup
+                    let maxAllowedY = totalHours * 60;
+                    for (let bound of eventBounds) {
+                        if (bound[0] >= startMin && bound[0] < maxAllowedY) {
+                            maxAllowedY = bound[0];
+                        }
+                    }
+                    if (endMin > maxAllowedY) {
+                        endMin = maxAllowedY;
+                    }
+                    if (endMin <= startMin) {
+                        return;
+                    }
+
+                    let sH = Math.floor(startMin / 60) + bukaInt;
+                    let sM = Math.floor(startMin % 60);
+                    let eH = Math.floor(endMin / 60) + bukaInt;
+                    let eM = Math.floor(endMin % 60);
+
+                    let startHStr = String(sH).padStart(2, '0') + ':' + String(sM).padStart(2, '0');
+                    let endHStr = String(eH).padStart(2, '0') + ':' + String(eM).padStart(2, '0');
+
+                    this.selectedRoomId = roomId;
+                    this.selectedDate = date;
+                    this.bookingData.roomName = roomName;
+
+                    let d = new Date(date);
+                    let dateStr = d.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                    this.bookingData.waktu = dateStr;
+                    this.bookingData.jamMulai = startHStr;
+                    this.bookingData.jamSelesai = endHStr;
+
+                    this.showModal = true;
+                    document.body.style.overflow = 'hidden';
+                },
+
                 // Absolute Drag Methods
                 startDragAbsolute(e, roomId, roomName, date, bukaInt, totalHours, eventBounds = []) {
                     if (e.button !== 0) return; // Hanya klik kiri
+                    if (this.showModal || this.showDetailModal) return;
                     
                     let rect = e.currentTarget.getBoundingClientRect();
                     let y = e.clientY - rect.top;
