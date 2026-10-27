@@ -211,8 +211,7 @@
                                                 const map = {
                                                     'disetujui': 'Disetujui',
                                                     'ditolak': 'Ditolak',
-                                                    'dibatalkan': 'Dibatalkan',
-                                                    'selesai': 'Selesai'
+                                                    'dibatalkan': 'Dibatalkan'
                                                 };
                                                 return map[this.selectedVal] || 'Semua Status';
                                             },
@@ -239,7 +238,6 @@
                                                 <button type="button" @click="selectItem('disetujui')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'disetujui', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'disetujui'}">Disetujui</button>
                                                 <button type="button" @click="selectItem('ditolak')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'ditolak', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'ditolak'}">Ditolak</button>
                                                 <button type="button" @click="selectItem('dibatalkan')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'dibatalkan', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'dibatalkan'}">Dibatalkan</button>
-                                                <button type="button" @click="selectItem('selesai')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'selesai', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'selesai'}">Selesai</button>
                                             </div>
                                         </div>
                                     </div>
