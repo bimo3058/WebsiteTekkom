@@ -108,12 +108,14 @@ function syncFotoInput() {
 }
 
 // ── Multi-File Upload: Dokumen ──
+// Batas total dokumen — satu sumber dengan validasi server (KegiatanController::MAKS_DOKUMEN).
+const MAKS_DOKUMEN = {{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_DOKUMEN }};
 let dokumenFiles = [];
 
 function handleDokumenSelect(input) {
     const newFiles = Array.from(input.files);
     newFiles.forEach(file => {
-        if (dokumenFiles.length >= 2) return;
+        if (dokumenFiles.length >= MAKS_DOKUMEN) return;
         dokumenFiles.push(file);
     });
     renderDokumenPreviews();
@@ -177,7 +179,7 @@ function formatFileSize(bytes) {
             renderFotoPreviews();
             syncFotoInput();
         } else {
-            Array.from(files).forEach(f => { if (dokumenFiles.length < 2) dokumenFiles.push(f); });
+            Array.from(files).forEach(f => { if (dokumenFiles.length < MAKS_DOKUMEN) dokumenFiles.push(f); });
             renderDokumenPreviews();
             syncDokumenInput();
         }

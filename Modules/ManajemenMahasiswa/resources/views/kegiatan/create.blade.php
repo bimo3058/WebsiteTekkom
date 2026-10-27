@@ -732,7 +732,7 @@
 
     <!-- Dokumen Kegiatan -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen Kegiatan <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks 2 dokumen)</span></div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen Kegiatan <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks {{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_DOKUMEN }} dokumen)</span></div>
 
         <div class="file-upload-area" id="dokumenUploadArea" onclick="document.getElementById('dokumenInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></div>
@@ -856,12 +856,14 @@ function syncFotoInput() {
 }
 
 // ── Multi-File Upload: Dokumen ──
+// Batas total dokumen — satu sumber dengan validasi server (KegiatanController::MAKS_DOKUMEN).
+const MAKS_DOKUMEN = {{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_DOKUMEN }};
 let dokumenFiles = [];
 
 function handleDokumenSelect(input) {
     const newFiles = Array.from(input.files);
     newFiles.forEach(file => {
-        if (dokumenFiles.length >= 2) return;
+        if (dokumenFiles.length >= MAKS_DOKUMEN) return;
         dokumenFiles.push(file);
     });
     renderDokumenPreviews();
@@ -925,7 +927,7 @@ function formatFileSize(bytes) {
             renderFotoPreviews();
             syncFotoInput();
         } else {
-            Array.from(files).forEach(f => { if (dokumenFiles.length < 2) dokumenFiles.push(f); });
+            Array.from(files).forEach(f => { if (dokumenFiles.length < MAKS_DOKUMEN) dokumenFiles.push(f); });
             renderDokumenPreviews();
             syncDokumenInput();
         }

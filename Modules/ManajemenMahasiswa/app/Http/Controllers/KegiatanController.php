@@ -23,9 +23,19 @@ use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class KegiatanController extends Controller
 {
-    /** Batas jumlah foto & dokumen yang boleh tersimpan pada satu kegiatan. */
+    /**
+     * Batas jumlah foto & dokumen yang boleh tersimpan pada satu kegiatan.
+     *
+     * Dokumen = 10. Tiap proker memuat Proposal, RAB, notulensi acara, dan LPJ, ditambah
+     * surat undangan yang bisa lebih dari satu (satu surat per dosen/tamu) dan proposal
+     * MoU bila kerja sama sponsor — jadi jumlah file = 4 + undangan (+ MoU), bukan 5 tetap
+     * (keterangan Ketua Bidang Ristek, 26 Okt 2026). Maksimal undangan yang pernah dibuat
+     * belum diketahui; 10 memberi ruang sampai 5 undangan + MoU. Public karena angkanya
+     * juga dipakai form (label & JavaScript) dan PelaksanaanController — satu sumber
+     * supaya batas di server dan di layar tidak pernah berbeda.
+     */
     private const MAKS_FILE = 10;
-    private const MAKS_DOKUMEN = 2;
+    public const MAKS_DOKUMEN = 10;
 
     public function __construct(
         private RepoMulmedService $repoMulmedService,

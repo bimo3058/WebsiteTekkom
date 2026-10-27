@@ -45,6 +45,8 @@
             .cvb-stepper-track { background: var(--c-grey-50); }
             .cvb-step-btn { background: #ffffff; border: 2px solid var(--c-border-strong); color: var(--c-fg-muted); }
             .cvb-step-btn:disabled { cursor: not-allowed; }
+            .cvb-step-btn:not(:disabled) { cursor: pointer; }
+            .cvb-step-btn:not(:disabled):hover { border-color: var(--c-primary); color: var(--c-primary); }
             .cvb-step-label { color: var(--c-fg-muted); }
             .cvb-step-label.is-reached { color: var(--c-fg); }
             /* Di layar sempit keenam label bertumpuk dan label tepi terpotong, jadi
@@ -56,18 +58,48 @@
                 .cvb-step-mobile { display: block; margin-top: 14px; }
             }
 
-            .cvb-title { margin: 0 0 20px; color: var(--c-fg); font-size: 15px; font-weight: 700; }
+            .cvb-title-row { position: relative; display: flex; align-items: center; gap: 6px; margin: 0 0 20px; }
+            .cvb-title { margin: 0; color: var(--c-fg); font-size: 15px; font-weight: 700; }
             .cvb-heading { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; color: var(--c-fg); font-size: 13px; font-weight: 700; }
             .cvb-heading.is-sync { color: var(--c-fg-sec); }
             .cvb-section { padding-top: 24px; border-top: 1px solid var(--c-border); }
 
-            .cvb-note {
-                display: flex; align-items: flex-start; gap: 10px; margin-bottom: 24px; padding: 12px 14px;
-                background: var(--c-primary-subtle); border: 1px solid rgba(11, 38, 110, 0.12); border-radius: 10px;
-                color: var(--c-fg-sec); font-size: 12px; line-height: 1.6;
+            /* Ikon ⓘ di samping judul langkah: keterangannya baru tampil saat ikon
+               di-hover / difokus / ditekan (HP), bukan kotak yang selalu terbuka. */
+            .cvb-info-btn {
+                display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0;
+                border: none; border-radius: 6px; background: transparent; color: var(--c-fg-muted); cursor: help;
+                transition: background-color 0.15s, color 0.15s;
             }
-            .cvb-note > span:first-child { flex-shrink: 0; margin-top: 1px; color: var(--c-primary); }
-            .cvb-note strong { color: var(--c-primary); }
+            .cvb-info-btn:hover, .cvb-info-btn:focus-visible { background: var(--c-grey-50); color: var(--c-primary); outline: none; }
+            .cvb-info-pop { position: absolute; top: 100%; left: 0; z-index: 40; width: min(440px, 100%); padding-top: 4px; }
+            .cvb-info-bubble {
+                padding: 10px 12px; border-radius: 8px; background: var(--c-fg); color: #ffffff;
+                font-size: 12px; font-weight: 400; line-height: 1.6; box-shadow: 0 6px 20px rgba(13, 13, 18, 0.18);
+            }
+            .cvb-info-bubble strong { font-weight: 700; }
+            /* Tautan ke submenu SIMENMA: putih bergaris bawah supaya jelas bisa diklik */
+            .cvb-info-bubble a { color: #ffffff; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+            .cvb-info-bubble a:hover { text-decoration-thickness: 2px; }
+            .cvb-info-bubble a:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; border-radius: 2px; }
+
+            /* Daftar Auto-Sync: satu bentuk di semua langkah; daftar panjang menggulir di dalamnya */
+            .cvb-sync-list { max-height: 400px; overflow-y: auto; }
+
+            /* Dropdown pilihan (partials/_pilihan & _pilih-lainnya). Gaya tetap ada di kelas,
+               bukan inline: :style milik Alpine menimpa seluruh atribut style, sehingga
+               huruf menu sempat kembali ke bawaan browser. */
+            .cvb-select-btn { cursor: pointer; }
+            .cvb-select-btn.is-open { border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.08); }
+            .cvb-opt {
+                display: block; width: 100%; padding: 6px 12px; border: none; background: none; text-align: left;
+                color: var(--c-fg-sec); font-family: inherit; font-size: 13px; font-weight: 400; cursor: pointer;
+                transition: background-color 0.15s;
+            }
+            .cvb-opt:hover { background: var(--c-bg); }
+            .cvb-opt.is-selected { background: rgba(11, 38, 110, 0.04); color: var(--c-primary); font-weight: 600; }
+            .cvb-opt.is-last { border-top: 1px solid var(--c-border); }
+            .cvb-opt-group { margin: 0; padding: 8px 12px 4px; color: var(--c-fg-muted); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 
             .cvb-item {
                 display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 14px 16px;
@@ -77,6 +109,7 @@
             .cvb-item-title { margin: 0; color: var(--c-fg); font-size: 13px; font-weight: 700; }
             .cvb-item-sub { margin: 0; color: var(--c-fg-sec); font-size: 13px; }
             .cvb-item.is-sync .cvb-item-sub { color: var(--c-primary); font-weight: 500; }
+            .cvb-item-level { margin: 0; color: var(--c-primary); font-size: 13px; }
             .cvb-item-meta { margin: 4px 0 0; color: var(--c-fg-muted); font-size: 11px; }
             .cvb-item-desc { margin: 8px 0 0; color: var(--c-fg-sec); font-size: 12px; line-height: 1.6; }
             .cvb-item-link { display: inline-block; margin-top: 4px; color: var(--c-primary); font-size: 11px; font-weight: 600; }
@@ -87,6 +120,24 @@
                 color: var(--c-fg-muted); font-size: 12px; font-style: italic; text-align: center;
             }
             .cvb-add { padding: 20px; background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 10px; }
+            .cvb-add-foot { margin-top: 16px; }
+
+            /* Tombol "Tambah …" di semua langkah: satu bentuk, ikon + label, ukuran
+               tombol SITKOM (12px/600, sudut 8px, tinggi 34px — seperti Import Users
+               di User Management). Navy dipakai khusus "Simpan & Lanjut". */
+            .cvb-add-btn {
+                display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px;
+                border: 1px solid var(--c-border); border-radius: 8px; background: #ffffff; color: var(--c-fg-sec);
+                font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+                transition: background-color 0.15s, border-color 0.15s;
+            }
+            .cvb-add-btn:hover { background: var(--c-bg); border-color: var(--c-border-strong); }
+            .cvb-add-btn:focus-visible { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.08); }
+
+            /* Pesan galat per kolom (muncul saat Tambah ditekan dengan isian kurang) */
+            .cvb-field-error { margin: 4px 0 0; color: var(--c-error); font-size: 12px; line-height: 1.4; }
+            .cvb-link { color: var(--c-primary); font-weight: 600; text-decoration: none; }
+            .cvb-link:hover { text-decoration: underline; }
 
             /* Chip bentuk role-badge SITKOM ukuran xs (components/ui/role-badge) */
             .cvb-chip {
@@ -94,7 +145,6 @@
                 border-radius: 9999px; background: var(--c-primary-subtle); color: var(--c-primary);
                 font-size: 9px; font-weight: 700; line-height: 1.5; letter-spacing: 0.02em; text-transform: uppercase; white-space: nowrap;
             }
-            .cvb-chip.is-neutral { background: var(--c-grey-50); border-color: var(--c-border); color: var(--c-fg-sec); }
 
             /* Kotak baca-saja (data SSO) — rupa .form-control-custom:disabled */
             .cvb-readonly { display: flex; align-items: center; gap: 8px; background-color: var(--c-bg); color: var(--c-fg-muted); cursor: not-allowed; }
@@ -111,7 +161,7 @@
         </style>
         @include('manajemenmahasiswa::partials.sitkom-ui')
 
-        <div class="cvb-wrap" x-data="cvWizard()">
+        <div class="cvb-wrap" x-data="cvWizard(@js($sudahPunyaCv))">
             <div class="cvb-box">
                 <div class="cvb-box-header">
                     <x-page-header title="CV Builder" subtitle="Lengkapi data Anda untuk menghasilkan CV profesional.">
@@ -142,8 +192,7 @@
                                         :class="step > index + 1 ? 'shadow-md' : (step === index + 1 ? 'shadow-sm scale-110' : '')"
                                         :style="step > index + 1 ? 'background: var(--c-primary); border-color: var(--c-primary); color: #fff;' : (step === index + 1 ? 'border: 4px solid var(--c-primary); color: var(--c-primary);' : '')"
                                         :disabled="index + 1 > maxStep">
-                                        <template x-if="step > index + 1"><x-icon name="check" size="18" /></template>
-                                        <template x-if="step <= index + 1"><span x-text="index + 1"></span></template>
+                                        <span x-text="index + 1"></span>
                                     </button>
                                     <span
                                         class="cvb-step-label absolute top-12 whitespace-nowrap text-[11px] font-bold tracking-wide uppercase transition-colors duration-300"
@@ -238,10 +287,12 @@
     </x-sidebar>
 
     <script>
-        function cvWizard() {
+        // $sudahPunyaCv: CV pernah disimpan → semua langkah langsung bisa dibuka lewat
+        // stepper. Pengguna baru tetap berurutan (langkah di depan terkunci).
+        function cvWizard(sudahPunyaCv = false) {
             return {
                 step: 1,
-                maxStep: 1,
+                maxStep: sudahPunyaCv ? 6 : 1,
                 loading: false,
                 error: false,
                 errorMsg: '',
@@ -273,6 +324,38 @@
                     prestasi_sync: []
                 },
 
+                // Pesan galat formulir "tambah manual": { newEdu: { institusi: '…' }, … }
+                errors: {},
+
+                // Kolom pilihan yang sedang memakai "Lainnya" (isi sendiri): { 'newLang.nama': true }
+                lainnya: {},
+
+                // Daftar Auto-Sync dinormalkan ke { judul, sub, meta } supaya semua langkah
+                // memakai satu tampilan (partials/_sync-list).
+                get syncPendidikan() {
+                    return this.data.pendidikan_sync.map((e) => ({
+                        judul: e.institusi, sub: e.jurusan, meta: this.rentang(e.tahun_masuk, e.tahun_lulus),
+                    }));
+                },
+                get syncPengalaman() {
+                    return this.data.pengalaman_sync.map((e) => ({
+                        judul: e.posisi, sub: e.perusahaan, meta: this.rentang(e.tahun_mulai, e.tahun_selesai),
+                    }));
+                },
+                get syncKegiatan() {
+                    return this.data.kegiatan_sync.map((k) => ({ judul: k.nama, sub: `Peran: ${k.peran}`, meta: '' }));
+                },
+                get syncPrestasi() {
+                    return this.data.prestasi_sync.map((p) => ({
+                        judul: p.nama,
+                        sub: `Tingkat: ${p.tingkat ? p.tingkat.charAt(0).toUpperCase() + p.tingkat.slice(1) : '-'}`,
+                        meta: p.tahun ? `Tahun ${p.tahun}` : '',
+                    }));
+                },
+                rentang(mulai, selesai) {
+                    return mulai ? `${mulai} - ${selesai || 'Sekarang'}` : '';
+                },
+
                 // UI Helpers for Arrays
                 newEdu: { institusi: '', jurusan: '', tahun_masuk: '', tahun_lulus: '' },
                 newExp: { perusahaan: '', posisi: '', tahun_mulai: '', tahun_selesai: '', deskripsi: '' },
@@ -289,6 +372,7 @@
                 async loadStepData(targetStep) {
                     this.loading = true;
                     this.error = false;
+                    this.errors = {};
 
                     try {
                         const response = await fetch(`/profile/cv/step/${targetStep}`);
@@ -430,20 +514,74 @@
                     }
                 },
 
+                // Galat per kolom formulir "tambah manual"
+                hasError(form, name) {
+                    return !!(this.errors[form] && this.errors[form][name]);
+                },
+                clearError(form, name) {
+                    if (!this.hasError(form, name)) return;
+                    const { [name]: _dibuang, ...sisa } = this.errors[form];
+                    this.errors[form] = sisa;
+                },
+
+                // Tambahkan satu baris dari formulir `form` ke daftar `daftar`.
+                // `aturan` memetakan kolom → cek: 'wajib' | 'tahun' | 'url' (boleh digabung).
+                // Kolom yang gagal diberi pesan di bawah kotaknya — sebelumnya tombol
+                // Tambah diam saja bila isian kurang, sehingga tampak rusak.
+                // `bawaan` = nilai awal kolom setelah formulir dikosongkan (mis. level).
+                tambah(form, daftar, aturan, bawaan = {}) {
+                    const baris = Object.fromEntries(
+                        Object.entries(this[form]).map(([k, v]) => [k, typeof v === 'string' ? v.trim() : v])
+                    );
+                    const galat = {};
+                    for (const [kolom, cek] of Object.entries(aturan)) {
+                        const nilai = baris[kolom] ?? '';
+                        if (cek.includes('wajib') && nilai === '') galat[kolom] = 'Wajib diisi.';
+                        else if (cek.includes('tahun') && nilai !== '' && !/^(19|20)\d{2}$/.test(nilai)) galat[kolom] = 'Isi dengan 4 digit tahun, mis. 2024.';
+                        else if (cek.includes('url') && nilai !== '' && !/^https?:\/\//i.test(nilai)) galat[kolom] = 'Awali dengan https://, mis. https://github.com/nama.';
+                    }
+                    this.errors[form] = galat;
+                    if (Object.keys(galat).length) return;
+
+                    this.data.cv[daftar].push(baris);
+                    this[form] = Object.fromEntries(Object.keys(baris).map((k) => [k, bawaan[k] ?? '']));
+                    this.lainnya = Object.fromEntries(Object.entries(this.lainnya).filter(([k]) => !k.startsWith(`${form}.`)));
+                },
+
+                // Kolom "pilih dari daftar umum, atau Lainnya" (partials/_pilih-lainnya)
+                pilihOpsi(form, name, nilai) {
+                    this[form][name] = nilai;
+                    this.lainnya[`${form}.${name}`] = false;
+                    this.clearError(form, name);
+                },
+                pilihLainnya(form, name) {
+                    this[form][name] = '';
+                    this.lainnya[`${form}.${name}`] = true;
+                    this.clearError(form, name);
+                    this.$nextTick(() => document.getElementById(`cvb-${form}-${name}`)?.focus());
+                },
+
+                // Enter di kotak isian = Tambah (di textarea Enter tetap pindah baris)
+                enterTambah(event, metode) {
+                    if (event.target.tagName !== 'INPUT') return;
+                    event.preventDefault();
+                    this[metode]();
+                },
+
                 // Array Helpers
                 addEdu() {
-                    if (!this.newEdu.institusi || !this.newEdu.jurusan) return;
-                    this.data.cv.pendidikan.push({ ...this.newEdu });
-                    this.newEdu = { institusi: '', jurusan: '', tahun_masuk: '', tahun_lulus: '' };
+                    this.tambah('newEdu', 'pendidikan', {
+                        institusi: ['wajib'], jurusan: ['wajib'], tahun_masuk: ['tahun'], tahun_lulus: ['tahun'],
+                    });
                 },
                 removeEdu(index) {
                     this.data.cv.pendidikan.splice(index, 1);
                 },
 
                 addExp() {
-                    if (!this.newExp.perusahaan || !this.newExp.posisi) return;
-                    this.data.cv.pengalaman_kerja.push({ ...this.newExp });
-                    this.newExp = { perusahaan: '', posisi: '', tahun_mulai: '', tahun_selesai: '', deskripsi: '' };
+                    this.tambah('newExp', 'pengalaman_kerja', {
+                        posisi: ['wajib'], perusahaan: ['wajib'], tahun_mulai: ['tahun'], tahun_selesai: ['tahun'],
+                    });
                 },
                 removeExp(index) {
                     this.data.cv.pengalaman_kerja.splice(index, 1);
@@ -459,36 +597,32 @@
                 },
 
                 addProj() {
-                    if (!this.newProj.nama || !this.newProj.deskripsi) return;
-                    this.data.cv.proyek.push({ ...this.newProj });
-                    this.newProj = { nama: '', peran: '', tahun: '', deskripsi: '', tautan: '' };
+                    this.tambah('newProj', 'proyek', {
+                        nama: ['wajib'], deskripsi: ['wajib'], tahun: ['tahun'], tautan: ['url'],
+                    });
                 },
                 removeProj(index) {
                     this.data.cv.proyek.splice(index, 1);
                 },
 
                 addCert() {
-                    if (!this.newCert.nama || !this.newCert.penerbit) return;
-                    this.data.cv.sertifikasi.push({ ...this.newCert });
-                    this.newCert = { nama: '', penerbit: '', tahun: '' };
+                    this.tambah('newCert', 'sertifikasi', {
+                        nama: ['wajib'], penerbit: ['wajib'], tahun: ['tahun'],
+                    });
                 },
                 removeCert(index) {
                     this.data.cv.sertifikasi.splice(index, 1);
                 },
 
                 addLang() {
-                    if (!this.newLang.nama || !this.newLang.level) return;
-                    this.data.cv.bahasa.push({ ...this.newLang });
-                    this.newLang = { nama: '', level: 'Menengah (Intermediate)', skor: '' };
+                    this.tambah('newLang', 'bahasa', { nama: ['wajib'] }, { level: 'Menengah (Intermediate)' });
                 },
                 removeLang(index) {
                     this.data.cv.bahasa.splice(index, 1);
                 },
 
                 addSkill() {
-                    if (!this.newSkill.nama) return;
-                    this.data.cv.keahlian.push({ ...this.newSkill });
-                    this.newSkill = { nama: '', level: 'Beginner' };
+                    this.tambah('newSkill', 'keahlian', { nama: ['wajib'] }, { level: 'Beginner' });
                 },
                 removeSkill(index) {
                     this.data.cv.keahlian.splice(index, 1);

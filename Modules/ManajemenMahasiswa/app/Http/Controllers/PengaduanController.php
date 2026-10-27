@@ -100,6 +100,28 @@ class PengaduanController extends Controller
             'pihak' => in_array($pihak, PengaduanPertanyaan::PIHAK, true) ? $pihak : '',
         ];
 
+        // Tautan dari kartu "Masalah berulang" di Statistik: ?cocok[kunci]=jawaban untuk
+        // SEMUA pertanyaan teks kategori, dicocokkan persis (sama dengan cara statistik
+        // menghitung) dan dibatasi periode statistiknya, supaya daftar berisi tepat
+        // pengaduan yang dihitung di sana. Kotak cari menampilkan jawaban pertama; bila
+        // isinya diganti, pencarian kembali bebas.
+        $filters['cocok'] = [];
+        $cocok = $request->query('cocok');
+        if ($isStaff && $filters['kategori'] !== '' && is_array($cocok)) {
+            $kunciTeks = PengaduanPertanyaan::kunciTeks($filters['kategori']);
+            $jawaban = [];
+            foreach ($kunciTeks as $kunci) {
+                $jawaban[$kunci] = is_string($cocok[$kunci] ?? null) ? PengaduanStatistikService::rapikan($cocok[$kunci]) : '';
+            }
+            $lengkap = $kunciTeks !== [] && !in_array('', $jawaban, true);
+            if ($lengkap && mb_strtolower(PengaduanStatistikService::rapikan($filters['q'])) === mb_strtolower(reset($jawaban))) {
+                $filters['cocok'] = $jawaban;
+            }
+        }
+        $periode = (string)$request->query('periode', '');
+        $filters['periode'] = $filters['cocok'] !== [] && array_key_exists($periode, PengaduanStatistikService::PERIODE)
+            ? $periode : '';
+
         $query = Pengaduan::query();
         if ($isStaff) {
             $query->with(['pelapor']);
@@ -131,7 +153,19 @@ class PengaduanController extends Controller
             $query->whereRaw("data_template->>'pihak_terkait' = ?", [$filters['pihak']]);
         }
 
-        if ($filters['q'] !== '') {
+        if ($filters['cocok'] !== []) {
+            foreach ($filters['cocok'] as $kunci => $jawaban) {
+                $query->whereRaw(
+                    "lower(btrim(regexp_replace(data_template->>?, '\\s+', ' ', 'g'))) = ?",
+                    [$kunci, mb_strtolower($jawaban)]
+                );
+            }
+
+            if ($filters['periode'] !== '' && $filters['periode'] !== 'semua') {
+                [$mulai, $selesai] = app(PengaduanStatistikService::class)->rentang($filters['periode']);
+                $query->whereBetween('created_at', [$mulai, $selesai]);
+            }
+        } elseif ($filters['q'] !== '') {
             $q = $filters['q'];
             $query->where(function ($sub) use ($q, $isStaff) {
                 if (ctype_digit($q)) {

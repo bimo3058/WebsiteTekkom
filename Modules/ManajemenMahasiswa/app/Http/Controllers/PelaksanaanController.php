@@ -23,7 +23,8 @@ class PelaksanaanController extends Controller
 {
     /** Batas jumlah foto & dokumen yang boleh tersimpan pada satu kegiatan. */
     private const MAKS_FILE = 10;
-    private const MAKS_DOKUMEN = 2;
+    /** Sama dengan form Laporan & Arsip — diatur di KegiatanController::MAKS_DOKUMEN. */
+    private const MAKS_DOKUMEN = KegiatanController::MAKS_DOKUMEN;
 
     public function __construct(
         private RepoMulmedService $repoMulmedService,

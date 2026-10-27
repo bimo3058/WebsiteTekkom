@@ -1,5 +1,5 @@
 <div>
-    <h3 class="cvb-title">Data Pribadi</h3>
+    @include('profile.cv.partials._judul', ['judul' => 'Data Pribadi'])
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div>
@@ -12,20 +12,22 @@
 
         <div>
             <label class="form-label-custom">Email Publik / Kontak</label>
+            {{-- Nilai ini Email Pribadi dari Settings; baru jatuh ke email SSO bila Email
+                 Pribadi kosong — jadi tanda sumbernya mengikuti nilai yang tampil. --}}
             <div class="form-control-custom cvb-readonly">
                 <span x-text="data.user.personal_email || data.user.email"></span>
-                <span class="cvb-chip">SSO</span>
+                <span class="cvb-chip" x-text="data.user.personal_email ? 'Dari Settings' : 'SSO'"></span>
             </div>
-            <p class="form-hint">Pembaruan email dapat dilakukan melalui menu edit Profil Utama.</p>
+            <p class="form-hint">Ubah Email Pribadi di <a href="{{ route('profile.edit') }}" target="_blank" rel="noopener" class="cvb-link">Settings → Umum</a>.</p>
         </div>
 
         <div>
             <label class="form-label-custom">Kontak / WhatsApp</label>
             <div class="form-control-custom cvb-readonly">
-                <span x-text="data.user.whatsapp || 'Belum diatur di Profil Utama'"></span>
-                <span class="cvb-chip">SSO</span>
+                <span x-text="data.user.whatsapp || 'Belum diatur di Settings'"></span>
+                <span class="cvb-chip" x-show="data.user.whatsapp">Dari Settings</span>
             </div>
-            <p class="form-hint">Pembaruan nomor dapat dilakukan melalui menu edit Profil Utama.</p>
+            <p class="form-hint">Ubah Nomor Telepon di <a href="{{ route('profile.edit') }}" target="_blank" rel="noopener" class="cvb-link">Settings → Umum</a>.</p>
         </div>
 
         <div>
@@ -42,7 +44,7 @@
     </div>
 
     <div class="cvb-section">
-        <label class="form-label-custom">Tentang Diri (Opsional)</label>
+        <label class="form-label-custom">Tentang Diri</label>
         <p class="form-hint mb-3">Tuliskan deskripsi singkat mengenai diri Anda, fokus karir, dan objektif profesional.</p>
         <textarea x-model="data.cv.tentang_diri"
                   rows="5"

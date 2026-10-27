@@ -169,29 +169,44 @@
     </div>
 </form>
 
-{{-- ── CV Builder — menyatu, rata kanan ── --}}
+{{-- ── CV Builder (hanya mahasiswa & alumni) ──
+     Mengikuti bentuk tombol & kartu SITKOM (User Management): tombol 12px/600, sudut 8px,
+     tinggi 34px, ikon + label; semua warna dari token --c-*. Baris dibiarkan membungkus
+     (flex-wrap) supaya tombol turun ke bawah teks di layar sempit, bukan menjepitnya. --}}
 @if($user->hasAnyRole(['mahasiswa', 'alumni']))
-<div style="margin-top:24px;padding-top:20px;border-top:1px solid #f1f5f9;">
-    <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:14px;">CV Builder</p>
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <div>
-            <p style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:2px;display:flex;align-items:center;gap:6px;">
-                <span class="material-symbols-outlined" style="font-size:16px;color:#0B266E;">description</span>
-                CV Builder
-            </p>
-            <p style="font-size:12px;color:#64748b;line-height:1.5;">Buat CV profesional semi-otomatis dari data profil & akademik Anda.</p>
+<style>
+    .cvset { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--c-border); }
+    .cvset-caption { margin: 0 0 14px; color: var(--c-fg-muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .cvset-card { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; padding: 14px 16px; background: #fff; border: 1px solid var(--c-border); border-radius: 10px; }
+    .cvset-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 36px; height: 36px; border-radius: 8px; background: var(--c-primary-subtle, rgba(11, 38, 110, .08)); color: var(--c-primary); }
+    .cvset-icon .material-symbols-outlined { font-size: 20px; }
+    .cvset-text { flex: 1 1 220px; min-width: 0; }
+    .cvset-title { margin: 0 0 2px; color: var(--c-fg); font-size: 13px; font-weight: 600; }
+    .cvset-desc { margin: 0; color: var(--c-fg-sec); font-size: 12px; line-height: 1.5; }
+    .cvset-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .cvset-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box; height: 34px; padding: 0 14px; border: 1px solid var(--c-border); border-radius: 8px; background: #fff; color: var(--c-fg-sec); font-size: 12px; font-weight: 600; text-decoration: none; white-space: nowrap; transition: background-color .15s, border-color .15s; }
+    .cvset-btn:hover { background: var(--c-bg); border-color: var(--c-border-strong); }
+    .cvset-btn.is-primary { border-color: var(--c-primary); background: var(--c-primary); color: #fff; }
+    .cvset-btn.is-primary:hover { border-color: var(--c-primary-hover); background: var(--c-primary-hover); }
+    .cvset-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(11, 38, 110, .12); }
+    .cvset-btn .material-symbols-outlined { font-size: 14px; }
+</style>
+<div class="cvset">
+    <p class="cvset-caption">CV Builder</p>
+    <div class="cvset-card">
+        <span class="cvset-icon"><span class="material-symbols-outlined">description</span></span>
+        <div class="cvset-text">
+            <p class="cvset-title">Buat CV profesional</p>
+            <p class="cvset-desc">Disusun semi-otomatis dari data profil dan akademik Anda.</p>
         </div>
-        <div style="display:flex;flex-direction:row;gap:8px;flex-shrink:0;align-items:center;">
-            <a href="{{ $user->hasRole('mahasiswa') ? route('manajemenmahasiswa.direktori.mahasiswa.profil.cv') : route('manajemenmahasiswa.direktori.alumni.profil.cv') }}" target="_blank"
-                style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:#f1f5f9;color:#374151;font-size:12px;font-weight:600;border-radius:8px;text-decoration:none;white-space:nowrap;border:1px solid #e2e8f0;transition:background .15s;"
-                onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
-                <span class="material-symbols-outlined" style="font-size:14px;">download</span>
+        <div class="cvset-actions">
+            <a href="{{ $user->hasRole('mahasiswa') ? route('manajemenmahasiswa.direktori.mahasiswa.profil.cv') : route('manajemenmahasiswa.direktori.alumni.profil.cv') }}"
+                target="_blank" rel="noopener" class="cvset-btn">
+                <span class="material-symbols-outlined">download</span>
                 Download PDF
             </a>
-            <a href="{{ route('profile.cv.index') }}"
-                style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:#0B266E;color:#fff;font-size:12px;font-weight:600;border-radius:8px;text-decoration:none;white-space:nowrap;transition:background .15s;"
-                onmouseover="this.style.background='#091958'" onmouseout="this.style.background='#0B266E'">
-                <span class="material-symbols-outlined" style="font-size:14px;">edit</span>
+            <a href="{{ route('profile.cv.index') }}" class="cvset-btn is-primary">
+                <span class="material-symbols-outlined">edit</span>
                 Mulai / Edit CV
             </a>
         </div>

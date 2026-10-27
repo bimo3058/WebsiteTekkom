@@ -17,7 +17,49 @@ class CvBuilderController extends Controller
 
     public function index()
     {
-        return view('profile.cv.index');
+        // Baris cv_profiles hanya dibuat saat saveStep() (GET tak membuatnya), jadi
+        // keberadaannya = CV pernah disimpan. Yang sudah punya CV tidak perlu dikunci
+        // per langkah; pengguna baru tetap berurutan.
+        $sudahPunyaCv = CvProfile::where('user_id', auth()->id())->exists();
+
+        return view('profile.cv.index', [
+            'sudahPunyaCv' => $sudahPunyaCv,
+            'tautanMm' => $this->tautanSubmenuMm(),
+        ]);
+    }
+
+    /**
+     * Tautan ke submenu SIMENMA (Manajemen Mahasiswa) yang jadi sumber data Auto-Sync,
+     * dipakai keterangan ⓘ di tiap langkah (token {kunci} di partials/_judul). Nama
+     * tautannya MENGIKUTI sidebar modul — alumni melihat "Riwayat …" (hanya lihat),
+     * yang lain "Verifikasi …" — jadi ubah di sini bila label sidebar berubah.
+     */
+    private function tautanSubmenuMm(): array
+    {
+        $alumni = auth()->user()->hasRole('alumni');
+
+        return [
+            // Pendidikan: baris profil milik sendiri di Direktori (data angkatan/tahun lulus)
+            'direktori' => [
+                'url'   => route($alumni ? 'manajemenmahasiswa.direktori.alumni.profil' : 'manajemenmahasiswa.direktori.mahasiswa.profil'),
+                'label' => $alumni ? 'Direktori Alumni' : 'Direktori Mahasiswa',
+            ],
+            // Prestasi: diajukan & dipantau di Verifikasi Data
+            'prestasi' => [
+                'url'   => route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi']),
+                'label' => $alumni ? 'Riwayat Prestasi' : 'Verifikasi Prestasi',
+            ],
+            // Kegiatan: riwayat yang sudah diverifikasi
+            'kegiatan' => [
+                'url'   => route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat']),
+                'label' => $alumni ? 'Riwayat Kegiatan' : 'Verifikasi Kegiatan',
+            ],
+            // Kegiatan himpunan berstatus selesai tempat pengguna ketua pelaksana / panitia
+            'arsip' => [
+                'url'   => route('manajemenmahasiswa.kegiatan.index'),
+                'label' => 'Laporan & Arsip',
+            ],
+        ];
     }
 
     public function loadStep($step)

@@ -89,6 +89,17 @@
        footer tabel sehingga "Tandai Tercatat" tidak bisa diklik. */
     .pgd-table .mk-menu.pgd-menu-fixed { position: fixed; z-index: 1050; }
 
+    /* ── Penanda pencarian dari Statistik (Masalah berulang) ── */
+    .pgd-asal {
+        display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap;
+        padding: 12px 16px; border-bottom: 1px solid var(--c-border);
+        background: var(--c-primary-subtle); font-size: 12px; line-height: 1.55; color: var(--c-fg);
+    }
+    .pgd-asal-icon { color: var(--c-primary); flex-shrink: 0; margin-top: 2px; }
+    .pgd-asal-teks { flex: 1; min-width: 200px; overflow-wrap: anywhere; }
+    .pgd-asal-sub { color: var(--c-fg-sec); margin-top: 2px; }
+    .pgd-asal-aksi { display: flex; gap: 8px; flex-wrap: wrap; }
+
     /* Sengaja tanpa kolom centang & aksi massal: "tercatat" berarti tiket sudah dibaca
        satu per satu, dan aduan (termasuk PPKS) tidak dihapus beramai-ramai. */
 
@@ -194,6 +205,15 @@
             @if(request()->filled('per_page'))
                 <input type="hidden" name="per_page" value="{{ request('per_page') }}">
             @endif
+            {{-- Ikut terkirim saat filter lain diubah, supaya pencarian persis dari Statistik tidak hilang. --}}
+            @if($filters['cocok'] !== [])
+                @foreach($filters['cocok'] as $kunci => $jawaban)
+                    <input type="hidden" name="cocok[{{ $kunci }}]" value="{{ $jawaban }}">
+                @endforeach
+                @if($filters['periode'] !== '')
+                    <input type="hidden" name="periode" value="{{ $filters['periode'] }}">
+                @endif
+            @endif
 
             <div class="search-wrapper">
                 <span class="search-icon">
@@ -275,6 +295,33 @@
             </div>
         </form>
     </div>
+
+    {{-- Datang dari kartu "Masalah berulang" di Statistik. --}}
+    @if($filters['cocok'] !== [])
+        @php
+            $fieldsKategori = \Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan::untuk($filters['kategori'])['fields'];
+            $labelPeriode = \Modules\ManajemenMahasiswa\Services\PengaduanStatistikService::PERIODE[$filters['periode']] ?? null;
+        @endphp
+        <div class="pgd-asal" role="status">
+            <span class="pgd-asal-icon"><x-manajemenmahasiswa::ui.icon name="bar-chart-12" size="15" /></span>
+            <div class="pgd-asal-teks">
+                <div>
+                    <strong>Masalah berulang</strong>@if($labelPeriode) · {{ mb_strtolower($labelPeriode) }}@endif
+                </div>
+                <div class="pgd-asal-sub">
+                    @foreach($filters['cocok'] as $kunci => $jawaban)
+                        {{ $fieldsKategori[$kunci]['label'] }}: <strong>{{ $jawaban }}</strong>@if(!$loop->last) · @endif
+                    @endforeach
+                </div>
+            </div>
+            <div class="pgd-asal-aksi">
+                <a href="{{ route('manajemenmahasiswa.pengaduan.statistik', array_filter(['periode' => $filters['periode']])) }}" class="mk-btn mk-btn--secondary mk-btn--sm">
+                    <x-manajemenmahasiswa::ui.icon name="chevron-left" size="14" /> Statistik
+                </a>
+                <a href="{{ route('manajemenmahasiswa.pengaduan.index', array_filter(['per_page' => request('per_page')])) }}" class="mk-btn mk-btn--secondary mk-btn--sm">Hapus filter</a>
+            </div>
+        </div>
+    @endif
 
     <div style="overflow-x: auto;">
         <table class="pgd-table">
