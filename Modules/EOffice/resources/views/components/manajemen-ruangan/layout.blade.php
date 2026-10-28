@@ -1231,13 +1231,7 @@
                         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
                             x-transition.opacity.duration.300ms class="mp-flash mp-flash-success"
                             style="justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.2" stroke-linecap="round">
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                {{ session('success') }}
-                            </div>
+                            <span>{{ session('success') }}</span>
                             <button @click="show = false"
                                 style="background: transparent; border: none; cursor: pointer; color: inherit; padding: 0; display: flex; align-items: center; opacity: 0.6;"
                                 onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">
@@ -1253,15 +1247,7 @@
                         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
                             x-transition.opacity.duration.300ms class="mp-flash mp-flash-error"
                             style="justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <line x1="12" y1="8" x2="12" y2="12" />
-                                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                                </svg>
-                                {{ session('error') }}
-                            </div>
+                            <span>{{ session('error') }}</span>
                             <button @click="show = false"
                                 style="background: transparent; border: none; cursor: pointer; color: inherit; padding: 0; display: flex; align-items: center; opacity: 0.6;"
                                 onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">
@@ -1277,15 +1263,7 @@
                         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 6000)"
                             x-transition.opacity.duration.300ms class="mp-flash mp-flash-error"
                             style="justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <line x1="12" y1="8" x2="12" y2="12" />
-                                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                                </svg>
-                                <span>{{ $errors->first() }}</span>
-                            </div>
+                            <span>{{ $errors->first() }}</span>
                             <button @click="show = false"
                                 style="background: transparent; border: none; cursor: pointer; color: inherit; padding: 0; display: flex; align-items: center; opacity: 0.6;"
                                 onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">
