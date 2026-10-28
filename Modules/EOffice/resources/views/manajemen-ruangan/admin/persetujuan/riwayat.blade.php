@@ -784,7 +784,7 @@
                             <div class="text-slate-500 font-medium flex items-center">No. Telp</div>
                             <div class="font-medium flex items-center">
                                 <template x-if="detailData.telepon && detailData.telepon !== '-'">
-                                    <a :href="'https://wa.me/' + (detailData.telepon.toString().startsWith('0') ? '62' + detailData.telepon.toString().substring(1) : detailData.telepon)" 
+                                    <a :href="'https://wa.me/' + (detailData.telepon.toString().replace(/[^0-9]/g, '').startsWith('0') ? '62' + detailData.telepon.toString().replace(/[^0-9]/g, '').substring(1) : detailData.telepon.toString().replace(/[^0-9]/g, ''))" 
                                         target="_blank" 
                                         class="inline-flex items-center gap-1.5 text-[#25D366] hover:text-[#1da851] hover:underline transition-colors group"
                                         title="Hubungi via WhatsApp">

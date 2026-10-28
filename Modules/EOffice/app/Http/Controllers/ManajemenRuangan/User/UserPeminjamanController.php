@@ -59,15 +59,80 @@ class UserPeminjamanController extends Controller
 
     public function storeBooking(Request $request)
     {
+        $user = auth()->user();
+        $isPhoneLocked = !empty($user->whatsapp);
+
         $request->validate([
             'ruangan_id' => 'required|exists:eo_mr_ruangans,id',
-            'nomor_telepon' => 'required|string',
+            'nomor_telepon' => $isPhoneLocked
+                ? 'required|string|max:30'
+                : [
+                    'required',
+                    'string',
+                    'regex:/^(?:\+62|62|0)8[1-9][0-9]{7,10}$/',
+                    function ($attribute, $value, $fail) {
+                        $digits = preg_replace('/[^0-9]/', '', (string) $value);
+                        // Cegah pola digit berulang ekstrem (seperti 081111111111 atau 082222222222)
+                        if (preg_match('/(.)\1{7,}/', $digits)) {
+                            $fail('Nomor WhatsApp tidak valid. Masukkan nomor seluler aktif yang benar.');
+                        }
+                    },
+                ],
             'tujuan' => 'required|string|max:500',
             'tanggal_pinjam' => 'required|date',
             'jam_mulai' => 'required',
             'jam_selesai' => 'required|after:jam_mulai',
             'file_berkas' => 'nullable|file|mimes:pdf|max:2048'
+        ], [
+            'nomor_telepon.required' => 'Nomor telepon / WhatsApp wajib diisi.',
+            'nomor_telepon.regex' => 'Nomor WhatsApp tidak valid. Masukkan nomor seluler aktif Indonesia (contoh: 08123456789).',
         ]);
+
+        // Sanitasi dan standardisasi format nomor telepon / WhatsApp
+        $rawPhone = trim((string) $request->nomor_telepon);
+        $cleanDigits = preg_replace('/[^0-9]/', '', $rawPhone);
+
+        if (str_starts_with($cleanDigits, '628')) {
+            $nomorTelepon = '0' . substr($cleanDigits, 2);
+            $waProfile = '+62' . substr($cleanDigits, 2);
+        } elseif (str_starts_with($cleanDigits, '08')) {
+            $nomorTelepon = $cleanDigits;
+            $waProfile = '+62' . substr($cleanDigits, 1);
+        } elseif (str_starts_with($cleanDigits, '8')) {
+            $nomorTelepon = '0' . $cleanDigits;
+            $waProfile = '+62' . $cleanDigits;
+        } else {
+            $nomorTelepon = !empty($cleanDigits) ? $cleanDigits : $rawPhone;
+            $waProfile = !empty($cleanDigits) ? '+' . $cleanDigits : null;
+        }
+
+        // Jika profil user belum memiliki nomor WhatsApp, otomatis simpan ke profil user
+        if (empty($user->whatsapp) && !empty($waProfile)) {
+            $user->updateQuietly([
+                'whatsapp' => $waProfile,
+            ]);
+
+            // Sinkronisasi ke direktori kemahasiswaan jika ada
+            try {
+                if (class_exists(\Modules\ManajemenMahasiswa\Models\Kemahasiswaan::class)) {
+                    \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('user_id', $user->id)
+                        ->where(function ($q) {
+                            $q->whereNull('kontak')->orWhere('kontak', '');
+                        })
+                        ->update(['kontak' => $waProfile]);
+                }
+            } catch (\Throwable $e) {
+                // Silently continue
+            }
+        } elseif (!empty($user->whatsapp)) {
+            // Jika profil sudah memiliki nomor resmi, gunakan nomor dari profil untuk menjaga integritas data
+            $userDigits = preg_replace('/[^0-9]/', '', $user->whatsapp);
+            if (str_starts_with($userDigits, '628')) {
+                $nomorTelepon = '0' . substr($userDigits, 2);
+            } elseif (str_starts_with($userDigits, '08')) {
+                $nomorTelepon = $userDigits;
+            }
+        }
 
         // Interceptor: Cek status blacklist / Banned account 
         $blacklist = \Modules\EOffice\Models\MrBlacklist::where('user_id', auth()->id())->first();
@@ -174,7 +239,7 @@ class UserPeminjamanController extends Controller
         Peminjaman::create([
             'user_id' => auth()->id(),
             'ruangan_id' => $request->ruangan_id,
-            'nomor_telepon' => $request->nomor_telepon,
+            'nomor_telepon' => $nomorTelepon,
             'tujuan' => $request->tujuan,
             'tanggal_pinjam' => $request->tanggal_pinjam,
             'jam_mulai' => $request->jam_mulai,
@@ -244,7 +309,20 @@ class UserPeminjamanController extends Controller
 
         $user = auth()->user();
         $nim = $user->student->student_number ?? $user->lecturer->employee_number ?? explode('@', $user->email)[0];
-        $phone = ''; // User model currently may not have phone natively unless it does, we can leave blank.
+        
+        // Ambil nomor kontak dari profil pengguna jika tersedia
+        $phone = '';
+        if (!empty($user->whatsapp)) {
+            $rawWa = trim($user->whatsapp);
+            $cleanDigits = preg_replace('/[^0-9]/', '', $rawWa);
+            if (str_starts_with($cleanDigits, '628')) {
+                $phone = '0' . substr($cleanDigits, 2);
+            } elseif (str_starts_with($cleanDigits, '08')) {
+                $phone = $cleanDigits;
+            } else {
+                $phone = $rawWa;
+            }
+        }
 
         $internalSchedules = \Modules\EOffice\Models\MrJadwalInternal::all()->map(function ($jadwal) {
             if (in_array($jadwal->kategori, ['Lainnya', 'Lainnya...', 'Event / Kegiatan', 'Rapat Internal'])) {

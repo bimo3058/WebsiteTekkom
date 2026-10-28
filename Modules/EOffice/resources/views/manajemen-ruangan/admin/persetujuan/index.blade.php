@@ -282,7 +282,8 @@
                                         @endif
                                         @if($pinjam->nomor_telepon)
                                             @php
-                                                $waNumber = preg_replace('/^0/', '62', $pinjam->nomor_telepon);
+                                                $waDigits = preg_replace('/[^0-9]/', '', (string)$pinjam->nomor_telepon);
+                                                $waNumber = str_starts_with($waDigits, '0') ? '62' . substr($waDigits, 1) : $waDigits;
                                             @endphp
                                             <a href="https://wa.me/{{ $waNumber }}" target="_blank" title="Hubungi via WhatsApp" class="text-[#25D366] hover:text-[#1da851] hover:underline font-semibold transition-colors">
                                                 {{ $pinjam->nomor_telepon }}
@@ -570,7 +571,7 @@
                                     <div class="text-slate-500 font-medium flex items-center">No. Telp</div>
                                     <div class="font-medium flex items-center">
                                         <template x-if="selectedTelp && selectedTelp !== '-'">
-                                            <a :href="'https://wa.me/' + (selectedTelp.toString().startsWith('0') ? '62' + selectedTelp.toString().substring(1) : selectedTelp)" 
+                                            <a :href="'https://wa.me/' + (selectedTelp.toString().replace(/[^0-9]/g, '').startsWith('0') ? '62' + selectedTelp.toString().replace(/[^0-9]/g, '').substring(1) : selectedTelp.toString().replace(/[^0-9]/g, ''))" 
                                                 target="_blank" 
                                                 class="inline-flex items-center gap-1.5 text-[#25D366] hover:text-[#1da851] hover:underline transition-colors group"
                                                 title="Hubungi via WhatsApp">

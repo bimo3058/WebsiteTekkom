@@ -145,11 +145,11 @@
                                     <a href="{{ $berkasUrl }}"
                                        target="_blank"
                                        class="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#0B266E] bg-blue-50/70 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-md transition-colors"
-                                       title="Lihat Dokumen Proposal">
+                                       title="Lihat Berkas">
                                         <svg class="w-3.5 h-3.5 text-[#0B266E]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
                                         </svg>
-                                        <span>Berkas Proposal</span>
+                                        <span>Berkas</span>
                                     </a>
                                 @endif
                             </div>
@@ -308,15 +308,12 @@
                             <div class="text-slate-500 font-medium">No. Telepon / WA</div>
                             <div class="text-slate-800 font-medium" x-text="detailData.telepon"></div>
 
-                            <div class="text-slate-500 font-medium pt-1">Berkas Proposal</div>
+                            <div class="text-slate-500 font-medium pt-1">Berkas</div>
                             <div class="pt-1">
                                 <template x-if="detailData.berkas">
                                     <a :href="detailData.berkas" target="_blank"
-                                        class="text-[13px] font-bold text-[#0065ff] hover:text-[#0052cc] hover:underline transition-colors inline-flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                        </svg>
-                                        Buka Dokumen Lampiran
+                                        class="text-[13px] font-bold text-[#0065ff] hover:text-[#0052cc] hover:underline transition-colors inline-block">
+                                        Lihat Lampiran
                                     </a>
                                 </template>
                                 <template x-if="!detailData.berkas">

@@ -764,9 +764,41 @@
                                     </div>
                                 </div>
                                 <div class="space-y-1.5">
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">No. Telepon / WhatsApp <span class="text-red-500">*</span></label>
-                                    <input type="text" name="nomor_telepon" value="{{ $phone ?? '' }}" required maxlength="20" placeholder="Contoh: 08123456789"
-                                        class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
+                                    <div class="flex items-center justify-between ml-1">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                            No. Telepon / WhatsApp <span class="text-red-500">*</span>
+                                        </label>
+                                        @if(!empty($phone))
+                                            <a href="{{ route('profile.edit') }}" target="_blank" rel="noopener noreferrer"
+                                                class="text-[10px] font-bold text-[#0B266E] hover:text-blue-700 hover:underline inline-flex items-center gap-1 transition-colors group"
+                                                title="Ubah nomor kontak di profil akun Anda">
+                                                <span>Ubah di Profil</span>
+                                                <svg class="w-3 h-3 text-[#0B266E] group-hover:text-blue-700 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                            </a>
+                                        @endif
+                                    </div>
+
+                                    @if(!empty($phone))
+                                        <input type="text" name="nomor_telepon" value="{{ $phone }}" readonly required
+                                            class="w-full bg-slate-100/80 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium text-gray-600 cursor-not-allowed outline-none select-all"
+                                            title="Nomor kontak tersambung dengan profil akun Anda">
+                                    @else
+                                        <input type="tel" name="nomor_telepon" value="{{ old('nomor_telepon') }}" required
+                                            maxlength="15" minlength="10" inputmode="numeric" autocomplete="tel"
+                                            placeholder="Contoh: 08123456789"
+                                            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                            class="w-full bg-white border @error('nomor_telepon') border-red-400 focus:ring-red-100 focus:border-red-500 @else border-slate-200 focus:ring-blue-100 focus:border-blue-400 @enderror rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 outline-none transition-all text-gray-800">
+                                        <p class="text-[11px] text-slate-500 ml-1 flex items-center gap-1.5 leading-snug">
+                                            <svg class="w-3.5 h-3.5 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <span>Nomor ini akan otomatis disimpan sebagai kontak profil akun Anda.</span>
+                                        </p>
+                                    @endif
+                                    @error('nomor_telepon')
+                                        <p class="text-[11px] text-rose-600 ml-1 font-semibold flex items-center gap-1.5 mt-1">
+                                            <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <span>{{ $message }}</span>
+                                        </p>
+                                    @enderror
                                 </div>
                             </div>
 
@@ -779,7 +811,7 @@
 
                             {{-- Berkas Pendukung (Opsional) --}}
                             <div class="space-y-1.5">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">File Berkas Proposal <span class="text-slate-400 font-normal lowercase tracking-normal">(opsional)</span></label>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">File Berkas <span class="text-slate-400 font-normal lowercase tracking-normal">(opsional)</span></label>
                                 <div class="relative bg-white border border-slate-200 rounded-xl p-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all">
                                     <input type="file" name="file_berkas" accept=".pdf"
                                         class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-[#0B266E]/10 file:text-[#0B266E] hover:file:bg-[#0B266E]/20 cursor-pointer transition-all outline-none">
