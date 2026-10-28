@@ -33,6 +33,16 @@ class PersetujuanController extends Controller
             $query->where('ruangan_id', $request->ruangan_id);
         }
 
+        if ($request->filled('source')) {
+            if ($request->source === 'umum') {
+                $query->whereNull('source');
+            } elseif ($request->source === 'kp') {
+                $query->whereIn('source', ['kp', 'kerja_praktik']);
+            } else {
+                $query->where('source', $request->source);
+            }
+        }
+
         if ($request->filled('search')) {
             $search = strtolower($request->search);
             $query->where(function ($q) use ($search) {

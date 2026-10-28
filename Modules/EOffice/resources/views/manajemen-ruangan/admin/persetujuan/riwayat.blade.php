@@ -167,37 +167,79 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-700 mb-1.5 relative z-10 w-full bg-white">Ruangan</label>
-                                    <div x-data="{ 
-                                            open: false, 
-                                            selectedId: '{{ request('ruangan_id') }}', 
-                                            selectedName: '{{ request('ruangan_id') ? addslashes($ruangans->firstWhere('id', request('ruangan_id'))->nama ?? 'Semua Ruangan') : 'Semua Ruangan' }}',
-                                            selectItem(id, name) { 
-                                                this.selectedId = id; 
-                                                this.selectedName = name; 
-                                                this.open = false; 
-                                            } 
-                                        }" class="relative w-full" @click.away="open = false">
+                                    <div x-data="roomFilterSelect('{{ request('ruangan_id') }}', '{{ addslashes(request('ruangan_id') ? ($ruangans->firstWhere('id', request('ruangan_id'))->nama ?? 'Semua Ruangan') : 'Semua Ruangan') }}')" class="relative w-full" @click.away="handleClose()">
                                         
                                         <input type="hidden" name="ruangan_id" :value="selectedId">
 
-                                        <button type="button" @click="open = !open" 
-                                            class="w-full flex items-center justify-between text-[13px] border border-gray-200 rounded-lg p-2 bg-white hover:border-[#0B266E] focus:outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] transition-colors cursor-pointer">
-                                            <span x-text="selectedName" class="truncate text-gray-700"></span>
-                                            <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        {{-- Mobile Trigger: Pure Button (Never triggers mobile keyboard) --}}
+                                        <button type="button" 
+                                            @click="open = !open" 
+                                            class="sm:hidden w-full flex items-center justify-between text-[13px] border border-gray-200 rounded-lg py-2 pl-3 pr-2.5 bg-white hover:border-[#0B266E] focus:outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] transition-colors cursor-pointer text-left font-medium">
+                                            <span class="truncate text-gray-700" x-text="selectedId ? selectedName : 'Semua Ruangan'"></span>
+                                            <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ml-1" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                             </svg>
                                         </button>
+
+                                        {{-- Desktop Trigger: Searchable Combobox Input --}}
+                                        <div class="hidden sm:flex relative w-full items-center">
+                                            <input type="text"
+                                                x-ref="roomInput"
+                                                :value="displayValue"
+                                                @input="handleInput($el.value)"
+                                                @focus="handleFocus(); $el.select()"
+                                                @click="open = true"
+                                                @keydown.enter.prevent="if (open && filteredRooms.length > 0) { selectItem(filteredRooms[0].id, filteredRooms[0].name); } else { open = false; }"
+                                                @keydown.escape="handleClose()"
+                                                :placeholder="selectedId ? selectedName : 'Semua Ruangan'"
+                                                class="w-full text-[13px] border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-white hover:border-[#0B266E] focus:outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] transition-colors text-gray-700 placeholder-gray-500 font-medium cursor-text"
+                                                autocomplete="off">
+
+                                            <button type="button" @click.stop="open = !open; if(open) { $nextTick(() => $refs.roomInput.focus()); }" 
+                                                class="absolute right-2 p-1 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+                                                <svg class="w-3.5 h-3.5 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                </svg>
+                                            </button>
+                                        </div>
                                         
                                         <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
-                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] max-h-48 overflow-y-auto" style="display: none;">
-                                            <div class="py-2 px-1">
-                                                <button type="button" @click="selectItem('', 'Semua Ruangan')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '', 'text-gray-700 hover:bg-gray-50 font-medium': selectedId != ''}">Semua Ruangan</button>
+                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] overflow-hidden" style="display: none;">
+                                            
+                                            {{-- Search input specifically on mobile so keyboard only opens if user wants to search --}}
+                                            <div class="p-2 border-b border-gray-100 sm:hidden bg-slate-50">
+                                                <div class="relative flex items-center">
+                                                    <svg class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                                    </svg>
+                                                    <input type="text"
+                                                        x-model="searchTerm"
+                                                        @input="isTyping = true"
+                                                        placeholder="Cari nama ruangan..."
+                                                        class="w-full text-xs bg-white border border-gray-200 rounded-lg py-1.5 pl-8 pr-2 focus:border-[#0B266E] focus:outline-none">
+                                                </div>
+                                            </div>
+
+                                            <div class="py-2 px-1 max-h-40 overflow-y-auto">
+                                                <button type="button" @click="selectItem('', 'Semua Ruangan')" 
+                                                    x-show="!searchTerm.trim() || 'semua ruangan'.includes(searchTerm.toLowerCase())"
+                                                    class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" 
+                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '', 'text-gray-700 hover:bg-gray-50 font-medium': selectedId != ''}">
+                                                    Semua Ruangan
+                                                </button>
                                                 
-                                                @foreach($ruangans as $ruangan)
-                                                    <button type="button" @click="selectItem('{{ $ruangan->id }}', '{{ addslashes($ruangan->nama) }}')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '{{ $ruangan->id }}', 'text-gray-700 hover:bg-gray-50 font-medium': selectedId != '{{ $ruangan->id }}'}">
-                                                        {{ $ruangan->nama }}
+                                                <template x-for="room in filteredRooms" :key="room.id">
+                                                    <button type="button" @click="selectItem(room.id, room.name)" 
+                                                        class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" 
+                                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == room.id, 'text-gray-700 hover:bg-gray-50 font-medium': selectedId != room.id}"
+                                                        x-text="room.name">
                                                     </button>
-                                                @endforeach
+                                                </template>
+
+                                                <div x-show="filteredRooms.length === 0 && (!'semua ruangan'.includes(searchTerm.toLowerCase()))" 
+                                                    class="px-3 py-3 text-xs text-gray-400 text-center font-medium">
+                                                    Ruangan tidak ditemukan
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -273,7 +315,7 @@
                                         </button>
                                         
                                         <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
-                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] overflow-hidden" style="display: none;">
+                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] max-h-36 overflow-y-auto" style="display: none;">
                                             <div class="py-2 px-1">
                                                 <button type="button" @click="selectItem('')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != ''}">Semua Asal</button>
                                                 <button type="button" @click="selectItem('kp')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'kp', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'kp'}">Seminar KP</button>
@@ -886,6 +928,60 @@
     </div>
 
     <script>
+        const appRuangans = @json($ruangans->map(fn($r) => ['id' => (string)$r->id, 'name' => $r->nama]));
+
+        function roomFilterSelect(selectedId, selectedName) {
+            return {
+                open: false,
+                selectedId: selectedId || '',
+                selectedName: selectedName || 'Semua Ruangan',
+                searchTerm: '',
+                isTyping: false,
+                rooms: appRuangans,
+                get displayValue() {
+                    if (this.isTyping) {
+                        return this.searchTerm;
+                    }
+                    return this.selectedId ? this.selectedName : '';
+                },
+                get filteredRooms() {
+                    if (!this.searchTerm || !this.searchTerm.trim()) {
+                        return this.rooms;
+                    }
+                    const q = this.searchTerm.toLowerCase();
+                    return this.rooms.filter(r => r.name.toLowerCase().includes(q));
+                },
+                selectItem(id, name) { 
+                    this.selectedId = id; 
+                    this.selectedName = name ? name : 'Semua Ruangan'; 
+                    this.searchTerm = '';
+                    this.isTyping = false;
+                    this.open = false; 
+                    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                        document.activeElement.blur();
+                    }
+                },
+                handleInput(val) {
+                    this.isTyping = true;
+                    this.searchTerm = val;
+                    this.open = true;
+                },
+                handleFocus() {
+                    this.open = true;
+                    this.searchTerm = '';
+                    this.isTyping = false;
+                },
+                handleClose() {
+                    this.open = false;
+                    this.isTyping = false;
+                    this.searchTerm = '';
+                    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                        document.activeElement.blur();
+                    }
+                }
+            };
+        }
+
         function arsipManager() {
             return {
                 isDetailOpen: false,

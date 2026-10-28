@@ -1110,16 +1110,26 @@
     </div>
     </div>
 
-    <script src="//unpkg.com/alpinejs" defer></script>
     <script>
         // AJAX Polling setiap 30 detik untuk update Real-time
         document.addEventListener('DOMContentLoaded', () => {
             setInterval(() => {
                 const kalenderDiv = document.querySelector('[x-data="bookingKalender()"]');
-                if (kalenderDiv && kalenderDiv.__x) {
-                    const data = Alpine.$data(kalenderDiv);
-                    // Jangan update UI jika admin sedang berinteraksi dengan modal atau dragging
-                    if (data && (data.showModal || data.showDetailModal || data.showBlockModal || data.isDragging)) return;
+                if (window.Alpine && kalenderDiv) {
+                    try {
+                        const data = Alpine.$data(kalenderDiv);
+                        // Jangan update UI jika admin sedang berinteraksi dengan modal atau dragging
+                        if (data && (data.showModal || data.showDetailModal || data.showBlockModal || data.isDragging)) return;
+                    } catch (e) {}
+                }
+
+                // Cek modal jalur tol admin
+                const jalurTolDiv = document.querySelector('[x-data*="modeAction"]');
+                if (window.Alpine && jalurTolDiv) {
+                    try {
+                        const jtData = Alpine.$data(jalurTolDiv);
+                        if (jtData && jtData.show) return;
+                    } catch (e) {}
                 }
                 
                 fetch(window.location.href, {
@@ -1134,20 +1144,30 @@
                     const currentContainer = document.getElementById('calendar-grid-wrapper');
                     
                     if (newContainer && currentContainer) {
+                        // Cek apakah ada perubahan konten jadwal, jika sama persis abaikan
+                        if (newContainer.innerHTML.trim() === currentContainer.innerHTML.trim()) {
+                            return;
+                        }
+
                         // Simpan posisi scroll sebelum replace
-                        let scrollWrapper = currentContainer.querySelector('div[style*="overflow-x"]');
+                        let scrollWrapper = currentContainer.querySelector('#table-scroll-container') || currentContainer.querySelector('div[style*="overflow-x"]');
                         let currentScroll = scrollWrapper ? scrollWrapper.scrollLeft : 0;
+
+                        if (window.Alpine && typeof window.Alpine.destroyTree === 'function') {
+                            window.Alpine.destroyTree(currentContainer);
+                        }
+                        delete currentContainer._x_marker;
 
                         currentContainer.innerHTML = newContainer.innerHTML;
 
                         // Kembalikan posisi scroll setelah replace
-                        let newScrollWrapper = currentContainer.querySelector('div[style*="overflow-x"]');
+                        let newScrollWrapper = currentContainer.querySelector('#table-scroll-container') || currentContainer.querySelector('div[style*="overflow-x"]');
                         if (newScrollWrapper) {
                             newScrollWrapper.scrollLeft = currentScroll;
                         }
 
                         // Inisialisasi ulang Alpine agar tombol dan event handler tetap aktif
-                        if (window.Alpine) {
+                        if (window.Alpine && typeof window.Alpine.initTree === 'function') {
                             window.Alpine.initTree(currentContainer);
                         }
                     }
@@ -1202,6 +1222,10 @@
                     // Jika menyentuh kotak event yang sudah ada, biarkan event box yang membuka modal detail
                     if (e.target && e.target.closest && e.target.closest('.cursor-pointer') && e.target !== e.currentTarget) {
                         return;
+                    }
+
+                    if (e.cancelable) {
+                        e.preventDefault();
                     }
 
                     let rect = e.currentTarget.getBoundingClientRect();

@@ -842,16 +842,17 @@
 
     </div> <!-- Close Alpine Wrapper -->
 
-    <script src="//unpkg.com/alpinejs" defer></script>
     <script>
         // AJAX Polling setiap 30 detik untuk update Real-time
         document.addEventListener('DOMContentLoaded', () => {
             setInterval(() => {
                 const kalenderDiv = document.querySelector('[x-data="bookingKalender()"]');
-                if (kalenderDiv && kalenderDiv.__x) {
-                    const data = Alpine.$data(kalenderDiv);
-                    // Jangan update UI jika user sedang berinteraksi dengan modal atau dragging
-                    if (data && (data.showModal || data.showDetailModal || data.isDragging)) return;
+                if (window.Alpine && kalenderDiv) {
+                    try {
+                        const data = Alpine.$data(kalenderDiv);
+                        // Jangan update UI jika user sedang berinteraksi dengan modal atau dragging
+                        if (data && (data.showModal || data.showDetailModal || data.isDragging)) return;
+                    } catch (e) {}
                 }
 
                 fetch(window.location.href, {
@@ -866,9 +867,19 @@
                         const currentContainer = document.getElementById('calendar-grid-wrapper');
 
                         if (newContainer && currentContainer) {
+                            // Cek apakah konten grid berubah, jika sama persis abaikan
+                            if (newContainer.innerHTML.trim() === currentContainer.innerHTML.trim()) {
+                                return;
+                            }
+
                             // Simpan posisi scroll sebelum replace
                             let scrollWrapper = currentContainer.querySelector('#table-scroll-container');
                             let currentScroll = scrollWrapper ? scrollWrapper.scrollLeft : 0;
+
+                            if (window.Alpine && typeof window.Alpine.destroyTree === 'function') {
+                                window.Alpine.destroyTree(currentContainer);
+                            }
+                            delete currentContainer._x_marker;
 
                             currentContainer.innerHTML = newContainer.innerHTML;
 
@@ -879,7 +890,7 @@
                             }
 
                             // Inisialisasi ulang Alpine agar tombol dan event handler tetap aktif
-                            if (window.Alpine) {
+                            if (window.Alpine && typeof window.Alpine.initTree === 'function') {
                                 window.Alpine.initTree(currentContainer);
                             }
                         }
@@ -994,6 +1005,10 @@
                     // Jika menyentuh kotak event yang sudah ada, biarkan event box yang membuka modal detail
                     if (e.target && e.target.closest && e.target.closest('.cursor-pointer') && e.target !== e.currentTarget) {
                         return;
+                    }
+
+                    if (e.cancelable) {
+                        e.preventDefault();
                     }
 
                     let rect = e.currentTarget.getBoundingClientRect();
