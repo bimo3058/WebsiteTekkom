@@ -24,9 +24,6 @@ final class PengaduanPertanyaan
 
     public const FREKUENSI_KULIAH = ['Sekali', 'Beberapa pertemuan', 'Hampir setiap pertemuan'];
 
-    /** Jawaban frekuensi yang berarti "sering" (huruf kecil), termasuk penulisan form lama. */
-    public const FREKUENSI_SERING = ['sering atau berulang', 'hampir setiap pertemuan', 'sering', 'hampir setiap pertemuan kuliah'];
-
     /** Status pihak, bukan nama — tiket PPKS tidak boleh memaksa pelapor menyebut nama. */
     public const PIHAK = [
         'Mahasiswa',
@@ -153,30 +150,6 @@ final class PengaduanPertanyaan
     public static function untuk(string $kategori): array
     {
         return self::semua()[Pengaduan::normalizeKategori($kategori)] ?? ['subjek' => '', 'pesan' => '', 'fields' => []];
-    }
-
-    /**
-     * Label semua pertanyaan dalam huruf kecil, sebagai kunci. Form lama sempat
-     * menyimpan label sebagai isian ("Tendik Terkait"), jadi teks ini bukan jawaban.
-     *
-     * @return array<string, true>
-     */
-    public static function semuaLabel(): array
-    {
-        $label = array_values(self::LABEL_BAWAAN);
-        foreach (self::semua() as $set) {
-            foreach ($set['fields'] as $field) {
-                $label[] = $field['label'];
-            }
-        }
-
-        return array_fill_keys(array_map('mb_strtolower', $label), true);
-    }
-
-    /** @return array<int, string> kunci pertanyaan isian teks milik satu kategori (dasar "Masalah berulang") */
-    public static function kunciTeks(string $kategori): array
-    {
-        return array_keys(array_filter(self::untuk($kategori)['fields'], fn ($field) => $field['type'] === 'text'));
     }
 
     /** @return array<int, string> kunci jawaban milik satu kategori */

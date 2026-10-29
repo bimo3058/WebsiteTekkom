@@ -72,7 +72,7 @@ class ProkerController extends Controller
         ])->isNotEmpty();
 
         // Relasi yang dibutuhkan kartu bersama (kegiatan-list/_kartu) — sama di ketiga subbab.
-        $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'ketuaPelaksana.user'])
+        $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'dosenPendampings.user'])
             ->whereIn('status', Kegiatan::STATUS_DAFTAR_RENCANA)
             ->orderBy('created_at', 'desc');
 

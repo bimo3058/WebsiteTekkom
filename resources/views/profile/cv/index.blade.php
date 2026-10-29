@@ -27,6 +27,13 @@
             .cvb-box-body {
                 flex: 1; overflow-y: auto; padding: 20px 24px;
             }
+            /* Bilah tombol navigasi menempel di dasar kotak (di luar area gulir), jadi
+               tombolnya selalu terlihat di semua langkah tanpa harus menggulir. */
+            .cvb-box-footer {
+                display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-shrink: 0;
+                padding: 12px 24px; background: #fff; border-top: 1px solid var(--c-border);
+            }
+            .cvb-box-footer-end { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 
             @media (max-width: 767px) {
                 .sitkom-content { padding: 8px 8px 80px !important; display: block !important; overflow: visible !important; }
@@ -35,6 +42,7 @@
                 /* z-index di atas lingkaran stepper (z-10) & lapisan memuat (z-20) */
                 .cvb-box-header { padding: 12px 14px; position: sticky; top: 52px; z-index: 30; }
                 .cvb-box-body { padding: 12px 14px; }
+                .cvb-box-footer { padding: 12px 14px; flex-wrap: wrap; }
             }
 
             /* ── Isi wizard ───────────────────────────────────────────────────
@@ -120,7 +128,7 @@
                 color: var(--c-fg-muted); font-size: 12px; font-style: italic; text-align: center;
             }
             .cvb-add { padding: 20px; background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 10px; }
-            .cvb-add-foot { margin-top: 16px; }
+            .cvb-add-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 
             /* Tombol "Tambah …" di semua langkah: satu bentuk, ikon + label, ukuran
                tombol SITKOM (12px/600, sudut 8px, tinggi 34px — seperti Import Users
@@ -133,6 +141,9 @@
             }
             .cvb-add-btn:hover { background: var(--c-bg); border-color: var(--c-border-strong); }
             .cvb-add-btn:focus-visible { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.08); }
+            /* "Tambahkan" di dalam formulir yang sedang dibuka — aksi utama formulir itu */
+            .cvb-add-btn.is-primary { background: var(--c-primary); border-color: var(--c-primary); color: #ffffff; }
+            .cvb-add-btn.is-primary:hover { opacity: 0.9; }
 
             /* Pesan galat per kolom (muncul saat Tambah ditekan dengan isian kurang) */
             .cvb-field-error { margin: 4px 0 0; color: var(--c-error); font-size: 12px; line-height: 1.4; }
@@ -146,10 +157,11 @@
                 font-size: 9px; font-weight: 700; line-height: 1.5; letter-spacing: 0.02em; text-transform: uppercase; white-space: nowrap;
             }
 
-            /* Kotak baca-saja (data SSO) — rupa .form-control-custom:disabled */
-            .cvb-readonly { display: flex; align-items: center; gap: 8px; background-color: var(--c-bg); color: var(--c-fg-muted); cursor: not-allowed; }
-            .cvb-readonly > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-            .cvb-readonly .cvb-chip { margin-left: auto; }
+            /* Kotak baca-saja (tidak bisa diubah di wizard): abu-abu jelas, bukan
+               --c-bg yang nyaris putih, supaya langsung terbaca terkunci. Dua kelas
+               supaya menang atas .form-control-custom kit SITKOM yang dimuat belakangan. */
+            .form-control-custom.cvb-readonly { display: flex; align-items: center; background-color: var(--c-grey-50); color: var(--c-fg-muted); cursor: not-allowed; }
+            .cvb-readonly > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
             /* Tombol hapus item: navy, bukan merah — keputusan tim untuk aksi Hapus */
             .cvb-icon-btn {
@@ -161,7 +173,7 @@
         </style>
         @include('manajemenmahasiswa::partials.sitkom-ui')
 
-        <div class="cvb-wrap" x-data="cvWizard(@js($sudahPunyaCv))">
+        <div class="cvb-wrap" x-data="cvWizard(@js($langkahTerbuka))">
             <div class="cvb-box">
                 <div class="cvb-box-header">
                     <x-page-header title="CV Builder" subtitle="Lengkapi data Anda untuk menghasilkan CV profesional.">
@@ -209,7 +221,7 @@
                     </div>
 
                     <!-- Step Content -->
-                    <div class="relative min-h-[400px]">
+                    <div class="relative min-h-[260px]">
 
                         <!-- Loading State -->
                         <div x-show="loading"
@@ -259,19 +271,21 @@
                         </div>
                     </div>
 
-                    <!-- Footer Navigation -->
-                    <div class="mt-6 flex justify-between items-center">
-                        {{-- :disabled saat loading — dua POST beruntun sama-sama membawa
-                             baris baru dan ditolak indeks UNIQUE user_id. --}}
-                        <button @click="goToStep(step - 1)" x-show="step > 1"
-                            :disabled="loading"
-                            :class="loading ? 'opacity-50 cursor-not-allowed' : ''"
-                            class="btn-secondary text-sm">
-                            <x-icon name="chevron-left" size="18" />
-                            Sebelumnya
-                        </button>
-                        <div x-show="step === 1"></div>
+                </div>
 
+                <!-- Footer Navigation — menempel di dasar kotak -->
+                <div class="cvb-box-footer">
+                    {{-- :disabled saat loading — dua POST beruntun sama-sama membawa
+                         baris baru dan ditolak indeks UNIQUE user_id. --}}
+                    <button @click="goToStep(step - 1)" x-show="step > 1"
+                        :disabled="loading"
+                        :class="loading ? 'opacity-50 cursor-not-allowed' : ''"
+                        class="btn-secondary text-sm">
+                        <x-icon name="chevron-left" size="18" />
+                        Sebelumnya
+                    </button>
+
+                    <div class="cvb-box-footer-end">
                         <button @click="saveAndNext()" x-show="step < 6"
                             :disabled="loading"
                             :class="loading ? 'opacity-50 cursor-not-allowed' : ''"
@@ -279,20 +293,43 @@
                             <span x-text="loading ? 'Menyimpan...' : 'Simpan & Lanjut'"></span>
                             <x-icon name="arrow-narrow-right" size="18" />
                         </button>
-                    </div>
 
+                        {{-- Langkah 6: aksi akhir ikut di bilah ini, bukan melayang di tengah --}}
+                        <a href="{{ route('profile.cv.preview') }}" target="_blank" x-show="step === 6" style="display: none;"
+                            class="btn-secondary text-sm">
+                            <x-icon name="eye" size="18" />
+                            Preview CV
+                        </a>
+                        <a href="{{ route('profile.cv.generate') }}" target="_blank" x-show="step === 6" style="display: none;"
+                            class="btn-primary text-sm shadow-sm">
+                            <x-icon name="download-01" size="18" />
+                            Download PDF / Print
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </x-sidebar>
 
     <script>
-        // $sudahPunyaCv: CV pernah disimpan → semua langkah langsung bisa dibuka lewat
-        // stepper. Pengguna baru tetap berurutan (langkah di depan terkunci).
-        function cvWizard(sudahPunyaCv = false) {
+        // $langkahTerbuka: satu setelah langkah tertinggi yang pernah disimpan lewat
+        // "Simpan & Lanjut" (cv_profiles.langkah_tersimpan) — langkah di depannya terkunci.
+        function cvWizard(langkahTerbuka = 1) {
+            // Isi awal formulir "tambah manual"; dipakai saat formulir dikosongkan
+            // (setelah Tambahkan / Batal) dan untuk mengecek apakah sudah diketik.
+            const formAwal = {
+                newEdu: { institusi: '', jurusan: '', tahun_masuk: '', tahun_lulus: '' },
+                newExp: { perusahaan: '', posisi: '', tahun_mulai: '', tahun_selesai: '', deskripsi: '' },
+                newOrg: { organisasi: '', peran: '', tahun_mulai: '', tahun_selesai: '', deskripsi: '' },
+                newProj: { nama: '', peran: '', tahun: '', deskripsi: '', tautan: '' },
+                newCert: { nama: '', penerbit: '', tahun: '' },
+                newLang: { nama: '', level: 'Menengah (Intermediate)', skor: '' },
+                newSkill: { nama: '', level: 'Beginner' },
+            };
+
             return {
                 step: 1,
-                maxStep: sudahPunyaCv ? 6 : 1,
+                maxStep: langkahTerbuka,
                 loading: false,
                 error: false,
                 errorMsg: '',
@@ -357,13 +394,25 @@
                 },
 
                 // UI Helpers for Arrays
-                newEdu: { institusi: '', jurusan: '', tahun_masuk: '', tahun_lulus: '' },
-                newExp: { perusahaan: '', posisi: '', tahun_mulai: '', tahun_selesai: '', deskripsi: '' },
-                newOrg: { organisasi: '', peran: '', tahun_mulai: '', tahun_selesai: '', deskripsi: '' },
-                newProj: { nama: '', peran: '', tahun: '', deskripsi: '', tautan: '' },
-                newCert: { nama: '', penerbit: '', tahun: '' },
-                newLang: { nama: '', level: 'Menengah (Intermediate)', skor: '' },
-                newSkill: { nama: '', level: 'Beginner' },
+                newEdu: { ...formAwal.newEdu },
+                newExp: { ...formAwal.newExp },
+                newOrg: { ...formAwal.newOrg },
+                newProj: { ...formAwal.newProj },
+                newCert: { ...formAwal.newCert },
+                newLang: { ...formAwal.newLang },
+                newSkill: { ...formAwal.newSkill },
+
+                // Formulir tambah yang sedang dibuka: { newProj: true }. Formulir baru
+                // tampil setelah tombol "Tambah …" ditekan supaya langkah tidak penuh.
+                terbuka: {},
+
+                // Formulir tambah di tiap langkah + namanya untuk pesan galat
+                formLangkah: {
+                    2: { newEdu: 'Pendidikan', newLang: 'Bahasa' },
+                    3: { newExp: 'Pengalaman' },
+                    4: { newProj: 'Proyek', newCert: 'Sertifikasi' },
+                    5: { newSkill: 'Keahlian' },
+                },
 
                 init() {
                     this.loadStepData(1);
@@ -372,6 +421,7 @@
                 async loadStepData(targetStep) {
                     this.loading = true;
                     this.error = false;
+                    Object.keys(this.terbuka).forEach((form) => this.tutupForm(form));
                     this.errors = {};
 
                     try {
@@ -439,8 +489,9 @@
                 },
 
                 // Simpan step yang sedang aktif. Return true jika sukses, false jika gagal.
-                // Step 6 (preview) tidak punya data untuk disimpan.
-                async persistCurrentStep() {
+                // Step 6 (preview) tidak punya data untuk disimpan. `lanjut` = dipanggil
+                // dari "Simpan & Lanjut" — hanya itu yang membuka langkah berikutnya.
+                async persistCurrentStep(lanjut = false) {
                     if (this.step < 1 || this.step > 5) return true;
 
                     try {
@@ -451,7 +502,7 @@
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                                 'Accept': 'application/json'
                             },
-                            body: JSON.stringify(this.buildPayload(this.step))
+                            body: JSON.stringify({ ...this.buildPayload(this.step), lanjut })
                         });
 
                         // Galat 500 mengembalikan halaman HTML, bukan JSON — response.json()
@@ -481,17 +532,45 @@
 
                         return true;
                     } catch (err) {
-                        this.error = true;
-                        this.errorMsg = err.message || 'Gagal menyimpan. Periksa koneksi Anda lalu coba lagi.';
+                        this.tampilkanGalat(err.message || 'Gagal menyimpan. Periksa koneksi Anda lalu coba lagi.');
                         return false;
                     }
                 },
 
+                // Pesan galat ada di atas isi langkah, sedangkan tombol di bilah bawah —
+                // gulir ke atas supaya pesannya terlihat.
+                tampilkanGalat(pesan) {
+                    this.error = true;
+                    this.errorMsg = pesan;
+                    this.$nextTick(() => document.querySelector('.cvb-box-body')?.scrollTo({ top: 0, behavior: 'smooth' }));
+                },
+
+                // Formulir tambah yang masih terbuka dan sudah diketik di langkah aktif.
+                // Tanpa cek ini isiannya hilang diam-diam saat pindah langkah. Formulir
+                // terbuka yang belum diketik ditutup saja.
+                isianTertunda() {
+                    for (const [form, nama] of Object.entries(this.formLangkah[this.step] || {})) {
+                        if (!this.terbuka[form]) continue;
+                        const diketik = Object.entries(this[form])
+                            .some(([kolom, nilai]) => String(nilai ?? '').trim() !== String(formAwal[form][kolom] ?? ''));
+                        if (diketik) return nama;
+                        this.tutupForm(form);
+                    }
+                    return null;
+                },
+                tolakBilaTertunda() {
+                    const nama = this.isianTertunda();
+                    if (!nama) return false;
+                    this.tampilkanGalat(`Isian ${nama} belum ditambahkan. Tekan "Tambahkan" atau "Batal" pada formulir ${nama} dulu.`);
+                    return true;
+                },
+
                 async saveAndNext() {
+                    if (this.tolakBilaTertunda()) return;
                     this.loading = true;
                     this.error = false;
 
-                    if (await this.persistCurrentStep()) {
+                    if (await this.persistCurrentStep(true)) {
                         this.loadStepData(this.step + 1);
                     } else {
                         this.loading = false;
@@ -503,6 +582,7 @@
                 // jika penyimpanan gagal (validasi) supaya pesan error tetap terlihat.
                 async goToStep(target) {
                     if (target < 1 || target > this.maxStep || target === this.step) return;
+                    if (this.tolakBilaTertunda()) return;
 
                     this.loading = true;
                     this.error = false;
@@ -528,8 +608,8 @@
                 // `aturan` memetakan kolom → cek: 'wajib' | 'tahun' | 'url' (boleh digabung).
                 // Kolom yang gagal diberi pesan di bawah kotaknya — sebelumnya tombol
                 // Tambah diam saja bila isian kurang, sehingga tampak rusak.
-                // `bawaan` = nilai awal kolom setelah formulir dikosongkan (mis. level).
-                tambah(form, daftar, aturan, bawaan = {}) {
+                // Berhasil → formulir dikosongkan ke formAwal lalu ditutup.
+                tambah(form, daftar, aturan) {
                     const baris = Object.fromEntries(
                         Object.entries(this[form]).map(([k, v]) => [k, typeof v === 'string' ? v.trim() : v])
                     );
@@ -544,8 +624,19 @@
                     if (Object.keys(galat).length) return;
 
                     this.data.cv[daftar].push(baris);
-                    this[form] = Object.fromEntries(Object.keys(baris).map((k) => [k, bawaan[k] ?? '']));
+                    this.tutupForm(form);
+                },
+
+                // Buka / tutup formulir tambah. Menutup = mengosongkan isian & galatnya.
+                bukaForm(form) {
+                    this.terbuka[form] = true;
+                    this.$nextTick(() => document.querySelector(`[data-cvb-form="${form}"] :is(input:not([type=hidden]), textarea, button)`)?.focus());
+                },
+                tutupForm(form) {
+                    this[form] = { ...formAwal[form] };
+                    this.errors[form] = {};
                     this.lainnya = Object.fromEntries(Object.entries(this.lainnya).filter(([k]) => !k.startsWith(`${form}.`)));
+                    this.terbuka[form] = false;
                 },
 
                 // Kolom "pilih dari daftar umum, atau Lainnya" (partials/_pilih-lainnya)
@@ -615,14 +706,14 @@
                 },
 
                 addLang() {
-                    this.tambah('newLang', 'bahasa', { nama: ['wajib'] }, { level: 'Menengah (Intermediate)' });
+                    this.tambah('newLang', 'bahasa', { nama: ['wajib'] });
                 },
                 removeLang(index) {
                     this.data.cv.bahasa.splice(index, 1);
                 },
 
                 addSkill() {
-                    this.tambah('newSkill', 'keahlian', { nama: ['wajib'] }, { level: 'Beginner' });
+                    this.tambah('newSkill', 'keahlian', { nama: ['wajib'] });
                 },
                 removeSkill(index) {
                     this.data.cv.keahlian.splice(index, 1);

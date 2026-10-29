@@ -22,9 +22,8 @@
             </div>
             <h1 class="kf-subject" style="font-size: 18px; margin-bottom: 8px;">Tautan ini sudah tidak berlaku</h1>
             <p style="font-size: 13px; color: var(--c-fg-muted); line-height: 1.6; margin: 0;">
-                Tautan ini dibuat untuk formulir pengaduan versi lama dan pengaduannya tidak pernah dikirim.
-                Silakan buat pengaduan baru melalui menu <strong>Layanan Pengaduan</strong>; untuk merahasiakan
-                identitas, centang <strong>Sembunyikan identitas saya</strong> di formulirnya.
+                Tautan formulir lama ini tak pernah dikirim. Buat pengaduan baru di <strong>Layanan Pengaduan</strong>
+                dan centang <strong>Sembunyikan identitas saya</strong> bila ingin anonim.
             </p>
         </div>
     @endif

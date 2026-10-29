@@ -17,13 +17,12 @@ class CvBuilderController extends Controller
 
     public function index()
     {
-        // Baris cv_profiles hanya dibuat saat saveStep() (GET tak membuatnya), jadi
-        // keberadaannya = CV pernah disimpan. Yang sudah punya CV tidak perlu dikunci
-        // per langkah; pengguna baru tetap berurutan.
-        $sudahPunyaCv = CvProfile::where('user_id', auth()->id())->exists();
+        // Langkah terbuka = satu setelah langkah tertinggi yang pernah disimpan lewat
+        // "Simpan & Lanjut" (R-35, menggantikan "sudah punya CV = semua terbuka").
+        $langkahTersimpan = (int) CvProfile::where('user_id', auth()->id())->value('langkah_tersimpan');
 
         return view('profile.cv.index', [
-            'sudahPunyaCv' => $sudahPunyaCv,
+            'langkahTerbuka' => min(6, $langkahTersimpan + 1),
             'tautanMm' => $this->tautanSubmenuMm(),
         ]);
     }
@@ -245,6 +244,14 @@ class CvBuilderController extends Controller
                 'keahlian' => 'nullable|array',
             ]);
             $cvProfile->keahlian = $request->keahlian ?? [];
+        }
+
+        // Hanya "Simpan & Lanjut" yang membuka langkah berikutnya. Simpan otomatis saat
+        // pindah lewat stepper / "Sebelumnya" tidak dihitung.
+        // Langkah yang belum terbuka tidak bisa melompati urutan.
+        $tersimpan = (int) $cvProfile->langkah_tersimpan;
+        if ($request->boolean('lanjut') && $step >= 1 && $step <= 5 && $step <= $tersimpan + 1) {
+            $cvProfile->langkah_tersimpan = max($tersimpan, (int) $step);
         }
 
         try {

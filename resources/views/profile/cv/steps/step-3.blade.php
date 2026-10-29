@@ -28,7 +28,7 @@
     </div>
 
     <div class="cvb-section">
-        <h4 class="cvb-heading">Tambah Pengalaman Kerja / Magang</h4>
+        <h4 class="cvb-heading">Pengalaman Kerja / Magang</h4>
 
         <div class="space-y-3 mb-4">
             <template x-for="(exp, index) in data.cv.pengalaman_kerja" :key="index">
@@ -49,7 +49,8 @@
             </div>
         </div>
 
-        <div class="cvb-add" @keydown.enter="enterTambah($event, 'addExp')">
+        @include('profile.cv.partials._tambah-buka', ['form' => 'newExp', 'label' => 'Tambah Pengalaman'])
+        <div class="cvb-add" data-cvb-form="newExp" x-show="terbuka.newExp" style="display: none;" @keydown.enter="enterTambah($event, 'addExp')">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @include('profile.cv.partials._field', ['form' => 'newExp', 'name' => 'posisi', 'label' => 'Posisi / Jabatan', 'required' => true, 'placeholder' => 'Contoh: Asisten Laboratorium'])
                 @include('profile.cv.partials._field', ['form' => 'newExp', 'name' => 'perusahaan', 'label' => 'Perusahaan / Organisasi', 'required' => true, 'placeholder' => 'Contoh: PT Teknologi Nusantara'])
@@ -59,12 +60,7 @@
                     @include('profile.cv.partials._field', ['form' => 'newExp', 'name' => 'deskripsi', 'label' => 'Deskripsi Pekerjaan', 'rows' => 3, 'placeholder' => 'Tanggung jawab dan hasil yang Anda capai'])
                 </div>
             </div>
-            <div class="cvb-add-foot">
-                <button type="button" @click="addExp()" class="cvb-add-btn">
-                    <x-icon name="plus" size="14" />
-                    Tambah Pengalaman
-                </button>
-            </div>
+            @include('profile.cv.partials._tambah-foot', ['form' => 'newExp', 'metode' => 'addExp'])
         </div>
     </div>
 </div>

@@ -6,7 +6,8 @@
     Urutan bagian: Pelapor → Kategori → Detail Kejadian → Isi Pengaduan → Bukti Dukung.
 
     - Pelapor: satu form untuk semua; pelapor yang ingin anonim mencentang
-      "Sembunyikan identitas saya" (is_anonim). Teksnya menyebut konsekuensinya apa adanya.
+      "Sembunyikan identitas saya" (is_anonim). Saat dicentang, kolom Nama & Angkatan
+      disembunyikan seluruhnya. Teksnya menyebut konsekuensinya apa adanya.
     - Detail Kejadian: empat pertanyaan yang menyesuaikan kategori terpilih
       (sumber: Support\PengaduanPertanyaan). Tiap kategori punya <fieldset> sendiri;
       yang tidak aktif disembunyikan DAN di-disable sehingga isiannya tidak ikut terkirim.
@@ -63,25 +64,27 @@
     <div class="kf-split">
         <div class="kf-side">
             <h3>Pelapor</h3>
-            <p>Nama dan angkatan diambil otomatis dari akun Anda. Email kontak boleh diganti.</p>
+            <p data-pgd-biasa-only @if ($anonAwal) hidden @endif>Nama dan angkatan diambil dari akun Anda.</p>
+            <p data-pgd-anon-only @unless ($anonAwal) hidden @endunless>Identitas Anda disembunyikan.</p>
         </div>
         <div class="kf-main is-fields">
             <div class="pgd-fields">
-                <div class="pgd-field">
+                {{-- Mode anonim: Nama & Angkatan disembunyikan seluruhnya. Angkatan akun tetap
+                     disimpan server untuk statistik; isian manual di-disable agar tak terkirim. --}}
+                <div class="pgd-field" data-pgd-biasa-only @if ($anonAwal) hidden @endif>
                     <label class="pgd-label" for="pgdNama">Nama Mahasiswa <span class="is-req">*</span></label>
-                    <input type="text" class="pgd-input" id="pgdNama" data-nama="{{ $namaAkun }}"
-                           value="{{ $anonAwal ? 'Disembunyikan' : $namaAkun }}" disabled>
+                    <input type="text" class="pgd-input" id="pgdNama" value="{{ $namaAkun }}" disabled>
                 </div>
-                <div class="pgd-field">
+                <div class="pgd-field" data-pgd-biasa-only @if ($anonAwal) hidden @endif>
                     <label class="pgd-label" for="pgdAngkatan">Angkatan <span class="is-req">*</span></label>
                     @if (filled($angkatanAkun))
                         <input type="text" class="pgd-input" id="pgdAngkatan" value="{{ $angkatanAkun }}" disabled>
                     @else
                         {{-- Akun tanpa data mahasiswa: angkatan diketik sendiri. --}}
                         <input type="text" class="pgd-input {{ $invalid('template.angkatan') }}" id="pgdAngkatan" name="template[angkatan]"
-                               value="{{ old('template.angkatan') }}" placeholder="Contoh: 2022"
+                               value="{{ old('template.angkatan') }}" placeholder="Contoh: 2022" data-pgd-angkatan-manual
                                inputmode="numeric" pattern="\d{4}" maxlength="4" autocomplete="off"
-                               title="Tahun 4 digit, misalnya 2022" required
+                               title="Tahun 4 digit, misalnya 2022" @if ($anonAwal) disabled @else required @endif
                                oninput="this.value = this.value.replace(/\D/g, '').slice(0, 4)">
                     @endif
                     @error('template.angkatan') <div class="pgd-error">{{ $message }}</div> @enderror
@@ -99,19 +102,13 @@
                         <div class="pgd-error">{{ $message }}</div>
                     @else
                         <div class="pgd-help" data-pgd-biasa-only @if ($anonAwal) hidden @endif>
-                            Dipakai pengelola untuk menghubungi Anda bila perlu klarifikasi. Boleh diganti dengan email yang paling sering Anda buka.
+                            Untuk dihubungi bila perlu klarifikasi. Nama, angkatan, dan email ini terlihat oleh pengelola.
                         </div>
                         <div class="pgd-help" data-pgd-anon-only @unless ($anonAwal) hidden @endunless>
-                            Isi bila Anda bersedia dihubungi pengelola. Email ini terlihat oleh pengelola, jadi gunakan email yang tidak memuat nama atau NIM Anda.
+                            Isi bila bersedia dihubungi. Gunakan email tanpa nama atau NIM Anda.
                         </div>
                     @enderror
                 </div>
-            </div>
-            <div class="pgd-help" data-pgd-biasa-only @if ($anonAwal) hidden @endif>
-                Nama, angkatan, dan email tersimpan pada pengaduan dan terlihat oleh pengelola.
-            </div>
-            <div class="pgd-help" data-pgd-anon-only @unless ($anonAwal) hidden @endunless>
-                Nama tidak disimpan. Angkatan hanya dipakai untuk statistik dan tidak ditampilkan pada pengaduan Anda.
             </div>
 
             {{-- Nilai 0 dikirim bila kotak tidak dicentang. --}}
@@ -121,9 +118,8 @@
                 <span style="min-width: 0;">
                     <span class="pgd-anon-title">Sembunyikan identitas saya dari pengelola</span>
                     <span class="pgd-anon-desc">
-                        Nama Anda tidak disimpan pada pengaduan ini. Pengelola hanya dapat menghubungi Anda
-                        bila Anda mengisi Email Kontak, dan pengaduan tidak muncul di daftar Anda.
-                        Sebagai gantinya, Anda mendapat tautan rahasia untuk melihatnya kembali.
+                        Pengaduan tidak tercatat atas nama Anda dan tidak muncul di daftar Anda.
+                        Anda mendapat tautan rahasia untuk melihatnya kembali.
                     </span>
                 </span>
             </label>
@@ -134,7 +130,7 @@
     <div class="kf-split">
         <div class="kf-side">
             <h3>Kategori</h3>
-            <p>Pilih satu kategori yang paling sesuai. Pertanyaan berikutnya menyesuaikan pilihan Anda.</p>
+            <p>Pilih satu yang paling sesuai.</p>
         </div>
         <div class="kf-main is-fields">
             <span class="pgd-label" id="pgdKategoriLabel">Kategori Pengaduan <span class="is-req">*</span></span>
@@ -166,14 +162,14 @@
                 @if ($setAktif)
                     Pertanyaan untuk kategori <strong>{{ $kategoriList[$kategoriAktif]['label'] ?? '' }}</strong>.
                 @else
-                    Pertanyaan menyesuaikan kategori yang Anda pilih.
+                    Menyesuaikan kategori terpilih.
                 @endif
             </p>
         </div>
         <div class="kf-main is-fields">
             <div class="pgd-set-empty" data-pgd-empty @if ($setAktif) hidden @endif>
                 <x-manajemenmahasiswa::ui.icon name="arrow-narrow-up" size="16" />
-                Pilih kategori terlebih dahulu untuk menampilkan pertanyaan yang sesuai.
+                Pilih kategori dulu.
             </div>
 
             @foreach ($pertanyaan as $kategori => $set)
@@ -231,7 +227,7 @@
     <div class="kf-split">
         <div class="kf-side">
             <h3>Isi Pengaduan</h3>
-            <p>Tuliskan subjek singkat dan ceritakan masalahnya dengan jelas.</p>
+            <p>Subjek singkat dan cerita masalahnya.</p>
         </div>
         <div class="kf-main is-fields">
             <div class="pgd-fields">
@@ -251,7 +247,7 @@
                         <div class="pgd-error">{{ $message }}</div>
                     @else
                         <div class="pgd-help pgd-help-row">
-                            <span>Minimal 20 karakter agar dapat ditindaklanjuti.</span>
+                            <span>Minimal 20 karakter.</span>
                             <span data-pgd-count>{{ mb_strlen((string) old('template.kronologi')) }}/5000</span>
                         </div>
                     @enderror
@@ -264,7 +260,7 @@
     <div class="kf-split">
         <div class="kf-side">
             <h3>Bukti Dukung</h3>
-            <p>Lampirkan bila ada. Pengaduan tanpa bukti tetap dicatat.</p>
+            <p>Opsional, tanpa bukti tetap dicatat.</p>
         </div>
         <div class="kf-main is-fields">
             @include('manajemenmahasiswa::pengaduan.partials.bukti-input', [
@@ -291,7 +287,7 @@
         var count = root.querySelector('[data-pgd-count]');
 
         var anon = document.getElementById('pgdAnonim');
-        var nama = document.getElementById('pgdNama');
+        var angkatanManual = root.querySelector('[data-pgd-angkatan-manual]');
         var email = document.getElementById('pgdEmail');
 
         // Tampilkan hanya set pertanyaan kategori terpilih. Set lain di-disable
@@ -314,11 +310,14 @@
             if (pesan && radio.dataset.pesan) pesan.placeholder = radio.dataset.pesan;
         }
 
-        // Centang anonim: nama tampil "Disembunyikan", email kontak jadi opsional,
+        // Centang anonim: kolom Nama & Angkatan disembunyikan, email kontak jadi opsional,
         // teks bantuan & peringatan PDF ikut berganti.
         function perbaruiIdentitas(dariCentang) {
             var on = !!(anon && anon.checked);
-            if (nama) nama.value = on ? 'Disembunyikan' : nama.dataset.nama;
+            if (angkatanManual) {
+                angkatanManual.disabled = on;
+                angkatanManual.required = !on;
+            }
             if (email) {
                 email.required = !on;
                 // Hanya saat pelapor mengubah centang: email akun dikosongkan ketika

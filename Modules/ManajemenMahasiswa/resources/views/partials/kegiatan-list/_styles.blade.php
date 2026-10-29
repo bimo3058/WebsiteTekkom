@@ -78,7 +78,7 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
-    /* Satu isian per baris (tanggal, jam, lokasi, ketua) — teks panjang dipotong
+    /* Satu isian per baris (tanggal, jam, lokasi, dosen pendamping) — teks panjang dipotong
        dengan elipsis, isi lengkapnya ada di tooltip. */
     .kegiatan-card-meta {
         display: flex;

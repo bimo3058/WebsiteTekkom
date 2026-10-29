@@ -1,6 +1,6 @@
 {{--
     Statistik Layanan Pengaduan (staf saja): bahan evaluasi mutu per periode —
-    tren per bulan, kategori, dan masalah berulang (hanya angka gabungan).
+    tren per bulan dan kategori (hanya angka gabungan).
 
     Grafik dibuat dengan HTML biasa (tanpa pustaka): batang satu warna (--c-primary)
     karena tugasnya membandingkan besaran, bukan membedakan seri. Tiap batang punya
@@ -52,24 +52,6 @@
     .ps-tip { position: fixed; z-index: 1060; pointer-events: none; padding: 6px 10px; border-radius: 8px; background: #0D0D12; color: #ffffff; font-size: 12px; line-height: 1.4; box-shadow: 0 6px 18px rgba(0,0,0,.18); white-space: nowrap; }
     .ps-tip[hidden] { display: none; }
 
-    /* ── Tabel ── */
-    .ps-table { width: 100%; border-collapse: collapse; }
-    .ps-table th { text-align: left; padding: 9px 12px; font-size: 11px; font-weight: 600; color: var(--c-fg-muted); background: #FAFAFA; border-bottom: 1px solid var(--c-border); white-space: nowrap; }
-    .ps-table td { padding: 11px 12px; font-size: 13px; color: var(--c-fg); border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
-    .ps-table tbody:last-child tr:last-child td { border-bottom: none; }
-    .ps-table .ps-group th { padding: 8px 12px; font-size: 12px; font-weight: 700; color: var(--c-fg-sec); background: #FAFAFA; border-top: 1px solid var(--c-border); border-bottom: 1px solid var(--c-border); white-space: normal; }
-    .ps-table thead + tbody .ps-group th { border-top: none; }
-    .ps-table .ps-more { font-size: 12px; color: var(--c-fg-muted); }
-    .ps-group-sub { display: block; font-size: 11px; font-weight: 500; color: var(--c-fg-muted); margin-top: 1px; }
-    .ps-hint { border-bottom: 1px dotted var(--c-fg-muted); cursor: help; }
-    .ps-link { display: inline-flex; align-items: center; gap: 4px; font-weight: 500; color: var(--c-primary); text-decoration: none; overflow-wrap: anywhere; }
-    .ps-link-sep { color: var(--c-fg-muted); }
-    .ps-link:hover, .ps-link:focus-visible { text-decoration: underline; }
-    .ps-link svg { flex-shrink: 0; }
-    .ps-table .is-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .ps-table thead .is-num { width: 1%; }
-    .ps-scroll { overflow-x: auto; }
-
     .ps-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .ps-periode { display: flex; align-items: center; gap: 8px; margin: 0; }
     .ps-periode label { font-size: 12px; color: var(--c-fg-muted); white-space: nowrap; }
@@ -85,7 +67,7 @@
             <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
         </a>
     </x-slot:leading>
-    Tren, kategori, dan masalah yang berulang sebagai bahan evaluasi mutu layanan.
+    Tren dan kategori pengaduan sebagai bahan evaluasi mutu layanan.
 </x-manajemenmahasiswa::ui.page-header>
 
 <div class="ps-wrap">
@@ -150,58 +132,6 @@
             </div>
         </div>
 
-        <div class="ps-card is-wide">
-            <div class="ps-card-head">
-                <h2 class="ps-card-title">Masalah berulang</h2>
-                <p class="ps-card-sub">Hal dan lokasi yang sama, dilaporkan 2 orang atau lebih. Klik untuk melihat pengaduannya.</p>
-            </div>
-            @if (empty($ev['berulang']))
-                <div class="ps-card-body"><div class="ps-empty">Belum ada masalah yang dilaporkan lebih dari satu orang pada periode ini.</div></div>
-            @else
-                <div class="ps-scroll">
-                    <table class="ps-table">
-                        <thead>
-                            <tr>
-                                <th>Masalah</th>
-                                <th class="is-num"><span class="ps-hint" tabindex="0" data-tip="Satu akun dihitung sekali; pelapor anonim per pengaduan">Pelapor</span></th>
-                                <th class="is-num"><span class="ps-hint" tabindex="0" data-tip="Pelapor yang menjawab masalahnya sering terjadi">Menjawab sering</span></th>
-                            </tr>
-                        </thead>
-                        @foreach ($ev['berulang'] as $k)
-                            <tbody>
-                                <tr class="ps-group">
-                                    <th colspan="3" scope="rowgroup">
-                                        {{ $k['kategori'] }}
-                                        <span class="ps-group-sub">{{ implode(' · ', $k['pertanyaan']) }}</span>
-                                    </th>
-                                </tr>
-                                @foreach ($k['baris'] as $r)
-                                    @php
-                                        $jawaban = array_values($r['jawaban']);
-                                        $tautan = route('manajemenmahasiswa.pengaduan.index', [
-                                            'kategori' => $k['kode'], 'q' => $jawaban[0], 'cocok' => $r['jawaban'], 'periode' => $periode,
-                                        ]);
-                                    @endphp
-                                    <tr>
-                                        <td>
-                                            <a class="ps-link" href="{{ $tautan }}" title="Lihat pengaduannya">
-                                                <span><strong>{{ $jawaban[0] }}</strong>@foreach (array_slice($jawaban, 1) as $lain)<span class="ps-link-sep"> · </span>{{ $lain }}@endforeach</span>
-                                                <x-manajemenmahasiswa::ui.icon name="chevron-right" size="14" />
-                                            </a>
-                                        </td>
-                                        <td class="is-num">{{ $r['pelapor'] }}</td>
-                                        <td class="is-num">{{ $r['sering'] }}</td>
-                                    </tr>
-                                @endforeach
-                                @if ($k['lainnya'] > 0)
-                                    <tr><td colspan="3" class="ps-more">+{{ $k['lainnya'] }} masalah berulang lain di kategori ini</td></tr>
-                                @endif
-                            </tbody>
-                        @endforeach
-                    </table>
-                </div>
-            @endif
-        </div>
     </div>
 </div>
 

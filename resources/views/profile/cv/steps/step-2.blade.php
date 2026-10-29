@@ -14,7 +14,7 @@
     </div>
 
     <div class="cvb-section">
-        <h4 class="cvb-heading">Tambah Pendidikan Lain</h4>
+        <h4 class="cvb-heading">Pendidikan Lain</h4>
 
         <!-- Manual Edu List -->
         <div class="space-y-3 mb-4">
@@ -35,20 +35,16 @@
             </div>
         </div>
 
-        <!-- Add Form -->
-        <div class="cvb-add" @keydown.enter="enterTambah($event, 'addEdu')">
+        <!-- Add Form — tampil setelah "Tambah Pendidikan" ditekan -->
+        @include('profile.cv.partials._tambah-buka', ['form' => 'newEdu', 'label' => 'Tambah Pendidikan'])
+        <div class="cvb-add" data-cvb-form="newEdu" x-show="terbuka.newEdu" style="display: none;" @keydown.enter="enterTambah($event, 'addEdu')">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @include('profile.cv.partials._field', ['form' => 'newEdu', 'name' => 'institusi', 'label' => 'Nama Institusi', 'required' => true, 'placeholder' => 'Contoh: SMA Negeri 1 Semarang'])
                 @include('profile.cv.partials._field', ['form' => 'newEdu', 'name' => 'jurusan', 'label' => 'Jurusan / Bidang', 'required' => true, 'placeholder' => 'Contoh: IPA'])
                 @include('profile.cv.partials._field', ['form' => 'newEdu', 'name' => 'tahun_masuk', 'label' => 'Tahun Masuk', 'year' => true, 'placeholder' => '2019'])
                 @include('profile.cv.partials._field', ['form' => 'newEdu', 'name' => 'tahun_lulus', 'label' => 'Tahun Lulus', 'year' => true, 'placeholder' => '2022', 'hint' => 'Kosongkan jika belum lulus.'])
             </div>
-            <div class="cvb-add-foot">
-                <button type="button" @click="addEdu()" class="cvb-add-btn">
-                    <x-icon name="plus" size="14" />
-                    Tambah Pendidikan
-                </button>
-            </div>
+            @include('profile.cv.partials._tambah-foot', ['form' => 'newEdu', 'metode' => 'addEdu'])
         </div>
     </div>
 
@@ -75,8 +71,9 @@
             </div>
         </div>
 
-        <!-- Add Form -->
-        <div class="cvb-add" @keydown.enter="enterTambah($event, 'addLang')">
+        <!-- Add Form — tampil setelah "Tambah Bahasa" ditekan -->
+        @include('profile.cv.partials._tambah-buka', ['form' => 'newLang', 'label' => 'Tambah Bahasa'])
+        <div class="cvb-add" data-cvb-form="newLang" x-show="terbuka.newLang" style="display: none;" @keydown.enter="enterTambah($event, 'addLang')">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 @include('profile.cv.partials._pilih-lainnya', [
                     'form' => 'newLang', 'name' => 'nama', 'label' => 'Bahasa', 'required' => true,
@@ -92,12 +89,7 @@
                 </div>
                 @include('profile.cv.partials._field', ['form' => 'newLang', 'name' => 'skor', 'label' => 'Skor / Nilai', 'placeholder' => 'Contoh: TOEFL 550'])
             </div>
-            <div class="cvb-add-foot">
-                <button type="button" @click="addLang()" class="cvb-add-btn">
-                    <x-icon name="plus" size="14" />
-                    Tambah Bahasa
-                </button>
-            </div>
+            @include('profile.cv.partials._tambah-foot', ['form' => 'newLang', 'metode' => 'addLang'])
         </div>
     </div>
 </div>

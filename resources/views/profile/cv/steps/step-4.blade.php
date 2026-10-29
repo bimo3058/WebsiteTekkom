@@ -38,7 +38,8 @@
             </div>
         </div>
 
-        <div class="cvb-add" @keydown.enter="enterTambah($event, 'addProj')">
+        @include('profile.cv.partials._tambah-buka', ['form' => 'newProj', 'label' => 'Tambah Proyek'])
+        <div class="cvb-add" data-cvb-form="newProj" x-show="terbuka.newProj" style="display: none;" @keydown.enter="enterTambah($event, 'addProj')">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @include('profile.cv.partials._field', ['form' => 'newProj', 'name' => 'nama', 'label' => 'Nama Proyek', 'required' => true, 'placeholder' => 'Contoh: Sistem Informasi Perpustakaan'])
                 @include('profile.cv.partials._field', ['form' => 'newProj', 'name' => 'peran', 'label' => 'Peran / Teknologi', 'placeholder' => 'Contoh: Backend Developer (Laravel, MySQL)'])
@@ -48,12 +49,7 @@
                     @include('profile.cv.partials._field', ['form' => 'newProj', 'name' => 'deskripsi', 'label' => 'Deskripsi Singkat', 'required' => true, 'rows' => 3, 'placeholder' => 'Apa yang dikerjakan dan hasilnya'])
                 </div>
             </div>
-            <div class="cvb-add-foot">
-                <button type="button" @click="addProj()" class="cvb-add-btn">
-                    <x-icon name="plus" size="14" />
-                    Tambah Proyek
-                </button>
-            </div>
+            @include('profile.cv.partials._tambah-foot', ['form' => 'newProj', 'metode' => 'addProj'])
         </div>
     </div>
 
@@ -78,7 +74,8 @@
             </div>
         </div>
 
-        <div class="cvb-add" @keydown.enter="enterTambah($event, 'addCert')">
+        @include('profile.cv.partials._tambah-buka', ['form' => 'newCert', 'label' => 'Tambah Sertifikasi'])
+        <div class="cvb-add" data-cvb-form="newCert" x-show="terbuka.newCert" style="display: none;" @keydown.enter="enterTambah($event, 'addCert')">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 @include('profile.cv.partials._field', ['form' => 'newCert', 'name' => 'nama', 'label' => 'Nama Sertifikasi / Pelatihan', 'required' => true, 'placeholder' => 'Contoh: Dasar Pemrograman Web'])
                 @include('profile.cv.partials._pilih-lainnya', [
@@ -88,12 +85,7 @@
                 ])
                 @include('profile.cv.partials._field', ['form' => 'newCert', 'name' => 'tahun', 'label' => 'Tahun', 'year' => true, 'placeholder' => '2024'])
             </div>
-            <div class="cvb-add-foot">
-                <button type="button" @click="addCert()" class="cvb-add-btn">
-                    <x-icon name="plus" size="14" />
-                    Tambah Sertifikasi
-                </button>
-            </div>
+            @include('profile.cv.partials._tambah-foot', ['form' => 'newCert', 'metode' => 'addCert'])
         </div>
     </div>
 </div>

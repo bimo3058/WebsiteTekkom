@@ -325,7 +325,10 @@
                     </div>
                     <div>
                         <label class="form-label-custom" for="kslAngkatan">Angkatan</label>
-                        <input type="number" id="kslAngkatan" name="angkatan" min="1990" max="{{ now()->year }}"
+                        {{-- Teks 4 digit, bukan type="number": tanpa panah naik-turun & riwayat isian browser. --}}
+                        <input type="text" id="kslAngkatan" name="angkatan" inputmode="numeric" pattern="\d{4}" maxlength="4"
+                               autocomplete="off" title="Tahun 4 digit, misalnya 2022"
+                               oninput="this.value = this.value.replace(/\D/g, '').slice(0, 4)"
                                class="form-control-custom @error('angkatan') is-invalid @enderror" placeholder="Opsional, mis. 2022">
                         @error('angkatan') <div class="ksl-err">{{ $message }}</div> @enderror
                     </div>
@@ -477,11 +480,17 @@
 
         // Batas atas angkatan mengikuti tahun tanggal konseling (tak mungkin lebih
         // baru dari tahun ini). Server tetap memeriksa ulang aturan yang sama.
+        // Input teks tak mengenal min/max, jadi rentangnya diperiksa lewat setCustomValidity.
         function batasiAngkatan() {
             const tahun = parseInt(($('kslTanggal').value || HARI_INI).slice(0, 4), 10);
-            $('kslAngkatan').max = Math.min(tahun || TAHUN_INI, TAHUN_INI);
+            const maks = Math.min(tahun || TAHUN_INI, TAHUN_INI);
+            const el = $('kslAngkatan');
+            const v = el.value;
+            el.setCustomValidity(v.length === 4 && (+v < 1990 || +v > maks)
+                ? 'Angkatan harus antara 1990 dan ' + maks + '.' : '');
         }
         $('kslTanggal').addEventListener('change', batasiAngkatan);
+        $('kslAngkatan').addEventListener('input', batasiAngkatan);
 
         window.kslBukaTambah = function () {
             bersihkanError();

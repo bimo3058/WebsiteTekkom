@@ -102,13 +102,18 @@
         @if($proker->dosenPendampings->isNotEmpty())
         <div class="meta-item">
             <div class="meta-item-label">Dosen Pendamping</div>
+            {{-- Satu dosen = satu blok: nama di atas, peran (pill) di bawahnya, supaya nama
+                 panjang tidak menjepit pill peran jadi satu huruf per baris. --}}
+            <div style="display:flex;flex-direction:column;gap:10px;">
             @foreach($proker->dosenPendampings as $dosenItem)
-            <div class="meta-item-value" @if(!$loop->first) style="margin-top:4px;" @endif><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> {{ $dosenItem->user->name ?? '-' }}
+            <div style="min-width:0;">
+                <div class="meta-item-value" style="align-items:flex-start;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:3px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg><span style="min-width:0;">{{ $dosenItem->user->name ?? '-' }}</span></div>
                 @if(filled($dosenItem->pivot->peran ?? null))
-                    <span style="font-size: 11px; font-weight: 600; color: var(--c-primary); background: var(--c-primary-subtle); padding: 1px 8px; border-radius: 20px; margin-left: 4px;">{{ $dosenItem->pivot->peran }}</span>
+                    <span style="display:inline-block;margin:4px 0 0 20px;max-width:calc(100% - 20px);font-size:11px;font-weight:600;line-height:1.4;color:var(--c-primary);background:var(--c-primary-subtle);padding:2px 10px;border-radius:20px;overflow-wrap:anywhere;">{{ $dosenItem->pivot->peran }}</span>
                 @endif
             </div>
             @endforeach
+            </div>
         </div>
         @endif
 

@@ -125,10 +125,11 @@ class PengaduanPayloadRequest extends FormRequest
                 );
             }
 
-            // Angkatan wajib di kedua mode (mengikuti Google Form pengaduan awal;
-            // untuk pelapor anonim dipakai sebagai statistik saja). Diambil dari akun;
-            // hanya akun tanpa data mahasiswa yang mengetiknya sendiri.
-            if ($this->angkatanAkun() === null && blank($this->input('template.angkatan'))) {
+            // Angkatan diambil dari akun (pelapor anonim: statistik saja). Akun tanpa
+            // data mahasiswa mengetiknya sendiri, kecuali anonim: kolomnya disembunyikan.
+            if (! $this->boolean('is_anonim')
+                && $this->angkatanAkun() === null
+                && blank($this->input('template.angkatan'))) {
                 $validator->errors()->add('template.angkatan', 'Angkatan wajib diisi.');
             }
         });

@@ -5,13 +5,11 @@ namespace Modules\ManajemenMahasiswa\Services;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Modules\ManajemenMahasiswa\Models\Pengaduan;
-use Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan;
 
 /**
  * Statistik halaman Layanan Pengaduan: bahan evaluasi mutu per periode untuk
  * GPM (pengendali mutu prodi, Peraturan Rektor Undip 18/2024) dan pengelola lain —
- * tren per bulan, kategori, dan masalah berulang.
- * Hanya angka gabungan.
+ * tren per bulan dan kategori. Hanya angka gabungan.
  *
  * Volume pengaduan prodi kecil (puluhan–ratusan per tahun), jadi agregasi dikerjakan
  * di PHP atas satu kueri, tanpa SQL JSON khusus per metrik.
@@ -34,9 +32,6 @@ class PengaduanStatistikService
         '1_tahun' => 12,
     ];
 
-    /** Baris masalah berulang yang ditampilkan per kategori; sisanya hanya dihitung. */
-    private const BERULANG_PER_KATEGORI = 5;
-
     private const BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
     private ?Collection $tiket = null;
@@ -56,7 +51,6 @@ class PengaduanStatistikService
             'total'         => $tiket->count(),
             'per_bulan'     => $this->perBulan($tiket, $mulai, $selesai->min($now)),
             'per_kategori'  => $this->perKategori($tiket),
-            'berulang'      => $this->berulang($tiket),
         ];
     }
 
@@ -110,93 +104,13 @@ class PengaduanStatistikService
         return $hasil;
     }
 
-    /**
-     * Masalah yang sama dari ≥ 2 pelapor, per kategori. "Sama" = SEMUA pertanyaan teks
-     * kategori itu dijawab sama (huruf kecil & spasi dirapikan), mis. Fasilitas: hal
-     * "AC" DAN lokasi "Ruang A.3.12" — AC di ruang lain adalah masalah lain. Tiket yang
-     * salah satu jawabannya kosong (atau berisi label pertanyaan, peninggalan form lama)
-     * tidak ikut, begitu pula kunci lama di luar set kategorinya.
-     *
-     * Satuannya pelapor: satu akun yang mengirim dua kali dihitung sekali. Tiket anonim
-     * dihitung per tiket, tanpa melihat akun pengirimnya.
-     *
-     * @return array<int, array{kode: string, kategori: string, pertanyaan: array<string, string>, baris: array, lainnya: int}>
-     */
-    private function berulang(Collection $tiket): array
-    {
-        $abaikan = PengaduanPertanyaan::semuaLabel();
-        $grup = [];
-
-        foreach ($tiket as $p) {
-            $kategori = Pengaduan::normalizeKategori((string) $p->kategori);
-            $kunciTeks = PengaduanPertanyaan::kunciTeks($kategori);
-            if (empty($kunciTeks)) {
-                continue;
-            }
-
-            $jawaban = [];
-            foreach ($kunciTeks as $kunci) {
-                $teks = self::rapikan((string) data_get($p->data_template, $kunci));
-                if (mb_strlen($teks) < 2 || isset($abaikan[mb_strtolower($teks)])) {
-                    continue 2;
-                }
-                $jawaban[$kunci] = $teks;
-            }
-
-            $pelapor = (!$p->is_anonim && $p->user_id) ? 'u' . $p->user_id : 't' . $p->id;
-            $frekuensi = mb_strtolower(trim((string) data_get($p->data_template, 'frekuensi')));
-
-            $id = mb_strtolower(implode("\n", $jawaban));
-            $grup[$kategori][$id]['tulisan'][] = json_encode($jawaban, JSON_UNESCAPED_UNICODE);
-            $grup[$kategori][$id]['pelapor'][$pelapor] = true;
-            if (in_array($frekuensi, PengaduanPertanyaan::FREKUENSI_SERING, true)) {
-                $grup[$kategori][$id]['sering'][$pelapor] = true;
-            }
-        }
-
-        return collect($grup)
-            ->map(function (array $masalah, string $kategori) {
-                $baris = collect($masalah)
-                    ->filter(fn ($g) => count($g['pelapor']) >= 2)
-                    ->map(fn ($g) => [
-                        // Penulisan yang paling sering dipakai.
-                        'jawaban' => json_decode(collect($g['tulisan'])->countBy()->sortDesc()->keys()->first(), true),
-                        'pelapor' => count($g['pelapor']),
-                        'sering'  => count($g['sering'] ?? []),
-                    ])
-                    ->sortByDesc('pelapor')
-                    ->values();
-
-                return [
-                    'kode'       => $kategori,
-                    'kategori'   => Pengaduan::kategoriLabel($kategori),
-                    'pertanyaan' => array_map(
-                        fn ($field) => $field['label'],
-                        array_intersect_key(PengaduanPertanyaan::untuk($kategori)['fields'], array_flip(PengaduanPertanyaan::kunciTeks($kategori)))
-                    ),
-                    'baris'      => $baris->take(self::BERULANG_PER_KATEGORI)->all(),
-                    'lainnya'    => max(0, $baris->count() - self::BERULANG_PER_KATEGORI),
-                ];
-            })
-            ->filter(fn ($k) => !empty($k['baris']))
-            ->sortByDesc(fn ($k) => $k['baris'][0]['pelapor'])
-            ->values()
-            ->all();
-    }
-
     // ── Pembantu ─────────────────────────────────────────────────────────
-
-    /** Spasi ganda dirapikan & ujung dipangkas; cara yang sama dipakai filter persis di daftar pengaduan. */
-    public static function rapikan(string $teks): string
-    {
-        return trim(preg_replace('/\s+/u', ' ', $teks));
-    }
 
     private function tiket(): Collection
     {
         return $this->tiket ??= Pengaduan::query()
             ->where('status', '!=', Pengaduan::STATUS_DRAFT)
-            ->get(['id', 'user_id', 'is_anonim', 'kategori', 'data_template', 'created_at']);
+            ->get(['id', 'kategori', 'created_at']);
     }
 
 }

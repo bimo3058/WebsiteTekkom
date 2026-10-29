@@ -11,7 +11,6 @@ use Modules\ManajemenMahasiswa\Models\PengaduanLog;
 use Modules\ManajemenMahasiswa\Services\PengaduanService;
 use Modules\ManajemenMahasiswa\Services\PengaduanStatistikService;
 use Modules\ManajemenMahasiswa\Support\PengaduanBukti;
-use Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan;
 use Modules\ManajemenMahasiswa\Support\PengaduanQuota;
 use Modules\ManajemenMahasiswa\Support\PerPage;
 
@@ -90,37 +89,16 @@ class PengaduanController extends Controller
         // tidak, pelapor bisa menebak status tiketnya lewat ?status= di URL.
         $kategori = (string)$request->query('kategori', '');
         $status = $isStaff ? (string)$request->query('status', '') : '';
-        // Filter "melihat pola" (pihak terlapor) khusus staff.
-        $pihak = $isStaff ? (string)$request->query('pihak', '') : '';
+        // Jenis pelapor (teridentifikasi/anonim) khusus staff; pelapor hanya melihat
+        // tiket non-anonimnya sendiri, jadi filter ini tidak berarti baginya.
+        $pelapor = $isStaff ? (string)$request->query('pelapor', '') : '';
 
         $filters = [
             'q' => trim((string)$request->query('q', '')),
             'kategori' => in_array($kategori, Pengaduan::KATEGORI_LIST, true) ? $kategori : '',
             'status' => in_array($status, ['baru', 'tercatat'], true) ? $status : '',
-            'pihak' => in_array($pihak, PengaduanPertanyaan::PIHAK, true) ? $pihak : '',
+            'pelapor' => in_array($pelapor, ['teridentifikasi', 'anonim'], true) ? $pelapor : '',
         ];
-
-        // Tautan dari kartu "Masalah berulang" di Statistik: ?cocok[kunci]=jawaban untuk
-        // SEMUA pertanyaan teks kategori, dicocokkan persis (sama dengan cara statistik
-        // menghitung) dan dibatasi periode statistiknya, supaya daftar berisi tepat
-        // pengaduan yang dihitung di sana. Kotak cari menampilkan jawaban pertama; bila
-        // isinya diganti, pencarian kembali bebas.
-        $filters['cocok'] = [];
-        $cocok = $request->query('cocok');
-        if ($isStaff && $filters['kategori'] !== '' && is_array($cocok)) {
-            $kunciTeks = PengaduanPertanyaan::kunciTeks($filters['kategori']);
-            $jawaban = [];
-            foreach ($kunciTeks as $kunci) {
-                $jawaban[$kunci] = is_string($cocok[$kunci] ?? null) ? PengaduanStatistikService::rapikan($cocok[$kunci]) : '';
-            }
-            $lengkap = $kunciTeks !== [] && !in_array('', $jawaban, true);
-            if ($lengkap && mb_strtolower(PengaduanStatistikService::rapikan($filters['q'])) === mb_strtolower(reset($jawaban))) {
-                $filters['cocok'] = $jawaban;
-            }
-        }
-        $periode = (string)$request->query('periode', '');
-        $filters['periode'] = $filters['cocok'] !== [] && array_key_exists($periode, PengaduanStatistikService::PERIODE)
-            ? $periode : '';
 
         $query = Pengaduan::query();
         if ($isStaff) {
@@ -149,23 +127,11 @@ class PengaduanController extends Controller
             $query->whereNotIn('status', Pengaduan::TERCATAT_STATUSES);
         }
 
-        if ($filters['pihak'] !== '') {
-            $query->whereRaw("data_template->>'pihak_terkait' = ?", [$filters['pihak']]);
+        if ($filters['pelapor'] !== '') {
+            $query->where('is_anonim', $filters['pelapor'] === 'anonim');
         }
 
-        if ($filters['cocok'] !== []) {
-            foreach ($filters['cocok'] as $kunci => $jawaban) {
-                $query->whereRaw(
-                    "lower(btrim(regexp_replace(data_template->>?, '\\s+', ' ', 'g'))) = ?",
-                    [$kunci, mb_strtolower($jawaban)]
-                );
-            }
-
-            if ($filters['periode'] !== '' && $filters['periode'] !== 'semua') {
-                [$mulai, $selesai] = app(PengaduanStatistikService::class)->rentang($filters['periode']);
-                $query->whereBetween('created_at', [$mulai, $selesai]);
-            }
-        } elseif ($filters['q'] !== '') {
+        if ($filters['q'] !== '') {
             $q = $filters['q'];
             $query->where(function ($sub) use ($q, $isStaff) {
                 if (ctype_digit($q)) {
@@ -177,7 +143,7 @@ class PengaduanController extends Controller
                     ->orWhereRaw("data_template->>'hal_aduan' ILIKE ?", [$like])
                     ->orWhereRaw("data_template->>'kronologi' ILIKE ?", [$like]);
 
-                // Lokasi & objek membantu staff melihat laporan berulang di tempat/hal yang sama.
+                // Lokasi & objek membantu staff menemukan laporan di tempat/hal yang sama.
                 if ($isStaff) {
                     $sub->orWhereRaw("data_template->>'lokasi' ILIKE ?", [$like])
                         ->orWhereRaw("data_template->>'objek' ILIKE ?", [$like]);

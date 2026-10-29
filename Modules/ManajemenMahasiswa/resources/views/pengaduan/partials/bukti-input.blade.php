@@ -21,13 +21,12 @@
     Pilih Berkas PDF
 </label>
 <div class="pgd-help">
-    Hanya berkas PDF, maks. {{ $maxFiles }} berkas &times; {{ $maxMb }} MB.
-    Gabungkan foto/screenshot ke dalam PDF terlebih dahulu.
+    PDF saja, maks. {{ $maxFiles }} berkas &times; {{ $maxMb }} MB. Foto/screenshot gabungkan ke PDF.
 </div>
 {{-- Hanya saat identitas disembunyikan (form-fields menyalakannya lewat data-pgd-anon-only):
      tanpa centang itu identitas pelapor memang sudah diketahui pengelola. --}}
 <div class="pgd-help" data-pgd-anon-only @unless (old('is_anonim')) hidden @endunless style="color: var(--c-warning); font-weight: 600;">
-    Pastikan nama atau NIM Anda tidak tertulis di dalam isi PDF.
+    Pastikan isi PDF tidak memuat nama atau NIM Anda.
 </div>
 <div class="bk-list" id="buktiPreview"></div>
 <div class="bk-error" id="buktiError" role="alert"></div>
@@ -35,7 +34,7 @@
 @error('bukti.*') <div class="pgd-error">{{ $message }}</div> @enderror
 @if ($pendingCount > 0)
     <div class="pgd-help" style="margin-top: 12px; color: var(--c-primary); font-weight: 600;">
-        {{ $pendingCount }} berkas sudah terunggah. Pilih berkas baru hanya bila ingin menggantinya.
+        {{ $pendingCount }} berkas sudah terunggah. Pilih berkas baru untuk menggantinya.
     </div>
     @include('manajemenmahasiswa::pengaduan.partials.bukti-items', ['items' => $buktiPendingItems])
     <label class="pgd-help" style="display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; cursor: pointer;">

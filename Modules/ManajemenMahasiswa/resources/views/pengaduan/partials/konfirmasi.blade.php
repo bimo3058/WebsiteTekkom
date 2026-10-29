@@ -19,11 +19,14 @@
     $buktiItems = (array) ($payload['bukti_items'] ?? []);
     $buktiCount = count($buktiItems);
 
-    $infoItems = array_merge([
-        // Istilah sama dengan daftar & detail staff: "Anonim".
-        ['label' => 'Pelapor',  'value' => $isAnonim ? 'Disembunyikan (anonim)' : ($reporterName ?? '-')],
-        ['label' => 'Angkatan', 'value' => $isAnonim && $tpl('angkatan') ? $tpl('angkatan') . ' (statistik saja)' : $tpl('angkatan')],
-        ['label' => 'Email Kontak', 'value' => $tpl('email_kontak') ?: ($isAnonim ? 'Tidak diisi (tidak dapat dihubungi)' : null)],
+    // Anonim: baris Pelapor & Angkatan tidak ditampilkan (badge "Anonim" sudah cukup).
+    $identitas = $isAnonim ? [] : [
+        ['label' => 'Pelapor',  'value' => $reporterName ?? '-'],
+        ['label' => 'Angkatan', 'value' => $tpl('angkatan')],
+    ];
+
+    $infoItems = array_merge($identitas, [
+        ['label' => 'Email Kontak', 'value' => $tpl('email_kontak') ?: ($isAnonim ? 'Tidak diisi' : null)],
     ], PengaduanPertanyaan::barisInfo(
         (string) $payload['kategori'],
         (array) ($payload['template'] ?? [])
@@ -57,9 +60,9 @@
         <div class="kf-notice">
             <x-manajemenmahasiswa::ui.icon name="alert-triangle" size="16" />
             <span>
-                Periksa kembali data di bawah. Setelah dikirim, pengaduan tidak bisa diedit lagi.
+                Periksa kembali; setelah dikirim tidak bisa diedit.
                 @if($isAnonim)
-                    Karena identitas Anda disembunyikan, Anda akan mendapat <strong>tautan rahasia</strong> untuk melihatnya kembali — simpan baik-baik.
+                    Simpan <strong>tautan rahasia</strong> yang akan diberikan untuk melihatnya kembali.
                 @endif
             </span>
         </div>
@@ -97,7 +100,7 @@
         <div class="kf-split">
             <div class="kf-side">
                 <h3>Pesan</h3>
-                <p>Isi pengaduan yang akan diterima pengelola. Pastikan sudah jelas dan lengkap.</p>
+                <p>Isi yang diterima pengelola.</p>
             </div>
             <div class="kf-main">{{ $tpl('kronologi') ?: '-' }}</div>
         </div>
@@ -106,11 +109,11 @@
         <div class="kf-split">
             <div class="kf-side">
                 <h3>Bukti Dukung</h3>
-                <p>Berkas PDF yang dilampirkan. Metadata penulis dokumen sudah dikosongkan sebisanya.</p>
+                <p>Metadata penulis PDF dikosongkan otomatis.</p>
             </div>
             <div class="kf-main is-fields">
                 @if($buktiCount > 0)
-                    <div style="font-size: 13px; font-weight: 600; color: var(--c-fg-sec);">{{ $buktiCount }} berkas — klik untuk melihat isinya</div>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--c-fg-sec);">{{ $buktiCount }} berkas — klik untuk melihat</div>
                     @include('manajemenmahasiswa::pengaduan.partials.bukti-items', ['items' => $buktiItems])
                 @else
                     <span class="kf-empty">Tidak ada bukti dilampirkan</span>

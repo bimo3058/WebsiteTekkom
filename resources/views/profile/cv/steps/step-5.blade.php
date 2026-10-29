@@ -25,8 +25,9 @@
             </div>
         </div>
 
-        <!-- Add Form -->
-        <div class="cvb-add" @keydown.enter="enterTambah($event, 'addSkill')">
+        <!-- Add Form — tampil setelah "Tambah Keahlian" ditekan -->
+        @include('profile.cv.partials._tambah-buka', ['form' => 'newSkill', 'label' => 'Tambah Keahlian'])
+        <div class="cvb-add" data-cvb-form="newSkill" x-show="terbuka.newSkill" style="display: none;" @keydown.enter="enterTambah($event, 'addSkill')">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @include('profile.cv.partials._pilih-lainnya', [
                     'form' => 'newSkill', 'name' => 'nama', 'label' => 'Nama Keahlian', 'required' => true,
@@ -44,12 +45,7 @@
                     ])
                 </div>
             </div>
-            <div class="cvb-add-foot">
-                <button type="button" @click="addSkill()" class="cvb-add-btn">
-                    <x-icon name="plus" size="14" />
-                    Tambah Keahlian
-                </button>
-            </div>
+            @include('profile.cv.partials._tambah-foot', ['form' => 'newSkill', 'metode' => 'addSkill'])
         </div>
     </div>
 </div>

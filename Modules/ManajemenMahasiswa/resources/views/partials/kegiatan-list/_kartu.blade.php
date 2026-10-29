@@ -7,10 +7,16 @@
     Diarsipkan / Tidak terlaksana) tidak dipakai — dicabut 27 Okt 2026.
 
     Variabel: $item (Kegiatan — muat relasi bidang, bidangs, kategoriKegiatan,
-    kategoris, ketuaPelaksana.user), $href.
+    kategoris, dosenPendampings.user), $href.
+
+    Baris terakhir kartu = Dosen Pendamping (bukan Ketua Pelaksana — diganti 27 Okt 2026
+    atas permintaan Surya; ketua pelaksana tetap tampil di halaman detail).
 --}}
 @php
-    $namaKetua = $item->ketuaPelaksana?->user?->name ?? $item->penanggung_jawab;
+    $namaDosen = $item->dosenPendampings->map(fn ($d) => $d->user?->name)->filter()->values();
+    $tooltipDosen = $item->dosenPendampings
+        ->map(fn ($d) => ($d->user?->name ?? '-') . (filled($d->pivot->peran ?? null) ? ' (' . $d->pivot->peran . ')' : ''))
+        ->implode(', ');
 @endphp
 <a href="{{ $href }}" class="kegiatan-card">
     <div class="kegiatan-card-image">
@@ -66,10 +72,10 @@
                     <span class="teks">{{ $item->lokasi }}</span>
                 </div>
             @endif
-            @if($namaKetua)
-                <div title="Ketua Pelaksana: {{ $namaKetua }}">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    <span class="teks">{{ $namaKetua }}</span>
+            @if($namaDosen->isNotEmpty())
+                <div title="Dosen Pendamping: {{ $tooltipDosen }}">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                    <span class="teks">{{ $namaDosen->first() }}@if($namaDosen->count() > 1) <span style="font-weight:700;color:var(--c-primary);">+{{ $namaDosen->count() - 1 }} lainnya</span>@endif</span>
                 </div>
             @endif
         </div>
