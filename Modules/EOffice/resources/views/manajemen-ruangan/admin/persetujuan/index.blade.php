@@ -703,8 +703,8 @@
 
                             <!-- Formulir Edit Overrride (Tampil Jika dipilih) -->
                             <div x-show="selectedAction === 'edit'" x-transition
-                                class="mt-4 mb-2 p-4 bg-slate-50 border border-slate-100 rounded-xl relative overflow-hidden group">
-                                <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#0B266E]"></div>
+                                class="mt-4 mb-2 p-4 bg-slate-50 border border-slate-100 rounded-xl relative group">
+                                <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#0B266E] rounded-l-xl"></div>
                                 <h4 class="text-[13px] font-bold text-slate-800 mb-4 flex items-center gap-2">
                                     <svg class="w-4 h-4 text-[#0B266E]" fill="none" stroke="currentColor"
                                         stroke-width="2" viewBox="0 0 24 24">
@@ -724,7 +724,7 @@
                                                     get selectedName() {
                                                         const room = [
                                                             @foreach($ruangans as $ruangan)
-                                                                {id: '{{ $ruangan->id }}', name: '{{ addslashes($ruangan->nama) }}'},
+                                                                 {id: '{{ $ruangan->id }}', name: '{{ addslashes($ruangan->nama) }}'},
                                                             @endforeach
                                                         ].find(r => r.id == currentRoom);
                                                         return room ? room.name : 'Pilih Ruangan...';
@@ -796,15 +796,28 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div x-show="conflictError" x-transition
-                                    class="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-red-700 text-xs font-semibold">
-                                    <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                                        </path>
-                                    </svg>
-                                    <span x-text="conflictError"></span>
+                                <div x-show="conflictError" x-cloak x-transition
+                                    class="mt-4 p-3.5 bg-red-50 border border-red-200 rounded-xl flex flex-col gap-2 text-red-700 text-xs">
+                                    <div class="font-bold flex items-center gap-2">
+                                        <svg class="w-4 h-4 shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                            </path>
+                                        </svg>
+                                        <span>Gagal Mengubah! Terdapat Jadwal yang Beririsan di Ruangan Ini:</span>
+                                    </div>
+                                    <div class="flex flex-col gap-1.5 mt-1" x-show="conflictsList.length > 0">
+                                        <template x-for="(c, idx) in conflictsList" :key="idx">
+                                            <div class="flex items-start gap-2">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0"></span>
+                                                <span class="leading-relaxed">
+                                                    <span class="font-bold" x-text="'[' + c.tipe + '] ' + c.nama"></span>
+                                                    <span class="text-red-600/80 ml-1 font-medium" x-text="'(' + c.waktu + ')'"></span>
+                                                </span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div x-show="conflictsList.length === 0" class="text-xs text-red-600 leading-relaxed" x-text="conflictError"></div>
                                 </div>
                             </div>
 
@@ -825,7 +838,7 @@
                                 class="flex-1 cursor-pointer py-2.5 px-4 border border-slate-200 text-slate-600 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-all">Batalkan</button>
                             <button type="submit"
                                 class="flex-1 cursor-pointer py-2.5 px-4 bg-[#0B266E] hover:bg-[#071946] text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                :disabled="!selectedAction || (selectedAction === 'edit' && (conflictError !== '' || isCheckingOut))">Simpan Perubahan</button>
+                                :disabled="!selectedAction || (selectedAction === 'edit' && (conflictsList.length > 0 || conflictError !== '' || isCheckingOut))">Simpan Perubahan</button>
                         </div>
                     </form>
                 </div>
@@ -914,6 +927,7 @@
                 currentTujuan: '',
 
                 conflictError: '',
+                conflictsList: [],
                 isCheckingOut: false,
                 checkTimeout: null,
 
@@ -922,11 +936,20 @@
                     this.$watch('currentDate', () => this.triggerCheck());
                     this.$watch('currentJamMulai', () => this.triggerCheck());
                     this.$watch('currentJamSelesai', () => this.triggerCheck());
+                    this.$watch('selectedAction', (val) => {
+                        if (val === 'edit') {
+                            this.triggerCheck();
+                        } else {
+                            this.conflictError = '';
+                            this.conflictsList = [];
+                        }
+                    });
                 },
 
                 triggerCheck() {
                     if (this.selectedAction !== 'edit') {
                         this.conflictError = '';
+                        this.conflictsList = [];
                         return;
                     }
                     if (this.checkTimeout) clearTimeout(this.checkTimeout);
@@ -949,9 +972,11 @@
                         let data = await res.json();
 
                         if (data.conflict) {
-                            this.conflictError = data.message;
+                            this.conflictError = data.message || 'Terdapat jadwal beririsan';
+                            this.conflictsList = data.conflicts_list || [];
                         } else {
                             this.conflictError = '';
+                            this.conflictsList = [];
                         }
                     } catch (e) {
                         console.error(e);
@@ -982,6 +1007,7 @@
                     this.currentJamSelesai = jamSelesai;
                     this.currentTujuan = kegiatan;
                     this.conflictError = '';
+                    this.conflictsList = [];
 
                     if (status === 'disetujui') {
                         this.selectedAction = 'ditolak';
@@ -995,6 +1021,8 @@
                 closeModal() {
                     this.modalTindakan = false;
                     this.selectedId = null;
+                    this.conflictError = '';
+                    this.conflictsList = [];
                     if (this.checkTimeout) clearTimeout(this.checkTimeout);
                 },
 

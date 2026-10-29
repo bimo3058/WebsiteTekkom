@@ -402,7 +402,7 @@ class PersetujuanController extends Controller
 
     /**
      * Mengecek bentrok secara asynchronous via AJAX/Fetch
-     * Mencegah hit lemot ke database dengan memberikan API endpoint spesifik
+     * Mengumpulkan seluruh jadwal yang beririsan (Akademik, Pemeliharaan, maupun Peminjaman lain)
      */
     public function checkCollision(Request $request)
     {
@@ -413,32 +413,14 @@ class PersetujuanController extends Controller
         $excludeId = $request->exclude_id; // ID Peminjaman yang sedang diedit (biar tidak bentrok dengan diri sendiri)
 
         if (!$ruanganId || !$tanggal || !$jamMulai || !$jamSelesai) {
-            return response()->json(['conflict' => false]);
+            return response()->json(['conflict' => false, 'conflicts_list' => []]);
         }
 
-        // 1. Cek bentrok peminjaman lain
-        $isConflict = Peminjaman::where('ruangan_id', $ruanganId)
-            ->where('tanggal_pinjam', $tanggal)
-            ->where('status', 'disetujui')
-            ->when($excludeId, function ($query, $excludeId) {
-                return $query->where('id', '!=', $excludeId);
-            })
-            ->where(function ($query) use ($jamMulai, $jamSelesai) {
-                $query->where('jam_mulai', '<', $jamSelesai)
-                    ->where('jam_selesai', '>', $jamMulai);
-            })->first();
+        $conflictsList = [];
 
-        if ($isConflict) {
-            $range = \Carbon\Carbon::parse($isConflict->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($isConflict->jam_selesai)->format('H:i');
-            return response()->json([
-                'conflict' => true,
-                'message' => "Ruangan terisi pihak lain pada jam {$range}."
-            ]);
-        }
-
-        // 2. Cek Jadwal Internal Akademik
+        // 1. Cek bentrok dengan Jadwal Internal (Akademik & Pemeliharaan / Blokir)
         $dayOfWeek = \Carbon\Carbon::parse($tanggal)->format('N');
-        $isInternalConflict = MrJadwalInternal::where('ruangan_id', $ruanganId)
+        $internalConflicts = MrJadwalInternal::where('ruangan_id', $ruanganId)
             ->where(function ($query) use ($tanggal, $dayOfWeek) {
                 $query->where(function ($q) use ($dayOfWeek, $tanggal) {
                     $q->where('tipe_jadwal', 'rutin')
@@ -459,17 +441,61 @@ class PersetujuanController extends Controller
                 $query->where('jam_mulai', '<', $jamSelesai)
                     ->where('jam_selesai', '>', $jamMulai);
             })
-            ->first();
+            ->orderBy('jam_mulai', 'asc')
+            ->get();
 
-        if ($isInternalConflict) {
-            $range = \Carbon\Carbon::parse($isInternalConflict->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($isInternalConflict->jam_selesai)->format('H:i');
+        foreach ($internalConflicts as $c) {
+            $range = \Carbon\Carbon::parse($c->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($c->jam_selesai)->format('H:i') . ' WIB';
+            $isAkademik = ($c->kategori === 'Jadwal Akademik (Kuliah)' || !empty($c->mata_kuliah));
+            $tipe = $isAkademik ? 'Akademik' : 'Pemeliharaan';
+
+            if ($isAkademik) {
+                $nama = $c->mata_kuliah ? ($c->mata_kuliah . ($c->kelas ? ' - Kelas ' . $c->kelas : '')) : ($c->keterangan ?: 'Jadwal Perkuliahan');
+            } else {
+                $nama = $c->keterangan ?: 'Pemeliharaan / Blokir Ruangan';
+            }
+
+            $conflictsList[] = [
+                'tipe' => $tipe,
+                'nama' => $nama,
+                'waktu' => $range,
+            ];
+        }
+
+        // 2. Cek bentrok dengan Peminjaman lain yang telah disetujui
+        $peminjamanConflicts = Peminjaman::with('user')
+            ->where('ruangan_id', $ruanganId)
+            ->where('tanggal_pinjam', $tanggal)
+            ->where('status', 'disetujui')
+            ->when($excludeId, function ($query, $excludeId) {
+                return $query->where('id', '!=', $excludeId);
+            })
+            ->where(function ($query) use ($jamMulai, $jamSelesai) {
+                $query->where('jam_mulai', '<', $jamSelesai)
+                    ->where('jam_selesai', '>', $jamMulai);
+            })
+            ->orderBy('jam_mulai', 'asc')
+            ->get();
+
+        foreach ($peminjamanConflicts as $p) {
+            $userPart = $p->user ? " (Oleh: {$p->user->name})" : "";
+            $range = \Carbon\Carbon::parse($p->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($p->jam_selesai)->format('H:i') . ' WIB';
+            $conflictsList[] = [
+                'tipe' => 'Peminjaman',
+                'nama' => ($p->tujuan ?: 'Peminjaman Ruangan') . $userPart,
+                'waktu' => $range,
+            ];
+        }
+
+        if (count($conflictsList) > 0) {
             return response()->json([
                 'conflict' => true,
-                'message' => "Menabrak Jadwal Akademik: {$isInternalConflict->keterangan} (Jam {$range})."
+                'message' => 'Terdapat jadwal beririsan di ruangan dan waktu yang dipilih.',
+                'conflicts_list' => $conflictsList,
             ]);
         }
 
-        return response()->json(['conflict' => false]);
+        return response()->json(['conflict' => false, 'conflicts_list' => []]);
     }
     /**
      * Soft delete arsip peminjaman (hanya superadmin)
