@@ -24,8 +24,8 @@ use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 class KemahasiswaanPolicy
 {
     /**
-     * Role yang boleh mengubah biodata direktori milik mahasiswa mana pun,
-     * termasuk kolom Status. Sinkron dengan gerbang route `direktori.mahasiswa.edit`.
+     * Role yang boleh mengubah kontak direktori milik mahasiswa mana pun.
+     * Sinkron dengan gerbang route `direktori.mahasiswa.edit`.
      */
     public const PENGELOLA = [
         'superadmin',
@@ -37,11 +37,6 @@ class KemahasiswaanPolicy
      * mahasiswa lain di Direktori Mahasiswa. Role di luar daftar ini hanya melihat
      * kontak pribadinya sendiri — prinsip need-to-know (UU PDP No. 27/2022
      * Pasal 16 ayat 2, Pasal 35, Pasal 36).
-     *
-     * Status kemahasiswaan (termasuk DO, mangkir, pindah studi, wafat) TIDAK
-     * dibatasi: semua role yang membuka direktori melihatnya, supaya siapa pun
-     * bisa memeriksa orang yang mengaku mahasiswa/alumni Tekkom (keputusan Bu Eve,
-     * 13 Okt 2026).
      */
     public const LIHAT_KONTAK_PRIBADI = [
         'superadmin',
@@ -56,7 +51,7 @@ class KemahasiswaanPolicy
      * Membuka form edit dan menyimpan perubahannya.
      *
      * Pemilik baris selalu boleh — itulah yang menggantikan halaman "Profil Saya".
-     * Field yang boleh ia ubah dibatasi terpisah di controller (Status hanya milik
+     * Field yang boleh ia ubah dibatasi terpisah di controller (audit hanya untuk
      * pengelola, lihat ubahDataMahasiswa); Policy ini hanya menjawab "baris siapa",
      * bukan "kolom apa".
      */
@@ -70,14 +65,13 @@ class KemahasiswaanPolicy
     }
 
     /**
-     * Mengubah data mahasiswa lain sebagai pengelola: Status Kemahasiswaan serta
-     * kontak (email pribadi, WhatsApp) — kontak boleh diperbaiki admin atas keputusan
-     * Bu Eve (13 Okt 2026), dan tiap perubahan tercatat di audit log. Nama, NIM, dan
-     * angkatan tetap milik SSO.
+     * Mengubah data mahasiswa lain sebagai pengelola: kontak (email pribadi, WhatsApp)
+     * — boleh diperbaiki admin atas keputusan Bu Eve (13 Okt 2026), dan tiap perubahan
+     * tercatat di audit log. Nama, NIM, dan angkatan tetap milik SSO. Status
+     * kemahasiswaan dicabut dari direktori sejak S-53 (29 Okt 2026).
      *
      * Pengelola tidak memakai jalur ini di barisnya sendiri (kasus pengelola yang juga
-     * terdaftar sebagai mahasiswa): status dirinya diputuskan pengelola lain, dan
-     * kontaknya ia ubah lewat jalur pemilik.
+     * terdaftar sebagai mahasiswa): kontaknya ia ubah lewat jalur pemilik.
      */
     public function ubahDataMahasiswa(User $user, Kemahasiswaan $mhs): bool
     {

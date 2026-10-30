@@ -50,16 +50,7 @@
        border, supaya ukurannya persis sama dengan badge/ikon terisi lainnya. */
     .tone-outline { background: #ffffff; color: var(--c-fg-muted); box-shadow: inset 0 0 0 1px var(--c-border); }
 
-    /* ── Status mahasiswa ── */
-    .status-badge.aktif        { background: var(--c-success-subtle); color: var(--c-success); }
-    .status-badge.cuti         { background: var(--c-sky-subtle);     color: var(--c-sky); }
-    .status-badge.mangkir      { background: var(--c-warning-subtle); color: var(--c-warning); }
-    .status-badge.drop_out     { background: var(--c-error-subtle);   color: var(--c-error-200); }
-    .status-badge.pindah_studi { background: var(--c-primary-subtle); color: var(--c-primary); }
-    /* Wafat sengaja bergaris, bukan terisi: latar abu terisi nyaris sama dengan
-       navy muda Pindah Studi (#ECEFF3 vs ≈#EBEEF3) sehingga keduanya tak terbedakan. */
-    .status-badge.wafat        { background: #ffffff; color: var(--c-fg-muted); box-shadow: inset 0 0 0 1px var(--c-border); }
-    .status-badge.alumni       { background: var(--c-sky-subtle);     color: var(--c-sky); }
+    /* Badge status mahasiswa (aktif/cuti/DO/...) dicabut bersama fiturnya (S-53, 29 Okt 2026). */
 
     /* ── Status karir alumni ──
        Bentuk & warnanya (garis + titik gaya SITKOM) ada di partials/sitkom-ui,

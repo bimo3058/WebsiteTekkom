@@ -76,6 +76,12 @@ class DashboardController extends Controller
         switch ($type) {
 
             case 'mahasiswa':
+                // PERINGATAN (S-53, 29 Okt 2026 — Surya, bimbingan Bu Eve & Pak Sidik): status kemahasiswaan
+                // (aktif/cuti/DO/pindah studi/wafat/mangkir) sudah DICABUT dari Direktori Mahasiswa dan tidak bisa
+                // diubah lagi dari UI mana pun (sumber resmi = SIAP Undip). Kolom mk_kemahasiswaan.status dibiarkan
+                // supaya bagian ini tidak error, tetapi angkanya MEMBEKU: nilai lama tetap, mahasiswa baru selalu 'aktif'.
+                // Pemilik fitur ini (Devarlo / Syahbana) perlu memutuskan: hapus/ubah modal daftar mahasiswa per status.
+                // Jangan drop kolom status sebelum bagian ini disesuaikan. Lihat Models/Kemahasiswaan.php.
                 $status = $request->query('status', Kemahasiswaan::STATUS_AKTIF);
                 $rows = Kemahasiswaan::where('status', $status)
                     ->with('user:id,email')
@@ -212,6 +218,12 @@ class DashboardController extends Controller
                 $yPantau = $currentMonth >= 8 ? 4 : 5;      // semester >= 9
                 $thresholdPantau = $currentYear - $yPantau;
 
+                // PERINGATAN (S-53, 29 Okt 2026 — Surya, bimbingan Bu Eve & Pak Sidik): status kemahasiswaan
+                // (aktif/cuti/DO/pindah studi/wafat/mangkir) sudah DICABUT dari Direktori Mahasiswa dan tidak bisa
+                // diubah lagi dari UI mana pun (sumber resmi = SIAP Undip). Kolom mk_kemahasiswaan.status dibiarkan
+                // supaya bagian ini tidak error, tetapi angkanya MEMBEKU: nilai lama tetap, mahasiswa baru selalu 'aktif'.
+                // Pemilik fitur ini (Devarlo / Syahbana) perlu memutuskan: hapus/ubah modal Calon DO.
+                // Jangan drop kolom status sebelum bagian ini disesuaikan. Lihat Models/Kemahasiswaan.php.
                 $rows = Kemahasiswaan::aktif()
                     ->whereNotNull('angkatan')
                     ->where('angkatan', '<=', $thresholdPantau)
@@ -244,6 +256,12 @@ class DashboardController extends Controller
                 // Mahasiswa berstatus alumni — dipantau per tahun lulus + status sinkron
                 $alumniUserIds = Alumni::whereNotNull('user_id')->pluck('user_id')->all();
 
+                // PERINGATAN (S-53, 29 Okt 2026 — Surya, bimbingan Bu Eve & Pak Sidik): status kemahasiswaan
+                // (aktif/cuti/DO/pindah studi/wafat/mangkir) sudah DICABUT dari Direktori Mahasiswa dan tidak bisa
+                // diubah lagi dari UI mana pun (sumber resmi = SIAP Undip). Kolom mk_kemahasiswaan.status dibiarkan
+                // supaya bagian ini tidak error, tetapi angkanya MEMBEKU: nilai lama tetap, mahasiswa baru selalu 'aktif'.
+                // Pemilik fitur ini (Devarlo / Syahbana) perlu memutuskan: hapus/ubah modal lulusan per periode.
+                // Jangan drop kolom status sebelum bagian ini disesuaikan. Lihat Models/Kemahasiswaan.php.
                 $rows = Kemahasiswaan::alumni()
                     ->whereNotNull('tahun_lulus')
                     ->with('user:id,email')

@@ -142,19 +142,6 @@
 <!-- Flash Messages -->
 <x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
 
-@php
-    $statusLabel = match ($mhs->status) {
-        'aktif'        => 'Aktif',
-        'alumni'       => 'Lulus',
-        'cuti'         => 'Cuti',
-        'drop_out'     => 'Drop Out',
-        'pindah_studi' => 'Pindah Studi',
-        'wafat'        => 'Wafat',
-        'mangkir'      => 'Mangkir',
-        default        => ucfirst($mhs->status),
-    };
-@endphp
-
 <!-- Card Profil (susunan mengikuti Detail User di User Management global) -->
 <div class="detail-box">
     {{-- ── Toolbar ── --}}
@@ -177,7 +164,7 @@
                     Download CV
                 </a>
             @endif
-            {{-- Pengelola di baris orang lain mengubah status + kontak; pemilik baris
+            {{-- Pengelola di baris orang lain mengubah kontak (dengan audit); pemilik baris
                  (termasuk pengelola di barisnya sendiri) mengedit data pribadinya. Halaman
                  tujuannya sama, isinya ditentukan KemahasiswaanPolicy::ubahDataMahasiswa. --}}
             @if($isAdmin || ($isSelf ?? false))
@@ -228,10 +215,6 @@
                 <div class="detail-row">
                     <span class="detail-label">Angkatan</span>
                     <span class="detail-value">{{ $mhs->angkatan }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Status Saat Ini</span>
-                    <span class="status-badge {{ $mhs->status }}">{{ $statusLabel }}</span>
                 </div>
             </div>
         </div>

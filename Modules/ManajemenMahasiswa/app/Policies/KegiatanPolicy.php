@@ -2,7 +2,10 @@
 
 namespace Modules\ManajemenMahasiswa\Policies;
 
+use App\Models\Student;
 use App\Models\User;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\In;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
 
 /**
@@ -61,6 +64,14 @@ class KegiatanPolicy
     public const ROLE_PENGELOLA = ['staff_himpunan'];
 
     /**
+     * Ketua Pelaksana wajib staff himpunan (keputusan Surya, 29 Okt 2026), karena
+     * ia otomatis ikut mengelola kegiatannya (lihat update()).
+     */
+    public const ROLE_KETUA_PELAKSANA = ['staff_himpunan'];
+
+    public const PESAN_KETUA_PELAKSANA = 'Ketua pelaksana harus staff himpunan. Pilih ulang dari daftar.';
+
+    /**
      * Pemegang jabatan ini TIDAK PERNAH bisa ditambahkan di "Akses Kelola".
      *
      * Satu proker dipegang satu bidang/unit (hasil telusur 2.100 postingan IG
@@ -102,16 +113,55 @@ class KegiatanPolicy
     }
 
     /**
+     * Id Student yang boleh dipilih sebagai Ketua Pelaksana: pemegang
+     * ROLE_KETUA_PELAKSANA, ditambah ketua yang sudah tersimpan di kegiatan itu.
+     *
+     * Pengecualian ketua tersimpan disengaja: 41 dari 46 kegiatan saat aturan ini
+     * dibuat berketua mahasiswa non-staff (16 sudah di Arsip). Tanpa pengecualian,
+     * kegiatan lama tidak bisa disimpan ulang sebelum ketuanya diganti, padahal
+     * arsip harus mencatat ketua yang sebenarnya. Begitu diganti, aturan berlaku.
+     */
+    public static function idCalonKetuaPelaksana(?int $ketuaTersimpan = null): array
+    {
+        $ids = Student::whereHas('user', fn ($q) => $q->role(self::ROLE_KETUA_PELAKSANA))
+            ->pluck('id')->all();
+
+        if ($ketuaTersimpan) {
+            $ids[] = $ketuaTersimpan;
+        }
+
+        return array_values(array_unique(array_map('intval', $ids)));
+    }
+
+    public static function aturanKetuaPelaksana(?Kegiatan $kegiatan = null): In
+    {
+        return Rule::in(self::idCalonKetuaPelaksana($kegiatan?->ketua_pelaksana_id));
+    }
+
+    /**
      * Edit & simpan, termasuk Ajukan Proker dan Unggah ke Arsip (keduanya
      * mengubah status kegiatan). Hanya pembuat, admin, Ketua Himpunan (jalur
      * darurat), dan staff himpunan yang ditambahkan di Akses Kelola.
+     *
+     * Ketua Pelaksana otomatis dianggap pengelola tanpa perlu dicantumkan di Akses
+     * Kelola (keputusan Surya, 29 Okt 2026), dengan syarat yang sama persis:
+     * hanya edit, dan hanya bila akunnya lolos bisaJadiPengelola() + route `role:`.
+     * Tidak ada baris pengelola yang disimpan, jadi begitu ketua pelaksana diganti,
+     * akses orang sebelumnya ikut lepas.
      */
     public function update(User $user, Kegiatan $kegiatan): bool
     {
         return $user->hasAnyRole([...self::PENGELOLA_SEMUA, ...self::EDIT_SEMUA])
             || $this->pemilik($user, $kegiatan)
             || (self::bisaJadiPengelola($user)
-                && $kegiatan->pengelola()->whereKey($user->getKey())->exists());
+                && ($this->ketuaPelaksana($user, $kegiatan)
+                    || $kegiatan->pengelola()->whereKey($user->getKey())->exists()));
+    }
+
+    private function ketuaPelaksana(User $user, Kegiatan $kegiatan): bool
+    {
+        return $kegiatan->ketua_pelaksana_id !== null
+            && (int) $kegiatan->ketuaPelaksana?->user_id === (int) $user->getKey();
     }
 
     /**

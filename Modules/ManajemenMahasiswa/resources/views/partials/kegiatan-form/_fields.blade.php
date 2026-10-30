@@ -182,6 +182,7 @@
 
         @include('manajemenmahasiswa::partials.kegiatan-form._personel', [
             'ketuaId'          => old('ketua_pelaksana_id', $proker->ketua_pelaksana_id),
+            'ketuaTersimpan'   => $proker->ketua_pelaksana_id,
             'dosenTerpilih'    => $existingDosen,
             'panitiaTerpilih'  => old('panitia_ids') !== null
                 ? $mahasiswaList->whereIn('id', old('panitia_ids'))

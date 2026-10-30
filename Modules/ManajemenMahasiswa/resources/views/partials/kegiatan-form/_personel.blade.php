@@ -10,6 +10,9 @@
       $mahasiswaList      koleksi Student (opsi Ketua & Panitia)
       $dosenList          koleksi Lecturer (opsi Dosen Pendamping)
       $ketuaId            id ketua terpilih — sudah memperhitungkan old()
+      $ketuaTersimpan     id ketua yang tersimpan di database (null saat membuat baru);
+                          tetap boleh dipilih walau bukan staff himpunan, lihat
+                          KegiatanPolicy::idCalonKetuaPelaksana
       $dosenTerpilih      koleksi Lecturer terpilih — sudah memperhitungkan old()
       $panitiaTerpilih    koleksi Student terpilih — sudah memperhitungkan old()
       $panitiaPeranLama   old('panitia_peran', []); jabatan dari database dibaca
@@ -23,6 +26,19 @@
         'nama' => $mhs->user->name ?? 'N/A',
         'sub'  => 'NIM: ' . $mhs->student_number . ' • Angkatan ' . $mhs->cohort_year,
         'cari' => \Illuminate\Support\Str::lower(($mhs->user->name ?? '') . ' ' . $mhs->student_number),
+    ])->values();
+
+    // Ketua Pelaksana wajib staff himpunan; Panitia tetap boleh semua mahasiswa.
+    $idCalonKetua = \Modules\ManajemenMahasiswa\Policies\KegiatanPolicy::idCalonKetuaPelaksana($ketuaTersimpan ?? null);
+    $opsiKetua = $mahasiswaList->whereIn('id', $idCalonKetua)->map(fn ($mhs) => [
+        'id'     => $mhs->id,
+        'nama'   => $mhs->user->name ?? 'N/A',
+        'sub'    => 'NIM: ' . $mhs->student_number . ' • Angkatan ' . $mhs->cohort_year,
+        'cari'   => \Illuminate\Support\Str::lower(($mhs->user->name ?? '') . ' ' . $mhs->student_number),
+        // Untuk baris terkunci di Akses Kelola. Ketua lama yang bukan staff himpunan
+        // tetap boleh tersimpan, tetapi tidak ikut mengelola (KegiatanPolicy::update).
+        'userId' => $mhs->user_id,
+        'akses'  => $mhs->user && \Modules\ManajemenMahasiswa\Policies\KegiatanPolicy::bisaJadiPengelola($mhs->user),
     ])->values();
 
     $opsiDosen = $dosenList->map(fn ($dosen) => [
@@ -47,12 +63,16 @@
 
 <div class="row g-3 mb-3">
     {{-- ── Ketua Pelaksana (pilih satu) ── --}}
-    <div class="col-md-6 mk-pilih" x-data="mkPilihSatu(@js($opsiMahasiswa), @js((string) ($ketuaId ?? '')))">
+    <div class="col-md-6 mk-pilih" x-data="mkPilihSatu(@js($opsiKetua), @js((string) ($ketuaId ?? '')))"
+         x-effect="const k = opsi.find(o => String(o.id) === terpilih);
+                   Object.assign($store.mkKetua, k
+                       ? { userId: String(k.userId), nama: k.nama, akses: k.akses }
+                       : { userId: '', nama: '', akses: false })">
         <label class="form-label-custom" for="ketuaPelaksanaSearch">Ketua Pelaksana @if($ketuaWajib ?? false)<span class="required">*</span>@endif</label>
         <div class="search-select-wrapper" @click.outside="tutup()">
             <input type="hidden" name="ketua_pelaksana_id" id="ketuaPelaksanaId" :value="terpilih">
             <input type="text" class="form-control form-control-custom" id="ketuaPelaksanaSearch"
-                   placeholder="Cari nama mahasiswa..."
+                   placeholder="Cari staff himpunan..."
                    autocomplete="off"
                    role="combobox" aria-controls="ketuaPelaksanaDropdown" :aria-expanded="open"
                    x-model="query"
@@ -79,9 +99,10 @@
                         <div class="sub-text" x-text="o.sub"></div>
                     </div>
                 </template>
-                <div class="panitia-empty" x-show="hasil.length === 0">Tidak ada mahasiswa yang cocok</div>
+                <div class="panitia-empty" x-show="hasil.length === 0">Tidak ada staff himpunan yang cocok</div>
             </div>
         </div>
+        <div class="checkbox-hint">Hanya staff himpunan. Ketua Pelaksana otomatis bisa mengedit kegiatan ini.</div>
     </div>
 </div>
 

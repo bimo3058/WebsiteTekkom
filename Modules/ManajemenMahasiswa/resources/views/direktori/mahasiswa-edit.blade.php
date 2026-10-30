@@ -5,24 +5,16 @@
 
 {{--
     Satu halaman, dua wajah (aturannya ada di KemahasiswaanPolicy):
-      $sebagaiPengelola = true  → pengelola membuka baris ORANG LAIN: Status Kemahasiswaan
-                                  + Kontak (email pribadi, WhatsApp).
+      $sebagaiPengelola = true  → pengelola membuka baris ORANG LAIN: Kontak (email pribadi,
+                                  WhatsApp), tercatat di audit log.
       $sebagaiPengelola = false → pemilik baris (termasuk pengelola yang membuka barisnya
                                   sendiri): hanya data pribadinya, yaitu email pribadi dan WhatsApp.
     Nama, NIM, dan Angkatan milik SSO dan hanya tampil sebagai teks di subjudul.
+    Status kemahasiswaan tidak lagi diubah di sini (S-53, 29 Okt 2026): tidak bisa disinkronkan
+    dengan SIAP Undip. Menjadikan alumni hanya lewat Permission.
 --}}
 @php
     $sebagaiPengelola = $sebagaiPengelola ?? false;
-
-    $statusLabel = [
-        'aktif'        => 'Aktif',
-        'cuti'         => 'Cuti',
-        'mangkir'      => 'Mangkir',
-        'alumni'       => 'Alumni (Lulus)',
-        'drop_out'     => 'Drop Out',
-        'pindah_studi' => 'Pindah Studi',
-        'wafat'        => 'Wafat',
-    ];
 
     // Prioritaskan users.whatsapp (sumber kanonik dari Settings global)
     // Fallback ke mk_kemahasiswaan.kontak jika belum tersinkron
@@ -81,8 +73,6 @@
         gap: 14px 20px;
         padding: 16px;
     }
-    .mm-sec-fields > .mm-span { grid-column: 1 / -1; }
-    .mm-sec-fields > [hidden]  { display: none; }
     .mm-hint {
         margin: 6px 0 0;
         font-size: 12px;
@@ -96,11 +86,9 @@
 
 <x-manajemenmahasiswa::ui.page-header bordered :title="$sebagaiPengelola ? 'Edit Data Mahasiswa' : 'Edit Data Saya'">
     {{ $mhs->nama }} · {{ $mhs->nim }} · Angkatan {{ $mhs->angkatan }}
-    @if($sebagaiPengelola)
-        · <span class="status-badge {{ $mhs->status }}">{{ $statusLabel[$mhs->status] ?? ucfirst($mhs->status) }}</span>
-    @else
+    @unless($sebagaiPengelola)
         — data dari SSO, tidak dapat diubah.
-    @endif
+    @endunless
     <x-slot:actions>
         <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id) }}" class="mk-btn mk-btn--secondary mk-btn--sm">
             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -113,49 +101,10 @@
 <x-manajemenmahasiswa::ui.flash type="error" :messages="$errors->all()" class="mb-3" />
 
 <form method="POST" action="{{ route('manajemenmahasiswa.direktori.mahasiswa.update', $mhs->id) }}"
-      id="formEditBiodata" data-status-awal="{{ $mhs->status }}"
+      id="formEditBiodata"
       data-email-awal="{{ $mhs->user?->personal_email }}" data-kontak-awal="{{ $localNum }}" data-kode-awal="{{ $savedCode }}">
     @csrf
     @method('PUT')
-
-@if($sebagaiPengelola)
-
-    <div class="mm-sec">
-        <div class="mm-sec-head">
-            <h2>Status Akademik</h2>
-            <p>Tentukan apakah mahasiswa ini masih berstatus mahasiswa.</p>
-        </div>
-
-        <div class="mm-sec-fields">
-            <div>
-                <label class="form-label-custom" for="statusSelect">Status <span class="required">*</span></label>
-                <x-manajemenmahasiswa::ui.select name="status" id="statusSelect" size="md" required
-                    :maxHeight="320" :invalid="$errors->has('status')">
-                    <optgroup label="Masih mahasiswa">
-                        @foreach(['aktif', 'cuti', 'mangkir'] as $s)
-                            <option value="{{ $s }}" @selected(old('status', $mhs->status) === $s)>{{ $statusLabel[$s] }}</option>
-                        @endforeach
-                    </optgroup>
-                    <optgroup label="Bukan mahasiswa lagi">
-                        @foreach(['alumni', 'drop_out', 'pindah_studi', 'wafat'] as $s)
-                            <option value="{{ $s }}" @selected(old('status', $mhs->status) === $s)>{{ $statusLabel[$s] }}</option>
-                        @endforeach
-                    </optgroup>
-                </x-manajemenmahasiswa::ui.select>
-                <p class="mm-hint" id="hintAlumni" hidden>Memilih <strong>Alumni</strong> memindahkan mahasiswa ini ke <strong>Direktori Alumni</strong>.</p>
-            </div>
-
-            <div id="tahunLulusWrap" hidden>
-                <label class="form-label-custom" for="tahunLulusInput">Tahun Lulus <span class="required">*</span></label>
-                <input type="number" id="tahunLulusInput" name="tahun_lulus" min="2000" max="2099"
-                       class="form-control form-control-custom @error('tahun_lulus') is-invalid @enderror"
-                       value="{{ old('tahun_lulus', $mhs->tahun_lulus ?: ((int) $mhs->angkatan + 4)) }}">
-                <p class="mm-hint">Terisi perkiraan angkatan + 4 tahun; sesuaikan dengan tahun wisuda sebenarnya.</p>
-            </div>
-        </div>
-    </div>
-
-@endif
 
     <div class="mm-sec">
         <div class="mm-sec-head">
@@ -226,55 +175,22 @@
 <script>
 (function () {
     const form       = document.getElementById('formEditBiodata');
-    const select     = document.getElementById('statusSelect');   // hanya ada untuk pengelola
-    const tahunWrap  = document.getElementById('tahunLulusWrap');
-    const hintAlumni = document.getElementById('hintAlumni');
     const btnSimpan  = document.getElementById('btnSimpan');
     const awal       = form.dataset;
 
-    // Tahun Lulus dan petunjuk Direktori Alumni hanya muncul saat status BARU menjadi Alumni;
-    // Simpan baru aktif setelah status atau kontak berbeda dari yang tersimpan.
+    // Simpan baru aktif setelah kontak berbeda dari yang tersimpan.
     function sinkron() {
-        const statusBerubah = select ? select.value !== awal.statusAwal : false;
-        if (select) {
-            const jadiAlumni = statusBerubah && select.value === 'alumni';
-            tahunWrap.hidden  = !jadiAlumni;
-            hintAlumni.hidden = !jadiAlumni;
-        }
-
         const nomor = form.elements.kontak.value;
         const kode  = form.elements.phone_code.value || awal.kodeAwal;
         const kontakBerubah = form.elements.email_pribadi.value.trim() !== awal.emailAwal
             || nomor !== awal.kontakAwal
             || (nomor !== '' && kode !== awal.kodeAwal);
 
-        btnSimpan.disabled = !statusBerubah && !kontakBerubah;
+        btnSimpan.disabled = !kontakBerubah;
     }
     form.addEventListener('input', sinkron);
     form.addEventListener('change', sinkron);
     sinkron();
-
-    // Pengaman terakhir: memindahkan mahasiswa KELUAR dari status Alumni akan menghapus
-    // datanya di Direktori Alumni, jadi minta konfirmasi eksplisit lebih dulu.
-    form.addEventListener('submit', function (e) {
-        if (!select || awal.statusAwal !== 'alumni' || select.value === 'alumni') {
-            return;
-        }
-
-        // Dialog modul bersifat asinkron, jadi submit selalu ditahan dulu lalu form dikirim
-        // sendiri bila disetujui. form.submit() tidak memicu ulang listener ini.
-        e.preventDefault();
-
-        const labelBaru = select.options[select.selectedIndex].text;
-
-        mkConfirm({
-            title: 'Keluarkan dari Direktori Alumni',
-            subtitle: 'Mahasiswa ini berstatus ALUMNI',
-            message: 'Mengubah status menjadi "' + labelBaru + '" akan menghapus datanya dari Direktori Alumni.\n\n' +
-                     'Lanjutkan menyimpan?',
-            confirmText: 'Ya, Simpan',
-        }).then(function (ok) { if (ok) form.submit(); });
-    });
 })();
 
 document.addEventListener('alpine:init', () => {

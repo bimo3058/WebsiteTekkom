@@ -249,7 +249,7 @@ class KegiatanController extends Controller
             // Banner wajib diisi saat menambah kegiatan langsung ke Laporan & Arsip (subbab 3).
             'banner'              => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
             'anggaran'            => 'nullable|numeric|min:0|max:9999999999999',
-            'ketua_pelaksana_id'  => 'nullable|exists:students,id',
+            'ketua_pelaksana_id'  => ['nullable', 'exists:students,id', KegiatanPolicy::aturanKetuaPelaksana()],
             'dosen_pendamping_ids'   => 'nullable|array',
             'dosen_pendamping_ids.*' => 'exists:lecturers,id',
             'dosen_peran'            => 'nullable|array',
@@ -386,7 +386,7 @@ class KegiatanController extends Controller
             // kalau sudah punya, boleh dikosongkan (banner lama dipertahankan).
             'banner'              => ($kegiatan->banner ? 'nullable' : 'required') . '|image|mimes:jpg,jpeg,png,webp|max:5120',
             'anggaran'            => 'nullable|numeric|min:0|max:9999999999999',
-            'ketua_pelaksana_id'  => 'nullable|exists:students,id',
+            'ketua_pelaksana_id'  => ['nullable', 'exists:students,id', KegiatanPolicy::aturanKetuaPelaksana($kegiatan)],
             'dosen_pendamping_ids'   => 'nullable|array',
             'dosen_pendamping_ids.*' => 'exists:lecturers,id',
             'dosen_peran'            => 'nullable|array',
@@ -620,6 +620,7 @@ class KegiatanController extends Controller
             'jam_mulai.date_format'          => 'Jam mulai harus berupa jam yang benar, contoh 09:00.',
             'jam_selesai.date_format'        => 'Jam selesai harus berupa jam yang benar, contoh 15:00.',
             'jam_selesai.after'              => 'Jam selesai harus lebih lambat dari jam mulai. Kalau kegiatannya lintas hari, isi dulu tanggal selesainya.',
+            'ketua_pelaksana_id.in'          => KegiatanPolicy::PESAN_KETUA_PELAKSANA,
         ] + self::pesanValidasiDokumen();
     }
 }

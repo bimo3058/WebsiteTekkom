@@ -107,10 +107,20 @@ class Kegiatan extends Model
      * Kunci = nilai ?status_rencana= di daftar.
      */
     const TAHAP_RENCANA_LABELS = [
-        'draft'            => 'Draft',
-        'pelaksanaan'      => 'Di Pelaksanaan',
-        'arsip'            => 'Diarsipkan',
+        'draft'            => 'Di Rencana Proker',
+        'pelaksanaan'      => 'Di Pelaksanaan Kegiatan',
+        'arsip'            => 'Di Laporan & Arsip',
         'tidak_terlaksana' => 'Tidak terlaksana',
+    ];
+
+    /**
+     * Pilihan filter Tahap Rencana (29 Okt 2026): label sama dengan badge, tanpa
+     * "Tidak terlaksana" dan tanpa "Semua Tahap" — filter dikosongkan lewat Reset.
+     */
+    const TAHAP_FILTER_LABELS = [
+        'draft'       => 'Di Rencana Proker',
+        'pelaksanaan' => 'Di Pelaksanaan Kegiatan',
+        'arsip'       => 'Di Laporan & Arsip',
     ];
 
     /** Warna badge tahap — kelas .mm-status--{nada} di partials/sitkom-ui. */

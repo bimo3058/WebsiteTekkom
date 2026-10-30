@@ -31,6 +31,14 @@
         align-items: center;
         justify-content: center;
         overflow: hidden;
+        position: relative;
+    }
+    /* Badge tahap (Rencana Proker saja) menempel di pojok kiri atas banner */
+    .kegiatan-card-tahap {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        box-shadow: 0 1px 4px rgba(13, 13, 18, 0.18) !important;
     }
     .kegiatan-card-image img {
         width: 100%;

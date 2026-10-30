@@ -48,6 +48,15 @@
             }
 
             /**
+             * Ketua Pelaksana yang sedang dipilih di bagian Personel, dibaca Akses Kelola
+             * untuk baris terkunci "Ketua Pelaksana". Diisi lewat x-effect di _personel,
+             * jadi urutan inisialisasi kedua kartu tidak berpengaruh.
+             *   userId — id akun (Akses Kelola memakai id akun, bukan id mahasiswa)
+             *   akses  — lolos KegiatanPolicy::bisaJadiPengelola, yakni benar-benar ikut mengelola
+             */
+            Alpine.store('mkKetua', { userId: '', nama: '', akses: false });
+
+            /**
              * Pilih satu dengan pencarian (Ketua Pelaksana).
              * Kotak teks menampilkan nama terpilih; saat diketik ia menjadi kolom cari.
              * Begitu panel ditutup tanpa memilih, teksnya dikembalikan ke nama yang
@@ -101,19 +110,29 @@
             /**
              * Pilih banyak dengan pencarian + chip (Dosen Pendamping, Panitia, Akses Kelola).
              * `terpilih` menyimpan id sesuai urutan dipilih.
+             *
+             * `kunci` (opsional): fungsi yang mengembalikan satu id yang sedang dipegang
+             * kotak lain (Akses Kelola: akun Ketua Pelaksana). Id itu disembunyikan dari
+             * daftar dan dari chip, sehingga tidak ikut terkirim dua kali. Ia tetap ada di
+             * `terpilih`, jadi chipnya kembali bila ketuanya diganti.
              */
-            Alpine.data('mkPilihBanyak', (opsi, terpilihAwal) => ({
+            Alpine.data('mkPilihBanyak', (opsi, terpilihAwal, kunci = null) => ({
                 opsi: opsi,
                 terpilih: (terpilihAwal || []).map(String).filter(id => opsi.some(o => String(o.id) === id)),
                 query: '',
                 open: false,
 
+                get idKunci() {
+                    return kunci ? String(kunci() || '') : '';
+                },
+
                 get hasil() {
-                    return saring(this.opsi, this.query);
+                    return saring(this.opsi, this.query).filter(o => String(o.id) !== this.idKunci);
                 },
 
                 get daftarTerpilih() {
                     return this.terpilih
+                        .filter(id => id !== this.idKunci)
                         .map(id => this.opsi.find(o => String(o.id) === id))
                         .filter(Boolean);
                 },

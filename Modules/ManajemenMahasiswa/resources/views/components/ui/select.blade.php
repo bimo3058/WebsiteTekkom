@@ -267,6 +267,8 @@
                                 value: opt.value,
                                 label: opt.textContent.trim(),
                                 disabled: opt.disabled,
+                                // <option hidden> = petunjuk di tombol saja, tak tampil di daftar
+                                hidden: opt.hidden,
                                 group: parent && parent.tagName === 'OPTGROUP' ? parent.label : null,
                             };
                         });
@@ -457,7 +459,7 @@
          x-transition:leave-end="opacity-0 scale-95">
 
         <template x-for="(option, index) in options" :key="option.value + '-' + index">
-            <div>
+            <div x-show="!option.hidden">
                 <template x-if="groupLabelFor(index)">
                     <div class="mk-select-group" x-text="groupLabelFor(index)"></div>
                 </template>

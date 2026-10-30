@@ -306,6 +306,9 @@ class DirektoriAlumniController extends Controller
                     'program_studi' => 'S1 Teknik Komputer',
                 ]);
 
+                // PERINGATAN (S-53, 29 Okt 2026): status kemahasiswaan sudah dicabut dari tampilan
+                // Direktori Mahasiswa & Alumni. Penulisan status di sini dipertahankan HANYA supaya
+                // Dashboard Analitik (Devarlo / Syahbana) tetap konsisten dengan role alumni.
                 // Sekaligus pastikan status km juga konsisten
                 if ($km && $km->status !== Kemahasiswaan::STATUS_ALUMNI) {
                     $km->update(['status' => Kemahasiswaan::STATUS_ALUMNI]);
@@ -320,6 +323,9 @@ class DirektoriAlumniController extends Controller
 
             if (!empty($noLongerAlumni)) {
                 Alumni::whereIn('user_id', $noLongerAlumni)->delete();
+                // PERINGATAN (S-53, 29 Okt 2026): status kemahasiswaan sudah dicabut dari tampilan
+                // Direktori Mahasiswa & Alumni. Penulisan status di sini dipertahankan HANYA supaya
+                // Dashboard Analitik (Devarlo / Syahbana) tetap konsisten dengan role alumni.
                 // Kembalikan status ke aktif jika record km-nya ada
                 Kemahasiswaan::whereIn('user_id', $noLongerAlumni)
                     ->where('status', Kemahasiswaan::STATUS_ALUMNI)
@@ -504,6 +510,8 @@ class DirektoriAlumniController extends Controller
             if (!$alumni) {
                 $mhs = $this->withRetry(fn() => Kemahasiswaan::where('user_id', $user->id)->first());
 
+                // PERINGATAN (S-53): jalan pintas ini bergantung pada status 'alumni' yang kini hanya
+                // ditulis Permission (ubah role / Cek Alumni Otomatis); form Direktori Mahasiswa tak lagi menulisnya.
                 if ($mhs && $mhs->status === Kemahasiswaan::STATUS_ALUMNI) {
                     $alumni = $this->withRetry(fn() => Alumni::create([
                         'user_id'       => $user->id,

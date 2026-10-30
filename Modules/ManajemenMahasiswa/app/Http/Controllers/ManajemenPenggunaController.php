@@ -235,6 +235,11 @@ class ManajemenPenggunaController extends Controller
                     ]);
                 }
                 
+                // PERINGATAN (S-53, 29 Okt 2026 — Surya): status kemahasiswaan sudah dicabut dari
+                // Direktori Mahasiswa (tidak tampil & tidak bisa diubah; sumber resmi = SIAP Undip).
+                // Kini halaman Permission ini SATU-SATUNYA jalur menjadikan alumni. Baris di bawah tetap
+                // perlu karena Dashboard Analitik masih menghitung Kemahasiswaan::alumni().
+                // Direktori Mahasiswa sendiri memisahkan alumni lewat mk_alumni, bukan kolom status.
                 // Update juga status di mk_kemahasiswaan agar tidak dihapus oleh auto-sync Direktori Alumni
                 Kemahasiswaan::where('user_id', $user->id)->update([
                     'status' => Kemahasiswaan::STATUS_ALUMNI,
@@ -325,6 +330,11 @@ class ManajemenPenggunaController extends Controller
                     ]);
                 }
                 
+                // PERINGATAN (S-53, 29 Okt 2026 — Surya): status kemahasiswaan sudah dicabut dari
+                // Direktori Mahasiswa (tidak tampil & tidak bisa diubah; sumber resmi = SIAP Undip).
+                // Kini halaman Permission ini SATU-SATUNYA jalur menjadikan alumni. Baris di bawah tetap
+                // perlu karena Dashboard Analitik masih menghitung Kemahasiswaan::alumni().
+                // Direktori Mahasiswa sendiri memisahkan alumni lewat mk_alumni, bukan kolom status.
                 // Update status kemahasiswaan
                 Kemahasiswaan::where('user_id', $user->id)->update([
                     'status' => Kemahasiswaan::STATUS_ALUMNI,

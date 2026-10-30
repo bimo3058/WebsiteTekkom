@@ -296,18 +296,6 @@
                 <div class="cv-info-label">Angkatan</div>
                 <div class="cv-info-value">{{ $mhs->angkatan }}</div>
             </div>
-            <div class="cv-info-row">
-                <div class="cv-info-label">Status</div>
-                <div class="cv-info-value">
-                    @switch($mhs->status)
-                        @case('aktif') Aktif @break
-                        @case('alumni') Lulus @break
-                        @case('cuti') Cuti @break
-                        @case('drop_out') Drop Out @break
-                        @default {{ ucfirst($mhs->status) }}
-                    @endswitch
-                </div>
-            </div>
 
         </div>
 

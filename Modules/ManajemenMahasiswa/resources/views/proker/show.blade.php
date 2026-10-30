@@ -25,7 +25,7 @@
     {{--
         Badge status sengaja TIDAK dirender di sini: tingginya (28px + jarak 8px)
         menjadikan blok kanan dua tingkat dan mendorong baris tombol turun sampai
-        menempel banner. Badge tahap di kartu daftar juga sudah dicabut (27 Okt 2026).
+        menempel banner. Badge tahap cukup di kartu daftar (dikembalikan 29 Okt 2026).
     --}}
     <div class="d-flex flex-column align-items-end">
         <div class="d-flex gap-2 flex-wrap align-items-start justify-content-end">

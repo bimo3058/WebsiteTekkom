@@ -296,6 +296,12 @@ class DashboardAnalitikService
 
                 'mahasiswa_tanpa_nim' => Kemahasiswaan::whereNull('nim')->orWhere('nim', '')->count(),
                 'mahasiswa_tanpa_angkatan' => Kemahasiswaan::whereNull('angkatan')->count(),
+                // PERINGATAN (S-53, 29 Okt 2026 — Surya, bimbingan Bu Eve & Pak Sidik): status kemahasiswaan
+                // (aktif/cuti/DO/pindah studi/wafat/mangkir) sudah DICABUT dari Direktori Mahasiswa dan tidak bisa
+                // diubah lagi dari UI mana pun (sumber resmi = SIAP Undip). Kolom mk_kemahasiswaan.status dibiarkan
+                // supaya bagian ini tidak error, tetapi angkanya MEMBEKU: nilai lama tetap, mahasiswa baru selalu 'aktif'.
+                // Pemilik fitur ini (Devarlo / Syahbana) perlu memutuskan: hapus/ubah hitungan lulusan_belum_sinkron.
+                // Jangan drop kolom status sebelum bagian ini disesuaikan. Lihat Models/Kemahasiswaan.php.
                 'lulusan_belum_sinkron' => Kemahasiswaan::alumni()
                     ->whereNotNull('user_id')
                     ->when(!empty($alumniUserIds), fn ($q) => $q->whereNotIn('user_id', $alumniUserIds))
@@ -616,6 +622,12 @@ class DashboardAnalitikService
      * TIER 3 - Data Mahasiswa (cache 120 detik).
      * Berubah saat admin update status mahasiswa atau data baru masuk, biasanya mingguan.
      */
+    // PERINGATAN (S-53, 29 Okt 2026 — Surya, bimbingan Bu Eve & Pak Sidik): status kemahasiswaan
+    // (aktif/cuti/DO/pindah studi/wafat/mangkir) sudah DICABUT dari Direktori Mahasiswa dan tidak bisa
+    // diubah lagi dari UI mana pun (sumber resmi = SIAP Undip). Kolom mk_kemahasiswaan.status dibiarkan
+    // supaya bagian ini tidak error, tetapi angkanya MEMBEKU: nilai lama tetap, mahasiswa baru selalu 'aktif'.
+    // Pemilik fitur ini (Devarlo / Syahbana) perlu memutuskan: hapus/ubah kartu/donut/grafik per status di bagian Mahasiswa.
+    // Jangan drop kolom status sebelum bagian ini disesuaikan. Lihat Models/Kemahasiswaan.php.
     public function getMahasiswaStats(): array
     {
         return Cache::remember('mk.dashboard.tier3', 120, function () {
@@ -727,6 +739,12 @@ class DashboardAnalitikService
      * Mengukur kualitas penyelenggaraan prodi: kelulusan, masa studi, DO rate,
      * waktu tunggu kerja, dan responsivitas layanan pengaduan.
      */
+    // PERINGATAN (S-53, 29 Okt 2026 — Surya, bimbingan Bu Eve & Pak Sidik): status kemahasiswaan
+    // (aktif/cuti/DO/pindah studi/wafat/mangkir) sudah DICABUT dari Direktori Mahasiswa dan tidak bisa
+    // diubah lagi dari UI mana pun (sumber resmi = SIAP Undip). Kolom mk_kemahasiswaan.status dibiarkan
+    // supaya bagian ini tidak error, tetapi angkanya MEMBEKU: nilai lama tetap, mahasiswa baru selalu 'aktif'.
+    // Pemilik fitur ini (Devarlo / Syahbana) perlu memutuskan: hapus/ubah rate lulus/DO yang dihitung dari status.
+    // Jangan drop kolom status sebelum bagian ini disesuaikan. Lihat Models/Kemahasiswaan.php.
     public function getEvaluasiMutu(): array
     {
         return Cache::remember('mk.dashboard.evaluasi', 300, function () {
@@ -909,6 +927,12 @@ class DashboardAnalitikService
      *  - "Perlu Pemantauan": mahasiswa aktif semester ≥ 9
      *  - "Kritis": mahasiswa aktif semester ≥ 12
      */
+    // PERINGATAN (S-53, 29 Okt 2026 — Surya, bimbingan Bu Eve & Pak Sidik): status kemahasiswaan
+    // (aktif/cuti/DO/pindah studi/wafat/mangkir) sudah DICABUT dari Direktori Mahasiswa dan tidak bisa
+    // diubah lagi dari UI mana pun (sumber resmi = SIAP Undip). Kolom mk_kemahasiswaan.status dibiarkan
+    // supaya bagian ini tidak error, tetapi angkanya MEMBEKU: nilai lama tetap, mahasiswa baru selalu 'aktif'.
+    // Pemilik fitur ini (Devarlo / Syahbana) perlu memutuskan: hapus/ubah Calon DO (scope aktif() kini mencakup mahasiswa yang sebenarnya sudah DO/wafat/pindah).
+    // Jangan drop kolom status sebelum bagian ini disesuaikan. Lihat Models/Kemahasiswaan.php.
     public function getCalonDO(): array
     {
         return Cache::remember('mk.dashboard.calon_do', 300, function () {
@@ -968,6 +992,12 @@ class DashboardAnalitikService
      * Menampilkan jumlah lulusan per tahun + deteksi mahasiswa berstatus alumni
      * yang belum punya record di tabel mk_alumni (belum tersinkron).
      */
+    // PERINGATAN (S-53, 29 Okt 2026 — Surya, bimbingan Bu Eve & Pak Sidik): status kemahasiswaan
+    // (aktif/cuti/DO/pindah studi/wafat/mangkir) sudah DICABUT dari Direktori Mahasiswa dan tidak bisa
+    // diubah lagi dari UI mana pun (sumber resmi = SIAP Undip). Kolom mk_kemahasiswaan.status dibiarkan
+    // supaya bagian ini tidak error, tetapi angkanya MEMBEKU: nilai lama tetap, mahasiswa baru selalu 'aktif'.
+    // Pemilik fitur ini (Devarlo / Syahbana) perlu memutuskan: hapus/ubah sumber lulusan (status 'alumni' masih ditulis Permission; mk_alumni lebih bisa dipercaya).
+    // Jangan drop kolom status sebelum bagian ini disesuaikan. Lihat Models/Kemahasiswaan.php.
     public function getLulusanPerPeriode(): array
     {
         return Cache::remember('mk.dashboard.lulusan', 300, function () {

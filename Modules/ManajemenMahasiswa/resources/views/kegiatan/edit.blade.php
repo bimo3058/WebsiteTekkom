@@ -727,6 +727,7 @@
 
         @include('manajemenmahasiswa::partials.kegiatan-form._personel', [
             'ketuaId'          => old('ketua_pelaksana_id', $kegiatan->ketua_pelaksana_id),
+            'ketuaTersimpan'   => $kegiatan->ketua_pelaksana_id,
             'dosenTerpilih'    => $existingDosen,
             'panitiaTerpilih'  => $existingPanitia,
             'panitiaPeranLama' => $panitiaPeranLama,

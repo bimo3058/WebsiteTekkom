@@ -74,12 +74,12 @@
        digambar JavaScript (modal Tinjau) dengan nama kelas yang sama.
 
        Satu status = satu warna di semua halaman:
-         hijau  Aktif, Disetujui, Bekerja
-         kuning Menunggu Review, Diajukan, Mangkir
-         merah  Ditolak, DO
-         langit Cuti, Berlangsung, Studi Lanjut
-         navy   Pindah Studi, Wirausaha
-         abu    Draft, Belum diklaim, Selesai, Wafat, Belum Terdata
+         hijau  Disetujui, Bekerja
+         kuning Menunggu Review, Diajukan
+         merah  Ditolak
+         langit Berlangsung, Studi Lanjut
+         navy   Wirausaha
+         abu    Draft, Belum diklaim, Selesai, Belum Terdata
 
        Status karir alumni ikut di sini. Wirausaha sengaja navy, bukan kuning,
        karena kuning berarti "menunggu tindakan".                              */
@@ -123,36 +123,36 @@
     /* Aturan warna ditulis ulang lengkap (latar, bayangan, garis) supaya menang
        atas aturan bertingkat sama di partial palet Direktori. */
     .mm-status--success,
-    .status-badge.aktif, .status-badge.status-disetujui, .status-badge.bekerja,
+    .status-badge.status-disetujui, .status-badge.bekerja,
     .status-verif.approved, .claim-badge.disetujui, .detail-status-pill.disetujui {
         --st-fg: var(--c-success); --st-border: var(--c-success-50); --st-dot: var(--c-success-100);
         background: #ffffff; box-shadow: none; color: var(--st-fg); border-color: var(--st-border);
     }
     .mm-status--warning,
-    .status-badge.mangkir, .status-badge.status-diajukan,
+    .status-badge.status-diajukan,
     .status-verif.pending, .claim-badge.diajukan, .detail-status-pill.diajukan {
         --st-fg: var(--c-warning); --st-border: var(--c-warning-50); --st-dot: var(--c-warning-100);
         background: #ffffff; box-shadow: none; color: var(--st-fg); border-color: var(--st-border);
     }
     .mm-status--error,
-    .status-badge.drop_out, .status-badge.status-ditolak,
+    .status-badge.status-ditolak,
     .status-verif.rejected, .claim-badge.ditolak, .detail-status-pill.ditolak {
         --st-fg: var(--c-error); --st-border: var(--c-error-50); --st-dot: var(--c-error);
         background: #ffffff; box-shadow: none; color: var(--st-fg); border-color: var(--st-border);
     }
     .mm-status--sky,
-    .status-badge.cuti, .status-badge.alumni, .status-badge.status-berlangsung,
+    .status-badge.status-berlangsung,
     .status-badge.studi_lanjut {
         --st-fg: var(--c-sky); --st-border: var(--c-sky-50); --st-dot: var(--c-sky-100);
         background: #ffffff; box-shadow: none; color: var(--st-fg); border-color: var(--st-border);
     }
     .mm-status--primary,
-    .status-badge.pindah_studi, .status-badge.wirausaha {
+    .status-badge.wirausaha {
         --st-fg: var(--c-primary); --st-border: rgba(11, 38, 110, 0.25); --st-dot: var(--c-primary);
         background: #ffffff; box-shadow: none; color: var(--st-fg); border-color: var(--st-border);
     }
     .mm-status--neutral,
-    .status-badge.wafat, .status-badge.status-draft, .status-badge.status-selesai,
+    .status-badge.status-draft, .status-badge.status-selesai,
     .status-badge.belum_bekerja, .status-badge.belum_terdata,
     .claim-badge.belum {
         --st-fg: var(--c-fg-muted); --st-border: var(--c-border); --st-dot: var(--c-grey-300);

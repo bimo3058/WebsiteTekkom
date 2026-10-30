@@ -3,11 +3,13 @@
     Kegiatan, dan Laporan & Arsip (keputusan 17 Okt 2026: isi kartu disamakan, versi
     lengkap). Badge mengikuti aturan halaman detail (kegiatan-detail/_body): bidang,
     atau "Prodi" bila tanpa bidang, lalu kategori. Isian yang kosong tidak ditampilkan,
-    jadi kartu draft yang belum lengkap tetap rapi. Badge tahap (Draft / Di Pelaksanaan /
-    Diarsipkan / Tidak terlaksana) tidak dipakai — dicabut 27 Okt 2026.
+    jadi kartu draft yang belum lengkap tetap rapi. Badge tahap (Di Rencana Proker /
+    Di Pelaksanaan Kegiatan / Di Laporan & Arsip / Tidak terlaksana) dicabut 27 Okt 2026,
+    dikembalikan 29 Okt 2026 khusus Rencana Proker (pasangan filter Tahap Rencana).
 
     Variabel: $item (Kegiatan — muat relasi bidang, bidangs, kategoriKegiatan,
     kategoris, dosenPendampings.user), $href.
+    Opsional: $tampilTahap (bool) — badge tahap di banner; muat relasi `salinan`.
 
     Baris terakhir kartu = Dosen Pendamping (bukan Ketua Pelaksana — diganti 27 Okt 2026
     atas permintaan Surya; ketua pelaksana tetap tampil di halaman detail).
@@ -17,9 +19,13 @@
     $tooltipDosen = $item->dosenPendampings
         ->map(fn ($d) => ($d->user?->name ?? '-') . (filled($d->pivot->peran ?? null) ? ' (' . $d->pivot->peran . ')' : ''))
         ->implode(', ');
+    $tahap = ($tampilTahap ?? false) ? $item->tahap_rencana : null;
 @endphp
 <a href="{{ $href }}" class="kegiatan-card">
     <div class="kegiatan-card-image">
+        @if($tahap)
+            <span class="mm-status mm-status--{{ \Modules\ManajemenMahasiswa\Models\Kegiatan::TAHAP_RENCANA_NADA[$tahap] }} kegiatan-card-tahap">{{ \Modules\ManajemenMahasiswa\Models\Kegiatan::TAHAP_RENCANA_LABELS[$tahap] }}</span>
+        @endif
         @if($item->banner)
             <img src="{{ $item->banner_url }}" alt="{{ $item->judul }}" loading="lazy">
         @else

@@ -8,8 +8,10 @@
 
     Variabel: $action (URL daftar), $placeholder, $bidangList, $tahunList,
     $adaTanpaTahun (opsi "Belum ada tanggal" hanya dirender bila memang ada isinya).
-    Opsional: $tahapList (Kegiatan::TAHAP_RENCANA_LABELS) — hanya Rencana Proker,
-    memunculkan filter Tahap (Draft / Di Pelaksanaan / Diarsipkan / Tidak terlaksana).
+    Opsional: $tahapList (Kegiatan::TAHAP_FILTER_LABELS) — hanya Rencana Proker,
+    memunculkan filter Tahap (Di Rencana Proker / Di Pelaksanaan Kegiatan / Di Laporan &
+    Arsip). Tanpa opsi "Semua Tahap": saat kosong tampil petunjuk abu yang tak bisa
+    dipilih, dan filter dikosongkan lewat Reset (29 Okt 2026).
 --}}
 @php
     $tahapList         = $tahapList ?? null;
@@ -88,7 +90,7 @@
                             <div>
                                 <label class="filter-pop-label" for="filterTahap">Tahap Rencana</label>
                                 <x-manajemenmahasiswa::ui.select name="status_rencana" id="filterTahap">
-                                    <option value="">Semua Tahap</option>
+                                    <option value="" disabled hidden {{ $filterTahapAktif ? '' : 'selected' }}>Pilih tahap</option>
                                     @foreach($tahapList as $kunci => $label)
                                         <option value="{{ $kunci }}" {{ request('status_rencana') === $kunci ? 'selected' : '' }}>{{ $label }}</option>
                                     @endforeach

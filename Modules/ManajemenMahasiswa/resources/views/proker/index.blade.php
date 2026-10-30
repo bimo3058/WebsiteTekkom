@@ -34,6 +34,7 @@
                 @include('manajemenmahasiswa::partials.kegiatan-list._kartu', [
                     'item' => $proker,
                     'href' => route('manajemenmahasiswa.proker.show', $proker->id),
+                    'tampilTahap' => true,
                 ])
             </div>
         @endforeach

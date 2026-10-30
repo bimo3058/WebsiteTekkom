@@ -55,7 +55,7 @@ class ProkerController extends Controller
         // walau salinannya sudah di Pelaksanaan/Arsip.
         $tahunList     = Kegiatan::daftarTahun(Kegiatan::STATUS_DAFTAR_RENCANA);
         $adaTanpaTahun = Kegiatan::whereIn('status', Kegiatan::STATUS_DAFTAR_RENCANA)->tanpaTahun()->exists();
-        $tahapList     = Kegiatan::TAHAP_RENCANA_LABELS;
+        $tahapList     = Kegiatan::TAHAP_FILTER_LABELS;
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
@@ -72,11 +72,12 @@ class ProkerController extends Controller
         ])->isNotEmpty();
 
         // Relasi yang dibutuhkan kartu bersama (kegiatan-list/_kartu) — sama di ketiga subbab.
-        $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'dosenPendampings.user'])
+        // `salinan` khusus di sini: badge tahap rencana (Draft / Di Pelaksanaan / Diarsipkan).
+        $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'dosenPendampings.user', 'salinan'])
             ->whereIn('status', Kegiatan::STATUS_DAFTAR_RENCANA)
             ->orderBy('created_at', 'desc');
 
-        // Filter tahap rencana (Draft / Di Pelaksanaan / Diarsipkan / Tidak terlaksana)
+        // Filter tahap rencana (Di Rencana Proker / Di Pelaksanaan Kegiatan / Di Laporan & Arsip)
         if ($request->filled('status_rencana') && array_key_exists($request->status_rencana, $tahapList)) {
             $query->tahapRencana($request->status_rencana);
         }
@@ -310,7 +311,7 @@ class ProkerController extends Controller
             return $tolak;
         }
 
-        $validated = $this->validateProker($request);
+        $validated = $this->validateProker($request, $proker);
 
         // Rencana hanya menyimpan dokumen (foto = dokumentasi acara, di Pelaksanaan),
         // jadi kuota foto 0; batas dokumen sama dengan Pelaksanaan & Arsip.
@@ -513,7 +514,7 @@ class ProkerController extends Controller
             ->with('error', $this->pengelolaService->pesanTolak($proker));
     }
 
-    private function validateProker(Request $request): array
+    private function validateProker(Request $request, ?Kegiatan $proker = null): array
     {
         // Aturannya dipusatkan di model supaya Rencana Proker & Pelaksanaan tidak
         // bisa lepas sinkron. Definisi lama ("tepat 1 kategori DAN itu Prodi") juga
@@ -567,7 +568,7 @@ class ProkerController extends Controller
             'lokasi'                 => 'nullable|string|max:150',
             'target_peserta'         => 'nullable|integer|min:1',
             'anggaran'               => 'nullable|numeric|min:0|max:9999999999999',
-            'ketua_pelaksana_id'     => 'nullable|exists:students,id',
+            'ketua_pelaksana_id'     => ['nullable', 'exists:students,id', KegiatanPolicy::aturanKetuaPelaksana($proker)],
             'dosen_pendamping_ids'   => 'nullable|array',
             'dosen_pendamping_ids.*' => 'exists:lecturers,id',
             'dosen_peran'            => 'nullable|array',
@@ -593,6 +594,7 @@ class ProkerController extends Controller
             'jam_mulai.date_format'          => 'Jam mulai harus berupa jam yang benar, contoh 09:00.',
             'jam_selesai.date_format'        => 'Jam selesai harus berupa jam yang benar, contoh 15:00.',
             'jam_selesai.after'              => 'Jam selesai harus lebih lambat dari jam mulai. Kalau kegiatannya lintas hari, isi dulu tanggal selesainya.',
+            'ketua_pelaksana_id.in'          => KegiatanPolicy::PESAN_KETUA_PELAKSANA,
         ] + KegiatanController::pesanValidasiDokumen());
     }
 

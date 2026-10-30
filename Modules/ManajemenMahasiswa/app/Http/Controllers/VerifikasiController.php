@@ -266,6 +266,8 @@ class VerifikasiController extends Controller
                 'nama'     => $user->name,
                 'nim'      => 'PENGURUS-' . $user->id,
                 'angkatan' => (int) date('Y'),
+                // PERINGATAN (S-53, 29 Okt 2026): status tak lagi dikelola di Direktori Mahasiswa;
+                // diisi hanya karena kolomnya NOT NULL dan Dashboard Analitik masih membacanya.
                 'status'   => Kemahasiswaan::STATUS_AKTIF,
             ]
         );
@@ -849,6 +851,8 @@ class VerifikasiController extends Controller
                 'nama'     => $user->name,
                 'nim'      => 'PENGURUS-' . $user->id,
                 'angkatan' => (int) date('Y'),
+                // PERINGATAN (S-53, 29 Okt 2026): status tak lagi dikelola di Direktori Mahasiswa;
+                // diisi hanya karena kolomnya NOT NULL dan Dashboard Analitik masih membacanya.
                 'status'   => Kemahasiswaan::STATUS_AKTIF,
             ]
         );

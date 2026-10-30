@@ -27,7 +27,8 @@
         'cari' => \Illuminate\Support\Str::lower($calon['nama']),
     ])->values();
 @endphp
-<div class="form-card mk-pilih" x-data="mkPilihBanyak(@js($opsiPengelola), @js(array_values($pengelolaTerpilih)))">
+<div class="form-card mk-pilih"
+     x-data="mkPilihBanyak(@js($opsiPengelola), @js(array_values($pengelolaTerpilih)), () => $store.mkKetua.akses ? $store.mkKetua.userId : '')">
     <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Akses Kelola</div>
 
     <input type="hidden" name="akses_kelola_dikirim" value="1">
@@ -36,7 +37,8 @@
         Pembuat: <strong style="color: var(--c-fg-sec);">{{ $namaPembuat }}</strong>.
         Admin otomatis bisa mengelola semua kegiatan, dan Ketua Himpunan bisa
         mengeditnya (tanpa menghapus) bila diperlukan.
-        Tambahkan staff himpunan yang boleh ikut mengubah kegiatan ini.
+        Ketua Pelaksana otomatis ikut mengelola.
+        Tambahkan staff himpunan lain yang boleh ikut mengubah kegiatan ini.
     </p>
 
     <label class="form-label-custom" for="pengelolaSearchInput">
@@ -89,6 +91,20 @@
 
     {{-- Baris hak per pengelola + hidden input pengelola_ids[] --}}
     <div id="pengelolaRolesContainer" class="mt-3 d-flex flex-column gap-2">
+        {{-- Ketua Pelaksana: terkunci, tanpa hidden input. Haknya dihitung dari
+             ketua_pelaksana_id (KegiatanPolicy::update), bukan dari daftar pengelola,
+             jadi menggantinya hanya lewat bagian Personel. --}}
+        <template x-if="idKunci">
+            <div class="d-flex align-items-center gap-3 p-2 border rounded bg-light">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; color: var(--c-fg-muted);" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <div style="flex: 1; font-size: 13px; font-weight: 600; color: var(--c-fg-sec);">
+                    <span x-text="$store.mkKetua.nama"></span>
+                    <div style="font-size: 11px; font-weight: 500; color: var(--c-fg-muted);">Staff Himpunan · ubah lewat bagian Personel</div>
+                </div>
+                <span style="flex: none; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--c-border); background: var(--c-bg); color: var(--c-fg-sec); white-space: nowrap;"
+                      title="Ketua Pelaksana otomatis bisa mengedit, tidak bisa menghapus">Ketua Pelaksana</span>
+            </div>
+        </template>
         <template x-for="p in daftarTerpilih" :key="'hak-' + p.id">
             <div class="d-flex align-items-center gap-3 p-2 border rounded bg-light">
                 <div style="flex: 1; font-size: 13px; font-weight: 600; color: var(--c-fg-sec);">

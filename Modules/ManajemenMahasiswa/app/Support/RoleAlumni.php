@@ -8,6 +8,10 @@ use App\Models\User;
 /**
  * Menyelaraskan role `alumni` dengan Status Kemahasiswaan.
  *
+ * CATATAN (S-53, 29 Okt 2026): sejak status kemahasiswaan dicabut dari form Edit
+ * Direktori Mahasiswa, kelas ini TIDAK punya pemanggil lagi. Dibiarkan sebagai acuan
+ * bila nanti ada jalur lain yang mengubah status ke/dari Alumni.
+ *
  * Direktori Alumni menyinkronkan tabel mk_alumni dari role `alumni` setiap kali
  * dibuka (DirektoriAlumniController::syncFromKemahasiswaan). Status "Alumni" yang
  * diubah admin tanpa ikut menyentuh role akan dibatalkan sinkron itu: baris
