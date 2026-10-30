@@ -84,6 +84,8 @@
         selectedDosen: '',
         sortBy: 'terbaru',
         filterOpen: false,
+        dosenOpen: false,
+        sortOpen: false,
         
         applyFiltersAndSort() {
             const tbody = document.querySelector('#table-menunggu tbody');
@@ -168,17 +170,32 @@
                                 <label
                                     class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Dosen
                                     Pengampu</label>
-                                <div class="space-y-2">
-                                    <select x-model="selectedDosen" @change="applyFiltersAndSort()"
-                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
-                                        <option value="">Semua Dosen</option>
+                                <div class="relative" @click.away="dosenOpen = false">
+                                    <button type="button" @click="dosenOpen = !dosenOpen"
+                                        class="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20">
+                                        <span x-text="selectedDosen || 'Semua Dosen'"></span>
+                                        <i class="fas fa-chevron-down text-xs text-slate-400 transition-transform"
+                                            :class="dosenOpen ? 'rotate-180' : ''"></i>
+                                    </button>
+                                    <div x-show="dosenOpen" x-cloak x-transition
+                                        class="absolute left-0 right-0 top-full z-10 mt-2 max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
+                                        <button type="button" @click="selectedDosen = ''; applyFiltersAndSort(); dosenOpen = false;"
+                                            class="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50"
+                                            :class="selectedDosen === '' ? 'font-semibold text-primary' : 'text-slate-700'">
+                                            Semua Dosen
+                                        </button>
                                         @php
                                             $dosens = $paket_soal->pluck('dosen_pengampu')->filter()->unique();
                                         @endphp
                                         @foreach($dosens as $dsn)
-                                            <option value="{{ $dsn }}">{{ $dsn }}</option>
+                                            <button type="button"
+                                                @click="selectedDosen = @js($dsn); applyFiltersAndSort(); dosenOpen = false;"
+                                                class="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                                                :class="selectedDosen === @js($dsn) ? 'font-semibold text-primary' : ''">
+                                                {{ $dsn }}
+                                            </button>
                                         @endforeach
-                                    </select>
+                                    </div>
                                 </div>
                             </div>
                             <div class="flex gap-2 pt-2 border-t border-slate-100">
@@ -195,14 +212,34 @@
                         </div>
                     </div>
 
-                    <select x-model="sortBy" @change="applyFiltersAndSort()"
-                        class="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none cursor-pointer min-w-45 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none"
-                        id="sortBy">
-                        <option value="terbaru">Terbaru</option>
-                        <option value="terlama">Terlama</option>
-                        <option value="nama-asc">Nama A-Z</option>
-                        <option value="nama-desc">Nama Z-A</option>
-                    </select>
+                    <div class="relative" @click.away="sortOpen = false">
+                        <button type="button" @click="sortOpen = !sortOpen"
+                            class="flex min-w-45 items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-left text-sm text-slate-700 transition-all hover:border-primary focus:outline-none focus:ring-4 focus:ring-primary/5">
+                            <span x-text="{
+                                'terbaru': 'Terbaru',
+                                'terlama': 'Terlama',
+                                'nama-asc': 'Nama A-Z',
+                                'nama-desc': 'Nama Z-A'
+                            }[sortBy]"></span>
+                            <i class="fas fa-chevron-down text-xs text-slate-400 transition-transform"
+                                :class="sortOpen ? 'rotate-180' : ''"></i>
+                        </button>
+                        <div x-show="sortOpen" x-cloak x-transition
+                            class="absolute right-0 z-10 mt-2 w-full min-w-45 rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
+                            @foreach([
+                                'terbaru' => 'Terbaru',
+                                'terlama' => 'Terlama',
+                                'nama-asc' => 'Nama A-Z',
+                                'nama-desc' => 'Nama Z-A',
+                            ] as $value => $label)
+                                <button type="button" @click="sortBy = @js($value); applyFiltersAndSort(); sortOpen = false;"
+                                    class="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                                    :class="sortBy === @js($value) ? 'font-semibold text-primary' : ''">
+                                    {{ $label }}
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             </div>
 

@@ -1,6 +1,8 @@
 @php
     $iconPortal = 'M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1V10';
     $iconRiwayat = 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z';
+    $semesterMahasiswa = \Modules\BankSoal\Support\SemesterCalculator::fromCohortYear(auth()->user()->student?->cohort_year);
+    $riwayatDisabled = $semesterMahasiswa < 7;
     $iconLogout = 'M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9';
     $iconGear = 'M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.5 1.7 1.7 0 00-1.8.3l-.1.1A2 2 0 114.4 17l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1A1.7 1.7 0 004.4 7l-.1-.1A2 2 0 117.1 4l.1.1a1.7 1.7 0 001.8.3 1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1A2 2 0 1119.6 7l-.1.1a1.7 1.7 0 00-.3 1.8 1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z';
     $iconHelp = 'M12 21a9 9 0 100-18 9 9 0 000 18zM9.5 9.5a2.5 2.5 0 015 0c0 1.5-2.5 2-2.5 3.5M12 17h.01';
@@ -43,7 +45,7 @@
             :active="request()->routeIs('komprehensif.mahasiswa.dashboard')" />
             
         <x-sidebar-link :href="route('komprehensif.mahasiswa.riwayat')" :icon="$iconRiwayat" label="Riwayat Ujian"
-            :active="request()->routeIs('komprehensif.mahasiswa.riwayat')" />
+            :active="request()->routeIs('komprehensif.mahasiswa.riwayat')" :disabled="$riwayatDisabled" />
     </nav>
 
     {{-- Footer --}}

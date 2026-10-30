@@ -28,17 +28,23 @@
 
     <x-banksoal::notification.alerts />
 
-    <div x-data="periodeWizard()" class="max-w-4xl mx-auto pb-20">
-
-        <x-banksoal::ui.page-header title="Atur Periode Pengajuan"
-            subtitle="Konfigurasi jadwal pengajuan RPS dan template dokumen untuk dosen">
-            <x-slot:actions>
-                <a href="{{ route('banksoal.rps.gpm.validasi-rps') }}"
-                    class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+    <x-banksoal::ui.bank-soal-page>
+        <x-slot:header>
+            <div class="bs-heading-row">
+                <div>
+                    <div class="bs-heading-label">
+                        <h1>Atur Periode Pengajuan</h1>
+                        <span class="bs-role-badge">GPM</span>
+                    </div>
+                    <p>Konfigurasi jadwal pengajuan RPS dan template dokumen untuk dosen.</p>
+                </div>
+                <a href="{{ route('banksoal.rps.gpm.validasi-rps') }}" class="dosen-management-btn">
                     <i class="fas fa-times"></i> Batal
                 </a>
-            </x-slot:actions>
-        </x-banksoal::ui.page-header>
+            </div>
+        </x-slot:header>
+
+        <div x-data="periodeWizard()" class="max-w-4xl mx-auto pb-12">
 
         <!-- Progress Stepper -->
         <div class="mb-12">
@@ -411,4 +417,6 @@
             }
         }
     </script>
+        </div>
+    </x-banksoal::ui.bank-soal-page>
 </x-banksoal::layouts.gpm-master>

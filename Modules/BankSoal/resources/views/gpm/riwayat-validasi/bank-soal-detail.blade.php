@@ -1,4 +1,5 @@
 <x-banksoal::layouts.gpm-master>
+    <div class="gpm-history-detail-page p-8 w-full max-w-screen-2xl mx-auto">
     <div class="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h1 class="text-2xl font-bold text-slate-900">{{ $mataKuliah->nama }}</h1>
@@ -80,8 +81,23 @@
 
             <div id="editModal{{ $soal->id }}" class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-200 ease-out" aria-hidden="true">
                 <div class="absolute inset-0 bg-slate-900/40" data-modal-overlay="editModal{{ $soal->id }}"></div>
-                <div class="modal-panel relative mx-auto mt-16 w-full max-w-lg rounded-2xl bg-white shadow-xl opacity-0 translate-y-4 scale-95 transition-all duration-200 ease-out">
-                    <form action="{{ route('banksoal.soal.gpm.validasi-bank-soal.update', $soal->id) }}" method="POST">
+                <div class="modal-panel relative mx-auto mt-16 w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl opacity-0 translate-y-4 scale-95 transition-all duration-200 ease-out">
+                    <form action="{{ route('banksoal.soal.gpm.validasi-bank-soal.update', $soal->id) }}" method="POST" x-data="{
+                        statusOpen: false,
+                        status: @js($soal->status_review ?: 'Sesuai'),
+                        statuses: [
+                            { value: 'Sesuai', label: 'Sesuai' },
+                            { value: 'Kurang Sesuai', label: 'Kurang Sesuai' },
+                            { value: 'Revisi', label: 'Revisi' }
+                        ],
+                        get statusLabel() {
+                            return this.statuses.find(option => option.value === this.status)?.label || 'Pilih status review';
+                        },
+                        chooseStatus(value) {
+                            this.status = value;
+                            this.statusOpen = false;
+                        }
+                    }">
                         @csrf
                         @method('PUT')
                         <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
@@ -93,15 +109,44 @@
                         <div class="px-5 py-4 space-y-4">
                             <div>
                                 <label class="text-xs font-semibold text-slate-600">Status Review</label>
-                                <select name="status_review" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" required>
-                                    <option value="Sesuai" {{ $soal->status_review == 'Sesuai' ? 'selected' : '' }}>Sesuai</option>
-                                    <option value="Kurang Sesuai" {{ $soal->status_review == 'Kurang Sesuai' ? 'selected' : '' }}>Kurang Sesuai</option>
-                                    <option value="Revisi" {{ $soal->status_review == 'Revisi' ? 'selected' : '' }}>Revisi</option>
-                                </select>
+                                <div class="relative mt-2" @click.outside="statusOpen = false">
+                                    <input type="hidden" name="status_review" x-model="status" required>
+                                    <button
+                                        type="button"
+                                        @click="statusOpen = !statusOpen"
+                                        class="flex w-full items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                        :aria-expanded="statusOpen"
+                                        aria-haspopup="listbox"
+                                    >
+                                        <span x-text="statusLabel"></span>
+                                        <i class="fas fa-chevron-down text-xs text-slate-400 transition-transform" :class="statusOpen ? 'rotate-180' : ''"></i>
+                                    </button>
+                                    <div
+                                        x-show="statusOpen"
+                                        x-cloak
+                                        x-transition
+                                        class="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white p-1 shadow-lg"
+                                        role="listbox"
+                                    >
+                                        <template x-for="option in statuses" :key="option.value">
+                                            <button
+                                                type="button"
+                                                @click="chooseStatus(option.value)"
+                                                class="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                                                :class="status === option.value ? 'bg-primary/5 text-primary font-semibold' : ''"
+                                                role="option"
+                                                :aria-selected="status === option.value"
+                                            >
+                                                <span x-text="option.label"></span>
+                                                <i x-show="status === option.value" class="fas fa-check text-xs"></i>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
                             </div>
                             <div>
                                 <label class="text-xs font-semibold text-slate-600">Catatan Evaluator</label>
-                                <textarea name="catatan" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" rows="4" placeholder="Tuliskan catatan revisi jika ada...">{{ $soal->catatan }}</textarea>
+                                <textarea name="catatan" class="mt-2 w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm" rows="4" placeholder="Tuliskan catatan revisi jika ada...">{{ $soal->catatan }}</textarea>
                             </div>
                         </div>
                         <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
@@ -123,5 +168,6 @@
 
     <div class="mt-6 flex justify-center">
         {{ $riwayatSoal->links('banksoal::components.ui.laravel-pagination') }}
+    </div>
     </div>
 </x-banksoal::layouts.gpm-master>

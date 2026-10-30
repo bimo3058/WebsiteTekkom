@@ -323,11 +323,11 @@
                 </div>
                 <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex items-center gap-3">
                     <button @click="showSubmitModal = false"
-                        class="flex-1 px-4 py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm rounded-xl focus:outline-none transition-colors">
+                        class="flex-1 px-4 py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm rounded-xl focus:outline-none transition-colors cursor-pointer">
                         Kembali
                     </button>
                     <button @click="confirmSubmit()"
-                        class="flex-1 px-4 py-2.5 text-[13px] font-bold text-white bg-primary hover:bg-primary/90 shadow-sm rounded-xl focus:outline-none transition-colors flex items-center justify-center gap-2">
+                        class="flex-1 px-4 py-2.5 text-[13px] font-bold text-white bg-primary hover:bg-primary/90 shadow-sm rounded-xl focus:outline-none transition-colors flex items-center justify-center gap-2 cursor-pointer">
                         <span class="material-symbols-outlined" style="font-size:18px">done_all</span>
                         Ya, Selesaikan
                     </button>
@@ -366,20 +366,19 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-8">
-                    <div class="flex items-center gap-2 border border-red-200 px-4 py-2 text-lg font-black bg-red-50 text-red-600 rounded-xl shadow-sm"
+                    <div class="flex items-center gap-2 border border-red-200 px-4 py-2 text-lg font-black bg-red-50 text-red-600 shadow-sm"
                         :class="timeLeft < 300 ? 'animate-pulse' : ''">
                         <span class="material-symbols-outlined">timer</span>
                         <span x-text="formattedTime">--:--:--</span>
                     </div>
                     <div class="flex items-center gap-3">
                         <div class="text-right">
-                            <p class="text-xs font-bold uppercase text-slate-800">Student: {{ auth()->user()->name }}
+                            <p class="text-xs font-bold uppercase text-slate-800">{{ auth()->user()->name }}
                             </p>
                             <p class="text-[10px] text-slate-800/60 font-bold tracking-wider">
                                 {{ optional(auth()->user()->student)->student_number ?? 'NIM' }}
                             </p>
                         </div>
-                        <span class="material-symbols-outlined text-4xl text-slate-800">account_circle</span>
                     </div>
                 </div>
             </div>
@@ -406,7 +405,7 @@
                         <div class="space-y-4 mt-auto">
                             <template x-for="(opsi, index) in currentSoal.opsi" :key="opsi.id">
                                 <label
-                                    class="flex items-center gap-4 p-4 border border-slate-200 transition-all cursor-pointer group rounded-xl hover:shadow-sm"
+                                    class="flex items-center gap-4 p-4 border border-slate-200 transition-all cursor-pointer group hover:shadow-sm"
                                     :class="currentJawaban == opsi.id ? 'border-[primary] bg-[#EEF2FF]' : 'border-transparent ring-1 ring-slate-200 hover:bg-[#F0F4FF]'">
 
                                     <input class="w-6 h-6 border-2 border-slate-300 text-[primary] focus:ring-0"
@@ -427,20 +426,20 @@
             <aside class="cbt-question-list w-1/5 pr-10 py-8 overflow-hidden"
                 :class="{ 'cbt-question-list-open': mobileQuestions }" aria-label="Daftar nomor soal">
                 <div
-                    class="bg-white border border-slate-200 h-full flex flex-col shadow-sm rounded-2xl overflow-hidden">
+                    class="bg-white border border-slate-200 h-full flex flex-col shadow-sm overflow-hidden">
                     <div class="p-5 border-b border-slate-200 bg-white">
                         <h2 class="text-sm font-black uppercase tracking-tight text-slate-800">Navigasi Soal</h2>
                         <button type="button" class="cbt-mobile-control mt-2 text-sm" @click="mobileQuestions = false"
                             aria-label="Tutup daftar soal">Tutup daftar soal</button>
                         <div class="flex flex-nowrap gap-x-4 mt-3">
                             <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-500">
-                                <div class="w-4 h-4 bg-primary border-none rounded-[3px]"></div> Terjawab
+                                <div class="w-4 h-4 bg-primary border-none"></div> Terjawab
                             </div>
                             <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-500">
-                                <div class="w-4 h-4 bg-yellow-400 border-none rounded-[3px]"></div> Ragu-Ragu
+                                <div class="w-4 h-4 bg-yellow-400 border-none"></div> Ragu-Ragu
                             </div>
                             <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-500">
-                                <div class="w-4 h-4 bg-white border border-slate-300 rounded-[3px]"></div> Kosong
+                                <div class="w-4 h-4 bg-white border border-slate-300"></div> Kosong
                             </div>
                         </div>
                     </div>
@@ -456,7 +455,7 @@
                                          'bg-primary text-white': !soal.ragu_ragu && soal.jawaban_terpilih,
                                          'bg-white text-slate-600': !soal.ragu_ragu && !soal.jawaban_terpilih
                                      }"
-                                    class="flex items-center justify-center font-bold text-xs cursor-pointer rounded-lg transition-transform hover:scale-105 active:scale-95"
+                                    class="flex items-center justify-center font-bold text-xs cursor-pointer transition-transform hover:scale-105 active:scale-95"
                                     :title="'Soal ' + (idx + 1)">
                                     <span x-text="idx + 1"></span>
                                 </button>
@@ -475,14 +474,14 @@
             <div class="flex items-center gap-3">
                 <button @click="prevSoal()" :disabled="currentIndex === 0"
                     :class="currentIndex === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90 active:translate-y-0.5'"
-                    class="border border-slate-200 px-6 py-2.5 text-sm font-bold uppercase tracking-tight transition-colors flex items-center gap-2 bg-slate-100 text-slate-800 hover:bg-slate-200 rounded-xl">
+                    class="border border-slate-200 px-6 py-2.5 text-sm font-bold uppercase tracking-tight transition-colors flex items-center gap-2 bg-slate-100 text-slate-800 hover:bg-slate-200 cursor-pointer disabled:cursor-not-allowed">
                     <svg class="cbt-control-icon" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="m12 5-7 7 7 7M5 12h14" />
                     </svg>
                     Prev
                 </button>
                 <button type="button"
-                    class="cbt-mobile-control border border-slate-200 rounded-xl bg-slate-100 text-slate-800"
+                    class="cbt-mobile-control border border-slate-200 bg-slate-100 text-slate-800"
                     @click="mobileQuestions = !mobileQuestions" :aria-expanded="mobileQuestions"
                     aria-label="Buka daftar soal">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -493,7 +492,7 @@
 
                 <button @click="toggleRagu()"
                     :class="isRagu ? 'bg-yellow-400 text-yellow-900 border-yellow-500' : 'bg-yellow-400 border-yellow-500 text-yellow-900 hover:bg-yellow-300'"
-                    class="border px-8 py-2.5 rounded-xl text-sm font-bold uppercase tracking-tight transition-colors active:translate-y-0.5 flex items-center gap-2">
+                    class="border px-8 py-2.5 text-sm font-bold uppercase tracking-tight transition-colors active:translate-y-0.5 flex items-center gap-2 cursor-pointer">
                     <svg class="cbt-control-icon" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M5 21V4c5-4 9 4 14 0v10c-5 4-9-4-14 0" :fill="isRagu ? 'currentColor' : 'none'" />
                     </svg>
@@ -502,7 +501,7 @@
 
                 <template x-if="currentIndex < soals.length - 1">
                     <button @click="nextSoal()"
-                        class="bg-primary text-white border-2 border-primary px-6 py-2.5 text-sm font-bold uppercase tracking-tight flex items-center gap-2 hover:opacity-90 active:translate-y-0.5 transition-colors rounded-xl">
+                        class="bg-primary text-white border-2 border-primary px-6 py-2.5 text-sm font-bold uppercase tracking-tight flex items-center gap-2 hover:opacity-90 active:translate-y-0.5 transition-colors cursor-pointer">
                         Next
                         <svg class="cbt-control-icon" viewBox="0 0 24 24" aria-hidden="true">
                             <path d="m12 5 7 7-7 7M5 12h14" />
@@ -511,7 +510,7 @@
                 </template>
                 <template x-if="currentIndex === soals.length - 1">
                     <button @click="submitExam()"
-                        class="bg-red-600 text-white border px-6 py-2.5 rounded-xl shadow-sm hover:shadow-md text-sm font-bold uppercase tracking-tight flex items-center gap-2 hover:bg-red-700 active:translate-y-0.5 transition-colors">
+                        class="bg-red-600 text-white border px-6 py-2.5 shadow-sm hover:shadow-md text-sm font-bold uppercase tracking-tight flex items-center gap-2 hover:bg-red-700 active:translate-y-0.5 transition-colors cursor-pointer">
                         <svg class="cbt-control-icon" viewBox="0 0 24 24" aria-hidden="true">
                             <path d="m3 12 5 5L19 6M13 16l2 2 7-8" />
                         </svg>
@@ -608,6 +607,10 @@
                 alertIcon: '⚠️',
                 _alertCallback: null,
 
+                // Penanda navigasi submit/timeout oleh mahasiswa sendiri
+                // (cegah race: polling melihat sesi finished lalu salah menampilkan popup force-submit)
+                selfSubmitting: false,
+
                 get currentSoal() {
                     return this.soals[this.currentIndex] || null;
                 },
@@ -659,6 +662,8 @@
                             if (!res.ok) return;
                             const data = await res.json();
                             if (data.status === 'finished') {
+                                // Abaikan: ini hasil submit/timeout mahasiswa sendiri, bukan force-submit admin
+                                if (this.selfSubmitting) return;
                                 clearInterval(this.timerInterval);
                                 clearInterval(this.statusInterval);
                                 window.onbeforeunload = null;
@@ -871,7 +876,12 @@
                                 'Waktu Ujian Habis',
                                 'Waktu ujian telah habis. Jawaban Anda akan disubmit otomatis oleh server.',
                                 '⏰',
-                                () => { window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}"; }
+                                () => {
+                                    this.selfSubmitting = true;
+                                    clearInterval(this.statusInterval);
+                                    clearInterval(this.timerInterval);
+                                    window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}";
+                                }
                             );
                             return;
                         }
@@ -920,7 +930,12 @@
                                 'Waktu Ujian Habis',
                                 'Waktu ujian telah habis. Jawaban Anda akan disubmit otomatis oleh server.',
                                 '⏰',
-                                () => { window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}"; }
+                                () => {
+                                    this.selfSubmitting = true;
+                                    clearInterval(this.statusInterval);
+                                    clearInterval(this.timerInterval);
+                                    window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}";
+                                }
                             );
                             return;
                         }
@@ -961,12 +976,18 @@
                 },
 
                 confirmSubmit() {
+                    this.selfSubmitting = true;
+                    clearInterval(this.statusInterval);
+                    clearInterval(this.timerInterval);
                     this.showSubmitModal = false;
                     window.onbeforeunload = null;
                     window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}";
                 },
 
                 forceSubmitTimeUp() {
+                    this.selfSubmitting = true;
+                    clearInterval(this.statusInterval);
+                    clearInterval(this.timerInterval);
                     window.onbeforeunload = null;
                     this.showAlert(
                         'Waktu Ujian Habis',

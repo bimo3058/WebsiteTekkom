@@ -7,11 +7,23 @@
 
     <x-banksoal::notification.alerts />
 
-    <div class="max-w-3xl mx-auto py-8">
-        <div class="mb-8">
-            <h1 class="text-2xl font-bold text-slate-800">Tambah Parameter Baru</h1>
-            <p class="text-sm text-slate-500 mt-1">Definisikan aspek penilaian baru untuk validasi RPS atau Bank Soal.</p>
-        </div>
+    <x-banksoal::ui.bank-soal-page>
+        <x-slot:header>
+            <div class="bs-heading-row">
+                <div>
+                    <div class="bs-heading-label">
+                        <h1>Tambah Parameter Baru</h1>
+                        <span class="bs-role-badge">GPM</span>
+                    </div>
+                    <p>Definisikan aspek penilaian baru untuk validasi RPS atau Bank Soal.</p>
+                </div>
+                <a href="{{ route('banksoal.soal.gpm.parameter.index') }}" class="dosen-management-btn">
+                    <i class="fas fa-times"></i> Batal
+                </a>
+            </div>
+        </x-slot:header>
+
+        <div class="max-w-3xl mx-auto py-4">
 
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <form action="{{ route('banksoal.soal.gpm.parameter.store') }}" method="POST" class="p-8 space-y-6" onsubmit="if(this.checkValidity()){ window.showLoader(); return true; }">
@@ -54,4 +66,5 @@
             </form>
         </div>
     </div>
+    </x-banksoal::ui.bank-soal-page>
 </x-banksoal::layouts.gpm-master>

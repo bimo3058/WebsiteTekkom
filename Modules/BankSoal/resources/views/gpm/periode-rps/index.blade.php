@@ -1,12 +1,20 @@
 <x-banksoal::layouts.gpm-master>
     <x-banksoal::notification.alerts />
-    <x-banksoal::ui.page-header title="Manajemen Jadwal RPS" subtitle="Kelola periode unggah RPS untuk Dosen">
-        <x-slot:actions>
-            <a href="{{ route('banksoal.rps.gpm.periode-rps.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90">
-                <i class="fas fa-plus"></i> Buat Periode & Template
-            </a>
-        </x-slot:actions>
-    </x-banksoal::ui.page-header>
+    <x-banksoal::ui.bank-soal-page>
+        <x-slot:header>
+            <div class="bs-heading-row">
+                <div>
+                    <div class="bs-heading-label">
+                        <h1>Manajemen Jadwal RPS</h1>
+                        <span class="bs-role-badge">GPM</span>
+                    </div>
+                    <p>Kelola periode unggah RPS untuk Dosen.</p>
+                </div>
+                <a href="{{ route('banksoal.rps.gpm.periode-rps.create') }}" class="dosen-management-btn dosen-management-btn-primary">
+                    <i class="fas fa-plus"></i> Buat Periode & Template
+                </a>
+            </div>
+        </x-slot:header>
 
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
@@ -159,4 +167,5 @@
 
 
 
+    </x-banksoal::ui.bank-soal-page>
 </x-banksoal::layouts.gpm-master>

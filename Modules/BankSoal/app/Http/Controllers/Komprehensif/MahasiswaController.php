@@ -52,8 +52,12 @@ class MahasiswaController extends Controller
             ? $this->pendaftaranService->isKuotaPenuh($activePeriode)
             : false;
 
+        $kuotaTerisi = $activePeriode
+            ? PendaftarUjian::where('periode_ujian_id', $activePeriode->id)->count()
+            : 0;
+
         return view('banksoal::mahasiswa.dashboard', compact(
-            'activePeriode', 'pendaftar', 'semester', 'isEligible', 'finishedSession', 'kuotaPenuh'
+            'activePeriode', 'pendaftar', 'semester', 'isEligible', 'finishedSession', 'kuotaPenuh', 'kuotaTerisi'
         ));
     }
 
@@ -137,7 +141,7 @@ class MahasiswaController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('jadwal.periode', function($q) use ($search) {
-                $q->where('nama_periode', 'like', "%{$search}%");
+                $q->where('nama_periode', 'ilike', "%{$search}%");
             });
         }
 

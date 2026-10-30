@@ -77,8 +77,8 @@ class AdminCbtController extends Controller
         if ($request->filled('q')) {
             $q = $request->q;
             $query->whereHas('user', function ($subQ) use ($q) {
-                $subQ->where('name', 'like', "%{$q}%")
-                    ->orWhereHas('student', fn($sq) => $sq->where('student_number', 'like', "%{$q}%"));
+                $subQ->where('name', 'ilike', "%{$q}%")
+                    ->orWhereHas('student', fn($sq) => $sq->where('student_number', 'ilike', "%{$q}%"));
             });
         }
 

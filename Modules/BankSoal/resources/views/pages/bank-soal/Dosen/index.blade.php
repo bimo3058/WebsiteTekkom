@@ -41,16 +41,75 @@
                 <!-- Mata Kuliah -->
                 <div class="mb-5">
                     <label class="block text-sm font-medium text-slate-700 mb-2">Mata Kuliah</label>
-                    <div class="relative">
-                        <select class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-10 shadow-sm appearance-none" style="appearance: none; -webkit-appearance: none; background-image: none;" name="mk_id" id="tarikMkId" required onchange="loadCplCpmk(this.value)">
-                        <select class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-10 shadow-sm appearance-none" style="appearance: none; -webkit-appearance: none; background-image: none;" name="mk_id" id="tarikMkId" required onchange="loadCplCpmk(this.value)">
-                            <option value="">Pilih  Mata Kuliah</option>
-                            @foreach($mataKuliahDosen as $mk)
-                                <option value="{{ $mk->id }}">{{ $mk->kode }} - {{ $mk->nama }}</option>
-                            @endforeach
-                        </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    <div
+                        id="mataKuliahDropdown"
+                        x-data="{
+                            open: false,
+                            search: '',
+                            selectedId: '',
+                            options: @js($mataKuliahDosen->map(fn ($mk) => ['id' => (string) $mk->id, 'label' => $mk->kode . ' - ' . $mk->nama])->values()),
+                            get selectedLabel() {
+                                return this.options.find(option => option.id === String(this.selectedId))?.label || 'Pilih Mata Kuliah';
+                            },
+                            get filteredOptions() {
+                                const query = this.search.toLowerCase().trim();
+                                return query
+                                    ? this.options.filter(option => option.label.toLowerCase().includes(query))
+                                    : this.options;
+                            },
+                            select(id) {
+                                this.selectedId = String(id);
+                                this.search = '';
+                                this.open = false;
+                                loadCplCpmk(this.selectedId);
+                            }
+                        }"
+                        @select-tarik-mk.window="select($event.detail.id)"
+                        @click.outside="open = false"
+                        class="relative"
+                    >
+                        <input type="hidden" name="mk_id" id="tarikMkId" x-model="selectedId" required>
+                        <button
+                            type="button"
+                            @click="open = !open; if (open) $nextTick(() => $refs.search?.focus())"
+                            class="w-full flex items-center justify-between gap-3 bg-white border border-slate-300 rounded-lg text-sm text-left focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary py-2.5 px-4 shadow-sm"
+                            :aria-expanded="open"
+                            aria-haspopup="listbox"
+                        >
+                            <span class="truncate" :class="selectedId ? 'text-slate-700' : 'text-slate-400'" x-text="selectedLabel"></span>
+                            <svg class="w-4 h-4 shrink-0 text-slate-400 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div
+                            x-show="open"
+                            x-transition
+                            x-cloak
+                            class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg"
+                            role="listbox"
+                        >
+                            <div class="border-b border-slate-100 p-2">
+                                <input
+                                    x-ref="search"
+                                    x-model="search"
+                                    @click.stop
+                                    type="search"
+                                    placeholder="Cari mata kuliah..."
+                                    class="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                >
+                            </div>
+                            <div class="max-h-52 overflow-y-auto py-1">
+                                <template x-for="option in filteredOptions" :key="option.id">
+                                    <button
+                                        type="button"
+                                        @click="select(option.id)"
+                                        class="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
+                                        :class="selectedId === option.id ? 'bg-primary/5 text-primary' : ''"
+                                        role="option"
+                                        :aria-selected="selectedId === option.id"
+                                        x-text="option.label"
+                                    ></button>
+                                </template>
+                                <p x-show="filteredOptions.length === 0" class="px-4 py-3 text-sm text-slate-500">Mata kuliah tidak ditemukan.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -324,8 +383,7 @@
         }, 10);
 
         if (mk_id) {
-            document.getElementById('tarikMkId').value = mk_id;
-            loadCplCpmk(mk_id);
+            window.dispatchEvent(new CustomEvent('select-tarik-mk', { detail: { id: String(mk_id) } }));
         }
     }
 
@@ -845,7 +903,8 @@
         }
 
         // Delegate actions so newly filtered rows retain their modal handlers.
-        document.getElementById('packagesSection')?.addEventListener('click', function (event) {
+        // The action menu is teleported to <body>, so listen above the teleport target.
+        document.addEventListener('click', function (event) {
             const button = event.target.closest('[data-package-action]');
             if (!button) return;
             const action = button.dataset.packageAction;
