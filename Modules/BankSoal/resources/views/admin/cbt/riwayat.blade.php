@@ -239,7 +239,7 @@
                             <th class="px-6 py-4 whitespace-nowrap">Nama Mahasiswa</th>
                             <th class="px-6 py-4 whitespace-nowrap">Periode Ujian</th>
                             <th class="px-6 py-4 whitespace-nowrap text-center">Ujian Ke-</th>
-                            <th class="px-6 py-4 whitespace-nowrap text-center">Total Poin</th>
+                            <th class="px-6 py-4 whitespace-nowrap text-center">Nilai</th>
                             <th class="px-6 py-4 whitespace-nowrap text-center">Keterangan</th>
                             <th class="px-6 py-4 whitespace-nowrap text-center">Aksi</th>
                         </tr>
@@ -366,7 +366,9 @@
         {{-- ============================================== --}}
         {{-- ZONA BERBAHAYA: Reset Data Ujian              --}}
         {{-- ============================================== --}}
-        <div id="reset-section" x-data="{ showResetModal: false }" class="hidden mt-4 mb-8">
+        {{-- Hanya yang berhak reset (policy resetAll: admin_banksoal / superadmin) yang melihat zona ini. --}}
+        @can('resetAll', \Modules\BankSoal\Models\Komprehensif\KompreSession::class)
+        <div id="reset-section" x-data="{ showResetModal: false }" class="mt-4 mb-8">
             <div class="border border-rose-200 bg-rose-50 rounded-2xl p-6 shadow-sm">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div class="flex items-start gap-4">
@@ -451,6 +453,7 @@
                 </div>
             </div>
         </div>
+        @endcan
 
     </div>
 

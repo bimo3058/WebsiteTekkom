@@ -16,14 +16,15 @@
         /* Container luar */
         .dash-wrap {
             display: flex; flex-direction: column; height: 100%;
-            padding: 16px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif;
+            padding: 0; box-sizing: border-box; font-family: 'Inter Tight', sans-serif;
         }
 
         /* Kotak utama (Box) */
         .dash-box {
             display: flex; flex-direction: column; flex: 1; min-height: 0;
-            background: #fff; border: 1px solid var(--c-border);
-            border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            background: #fff; border: none;
+            border-bottom: 1px solid var(--c-border);
+            border-radius: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
             overflow: hidden; width: 100%; box-sizing: border-box;
         }
 
@@ -67,7 +68,9 @@
                 padding: 0;
             }
             .dash-box {
-                border-radius: 10px;
+                border-radius: 0;
+                border: none;
+                border-bottom: 1px solid var(--c-border);
                 display: block;
                 height: auto;
                 overflow: visible;
@@ -99,43 +102,7 @@
 
             {{-- Area Konten (Bisa di-scroll) --}}
             <div class="dash-box-body">
-                {{-- Statistik Ringkasan --}}
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-5 mb-8">
-        {{-- Total Ujian --}}
-        <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm flex flex-col justify-center">
-            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Total Ujian</p>
-            <div class="flex items-baseline gap-2">
-                <p class="text-4xl font-bold tracking-tight text-gray-900">{{ $totalUjian }}</p>
-            </div>
-        </div>
-
-        {{-- Nilai Tertinggi --}}
-        <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm flex flex-col justify-center">
-            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Tertinggi</p>
-            <div class="flex items-baseline gap-2">
-                <p class="text-4xl font-bold tracking-tight text-gray-900">
-                    {{ $nilaiTertinggi > 0 ? (int)$nilaiTertinggi : '—' }}
-                </p>
-                @if($nilaiTertinggi > 0)
-                <p class="text-sm text-gray-400 font-medium">/ 100</p>
-                @endif
-            </div>
-        </div>
-
-        {{-- Rata-rata --}}
-        <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm flex flex-col justify-center col-span-2 md:col-span-1">
-            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Rata-rata</p>
-            <div class="flex items-baseline gap-2">
-                <p class="text-4xl font-bold tracking-tight text-gray-900">
-                    {{ $nilaiRataRata > 0 ? $nilaiRataRata : '—' }}
-                </p>
-                @if($nilaiRataRata > 0)
-                @endif
-            </div>
-        </div>
-    </div>
-
-    {{-- Tabel Riwayat --}}
+                {{-- Tabel Riwayat --}}
     <div style="background:#fff; border:1px solid var(--c-border); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column;">
         
         {{-- Table Toolbar --}}
@@ -350,9 +317,7 @@
                                         </svg>
                                     </div>
                                     <h3 style="font-size:14px; font-weight:600; color:var(--c-fg); margin:0 0 4px;">Belum Ada Riwayat Ujian</h3>
-                                    <p style="font-size:13px; color:var(--c-fg-muted); margin:0;">
-                                        Belum ada ujian komprehensif yang sesuai kriteria.
-                                    </p>
+                                   
                                 </div>
                             </td>
                         </tr>

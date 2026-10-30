@@ -153,7 +153,7 @@
                             @endif
                         </svg>
                     </div>
-                    <p style="font-size:12px;font-weight:500;color:var(--c-fg-muted);">Skor Akhir
+                    <p style="font-size:12px;font-weight:500;color:var(--c-fg-muted);">Nilai Total
                         ({{ $lulus ? 'Lulus' : 'Tidak Lulus' }})</p>
                 </div>
                 <p
@@ -256,107 +256,58 @@
         {{-- ── Nilai per Capaian Pembelajaran (CPL) ── --}}
         @if(isset($cplStats) && $cplStats->isNotEmpty())
             @php
-                $cplLabels = [];
-                $cplScores = [];
-                $cplTotal = 0;
-                foreach ($cplStats as $stat) {
-                    $cplLabels[] = preg_replace('/^CPL-0*/', 'CPL ', $stat['kode']);
-                    $cplScores[] = $stat['benar']; // Score out of 10
-                    $cplTotal += $stat['benar'];
-                }
-                $cplCount = count($cplStats);
-                $cplAverage = $cplCount > 0 ? round($cplTotal / $cplCount, 1) : 0;
+                $tglUjian = optional($session->jadwal)->tanggal_ujian ?? $session->started_at;
+                $tglUjianLabel = $tglUjian ? \Carbon\Carbon::parse($tglUjian)->format('dmY') : '-';
+                $waktuMulaiLabel = $session->started_at ? \Carbon\Carbon::parse($session->started_at)->format('Y-m-d H:i:s') : '—';
+                $waktuSelesaiLabel = $session->finished_at ? \Carbon\Carbon::parse($session->finished_at)->format('Y-m-d H:i:s') : '—';
             @endphp
 
-            <div class="flex flex-col lg:flex-row gap-6 mb-6">
-                {{-- 1. Chart Kiri --}}
-                <div class="w-full lg:w-1/2 flex flex-col"
+            <div class="flex flex-col gap-6 mb-6">
+                {{-- Tabel Nilai per CPL --}}
+                <div class="w-full flex flex-col"
                     style="min-width: 0; background:#fff; border:1px solid var(--c-border); border-radius:14px; box-shadow:var(--shadow-card); overflow:hidden;">
-                    {{-- ── Header ─────────────────────────────────────────────────────── --}}
-                    <div class="chart-header"
-                        style="display:flex; align-items:flex-start; justify-content:space-between; padding:16px 20px 14px; border-bottom:1px solid var(--c-border); flex-wrap:wrap; gap:12px;">
-                        <div>
-                            <h3 style="font-size:13px; font-weight:700; color:var(--c-fg); margin-bottom:0;">Grafik
-                                Pencapaian CPL</h3>
-                        </div>
+                    <div style="padding:16px 20px 14px; border-bottom:1px solid var(--c-border);">
+                        <h3 style="font-size:13px; font-weight:700; color:var(--c-fg); margin-bottom:0;">Nilai per CPL</h3>
                     </div>
-
-                    <style>
-                        @media (max-width: 767px) {
-                            .chart-header {
-                                flex-direction: column !important;
-                                gap: 10px !important;
-                                padding: 12px 14px !important;
-                            }
-
-                            .chart-stats {
-                                display: flex !important;
-                                gap: 10px !important;
-                                width: 100%;
-                                justify-content: flex-start;
-                            }
-
-                            .chart-stat-divider {
-                                display: none !important;
-                            }
-
-                            .chart-stats>div {
-                                text-align: left !important;
-                            }
-
-                            .chart-stats p[style*="font-size:18px"] {
-                                font-size: 16px !important;
-                            }
-                        }
-                    </style>
-
-                    {{-- ── Chart ───────────────────────────────────────────────────────── --}}
-                    <div style="padding:16px 20px 8px;">
-                        <div style="height:230px; width:100%; position:relative; min-width: 0;">
-                            <canvas id="cplChart"></canvas>
-                        </div>
-                    </div>
-
-                    {{-- ── Legend ──────────────────────────────────────────────────────── --}}
-                    <div
-                        style="padding:10px 20px 16px; display:flex; align-items:center; gap:16px; border-top:1px solid var(--c-border); margin-top:auto;">
-                        <div style="display:flex; align-items:center; gap:5px;">
-                            <div style="width:14px; height:3px; background:#5E53F4; border-radius:2px;"></div>
-                            <span style="font-size:10px; color:var(--c-fg-muted);">Nilai CPL</span>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- 2. Daftar Keterangan CPL Kanan --}}
-                <div class="w-full lg:w-1/2 flex flex-col"
-                    style="min-width: 0; background:#fff; border:1px solid var(--c-border); border-radius:14px; box-shadow:var(--shadow-card); overflow:hidden;">
-                    <div
-                        style="padding:16px 20px 14px; border-bottom:1px solid var(--c-border); display:flex; align-items:center; gap:8px;">
-
-                        <h3 style="font-size:13px; font-weight:700; color:var(--c-fg); margin-bottom:0;">Deskripsi Indikator
-                            CPL</h3>
-                    </div>
-                    <div style="padding:0; overflow-y:auto; flex:1; max-height: 290px;">
-                        <table style="width: 100%; text-align: left; border-collapse: collapse;">
-                            <thead style="position: sticky; top: 0; z-index: 1;">
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%; min-width:680px; text-align:left; border-collapse:collapse;">
+                            <thead>
                                 <tr>
                                     <th
-                                        style="padding: 10px 20px; font-size: 11px; font-weight: 600; color: var(--c-fg-muted); text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--c-border); background: var(--c-bg); width: 25%;">
-                                        Kode</th>
+                                        style="padding:10px 20px; font-size:11px; font-weight:600; color:var(--c-fg-muted); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--c-border); background:var(--c-bg); width:56px; text-align:center;">
+                                        No</th>
                                     <th
-                                        style="padding: 10px 20px; font-size: 11px; font-weight: 600; color: var(--c-fg-muted); text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--c-border); background: var(--c-bg);">
-                                        Deskripsi CPL</th>
+                                        style="padding:10px 20px; font-size:11px; font-weight:600; color:var(--c-fg-muted); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--c-border); background:var(--c-bg);">
+                                        Nama Tes</th>
+                                    <th
+                                        style="padding:10px 20px; font-size:11px; font-weight:600; color:var(--c-fg-muted); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--c-border); background:var(--c-bg);">
+                                        Waktu Mulai Tes</th>
+                                    <th
+                                        style="padding:10px 20px; font-size:11px; font-weight:600; color:var(--c-fg-muted); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--c-border); background:var(--c-bg);">
+                                        Waktu Selesai Tes</th>
+                                    <th
+                                        style="padding:10px 20px; font-size:11px; font-weight:600; color:var(--c-fg-muted); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--c-border); background:var(--c-bg);">
+                                        Nilai</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($cplStats as $stat)
-                                    <tr style="border-bottom: 1px solid var(--c-border);">
+                                @foreach($cplStats as $i => $stat)
+                                    <tr style="border-bottom:1px solid var(--c-border);">
                                         <td
-                                            style="padding: 12px 20px; font-size: 12px; font-weight: 600; color: var(--c-fg); vertical-align: top;">
-                                            {{ preg_replace('/^CPL-0*/', 'CPL ', $stat['kode']) }}</td>
+                                            style="padding:12px 20px; font-size:12px; color:var(--c-fg-muted); text-align:center;">
+                                            {{ $i + 1 }}</td>
                                         <td
-                                            style="padding: 12px 20px; font-size: 12px; color: var(--c-fg-muted); line-height: 1.5; vertical-align: top;">
-                                            {{ $stat['deskripsi'] ?: '-' }}</td>
+                                            style="padding:12px 20px; font-size:12px; font-weight:600; color:var(--c-fg);">
+                                            {{ preg_replace('/^CPL-0*/', 'CPL ', $stat['kode']) }} ({{ $tglUjianLabel }})</td>
+                                        <td
+                                            style="padding:12px 20px; font-size:12px; color:var(--c-fg-muted); white-space:nowrap;">
+                                            {{ $waktuMulaiLabel }}</td>
+                                        <td
+                                            style="padding:12px 20px; font-size:12px; color:var(--c-fg-muted); white-space:nowrap;">
+                                            {{ $waktuSelesaiLabel }}</td>
+                                        <td
+                                            style="padding:12px 20px; font-size:12px; font-weight:700; color:var(--c-fg);">
+                                            {{ number_format($stat['benar'], 2) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -366,8 +317,8 @@
             </div>
         @endif
 
-        {{-- ── Review Jawaban ── --}}
-        <div x-data="{ viewMode: 'default' }">
+        {{-- ── Review Jawaban (urut nomor = urut CPL) ── --}}
+        <div>
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h2 style="font-size:16px; font-weight:700; color:var(--c-fg); margin-bottom:2px;">Review Jawaban
@@ -378,22 +329,8 @@
 
                 <div class="flex items-center gap-5 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm"
                     style="border-color:var(--c-border);">
-                    {{-- Toggle --}}
-                    <div class="bg-gray-100 p-1 rounded-md inline-flex">
-                        <button @click="viewMode = 'default'"
-                            :class="{'bg-white text-gray-800 shadow-sm border border-gray-200/60': viewMode === 'default', 'text-gray-500 hover:text-gray-700': viewMode !== 'default'}"
-                            class="px-3 py-1.5 text-[12px] font-medium rounded-md transition-all">
-                            Urut Nomor
-                        </button>
-                        <button @click="viewMode = 'cpl'"
-                            :class="{'bg-white text-gray-800 shadow-sm border border-gray-200/60': viewMode === 'cpl', 'text-gray-500 hover:text-gray-700': viewMode !== 'cpl'}"
-                            class="px-3 py-1.5 text-[12px] font-medium rounded-md transition-all">
-                            Kelompok per CPL
-                        </button>
-                    </div>
-
                     {{-- Legend --}}
-                    <div class="hidden md:flex items-center gap-3 border-l border-gray-200 pl-4">
+                    <div class="hidden md:flex items-center gap-3">
                         <div class="flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             <span class="text-[12px] font-medium text-gray-500">Benar</span>
@@ -410,10 +347,8 @@
                 </div>
             </div>
 
-            {{-- 1. Default View (Urut Nomor) --}}
-            <div x-show="viewMode === 'default'" x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 transform translate-y-2"
-                x-transition:enter-end="opacity-100 transform translate-y-0">
+            {{-- Daftar jawaban (urut nomor = urut CPL) --}}
+            <div>
                 @if($session->jawabans->isEmpty())
                     <div class="text-center py-16 bg-white rounded-xl border border-gray-200 shadow-sm"
                         style="border-color:var(--c-border);">
@@ -434,30 +369,6 @@
                 @endif
             </div>
 
-            {{-- 2. CPL View (Kelompok per CPL) --}}
-            <div x-show="viewMode === 'cpl'" x-cloak style="display: none;"
-                x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 transform translate-y-2"
-                x-transition:enter-end="opacity-100 transform translate-y-0">
-                @if(!empty($jawabansPerCpl))
-                    <div class="space-y-8">
-                        @foreach($jawabansPerCpl as $kodeCpl => $jawabansGroup)
-                            <div>
-                                <div
-                                    class="flex items-center gap-3 mb-4 sticky top-16 bg-white/95 backdrop-blur-sm py-2 z-10 border-b border-gray-100">
-                                    <h3 class="text-[14px] font-bold text-gray-800">{{ preg_replace('/^CPL-0*/', 'CPL ', $kodeCpl) }}</h3>
-                                    <div class="h-px bg-gray-200 flex-1"></div>
-                                </div>
-                                <div>
-                                    @foreach($jawabansGroup as $kompreJawaban)
-                                        @include('banksoal::admin.cbt.partials._jawaban-card', ['kompreJawaban' => $kompreJawaban, 'hideCplBadge' => true])
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
         </div>
 
         </div> {{-- end .dash-box-body --}}
@@ -465,106 +376,4 @@
 
     </div>
 
-    @if(isset($cplStats) && $cplStats->isNotEmpty())
-        @push('scripts')
-            <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-            <script>
-                document.addEventListener("DOMContentLoaded", function () {
-                    var canvas = document.getElementById('cplChart');
-
-                    function initChart() {
-                        if (!window.Chart || !canvas) return;
-                        var ctx = canvas.getContext('2d');
-
-                        const gradPrimary = ctx.createLinearGradient(0, 0, 0, 210);
-                        gradPrimary.addColorStop(0, 'rgba(94,83,244,0.7)');
-                        gradPrimary.addColorStop(1, 'rgba(94,83,244,0.05)');
-
-                        const labels = @json($cplLabels);
-                        const cplScores = @json($cplScores);
-
-                        new Chart(ctx, {
-                            type: 'bar',
-                            data: {
-                                labels: labels,
-                                datasets: [
-                                    {
-                                        label: 'Nilai CPL',
-                                        data: cplScores,
-                                        backgroundColor: gradPrimary,
-                                        borderColor: '#5E53F4',
-                                        borderWidth: 1,
-                                        borderRadius: 6,
-                                        borderSkipped: 'bottom',
-                                        barPercentage: 0.45,
-                                    }
-                                ]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                interaction: { mode: 'index', intersect: false },
-                                plugins: {
-                                    legend: { display: false },
-                                    tooltip: {
-                                        backgroundColor: '#1A1A2E',
-                                        titleColor: '#9CA3AF',
-                                        bodyColor: '#fff',
-                                        titleFont: { size: 10, weight: '500' },
-                                        bodyFont: { size: 12, weight: '600' },
-                                        padding: 12,
-                                        cornerRadius: 8,
-                                        displayColors: true,
-                                        boxWidth: 8,
-                                        boxHeight: 8,
-                                        callbacks: {
-                                            title: (items) => items[0]?.label ?? '',
-                                            label: (item) => `  ${item.raw} / 10`,
-                                        }
-                                    }
-                                },
-                                scales: {
-                                    x: {
-                                        grid: { display: false },
-                                        ticks: {
-                                            font: { size: 11, family: 'Inter, sans-serif' },
-                                            color: '#9CA3AF'
-                                        }
-                                    },
-                                    y: {
-                                        beginAtZero: true,
-                                        max: 10,
-                                        border: { display: false },
-                                        grid: { color: '#F3F4F6', drawTicks: false },
-                                        ticks: {
-                                            font: { size: 11, family: 'Inter, sans-serif' },
-                                            color: '#9CA3AF',
-                                            stepSize: 1,
-                                            padding: 8
-                                        },
-                                    }
-                                }
-                            }
-                        });
-                    }
-
-                    if ('IntersectionObserver' in window) {
-                        new IntersectionObserver(function (entries, observer) {
-                            if (entries[0].isIntersecting) {
-                                observer.disconnect();
-                                if (window.Chart) {
-                                    initChart();
-                                } else {
-                                    document.querySelector('script[src*="chart.js"]')
-                                        ?.addEventListener('load', initChart);
-                                }
-                            }
-                        }, { threshold: 0.1 }).observe(canvas);
-                    } else {
-                        window.addEventListener('load', initChart);
-                    }
-                });
-            </script>
-        @endpush
-    @endif
 </x-banksoal::layouts.admin>

@@ -52,8 +52,12 @@ class MahasiswaController extends Controller
             ? $this->pendaftaranService->isKuotaPenuh($activePeriode)
             : false;
 
+        $kuotaTerisi = $activePeriode
+            ? PendaftarUjian::where('periode_ujian_id', $activePeriode->id)->count()
+            : 0;
+
         return view('banksoal::mahasiswa.dashboard', compact(
-            'activePeriode', 'pendaftar', 'semester', 'isEligible', 'finishedSession', 'kuotaPenuh'
+            'activePeriode', 'pendaftar', 'semester', 'isEligible', 'finishedSession', 'kuotaPenuh', 'kuotaTerisi'
         ));
     }
 
