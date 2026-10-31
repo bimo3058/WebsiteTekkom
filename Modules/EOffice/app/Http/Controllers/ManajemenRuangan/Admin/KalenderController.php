@@ -20,9 +20,13 @@ class KalenderController extends Controller
         Peminjaman::autoExpirePending();
         $allRuangansDaftar = Ruangan::where('is_active', true)->orderBy('nama', 'asc')->get();
         $selectedRoomId = $request->get('ruangan_id');
+        $selectedKategori = $request->get('kategori');
+        $kategoriList = $allRuangansDaftar->pluck('kategori')->filter()->unique()->values();
 
         if ($selectedRoomId) {
             $ruangans = $allRuangansDaftar->where('id', $selectedRoomId)->values();
+        } elseif ($selectedKategori && $selectedKategori !== 'Semua Kategori') {
+            $ruangans = $allRuangansDaftar->where('kategori', $selectedKategori)->values();
         } else {
             $ruangans = $allRuangansDaftar;
         }
@@ -65,6 +69,7 @@ class KalenderController extends Controller
             'ruangans',
             'allRuangansDaftar',
             'selectedRoomId',
+            'kategoriList',
             'bookingsRaw',
             'internalSchedules',
             'weekStart',

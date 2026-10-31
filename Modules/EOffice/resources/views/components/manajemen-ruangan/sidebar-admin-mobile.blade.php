@@ -24,19 +24,19 @@
     $iJadwalAkademik = "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253";
     $iPersetujuan = "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2";
     $iList = "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2";
+    $iBlock = "M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z";
     $iArsip = "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z";
     $iBook = "M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z";
     $iFasilitas = "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z";
     $iKey = "M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L6.5 21.5H3v-3.5l1.5-1.5v-2l1.5-1.5 2-2 2.257-2.257A6 6 0 1121 9z";
     $iPengaturan = "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z";
+    $iProfile = "M19 21v-2a7 7 0 0 0-14 0v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8";
     $iLogout = "M13 8.73V8.14C13 6.58 12.19 5.24 11.07 4.94L7.87 4.06C6.39 3.66 5 5.21 5 7.27v9.46C5 18.79 6.39 20.34 7.87 19.94l3.2-.87C12.19 18.76 13 17.42 13 15.86v-.59M11 12h8M19 12l-2.5-2.72M19 12l-2.5 2.72";
     $iBack = "M19 12H5M5 12l7-7M5 12l7 7";
 @endphp
 
 {{-- ── MOBILE BOTTOM NAV (ADMIN) ────────────────────── --}}
-<div x-data="{ show: window.innerWidth < 768, openMenu: false, startY: 0 }"
-    x-init="window.addEventListener('resize', () => show = window.innerWidth < 768)" x-show="show"
-    style="display: none;"
+<div x-data="{ openMenu: false, startY: 0 }"
     class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] font-['Inter_Tight']">
 
     {{-- More Menu Drawer (Lainnya) --}}
@@ -97,9 +97,9 @@
                         <a href="{{ route('eoffice.peminjaman.admin.jadwal-internal.index') }}" @click="openMenu = false"
                             class="flex items-center gap-3 px-3 py-2.5 rounded-xl {{ str_contains($currentRoute, 'admin.jadwal-internal') ? 'bg-[#EEF2FF] text-[#0B266E]' : 'text-slate-600 hover:bg-slate-50' }} transition-colors">
                             <svg class="w-5 h-5 flex-shrink-0 {{ str_contains($currentRoute, 'admin.jadwal-internal') ? 'text-[#0B266E]' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="{{ $iList }}" />
+                                <path d="{{ $iBlock }}" />
                             </svg>
-                            <span class="text-[13px] font-semibold">Event & Maintenance</span>
+                            <span class="text-[13px] font-semibold">Blokir Ruangan</span>
                         </a>
                         @endif
                         
@@ -185,7 +185,18 @@
 
                 {{-- Grup: Akun --}}
                 <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 px-1 opacity-80">
+                        Akun</p>
                     <div class="space-y-1">
+                        <a href="{{ route('profile.edit') }}" @click="openMenu = false"
+                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                            <svg class="w-5 h-5 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="{{ $iProfile }}" />
+                            </svg>
+                            <span class="text-[13px] font-semibold">Pengaturan Profil</span>
+                        </a>
+
                         <form method="POST" action="{{ route('logout') }}" data-no-loader>
                             @csrf
                             <button type="submit"

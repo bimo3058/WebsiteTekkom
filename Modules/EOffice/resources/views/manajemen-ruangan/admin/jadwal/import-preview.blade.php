@@ -1,16 +1,42 @@
 <x-eoffice::manajemen-ruangan.layout pageTitle="Pratinjau Impor Jadwal Kuliah">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
 
     <div x-data="sandboxEditor()">
-        <div class="mp-page-header">
+        @php
+            $namaHariArray = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+            $payloadArray = [];
+            foreach ($csvData as $row) {
+                $payloadArray[] = [
+                    'hari' => (int) $row[0],
+                    'ruangan_id' => $row[1] ?: null,
+                    'jam_mulai' => $row[2],
+                    'jam_selesai' => $row[3],
+                    'mata_kuliah' => $row[4],
+                    'kode_mk' => $row[5],
+                    'kelas' => $row[6],
+                    'sks' => (int) $row[7],
+                    'kuota' => (int) $row[8],
+                    'pengampu' => $row[9]
+                ];
+            }
+            $validCountInit = count(array_filter($payloadArray, fn($r) => !empty($r['ruangan_id'])));
+            $invalidCountInit = count($payloadArray) - $validCountInit;
+        @endphp
+
+        <!-- Back Button Area -->
+        <div class="mb-5">
+            <a href="{{ route('eoffice.peminjaman.admin.jadwal-akademik.index') }}"
+                class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 bg-slate-100 hover:bg-slate-200 hover:text-gray-900 px-3 py-1.5 rounded-full transition-all shadow-sm w-fit">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Kembali ke Daftar Jadwal
+            </a>
+        </div>
+
+        <div class="mp-page-header flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <a href="{{ route('eoffice.peminjaman.admin.jadwal-akademik.index') }}"
-                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 mb-2 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    Kembali ke Daftar Jadwal
-                </a>
                 <h1 class="mp-page-title">Pratinjau Sandbox
                     <span
                         class="ml-2 inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">Belum
@@ -18,55 +44,31 @@
                 </h1>
                 <p class="mp-page-sub">Tinjau ulang data kelas di bawah ini sebelum disimpan permanen ke database.</p>
             </div>
-            <div class="mp-page-actions">
-                <!-- Form Execution -->
-                @php
-                    $namaHariArray = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
-                    $payloadArray = [];
-                    foreach ($csvData as $row) {
-                        $payloadArray[] = [
-                            'hari' => (int) $row[0],
-                            'ruangan_id' => $row[1] ?: null,
-                            'jam_mulai' => $row[2],
-                            'jam_selesai' => $row[3],
-                            'mata_kuliah' => $row[4],
-                            'kode_mk' => $row[5],
-                            'kelas' => $row[6],
-                            'sks' => (int) $row[7],
-                            'kuota' => (int) $row[8],
-                            'pengampu' => $row[9]
-                        ];
-                    }
-                @endphp
+
+            <div class="w-full md:w-auto mt-2 md:mt-0">
                 <form action="{{ route('eoffice.peminjaman.admin.jadwal-akademik.import-execute') }}" method="POST"
                     id="executeImportForm"
-                    class="flex items-center gap-3 bg-white p-2 rounded-xl border border-gray-200 shadow-sm">
+                    class="flex flex-col md:flex-row md:items-center gap-3 bg-white p-3 md:p-2 rounded-xl border border-gray-200 shadow-sm w-full md:w-auto">
                     @csrf
                     <textarea name="validated_payload" class="hidden">{{ json_encode($payloadArray) }}</textarea>
 
-                    <div class="flex flex-col text-left">
-                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1 mb-0.5">Mulai
-                            Semester</label>
-                        <input type="date" name="tgl_mulai_efektif_global" required
-                            class="mp-input !py-1.5 !text-xs !bg-gray-50 border-none shadow-inner w-[130px] rounded-lg">
-                    </div>
-                    <div class="flex flex-col text-left">
-                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1 mb-0.5">Akhir
-                            Semester</label>
-                        <input type="date" name="tgl_selesai_efektif_global" required
-                            class="mp-input !py-1.5 !text-xs !bg-gray-50 border-none shadow-inner w-[130px] rounded-lg">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 w-full md:w-auto">
+                        <div class="flex flex-col text-left w-full sm:w-auto">
+                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1 mb-0.5">Mulai Semester</label>
+                            <input type="date" name="tgl_mulai_efektif_global" required
+                                class="mp-input !py-1.5 !text-xs !bg-gray-50 border-none shadow-inner w-full sm:w-[130px] md:w-[130px] rounded-lg">
+                        </div>
+                        <div class="flex flex-col text-left w-full sm:w-auto">
+                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1 mb-0.5">Akhir Semester</label>
+                            <input type="date" name="tgl_selesai_efektif_global" required
+                                class="mp-input !py-1.5 !text-xs !bg-gray-50 border-none shadow-inner w-full sm:w-[130px] md:w-[130px] rounded-lg">
+                        </div>
                     </div>
 
-                    <div class="h-8 w-px bg-gray-200 mx-1"></div>
+                    <div class="hidden md:block h-8 w-px bg-gray-200 mx-1"></div>
 
-                    <button type="submit" id="simpan-btn" class="mp-btn primary md !py-2.5" {{ count($payloadArray) === 0 ? 'disabled' : '' }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="mr-1" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round">
-                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                            <polyline points="7 3 7 8 15 8"></polyline>
-                        </svg>
-                        Simpan <span id="simpan-btn-counter" class="mx-1">{{ count($payloadArray) }}</span> Kelas Rutin
+                    <button type="submit" id="simpan-btn" class="mp-btn primary md shadow-sm cursor-pointer w-full md:w-auto justify-center" {{ $validCountInit === 0 ? 'disabled' : '' }}>
+                        Simpan <span id="simpan-btn-counter" class="mx-1">{{ $validCountInit }}</span> Jadwal
                     </button>
                 </form>
             </div>
@@ -74,9 +76,11 @@
 
         <!-- Alert Block -->
         <div
-            class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl relative text-[13px] font-medium shadow-sm">
+            class="mt-4 mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl relative text-[13px] font-medium shadow-sm">
             <strong class="font-bold mr-1">Sandbox Mode:</strong>
-            {{ count($csvData) }} baris data valid berhasil dibaca dari SIAP. Tinjau dan simpan ke database.
+            <span id="alert-text-summary">
+                {{ count($csvData) }} baris terbaca. <strong>{{ $validCountInit }}</strong> disimpan (hijau & merah), dan <strong>{{ $invalidCountInit }}</strong> jadwal tidak disimpan karena ruangan tidak tersedia (kuning).
+            </span>
         </div>
 
         <div class="mp-card" style="margin-top: 15px;">
@@ -185,46 +189,87 @@
                                                     {{ $ruanganObj->lantai ?? '-' }})</span>
                                             </div>
                                         @else
-                                            <div style="font-weight:700; color:#B45309; margin-bottom: 4px; font-size: 11px;">
-                                                Tidak Dikenal: <span
-                                                    class="bg-orange-100 px-1 rounded">{{ $row[11] ?? '?' }}</span>
-                                            </div>
                                             <div x-data="{ 
                                                     open: false,
+                                                    search: '',
                                                     ruanganId: '',
-                                                    get selectedName() {
-                                                        const room = [
-                                                            @foreach($ruangans as $r)
-                                                                {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }}'},
-                                                            @endforeach
-                                                        ].find(r => r.id == this.ruanganId);
-                                                        return room ? room.name : '-- Pilih Manual --';
+                                                    rooms: [
+                                                        @foreach($ruangans as $r)
+                                                            {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }}'},
+                                                        @endforeach
+                                                    ],
+                                                    get filteredRooms() {
+                                                        if (this.search === '') return this.rooms;
+                                                        return this.rooms.filter(r => r.name.toLowerCase().includes(this.search.toLowerCase()));
                                                     },
                                                     selectItem(id) { 
                                                         this.ruanganId = id;
-                                                        this.open = false; 
+                                                        this.open = false;
+                                                        if (id) {
+                                                            const room = this.rooms.find(r => r.id == id);
+                                                            this.search = room ? room.name : '';
+                                                        } else {
+                                                            this.search = '';
+                                                        }
                                                         updateRuangan({{ $loop->index }}, id);
-                                                    } 
-                                                }" class="relative w-full" @click.away="open = false">
-
-                                                <button type="button" @click="open = !open" 
-                                                    class="w-full flex items-center justify-between mp-input !py-1 !px-2 !text-xs !bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-900 focus:outline-none transition-colors rounded-md h-[26px]">
-                                                    <span x-text="selectedName" class="truncate font-semibold"></span>
-                                                    <svg class="w-3 h-3 text-orange-700 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                                    </svg>
-                                                </button>
+                                                    },
+                                                    init() {
+                                                        this.$watch('search', (val) => {
+                                                            if (val === '') {
+                                                                if (this.ruanganId !== '') {
+                                                                    this.ruanganId = '';
+                                                                    updateRuangan({{ $loop->index }}, '');
+                                                                }
+                                                            } else {
+                                                                const currentRoom = this.rooms.find(r => r.id == this.ruanganId);
+                                                                if (currentRoom && val !== currentRoom.name) {
+                                                                    this.ruanganId = '';
+                                                                    updateRuangan({{ $loop->index }}, '');
+                                                                }
+                                                            }
+                                                        });
+                                                    }
+                                                }" class="w-full" @click.away="open = false; if(!ruanganId) search = ''; else search = rooms.find(r => r.id == ruanganId)?.name || ''">
                                                 
-                                                <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
-                                                    class="absolute left-0 top-full mt-1 w-full min-w-[150px] bg-white border border-gray-200 rounded-md shadow-lg z-[60] max-h-48 overflow-y-auto" style="display: none;">
-                                                    <div class="p-1">
-                                                        <button type="button" @click="selectItem('')" class="w-full text-left px-2 py-1.5 text-xs font-medium rounded-md transition-colors" :class="{'bg-orange-50 text-orange-900 font-bold': ruanganId == '', 'text-gray-700 hover:bg-gray-50': ruanganId != ''}">-- Pilih Manual --</button>
+                                                <div :class="{'text-[#B45309]': !ruanganId, 'text-gray-400': ruanganId}" style="font-weight:700; margin-bottom: 4px; font-size: 11px; transition: all 0.2s;">
+                                                    <span x-text="ruanganId ? 'Semula:' : 'Tidak Dikenal:'"></span> <span
+                                                        :class="{'bg-orange-100 px-1 rounded': !ruanganId, 'line-through opacity-70': ruanganId}">{{ $row[11] ?? '?' }}</span>
+                                                </div>
+
+                                                <div class="relative w-full">
+                                                    <div class="relative flex items-center">
+                                                        <input type="text" x-model="search" @click="open = true" @focus="open = true"
+                                                            placeholder="-- Pilih Manual --" autocomplete="off"
+                                                            class="w-full flex items-center justify-between mp-input !py-1 !pl-2 !pr-7 !text-xs border-orange-200 focus:outline-none focus:ring-1 focus:ring-orange-400 transition-colors rounded-md h-[26px] font-semibold"
+                                                            :class="{'!bg-orange-50 hover:bg-orange-100 text-orange-900': !ruanganId, '!bg-gray-50 border-gray-200 text-gray-700 focus:ring-gray-300': ruanganId}">
+                                                        <div class="absolute right-2 pointer-events-none transition-transform duration-200 shrink-0"
+                                                            :class="{'rotate-180': open, 'text-orange-700': !ruanganId, 'text-gray-400': ruanganId}">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                                        class="absolute left-0 top-full mt-1 w-full min-w-[200px] bg-white border border-gray-200 rounded-md shadow-lg z-[60] max-h-56 flex flex-col overflow-hidden" style="display: none;">
                                                         
-                                                        @foreach($ruangans as $r)
-                                                            <button type="button" @click="selectItem('{{ $r->id }}')" class="w-full text-left px-2 py-1.5 mt-0.5 text-xs font-medium rounded-md transition-colors" :class="{'bg-orange-50 text-orange-900 font-bold': ruanganId == '{{ $r->id }}', 'text-gray-700 hover:bg-gray-50': ruanganId != '{{ $r->id }}'}">
-                                                                {{ $r->nama }}
-                                                            </button>
-                                                        @endforeach
+                                                        <div class="p-1 flex flex-col overflow-y-auto overflow-x-hidden flex-1 min-h-0">
+                                                            <button type="button" @click="selectItem('')" x-show="search === ''"
+                                                                class="w-full text-left px-2 py-1.5 text-[11px] font-medium rounded-md transition-colors" 
+                                                                :class="{'bg-orange-50 text-orange-900 font-bold': ruanganId == '', 'text-gray-700 hover:bg-gray-50': ruanganId != ''}">-- Kosongkan --</button>
+                                                            
+                                                            <template x-for="r in filteredRooms" :key="r.id">
+                                                                <button type="button" @click="selectItem(r.id)" 
+                                                                    class="w-full text-left px-2 py-1.5 mt-0.5 text-[11px] font-medium rounded-md transition-colors whitespace-normal break-words" 
+                                                                    :class="{'bg-orange-50 text-orange-900 font-bold': ruanganId == r.id, 'text-gray-700 hover:bg-gray-50': ruanganId != r.id}"
+                                                                    x-text="r.name">
+                                                                </button>
+                                                            </template>
+
+                                                            <div x-show="filteredRooms.length === 0" class="px-2 py-3 text-[11px] text-center text-gray-500">
+                                                                Ruangan tidak ditemukan
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -273,8 +318,20 @@
                     function syncPayload() {
                         let cleanPayload = rawPayload.filter(item => item !== null);
                         document.querySelector('textarea[name="validated_payload"]').value = JSON.stringify(cleanPayload);
-                        document.getElementById('simpan-btn-counter').innerText = cleanPayload.length;
-                        document.getElementById('simpan-btn').disabled = cleanPayload.length === 0;
+                        
+                        let validCount = cleanPayload.filter(item => item.ruangan_id).length;
+                        let invalidCount = cleanPayload.length - validCount;
+                        
+                        let counterEl = document.getElementById('simpan-btn-counter');
+                        if (counterEl) counterEl.innerText = validCount;
+                        
+                        let btnEl = document.getElementById('simpan-btn');
+                        if (btnEl) btnEl.disabled = (validCount === 0);
+                        
+                        let alertText = document.getElementById('alert-text-summary');
+                        if (alertText) {
+                            alertText.innerHTML = cleanPayload.length + ' baris terbaca. <strong>' + validCount + '</strong> disimpan (hijau & merah), dan <strong>' + invalidCount + '</strong> jadwal tidak disimpan karena ruangan tidak tersedia (kuning).';
+                        }
 
                         recalculateCollisions();
                     }
@@ -359,22 +416,159 @@
         </div>
 
         <!-- EVAL EDIT MODAL -->
-        <div x-show="editModalOpen" style="display:none;" class="fixed inset-0 z-[60] overflow-y-auto"
+        <div x-show="editModalOpen" x-cloak style="display: none;"
+            class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6" 
             aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div x-show="editModalOpen" x-transition.opacity
-                    class="fixed inset-0 transition-opacity bg-slate-900/40 backdrop-blur-sm"
-                    @click="editModalOpen = false"></div>
 
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div x-show="editModalOpen" x-transition
-                    class="inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-md sm:w-full sm:p-6 relative z-[70]">
-                    <h3 class="text-[16px] font-bold text-gray-900 mb-4 font-['Inter_Tight']">Edit Baris Jadwal</h3>
+            <!-- 1. BACKDROP OVERLAY -->
+            <div x-show="editModalOpen" 
+                x-transition:enter="ease-out duration-300" 
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100" 
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100" 
+                x-transition:leave-end="opacity-0"
+                class="fixed inset-0 bg-slate-900/60 transition-opacity" 
+                aria-hidden="true" @click="editModalOpen = false"></div>
 
-                    <div class="space-y-4">
-                        <div>
-                            <label
-                                class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Hari</label>
+            <!-- 2. MODAL PANEL -->
+            <div x-show="editModalOpen" 
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                class="relative bg-white rounded-t-[24px] sm:rounded-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col overflow-visible">
+                
+                <div class="p-3 sm:p-6 flex flex-col flex-1 min-h-0">
+
+                    <!-- Modal Header -->
+                    <div class="-mx-3 sm:-mx-6 -mt-3 sm:-mt-6 mb-3 sm:mb-5 px-4 sm:px-6 py-3 sm:py-4 border-b border-[#0B266E]/10 flex items-center justify-between bg-[#0B266E]/[0.06] rounded-none sm:rounded-t-[20px]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#0B266E] flex items-center justify-center">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-[13px] sm:text-sm font-bold text-[#1A1C1E] tracking-tight">Edit Baris Jadwal</h3>
+                                <p class="text-[9px] sm:text-[10px] text-[#0B266E] font-medium">Ubah detail baris jadwal akademik</p>
+                            </div>
+                        </div>
+                        <button type="button" @click="editModalOpen = false" class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
+                            <span class="material-symbols-outlined" style="font-size:20px">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Modal Content (Scrollable) -->
+                    <div class="space-y-3 sm:space-y-4 overflow-y-auto overflow-x-hidden p-1 -m-1 pb-1 flex-1 whitespace-normal mt-1 sm:mt-2">
+                        
+                        <!-- RUANGAN -->
+                        <div class="space-y-1.5 px-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ruangan</label>
+                            <div x-data="{ 
+                                    open: false,
+                                    search: '',
+                                    rooms: [
+                                        @foreach($ruangans as $r)
+                                            {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }} - Lt. {{ $r->lantai }}'},
+                                        @endforeach
+                                    ],
+                                    get filteredRooms() {
+                                        if (this.search === '') return this.rooms;
+                                        return this.rooms.filter(r => r.name.toLowerCase().includes(this.search.toLowerCase()));
+                                    },
+                                    selectItem(id) { 
+                                        editData.ruangan_id = id;
+                                        this.open = false; 
+                                        if (id) {
+                                            const room = this.rooms.find(r => r.id == id);
+                                            this.search = room ? room.name : '';
+                                        } else {
+                                            this.search = '';
+                                        }
+                                    },
+                                    init() {
+                                        this.$watch('search', (val) => {
+                                            if (val === '') {
+                                                editData.ruangan_id = '';
+                                            } else {
+                                                const currentRoom = this.rooms.find(r => r.id == editData.ruangan_id);
+                                                if (currentRoom && val !== currentRoom.name) {
+                                                    editData.ruangan_id = '';
+                                                }
+                                            }
+                                        });
+                                        this.$watch('editData.ruangan_id', (val) => {
+                                            if (!val) {
+                                                this.search = '';
+                                            } else {
+                                                const room = this.rooms.find(r => r.id == val);
+                                                if(room) this.search = room.name;
+                                            }
+                                        });
+                                        // initial state sync
+                                        if (editData.ruangan_id) {
+                                            const room = this.rooms.find(r => r.id == editData.ruangan_id);
+                                            if(room) this.search = room.name;
+                                        }
+                                    }
+                                }" class="relative w-full" :class="{'z-50': open, 'z-10': !open}" 
+                                @click.away="open = false; if(!editData.ruangan_id) search = ''; else search = rooms.find(r => r.id == editData.ruangan_id)?.name || ''">
+                                
+                                <div class="relative flex items-center">
+                                    <input type="text" x-model="search" @click="open = true" @focus="open = true"
+                                        placeholder="-- Kosong / Pilih Nanti --" autocomplete="off"
+                                        class="w-full bg-white border border-slate-200 rounded-xl pl-3 pr-10 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px] text-gray-800 shadow-sm">
+                                    <div class="absolute right-3 pointer-events-none text-gray-400">
+                                        <svg class="w-4 h-4 transition-transform duration-200"
+                                            :class="{'rotate-180': open}" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                
+                                <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                    class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[80] max-h-48 flex flex-col overflow-hidden" style="display: none;">
+                                    <div class="p-1 flex flex-col overflow-y-auto overflow-x-hidden flex-1 min-h-0">
+                                        <button type="button" @click="selectItem('')" x-show="search === ''"
+                                            class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors whitespace-normal break-words" 
+                                            :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': editData.ruangan_id == '', 'text-gray-700 hover:bg-gray-50': editData.ruangan_id != ''}">-- Kosong / Pilih Nanti --</button>
+                                        
+                                        <template x-for="r in filteredRooms" :key="r.id">
+                                            <button type="button" @click="selectItem(r.id)" 
+                                                class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors whitespace-normal break-words" 
+                                                :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': editData.ruangan_id == r.id, 'text-gray-700 hover:bg-gray-50': editData.ruangan_id != r.id}"
+                                                x-text="r.name">
+                                            </button>
+                                        </template>
+
+                                        <div x-show="filteredRooms.length === 0" class="px-3 py-4 text-xs text-center text-gray-500">
+                                            Ruangan tidak ditemukan
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MATA KULIAH -->
+                        <div class="space-y-1.5 px-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mata Kuliah</label>
+                            <input type="text" x-model="editData.mata_kuliah" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all shadow-sm">
+                        </div>
+
+                        <!-- KELAS -->
+                        <div class="space-y-1.5 px-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kelas</label>
+                            <input type="text" x-model="editData.kelas" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all shadow-sm">
+                        </div>
+
+                        <!-- HARI -->
+                        <div class="space-y-1 sm:space-y-1.5 px-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hari</label>
                             <div x-data="{ 
                                     open: false,
                                     get selectedName() {
@@ -388,11 +582,11 @@
                                         editData.hari = val;
                                         this.open = false; 
                                     } 
-                                }" class="relative w-full" @click.away="open = false">
+                                }" class="relative w-full" :class="{'z-50': open, 'z-10': !open}" @click.away="open = false">
 
                                 <button type="button" @click="open = !open" 
-                                    class="w-full flex items-center justify-between mp-input bg-white focus:outline-none transition-colors h-[42px] px-3">
-                                    <span x-text="selectedName" class="truncate text-gray-800"></span>
+                                    class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl focus:outline-none transition-colors h-[42px] px-3 shadow-sm">
+                                    <span x-text="selectedName" class="truncate text-gray-800 text-xs font-medium"></span>
                                     <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                     </svg>
@@ -412,77 +606,36 @@
                                 </div>
                             </div>
                         </div>
-                        <div>
-                            <label
-                                class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Ruangan</label>
-                            <div x-data="{ 
-                                    open: false,
-                                    get selectedName() {
-                                        const room = [
-                                            @foreach($ruangans as $r)
-                                                {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }}'},
-                                            @endforeach
-                                        ].find(r => r.id == editData.ruangan_id);
-                                        return room ? room.name : '-- Kosong / Pilih Nanti --';
-                                    },
-                                    selectItem(id) { 
-                                        editData.ruangan_id = id;
-                                        this.open = false; 
-                                    } 
-                                }" class="relative w-full" @click.away="open = false">
-                                
-                                <button type="button" @click="open = !open" 
-                                    class="w-full flex items-center justify-between mp-input bg-white focus:outline-none transition-colors h-[42px] px-3">
-                                    <span x-text="selectedName" class="truncate" :class="{'text-gray-400': !editData.ruangan_id, 'text-gray-800': editData.ruangan_id}"></span>
-                                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                    </svg>
-                                </button>
-                                
-                                <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
-                                    class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[80] max-h-48 overflow-y-auto" style="display: none;">
-                                    <div class="p-1">
-                                        <button type="button" @click="selectItem('')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': editData.ruangan_id == '', 'text-gray-700 hover:bg-gray-50': editData.ruangan_id != ''}">-- Kosong / Pilih Nanti --</button>
-                                        
-                                        @foreach($ruangans as $r)
-                                            <button type="button" @click="selectItem('{{ $r->id }}')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': editData.ruangan_id == '{{ $r->id }}', 'text-gray-700 hover:bg-gray-50': editData.ruangan_id != '{{ $r->id }}'}">
-                                                {{ $r->nama }}
-                                            </button>
-                                        @endforeach
-                                    </div>
+
+                        <!-- WAKTU -->
+                        <div class="grid grid-cols-2 gap-3 px-1">
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jam Mulai</label>
+                                <div class="relative">
+                                    <input type="time" x-model="editData.jam_mulai" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all shadow-sm">
+                                </div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jam Selesai</label>
+                                <div class="relative">
+                                    <input type="time" x-model="editData.jam_selesai" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all shadow-sm">
                                 </div>
                             </div>
                         </div>
-                        <div>
-                            <label class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Mata
-                                Kuliah</label>
-                            <input type="text" x-model="editData.mata_kuliah" class="mp-input text-[14px] w-full">
-                        </div>
-                        <div>
-                            <label
-                                class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Kelas</label>
-                            <input type="text" x-model="editData.kelas" class="mp-input text-[14px] w-full">
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label
-                                    class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Jam
-                                    Mulai</label>
-                                <input type="time" x-model="editData.jam_mulai" class="mp-input text-[14px]">
-                            </div>
-                            <div>
-                                <label
-                                    class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Jam
-                                    Selesai</label>
-                                <input type="time" x-model="editData.jam_selesai" class="mp-input text-[14px]">
-                            </div>
+
+                        <!-- Mobile Footer (Inside scrollable area so it doesn't squish content on small screens) -->
+                        <div class="sm:hidden mt-6 pt-4 pb-2 border-t border-slate-100 flex items-center justify-end gap-3">
+                            <button type="button" @click="editModalOpen = false" class="text-[11px] font-bold text-slate-400 hover:text-slate-600 uppercase tracking-widest px-4 py-2 transition-colors cursor-pointer">Batal</button>
+                            <button type="button" @click="saveEdit()" class="bg-[#0B266E] hover:bg-[#091F5E] text-white text-[11px] font-bold uppercase tracking-widest px-6 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer">Simpan Perubahan</button>
                         </div>
                     </div>
 
-                    <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100">
-                        <button type="button" @click="editModalOpen = false" class="mp-btn secondary md">Batal</button>
-                        <button type="button" @click="saveEdit()" class="mp-btn primary md">Simpan Perubahan</button>
+                    <!-- Desktop Footer (Sticky) -->
+                    <div class="hidden sm:flex mt-4 -mx-4 sm:-mx-6 -mb-4 sm:-mb-6 px-6 py-4 border-t border-slate-100 bg-slate-50/50 items-center justify-end gap-3 shrink-0 rounded-b-[20px]">
+                        <button type="button" @click="editModalOpen = false" class="text-[11px] font-bold text-slate-400 hover:text-slate-600 uppercase tracking-widest px-4 py-2 transition-colors cursor-pointer">Batal</button>
+                        <button type="button" @click="saveEdit()" class="bg-[#0B266E] hover:bg-[#091F5E] text-white text-[11px] font-bold uppercase tracking-widest px-6 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer">Simpan Perubahan</button>
                     </div>
+
                 </div>
             </div>
         </div>
