@@ -18,6 +18,7 @@ use Modules\ManajemenMahasiswa\Models\KegiatanPeserta;
 use Modules\ManajemenMahasiswa\Policies\KegiatanPolicy;
 use Modules\ManajemenMahasiswa\Services\PengelolaKegiatanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
+use Modules\ManajemenMahasiswa\Support\PeriodeKepengurusan;
 use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class KegiatanController extends Controller
@@ -86,6 +87,7 @@ class KegiatanController extends Controller
         $tahunList = Kegiatan::daftarTahun(Kegiatan::STATUS_SELESAI);
         // Opsi "Belum ada tanggal" hanya dirender bila memang ada isinya.
         $adaTanpaTahun = Kegiatan::where('status', Kegiatan::STATUS_SELESAI)->tanpaTahun()->exists();
+        $periodeList   = Kegiatan::daftarPeriode(Kegiatan::STATUS_SELESAI);
 
         // Relasi yang dibutuhkan kartu bersama (kegiatan-list/_kartu) — sama di ketiga subbab.
         $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'dosenPendampings.user'])
@@ -117,6 +119,11 @@ class KegiatanController extends Controller
             } else {
                 $query->filterTahun($request->tahun);
             }
+        }
+
+        // Filter periode kepengurusan (S-62) — sama dengan Rencana Proker & Pelaksanaan.
+        if (PeriodeKepengurusan::ada($request->periode)) {
+            $query->filterPeriode((int) $request->periode);
         }
 
         // Search by judul + deskripsi
@@ -152,6 +159,7 @@ class KegiatanController extends Controller
             'bidangList',
             'tahunList',
             'adaTanpaTahun',
+            'periodeList',
             'isAdmin',
             'canTambahKegiatan',
         ));
@@ -264,6 +272,7 @@ class KegiatanController extends Controller
             'dokumen_kegiatan'    => 'nullable|array|max:' . self::MAKS_DOKUMEN,
             'dokumen_kegiatan.*'  => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:' . self::MAKS_UKURAN_DOKUMEN_KB,
         ], $this->pesanValidasi());
+        $this->repoMulmedService->pastikanJenisDokumen($request, null, false);
 
         $validated['status'] = 'selesai';
 
@@ -366,6 +375,9 @@ class KegiatanController extends Controller
             return $tolak;
         }
 
+        // Banner salinan Rencana Proker terkunci juga di Arsip (S-61).
+        $this->repoMulmedService->tolakUbahBannerRencana($request, $kegiatan);
+
         $jam = $this->aturanJam($request);
 
         // Check if all selected kategori are "Kegiatan Prodi" (bidang not needed)
@@ -382,9 +394,10 @@ class KegiatanController extends Controller
             'tanggal_selesai'     => 'nullable|date|after_or_equal:tanggal_mulai',
             'jam_selesai'         => $jam['selesai'],
             'lokasi'              => 'nullable|string|max:150',
-            // Banner wajib ada: kalau kegiatan belum punya banner, unggahan baru diwajibkan;
-            // kalau sudah punya, boleh dikosongkan (banner lama dipertahankan).
-            'banner'              => ($kegiatan->banner ? 'nullable' : 'required') . '|image|mimes:jpg,jpeg,png,webp|max:5120',
+            // Banner wajib ada: kalau kegiatan belum punya banner, atau banner lamanya
+            // dihapus lewat tombol Hapus, unggahan baru diwajibkan; selain itu boleh
+            // dikosongkan (banner lama dipertahankan).
+            'banner'              => ($kegiatan->banner && !$request->boolean('hapus_banner') ? 'nullable' : 'required') . '|image|mimes:jpg,jpeg,png,webp|max:5120',
             'anggaran'            => 'nullable|numeric|min:0|max:9999999999999',
             'ketua_pelaksana_id'  => ['nullable', 'exists:students,id', KegiatanPolicy::aturanKetuaPelaksana($kegiatan)],
             'dosen_pendamping_ids'   => 'nullable|array',
@@ -405,7 +418,11 @@ class KegiatanController extends Controller
         ], $this->pesanValidasi());
 
         // Batas 10 file berlaku untuk TOTAL yang tersimpan, bukan per sekali simpan.
+        // Dokumen salinan Rencana Proker terkunci juga di Arsip (S-60); yang diunggah
+        // di Pelaksanaan atau di sini tetap bisa dihapus/diganti jenisnya.
+        $this->repoMulmedService->tolakHapusDokumenRencana($request, $kegiatan);
         $this->repoMulmedService->pastikanKuota($request, $kegiatan, self::MAKS_FILE, self::MAKS_DOKUMEN);
+        $this->repoMulmedService->pastikanJenisDokumen($request, $kegiatan, false, true);
 
         $validated['status'] = 'selesai';
 
@@ -432,6 +449,7 @@ class KegiatanController extends Controller
         }
 
         $this->repoMulmedService->hapusTerpilih($request, $kegiatan);
+        $this->repoMulmedService->perbaruiJenisDokumen($request, $kegiatan, true);
 
         // Set backward-compat FK columns (first item)
         $kategoriIds = $validated['kategori_kegiatan_id'];

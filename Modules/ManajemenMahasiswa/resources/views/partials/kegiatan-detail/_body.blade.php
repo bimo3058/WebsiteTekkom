@@ -44,7 +44,8 @@
             @endforeach
         @elseif($proker->bidang)
             <span class="badge-bidang">{{ $proker->bidang->nama_bidang }}</span>
-        @else
+        {{-- Draft Rencana Proker boleh belum berkategori: jangan dikira "Prodi" --}}
+        @elseif(($proker->kategoris && $proker->kategoris->isNotEmpty()) || $proker->kategoriKegiatan)
             <span class="badge-bidang" style="background: var(--c-primary-subtle); color: var(--c-primary);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> Prodi</span>
         @endif
 
@@ -215,7 +216,12 @@
 <!-- Deskripsi -->
 <div class="detail-card">
     <div class="detail-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Deskripsi & Tujuan Kegiatan</div>
-    <div class="detail-description">{{ $proker->deskripsi }}</div>
+    {{-- Draft Rencana Proker boleh disimpan tanpa deskripsi --}}
+    @if(filled($proker->deskripsi))
+        <div class="detail-description">{{ $proker->deskripsi }}</div>
+    @else
+        <div class="detail-description" style="color:var(--c-fg-muted);font-style:italic;">Belum diisi.</div>
+    @endif
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════ -->

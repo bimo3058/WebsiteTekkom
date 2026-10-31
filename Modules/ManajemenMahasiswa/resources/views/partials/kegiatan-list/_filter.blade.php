@@ -7,7 +7,10 @@
     mencakup kegiatan tanpa bidang atau berkategori Prodi.
 
     Variabel: $action (URL daftar), $placeholder, $bidangList, $tahunList,
-    $adaTanpaTahun (opsi "Belum ada tanggal" hanya dirender bila memang ada isinya).
+    $adaTanpaTahun (opsi "Belum ada tanggal" hanya dirender bila memang ada isinya),
+    $periodeList (Kegiatan::daftarPeriode). Periode Kepengurusan (S-62) mengikuti masa
+    jabatan kabinet HIMASKOM, bukan tahun kalender, dan berlaku juga untuk kegiatan
+    Prodi (S-64). Daftar kabinet & tanggal mulainya di Support\PeriodeKepengurusan.
     Opsional: $tahapList (Kegiatan::TAHAP_FILTER_LABELS) — hanya Rencana Proker,
     memunculkan filter Tahap (Di Rencana Proker / Di Pelaksanaan Kegiatan / Di Laporan &
     Arsip). Tanpa opsi "Semua Tahap": saat kosong tampil petunjuk abu yang tak bisa
@@ -18,7 +21,9 @@
     $filterBidangAktif = request()->filled('bidang') && request('bidang') !== 'semua';
     $filterTahunAktif  = request()->filled('tahun') && request('tahun') !== 'semua';
     $filterTahapAktif  = $tahapList && request()->filled('status_rencana') && array_key_exists(request('status_rencana'), $tahapList);
-    $adaFilterApaPun   = $filterBidangAktif || $filterTahunAktif || $filterTahapAktif || request()->filled('search');
+    $filterPeriodeAktif = \Modules\ManajemenMahasiswa\Support\PeriodeKepengurusan::ada(request('periode'));
+    $adaFilterPanel    = $filterBidangAktif || $filterPeriodeAktif || $filterTahunAktif || $filterTahapAktif;
+    $adaFilterApaPun   = $adaFilterPanel || request()->filled('search');
     $tanpaTahun        = \Modules\ManajemenMahasiswa\Models\Kegiatan::FILTER_TANPA_TAHUN;
 @endphp
 <form method="GET" action="{{ $action }}" id="filterForm">
@@ -41,7 +46,7 @@
                         <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
                     </svg>
                     <span style="line-height: 1;">Filter</span>
-                    @if($filterBidangAktif || $filterTahunAktif || $filterTahapAktif)
+                    @if($adaFilterPanel)
                         <span class="filter-pop-dot"></span>
                     @endif
                 </button>
@@ -70,6 +75,15 @@
                                 @endforeach
                             </x-manajemenmahasiswa::ui.select>
                         </div>
+
+                        <div>
+                            <label class="filter-pop-label" for="filterPeriode">Periode Kepengurusan</label>
+                            <x-manajemenmahasiswa::ui.select name="periode" id="filterPeriode">
+                                <option value="semua">Semua Periode</option>
+                                @foreach($periodeList as $p)
+                                    <option value="{{ $p }}" {{ (string) request('periode') === (string) $p ? 'selected' : '' }}>{{ \Modules\ManajemenMahasiswa\Support\PeriodeKepengurusan::label($p) }}</option>
+                                @endforeach
+                            </x-manajemenmahasiswa::ui.select>                        </div>
 
                         <div>
                             <label class="filter-pop-label" for="filterTahun">Tahun</label>

@@ -35,6 +35,25 @@
             top: 50%;
             margin-top: -6px;
         }
+        .mk-pilih .search-select-wrapper.ada-pilihan input[type="text"] { padding-right: 62px; }
+        .mk-pilih-kosongkan {
+            position: absolute;
+            right: 34px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: transparent;
+            color: var(--c-fg-muted);
+            cursor: pointer;
+        }
+        .mk-pilih-kosongkan:hover { background: var(--c-primary-subtle); color: var(--c-primary); }
         .mk-pilih .search-select-option.is-active { background: var(--c-primary-subtle); color: var(--c-primary); }
         .mk-pilih .search-select-option.is-selected { font-weight: 700; color: var(--c-primary); }
     </style>
@@ -102,7 +121,20 @@
                     this.query = this.namaTerpilih;
                 },
 
+                // Tombol × : kosongkan pilihan.
+                kosongkan() {
+                    this.terpilih = '';
+                    this.query = '';
+                    this.open = false;
+                },
+
+                // Nilai yang dikirim: teks dihapus habis = kosong, walau dropdown belum ditutup.
+                get nilaiKirim() {
+                    return this.query.trim() === '' ? '' : this.terpilih;
+                },
+
                 pilihPertama() {
+                    if (this.query.trim() === '') return this.kosongkan();
                     if (this.open && this.hasil.length) this.pilih(this.hasil[0]);
                 },
             }));

@@ -150,13 +150,7 @@ class PengelolaKegiatanService
      */
     public function pesanTolak(Kegiatan $kegiatan): string
     {
-        // Ketua Himpunan selalu boleh mengedit (KegiatanPolicy::EDIT_SEMUA), jadi
-        // bila ia ditolak, yang ditolak pasti penghapusan.
-        if (Auth::user()?->hasAnyRole(KegiatanPolicy::EDIT_SEMUA)) {
-            return 'Ketua Himpunan bisa mengedit semua proker, tetapi menghapus hanya '
-                . 'bisa dilakukan pembuatnya atau admin.';
-        }
-
+        // Ketua Himpunan tidak pernah ditolak (KegiatanPolicy::KETUA_SEMUA).
         // Para ketua bidang/unit tidak bisa ditambahkan di Akses Kelola, jadi
         // jangan sarankan hal yang mustahil.
         if (Auth::user()?->hasAnyRole(KegiatanPolicy::JABATAN_KETUA)) {

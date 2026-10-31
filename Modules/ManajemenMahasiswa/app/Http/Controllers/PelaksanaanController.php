@@ -16,6 +16,7 @@ use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
 use Modules\ManajemenMahasiswa\Policies\KegiatanPolicy;
 use Modules\ManajemenMahasiswa\Services\PengelolaKegiatanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
+use Modules\ManajemenMahasiswa\Support\PeriodeKepengurusan;
 use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class PelaksanaanController extends Controller
@@ -44,6 +45,7 @@ class PelaksanaanController extends Controller
         // Opsi "Belum ada tanggal" hanya dirender bila memang ada isinya (proker lama
         // yang diajukan sebelum tanggal mulai jadi syarat Ajukan Proker).
         $adaTanpaTahun = Kegiatan::where('status', Kegiatan::STATUS_DISETUJUI)->tanpaTahun()->exists();
+        $periodeList   = Kegiatan::daftarPeriode(Kegiatan::STATUS_DISETUJUI);
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
@@ -79,6 +81,11 @@ class PelaksanaanController extends Controller
             }
         }
 
+        // Filter periode kepengurusan (S-62) — sama dengan Rencana Proker & Laporan/Arsip.
+        if (PeriodeKepengurusan::ada($request->periode)) {
+            $query->filterPeriode((int) $request->periode);
+        }
+
         // Search judul + deskripsi
         // Dibungkus closure supaya orWhere tidak "membocorkan" filter bidang/tahun di atas.
         if ($request->filled('search')) {
@@ -93,7 +100,7 @@ class PelaksanaanController extends Controller
 
 
         return view('manajemenmahasiswa::pelaksanaan.index', compact(
-            'pelaksanaanList', 'bidangList', 'tahunList', 'adaTanpaTahun',
+            'pelaksanaanList', 'bidangList', 'tahunList', 'adaTanpaTahun', 'periodeList',
             'isAdmin', 'isPengurus', 'canManage'
         ));
     }
@@ -219,7 +226,41 @@ class PelaksanaanController extends Controller
             'existingPanitia', 'existingPanitiaIds', 'existingDosen',
             'selectedKategoriIds', 'selectedBidangIds',
             'isAdmin', 'isPengurus', 'canManage'
-        ) + $this->pengelolaService->dataForm($proker));
+        ) + [
+            'wajibDariRencana' => $this->wajibDariRencana($proker),
+            'kunciDariRencana' => true,
+        ] + $this->pengelolaService->dataForm($proker));
+    }
+
+    /**
+     * Isian Pelaksanaan yang wajib karena sudah terisi di Rencana Proker-nya (S-59).
+     *
+     * Keputusan Surya 30 Okt 2026: apa yang diisi di rencana harus tetap ada di
+     * pelaksanaan — boleh diubah sesuai realisasi, tidak boleh dikosongkan; isian
+     * yang memang kosong di rencana boleh tetap kosong. Isian yang sudah selalu
+     * wajib di sini (judul, kategori, bidang, deskripsi, tanggal mulai, lokasi,
+     * ketua pelaksana, anggaran) tidak dicantumkan. Akses Kelola tidak termasuk:
+     * itu pengaturan hak akses, bukan data kegiatan. Banner & dokumen rencana juga
+     * tidak — keduanya terkunci penuh (Kegiatan::bannerDariRencana, S-61; dokumen
+     * `dari_rencana`, S-59). Kegiatan lama tanpa rencana → [].
+     *
+     * @return list<string> nama isian form
+     */
+    private function wajibDariRencana(Kegiatan $proker): array
+    {
+        $rencana = $proker->rencana()->with(['panitia', 'dosenPendampings'])->first();
+        if (!$rencana) {
+            return [];
+        }
+
+        return array_keys(array_filter([
+            'jam_mulai'            => filled($rencana->jam_mulai),
+            'tanggal_selesai'      => filled($rencana->tanggal_selesai),
+            'jam_selesai'          => filled($rencana->jam_selesai),
+            'target_peserta'       => filled($rencana->target_peserta),
+            'dosen_pendamping_ids' => $rencana->dosenPendampings->isNotEmpty(),
+            'panitia_ids'          => $rencana->panitia->isNotEmpty(),
+        ]));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -239,6 +280,9 @@ class PelaksanaanController extends Controller
             return $tolak;
         }
 
+        // Banner salinan Rencana Proker terkunci (S-61).
+        $this->repoMulmedService->tolakUbahBannerRencana($request, $proker);
+
         // Bidang wajib kecuali seluruh kategori yang dipilih berkategori Prodi —
         // aturan yang sama persis dengan Rencana Proker. Sebelumnya di sini
         // `bidang_id` selalu nullable, sehingga kegiatan "Kegiatan Himpunan" bisa
@@ -254,7 +298,12 @@ class PelaksanaanController extends Controller
         $satuHari = !$request->filled('tanggal_selesai')
             || $request->input('tanggal_selesai') === $request->input('tanggal_mulai');
 
-        $jamSelesaiRules = ['nullable', 'date_format:H:i,H:i:s'];
+        // Isian yang terisi di Rencana Proker tidak boleh dikosongkan di sini (S-59).
+        $wajib  = $this->wajibDariRencana($proker);
+        $aturan = fn(string $isian, string $sisa) => (in_array($isian, $wajib, true) ? 'required|' : 'nullable|') . $sisa;
+        $pesanRencana = fn(string $label) => "{$label} wajib diisi karena sudah terisi di Rencana Proker. Boleh diubah sesuai realisasi, tapi tidak boleh dikosongkan.";
+
+        $jamSelesaiRules = [in_array('jam_selesai', $wajib, true) ? 'required' : 'nullable', 'date_format:H:i,H:i:s'];
         if ($satuHari && $request->filled('jam_mulai')) {
             $jamSelesaiRules[] = 'after:jam_mulai';
         }
@@ -269,22 +318,22 @@ class PelaksanaanController extends Controller
             'bidang_id.*'               => 'integer|exists:mk_bidang,id',
             'deskripsi'                 => 'required|string|min:20|max:3000',
             'tanggal_mulai'             => 'required|date',
-            'tanggal_selesai'           => 'nullable|date|after_or_equal:tanggal_mulai',
+            'tanggal_selesai'           => $aturan('tanggal_selesai', 'date|after_or_equal:tanggal_mulai'),
             // Kolom jam di database bertipe TIME: `string` bebas membuat isian ngawur
             // lolos ke query dan memunculkan halaman error saat disimpan.
-            'jam_mulai'                 => 'nullable|date_format:H:i,H:i:s',
+            'jam_mulai'                 => $aturan('jam_mulai', 'date_format:H:i,H:i:s'),
             'jam_selesai'               => $jamSelesaiRules,
             // Lokasi, ketua pelaksana, dan anggaran sudah wajib sejak Ajukan Proker; di tahap
             // Pelaksanaan boleh diubah sesuai realisasi tetapi tidak boleh dikosongkan lagi.
             'lokasi'                    => 'required|string|max:150',
-            'target_peserta'            => 'nullable|integer|min:1',
+            'target_peserta'            => $aturan('target_peserta', 'integer|min:1'),
             'anggaran'                  => 'required|numeric|min:0|max:9999999999999',
             'ketua_pelaksana_id'        => ['required', 'exists:students,id', KegiatanPolicy::aturanKetuaPelaksana($proker)],
-            'dosen_pendamping_ids'      => 'nullable|array',
+            'dosen_pendamping_ids'      => $aturan('dosen_pendamping_ids', 'array'),
             'dosen_pendamping_ids.*'    => 'exists:lecturers,id',
             'dosen_peran'               => 'nullable|array',
             'dosen_peran.*'             => 'nullable|string|max:60',
-            'panitia_ids'               => 'nullable|array',
+            'panitia_ids'               => $aturan('panitia_ids', 'array'),
             'panitia_ids.*'             => 'exists:students,id',
             'panitia_peran'             => 'nullable|array',
             'panitia_peran.*'           => 'nullable|string|max:60',
@@ -309,10 +358,19 @@ class PelaksanaanController extends Controller
             'jam_mulai.date_format'          => 'Jam mulai harus berupa jam yang benar, contoh 09:00.',
             'jam_selesai.date_format'        => 'Jam selesai harus berupa jam yang benar, contoh 15:00.',
             'jam_selesai.after'              => 'Jam selesai harus lebih lambat dari jam mulai. Kalau kegiatannya lintas hari, isi dulu tanggal selesainya.',
+            'jam_mulai.required'             => $pesanRencana('Jam mulai'),
+            'tanggal_selesai.required'       => $pesanRencana('Tanggal selesai'),
+            'jam_selesai.required'           => $pesanRencana('Jam selesai'),
+            'target_peserta.required'        => $pesanRencana('Peserta'),
+            'dosen_pendamping_ids.required'  => $pesanRencana('Dosen pendamping (minimal 1)'),
+            'panitia_ids.required'           => $pesanRencana('Panitia (minimal 1)'),
         ] + KegiatanController::pesanValidasiDokumen());
 
+        // Dokumen salinan Rencana Proker tidak boleh dihapus di sini (S-59).
+        $this->repoMulmedService->tolakHapusDokumenRencana($request, $proker);
         // Batas 10 file berlaku untuk TOTAL yang tersimpan, bukan per sekali simpan.
         $this->repoMulmedService->pastikanKuota($request, $proker, self::MAKS_FILE, self::MAKS_DOKUMEN);
+        $this->repoMulmedService->pastikanJenisDokumen($request, $proker, false, true);
 
         // Update data utama
         $proker->update([
@@ -391,9 +449,16 @@ class PelaksanaanController extends Controller
             $proker->update([
                 'banner' => $this->supabase->upload($request->file('banner'), 'mk_mulmed/image'),
             ]);
+        } elseif ($request->boolean('hapus_banner') && $proker->banner) {
+            // Tombol Hapus di kotak banner tanpa unggahan pengganti. Banner hasil
+            // salinan Ajukan adalah objek tersendiri, jadi rencananya tidak ikut
+            // kehilangan banner; Unggah ke Arsip tetap menagih banner baru.
+            $this->supabase->delete($proker->banner);
+            $proker->update(['banner' => null]);
         }
 
         $this->repoMulmedService->hapusTerpilih($request, $proker);
+        $this->repoMulmedService->perbaruiJenisDokumen($request, $proker, true);
         $this->repoMulmedService->simpanUnggahan($request, $proker);
 
         return redirect()

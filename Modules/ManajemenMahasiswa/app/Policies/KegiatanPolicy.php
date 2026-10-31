@@ -35,27 +35,28 @@ class KegiatanPolicy
 
     /**
      * Admin — boleh mengedit & menghapus SEMUA kegiatan tanpa perlu tercantum di
-     * daftar pengelola. Penyelamat bila pemiliknya sudah lulus/berganti jabatan.
+     * daftar pengelola, sekaligus mengatur Akses Kelola. Penyelamat bila
+     * pemiliknya sudah lulus/berganti jabatan.
      *
-     * ketua_himpunan sengaja TIDAK termasuk — lihat EDIT_SEMUA.
+     * ketua_himpunan tidak di sini karena tidak mengatur Akses Kelola — lihat
+     * KETUA_SEMUA.
      */
     public const PENGELOLA_SEMUA = [
         'superadmin', 'admin_kemahasiswaan',
     ];
 
     /**
-     * Boleh MENGEDIT semua kegiatan, tetapi TIDAK menghapus: jalur darurat Ketua
-     * Himpunan sebagai penanggung jawab utama himpunan — mis. data proker salah
-     * menjelang acara sementara ketua bidangnya berhalangan, atau pembuatnya
-     * sudah lulus/berganti periode.
+     * Boleh MENGEDIT dan MENGHAPUS semua kegiatan di ketiga subbab: Ketua Himpunan
+     * sebagai penanggung jawab utama himpunan — mis. data proker salah menjelang
+     * acara sementara ketua bidangnya berhalangan, pembuatnya sudah lulus/berganti
+     * periode, atau proker bidang batal.
      *
-     * Tanpa hak hapus karena menghapus itu permanen (baris kegiatan beserta
-     * banner, surat, foto & dokumennya di storage ikut hilang, tanpa tempat
-     * sampah) dan keadaan darurat tidak pernah butuh penghapusan: data yang salah
-     * cukup dibetulkan. Membatalkan proker adalah keputusan bidangnya, jadi
-     * penghapusan tetap milik pembuat & admin.
+     * Hak hapus dibuka 30 Okt 2026 (keputusan Surya, S-67), membatalkan larangan
+     * 28 Sep 2026 (S-21). Disadari: hapus itu permanen (banner, surat, foto &
+     * dokumen di storage ikut hilang, tanpa tempat sampah) dan tanpa audit log.
+     * Akses Kelola tetap milik pembuat & admin (aturAkses()).
      */
-    public const EDIT_SEMUA = ['ketua_himpunan'];
+    public const KETUA_SEMUA = ['ketua_himpunan'];
 
     /**
      * Satu-satunya role yang bisa ditambahkan di "Akses Kelola" — hak mengedit,
@@ -66,6 +67,11 @@ class KegiatanPolicy
     /**
      * Ketua Pelaksana wajib staff himpunan (keputusan Surya, 29 Okt 2026), karena
      * ia otomatis ikut mengelola kegiatannya (lihat update()).
+     *
+     * Dipertahankan 30 Okt 2026 setelah telusur IG HIMASKOM: tidak ditemukan ketua
+     * pelaksana yang bukan pengurus. Ketua yang kemudian keluar himpunan atau lulus
+     * tetap tercatat (idCalonKetuaPelaksana), tetapi hak editnya putus sendiri
+     * begitu role staff_himpunan-nya dicabut, karena update() memeriksa role saat itu.
      */
     public const ROLE_KETUA_PELAKSANA = ['staff_himpunan'];
 
@@ -78,7 +84,7 @@ class KegiatanPolicy
      * HIMASKOM 2016–2026: antarbidang praktis tidak berkolaborasi), dan pemiliknya
      * adalah ketua bidang/unit itu sendiri. Ketua bidang/unit lain tidak boleh
      * ikut mengedit apalagi menghapus. Ketua Himpunan juga tidak perlu dicantumkan
-     * karena hak editnya sudah datang dari EDIT_SEMUA. Dicek ke role, bukan ke
+     * karena hak editnya sudah datang dari KETUA_SEMUA. Dicek ke role, bukan ke
      * data divisi, karena role bisa menumpuk: akun yang merangkap
      * staff_himpunan + ketua_unit tetap ditolak.
      */
@@ -140,8 +146,8 @@ class KegiatanPolicy
 
     /**
      * Edit & simpan, termasuk Ajukan Proker dan Unggah ke Arsip (keduanya
-     * mengubah status kegiatan). Hanya pembuat, admin, Ketua Himpunan (jalur
-     * darurat), dan staff himpunan yang ditambahkan di Akses Kelola.
+     * mengubah status kegiatan). Hanya pembuat, admin, Ketua Himpunan, dan
+     * staff himpunan yang ditambahkan di Akses Kelola.
      *
      * Ketua Pelaksana otomatis dianggap pengelola tanpa perlu dicantumkan di Akses
      * Kelola (keputusan Surya, 29 Okt 2026), dengan syarat yang sama persis:
@@ -151,7 +157,7 @@ class KegiatanPolicy
      */
     public function update(User $user, Kegiatan $kegiatan): bool
     {
-        return $user->hasAnyRole([...self::PENGELOLA_SEMUA, ...self::EDIT_SEMUA])
+        return $user->hasAnyRole([...self::PENGELOLA_SEMUA, ...self::KETUA_SEMUA])
             || $this->pemilik($user, $kegiatan)
             || (self::bisaJadiPengelola($user)
                 && ($this->ketuaPelaksana($user, $kegiatan)
@@ -165,12 +171,12 @@ class KegiatanPolicy
     }
 
     /**
-     * Menghapus hanya pembuat & admin. Ketua Himpunan (EDIT_SEMUA) dan pengelola
+     * Menghapus hanya pembuat, admin, dan Ketua Himpunan (KETUA_SEMUA). Pengelola
      * tambahan (staff_himpunan) tidak pernah boleh menghapus.
      */
     public function delete(User $user, Kegiatan $kegiatan): bool
     {
-        return $user->hasAnyRole(self::PENGELOLA_SEMUA)
+        return $user->hasAnyRole([...self::PENGELOLA_SEMUA, ...self::KETUA_SEMUA])
             || $this->pemilik($user, $kegiatan);
     }
 

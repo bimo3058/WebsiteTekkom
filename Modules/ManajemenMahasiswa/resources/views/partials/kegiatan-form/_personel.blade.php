@@ -17,6 +17,9 @@
       $panitiaTerpilih    koleksi Student terpilih — sudah memperhitungkan old()
       $panitiaPeranLama   old('panitia_peran', []); jabatan dari database dibaca
                           lewat pivot bila tidak ada isian terakhir
+      $ketuaWajib, $panitiaWajib, $dosenWajib  (opsional) tampilkan tanda *; di Rencana
+                          Proker artinya "wajib sebelum diajukan" (ProkerController::SYARAT_AJUKAN),
+                          di Pelaksanaan "terisi di rencana, tak boleh dikosongkan" (S-59)
 --}}
 @include('manajemenmahasiswa::partials.kegiatan-form._pilih-assets')
 
@@ -64,13 +67,13 @@
 <div class="row g-3 mb-3">
     {{-- ── Ketua Pelaksana (pilih satu) ── --}}
     <div class="col-md-6 mk-pilih" x-data="mkPilihSatu(@js($opsiKetua), @js((string) ($ketuaId ?? '')))"
-         x-effect="const k = opsi.find(o => String(o.id) === terpilih);
+         x-effect="const k = opsi.find(o => String(o.id) === nilaiKirim);
                    Object.assign($store.mkKetua, k
                        ? { userId: String(k.userId), nama: k.nama, akses: k.akses }
                        : { userId: '', nama: '', akses: false })">
         <label class="form-label-custom" for="ketuaPelaksanaSearch">Ketua Pelaksana @if($ketuaWajib ?? false)<span class="required">*</span>@endif</label>
-        <div class="search-select-wrapper" @click.outside="tutup()">
-            <input type="hidden" name="ketua_pelaksana_id" id="ketuaPelaksanaId" :value="terpilih">
+        <div class="search-select-wrapper" :class="{ 'ada-pilihan': nilaiKirim }" @click.outside="tutup()">
+            <input type="hidden" name="ketua_pelaksana_id" id="ketuaPelaksanaId" :value="nilaiKirim">
             <input type="text" class="form-control form-control-custom" id="ketuaPelaksanaSearch"
                    placeholder="Cari staff himpunan..."
                    autocomplete="off"
@@ -79,6 +82,11 @@
                    @focus="buka()" @click="buka()" @input="buka()"
                    @keydown.enter.prevent="pilihPertama()"
                    @keydown.escape.prevent="tutup()" @keydown.tab="tutup()">
+            <button type="button" class="mk-pilih-kosongkan" x-show="nilaiKirim" style="display: none;"
+                    title="Kosongkan Ketua Pelaksana" aria-label="Kosongkan Ketua Pelaksana"
+                    @click.stop="kosongkan()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
             <svg class="mk-pilih-caret" :class="{ 'is-open': open }" width="12" height="12" fill="none"
                  stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
 
@@ -109,7 +117,12 @@
 {{-- ── Dosen Pendamping (pilih banyak + peran), sejajar dengan Panitia ── --}}
 <div class="mb-3 mk-pilih" x-data="mkPilihBanyak(@js($opsiDosen), @js($dosenTerpilih->pluck('id')->values()))">
         <label class="form-label-custom" for="dosenSearchInput">
-            Dosen Pendamping <span style="color: var(--c-fg-muted); font-weight: 400;">(opsional)</span>
+            Dosen Pendamping
+            @if($dosenWajib ?? false)
+                <span class="required">*</span>
+            @else
+                <span style="color: var(--c-fg-muted); font-weight: 400;">(opsional)</span>
+            @endif
             <span class="panitia-count-badge" x-show="terpilih.length" x-text="terpilih.length + ' dipilih'" style="display: none;"></span>
         </label>
         <div class="panitia-select-wrapper" id="dosenSelectWrapper" @click.outside="open = false">
@@ -182,7 +195,11 @@
 <div class="mb-1 mk-pilih" x-data="mkPilihBanyak(@js($opsiMahasiswa), @js($panitiaTerpilih->pluck('id')->values()))">
     <label class="form-label-custom" for="panitiaSearchInput">
         Panitia Kegiatan
-        <span style="color: var(--c-fg-muted); font-weight: 400;">(opsional)</span>
+        @if($panitiaWajib ?? false)
+            <span class="required">*</span>
+        @else
+            <span style="color: var(--c-fg-muted); font-weight: 400;">(opsional)</span>
+        @endif
         <span class="panitia-count-badge" x-show="terpilih.length" x-text="terpilih.length + ' dipilih'" style="display: none;"></span>
     </label>
     <div class="panitia-select-wrapper" id="panitiaSelectWrapper" @click.outside="open = false">

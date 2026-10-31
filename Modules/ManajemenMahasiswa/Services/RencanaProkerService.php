@@ -89,6 +89,8 @@ class RencanaProkerService
                         'nama_file'         => $asli->nama_file,
                         'path_file'         => $path,
                         'tipe_file'         => $asli->tipe_file,
+                        'jenis_dokumen'     => $asli->jenis_dokumen,
+                        'dari_rencana'      => true,
                         'judul_file'        => $asli->judul_file,
                         'deskripsi_meta'    => $asli->deskripsi_meta,
                         'visibility_status' => $asli->visibility_status,

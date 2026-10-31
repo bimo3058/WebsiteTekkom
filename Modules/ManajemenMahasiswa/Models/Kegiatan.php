@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Modules\ManajemenMahasiswa\Support\PeriodeKepengurusan;
 
 class Kegiatan extends Model
 {
@@ -262,6 +263,16 @@ class Kegiatan extends Model
     }
 
     /**
+     * Banner hasil salinan Rencana Proker terkunci di Pelaksanaan & Arsip (S-61):
+     * semua yang diunggah di rencana tidak bisa diganti atau dihapus sesudahnya.
+     * Kegiatan lama tanpa rencana, atau yang rencananya tanpa banner, tetap bebas.
+     */
+    public function bannerDariRencana(): bool
+    {
+        return $this->rencana_id !== null && filled($this->rencana?->banner);
+    }
+
+    /**
      * Salinan Pelaksanaan/Arsip milik rencana ini (S-49) — paling banyak satu,
      * karena rencana tidak bisa diajukan ulang.
      */
@@ -349,6 +360,10 @@ class Kegiatan extends Model
      * scopeFilterTahun(): tanpa itu, tahun milik kegiatan ber-`tahun` NULL tidak
      * pernah muncul sebagai pilihan sehingga kegiatannya mustahil ditemukan.
      *
+     * Berurutan tanpa celah dari tahun kegiatan tertua sampai tahun berjalan (atau
+     * tahun kegiatan terjauh bila sudah ada rencana tahun depan), sehingga tahun
+     * baru otomatis muncul begitu tahun berganti (S-63).
+     *
      * @param  string|array<int, string>  $status
      * @return array<int, int> tahun terbaru lebih dulu; minimal berisi tahun berjalan
      */
@@ -361,12 +376,46 @@ class Kegiatan extends Model
             ->map(fn($kegiatan) => $kegiatan->tahun ?? $kegiatan->tanggal_mulai?->year)
             ->filter()
             ->map(fn($tahun) => (int) $tahun)
-            ->unique()
-            ->sortDesc()
-            ->values()
-            ->all();
+            ->push((int) date('Y'));
 
-        return $daftar ?: [(int) date('Y')];
+        return range($daftar->max(), $daftar->min());
+    }
+
+    /**
+     * Filter Periode Kepengurusan (S-62): kegiatan yang tanggal mulainya jatuh
+     * dalam masa jabatan kabinet itu (lihat Support\PeriodeKepengurusan).
+     *
+     * Kegiatan Prodi ikut periode juga (S-64, keputusan Surya). Kegiatan tanpa
+     * tanggal mulai tidak punya periode — cari lewat filter Tahun "Belum ada tanggal".
+     */
+    public function scopeFilterPeriode($query, int $periode)
+    {
+        [$mulai, $selesai] = PeriodeKepengurusan::rentang($periode);
+
+        return $query
+            ->whereDate('tanggal_mulai', '>=', $mulai)
+            ->whereDate('tanggal_mulai', '<=', $selesai);
+    }
+
+    /**
+     * Daftar periode untuk dropdown filter (S-63): berurutan tanpa celah dari
+     * periode kegiatan tertua sampai periode berjalan — atau periode kegiatan
+     * terjauh bila ada rencana untuk kabinet berikutnya.
+     *
+     * @param  string|array<int, string>  $status
+     * @return array<int, int> tahun awal periode, terbaru lebih dulu
+     */
+    public static function daftarPeriode(string|array $status): array
+    {
+        $periode = static::query()
+            ->whereIn('status', (array) $status)
+            ->whereNotNull('tanggal_mulai')
+            ->pluck('tanggal_mulai')
+            ->map(fn ($tanggal) => PeriodeKepengurusan::untukTanggal($tanggal))
+            ->push(PeriodeKepengurusan::sekarang())
+            ->filter();
+
+        return range($periode->max(), $periode->min());
     }
 
     public function scopeByKategori($query, int $kategoriId)

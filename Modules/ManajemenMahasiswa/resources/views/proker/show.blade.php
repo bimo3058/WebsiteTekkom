@@ -49,34 +49,32 @@
                 ])
             @endif
             {{-- staff_himpunan & role pengawas tidak melihat tombol ini sama sekali --}}
-            @if($proker->status === 'draft' && $canSeeAjukan)
-                @if($canAjukan)
-                    @if($rencanaLengkap)
-                        <form action="{{ route('manajemenmahasiswa.proker.ajukan', $proker->id) }}" method="POST" class="m-0"
-                              onsubmit="return mkAjukanProker(this, @js('Rencana proker "' . $proker->judul . '" akan diajukan. Rencana ini dikunci dan tetap tersimpan di Rencana Proker, sedangkan salinannya beserta dokumen rencana dibuat di Pelaksanaan Kegiatan. Rencana yang sudah diajukan tidak bisa diubah lagi.'))">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9 22 2z"/></svg>
-                                Ajukan Proker
-                            </button>
-                        </form>
-                    @else
-                        <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm mk-btn--disabled" disabled
-                                title="Lengkapi dulu: {{ $kelengkapanKurang->implode(', ') }}">
+            @if($proker->status === 'draft' && $canAjukan)
+                @if($rencanaLengkap)
+                    <form action="{{ route('manajemenmahasiswa.proker.ajukan', $proker->id) }}" method="POST" class="m-0"
+                          onsubmit="return mkAjukanProker(this, @js('Rencana proker "' . $proker->judul . '" akan diajukan. Rencana ini dikunci dan tetap tersimpan di Rencana Proker, sedangkan salinannya beserta dokumen rencana dibuat di Pelaksanaan Kegiatan. Rencana yang sudah diajukan tidak bisa diubah lagi.'))">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9 22 2z"/></svg>
                             Ajukan Proker
                         </button>
-                    @endif
+                    </form>
                 @else
                     <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm mk-btn--disabled" disabled
-                            title="Hanya Ketua / Ketua Bidang / Ketua Unit yang dapat mengajukan proker">
+                            title="Lengkapi dulu: {{ $kelengkapanKurang->implode(', ') }}">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9 22 2z"/></svg>
                         Ajukan Proker
                     </button>
                 @endif
             @endif
         </div>
+        {{-- Tooltip tombol nonaktif tidak terlihat di layar sentuh, jadi kekurangannya ditulis --}}
+        @if($proker->status === 'draft' && $canAjukan && !$rencanaLengkap)
+            <p class="mb-0 mt-1 text-end" style="max-width:340px;font-size:12px;color:var(--c-fg-muted);font-weight:500;">
+                Belum bisa diajukan. Lengkapi dulu: {{ $kelengkapanKurang->implode(', ') }}.
+            </p>
+        @endif
         {{-- Role-nya boleh mengelola, tapi bukan pengelola proker ini (KegiatanPolicy) --}}
         @if($pesanBukanPengelola && $proker->status === 'draft')
             <p class="mb-0 mt-1 text-end" style="max-width:340px;font-size:12px;color:var(--c-fg-muted);font-weight:500;">

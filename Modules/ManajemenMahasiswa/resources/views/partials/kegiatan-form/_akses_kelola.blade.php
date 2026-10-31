@@ -35,8 +35,7 @@
 
     <p style="font-size: 13px; color: var(--c-fg-muted); margin-bottom: 14px;">
         Pembuat: <strong style="color: var(--c-fg-sec);">{{ $namaPembuat }}</strong>.
-        Admin otomatis bisa mengelola semua kegiatan, dan Ketua Himpunan bisa
-        mengeditnya (tanpa menghapus) bila diperlukan.
+        Admin dan Ketua Himpunan otomatis bisa mengedit dan menghapus semua kegiatan.
         Ketua Pelaksana otomatis ikut mengelola.
         Tambahkan staff himpunan lain yang boleh ikut mengubah kegiatan ini.
     </p>

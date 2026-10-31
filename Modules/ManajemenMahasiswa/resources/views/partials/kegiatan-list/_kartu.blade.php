@@ -41,7 +41,8 @@
                 @endforeach
             @elseif($item->bidang)
                 <span class="badge-bidang">{{ $item->bidang->nama_bidang }}</span>
-            @else
+            {{-- Draft Rencana Proker boleh belum berkategori: jangan dikira "Prodi" --}}
+            @elseif($item->kategoris->isNotEmpty() || $item->kategoriKegiatan)
                 <span class="badge-bidang">Prodi</span>
             @endif
 

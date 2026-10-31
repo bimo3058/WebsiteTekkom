@@ -17,6 +17,8 @@
         color: var(--c-fg);
         margin-bottom: 20px;
         display: flex;
+        /* Judul + keterangan "(maks 10 dokumen)" turun baris di layar sempit, tidak dijepit jadi kolom. */
+        flex-wrap: wrap;
         align-items: center;
         gap: 8px;
         padding-bottom: 14px;
@@ -238,22 +240,6 @@
         background: rgba(255,255,255,0.2);
         transform: scale(1.05);
     }
-    .banner-current {
-        position: relative;
-        margin-bottom: 12px;
-    }
-    .banner-current .badge-current {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background: rgba(0,0,0,0.6);
-        color: var(--c-surface);
-        font-size: 11px;
-        font-weight: 600;
-        padding: 4px 10px;
-        border-radius: 6px;
-    }
-
     /* ── Multi File Upload ── */
     .file-upload-area {
         border: 2px dashed var(--c-border-strong);
@@ -769,22 +755,10 @@
     <div class="form-card">
         <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg> Banner Kegiatan <span style="color: var(--c-error);">*</span></div>
 
-        @if($kegiatan->banner)
-            <div class="banner-current">
-                <span class="badge-current">Banner Saat Ini</span>
-                <img src="{{ $kegiatan->banner_url }}" alt="Banner saat ini" class="banner-preview" style="display: block;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
-            </div>
-            <p style="font-size: 13px; color: var(--c-fg-muted); margin-bottom: 12px;">Upload gambar baru untuk mengganti banner saat ini.</p>
-        @endif
-
-        <div class="banner-upload-area" onclick="document.getElementById('bannerInput').click()">
-            <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
-            <p>Klik untuk upload banner {{ $kegiatan->banner ? 'baru' : 'kegiatan' }}</p>
-            <small>Format: JPG, PNG, WebP • Maks: 5MB<br><span style="color: var(--c-primary); font-weight: 500;">Rekomendasi: Resolusi 1280 x 720 (Rasio 16:9)</span></small>
-        </div>
-        <input type="file" name="banner" id="bannerInput" accept="image/jpeg,image/png,image/webp"
-               style="display: none;" onchange="previewBanner(this)">
-        <img id="bannerPreview" class="banner-preview" alt="Preview Banner" style="display: none;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
+        @include('manajemenmahasiswa::partials.kegiatan-form._banner', [
+            'bannerUrl'      => $kegiatan->banner ? $kegiatan->banner_url : null,
+            'bannerTerkunci' => $kegiatan->bannerDariRencana(),
+        ])
     </div>
 
     <!-- Foto Kegiatan -->
@@ -818,36 +792,7 @@
     <div class="form-card">
         <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen Kegiatan <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks {{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_DOKUMEN }} dokumen)</span></div>
 
-        @if($existingDokumen->count() > 0)
-            <div class="existing-file-label">Dokumen yang sudah diupload</div>
-            @foreach($existingDokumen as $doc)
-                @php
-                    $ext = pathinfo($doc->nama_file, PATHINFO_EXTENSION);
-                    $iconMap = ['pdf' => 'PDF', 'doc' => 'DOC', 'docx' => 'DOC', 'xls' => 'XLS', 'xlsx' => 'XLS', 'ppt' => 'PPT', 'pptx' => 'PPT'];
-                    $icon = $iconMap[strtolower($ext)] ?? 'FILE';
-                @endphp
-                <div class="doc-preview-item" id="existingFile{{ $doc->id }}">
-                    <span class="doc-icon">{{ $icon }}</span>
-                    <div class="doc-info">
-                        <div class="doc-name">{{ $doc->nama_file }}</div>
-                        <div class="doc-size">{{ strtoupper($ext) }}</div>
-                    </div>
-                    <a href="{{ $doc->url }}" target="_blank" class="mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" title="Unduh dokumen" aria-label="Unduh dokumen {{ $doc->nama_file }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>
-                    <button type="button" class="btn-remove-doc mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="markFileForDeletion({{ $doc->id }})" title="Hapus dokumen" aria-label="Hapus dokumen {{ $doc->nama_file }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-                </div>
-            @endforeach
-            <div style="margin-bottom: 16px;"></div>
-        @endif
-
-        <div class="file-upload-area" id="dokumenUploadArea" onclick="document.getElementById('dokumenInput').click()">
-            <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></div>
-            <p>Klik atau drag & drop dokumen baru ke sini</p>
-            <small>Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX • Maks: {{ intdiv(\Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_UKURAN_DOKUMEN_KB, 1024) }} MB per file</small>
-        </div>
-        <input type="file" name="dokumen_kegiatan[]" id="dokumenInput"
-               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-               multiple style="display: none;" onchange="handleDokumenSelect(this)">
-        <div id="dokumenPreviewList"></div>
+        @include('manajemenmahasiswa::partials.kegiatan-form._dokumen', ['existingDokumen' => $existingDokumen, 'tahapRencana' => false, 'kunciDariRencana' => true])
     </div>
 
     <!-- Hidden inputs for file deletion -->
@@ -886,19 +831,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.dispatchEvent(new Event('input'));
     });
 });
-
-// ── Banner Preview ──
-function previewBanner(input) {
-    const preview = document.getElementById('bannerPreview');
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
 
 // ── Lightbox ──
 function openLightbox(src) {
@@ -978,53 +910,7 @@ function syncFotoInput() {
     document.getElementById('fotoInput').files = dt.files;
 }
 
-// ── Multi-File Upload: Dokumen ──
-// Batas total dokumen — satu sumber dengan validasi server (KegiatanController::MAKS_DOKUMEN).
-const MAKS_DOKUMEN = {{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_DOKUMEN }};
-let dokumenFiles = [];
-
-function handleDokumenSelect(input) {
-    const newFiles = Array.from(input.files);
-    newFiles.forEach(file => {
-        if (dokumenFiles.length >= MAKS_DOKUMEN) return;
-        dokumenFiles.push(file);
-    });
-    renderDokumenPreviews();
-    syncDokumenInput();
-}
-
-function removeDokumen(index) {
-    dokumenFiles.splice(index, 1);
-    renderDokumenPreviews();
-    syncDokumenInput();
-}
-
-function renderDokumenPreviews() {
-    const list = document.getElementById('dokumenPreviewList');
-    list.innerHTML = '';
-    dokumenFiles.forEach((file, i) => {
-        const ext = file.name.split('.').pop().toLowerCase();
-        const icons = { pdf: 'PDF', doc: 'DOC', docx: 'DOC', xls: 'XLS', xlsx: 'XLS', ppt: 'PPT', pptx: 'PPT' };
-        const icon = icons[ext] || '\u25A1';
-        const item = document.createElement('div');
-        item.className = 'doc-preview-item';
-        item.innerHTML = `
-            <span class="doc-icon">${icon}</span>
-            <div class="doc-info">
-                <div class="doc-name">${file.name}</div>
-                <div class="doc-size">${formatFileSize(file.size)} • ${ext.toUpperCase()}</div>
-            </div>
-            <button type="button" class="btn-remove-doc mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="removeDokumen(${i})" title="Hapus dokumen" aria-label="Hapus dokumen ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-        `;
-        list.appendChild(item);
-    });
-}
-
-function syncDokumenInput() {
-    const dt = new DataTransfer();
-    dokumenFiles.forEach(f => dt.items.add(f));
-    document.getElementById('dokumenInput').files = dt.files;
-}
+// Dokumen (unggah, dropdown jenis, drag & drop) diurus partial _dokumen.
 
 // ── Helper ──
 function formatFileSize(bytes) {
@@ -1033,9 +919,9 @@ function formatFileSize(bytes) {
     return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
-// ── Drag & Drop ──
-['fotoUploadArea', 'dokumenUploadArea'].forEach(id => {
-    const area = document.getElementById(id);
+// ── Drag & Drop: Foto ──
+(function () {
+    const area = document.getElementById('fotoUploadArea');
     if (!area) return;
     ['dragenter', 'dragover'].forEach(evt => {
         area.addEventListener(evt, e => { e.preventDefault(); area.classList.add('dragover'); });
@@ -1044,18 +930,11 @@ function formatFileSize(bytes) {
         area.addEventListener(evt, e => { e.preventDefault(); area.classList.remove('dragover'); });
     });
     area.addEventListener('drop', e => {
-        const files = e.dataTransfer.files;
-        if (id === 'fotoUploadArea') {
-            Array.from(files).forEach(f => { if (fotoFiles.length < 10 && f.type.startsWith('image/')) fotoFiles.push(f); });
-            renderFotoPreviews();
-            syncFotoInput();
-        } else {
-            Array.from(files).forEach(f => { if (dokumenFiles.length < MAKS_DOKUMEN) dokumenFiles.push(f); });
-            renderDokumenPreviews();
-            syncDokumenInput();
-        }
+        Array.from(e.dataTransfer.files).forEach(f => { if (fotoFiles.length < 10 && f.type.startsWith('image/')) fotoFiles.push(f); });
+        renderFotoPreviews();
+        syncFotoInput();
     });
-});
+})();
 
 // ── Toggle Bidang Field based on Kategori (checkbox version) ──
 function handleKategoriChange() {

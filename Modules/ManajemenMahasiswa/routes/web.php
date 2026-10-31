@@ -290,9 +290,10 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 Route::put('/{id}', [ProkerController::class, 'update'])->name('update')->where('id', '[0-9]+');
             });
 
-            // Ajukan ke tahap Pelaksanaan — kewenangan ketua saja, sinkron dengan
-            // whitelist di ProkerController::ajukan(). DPM = pembina himpunan: memantau saja.
-            Route::middleware('role:superadmin|ketua_himpunan|ketua_bidang|ketua_unit')
+            // Ajukan ke tahap Pelaksanaan — ketua + admin (admin_kemahasiswaan setara superadmin,
+            // S-66), sinkron dengan whitelist di ProkerController::ajukan(). Bukan tahap
+            // persetujuan admin. DPM = pembina himpunan: memantau saja.
+            Route::middleware('role:superadmin|admin_kemahasiswaan|ketua_himpunan|ketua_bidang|ketua_unit')
                 ->group(function () {
                 Route::patch('/{id}/ajukan', [ProkerController::class, 'ajukan'])->name('ajukan')->where('id', '[0-9]+');
             });

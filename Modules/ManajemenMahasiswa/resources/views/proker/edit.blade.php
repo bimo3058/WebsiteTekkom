@@ -19,7 +19,7 @@
     'formMethod'      => 'PUT',
     'backUrl'         => route('manajemenmahasiswa.proker.show', $proker->id),
     'headerTitle'     => 'Edit Rencana Proker',
-    'headerSubtitle'  => 'Perbarui rencana <strong>' . e($proker->judul) . '</strong>',
+    'headerSubtitle'  => 'Perbarui rencana <strong>' . e($proker->judul) . '</strong>. Draft boleh disimpan walau belum lengkap; kolom bertanda <span style="color:var(--c-error);">*</span> wajib dilengkapi sebelum diajukan.',
     'submitLabel'     => 'Simpan Perubahan',
 ])
 

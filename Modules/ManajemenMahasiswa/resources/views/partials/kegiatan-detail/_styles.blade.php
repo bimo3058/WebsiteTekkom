@@ -56,7 +56,9 @@
     .lightbox-info .lightbox-counter { color: rgba(255,255,255,0.6); font-size: 12px; font-weight: 500; }
 
     /* ── Document Cards ── */
-    .document-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+    .document-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+    .document-group-title { margin-top: 18px; font-size: 12px; font-weight: 700; color: var(--c-fg-muted); text-transform: uppercase; letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px; }
+    .document-group-title span { font-size: 11px; font-weight: 600; text-transform: none; background: var(--c-surface-muted); padding: 1px 8px; border-radius: 10px; }
     .document-card { display: flex; align-items: center; gap: 14px; padding: 16px 18px; background: var(--c-surface-subtle); border: 1px solid var(--c-border); border-radius: 12px; text-decoration: none !important; transition: all 0.25s ease; }
     .document-card:hover { background: var(--c-primary-subtle); border-color: var(--c-primary-border); transform: translateX(4px); box-shadow: 0 4px 12px var(--c-primary-subtle); }
     .document-card .doc-icon-wrapper { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }

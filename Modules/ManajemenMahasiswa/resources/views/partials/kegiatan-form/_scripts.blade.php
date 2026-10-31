@@ -15,19 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ── Banner Preview ──
-function previewBanner(input) {
-    const preview = document.getElementById('bannerPreview');
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
 // ── Lightbox ──
 function openLightbox(src) {
     const modal = document.getElementById('lightboxModal');
@@ -107,53 +94,7 @@ function syncFotoInput() {
     document.getElementById('fotoInput').files = dt.files;
 }
 
-// ── Multi-File Upload: Dokumen ──
-// Batas total dokumen — satu sumber dengan validasi server (KegiatanController::MAKS_DOKUMEN).
-const MAKS_DOKUMEN = {{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_DOKUMEN }};
-let dokumenFiles = [];
-
-function handleDokumenSelect(input) {
-    const newFiles = Array.from(input.files);
-    newFiles.forEach(file => {
-        if (dokumenFiles.length >= MAKS_DOKUMEN) return;
-        dokumenFiles.push(file);
-    });
-    renderDokumenPreviews();
-    syncDokumenInput();
-}
-
-function removeDokumen(index) {
-    dokumenFiles.splice(index, 1);
-    renderDokumenPreviews();
-    syncDokumenInput();
-}
-
-function renderDokumenPreviews() {
-    const list = document.getElementById('dokumenPreviewList');
-    list.innerHTML = '';
-    dokumenFiles.forEach((file, i) => {
-        const ext = file.name.split('.').pop().toLowerCase();
-        const icons = { pdf: 'PDF', doc: 'DOC', docx: 'DOC', xls: 'XLS', xlsx: 'XLS', ppt: 'PPT', pptx: 'PPT' };
-        const icon = icons[ext] || '\u25A1';
-        const item = document.createElement('div');
-        item.className = 'doc-preview-item';
-        item.innerHTML = `
-            <span class="doc-icon">${icon}</span>
-            <div class="doc-info">
-                <div class="doc-name">${file.name}</div>
-                <div class="doc-size">${formatFileSize(file.size)} • ${ext.toUpperCase()}</div>
-            </div>
-            <button type="button" class="btn-remove-doc mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="removeDokumen(${i})" title="Hapus dokumen" aria-label="Hapus dokumen ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-        `;
-        list.appendChild(item);
-    });
-}
-
-function syncDokumenInput() {
-    const dt = new DataTransfer();
-    dokumenFiles.forEach(f => dt.items.add(f));
-    document.getElementById('dokumenInput').files = dt.files;
-}
+// Dokumen (unggah, dropdown jenis, drag & drop) diurus partial _dokumen.
 
 // ── Helper ──
 function formatFileSize(bytes) {
@@ -162,9 +103,9 @@ function formatFileSize(bytes) {
     return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
-// ── Drag & Drop ──
-['fotoUploadArea', 'dokumenUploadArea'].forEach(id => {
-    const area = document.getElementById(id);
+// ── Drag & Drop: Foto ──
+(function () {
+    const area = document.getElementById('fotoUploadArea');
     if (!area) return;
     ['dragenter', 'dragover'].forEach(evt => {
         area.addEventListener(evt, e => { e.preventDefault(); area.classList.add('dragover'); });
@@ -173,18 +114,11 @@ function formatFileSize(bytes) {
         area.addEventListener(evt, e => { e.preventDefault(); area.classList.remove('dragover'); });
     });
     area.addEventListener('drop', e => {
-        const files = e.dataTransfer.files;
-        if (id === 'fotoUploadArea') {
-            Array.from(files).forEach(f => { if (fotoFiles.length < 10 && f.type.startsWith('image/')) fotoFiles.push(f); });
-            renderFotoPreviews();
-            syncFotoInput();
-        } else {
-            Array.from(files).forEach(f => { if (dokumenFiles.length < MAKS_DOKUMEN) dokumenFiles.push(f); });
-            renderDokumenPreviews();
-            syncDokumenInput();
-        }
+        Array.from(e.dataTransfer.files).forEach(f => { if (fotoFiles.length < 10 && f.type.startsWith('image/')) fotoFiles.push(f); });
+        renderFotoPreviews();
+        syncFotoInput();
     });
-});
+})();
 @endif
 
 // ── Toggle Bidang Field based on Kategori (checkbox version) ──
