@@ -89,6 +89,10 @@
        footer tabel sehingga "Tandai Tercatat" tidak bisa diklik. */
     .pgd-table .mk-menu.pgd-menu-fixed { position: fixed; z-index: 1050; }
 
+    /* Filter Tanggal Masuk: dua isian tanggal berdampingan di panel filter. */
+    .pgd-tanggal-range { display: flex; align-items: center; gap: 6px; color: var(--c-fg-muted); font-size: 12px; }
+    .pgd-tanggal-range .filter-pop-select { flex: 1; min-width: 0; padding: 0 8px; cursor: text; }
+
     /* Sengaja tanpa kolom centang & aksi massal: "tercatat" berarti tiket sudah dibaca
        satu per satu, dan aduan (termasuk PPKS) tidak dihapus beramai-ramai. */
 
@@ -162,7 +166,7 @@
             <div>
                 <div class="pgd-link-title">Pengaduan anonim berhasil dikirim</div>
                 <p class="pgd-link-desc">
-                    Tidak muncul di daftar Anda. Simpan tautan berikut untuk melihatnya kembali;
+                    Tidak muncul di daftar Anda. Simpan tautan berikut untuk melihatnya kembali beserta statusnya;
                     <strong>hanya ditampilkan sekali</strong> dan tak bisa dipulihkan.
                 </p>
             </div>
@@ -180,10 +184,10 @@
 
 @php
     $filterPanelAktif = $filters['kategori'] !== '' || $filters['status'] !== ''
-        || $filters['pelapor'] !== '';
+        || $filters['pelapor'] !== '' || $filters['dari'] !== '' || $filters['sampai'] !== '';
     $adaFilter = $filters['q'] !== '' || $filterPanelAktif;
-    // Pelapor tidak melihat status tiket (kolom Status & filternya khusus staff).
-    $jumlahKolom = $isStaff ? 7 : 4;
+    // Pelapor melihat kolom Status versi pelapor (Terkirim/Dibaca/Tercatat).
+    $jumlahKolom = $isStaff ? 7 : 5;
 @endphp
 
 <div class="table-card filter-pop-host">
@@ -259,6 +263,17 @@
                                     <option value="anonim" @selected($filters['pelapor'] === 'anonim')>Anonim</option>
                                 </x-manajemenmahasiswa::ui.select>
                             </div>
+
+                            <div>
+                                <span class="filter-pop-label">Tanggal Masuk</span>
+                                <div class="pgd-tanggal-range">
+                                    <input type="date" name="dari" class="filter-pop-select" value="{{ $filters['dari'] }}"
+                                           max="{{ now()->format('Y-m-d') }}" aria-label="Dari tanggal">
+                                    <span aria-hidden="true">–</span>
+                                    <input type="date" name="sampai" class="filter-pop-select" value="{{ $filters['sampai'] }}"
+                                           max="{{ now()->format('Y-m-d') }}" aria-label="Sampai tanggal">
+                                </div>
+                            </div>
                         @endif
 
                         <div class="filter-pop-actions">
@@ -283,9 +298,7 @@
                         <th>Pelapor</th>
                     @endif
                     <th>Kategori</th>
-                    @if($isStaff)
-                        <th>Status</th>
-                    @endif
+                    <th>Status</th>
                     <th>Tanggal</th>
                     @if($isStaff)
                         <th style="width: 72px; text-align: center;">Aksi</th>
@@ -310,7 +323,7 @@
                             <td>
                                 <div class="pgd-pelapor">
                                     @if($item->is_anonim)
-                                        <span class="pgd-anon-avatar" title="Identitas tidak disimpan">
+                                        <span class="pgd-anon-avatar" title="Identitas disembunyikan">
                                             <x-manajemenmahasiswa::ui.icon name="shield-02" size="15" />
                                         </span>
                                         <span class="pgd-pelapor-name is-anon">Anonim</span>
@@ -322,9 +335,7 @@
                             </td>
                         @endif
                         <td><span class="pgd-pill kategori" title="{{ $kategoriLabel }}">{{ $kategoriLabel }}</span></td>
-                        @if($isStaff)
-                            <td>@include('manajemenmahasiswa::pengaduan.partials.status-badge', ['pengaduan' => $item])</td>
-                        @endif
+                        <td>@include('manajemenmahasiswa::pengaduan.partials.status-badge', ['pengaduan' => $item, 'pelapor' => !$isStaff])</td>
                         <td class="pgd-tgl">
                             {{ optional($item->created_at)->translatedFormat('d M Y') }}
                             <div class="pgd-jam">{{ optional($item->created_at)->translatedFormat('H:i') }} WIB</div>

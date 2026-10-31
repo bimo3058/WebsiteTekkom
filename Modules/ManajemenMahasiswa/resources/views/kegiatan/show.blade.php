@@ -56,11 +56,47 @@
      menampilkan pesan sukses, jadi redirect dengan error jatuh diam-diam. --}}
 <x-manajemenmahasiswa::ui.flash type="error" :message="session('error')" class="mb-3" />
 
+{{-- Tab Rencana vs Pelaksanaan (S-70): hanya untuk role LIHAT_INTERNAL dan kegiatan yang
+     punya Rencana Proker. Tanpa $banding halaman tetap seperti semula, tanpa deretan tab.
+     Urutan sesuai mockup pilihan Surya: banner → tab → isi tab. --}}
+@if($banding)
+@include('manajemenmahasiswa::partials.kegiatan-detail._banner', ['proker' => $kegiatan])
+<div x-data="{ tab: location.hash === '#rencana-vs-pelaksanaan' ? 'banding' : 'ringkasan' }">
+    <div class="detail-tabs" role="tablist">
+        <button type="button" role="tab" class="detail-tab is-active"
+                :class="{ 'is-active': tab === 'ringkasan' }" :aria-selected="tab === 'ringkasan'"
+                @click="tab = 'ringkasan'; history.replaceState(null, '', location.pathname + location.search)">
+            Ringkasan
+        </button>
+        <button type="button" role="tab" class="detail-tab"
+                :class="{ 'is-active': tab === 'banding' }" :aria-selected="tab === 'banding'"
+                @click="tab = 'banding'; history.replaceState(null, '', '#rencana-vs-pelaksanaan')">
+            Rencana vs Pelaksanaan
+            {{-- Penanda selalu tampil, juga saat semua sesuai — tanpa penanda tab ini mudah terlewat. --}}
+            @if($banding['jumlahBeda'] > 0)
+                <span class="banding-pill banding-pill--warning" title="{{ $banding['jumlahBeda'] }} isian berbeda dari rencana">{{ $banding['jumlahBeda'] }} beda</span>
+            @else
+                <span class="banding-pill banding-pill--success" title="Semua isian sesuai rencana">Sesuai</span>
+            @endif
+        </button>
+    </div>
+    <div x-show="tab === 'ringkasan'" role="tabpanel">
+@endif
+
 {{-- Badan detail dipakai bersama dengan Rencana Proker & Pelaksanaan; $showDokumentasi = true --}}
 @include('manajemenmahasiswa::partials.kegiatan-detail._body', [
     'proker'          => $kegiatan,
     'showDokumentasi' => true,
+    'tampilBanner'    => !$banding,
 ])
+
+@if($banding)
+    </div>
+    <div x-show="tab === 'banding'" x-cloak role="tabpanel">
+        @include('manajemenmahasiswa::partials.kegiatan-detail._banding-rencana')
+    </div>
+</div>
+@endif
 
 @include('manajemenmahasiswa::partials.kegiatan-detail._lightbox', ['proker' => $kegiatan])
 

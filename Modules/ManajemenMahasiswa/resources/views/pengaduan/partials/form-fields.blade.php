@@ -6,8 +6,8 @@
     Urutan bagian: Pelapor → Kategori → Detail Kejadian → Isi Pengaduan → Bukti Dukung.
 
     - Pelapor: satu form untuk semua; pelapor yang ingin anonim mencentang
-      "Sembunyikan identitas saya" (is_anonim). Saat dicentang, kolom Nama & Angkatan
-      disembunyikan seluruhnya. Teksnya menyebut konsekuensinya apa adanya.
+      "Sembunyikan identitas saya" (is_anonim). Saat dicentang, kolom Nama, Angkatan &
+      Email Kontak disembunyikan seluruhnya. Teksnya menyebut konsekuensinya apa adanya.
     - Detail Kejadian: empat pertanyaan yang menyesuaikan kategori terpilih
       (sumber: Support\PengaduanPertanyaan). Tiap kategori punya <fieldset> sendiri;
       yang tidak aktif disembunyikan DAN di-disable sehingga isiannya tidak ikut terkirim.
@@ -33,9 +33,9 @@
     $angkatanAkun   = optional(auth()->user()->student)->cohort_year;
     $emailAkun      = auth()->user()->email ?? '';
     $anonAwal       = (bool) old('is_anonim');
-    // Email akun diisikan otomatis hanya untuk pengaduan biasa; di mode anonim
-    // kotaknya mulai kosong supaya email kampus tidak terkirim tanpa disadari.
-    $emailAwal      = old('template.email_kontak', $anonAwal ? '' : $emailAkun);
+    // Email kontak hanya untuk pengaduan biasa (R-43): kontak membuat pelapor anonim
+    // bisa dikenali, jadi di mode anonim kolomnya disembunyikan & di-disable.
+    $emailAwal      = old('template.email_kontak', $emailAkun);
 
     // Kelas field bermasalah + pesan per-field, seperti @error di Edit User SITKOM.
     $invalid = fn (string $key) => $errors->has($key) ? 'is-invalid' : '';
@@ -89,23 +89,16 @@
                     @endif
                     @error('template.angkatan') <div class="pgd-error">{{ $message }}</div> @enderror
                 </div>
-                <div class="pgd-field is-wide">
-                    <label class="pgd-label" for="pgdEmail">
-                        Email Kontak
-                        <span class="is-req" data-pgd-biasa-only @if ($anonAwal) hidden @endif>*</span>
-                        <span class="is-opt" data-pgd-anon-only @unless ($anonAwal) hidden @endunless>(opsional)</span>
-                    </label>
+                <div class="pgd-field is-wide" data-pgd-biasa-only @if ($anonAwal) hidden @endif>
+                    <label class="pgd-label" for="pgdEmail">Email Kontak <span class="is-req">*</span></label>
                     <input type="email" class="pgd-input {{ $invalid('template.email_kontak') }}" id="pgdEmail" name="template[email_kontak]"
-                           value="{{ $emailAwal }}" data-email-akun="{{ $emailAkun }}" maxlength="255" autocomplete="email"
-                           placeholder="nama@contoh.com" @unless ($anonAwal) required @endunless>
+                           value="{{ $emailAwal }}" maxlength="255" autocomplete="email"
+                           placeholder="nama@contoh.com" @if ($anonAwal) disabled @else required @endif>
                     @error('template.email_kontak')
                         <div class="pgd-error">{{ $message }}</div>
                     @else
-                        <div class="pgd-help" data-pgd-biasa-only @if ($anonAwal) hidden @endif>
+                        <div class="pgd-help">
                             Untuk dihubungi bila perlu klarifikasi. Nama, angkatan, dan email ini terlihat oleh pengelola.
-                        </div>
-                        <div class="pgd-help" data-pgd-anon-only @unless ($anonAwal) hidden @endunless>
-                            Isi bila bersedia dihubungi. Gunakan email tanpa nama atau NIM Anda.
                         </div>
                     @enderror
                 </div>
@@ -118,8 +111,8 @@
                 <span style="min-width: 0;">
                     <span class="pgd-anon-title">Sembunyikan identitas saya dari pengelola</span>
                     <span class="pgd-anon-desc">
-                        Pengaduan tidak tercatat atas nama Anda dan tidak muncul di daftar Anda.
-                        Anda mendapat tautan rahasia untuk melihatnya kembali.
+                        Pengaduan tidak tercatat atas nama Anda dan tidak muncul di daftar Anda. 
+                        Anda akan mendapatkan tautan rahasia untuk melihatnya kembali.
                     </span>
                 </span>
             </label>
@@ -310,23 +303,15 @@
             if (pesan && radio.dataset.pesan) pesan.placeholder = radio.dataset.pesan;
         }
 
-        // Centang anonim: kolom Nama & Angkatan disembunyikan, email kontak jadi opsional,
-        // teks bantuan & peringatan PDF ikut berganti.
-        function perbaruiIdentitas(dariCentang) {
+        // Centang anonim: kolom Nama, Angkatan & Email Kontak disembunyikan dan
+        // di-disable (tidak ikut terkirim); teks bantuan & peringatan PDF ikut berganti.
+        function perbaruiIdentitas() {
             var on = !!(anon && anon.checked);
-            if (angkatanManual) {
-                angkatanManual.disabled = on;
-                angkatanManual.required = !on;
-            }
-            if (email) {
-                email.required = !on;
-                // Hanya saat pelapor mengubah centang: email akun dikosongkan ketika
-                // beralih ke anonim, dan diisikan lagi ketika kembali ke biasa.
-                if (dariCentang === true) {
-                    if (on && email.value === email.dataset.emailAkun) email.value = '';
-                    if (!on && email.value === '') email.value = email.dataset.emailAkun;
-                }
-            }
+            [angkatanManual, email].forEach(function (el) {
+                if (!el) return;
+                el.disabled = on;
+                el.required = !on;
+            });
             root.querySelectorAll('[data-pgd-anon-only]').forEach(function (el) { el.hidden = !on; });
             root.querySelectorAll('[data-pgd-biasa-only]').forEach(function (el) { el.hidden = on; });
         }
@@ -336,7 +321,7 @@
                 if (radio.checked) pilihKategori(radio);
             });
         });
-        if (anon) anon.addEventListener('change', function () { perbaruiIdentitas(true); });
+        if (anon) anon.addEventListener('change', perbaruiIdentitas);
 
         if (pesan && count) {
             pesan.addEventListener('input', function () { count.textContent = pesan.value.length + '/5000'; });

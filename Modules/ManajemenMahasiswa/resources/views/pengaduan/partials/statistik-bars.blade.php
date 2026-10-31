@@ -3,9 +3,9 @@
     (dipakai halaman pengaduan/statistik; gaya .ps-bar-* ada di halaman itu).
 
     Param:
-      $baris      [['label' => string, 'nilai' => int], ...]
+      $baris      [['label' => string, 'nilai' => int, 'url' => ?string], ...]
       $satuan     kata satuan untuk tooltip, mis. "pengaduan"
-    Baris bernilai 0 tidak ditampilkan.
+    Baris bernilai 0 tidak ditampilkan. Baris ber-url menjadi tautan ke daftarnya.
 --}}
 @php
     $baris = array_values(array_filter($baris, fn ($b) => $b['nilai'] > 0));
@@ -17,7 +17,9 @@
 @else
     <div class="ps-bars">
         @foreach ($baris as $b)
-            <div class="ps-bar-row" tabindex="0" data-tip="{{ $b['label'] }}: {{ $b['nilai'] }} {{ $satuan }}">
+            @php $psTag = !empty($b['url']) ? 'a' : 'div'; @endphp
+            <{{ $psTag }} class="ps-bar-row" @if ($psTag === 'a') href="{{ $b['url'] }}" @else tabindex="0" @endif
+                data-tip="{{ $b['label'] }}: {{ $b['nilai'] }} {{ $satuan }}{{ $psTag === 'a' ? ' · klik untuk melihat daftarnya' : '' }}">
                 <span class="ps-bar-label">{{ $b['label'] }}</span>
                 <span class="ps-bar-track">
                     @if ($b['nilai'] > 0)
@@ -25,7 +27,7 @@
                     @endif
                 </span>
                 <span class="ps-bar-value">{{ $b['nilai'] }}</span>
-            </div>
+            </{{ $psTag }}>
         @endforeach
     </div>
 @endif

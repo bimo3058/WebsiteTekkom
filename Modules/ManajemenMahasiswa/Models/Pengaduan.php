@@ -33,6 +33,15 @@ class Pengaduan extends Model
         'closed_by',
     ];
 
+    /**
+     * Akun pelapor tiket anonim (R-40). Sengaja tidak fillable dan tidak ikut
+     * diserialisasi: hanya diisi PengaduanService::create() dan tidak dipakai
+     * tampilan mana pun.
+     */
+    protected $hidden = [
+        'pelapor_tersimpan_id',
+    ];
+
     protected $casts = [
         'is_anonim'      => 'bool',
         'data_template'  => 'array',
@@ -201,5 +210,26 @@ class Pengaduan extends Model
         return $this->isTercatat()
             ? ['tone' => 'tercatat', 'label' => 'Tercatat']
             : ['tone' => 'baru', 'label' => 'Baru'];
+    }
+
+    /**
+     * Status dari sudut pandang pelapor — bentuk pertanggungjawaban layanan tanpa
+     * membuka jalur balas (tetap one-way). "Dibaca" diambil dari read_at yang diisi
+     * saat staff pertama kali membuka detail, jadi tetap benar walau status
+     * tercatat dibatalkan.
+     *
+     * @return array{tone: string, label: string, keterangan: string}  tone = kelas .pgd-status
+     */
+    public function statusPelapor(): array
+    {
+        if ($this->isTercatat()) {
+            return ['tone' => 'tercatat', 'label' => 'Tercatat', 'keterangan' => 'Pengaduan sudah dicatat pengelola untuk ditindaklanjuti.'];
+        }
+
+        if ($this->read_at || $this->status === self::STATUS_DIBACA) {
+            return ['tone' => 'dibaca', 'label' => 'Dibaca', 'keterangan' => 'Pengaduan sudah dibaca pengelola.'];
+        }
+
+        return ['tone' => 'baru', 'label' => 'Terkirim', 'keterangan' => 'Pengaduan terkirim dan belum dibuka pengelola.'];
     }
 }

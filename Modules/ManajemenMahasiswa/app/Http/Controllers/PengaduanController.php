@@ -84,20 +84,28 @@ class PengaduanController extends Controller
         $canCreate = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(self::PELAPOR_ROLES);
         $canDelete = $this->canDelete($user);
 
-        // Nilai di luar daftar (termasuk "semua") dianggap tanpa filter. Status tidak
-        // ditampilkan ke pelapor, jadi filternya hanya berlaku untuk staff — kalau
-        // tidak, pelapor bisa menebak status tiketnya lewat ?status= di URL.
+        // Nilai di luar daftar (termasuk "semua") dianggap tanpa filter. Filter status
+        // memakai istilah staff (Baru/Tercatat), jadi khusus staff; pelapor melihat
+        // statusnya langsung di kolom Status.
         $kategori = (string)$request->query('kategori', '');
         $status = $isStaff ? (string)$request->query('status', '') : '';
         // Jenis pelapor (teridentifikasi/anonim) khusus staff; pelapor hanya melihat
         // tiket non-anonimnya sendiri, jadi filter ini tidak berarti baginya.
         $pelapor = $isStaff ? (string)$request->query('pelapor', '') : '';
+        // Rentang tanggal kirim (Y-m-d), khusus staff — juga tujuan tautan dari Statistik.
+        $dari = $isStaff ? $this->tanggalFilter($request->query('dari')) : '';
+        $sampai = $isStaff ? $this->tanggalFilter($request->query('sampai')) : '';
+        if ($dari !== '' && $sampai !== '' && $dari > $sampai) {
+            [$dari, $sampai] = [$sampai, $dari];
+        }
 
         $filters = [
             'q' => trim((string)$request->query('q', '')),
             'kategori' => in_array($kategori, Pengaduan::KATEGORI_LIST, true) ? $kategori : '',
             'status' => in_array($status, ['baru', 'tercatat'], true) ? $status : '',
             'pelapor' => in_array($pelapor, ['teridentifikasi', 'anonim'], true) ? $pelapor : '',
+            'dari' => $dari,
+            'sampai' => $sampai,
         ];
 
         $query = Pengaduan::query();
@@ -129,6 +137,13 @@ class PengaduanController extends Controller
 
         if ($filters['pelapor'] !== '') {
             $query->where('is_anonim', $filters['pelapor'] === 'anonim');
+        }
+
+        if ($filters['dari'] !== '') {
+            $query->whereDate('created_at', '>=', $filters['dari']);
+        }
+        if ($filters['sampai'] !== '') {
+            $query->whereDate('created_at', '<=', $filters['sampai']);
         }
 
         if ($filters['q'] !== '') {
@@ -424,9 +439,17 @@ class PengaduanController extends Controller
             ? (string) $request->query('periode')
             : PengaduanStatistikService::PERIODE_BAWAAN;
 
+        // Dari/Sampai (Y-m) hanya dipakai pada "Rentang khusus"; nilai tak valid
+        // ditangani PengaduanStatistikService::rentang().
+        $evaluasi = $statistik->evaluasi(
+            $periode,
+            (string) $request->query('dari', ''),
+            (string) $request->query('sampai', ''),
+        );
+
         return view('manajemenmahasiswa::pengaduan.statistik', [
             'periode'  => $periode,
-            'evaluasi' => $statistik->evaluasi($periode),
+            'evaluasi' => $evaluasi,
         ]);
     }
 
@@ -484,6 +507,15 @@ class PengaduanController extends Controller
         if (!method_exists($user, 'hasAnyRole') || !$user->hasAnyRole(self::PELAPOR_ROLES)) {
             abort(403, 'Hanya mahasiswa yang dapat membuat pengaduan.');
         }
+    }
+
+    /** Tanggal filter "Y-m-d" yang valid, atau string kosong. */
+    private function tanggalFilter($nilai): string
+    {
+        $nilai = is_string($nilai) ? $nilai : '';
+        $tanggal = \DateTime::createFromFormat('!Y-m-d', $nilai);
+
+        return $tanggal && $tanggal->format('Y-m-d') === $nilai ? $nilai : '';
     }
 
     private function isStaffViewer($user): bool

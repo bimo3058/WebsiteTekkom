@@ -17,6 +17,7 @@ use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
 use Modules\ManajemenMahasiswa\Models\KegiatanPeserta;
 use Modules\ManajemenMahasiswa\Policies\KegiatanPolicy;
 use Modules\ManajemenMahasiswa\Services\PengelolaKegiatanService;
+use Modules\ManajemenMahasiswa\Services\RencanaProkerService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
 use Modules\ManajemenMahasiswa\Support\PeriodeKepengurusan;
 use Modules\ManajemenMahasiswa\Support\PerPage;
@@ -72,7 +73,8 @@ class KegiatanController extends Controller
     public function __construct(
         private RepoMulmedService $repoMulmedService,
         private SupabaseStorage $supabase,
-        private PengelolaKegiatanService $pengelolaService
+        private PengelolaKegiatanService $pengelolaService,
+        private RencanaProkerService $rencanaProkerService
     ) {}
 
     /**
@@ -207,9 +209,13 @@ class KegiatanController extends Controller
         $images    = $kegiatan->repoMulmed->where('tipe_file', 'image');
         $documents = $kegiatan->repoMulmed->where('tipe_file', 'document');
 
+        // Tab Rencana vs Pelaksanaan (S-70). Rencana Proker internal seperti anggaran,
+        // jadi ikut LIHAT_INTERNAL. Null = tanpa tab (mahasiswa, kegiatan tanpa rencana).
+        $banding = $canViewRestricted ? $this->rencanaProkerService->bandingkan($kegiatan) : null;
+
         return view('manajemenmahasiswa::kegiatan.show', compact(
             'kegiatan', 'canEdit', 'canDelete', 'pesanBukanPengelola',
-            'canViewRestricted', 'images', 'documents'
+            'canViewRestricted', 'images', 'documents', 'banding'
         ));
     }
 

@@ -6,8 +6,8 @@
     Param:
       $pengaduan      Pengaduan
       $title          judul bilah atas
-      $isStaff        bool — tampilkan Pelapor, badge status, dan tombol Tandai Tercatat
-                      (pelapor tidak pernah melihat status tiket)
+      $isStaff        bool — tampilkan Pelapor dan tombol Tandai Tercatat; pelapor
+                      melihat status versi pelapor (Pengaduan::statusPelapor)
       $canDelete      bool — tombol Hapus (bawaan false)
       $backUrl        tujuan tombol kembali; null = tanpa tombol
       $kategoriLabel  label kategori (opsional; bawaan dari key kategori)
@@ -36,15 +36,17 @@
         $infoItems[] = ['label' => 'Angkatan', 'value' => $tpl('angkatan')];
     }
     // Email kontak isian pelapor. Tiket biasa sebelum Oktober 2026 belum menanyakannya,
-    // jadi staf diberi email akun pelapor sebagai gantinya. Tiket anonim tanpa email
-    // memang tidak bisa dihubungi.
+    // jadi staf diberi email akun pelapor sebagai gantinya. Tiket anonim tidak punya
+    // kontak (R-43); baris hanya muncul untuk tiket anonim lama yang sempat mengisinya.
     $emailKontak = $tpl('email_kontak')
         ?: (!$pengaduan->is_anonim ? optional($pengaduan->pelapor)->email : null);
-    $infoItems[] = [
-        'label' => 'Email Kontak',
-        'value' => $emailKontak ?: ($pengaduan->is_anonim ? 'Tidak diisi' : null),
-        'href'  => $isStaff && $emailKontak ? 'mailto:' . $emailKontak : null,
-    ];
+    if (!$pengaduan->is_anonim || $emailKontak) {
+        $infoItems[] = [
+            'label' => 'Email Kontak',
+            'value' => $emailKontak,
+            'href'  => $isStaff && $emailKontak ? 'mailto:' . $emailKontak : null,
+        ];
+    }
     // Pertanyaan Detail Kejadian sesuai kategori tiket; jawaban tiket lama di luar
     // set kategorinya tetap ditampilkan bila berisi.
     $infoItems = array_merge($infoItems, \Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan::barisInfo(
@@ -117,10 +119,8 @@
             <div class="kf-heading">
                 <h2 class="kf-subject">{{ $judul }}</h2>
                 <span class="pgd-pill kategori">{{ $kategoriLabel }}</span>
-                {{-- Status hanya untuk staff; pelapor (reguler & konfidensial) tidak melihatnya. --}}
-                @if ($isStaff)
-                    @include('manajemenmahasiswa::pengaduan.partials.status-badge', ['pengaduan' => $pengaduan])
-                @endif
+                {{-- Staff: Baru/Tercatat. Pelapor (biasa & anonim): Terkirim/Dibaca/Tercatat. --}}
+                @include('manajemenmahasiswa::pengaduan.partials.status-badge', ['pengaduan' => $pengaduan, 'pelapor' => !$isStaff])
                 @if ($pengaduan->is_anonim)
                     <span class="pgd-pill konfidensial">
                         <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Anonim
@@ -129,6 +129,9 @@
             </div>
             <p class="kf-sub">
                 Diajukan {{ optional($pengaduan->created_at)->translatedFormat('d F Y, H:i') }} WIB
+                @unless ($isStaff)
+                    · {{ $pengaduan->statusPelapor()['keterangan'] }}
+                @endunless
             </p>
 
             <div class="kf-grid">

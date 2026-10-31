@@ -10,7 +10,8 @@ use Modules\ManajemenMahasiswa\Support\PengaduanBukti;
 /**
  * Halaman tautan rahasia untuk pengaduan anonim.
  *
- * Pengaduan anonim tidak menyimpan user_id, jadi tidak muncul di daftar
+ * Pengaduan anonim tidak memakai user_id (akunnya disimpan terpisah di
+ * pelapor_tersimpan_id, R-40), jadi tidak muncul di daftar
  * "Pengaduan Saya"; pelapornya melihat kembali lewat tautan ini. Pembuatan
  * pengaduan anonim kini lewat form biasa (PengaduanController) dengan centang
  * "Sembunyikan identitas saya" — alur magic link + draft yang lama sudah dihapus.

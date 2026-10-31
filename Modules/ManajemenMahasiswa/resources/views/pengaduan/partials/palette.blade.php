@@ -6,11 +6,13 @@
     Token --c-* diambil dari palet Direktori (1:1 dengan SITKOM); layout mahasiswa dan
     layout magic link tidak mendeklarasikannya sendiri.
 
-      .pgd-status.{baru|tercatat}         badge garis tepi + titik, meniru
+      .pgd-status.{baru|dibaca|tercatat}  badge garis tepi + titik, meniru
                                           components/ui/status-badge SITKOM.
-                                          Nada diambil dari Pengaduan::statusBadge();
+                                          Nada diambil dari Pengaduan::statusBadge()
+                                          (staff) atau statusPelapor() (pelapor);
                                           warnanya sama dengan partials/sitkom-ui
-                                          (Baru = kuning "Menunggu", Tercatat = hijau).
+                                          (Baru/Terkirim = kuning "Menunggu",
+                                          Dibaca = navy, Tercatat = hijau).
       .pgd-pill.kategori                  pill terisi navy muda
       .pgd-pill.konfidensial              pill hitam
       .pgd-pill.jalur                     pill abu penanda jalur Reguler (bukan status)
@@ -34,6 +36,8 @@
         .pgd-status.baru::before     { background: #FFBD4C; }
         .pgd-status.tercatat         { color: var(--c-success); border-color: #9DE0D3; }
         .pgd-status.tercatat::before { background: #40C4AA; }
+        .pgd-status.dibaca           { color: var(--c-primary); border-color: var(--c-primary-border); }
+        .pgd-status.dibaca::before   { background: var(--c-primary-border); }
 
         .pgd-pill {
             display: inline-flex; align-items: center; gap: 4px;

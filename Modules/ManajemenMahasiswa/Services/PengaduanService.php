@@ -33,9 +33,9 @@ class PengaduanService
     {
         $anonToken = $isAnonim ? Str::random(32) : null;
 
-        $pengaduan = Pengaduan::create([
-            // Tiket konfidensial tidak menyimpan pelapor sama sekali (bukan sekadar
-            // disembunyikan di tampilan): pelapor hanya memegang magic link.
+        $pengaduan = new Pengaduan([
+            // Tiket anonim tidak memakai user_id, jadi tidak muncul di daftar
+            // pelapor dan namanya tidak tampil ke pengelola; pelapor memegang magic link.
             'user_id'       => $isAnonim ? null : $userId,
             'kategori'      => $kategori,
             'is_anonim'     => $isAnonim,
@@ -43,6 +43,9 @@ class PengaduanService
             'data_template' => $template,
             'status'        => Pengaduan::STATUS_BARU,
         ]);
+        // Akun pelapor tiket anonim tetap disimpan di kolom terpisah untuk
+        // penanganan bila diperlukan (R-40); form memberi tahu pelapor soal ini.
+        $pengaduan->forceFill(['pelapor_tersimpan_id' => $isAnonim ? $userId : null])->save();
 
         // Tiket konfidensial TIDAK boleh menyimpan identitas pelapor pada log.
         // actor_user_id memang nullable ("null = sistem/otomatis") justru untuk ini:

@@ -40,8 +40,9 @@ class PengaduanPayloadRequest extends FormRequest
             // Wajib bila akun belum punya angkatan (lihat withValidator).
             'template.angkatan'         => ['nullable', 'digits:4', 'integer', 'between:1990,' . now()->year],
             // Email kontak: wajib untuk pengaduan biasa (pengelola bisa menghubungi
-            // pelapor untuk klarifikasi), opsional untuk anonim (diisi bila pelapor
-            // bersedia dihubungi).
+            // pelapor untuk klarifikasi). Anonim tidak punya kontak (R-43: kontak
+            // membuat pelapor bisa dikenali); isian yang tetap terkirim dibuang di
+            // normalizedTemplate().
             'template.email_kontak'     => [$this->boolean('is_anonim') ? 'nullable' : 'required', 'string', 'email:rfc', 'max:255'],
             'template.lokasi'           => ['nullable', 'string', 'max:255'],
             // Kejadian tidak mungkin terjadi di masa depan.
@@ -150,7 +151,8 @@ class PengaduanPayloadRequest extends FormRequest
         }
 
         $template = Arr::only($template, array_merge(
-            ['judul', 'kronologi', 'angkatan', 'email_kontak'],
+            ['judul', 'kronologi', 'angkatan'],
+            $this->boolean('is_anonim') ? [] : ['email_kontak'],
             PengaduanPertanyaan::kunci($kategori)
         ));
 

@@ -4,7 +4,7 @@
 
 @section('content')
     @if ($pengaduan)
-        {{-- Kotak yang sama dengan halaman Detail; tanpa pelapor, status, maupun aksi. --}}
+        {{-- Kotak yang sama dengan halaman Detail; status versi pelapor, tanpa pelapor maupun aksi. --}}
         @include('manajemenmahasiswa::pengaduan.partials.detail-box', [
             'pengaduan'     => $pengaduan,
             'kategoriLabel' => $kategoriLabel ?? null,

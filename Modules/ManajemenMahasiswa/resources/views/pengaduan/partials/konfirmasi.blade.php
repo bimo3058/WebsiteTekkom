@@ -19,15 +19,15 @@
     $buktiItems = (array) ($payload['bukti_items'] ?? []);
     $buktiCount = count($buktiItems);
 
-    // Anonim: baris Pelapor & Angkatan tidak ditampilkan (badge "Anonim" sudah cukup).
+    // Anonim: baris Pelapor, Angkatan & Email Kontak tidak ditampilkan (badge "Anonim"
+    // sudah cukup; anonim tidak punya kontak, R-43).
     $identitas = $isAnonim ? [] : [
-        ['label' => 'Pelapor',  'value' => $reporterName ?? '-'],
-        ['label' => 'Angkatan', 'value' => $tpl('angkatan')],
+        ['label' => 'Pelapor',      'value' => $reporterName ?? '-'],
+        ['label' => 'Angkatan',     'value' => $tpl('angkatan')],
+        ['label' => 'Email Kontak', 'value' => $tpl('email_kontak')],
     ];
 
-    $infoItems = array_merge($identitas, [
-        ['label' => 'Email Kontak', 'value' => $tpl('email_kontak') ?: ($isAnonim ? 'Tidak diisi' : null)],
-    ], PengaduanPertanyaan::barisInfo(
+    $infoItems = array_merge($identitas, PengaduanPertanyaan::barisInfo(
         (string) $payload['kategori'],
         (array) ($payload['template'] ?? [])
     ));
