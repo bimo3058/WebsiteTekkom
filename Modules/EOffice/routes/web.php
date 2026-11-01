@@ -718,6 +718,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::get('kalender-global', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'index'])->name('kalender-global.index');
                 Route::post('kalender-global/express', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'expressBooking'])->name('kalender-global.express');
                 Route::get('kalender-global/search-users', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'searchUsers'])->name('kalender-global.search-users');
+                Route::get('kalender-global/check-collision', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'checkCollision'])->name('kalender-global.check-collision');
 
 
                 // Settings

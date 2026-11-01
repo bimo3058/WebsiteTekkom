@@ -51,6 +51,7 @@
                             $tgl = $day->format('Y-m-d');
                             if (!empty($j->tgl_mulai_efektif) && $tgl < $j->tgl_mulai_efektif) continue;
                             if (!empty($j->tgl_selesai_efektif) && $tgl > $j->tgl_selesai_efektif) continue;
+                            if (isset($holidays[$tgl])) continue; // Libur Nasional: perkuliahan rutin ditiadakan
                             $eventsMap[$tgl][$j->ruangan_id][] = [
                                 'id' => 'it_' . $j->id,
                                 'status' => 'internal',
@@ -99,13 +100,13 @@
 
     {{-- =================== PAGE HEADER =================== --}}
     <div class="mp-page-header">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-3 sm:gap-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between w-full gap-3 lg:gap-4">
             <div>
                 <h1 class="mp-page-title">Kalender Ruangan</h1>
-                <p class="mp-page-sub hidden sm:block">Lihat ketersediaan seluruh ruangan dan langsung booking slot yang kosong.</p>
+                <p class="mp-page-sub">Lihat ketersediaan seluruh ruangan dan langsung booking slot yang kosong.</p>
             </div>
 
-            <div class="w-full sm:w-auto flex justify-start sm:justify-end">
+            <div class="w-full lg:w-auto flex justify-start lg:justify-end">
                 {{-- Room Filter --}}
                 <form id="roomFilterForm" method="GET" action="{{ route('eoffice.peminjaman.user.kalender') }}"
                     class="w-full sm:w-auto">
@@ -310,12 +311,12 @@
                 <div class="flex items-center gap-1 sm:gap-2">
                     @if($canGoBackWeek)
                         <a href="{{ request()->fullUrlWithQuery(['week_start' => $prevWeek]) }}"
-                            class="inline-flex items-center justify-center gap-1.5 text-[12px] sm:text-[13px] font-semibold px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[34px] sm:min-w-[40px] md:min-w-[120px]"
+                            class="inline-flex items-center justify-center gap-1.5 text-[12px] sm:text-[13px] font-semibold px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[34px] sm:min-w-[40px] lg:min-w-[120px]"
                             title="Minggu Lalu">
                             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                             </svg>
-                            <span class="hidden md:inline">Minggu Lalu</span>
+                            <span class="hidden lg:inline">Minggu Lalu</span>
                         </a>
                     @else
                         <div class="w-8 sm:w-auto"></div>
@@ -374,9 +375,9 @@
 
                 {{-- Right: Next Week --}}
                 <a href="{{ request()->fullUrlWithQuery(['week_start' => $nextWeek]) }}"
-                    class="inline-flex items-center justify-center gap-1.5 text-[12px] sm:text-[13px] font-semibold px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[34px] sm:min-w-[40px] md:min-w-[120px]"
+                    class="inline-flex items-center justify-center gap-1.5 text-[12px] sm:text-[13px] font-semibold px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[34px] sm:min-w-[40px] lg:min-w-[120px]"
                     title="Minggu Depan">
-                    <span class="hidden md:inline">Minggu Depan</span>
+                    <span class="hidden lg:inline">Minggu Depan</span>
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>

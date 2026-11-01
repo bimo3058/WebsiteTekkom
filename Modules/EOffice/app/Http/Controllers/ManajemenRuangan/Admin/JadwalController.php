@@ -246,20 +246,10 @@ class JadwalController extends Controller
                                 'waktu_approval' => now()
                             ]);
 
-                            // Insert Database Notification (Jejak Audit)
-                            \Illuminate\Support\Facades\DB::table('notifications')->insert([
-                                'id' => \Illuminate\Support\Str::uuid()->toString(),
-                                'type' => 'App\Notifications\PeminjamanDibatalkan',
-                                'notifiable_type' => 'App\Models\User',
-                                'notifiable_id' => $p->user_id,
-                                'data' => json_encode([
-                                    'title' => 'Peminjaman Dibatalkan Sistem',
-                                    'message' => "Peminjaman Anda {$newStatus} secara otomatis karena ruangan digunakan untuk {$request->kategori}.",
-                                    'peminjaman_id' => $p->id
-                                ]),
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ]);
+                            // Kirim notifikasi resmi kepada peminjam
+                            if ($p->user) {
+                                $p->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($p, true));
+                            }
                         }
                     }
                 }
