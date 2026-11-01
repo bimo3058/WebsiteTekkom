@@ -115,9 +115,6 @@ class RuanganController extends Controller
 
     public function update(Request $request, Ruangan $ruangan)
     {
-        // TEMPORARY DEBUG - hapus setelah konfirmasi
-        \Illuminate\Support\Facades\Log::info('=== UPDATE REACHED ===', ['id' => $ruangan->id]);
-        \Session::flash('success', 'DEBUG: Update method reached! ID=' . $ruangan->id);
         $request->validate([
             'nama' => 'required|string|max:255',
             'lokasi' => 'required|string|max:255',

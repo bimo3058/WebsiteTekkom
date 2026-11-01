@@ -286,7 +286,7 @@
                                                 class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]">
                                         </div>
                                         <div class="col-span-2 text-[10px] text-slate-500 mt-0.5 ml-1">
-                                            <p class="leading-relaxed"><b>Info:</b> Jam operasional peminjaman reguler adalah <b>07:00 - 17:00</b>. Sebagai Admin, Anda bebas melewati batas ini untuk pemblokiran 24 jam jika diperlukan.</p>
+                                            <p class="leading-relaxed"><b>Info:</b> Jam operasional peminjaman reguler adalah <b>{{ $jamBuka ?? '08:00' }} - {{ $jamTutup ?? '16:00' }}</b>. Sebagai Admin, Anda bebas melewati batas ini untuk pemblokiran 24 jam jika diperlukan.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -1031,9 +1031,9 @@
                                                                     <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Informasi Kegiatan</span>
                                                                 </div>
                                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                                    <!-- Tipe Ruangan -->
+                                                                    <!-- Bagian Ruangan -->
                                                                     <div class="space-y-1.5">
-                                                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tipe Ruangan</label>
+                                                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pilih Ruangan</label>
                                                                         <div x-data="{ 
                                                                                         open: false,
                                                                                         get selectedName() {
@@ -1078,6 +1078,71 @@
                                                                                 class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[9999] max-h-48 overflow-y-auto overflow-x-hidden"
                                                                                 style="display: none;">
                                                                                 <div class="p-1 flex flex-col">
+                                                                                    @foreach($ruangans as $r)
+                                                                                        <button type="button"
+                                                                                            @click="selectItem('{{ $r->id }}')"
+                                                                                            class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors"
+                                                                                            :class="ruanganId == '{{ $r->id }}' ? 'bg-[#EFF6FF] text-[#0B266E] font-bold' : 'text-gray-700 hover:bg-gray-50'">
+                                                                                            {{ $r->nama }} - Lt. {{ $r->lantai }}
+                                                                                        </button>
+                                                                                    @endforeach
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <!-- Bagian Kategori Kegiatan -->
+                                                                    <div class="space-y-1.5">
+                                                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori Kegiatan</label>
+                                                                        <div x-data="{ 
+                                                                                        open: false,
+                                                                                        options: ['Pemeliharaan / Penutupan', 'Kuliah Pengganti', 'Ujian & Evaluasi', 'Lainnya'],
+                                                                                        selectKat(opt) {
+                                                                                            kategoriType = opt;
+                                                                                            this.open = false;
+                                                                                        }
+                                                                                    }" class="relative w-full"
+                                                                            :class="{'z-50': open, 'z-10': !open}"
+                                                                            @click.away="open = false">
+
+                                                                            <input type="hidden" name="kategori"
+                                                                                :value="kategoriType" required>
+
+                                                                            <button type="button" @click="open = !open"
+                                                                                class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]">
+                                                                                <span x-text="kategoriType || '-- Pilih Kategori --'" class="truncate text-gray-800"></span>
+                                                                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0"
+                                                                                    :class="{'rotate-180': open}" fill="none"
+                                                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round" stroke-width="2"
+                                                                                        d="M19 9l-7 7-7-7" />
+                                                                                </svg>
+                                                                            </button>
+
+                                                                            <div x-show="open" x-cloak
+                                                                                x-transition:enter="transition ease-out duration-100"
+                                                                                x-transition:enter-start="opacity-0 scale-95"
+                                                                                x-transition:enter-end="opacity-100 scale-100"
+                                                                                x-transition:leave="transition ease-in duration-75"
+                                                                                x-transition:leave-start="opacity-100 scale-100"
+                                                                                x-transition:leave-end="opacity-0 scale-95"
+                                                                                class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[9999] max-h-48 overflow-y-auto overflow-x-hidden"
+                                                                                style="display: none;">
+                                                                                <div class="p-1 flex flex-col">
+                                                                                    <template x-for="opt in options" :key="opt">
+                                                                                        <button type="button"
+                                                                                            @click="selectKat(opt)"
+                                                                                            class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors"
+                                                                                            :class="kategoriType == opt ? 'bg-[#EFF6FF] text-[#0B266E] font-bold' : 'text-gray-700 hover:bg-gray-50'"
+                                                                                            x-text="opt">
+                                                                                        </button>
+                                                                                    </template>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+@if(false)
                                                                                      <button type="button"
                                                                                          @click="selectItem('Pemeliharaan / Penutupan')"
                                                                                          class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors"
@@ -1100,6 +1165,8 @@
                                                                      </div>
                                                                      
                                                                      <div class="space-y-1.5 sm:col-span-2">
+                                                                        @endif
+                                                                    <div class="space-y-1.5 sm:col-span-2">
                                                                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Kegiatan</label>
                                                                         <input type="text" name="keterangan"
                                                                             value="{{ $j->keterangan }}" required autocomplete="off"
@@ -1138,7 +1205,7 @@
                                                                             class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]">
                                                                     </div>
                                                                     <div class="col-span-2 text-[10px] text-slate-500 mt-0.5 ml-1">
-                                                                        <p class="leading-relaxed"><b>Info:</b> Jam operasional peminjaman reguler adalah <b>07:00 - 17:00</b>. Sebagai Admin, Anda bebas melewati batas ini untuk pemblokiran 24 jam jika diperlukan.</p>
+                                                                        <p class="leading-relaxed"><b>Info:</b> Jam operasional peminjaman reguler adalah <b>{{ $jamBuka ?? '08:00' }} - {{ $jamTutup ?? '16:00' }}</b>. Sebagai Admin, Anda bebas melewati batas ini untuk pemblokiran 24 jam jika diperlukan.</p>
                                                                     </div>
                                                                 </div>
                                                             </div>

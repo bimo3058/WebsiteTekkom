@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\EOffice\Models\MrJadwalInternal;
 use Modules\EOffice\Models\Ruangan;
+use Modules\EOffice\Models\Pengaturan;
 
 class JadwalController extends Controller
 {
@@ -119,8 +120,11 @@ class JadwalController extends Controller
         $jadwals = $query->paginate((int) $request->query('per_page', 10))->withQueryString();
         $ruangans = Ruangan::where('is_active', true)->get();
 
+        $jamBuka = Pengaturan::where('key', 'jam_buka')->value('value') ?? '08:00';
+        $jamTutup = Pengaturan::where('key', 'jam_tutup')->value('value') ?? '16:00';
+
         $bladeFile = $isAkademik ? 'index' : 'maintenance';
-        return view('eoffice::manajemen-ruangan.admin.jadwal.' . $bladeFile, compact('jadwals', 'tipe', 'ruangans', 'viewMode', 'search', 'filterHari', 'filterRuangan', 'sort', 'filterKategori', 'filterStatusWaktu'));
+        return view('eoffice::manajemen-ruangan.admin.jadwal.' . $bladeFile, compact('jadwals', 'tipe', 'ruangans', 'viewMode', 'search', 'filterHari', 'filterRuangan', 'sort', 'filterKategori', 'filterStatusWaktu', 'jamBuka', 'jamTutup'));
     }
 
     public function store(Request $request)
@@ -357,20 +361,10 @@ class JadwalController extends Controller
                         'waktu_approval' => now()
                     ]);
 
-                    // Insert Database Notification (Jejak Audit)
-                    \Illuminate\Support\Facades\DB::table('notifications')->insert([
-                        'id' => \Illuminate\Support\Str::uuid()->toString(),
-                        'type' => 'App\Notifications\PeminjamanDibatalkan',
-                        'notifiable_type' => 'App\Models\User',
-                        'notifiable_id' => $p->user_id,
-                        'data' => json_encode([
-                            'title' => 'Peminjaman Dibatalkan Sistem',
-                            'message' => "Peminjaman Anda {$newStatus} secara otomatis karena ruangan digunakan untuk {$request->kategori}.",
-                            'peminjaman_id' => $p->id
-                        ]),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
+                    // Kirim notifikasi resmi kepada peminjam
+                    if ($p->user) {
+                        $p->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($p, true));
+                    }
                 }
             }
 
