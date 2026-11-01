@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Dashboard">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Dashboard">
 @php
     /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\Praktikum[] $praktikums */
     /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\Pengumuman[] $pengumumanTerbaru */
@@ -228,106 +228,8 @@
 
     </div>{{-- /mp-data-scroll --}}
     {{-- Pagination Custom Fungsional --}}
-    @if($dosenPaginator->hasPages() || $dosenPaginator->total() > 0)
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-block-start:1px solid var(--c-border);">
-        <div style="display:flex; align-items:center; gap:12px;">
-            <div x-data="{ open: false, selected: '{{ request('per_page', 5) }}', options: [5, 10, 20] }" 
-                 class="relative"
-                 @click.away="open = false">
-                <div class="flex items-center gap-2 cursor-pointer border rounded-lg px-3 py-1.5 transition-colors focus:outline-none"
-                     :class="open ? 'border-[#0B266E] bg-[#EEF1FA] text-[#0B266E]' : 'border-[#DFE1E7] bg-white text-[#353849] hover:bg-[#F6F8FA]'"
-                     @click="open = !open">
-                    <span class="text-[12px] text-[#666D80]" :class="open ? 'text-[#0B266E]' : ''">Per halaman</span>
-                    <div class="flex items-center gap-1 font-semibold text-[12px]">
-                        <span x-text="selected"></span>
-                        <svg class="w-3.5 h-3.5 transition-transform duration-200" 
-                             :class="{'rotate-180': open, 'text-[#0B266E]': open, 'text-[#666D80]': !open}" 
-                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </div>
-                </div>
-                <div x-show="open" @click.away="open = false" style="display: none;" 
-                     x-transition:enter="transition ease-out duration-100"
-                     x-transition:enter-start="opacity-0 scale-95"
-                     x-transition:enter-end="opacity-100 scale-100"
-                     x-transition:leave="transition ease-in duration-75"
-                     x-transition:leave-start="opacity-100 scale-100"
-                     x-transition:leave-end="opacity-0 scale-95"
-                     class="absolute top-full left-0 mt-2 z-10 w-full min-w-20 bg-white border border-[#DFE1E7] rounded-[10px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 px-1.5 flex flex-col">
-                    <template x-for="option in options" :key="option">
-                        <label class="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-[12px] transition-colors mb-0.5 last:mb-0"
-                               :class="selected == option ? 'bg-[#F6F8FA] text-[#0B266E] font-medium' : 'text-[#353849] hover:bg-[#F6F8FA]'">
-                            <input type="radio" :value="option" name="per_page" form="dosen_filter_form" x-model="selected" @change="document.getElementById('dosen_filter_form').submit()" class="hidden">
-                            <span x-text="option"></span>
-                            <svg x-show="selected == option" class="w-3.5 h-3.5 shrink-0 text-[#0B266E] ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                        </label>
-                    </template>
-                </div>
-            </div>
-            <div style="font-size:13px; color:var(--c-fg-sec);">Menampilkan {{ $dosenPaginator->firstItem() ?? 0 }} sampai {{ $dosenPaginator->lastItem() ?? 0 }} dari {{ $dosenPaginator->total() }} data</div>
-        </div>
-        
-        <div style="display:flex; gap:4px;">
-            {{-- Tombol Prev --}}
-            @if ($dosenPaginator->onFirstPage())
-                <span style="inline-size:32px; block-size:32px; border:1px solid var(--c-border); background:#FAFAFA; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--c-border-strong);">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-                </span>
-            @else
-                <a href="{{ $dosenPaginator->previousPageUrl() }}" style="inline-size:32px; block-size:32px; border:1px solid var(--c-border); background:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-fg); text-decoration:none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-                </a>
-            @endif
-
-            {{-- Looping Nomor Halaman (Pola Custom) --}}
-            @php
-                $current = $dosenPaginator->currentPage();
-                $last = $dosenPaginator->lastPage();
-                
-                if ($current % 3 == 1) {
-                    $start = $current;
-                } else {
-                    $start = $current - 1;
-                }
-
-                // Jika sudah mentok di halaman terakhir
-                if ($start + 2 > $last) {
-                    $start = max(1, $last - 2);
-                }
-                
-                $end = min($start + 2, $last);
-            @endphp
-            @if($start > 1)
-                <span style="inline-size:32px; block-size:32px; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--c-fg-sec);">...</span>
-            @endif
-
-            @for ($i = $start; $i <= $end; $i++)
-                @if ($i == $current)
-                    <span style="inline-size:32px; block-size:32px; border:none; background:var(--c-primary); color:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600;">{{ $i }}</span>
-                @else
-                    <a href="{{ $dosenPaginator->url($i) }}" style="inline-size:32px; block-size:32px; border:1px solid var(--c-border); background:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; font-weight:600; color:var(--c-fg); text-decoration:none;">{{ $i }}</a>
-                @endif
-            @endfor
-
-            @if($end < $last)
-                <span style="inline-size:32px; block-size:32px; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--c-fg-sec);">...</span>
-            @endif
-
-            {{-- Tombol Next --}}
-            @if ($dosenPaginator->hasMorePages())
-                <a href="{{ $dosenPaginator->nextPageUrl() }}" style="inline-size:32px; block-size:32px; border:1px solid var(--c-border); background:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-fg); text-decoration:none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-                </a>
-            @else
-                <span style="inline-size:32px; block-size:32px; border:1px solid var(--c-border); background:#FAFAFA; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--c-border-strong);">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-                </span>
-            @endif
-        </div>
-    </div>
+    @if(isset($dosenPaginator) && $dosenPaginator instanceof \Illuminate\Pagination\LengthAwarePaginator)
+        <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$dosenPaginator" :options="[5, 10, 20]" />
     @endif
 </div>
 

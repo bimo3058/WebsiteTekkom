@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null"
     pageTitle="{{ $praktikum ? $praktikum->nama : 'Belum Ada Praktikum' }} / Seleksi Asisten">
 
     @if($praktikum)
@@ -298,7 +298,7 @@
                             </td>
                             <td style="padding:12px 16px;">
                                 @if($p->transkrip_path)
-                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->transkrip_path, 'eoffice') }}"
+                                    <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($p->transkrip_path, 'eoffice') }}"
                                         target="_blank" style="font-size:13px;font-weight:600;color:#0B266E;"
                                         class="hover:underline">Lihat Berkas</a>
                                 @else
@@ -308,7 +308,7 @@
 
                             <td style="padding:10px 16px;">
                                 @if($p->berkas_cerc_path)
-                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->berkas_cerc_path, 'eoffice') }}"
+                                    <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($p->berkas_cerc_path, 'eoffice') }}"
                                         target="_blank"
                                         style="display:inline-flex; align-items:center; gap:6px; color:#0B266E; font-size:12px; font-weight:600; text-decoration:none;"
                                         class="hover:underline">Lihat Berkas</a>
@@ -319,7 +319,7 @@
                             @if(filled($periodeTabel?->nama_berkas_tambahan))
                                 <td style="padding:10px 16px;">
                                     @if($p->berkas_tambahan_path)
-                                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->berkas_tambahan_path, 'eoffice') }}"
+                                        <a href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($p->berkas_tambahan_path, 'eoffice') }}"
                                             target="_blank" rel="noopener noreferrer"
                                             style="display:inline-flex; align-items:center; gap:6px; color:#0B266E; font-size:12px; font-weight:600; text-decoration:none;"
                                             class="hover:underline">Lihat Berkas</a>
@@ -343,6 +343,7 @@
                             <td style="padding:12px 16px;">
                                 @if($p->status_koor === 'menunggu')
                                     <div class="flex gap-2" x-data="{ catatan: '' }">
+                                        <x-eoffice::manajemen-praktikum.ui.action-menu>
                                         <form method="POST"
                                             action="{{ route('eoffice.manprak.koor.pendaftaran-asprak.approve', $p->id) }}">
                                             @csrf
@@ -361,7 +362,7 @@
                                             @csrf
                                             <input type="hidden" name="alasan_penolakan" :value="alasan">
                                             <button type="button"
-                                                @click="alasan = prompt('Alasan penolakan:'); if(alasan !== null) .closest('form').submit()"
+                                                @click="alasan = prompt('Alasan penolakan:'); if(alasan !== null) $el.closest('form').submit()"
                                                 class="mp-btn destructive sm">
                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
                                                     stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
@@ -371,6 +372,7 @@
                                                 Tolak
                                             </button>
                                         </form>
+                                        </x-eoffice::manajemen-praktikum.ui.action-menu>
                                     </div>
                                 @else
                                     <span style="font-size:13px;color:#808897;">Sudah diproses</span>
@@ -394,111 +396,8 @@
             </table>
         </div>
         {{-- Pagination Custom Fungsional --}}
-        @if(isset($pendaftaran) && method_exists($pendaftaran, 'hasPages') && ($pendaftaran->hasPages() || $pendaftaran->total() > 0))
-            <div
-                style="display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-top:1px solid var(--c-border);">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <div x-data="{ open: false, selected: '{{ request('per_page', 10) }}', options: [5, 10, 20] }"
-                        class="relative" @click.away="open = false">
-                        <div class="flex items-center gap-2 cursor-pointer border rounded-[8px] px-3 py-1.5 transition-colors focus:outline-none"
-                            :class="open ? 'border-[#0B266E] bg-[#EEF1FA] text-[#0B266E]' : 'border-[#DFE1E7] bg-white text-[#353849] hover:bg-[#F6F8FA]'"
-                            @click="open = !open">
-                            <span class="text-[12px] text-[#666D80]" :class="open ? 'text-[#0B266E]' : ''">Per
-                                halaman</span>
-                            <div class="flex items-center gap-1 font-semibold text-[12px]">
-                                <span x-text="selected"></span>
-                                <svg class="w-3.5 h-3.5 transition-transform duration-200"
-                                    :class="{'rotate-180': open, 'text-[#0B266E]': open, 'text-[#666D80]': !open}"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </div>
-                        </div>
-                        <div x-show="open" @click.away="open = false" style="display: none;"
-                            x-transition:enter="transition ease-out duration-100"
-                            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                            x-transition:leave="transition ease-in duration-75"
-                            x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                            class="absolute bottom-full left-0 mb-2 z-10 w-full min-w-[80px] bg-white border border-[#DFE1E7] rounded-[10px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 px-1.5 flex flex-col">
-                            <template x-for="option in options" :key="option">
-                                <a :href="'?per_page=' + option + '&' + decodeURIComponent(new URLSearchParams(Object.fromEntries(Object.entries(Object.fromEntries(new URLSearchParams(window.location.search))).filter(([k,v])=>k!=='per_page'))).toString())"
-                                    class="flex items-center justify-between px-3 py-2 rounded-[6px] cursor-pointer text-[12px] transition-colors mb-0.5 last:mb-0 no-underline"
-                                    :class="selected == option ? 'bg-[#F6F8FA] text-[#0B266E] font-medium' : 'text-[#353849] hover:bg-[#F6F8FA]'">
-                                    <span x-text="option"></span>
-                                    <svg x-show="selected == option" class="w-3.5 h-3.5 flex-shrink-0 text-[#0B266E] ml-2"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                                        stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </a>
-                            </template>
-                        </div>
-                    </div>
-                    <div style="font-size:13px; color:var(--c-fg-sec);">Menampilkan {{ $pendaftaran->firstItem() ?? 0 }}
-                        sampai {{ $pendaftaran->lastItem() ?? 0 }} dari {{ $pendaftaran->total() }} data</div>
-                </div>
-
-                <div style="display:flex; gap:4px;">
-                    @if ($pendaftaran->onFirstPage())
-                        <span
-                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#FAFAFA; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--c-border-strong);">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="15 18 9 12 15 6" />
-                            </svg>
-                        </span>
-                    @else
-                        <a href="{{ $pendaftaran->previousPageUrl() }}"
-                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-fg); text-decoration:none;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="15 18 9 12 15 6" />
-                            </svg>
-                        </a>
-                    @endif
-
-                    @php
-                        $current = $pendaftaran->currentPage();
-                        $last = $pendaftaran->lastPage();
-                        $start = max(1, $current - 1);
-                        $end = min($start + 2, $last);
-                    @endphp
-
-                    @for ($i = $start; $i <= $end; $i++)
-                        @if ($i == $current)
-                            <span
-                                style="width:32px; height:32px; background:#0B266E; color:#fff; font-size:13px; font-weight:600; border-radius:6px; display:flex; align-items:center; justify-content:center;">
-                                {{ $i }}
-                            </span>
-                        @else
-                            <a href="{{ $pendaftaran->url($i) }}"
-                                style="width:32px; height:32px; border:1px solid var(--c-border); background:#fff; color:var(--c-fg-sec); font-size:13px; font-weight:600; border-radius:6px; display:flex; align-items:center; justify-content:center; text-decoration:none; transition:all 0.2s;"
-                                onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
-                                {{ $i }}
-                            </a>
-                        @endif
-                    @endfor
-
-                    @if ($pendaftaran->hasMorePages())
-                        <a href="{{ $pendaftaran->nextPageUrl() }}"
-                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-fg); text-decoration:none;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="9 18 15 12 9 6" />
-                            </svg>
-                        </a>
-                    @else
-                        <span
-                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#FAFAFA; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--c-border-strong);">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="9 18 15 12 9 6" />
-                            </svg>
-                        </span>
-                    @endif
-                </div>
-            </div>
+        @if(isset($pendaftaran) && $pendaftaran instanceof \Illuminate\Pagination\LengthAwarePaginator)
+            <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$pendaftaran" :options="[5, 10, 20]" />
         @endif
     </div>
 
@@ -948,7 +847,7 @@
                                         :class="tempType === '' ? 'text-[#808897]' : 'text-[#0D0D12]'"></span>
                                     <svg class="transition-transform duration-200"
                                         :class="dropdownOpen ? 'rotate-180' : ''" width="16" height="16"
-                                        viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2.5"
+                                        viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                                         stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
@@ -981,7 +880,7 @@
                                 placeholder="Tambahkan petunjuk untuk asisten...">
                         </div>
 
-                        <div class="flex gap-3 justify-end mt-4 pt-5 border-t border-[#DFE1E7]">
+                        <div class="mp-modal-footer mp-modal-footer-bleed flex gap-3 justify-end mt-4 pt-5 border-t border-[#DFE1E7]" style="--mp-modal-footer-radius:16px;">
                             <button type="button" @click="show = false" class="mp-btn secondary md px-5">Batal</button>
                             <button type="button"
                                 @click="$dispatch('save-berkas', {name: tempName, type: tempType, desc: tempDesc}); show = false"

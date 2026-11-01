@@ -139,15 +139,12 @@ class ModulController extends Controller
     }
 
     /**
-     * Update modul (hanya modul di praktikum asprak ini).
+     * Perbarui deskripsi dan lampiran modul yang diampu, tanpa mengubah struktur.
      */
     public function update(Request $request, $id)
     {
         $request->validate([
-            'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string|max:500',
-            'urutan' => 'nullable|integer|min:1',
-            'jadwal_minggu' => 'nullable|string|max:100',
             'lampiran' => 'nullable|array|max:3',
             'lampiran.*' => 'file|max:5120',
         ]);
@@ -220,22 +217,17 @@ class ModulController extends Controller
 
         // Hapus lampiran lama hanya setelah seluruh upload baru dipastikan berhasil.
         foreach ($materiToDelete as $materiLama) {
-            if ($materiLama->file_path) {
+            if ($materiLama->file_path && ! \Modules\EOffice\Models\MateriModul::where('file_path', $materiLama->file_path)
+                ->where('id', '!=', $materiLama->id)->exists()) {
                 $supabase->delete($materiLama->file_path, 'eoffice');
             }
             $materiLama->delete();
         }
 
-        $modul->update(array_merge(
-            $request->only(['nama', 'deskripsi']),
-            [
-                'urutan' => $request->input('urutan', $modul->urutan),
-                'jadwal_minggu' => $request->input('jadwal_minggu', $modul->jadwal_minggu),
-            ]
-        ));
+        $modul->update($request->only(['deskripsi']));
         $modul->touch();
 
-        return back()->with('success', 'Modul berhasil diperbarui.');
+        return back()->with('success', 'Konten modul berhasil diperbarui.');
     }
 
     /**

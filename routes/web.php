@@ -53,10 +53,10 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/auth/microsoft/callback', [MicrosoftController::class, 'callback'])
         ->name('microsoft.callback');
-    Route::get(env('SPC_LOGIN_PATH', 'disabled'), function () {
+    Route::get('/' . config('app.spc_login_path', 'disabled'), function () {
         abort_unless(app()->isLocal() || app()->environment('staging'), 403);
         return view('auth.dev-login');
-    });
+    })->name('dev-login');
 });
 
 Route::middleware('auth')->group(function () {

@@ -80,7 +80,7 @@ class TugasController extends Controller
     {
         $request->validate([
             'modul_id' => 'required|exists:modul_praktikum,id',
-            'jenis_tugas' => 'required|in:tugas_pendahuluan,laporan,responsi,tugas_pengganti',
+            'jenis_tugas' => 'required|in:tugas_pendahuluan,laporan,responsi,tugas_pengganti,tambahan_1,tambahan_2',
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'deadline' => 'nullable|date',
@@ -93,6 +93,8 @@ class TugasController extends Controller
         if (!$this->ownsModul((int) $request->modul_id)) {
             abort(403, 'Anda tidak di-assign ke modul ini.');
         }
+        $modul=Modul::with('praktikum')->findOrFail($request->modul_id);
+        $request->validate(['jenis_tugas'=>['required',\Illuminate\Validation\Rule::in(array_keys($modul->praktikum->moduleTaskTypes()))]]);
 
         $filePath = null;
         if ($request->hasFile('files')) {
@@ -147,7 +149,7 @@ class TugasController extends Controller
     public function update(Request $request, int $id)
     {
         $request->validate([
-            'jenis_tugas' => 'required|in:tugas_pendahuluan,laporan,responsi,tugas_pengganti',
+            'jenis_tugas' => 'required|in:tugas_pendahuluan,laporan,responsi,tugas_pengganti,tambahan_1,tambahan_2',
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'deadline' => 'nullable|date',
@@ -158,7 +160,8 @@ class TugasController extends Controller
             'hapus_file' => 'nullable|string',
         ]);
 
-        $tugas = $this->findOwnedTugas($id);
+        $tugas = $this->findOwnedTugas($id, ['modul.praktikum']);
+        $request->validate(['jenis_tugas'=>['required',\Illuminate\Validation\Rule::in(array_keys($tugas->modul->praktikum->moduleTaskTypes()))]]);
 
         $filePath = $tugas->file_path;
         $finalPaths = [];
@@ -268,8 +271,14 @@ class TugasController extends Controller
         $tugas = $this->findOwnedTugas($id, ['modul.praktikum']);
 
         // Ambil semua praktikan terdaftar di praktikum tugas ini
+        request()->validate(['search'=>'nullable|string|max:100','kelompok'=>'nullable|string|max:50','shift'=>'nullable|string|max:50','per_page'=>'nullable|integer|in:10,20,30']);
         $perPage = request()->input('per_page', 10);
+        $search=mb_strtolower(trim((string)request('search','')));
+        $totalPraktikan=DaftarPraktikan::where('praktikum_id',$tugas->modul?->praktikum_id)->count();
         $praktikans = DaftarPraktikan::where('praktikum_id', $tugas->modul?->praktikum_id)
+            ->when($search!=='',fn($q)=>$q->whereHas('user',fn($user)=>$user->where(fn($match)=>$match->whereRaw('LOWER(name) LIKE ?', ['%'.$search.'%'])->orWhereHas('student',fn($student)=>$student->where('student_number','like','%'.$search.'%')))))
+            ->when(filled(request('kelompok')),fn($q)=>$q->where('kelompok',trim(request('kelompok'))))
+            ->when(filled(request('shift')),fn($q)=>$q->where('shift',trim(request('shift'))))
             ->with(['user', 'user.student'])
             ->orderByRaw("CASE WHEN (shift IS NULL OR shift = '') THEN 1 ELSE 0 END, shift ASC")
             ->orderByRaw("CASE WHEN (kelompok IS NULL OR kelompok = '') THEN 1 ELSE 0 END, kelompok ASC")
@@ -292,7 +301,7 @@ class TugasController extends Controller
 
         return view(
             'eoffice::manajemen-praktikum.asprak.tugas-pengumpulan',
-            compact('tugas', 'praktikans', 'pengumpulan', 'nilaiJenis')
+            compact('tugas', 'praktikans', 'pengumpulan', 'nilaiJenis','totalPraktikan')
         );
     }
 
@@ -343,8 +352,10 @@ class TugasController extends Controller
     public function beriRevisi(Request $request, int $id)
     {
         $request->validate([
-            'file_revisi' => 'required|array|max:3',
+            'file_revisi' => 'nullable|array|max:3',
             'file_revisi.*' => 'required|file|max:5120',
+            'retained_files' => 'nullable|array|max:3',
+            'retained_files.*' => 'required|string',
         ]);
 
         $pengumpulan = PengumpulanTugas::with('tugas.modul')->findOrFail($id);
@@ -352,9 +363,16 @@ class TugasController extends Controller
             abort(403, 'Anda tidak berhak merevisi pengumpulan ini.');
         }
 
-        $paths = [];
+        if (!$pengumpulan->tugas?->modul?->praktikum?->is_active) {
+            throw ValidationException::withMessages(['revisi'=>'Praktikum telah diarsipkan.']);
+        }
+        $paths = \Modules\EOffice\Services\ManajemenPraktikum\ModuleRevisionAttachments::retained($pengumpulan->file_revisi_asprak,$request->input('retained_files',[]));
+        $uploads=$request->file('file_revisi',[]);
+        if (count($paths)+count($uploads)<1 || count($paths)+count($uploads)>3) {
+            throw ValidationException::withMessages(['file_revisi'=>'Lampirkan minimal satu dan maksimal tiga berkas revisi.']);
+        }
         $failedCount = 0;
-        foreach ($request->file('file_revisi') as $f) {
+        foreach ($uploads as $f) {
             $uploadedPath = $this->supabase->upload(
                 $f,
                 'tugas-revisi/' . ($pengumpulan->tugas?->modul?->praktikum_id ?? 'default') . '/' . $pengumpulan->tugas_id,
@@ -370,7 +388,7 @@ class TugasController extends Controller
             }
         }
 
-        if ($failedCount > 0 && count($paths) === 0) {
+        if ($failedCount > 0) {
             return back()->with('error', 'Gagal mengunggah file revisi.');
         }
 
@@ -394,15 +412,21 @@ class TugasController extends Controller
     {
         $request->validate([
             'nilai' => 'required|array',
-            'nilai.*.nilai_jenis' => 'nullable|numeric|min:0|max:100',
+            'nilai.*.nilai_jenis' => 'present|nullable|numeric|min:0|max:100',
         ]);
 
         $tugas = $this->findOwnedTugas($id, ['modul']);
+
+        if (!$tugas->modul?->praktikum?->is_active) throw ValidationException::withMessages(['nilai'=>'Praktikum telah diarsipkan.']);
+        $studentIds=array_keys($request->nilai);
+        $enrolled=DaftarPraktikan::where('praktikum_id',$tugas->modul->praktikum_id)->whereIn('id',$studentIds)->count();
+        if ($enrolled!==count($studentIds)) throw ValidationException::withMessages(['nilai'=>'Mahasiswa tidak terdaftar pada praktikum ini.']);
 
         if (!$tugas->jenis_tugas) {
             return back()->with('error', 'Tugas ini belum memiliki jenis tugas.');
         }
 
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request,$tugas) {
         foreach ($request->nilai as $daftarPraktikanId => $item) {
             $nilaiValue = isset($item['nilai_jenis']) && $item['nilai_jenis'] !== ''
                 ? (float) $item['nilai_jenis']
@@ -438,6 +462,7 @@ class TugasController extends Controller
             }
         }
 
+        });
         return back()->with('success', 'Nilai berhasil disimpan.');
     }
 

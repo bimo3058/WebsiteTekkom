@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Pendaftaran Aktif">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Pendaftaran Aktif">
 
 <div class="mp-page-header" style="margin-bottom: 24px;">
     <div>
@@ -92,7 +92,6 @@
                         
                         <div class="mp-card-header flex justify-between items-center" style="flex-shrink:0;">
                             <span class="mp-card-title">{{ $pAsprak->judul ?: "Pendaftaran Asisten Praktikum - " . $p->nama }}</span>
-                            <button @click="open = false" style="background:none; border:none; cursor:pointer; color:#666D80;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                         </div>
                         
                         <div class="overflow-y-auto" style="padding:24px;">
@@ -193,10 +192,16 @@
                                     </div>
                                     @endif
 
-                                    <button type="submit" class="mp-btn primary md w-full" style="justify-content:center;">
-                                        Kirim Pendaftaran Asisten
-                                    </button>
+                                    <div class="mp-modal-footer mp-modal-footer-bleed" style="display:flex;justify-content:flex-end;gap:12px;">
+                                        <button type="button" @click="open = false" class="mp-btn secondary md" style="color:#353849;">Batal</button>
+                                        <button type="submit" class="mp-btn primary md" style="background:#0B266E;color:#FFFFFF;">Kirim Pendaftaran Asisten</button>
+                                    </div>
                                 </form>
+                            @endif
+                            @if($isAsprakDiPraktikumIni || ($existingAsprak && in_array($existingAsprak->status, ['pending','approved'])))
+                                    <div class="mp-modal-footer mp-modal-footer-bleed" style="margin-top:20px;">
+                                    <button type="button" @click="open = false" class="mp-btn secondary md" style="color:#353849;">Batal</button>
+                                </div>
                             @endif
                         </div>
                     </div>
@@ -263,7 +268,6 @@
                         
                         <div class="mp-card-header flex justify-between items-center" style="flex-shrink:0;">
                             <span class="mp-card-title">{{ $pKoor->judul ?: "Pendaftaran Koordinator - " . $p->nama }}</span>
-                            <button @click="open = false" style="background:none; border:none; cursor:pointer; color:#666D80;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                         </div>
                         
                         <div class="overflow-y-auto" style="padding:24px;">
@@ -380,10 +384,16 @@
                                         @endif
                                     </div>
 
-                                    <button type="submit" class="mp-btn navy md w-full" style="justify-content:center;">
-                                        Kirim Pendaftaran Koordinator
-                                    </button>
+                                    <div class="mp-modal-footer mp-modal-footer-bleed" style="display:flex;justify-content:flex-end;gap:12px;">
+                                        <button type="button" @click="open = false" class="mp-btn secondary md" style="color:#353849;">Batal</button>
+                                        <button type="submit" class="mp-btn primary md" style="background:#0B266E;color:#FFFFFF;">Kirim Pendaftaran Koordinator</button>
+                                    </div>
                                 </form>
+                            @endif
+                            @if($isKoorDiPraktikumIni || ($existingKoor && in_array($existingKoor->status, ['pending','approved'])))
+                                    <div class="mp-modal-footer mp-modal-footer-bleed" style="margin-top:20px;">
+                                    <button type="button" @click="open = false" class="mp-btn secondary md" style="color:#353849;">Batal</button>
+                                </div>
                             @endif
                         </div>
                     </div>

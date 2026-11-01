@@ -18,7 +18,7 @@
     .mp-app :is(a,button,input,select,textarea):focus-visible { outline: 2px solid var(--c-primary); outline-offset: 3px; }
     .mp-shell { display: flex; height: 100dvh; overflow: hidden; }
     .mp-main { display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
-    .mp-sidebar { display: flex; flex-direction: column; flex-shrink: 0; width: 256px; min-height: 0; border-right: 1px solid var(--c-border); background: white; transition: width .25s ease, transform .25s ease; z-index: 40; }
+    .mp-sidebar { display: flex; flex-direction: column; flex-shrink: 0; width: 240px; min-height: 0; border-right: 1px solid var(--c-border); background: white; transition: width .25s ease, transform .25s ease; z-index: 40; }
     .mp-sidebar.is-collapsed { width: 64px; }
     .mp-sidebar-brand { display: flex; align-items: center; gap: 8px; min-height: 60px; padding: 12px 14px; border-bottom: 1px solid var(--c-border); flex-shrink: 0; }
     .mp-brand { display: flex; flex: 1; align-items: center; gap: 8px; min-width: 0; text-decoration: none; color: var(--c-fg); }
@@ -44,7 +44,8 @@
     .mp-nav-link.is-active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 20px; border-radius: 0 3px 3px 0; background: var(--c-primary); }
     .mp-sidebar.is-collapsed .mp-nav-link { justify-content: center; padding: 9px 0; }
     .mp-sidebar.is-collapsed .mp-nav-group + .mp-nav-group { border-top: 1px solid var(--c-border); margin-top: 8px; padding-top: 8px; }
-    .mp-role-toggle { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px; border: 0; border-radius: 8px; background: var(--c-bg); color: var(--c-fg-sec); font-size: 12px; font-weight: 600; cursor: pointer; }
+    .mp-role-toggle { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px; border: 0; border-radius: 8px; background: transparent; color: var(--c-fg-sec); font-size: 12px; font-weight: 600; cursor: pointer; }
+    .mp-role-toggle.is-active { background: var(--c-bg); }
     .mp-role-name { flex: 1; text-align: left; }
     .mp-role-initial { display: grid; place-items: center; width: 24px; height: 24px; background: white; border: 1px solid var(--c-border); border-radius: 6px; color: var(--c-primary); font-size: 11px; }
     .mp-role-toggle svg { transition: transform .25s cubic-bezier(.4,0,.2,1); }
@@ -62,6 +63,7 @@
     .mp-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 60px; padding: 10px 24px; background: white; border-bottom: 1px solid var(--c-border); flex-shrink: 0; z-index: 30; }
     .mp-breadcrumb { display: flex; align-items: center; gap: 7px; min-width: 0; font-size: 12px; }
     .mp-breadcrumb a { color: var(--c-fg-muted); text-decoration: none; white-space: nowrap; flex-shrink: 0; }
+    .mp-breadcrumb .mp-breadcrumb-praktikum { min-width: 0; max-width: min(34vw, 360px); overflow: hidden; text-overflow: ellipsis; flex-shrink: 1; }
     .mp-breadcrumb a:hover { color: var(--c-primary); }
     .mp-breadcrumb > span { color: var(--c-border-strong); flex-shrink: 0; }
     .mp-breadcrumb strong { min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -78,6 +80,27 @@
     .mp-header-slot { padding: 20px 24px; border-bottom: 1px solid var(--c-border); flex-shrink: 0; }
     .mp-app .mp-box-body { min-width: 0; min-height: 0; gap: 20px; }
     .mp-box-body > * { min-width: 0; }
+    .mp-module-card-header { gap:16px; }
+    .mp-module-card-header > div { min-width:0; }
+    .mp-module-card-header > svg { margin-right:4px;flex-shrink:0; }
+    /* Spacing applies only within a selected practicum, not dashboard cards or forms. */
+    .mp-app .mp-praktikum-content { --mp-card-spacing:15px;--mp-content-inset:24px; row-gap:var(--mp-card-spacing) !important; }
+    .mp-app .mp-praktikum-content .sticky { width:calc(100% + 2 * var(--mp-content-inset));max-width:none;align-self:flex-start;margin-left:calc(-1 * var(--mp-content-inset))!important;margin-right:calc(-1 * var(--mp-content-inset))!important;padding-left:var(--mp-content-inset)!important;padding-right:var(--mp-content-inset)!important;box-sizing:border-box; }
+    .mp-praktikum-content .mp-card { margin-top:0 !important; margin-bottom:0 !important; }
+    .mp-app .mp-praktikum-content .sticky { margin-bottom:0 !important; }
+    .mp-praktikum-tabs-divider { height:1px;flex-shrink:0;background:var(--c-border);margin-left:calc(-1 * var(--mp-content-inset));margin-right:calc(-1 * var(--mp-content-inset));box-shadow:32px 0 0 var(--c-border); }
+    .mp-praktikum-content div:has(> .sticky) { display:flex;flex-direction:column;row-gap:var(--mp-card-spacing) !important; }
+    .mp-praktikum-content .sticky ~ div:not(.fixed):not(.mp-card) { margin-top:0 !important;padding-top:0 !important; }
+    .mp-praktikum-content > :is(.flex-col,[style*="flex-direction:column"],[style*="flex-direction: column"]):has(> .mp-card) { padding-top:0 !important; }
+    .mp-app .mp-modal-footer { display:flex !important;justify-content:flex-end !important;align-items:center;gap:10px !important;padding:16px 22px !important;border-top:1px solid #DFE1E7 !important;background:#FAFBFC !important; }
+    /* Extend a footer through its modal body's padding, without widening its buttons. */
+    .mp-app .mp-modal-footer.mp-modal-footer-bleed { margin-inline:calc(-1 * var(--mp-modal-inline-inset, 24px));margin-bottom:calc(-1 * var(--mp-modal-bottom-inset, 24px));align-self:stretch;flex-shrink:0;border-radius:0 0 var(--mp-modal-footer-radius, 12px) var(--mp-modal-footer-radius, 12px); }
+    .mp-app .mp-modal-footer.mp-modal-footer-split { justify-content:space-between !important; }
+    .mp-app .mp-modal-footer .mp-btn { flex:0 0 auto !important;font-size:13px !important;padding:10px 16px !important; }
+    .mp-app .mp-modal-footer .mp-btn.secondary { order:0;color:#353849 !important;border:1px solid #DFE1E7;border-radius:8px;background:#fff; }
+    .mp-app .mp-modal-footer .mp-btn.primary { order:1;background:#0B266E !important;color:#fff !important;border-radius:8px; }
+    .mp-praktikum-content :is(.flex-col,[style*="flex-direction:column"],[style*="flex-direction: column"]):has(> .mp-card),
+    .mp-praktikum-content :is(.flex-col,[style*="flex-direction:column"],[style*="flex-direction: column"]):not(form *):has(> div[style*="border:"]) { row-gap:var(--mp-card-spacing) !important; }
     .mp-app .mp-page-title { font-size: 22px; }
     .mp-app .mp-page-sub { line-height: 1.6; margin-top: 5px; }
     .mp-app .mp-card { border-radius: 12px; }
@@ -91,7 +114,7 @@
     .mp-app .mp-stats-grid.cols-3 { grid-template-columns: repeat(3,minmax(0,1fr)); }
     .mp-app .mp-stats-grid.cols-4 { grid-template-columns: repeat(4,minmax(0,1fr)); }
     .mp-app .mp-btn { justify-content: center; min-height: 34px; line-height: 1.3; }
-    .mp-app .mp-btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+    .mp-app .mp-btn:disabled { opacity: .5; cursor: not-allowed!important; box-shadow: none; }
     .mp-app .mp-input { min-height: 38px; }
     .mp-app .mp-table th { color: var(--c-fg-muted); text-transform: none; letter-spacing: 0; font-size: 12px; padding: 12px 16px; }
     .mp-app .mp-table td { padding: 12px 16px; }
@@ -131,6 +154,7 @@
         .mp-account { padding-left: 0; border-left: 0; }
         .mp-app .mp-wrap { padding: 8px; }
         .mp-app .mp-box-body, .mp-header-slot { padding: 16px; }
+        .mp-app .mp-praktikum-content { --mp-content-inset:16px; }
         .mp-app .mp-page-title { font-size: 20px; }
         .mp-app .mp-page-actions { width: 100%; }
         .mp-app .mp-page-actions > .mp-btn { flex: 1; }

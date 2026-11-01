@@ -1,4 +1,17 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="{{ $praktikum ? $praktikum->nama . ' / Modul' : 'Modul' }}">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="{{ $praktikum ? $praktikum->nama . ' / Modul' : 'Modul' }}">
+    <style>
+        .mp-app .mp-box-body { gap:15px; }
+        .mp-module-section { margin-bottom:14px; }
+        .mp-module-history { overflow:hidden; }
+        .mp-review-actions .mp-btn { font-size:13px;padding:10px 16px; }
+        .mp-module-status { display:inline-flex;align-items:center;padding:3px 9px;border:1px solid currentColor;border-radius:999px;font-size:11px;font-weight:700;text-transform:capitalize; }
+        .mp-version-toggle { display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:16px 20px;border:0;background:#fff;text-align:left;cursor:pointer; }
+        .mp-version-toggle:hover { background:#FAFBFD; }
+        .mp-version-table { min-width:540px;table-layout:fixed; }
+        .mp-version-table th { background:#F7F8FA; }
+        .mp-version-table td { padding:14px 16px;font-size:13px;overflow-wrap:anywhere;vertical-align:top; }
+        .mp-version-note { padding:14px 20px;border-top:1px solid #DFE1E7;background:#FAFBFD;font-size:12px;line-height:1.6;color:#666D80;overflow-wrap:anywhere; }
+    </style>
 
     {{-- Pilih Praktikum --}}
     @if(!$praktikum)
@@ -47,7 +60,7 @@
                         box.addEventListener('scroll', () => {
                             if (!ticking) {
                                 window.requestAnimationFrame(() => {
-                                    st = box.scrollTop;
+                                    st = Math.max(0, box.scrollTop);
                                     ticking = false;
                                 });
                                 ticking = true;
@@ -66,7 +79,7 @@
                     @if($praktikum->cover_path)
                         <img src="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($praktikum->cover_path, 'eoffice') }}"
                              class="w-full h-full object-cover"
-                             :style="`transform: scale(${Math.max(1, 1 + (st / 200) * 0.1)}); opacity: ${Math.max(0.3, 1 - (st / 300))}; filter: blur(${Math.min(8, st / 15)}px);`"
+                             :style="`transform: scale(${1 + Math.min(1, Math.max(0, st / 200)) * 0.04});`"
                              alt="Cover Praktikum">
                     @else
                         <svg width="48" height="48" viewBox="0 0 24 24" fill="#828896"
@@ -79,12 +92,12 @@
 
                 {{-- 1. Base Gradient --}}
                 <div class="absolute inset-0 pointer-events-none"
-                    style="border-radius: inherit; background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 30%, rgba(0,0,0,0) 70%);">
+                    style="border-radius: inherit; background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0) 100%);">
                 </div>
 
                 {{-- 2. Scrolled Overlay (Gelap + Blur) --}}
                 <div class="absolute inset-0 pointer-events-none"
-                    :style="`border-radius: inherit; opacity: ${Math.min(1, st / 200)}; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);`">
+                    style="display:none;" aria-hidden="true">
                 </div>
 
                 {{-- Title --}}
@@ -97,7 +110,7 @@
             </div>
 
             {{-- Tabs --}}
-            <div style="display: flex; gap: 8px;">
+            <div style="display:flex;gap:8px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;">
 
                 <a href="{{ route('eoffice.manprak.dosen.praktikum.show', $praktikum->id) }}"
                     style="padding: 12px 24px; font-weight: 500; font-size: 14px; color: var(--c-fg-muted); text-decoration: none;">Pengumuman</a>
@@ -115,35 +128,93 @@
             </div>
         </div>
 
+        @if($errors->any())
+            <div class="mp-flash mp-flash-error" role="alert" style="border-radius:12px;font-size:13px;line-height:1.6;align-items:flex-start;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                <div>
+                    <strong style="display:block;margin-bottom:4px;">{{ $errors->has('pengajuan') ? 'Gagal menyetujui pengajuan' : 'Data belum dapat diproses' }}</strong>
+                    @foreach($errors->all() as $message)
+                        <div>{{ $message }}</div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        {{-- Review pengajuan struktur modul --}}
+        @if($pengajuanAktif)
+            <div x-data="{ reviewOpen: false, reviewTitle: '', reviewAction: '', noteRequired: false }" class="mp-card mp-module-section">
+                <div class="mp-card-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+                    <div>
+                        <div style="display:flex;align-items:center;gap:9px;">
+                            <span class="mp-card-title">Pengajuan Modul Versi {{ $pengajuanAktif->versi }}</span>
+                            <span style="display:inline-flex;padding:4px 9px;border-radius:999px;font-size:11px;font-weight:700;color:#1D4ED8;background:#EFF6FF;border:1px solid #BFDBFE;">Menunggu Keputusan</span>
+                        </div>
+                        <div style="font-size:12px;color:#666D80;margin-top:5px;">
+                            Diajukan oleh {{ $pengajuanAktif->pengaju?->name ?? 'Koordinator' }}
+                            @if($pengajuanAktif->diajukan_at) · {{ $pengajuanAktif->diajukan_at->locale('id')->translatedFormat('d M Y, H:i') }} @endif
+                        </div>
+                    </div>
+                    <div class="mp-review-actions" style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button type="button" class="mp-btn secondary" @click="reviewOpen=true;reviewTitle='Revisi';reviewAction='{{ route('eoffice.manprak.dosen.pengajuan-modul.revision', $pengajuanAktif) }}';noteRequired=true">Revisi</button>
+                        <button type="button" class="mp-btn" style="color:#DC2626;background:#FFF1F2;border:1px solid #FECDD3;" @click="reviewOpen=true;reviewTitle='Tolak Pengajuan';reviewAction='{{ route('eoffice.manprak.dosen.pengajuan-modul.reject', $pengajuanAktif) }}';noteRequired=true">Tolak</button>
+                        <button type="button" class="mp-btn primary" @click="reviewOpen=true;reviewTitle='Setujui Pengajuan';reviewAction='{{ route('eoffice.manprak.dosen.pengajuan-modul.approve', $pengajuanAktif) }}';noteRequired=false">Setujui</button>
+                    </div>
+                </div>
+
+                @if($pengajuanAktif->catatan_pengajuan)
+                    <div style="margin:15px 20px;padding:12px 14px;border:1px solid #DFE1E7;border-radius:9px;background:#F9FAFB;font-size:13px;color:#475569;"><strong>Catatan koordinator:</strong> {{ $pengajuanAktif->catatan_pengajuan }}</div>
+                @endif
+
+                <div class="overflow-x-auto">
+                    <table class="mp-table">
+                        <thead><tr style="background:#F9FAFB;"><th class="mp-th" style="width:110px;">STATUS</th><th class="mp-th">SEBELUM</th><th class="mp-th">SESUDAH</th></tr></thead>
+                        <tbody>
+                            @foreach($pengajuanAktif->items as $item)
+                                @php
+                                    $reviewAction = match($item->aksi) { 'tambah' => 'Ditambahkan', 'ubah' => 'Diubah', 'hapus' => 'Dihapus', default => 'Tetap' };
+                                    $reviewColor = match($item->aksi) { 'tambah' => '#047857', 'ubah' => '#1D4ED8', 'hapus' => '#DC2626', default => '#475569' };
+                                @endphp
+                                <tr class="mp-tr">
+                                    <td style="padding:14px 16px;"><span style="display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700;color:{{ $reviewColor }};background:{{ match($item->aksi) { 'tambah' => '#ECFDF5', 'ubah' => '#EFF6FF', 'hapus' => '#FEF2F2', default => '#F1F5F9' } }};">{{ $reviewAction }}</span></td>
+                                    <td style="padding:14px 16px;font-size:13px;color:#475569;">{{ $item->nama_lama ? $item->urutan_lama . '. ' . $item->nama_lama : 'Tidak ada' }}</td>
+                                    <td style="padding:14px 16px;font-size:13px;font-weight:600;color:#0D0D12;">{{ $item->nama_baru ? $item->urutan_baru . '. ' . $item->nama_baru : 'Tidak digunakan' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <template x-teleport="body">
+                    <div x-show="reviewOpen" x-cloak class="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 px-4" @keydown.escape.window="reviewOpen=false">
+                        <div x-show="reviewOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" @click.outside="reviewOpen=false" class="bg-white rounded-[14px] shadow-2xl w-full max-w-md overflow-hidden">
+                            <div style="padding:20px 22px;border-bottom:1px solid #DFE1E7;"><div style="font-size:17px;font-weight:750;color:#0D0D12;" x-text="reviewTitle"></div><div style="font-size:12px;color:#666D80;margin-top:4px;">Keputusan pertama dari salah satu dosen menjadi keputusan yang berlaku.</div></div>
+                            <form method="POST" :action="reviewAction">@csrf
+                                <div style="padding:20px 22px;"><label style="display:block;font-size:12px;font-weight:700;color:#353849;margin-bottom:7px;">Catatan <span x-show="noteRequired" style="color:#DF1C41;">*</span> <span style="font-weight:500;color:#A4ABB8;">(Maks. 500 karakter)</span></label><textarea class="mp-input" style="display:block;min-height:40px;height:40px;max-height:240px;resize:vertical;overflow-y:auto;" name="catatan" rows="1" maxlength="500" :required="noteRequired" placeholder="Tuliskan catatan keputusan"></textarea></div>
+                                <div class="mp-modal-footer" style="padding:14px 22px;border-top:1px solid #DFE1E7;background:#FAFBFC;display:flex;justify-content:flex-end;gap:8px;"><button type="button" class="mp-btn secondary" style="font-size:13px;padding:10px 16px;color:#353849;" @click="reviewOpen=false">Batal</button><button type="submit" class="mp-btn primary" style="font-size:13px;padding:10px 16px;background:#0B266E;color:#FFFFFF;">Simpan</button></div>
+                            </form>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        @endif
+
         {{-- Content: Modul --}}
         <style>
-            .modul-accordion-content {
-                max-height: 0;
-                opacity: 0;
-                overflow: hidden;
-                transition: max-height 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.1s ease;
-            }
-
-            .modul-accordion-content.is-open {
-                max-height: 600px;
-                opacity: 1;
-                transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
-            }
-        </style>
-        <div style="display: flex; flex-direction: column; gap: 16px; padding-top: 4px;">
+    </style>
+        <div style="display: flex; flex-direction: column; gap: 29px;">
             @forelse($modulList as $item)
                 @php $modul = $item['modul']; @endphp
                 <div x-data="{ open: false }"
                     style="background: #fff; border: 1px solid var(--c-border); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); overflow: hidden;">
 
                     {{-- Header (Clickable) --}}
-                    <div @click="open = !open"
+                    <div class="mp-module-card-header" @click="open = !open"
                         style="padding: 16px 24px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff; transition: background 0.15s;"
                         onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
                         <div>
                             <h3 style="font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 4px 0;">{{ $modul->nama }}
                             </h3>
-                            <div style="font-size: 13px; color: #6B7280;">
+                            <div style="font-size:13px; color:#666D80; font-weight:400; margin-bottom:4px;">
                                 Asisten:
                                 @if($item['asprak']->isNotEmpty())
                                     {{ $item['asprak']->join(', ') }}
@@ -168,7 +239,7 @@
                                 </div>
                             @endif
                         </div>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round"
                             :style="open ? 'transform: rotate(180deg); transition: transform 0.2s;' : 'transform: rotate(0deg); transition: transform 0.2s;'">
                             <polyline points="6 9 12 15 18 9"></polyline>
@@ -176,21 +247,14 @@
                     </div>
 
                     {{-- Expanded Content --}}
-                    <div class="modul-accordion-content" :class="{ 'is-open': open }">
+                    <x-eoffice::manajemen-praktikum.ui.grade-accordion state="open">
                         <div style="border-top: 1px solid var(--c-border); padding: 20px 24px 24px; background: #fff;">
                             @if($modul->materi->isEmpty())
                                 <div style="font-size: 14px; color: #6B7280; font-style: italic;">Modul belum diunggah</div>
                             @else
-                                @if($modul->deskripsi)
-                                    <div
-                                        style="font-size: 14px; color: #374151; line-height: 1.5; text-align: left; margin: 0 0 20px 0;">
-                                        {!! nl2br(e(trim($modul->deskripsi))) !!}
-                                    </div>
-                                @endif
-
                                 <div style="display:flex; gap:16px; flex-wrap:wrap;">
                                     @foreach($modul->materi as $materi)
-                                        <a href="{{ $materi->file_path ? app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice', ($materi->judul ?? basename($materi->file_path))) : '#' }}"
+                                        <a rel="noopener noreferrer" href="{{ $materi->file_path ? app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($materi->file_path, 'eoffice', ($materi->judul ?? basename($materi->file_path))) : '#' }}"
                                             target="_blank"
                                             style="display:flex; flex-direction:column; width:140px; height:140px; border:1px solid #DFE1E7; border-radius:8px; overflow:hidden; text-decoration:none; background:#fff; transition:transform 0.15s, box-shadow 0.15s;"
                                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"
@@ -207,7 +271,7 @@
                                             </div>
 
                                             {{-- Bottom Name Area --}}
-                                            <div style="background:#293C79; padding:10px 12px; display:flex; align-items:center;">
+                                            <div style="background:#0B266E; padding:10px 12px; display:flex; align-items:center;">
                                                 <span
                                                     style="color:#FFF; font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;"
                                                     title="{{ $materi->judul ?? basename($materi->file_path ?? 'File') }}">
@@ -219,18 +283,26 @@
                                 </div>
                             @endif
                         </div>
-                    </div>
+                    </x-eoffice::manajemen-praktikum.ui.grade-accordion>
 
                 </div>
             @empty
-                <div
-                    style="padding: 48px; text-align: center; border: 1px solid var(--c-border); border-radius: 8px; background: #fff;">
-                    <div style="font-size: 14px; font-weight: 600; color: #111827;">Belum Ada Modul</div>
-                    <div style="font-size: 13px; color: #6B7280; margin-top: 4px;">Belum ada modul yang dibuat pada praktikum
-                        ini.</div>
+                <div class="mp-card flex-1 flex items-center justify-center" style="min-height:200px;">
+                    <div style="padding:48px;text-align:center;">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 12px;display:block;" aria-hidden="true">
+                            <path d="M12 6C10 4 7 3 4 3v15c3 0 6 1 8 3m0-15c2-2 5-3 8-3v15c-3 0-6 1-8 3V6" />
+                            <path d="M4 5H2v16h20V5h-2" />
+                        </svg>
+                        <div style="font-size:14px;font-weight:600;color:#0D0D12;margin-bottom:4px;">Belum Ada Modul</div>
+                        <div style="font-size:12px;color:#666D80;">Belum ada modul yang dibuat pada praktikum ini.</div>
+                    </div>
                 </div>
             @endforelse
         </div>
+
+    <x-eoffice::manajemen-praktikum.ui.tugas-akhir-card :praktikum="$praktikum ?? null" role="dosen" section="modul" />
+        <x-eoffice::manajemen-praktikum.ui.module-history :riwayatPengajuan="$riwayatPengajuan" />
 
     @endif
 

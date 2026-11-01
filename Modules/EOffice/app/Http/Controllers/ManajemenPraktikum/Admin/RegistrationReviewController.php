@@ -35,7 +35,7 @@ class RegistrationReviewController extends Controller
         $pendaftaran = PendaftaranPraktikan::with(['user.student', 'praktikum'])
             ->when($data['status'] ?? null, fn ($q, $status) => $q->where('status', $status))
             ->when($data['search'] ?? null, fn ($q, $search) => $q->whereHas('user', fn ($u) => $u->whereRaw('LOWER(name) like ?', ['%'.mb_strtolower($search).'%'])))
-            ->latest()->paginate(20)->withQueryString();
+            ->latest()->paginate(max(1, min(100, request()->integer('per_page', 20))))->withQueryString();
 
         return view('eoffice::manajemen-praktikum.admin.pendaftaran-praktikan', compact('pendaftaran'));
     }
@@ -80,18 +80,11 @@ class RegistrationReviewController extends Controller
         $file = $storage->download($path, 'eoffice');
         abort_unless($file, 404, 'Dokumen tidak tersedia.');
         $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($file['content']);
-        $inline = in_array($mime, ['application/pdf', 'image/png', 'image/jpeg'], true);
         $extension = match ($mime) {
             'application/pdf' => 'pdf', 'image/png' => 'png', 'image/jpeg' => 'jpg', default => pathinfo($path, PATHINFO_EXTENSION)
         };
         $filename = $type.'-'.$id.'-'.str_replace('_path', '', $document).'.'.preg_replace('/[^a-z0-9]/i', '', $extension);
 
-        return response($file['content'])->withHeaders([
-            'Content-Type' => $inline ? $mime : 'application/octet-stream',
-            'Content-Disposition' => ($inline ? 'inline' : 'attachment').'; filename="'.$filename.'"',
-            'Cache-Control' => 'private, no-store',
-            'X-Content-Type-Options' => 'nosniff',
-            'Content-Security-Policy' => "default-src 'none'; frame-ancestors 'self'",
-        ]);
+        return \Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::response($file['content'], $filename, false, '');
     }
 }

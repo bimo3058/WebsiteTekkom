@@ -1,4 +1,4 @@
-@props(['pageTitle' => null, 'noBox' => false])
+@props(['pageTitle' => null, 'noBox' => false, 'breadcrumbPraktikum' => null])
 <!DOCTYPE html>
 <html lang="id">
 
@@ -64,6 +64,7 @@
                     'Kelola Data' => [
                         ['href' => route('eoffice.manprak.admin.praktikum.index'), 'label' => 'Daftar Praktikum', 'match' => 'admin.praktikum', 'icon' => $iBook],
                         ['href' => route('eoffice.manprak.admin.matkul-praktikum.index'), 'label' => 'Mata Kuliah Praktikum', 'match' => 'matkul-praktikum', 'icon' => $iList],
+                        ['href' => route('eoffice.manprak.admin.grade-policies.index'), 'label' => 'Skema Predikat', 'match' => 'grade-policies', 'icon' => $iList],
                         ['href' => route('eoffice.manprak.admin.dosen.index'), 'label' => 'Daftar Dosen', 'match' => 'admin.dosen', 'icon' => $iUsers],
                         ['href' => route('eoffice.manprak.admin.pendaftaran-koor.index'), 'label' => 'Pendaftaran', 'match' => 'pendaftaran', 'icon' => $iClipboard],
                         ['href' => route('eoffice.manprak.admin.kelola-role.index'), 'label' => 'Kelola Role', 'match' => 'kelola-role', 'icon' => $iShield],
@@ -100,7 +101,7 @@
                         ['href' => route('eoffice.manprak.koor.dashboard'), 'label' => 'Dashboard', 'match' => 'koor.dashboard', 'icon' => $iHome],
                     ],
                     'Kelola' => [
-                        ['href' => route('eoffice.manprak.koor.praktikum.index'), 'label' => 'Praktikum', 'match' => ['koor.praktikum', 'koordinator.periode-pendaftaran', 'koor.pendaftaran-asprak', 'koor.modul', 'bagi-modul', 'koor.praktikan', 'koor.nilai'], 'icon' => $iBook],
+                        ['href' => route('eoffice.manprak.koor.praktikum.index'), 'label' => 'Praktikum', 'match' => ['koor.praktikum', 'koordinator.periode-pendaftaran', 'koor.pendaftaran-asprak', 'koor.modul', 'koor.tugas-akhir', 'bagi-modul', 'koor.praktikan', 'koor.nilai', 'koor.pengumuman'], 'icon' => $iBook],
                     ],
                 ],
             ];
@@ -117,7 +118,7 @@
                         ['href' => route('eoffice.manprak.asprak.dashboard'), 'label' => 'Dashboard', 'match' => 'asprak.dashboard', 'icon' => $iHome],
                     ],
                     'Kelola' => [
-                        ['href' => route('eoffice.manprak.asprak.praktikum.index'), 'label' => 'Praktikum', 'match' => ['asprak.praktikum', 'asprak.daftar-praktikan', 'asprak.absensi', 'asprak.tugas', 'asprak.materi', 'asprak.pengumuman'], 'icon' => $iBook],
+                        ['href' => route('eoffice.manprak.asprak.praktikum.index'), 'label' => 'Praktikum', 'match' => ['asprak.praktikum', 'asprak.daftar-praktikan', 'asprak.absensi', 'asprak.tugas', 'asprak.modul', 'asprak.materi', 'asprak.pengumuman'], 'icon' => $iBook],
                     ],
                 ],
             ];
@@ -179,9 +180,12 @@
                             {{ $header }}
                         </div>
                     @endif
-                    <div class="mp-box-body" role="region" aria-label="Konten {{ $pageTitle ?? 'praktikum' }}"
+                    <div class="mp-box-body {{ $breadcrumbPraktikum ? 'mp-praktikum-content' : '' }}" role="region" aria-label="Konten {{ $pageTitle ?? 'praktikum' }}"
                         tabindex="0">
                         {{-- Flash alerts --}}
+                        @if($errors->any())
+                            <div class="mp-flash mp-flash-error mb-4" role="alert" style="border-radius:12px;">{{ $errors->first() }}</div>
+                        @endif
                         @if(session('success'))
                             <div class="mp-flash mp-flash-success mb-4" style="border-radius:12px;">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -241,22 +245,19 @@
         // Finish NProgress when the page finishes loading
         window.addEventListener('load', () => {
             NProgress.done();
-            document.body.style.pointerEvents = '';
         });
 
         // Intercept clicks on links to show NProgress
         document.addEventListener('click', function (e) {
+            if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
             const link = e.target.closest('a');
-            if (link && link.href && !link.href.includes('javascript:') && !link.href.startsWith('#') && link.target !== '_blank' && !link.hasAttribute('download')) {
+            if (link && link.href && !link.href.includes('javascript:') && !link.href.startsWith('#') && !link.target && !link.hasAttribute('download')) {
                 // Check if it's the same page anchor
                 const url = new URL(link.href, window.location.href);
-                if (url.pathname === window.location.pathname && url.hash) {
+                if (url.origin !== window.location.origin || (url.pathname === window.location.pathname && url.search === window.location.search)) {
                     return; // Same page anchor, don't show loading
                 }
-                if (!e.defaultPrevented) {
-                    NProgress.start();
-                    document.body.style.pointerEvents = 'none';
-                }
+                NProgress.start();
             }
         });
 
@@ -264,7 +265,6 @@
         document.addEventListener('submit', function (e) {
             if (!e.defaultPrevented) {
                 NProgress.start();
-                document.body.style.pointerEvents = 'none';
             }
         });
 
@@ -272,7 +272,6 @@
         window.addEventListener('pageshow', function (e) {
             if (e.persisted) {
                 NProgress.done();
-                document.body.style.pointerEvents = '';
             }
         });
     </script>

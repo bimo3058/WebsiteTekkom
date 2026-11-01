@@ -42,11 +42,14 @@ class TugasController extends Controller
 
         if (!$daftarPraktikan) {
             return view('eoffice::manajemen-praktikum.mahasiswa.tugas', [
-                'tugasList'      => collect(),
+                'modulList'      => collect(),
+                'praktikum'      => null,
                 'daftarPraktikan' => null,
                 'semuaPraktikan'  => collect(),
             ]);
         }
+
+        $praktikum = $daftarPraktikan->praktikum;
 
         // --- Optimasi: Load semua pengumpulan dalam 1 query, bukan per-tugas (fix N+1) ---
         // Kumpulkan semua tugas_id terlebih dahulu
@@ -81,6 +84,7 @@ class TugasController extends Controller
 
         return view('eoffice::manajemen-praktikum.mahasiswa.tugas', compact(
             'modulList',
+            'praktikum',
             'daftarPraktikan',
             'semuaPraktikan'
         ));
@@ -91,7 +95,6 @@ class TugasController extends Controller
         $request->validate([
             'file'    => 'required|array|max:3',
             'file.*'  => 'required|file|max:5120',
-            'catatan' => 'nullable|string|max:500',
         ]);
 
         $user  = auth()->user();
@@ -104,7 +107,7 @@ class TugasController extends Controller
         // BATAS MUTLAK: deadline_acc jika ada, jika tidak ada fallback ke deadline AC
         $tenggatMutlak = $tugas->deadline_acc ?? $tugas->deadline;
         if ($tenggatMutlak && now()->gt($tenggatMutlak)) {
-            return back()->with('error', 'Tenggat waktu pengumpulan (Deadline ACC) sudah lewat.');
+            return back()->with('error', 'Tenggat waktu pengumpulan (Tenggat ACC) sudah lewat.');
         }
 
         $existing = PengumpulanTugas::where('tugas_id', $tugas->id)
@@ -141,7 +144,7 @@ class TugasController extends Controller
             ],
             [
                 'file_path'          => $path,
-                'catatan'            => $request->catatan,
+                'catatan'            => null,
                 'nilai'              => null,
                 'catatan_revisi'     => null,
                 'is_revision'        => false,
@@ -152,7 +155,6 @@ class TugasController extends Controller
         // Catat ke RiwayatPengumpulan
         $pengumpulan->riwayat()->create([
             'file_path'   => $path,
-            'catatan'     => $request->catatan,
             'is_revision' => false,
         ]);
 
@@ -169,7 +171,6 @@ class TugasController extends Controller
             'file.*'  => 'required|file|max:5120',
             'retained_files' => 'nullable|array|max:3',
             'retained_files.*' => 'required|string',
-            'catatan' => 'nullable|string|max:500',
         ]);
 
         $user  = auth()->user();
@@ -182,7 +183,7 @@ class TugasController extends Controller
         // BATAS MUTLAK: deadline_acc jika ada, jika tidak ada fallback ke deadline AC
         $tenggatMutlak = $tugas->deadline_acc ?? $tugas->deadline;
         if ($tenggatMutlak && now()->gt($tenggatMutlak)) {
-            return back()->with('error', 'Tenggat waktu pengumpulan (Deadline ACC) sudah lewat.');
+            return back()->with('error', 'Tenggat waktu pengumpulan (Tenggat ACC) sudah lewat.');
         }
 
         $pengumpulan = PengumpulanTugas::where('tugas_id', $tugasId)
@@ -241,7 +242,7 @@ class TugasController extends Controller
 
         $pengumpulan->update([
             'file_path'          => $path,
-            'catatan'            => $request->catatan,
+            'catatan'            => null,
             'catatan_revisi'     => null,
             'is_revision'        => $isFromRevisi,
             'status_pengumpulan' => PengumpulanTugas::STATUS_BELUM_DICEK,
@@ -250,7 +251,6 @@ class TugasController extends Controller
         // Catat ke RiwayatPengumpulan
         $pengumpulan->riwayat()->create([
             'file_path'   => $path,
-            'catatan'     => $request->catatan,
             'is_revision' => $isFromRevisi,
         ]);
 

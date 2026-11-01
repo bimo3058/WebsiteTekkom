@@ -23,7 +23,7 @@ class MatkulPraktikumController extends Controller
             $query->where('semester', $semester);
         }
 
-        $matkulList = $query->paginate(50)->withQueryString();
+        $matkulList = $query->paginate(max(1, min(100, request()->integer('per_page', 50))))->withQueryString();
 
         return view('eoffice::manajemen-praktikum.admin.matkul-praktikum', compact('matkulList'));
     }

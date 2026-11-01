@@ -49,6 +49,14 @@ class DashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        // Breadcrumb links carry an explicit context, including across browser tabs.
+        if (request()->has('praktikum_id')) {
+            $selected = $all->firstWhere('id', request()->query('praktikum_id'));
+            abort_unless($selected, 404);
+            session(['koor_praktikum_id' => $selected->id]);
+            return $selected;
+        }
+
         if ($all->isEmpty()) return null;
 
         $sessionId = session('koor_praktikum_id');
@@ -188,12 +196,9 @@ class DashboardController extends Controller
             ->orderByRaw("CASE WHEN (kelompok IS NULL OR kelompok = '') THEN 1 ELSE 0 END, kelompok ASC")
             ->orderBy('created_at');
 
-        if ($search) {
-            $query->whereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%"));
-        }
+        \Modules\EOffice\Services\ManajemenPraktikum\ParticipantListFilters::apply($query,$request);
 
-        $praktikans = $query->paginate($request->input('per_page', 10))->withQueryString();
+        $praktikans = $query->paginate(max(1,min(100,$request->integer('per_page',10))))->withQueryString();
 
         $praktikansSemua = DaftarPraktikan::with(['user', 'user.student'])
             ->where('praktikum_id', $praktikum?->id)

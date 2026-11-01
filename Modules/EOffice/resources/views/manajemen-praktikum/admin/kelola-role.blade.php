@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Kelola Role — Manajemen Praktikum">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Kelola Role — Manajemen Praktikum">
 <div x-data="{ roleModalOpen: @js($errors->any()) }" style="display:contents;">
 
 {{-- ════════════════════════
@@ -237,9 +237,6 @@
                 <h2 class="mp-card-title" style="font-size:16px;">Kelola Role Praktikum</h2>
                 <p class="mp-page-sub" style="margin-top:3px;">{{ $praktikum->nama }}</p>
             </div>
-            <button type="button" class="mp-icon-button" @click="roleModalOpen = false" aria-label="Tutup modal">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
-            </button>
         </div>
 
         <div style="padding:20px;display:grid;gap:20px;">
@@ -277,9 +274,12 @@
                             style="width:100%;height:42px;border:1px dashed #DFE1E7;border-radius:9px;background:#FAFBFD;color:#0B266E;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;">
                         <span style="font-size:20px;line-height:1;">+</span> Tambah Dosen Pengampu
                     </button>
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+                    <div style="margin-top:8px;">
                         <span style="font-size:11px;color:#666D80;">Maksimal 3 dosen pengampu</span>
-                        <button type="submit" class="mp-btn primary sm">Simpan Dosen</button>
+                        <div class="mp-modal-footer mp-modal-footer-bleed" style="margin-top:12px;--mp-modal-inline-inset:20px;--mp-modal-bottom-inset:0px;--mp-modal-footer-radius:0px;">
+                            <button type="button" @click="roleModalOpen = false" class="mp-btn secondary sm" style="color:#353849;">Batal</button>
+                            <button type="submit" class="mp-btn primary sm" style="background:#0B266E;color:#FFFFFF;">Simpan Dosen</button>
+                        </div>
                     </div>
                 </form>
             </section>
@@ -292,7 +292,7 @@
                         <div><div style="font-size:13px;font-weight:600;">{{ $praktikum->koordinator->name }}</div><div style="font-size:11px;color:#666D80;">{{ $praktikum->koordinator->email }}</div></div>
                     </div>
                 @else
-                    <form method="POST" action="{{ route('eoffice.manprak.admin.kelola-role.assign') }}" style="display:flex;gap:10px;align-items:end;">
+                    <form method="POST" action="{{ route('eoffice.manprak.admin.kelola-role.assign') }}" style="display:block;">
                         @csrf
                         <input type="hidden" name="praktikum_id" value="{{ $praktikum->id }}">
                         <input type="hidden" name="role" value="koor">
@@ -300,7 +300,8 @@
                             <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Pilih Mahasiswa</label>
                             <x-eoffice::manajemen-praktikum.ui.select name="user_id" :options="$mahasiswaOptions->all()" selected="" placeholder="Cari nama mahasiswa..." minWidth="100%" searchable="true" searchPlaceholder="Cari nama mahasiswa..." />
                         </div>
-                        <button type="submit" class="mp-btn primary md" style="height:38px;">Tambah Koordinator</button>
+                        <div class="mp-modal-footer mp-modal-footer-bleed" style="margin-top:16px;--mp-modal-inline-inset:20px;--mp-modal-bottom-inset:0px;--mp-modal-footer-radius:0px;"><button type="button" @click="roleModalOpen = false" class="mp-btn secondary md" style="height:38px;color:#353849;">Batal</button>
+                        <button type="submit" class="mp-btn primary md" style="height:38px;background:#0B266E;color:#FFFFFF;">Tambah Koordinator</button></div>
                     </form>
                 @endif
             </section>
@@ -318,7 +319,7 @@
                     </div>
                 @endif
                 @if($asistenOptions->isNotEmpty())
-                    <form method="POST" action="{{ route('eoffice.manprak.admin.kelola-role.assign') }}" style="display:flex;gap:10px;align-items:end;">
+                    <form method="POST" action="{{ route('eoffice.manprak.admin.kelola-role.assign') }}" style="display:block;">
                         @csrf
                         <input type="hidden" name="praktikum_id" value="{{ $praktikum->id }}">
                         <input type="hidden" name="role" value="asprak">
@@ -326,7 +327,8 @@
                             <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Cari Mahasiswa</label>
                             <x-eoffice::manajemen-praktikum.ui.select name="user_id" :options="$asistenOptions->all()" selected="" placeholder="Cari nama mahasiswa..." minWidth="100%" searchable="true" searchPlaceholder="Cari nama mahasiswa..." />
                         </div>
-                        <button type="submit" class="mp-btn primary md" style="height:38px;">Tambah Asisten</button>
+                        <div class="mp-modal-footer mp-modal-footer-bleed" style="margin-top:16px;--mp-modal-inline-inset:20px;--mp-modal-bottom-inset:20px;--mp-modal-footer-radius:14px;"><button type="button" @click="roleModalOpen = false" class="mp-btn secondary md" style="height:38px;color:#353849;">Batal</button>
+                        <button type="submit" class="mp-btn primary md" style="height:38px;background:#0B266E;color:#FFFFFF;">Tambah Asisten</button></div>
                     </form>
                 @else
                     <p style="font-size:12px;color:#666D80;margin:0;">Semua mahasiswa yang tersedia sudah memiliki role pada praktikum ini.</p>

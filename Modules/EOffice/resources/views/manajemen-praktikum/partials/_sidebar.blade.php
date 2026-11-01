@@ -25,14 +25,14 @@
             @php $sectionActive = str_contains($currentRoute, $section['match']); @endphp
             <section class="mp-nav-section" aria-label="Menu {{ $section['label'] }}">
                 @if($multiRole)
-                    <button type="button" class="mp-role-toggle"
+                    <button type="button" class="mp-role-toggle {{ $sectionActive ? 'is-active' : '' }}"
                             :aria-expanded="openRoleSection === {{ $loop->index }}"
                             aria-controls="mp-role-{{ $loop->index }}"
                             title="Menu {{ $section['label'] }}" aria-label="Menu {{ $section['label'] }}"
                             @click="if (!sidebarOpen) { sidebarOpen = true; openRoleSection = {{ $loop->index }}; } else { openRoleSection = openRoleSection === {{ $loop->index }} ? null : {{ $loop->index }}; }">
                         <span class="mp-role-initial" aria-hidden="true">{{ mb_substr($section['label'], 0, 1) }}</span>
                         <span class="mp-role-name" x-show="sidebarOpen">{{ $section['label'] }}</span>
-                        <svg x-show="sidebarOpen" :class="{ 'is-open': openRoleSection === {{ $loop->index }} }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                        <svg x-show="sidebarOpen" :class="{ 'is-open': openRoleSection === {{ $loop->index }} }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                     </button>
                 @endif
                 <div id="mp-role-{{ $loop->index }}" class="mp-role-content" x-cloak

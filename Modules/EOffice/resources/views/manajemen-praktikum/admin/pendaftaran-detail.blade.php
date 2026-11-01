@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout :pageTitle="'Detail Pendaftaran '.$label">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" :pageTitle="'Detail Pendaftaran '.$label">
     @php
         $statusLabel = ['pending' => 'Menunggu', 'approved' => 'Disetujui', 'rejected' => 'Ditolak'];
         $statusTone = ['pending' => 'warning', 'approved' => 'success', 'rejected' => 'error'];

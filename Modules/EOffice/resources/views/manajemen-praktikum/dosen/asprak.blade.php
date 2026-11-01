@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="{{ $praktikum ? $praktikum->nama . ' / Anggota' : 'Anggota' }}">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="{{ $praktikum ? $praktikum->nama . ' / Anggota' : 'Anggota' }}">
 
 {{-- Pilih Praktikum --}}
 @if(!$praktikum)
@@ -14,7 +14,7 @@
                 box.addEventListener('scroll', () => {
                     if (!ticking) {
                         window.requestAnimationFrame(() => {
-                            st = box.scrollTop;
+                            st = Math.max(0, box.scrollTop);
                             ticking = false;
                         });
                         ticking = true;
@@ -32,7 +32,7 @@
                 @if($praktikum->cover_path)
                     <img src="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($praktikum->cover_path, 'eoffice') }}"
                          class="w-full h-full object-cover"
-                         :style="`transform: scale(${Math.max(1, 1 + (st / 200) * 0.1)}); opacity: ${Math.max(0.3, 1 - (st / 300))}; filter: blur(${Math.min(8, st / 15)}px);`"
+                         :style="`transform: scale(${1 + Math.min(1, Math.max(0, st / 200)) * 0.04});`"
                          alt="Cover Praktikum">
                 @else
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="#828896" 
@@ -44,12 +44,12 @@
 
             {{-- 1. Base Gradient --}}
             <div class="absolute inset-0 pointer-events-none"
-                 style="border-radius: inherit; background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 30%, rgba(0,0,0,0) 70%);">
+                 style="border-radius: inherit; background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0) 100%);">
             </div>
 
             {{-- 2. Scrolled Overlay (Gelap + Blur) --}}
             <div class="absolute inset-0 pointer-events-none"
-                 :style="`border-radius: inherit; opacity: ${Math.min(1, st / 200)}; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);`">
+                 style="display:none;" aria-hidden="true">
             </div>
 
             {{-- Title --}}
@@ -157,70 +157,8 @@
             </tbody>
         </table>
     </div>
-    @if($aspraks instanceof \Illuminate\Pagination\LengthAwarePaginator && $aspraks->total() > 0)
-        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:12px 20px; border-top:1px solid #DFE1E7; box-sizing:border-box; flex-wrap:nowrap; gap:16px;">
-            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                <div x-data="{ openA: false, options: [5, 10, 15], perPage: {{ $aspraks->perPage() }} }"
-                    class="relative" @click.away="openA = false">
-                    <div class="flex items-center gap-2 cursor-pointer border rounded-[8px] px-3 py-1.5 transition-colors"
-                        :class="openA ? 'border-[#0B266E] bg-[#EEF1FA] text-[#0B266E]' : 'border-[#DFE1E7] bg-white text-[#353849] hover:bg-[#F6F8FA]'"
-                        @click="openA = !openA">
-                        <span class="text-[12px] text-[#666D80]" :class="openA ? 'text-[#0B266E]' : ''">Per halaman</span>
-                        <div class="flex items-center gap-1 font-semibold text-[12px]">
-                            <span x-text="perPage"></span>
-                            <svg class="w-3.5 h-3.5 transition-transform duration-200"
-                                :class="{'rotate-180': openA, 'text-[#0B266E]': openA, 'text-[#666D80]': !openA}"
-                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </div>
-                    </div>
-                    <div x-show="openA" style="display:none;"
-                        x-transition:enter="transition ease-out duration-100"
-                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                        x-transition:leave="transition ease-in duration-75"
-                        x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                        class="absolute bottom-full left-0 mb-2 z-10 w-full min-w-[80px] bg-white border border-[#DFE1E7] rounded-[10px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 px-1.5 flex flex-col">
-                        <template x-for="option in options" :key="option">
-                            <a :href="`?${new URLSearchParams({...Object.fromEntries(new URLSearchParams(window.location.search)), per_page_asisten: option, page_asisten: 1}).toString()}`"
-                                class="flex items-center justify-between px-3 py-2 rounded-[6px] cursor-pointer text-[12px] transition-colors mb-0.5 last:mb-0 no-underline"
-                                :class="perPage == option ? 'bg-[#F6F8FA] text-[#0B266E] font-medium' : 'text-[#353849] hover:bg-[#F6F8FA]'">
-                                <span x-text="option"></span>
-                                <svg x-show="perPage == option" class="w-3.5 h-3.5 flex-shrink-0 text-[#0B266E] ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
-                            </a>
-                        </template>
-                    </div>
-                </div>
-                <div style="font-size:12px; color:#666D80;">
-                    Menampilkan {{ $aspraks->firstItem() }} sampai {{ $aspraks->lastItem() }} dari {{ $aspraks->total() }} data
-                </div>
-            </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-                @if($aspraks->onFirstPage())
-                    <span style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:#F8FAFC;border:1px solid #DFE1E7;color:#A4ABB8;cursor:not-allowed;">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                    </span>
-                @else
-                    <a href="{{ $aspraks->previousPageUrl() }}" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:white;border:1px solid #DFE1E7;color:#353849;text-decoration:none;" class="hover:bg-gray-50">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                    </a>
-                @endif
-                <span style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:#0B266E;color:white;font-size:13px;font-weight:600;">
-                    {{ $aspraks->currentPage() }}
-                </span>
-                @if($aspraks->hasMorePages())
-                    <a href="{{ $aspraks->nextPageUrl() }}" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:white;border:1px solid #DFE1E7;color:#353849;text-decoration:none;" class="hover:bg-gray-50">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </a>
-                @else
-                    <span style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:#F8FAFC;border:1px solid #DFE1E7;color:#A4ABB8;cursor:not-allowed;">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </span>
-                @endif
-            </div>
-        </div>
+    @if(isset($aspraks) && $aspraks instanceof \Illuminate\Pagination\LengthAwarePaginator)
+        <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$aspraks" per-page-name="per_page_asisten" :options="[5, 10, 15]" />
     @endif
     @endif
 </div>
@@ -364,70 +302,8 @@
             </tbody>
         </table>
         </div>
-        @if($praktikans instanceof \Illuminate\Pagination\LengthAwarePaginator && $praktikans->total() > 0)
-            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:12px 20px; border-top:1px solid #DFE1E7; box-sizing:border-box; flex-wrap:nowrap; gap:16px;">
-                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                    <div x-data="{ openP: false, options: [5, 10, 15], perPage: {{ $praktikans->perPage() }} }"
-                        class="relative" @click.away="openP = false">
-                        <div class="flex items-center gap-2 cursor-pointer border rounded-[8px] px-3 py-1.5 transition-colors"
-                            :class="openP ? 'border-[#0B266E] bg-[#EEF1FA] text-[#0B266E]' : 'border-[#DFE1E7] bg-white text-[#353849] hover:bg-[#F6F8FA]'"
-                            @click="openP = !openP">
-                            <span class="text-[12px] text-[#666D80]" :class="openP ? 'text-[#0B266E]' : ''">Per halaman</span>
-                            <div class="flex items-center gap-1 font-semibold text-[12px]">
-                                <span x-text="perPage"></span>
-                                <svg class="w-3.5 h-3.5 transition-transform duration-200"
-                                    :class="{'rotate-180': openP, 'text-[#0B266E]': openP, 'text-[#666D80]': !openP}"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </div>
-                        </div>
-                        <div x-show="openP" style="display:none;"
-                            x-transition:enter="transition ease-out duration-100"
-                            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                            x-transition:leave="transition ease-in duration-75"
-                            x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                            class="absolute bottom-full left-0 mb-2 z-10 w-full min-w-[80px] bg-white border border-[#DFE1E7] rounded-[10px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 px-1.5 flex flex-col">
-                            <template x-for="option in options" :key="option">
-                                <a :href="`?${new URLSearchParams({...Object.fromEntries(new URLSearchParams(window.location.search)), per_page_praktikan: option, page_praktikan: 1}).toString()}`"
-                                    class="flex items-center justify-between px-3 py-2 rounded-[6px] cursor-pointer text-[12px] transition-colors mb-0.5 last:mb-0 no-underline"
-                                    :class="perPage == option ? 'bg-[#F6F8FA] text-[#0B266E] font-medium' : 'text-[#353849] hover:bg-[#F6F8FA]'">
-                                    <span x-text="option"></span>
-                                    <svg x-show="perPage == option" class="w-3.5 h-3.5 flex-shrink-0 text-[#0B266E] ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </a>
-                            </template>
-                        </div>
-                    </div>
-                    <div style="font-size:12px; color:#666D80;">
-                        Menampilkan {{ $praktikans->firstItem() }} sampai {{ $praktikans->lastItem() }} dari {{ $praktikans->total() }} data
-                    </div>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    @if($praktikans->onFirstPage())
-                        <span style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:#F8FAFC;border:1px solid #DFE1E7;color:#A4ABB8;cursor:not-allowed;">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                        </span>
-                    @else
-                        <a href="{{ $praktikans->previousPageUrl() }}" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:white;border:1px solid #DFE1E7;color:#353849;text-decoration:none;" class="hover:bg-gray-50">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                        </a>
-                    @endif
-                    <span style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:#0B266E;color:white;font-size:13px;font-weight:600;">
-                        {{ $praktikans->currentPage() }}
-                    </span>
-                    @if($praktikans->hasMorePages())
-                        <a href="{{ $praktikans->nextPageUrl() }}" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:white;border:1px solid #DFE1E7;color:#353849;text-decoration:none;" class="hover:bg-gray-50">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                        </a>
-                    @else
-                        <span style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:#F8FAFC;border:1px solid #DFE1E7;color:#A4ABB8;cursor:not-allowed;">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                        </span>
-                    @endif
-                </div>
-            </div>
+        @if(isset($praktikans) && $praktikans instanceof \Illuminate\Pagination\LengthAwarePaginator)
+            <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$praktikans" per-page-name="per_page_praktikan" :options="[5, 10, 15]" />
         @endif
 </div>
 

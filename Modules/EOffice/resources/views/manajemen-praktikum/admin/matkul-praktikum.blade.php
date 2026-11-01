@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Mata Kuliah Praktikum">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Mata Kuliah Praktikum">
 
 {{-- ════════════════════════════════════════════
      PAGE HEADER
@@ -120,9 +120,11 @@
 
             {{-- Aksi --}}
             <div class="flex items-center justify-center gap-1.5">
+                <x-eoffice::manajemen-praktikum.ui.action-menu>
                 <button onclick="openEdit({{ $mk->id }}, '{{ addslashes($mk->kode) }}', '{{ addslashes($mk->nama) }}', {{ $mk->sks }}, {{ $mk->semester ?? 'null' }})"
                         class="flex items-center justify-center w-8 h-8 rounded-lg border border-[#DFE1E7] bg-white text-[#666D80] hover:bg-[#F6F8FA] hover:text-[#0B266E] transition-colors"
                         title="Edit Mata Kuliah">
+                    <span>Edit Mata Kuliah</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                         <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                         <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -134,12 +136,14 @@
                     <button type="submit"
                             class="flex items-center justify-center w-8 h-8 rounded-lg border border-[#FADAE1] bg-[#FFF5F5] text-[#DF1C41] hover:bg-[#FEE2E2] transition-colors"
                             title="Hapus Mata Kuliah">
+                        <span>Hapus Mata Kuliah</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                             <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
                             <path d="M10 11v6M14 11v6"/>
                         </svg>
                     </button>
                 </form>
+                </x-eoffice::manajemen-praktikum.ui.action-menu>
             </div>
         </div>
         @endforeach
@@ -148,8 +152,8 @@
     </div>{{-- /mp-card-body --}}
 
     {{-- Pagination --}}
-    @if($matkulList->hasPages())
-    <div class="p-4 border-t border-[#DFE1E7]">{{ $matkulList->links() }}</div>
+    @if(isset($matkulList) && $matkulList instanceof \Illuminate\Pagination\LengthAwarePaginator)
+        <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$matkulList" />
     @endif
 
 </div>
@@ -196,7 +200,7 @@
                             <span x-text="selected ? 'Semester ' + selected : '— Pilih Semester —'" class="truncate pr-2" :class="!selected ? 'text-[#94A3B8]' : ''"></span>
                             <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0" 
                                  :class="{'rotate-180': dropdownOpen, 'text-[#0B266E]': dropdownOpen, 'text-[#666D80]': !dropdownOpen}" 
-                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                 viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
                         </button>
@@ -222,7 +226,7 @@
                     </div>
                 </div>
             </div>
-            <div class="flex justify-end gap-2 pt-1">
+            <div class="mp-modal-footer mp-modal-footer-bleed flex justify-end gap-2 pt-1" style="--mp-modal-bottom-inset:20px;--mp-modal-footer-radius:16px;">
                 <button type="button" @click="open = false"
                         class="mp-btn secondary md">Batal</button>
                 <button type="submit" class="mp-btn primary md">Simpan</button>
@@ -273,7 +277,7 @@
                             <span x-text="selected ? 'Semester ' + selected : '— Pilih Semester —'" class="truncate pr-2" :class="!selected ? 'text-[#94A3B8]' : ''"></span>
                             <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0" 
                                  :class="{'rotate-180': dropdownOpen, 'text-[#0B266E]': dropdownOpen, 'text-[#666D80]': !dropdownOpen}" 
-                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                 viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
                         </button>
@@ -299,7 +303,7 @@
                     </div>
                 </div>
             </div>
-            <div class="flex justify-end gap-2 pt-1">
+            <div class="mp-modal-footer mp-modal-footer-bleed flex justify-end gap-2 pt-1" style="--mp-modal-bottom-inset:20px;--mp-modal-footer-radius:16px;">
                 <button type="button" @click="open = false"
                         class="mp-btn secondary md">Batal</button>
                 <button type="submit" class="mp-btn primary md">Simpan</button>

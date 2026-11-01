@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Tugas Praktikum">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$daftarPraktikan?->praktikum" pageTitle="Tugas">
 
     @if(!$daftarPraktikan)
         <div class="mp-page-header">
@@ -14,29 +14,7 @@
     
     {{-- CSS untuk Accordion --}}
     <style>
-        .modul-accordion-content {
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            transition: max-height 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.1s ease;
-        }
-        .modul-accordion-content.is-open {
-            max-height: 1500px;
-            opacity: 1;
-            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
-        }
-        .tugas-accordion-content {
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            transition: max-height 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.1s ease;
-        }
-        .tugas-accordion-content.is-open {
-            max-height: 1200px; /* Increased for upload form */
-            opacity: 1;
-            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
-        }
-    </style>
+</style>
 
     <div style="display: flex; flex-direction: column; gap: 16px; padding-top: 4px;">
         @forelse($modulList as $item)
@@ -45,13 +23,13 @@
                 $tugasList = $item['tugas'];
             @endphp
             
-            <div x-data="{ modulOpen: false }" style="background: #fff; border: 1px solid var(--c-border); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); overflow: hidden;">
+            <div x-data="{ modulOpen: false }" style="background: #fff; border: 1px solid var(--c-border); border-radius: 8px; box-shadow:none; overflow: hidden;">
                 
                 {{-- Card Header: Modul Info --}}
-                <div @click="modulOpen = !modulOpen" style="padding: 16px 24px; background: #fff; border-bottom: 1px solid var(--c-border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
+                <div class="mp-module-card-header" @click="modulOpen = !modulOpen" :style="{boxShadow:modulOpen ? 'inset 0 -1px 0 var(--c-border)' : 'none'}" style="padding: 16px 24px; background: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
                     <div>
                         <h3 style="font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 4px 0;">{{ $modul->nama }}</h3>
-                        <div style="font-size: 13px; color: #6B7280;">
+                        <div style="font-size:13px; color:#666D80; font-weight:400; margin-bottom:4px;">
                             Asisten: 
                             @if($item['asprak']->isNotEmpty())
                                 {{ $item['asprak']->join(', ') }}
@@ -60,21 +38,16 @@
                             @endif
                         </div>
                     </div>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="modulOpen ? 'transform: rotate(180deg); transition: transform 0.2s;' : 'transform: rotate(0deg); transition: transform 0.2s;'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="modulOpen ? 'transform: rotate(180deg); transition: transform 0.2s;' : 'transform: rotate(0deg); transition: transform 0.2s;'">
                         <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                 </div>
 
                 {{-- List of Tugas as Accordions --}}
-                <div class="modul-accordion-content" :class="{ 'is-open': modulOpen }">
+                <x-eoffice::manajemen-praktikum.ui.grade-accordion state="modulOpen">
                     <div style="display: flex; flex-direction: column;">
                     @php
-                        $requiredTypes = [
-                            'tugas_pendahuluan' => 'Tugas Pendahuluan',
-                            'laporan'           => 'Laporan',
-                            'responsi'          => 'Responsi',
-                            'tugas_pengganti'   => 'Tugas Pengganti'
-                        ];
+                        $requiredTypes = $praktikum->moduleTaskTypes();
                     @endphp
 
                     @foreach($requiredTypes as $type => $label)
@@ -117,7 +90,7 @@
                             }
                         @endphp
                         
-                        <div x-data="{ open: false, showUpload: false }" style="border-bottom: 1px solid var(--c-border);">
+                        <div x-data="{ open: false, showUpload: false }" style="{{ $loop->last ? '' : 'border-bottom:1px solid var(--c-border);' }}">
                             
                             {{-- Accordion Header --}}
                             <div @click="open = !open" style="padding: 14px 24px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff; transition: background 0.15s;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
@@ -125,7 +98,7 @@
                                     <div style="font-size: 14px; font-weight: 600; color: #0D0D12;">{{ $label }}</div>
                                     @if($t)
                                         @if($statusTugas === 'acc')
-                                            <span class="mp-badge success sm"><span class="dot"></span>ACC{{ $pengumpulan?->nilai ? ' — Nilai: ' . $pengumpulan->nilai : '' }}</span>
+                                            <span class="mp-badge success sm"><span class="dot"></span>ACC @if($pengumpulan?->nilai !== null)<span>Nilai: {{ str_replace('.', ',', (string)$pengumpulan->nilai) }}</span>@endif</span>
                                         @elseif($statusTugas === 'revisi')
                                             <span class="mp-badge error sm"><span class="dot"></span>Perlu Revisi</span>
                                         @elseif($statusTugas === 'belum_dicek')
@@ -149,13 +122,16 @@
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 16px;">
                                     @if($t)
-                                    <div style="font-size: 12px; color: #666D80; display: flex; gap: 8px;">
+                                    <div style="font-size:12px;color:#666D80;display:flex;gap:10px;flex-wrap:wrap;">
                                         @if($dlAC && $dlACC)
-                                            <span style="color:{{ $lewatMutlak ? '#A4ABB8' : '#353849' }};">AC: {{ $dlAC->format('d/m/Y, H:i') }} | ACC: {{ $dlACC->format('d/m/Y, H:i') }}</span>
+                                            <span style="color:{{ $lewatMutlak ? '#A4ABB8' : '#353849' }};">Tenggat AC: {{ $dlAC->format('d/m/Y, H:i') }}</span>
+                                            <span style="color:{{ $lewatMutlak ? '#A4ABB8' : '#353849' }};">Tenggat ACC: {{ $dlACC->format('d/m/Y, H:i') }}</span>
                                         @elseif($dlACC)
-                                            <span style="color:{{ $lewatMutlak ? '#A4ABB8' : '#353849' }};">ACC: {{ $dlACC->format('d/m/Y, H:i') }}</span>
+                                            <span style="color:#A4ABB8;">Tenggat AC: -</span>
+                                            <span style="color:{{ $lewatMutlak ? '#A4ABB8' : '#353849' }};">Tenggat ACC: {{ $dlACC->format('d/m/Y, H:i') }}</span>
                                         @elseif($dlAC)
-                                            <span style="color:{{ $lewatMutlak ? '#A4ABB8' : '#353849' }};">AC: {{ $dlAC->format('d/m/Y, H:i') }}</span>
+                                            <span style="color:{{ $lewatMutlak ? '#A4ABB8' : '#353849' }};">Tenggat AC: {{ $dlAC->format('d/m/Y, H:i') }}</span>
+                                            <span style="color:#A4ABB8;">Tenggat ACC: -</span>
                                         @else
                                             <span style="color:#A4ABB8;">Tanpa batas waktu</span>
                                         @endif
@@ -168,7 +144,7 @@
                             </div>
 
                             {{-- Accordion Body --}}
-                            <div class="tugas-accordion-content" :class="{ 'is-open': open }">
+                            <x-eoffice::manajemen-praktikum.ui.grade-accordion state="open">
                                 <div style="border-top: 1px solid var(--c-border); padding: 16px 24px; background: #FAFBFC;">
                                     
                                     @if($t)
@@ -182,7 +158,7 @@
                                                     $pathStr = is_array($f) && isset($f['path']) ? $f['path'] : $f;
                                                     $baseName = is_array($f) && isset($f['original_name']) ? $f['original_name'] : pathinfo($pathStr, PATHINFO_BASENAME);
                                                 @endphp
-                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($pathStr, 'eoffice', $baseName) }}"
+                                                <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($pathStr, 'eoffice', $baseName) }}"
                                                     target="_blank" title="{{ $baseName }}"
                                                     style="display: flex; flex-direction: column; width: 120px; height: 120px; border: 1px solid #DFE1E7; border-radius: 8px; overflow: hidden; text-decoration: none; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition:transform 0.15s, box-shadow 0.15s;"
                                                     onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"
@@ -195,14 +171,14 @@
                                                             <polyline points="13 2 13 9 20 9"></polyline>
                                                         </svg>
                                                     </div>
-                                                    <div style="background: #293C79; color: #fff; padding: 8px 10px; font-size: 11px; font-weight: 600; text-align: center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="{{ $baseName }}">
+                                                    <div style="background: #0B266E; color: #fff; padding: 8px 10px; font-size: 11px; font-weight: 600; text-align: center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="{{ $baseName }}">
                                                         {{ $baseName }}
                                                     </div>
                                                 </a>
                                             @endforeach
                                         </div>
 
-                                        <div style="border-top:1px solid #DFE1E7; margin:16px 0;"></div>                                        
+                                        <div style="border-top:1px dashed #DFE1E7; margin:16px 0;"></div>
                                         @php
                                             $isInRevisionFlow = $pengumpulan && (in_array($statusTugas, ['revisi']) || $pengumpulan->is_revision);
                                             $firstSub = $pengumpulan ? ($pengumpulan->riwayat->where('is_revision', false)->sortByDesc('created_at')->first() ?? $pengumpulan->riwayat->sortByDesc('created_at')->first()) : null;
@@ -274,7 +250,7 @@
                                                                     $pPath = is_array($pPathObj) && isset($pPathObj['path']) ? $pPathObj['path'] : $pPathObj;
                                                                     $pName = is_array($pPathObj) && isset($pPathObj['original_name']) ? $pPathObj['original_name'] : pathinfo($pPath, PATHINFO_BASENAME);
                                                                 @endphp
-                                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($pPath, 'eoffice', $pName) }}"
+                                                                <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($pPath, 'eoffice', $pName) }}"
                                                                     target="_blank"
                                                                     style="display:flex; align-items:center; padding:10px 14px; border:1px solid #DFE1E7; border-radius:8px; background:#fff; text-decoration:none; transition:border-color 0.2s;"
                                                                     onmouseover="this.style.borderColor='#0B266E'" onmouseout="this.style.borderColor='#DFE1E7'">
@@ -306,7 +282,7 @@
 
                                             {{-- File Revisi dari Asisten (View Mode) --}}
                                             @if($isInRevisionFlow && $pengumpulan?->file_revisi_asprak)
-                                                <div style="border-top:1px solid #DFE1E7; margin:16px 0;"></div>
+                                                <div style="border-top:1px dashed #DFE1E7; margin:16px 0;"></div>
                                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                                                     <h3 style="font-size:14px; font-weight:700; color:#353849;">Revisi Tugas</h3>
                                                 </div>
@@ -326,7 +302,7 @@
                                                                     $rName = is_array($rf) ? ($rf['original_name'] ?? basename($rPath)) : basename($rPath);
                                                                 @endphp
                                                                 @if($rPath)
-                                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($rPath, 'eoffice', $rName) }}"
+                                                                <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($rPath, 'eoffice', $rName) }}"
                                                                     target="_blank"
                                                                     style="display:flex; align-items:center; padding:10px 14px; border:1px solid #DFE1E7; border-radius:8px; background:#fff; text-decoration:none; transition:border-color 0.2s;"
                                                                     onmouseover="this.style.borderColor='#0B266E'" onmouseout="this.style.borderColor='#DFE1E7'">
@@ -345,7 +321,7 @@
 
                                             {{-- Pengumpulan Revisi Header and View Mode --}}
                                             @if($isInRevisionFlow)
-                                                <div style="border-top:1px solid #DFE1E7; margin:16px 0;"></div>
+                                                <div style="border-top:1px dashed #DFE1E7; margin:16px 0;"></div>
                                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                                                     <h3 style="font-size:14px; font-weight:700; color:#353849;">Pengumpulan Revisi</h3>
                                                     @if($statusTugas !== 'revisi' && $pengumpulan)
@@ -362,7 +338,7 @@
                                                                         $pPath = is_array($pPathObj) && isset($pPathObj['path']) ? $pPathObj['path'] : $pPathObj;
                                                                         $pName = is_array($pPathObj) && isset($pPathObj['original_name']) ? $pPathObj['original_name'] : pathinfo($pPath, PATHINFO_BASENAME);
                                                                     @endphp
-                                                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($pPath, 'eoffice', $pName) }}"
+                                                                    <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($pPath, 'eoffice', $pName) }}"
                                                                         target="_blank"
                                                                         style="display:flex; align-items:center; padding:10px 14px; border:1px solid #DFE1E7; border-radius:8px; background:#fff; text-decoration:none; transition:border-color 0.2s;"
                                                                         onmouseover="this.style.borderColor='#0B266E'" onmouseout="this.style.borderColor='#DFE1E7'">
@@ -471,20 +447,22 @@
                                     @endif
 
                                 </div>
-                            </div>
+                            </x-eoffice::manajemen-praktikum.ui.grade-accordion>
 
                         </div>
                     @endforeach
                     </div>
-                </div>
+                </x-eoffice::manajemen-praktikum.ui.grade-accordion>
 
             </div>
         @empty
             <div style="padding: 48px; text-align: center; border: 1px solid var(--c-border); border-radius: 8px; background: #fff;">
+                <x-eoffice::manajemen-praktikum.ui.empty-icon name="task" />
                 <div style="font-size: 14px; font-weight: 600; color: #111827;">Belum Ada Modul & Tugas</div>
                 <div style="font-size: 13px; color: #6B7280; margin-top: 4px;">Belum ada data yang dapat ditampilkan.</div>
             </div>
         @endforelse
     </div>
 
+    <x-eoffice::manajemen-praktikum.ui.tugas-akhir-card :praktikum="$daftarPraktikan?->praktikum" role="mahasiswa" section="tugas" />
 </x-eoffice::manajemen-praktikum.layout>

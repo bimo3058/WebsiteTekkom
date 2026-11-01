@@ -4,20 +4,20 @@
 <div x-data="{ st: 0 }" x-init="
         const box = document.querySelector('.mp-box-body');
         if (box) {
+            st = Math.max(0, box.scrollTop);
             let ticking = false;
             box.addEventListener('scroll', () => {
                 if (!ticking) {
                     window.requestAnimationFrame(() => {
-                        st = box.scrollTop;
+                        st = Math.max(0, box.scrollTop);
                         ticking = false;
                     });
                     ticking = true;
                 }
             });
         }
-         }
      " class="sticky z-20 bg-white transition-all duration-300"
-    style="top: -200px; margin: -20px -24px 0 -24px; padding: 20px 24px 0 24px; border-bottom: 1px solid var(--c-border); margin-bottom: 16px;">
+    style="top: -200px; margin: -20px -24px 0 -24px; padding: 20px 24px 0 24px; border-bottom: 0; margin-bottom: 16px;">
 
     {{-- Banner / Cover Image Container --}}
     <div
@@ -28,7 +28,7 @@
             @if($praktikum->cover_path)
                 <img src="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($praktikum->cover_path, 'eoffice') }}"
                      class="w-full h-full object-cover"
-                     :style="`transform: scale(${Math.max(1, 1 + (st / 200) * 0.1)}); opacity: ${Math.max(0.3, 1 - (st / 300))}; filter: blur(${Math.min(8, st / 15)}px);`"
+                     :style="`transform: scale(${1 + Math.min(1, Math.max(0, st / 200)) * 0.04});`"
                      alt="Cover Praktikum">
             @else
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="#828896"
@@ -41,42 +41,29 @@
 
         {{-- Upload Button & Delete Button --}}
         <div class="absolute top-4 right-4 pointer-events-auto z-10 flex gap-2" :style="`opacity: ${Math.max(0, 1 - (st / 100))};`">
-            @if($praktikum->cover_path)
+            <x-eoffice::manajemen-praktikum.ui.action-menu>
+                <button type="button" class="primary" @click="document.getElementById('cover_upload').click()"><x-eoffice::manajemen-praktikum.ui.icon name="upload" />{{ $praktikum->cover_path ? 'Ubah Gambar Sampul' : 'Tambahkan Gambar Sampul' }}</button>
+                @if($praktikum->cover_path)
                 <form action="{{ route('eoffice.manprak.koor.praktikum.cover.destroy', $praktikum->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus gambar sampul?');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" style="cursor:pointer; background:rgba(223,28,65,0.9); padding:8px; border-radius:8px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.1); backdrop-filter:blur(4px); transition:all 0.2s;" onmouseover="this.style.background='#DF1C41'" onmouseout="this.style.background='rgba(223,28,65,0.9)'" title="Hapus Gambar Sampul">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 6h18"></path>
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                        </svg>
-                    </button>
+                    @csrf @method('DELETE')
+                    <button type="submit" class="destructive"><x-eoffice::manajemen-praktikum.ui.icon name="trash" />Hapus Gambar Sampul</button>
                 </form>
-            @endif
-
-            <form action="{{ route('eoffice.manprak.koor.praktikum.cover.update', $praktikum->id) }}" method="POST" enctype="multipart/form-data" id="coverUploadForm">
+                @endif
+            </x-eoffice::manajemen-praktikum.ui.action-menu>
+            <form action="{{ route('eoffice.manprak.koor.praktikum.cover.update', $praktikum->id) }}" method="POST" enctype="multipart/form-data" id="coverUploadForm" hidden>
                 @csrf
-                <label for="cover_upload" style="cursor:pointer; background:rgba(255,255,255,0.9); padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; color:#111827; display:flex; align-items:center; gap:6px; box-shadow:0 2px 4px rgba(0,0,0,0.1); backdrop-filter:blur(4px); transition:all 0.2s;" onmouseover="this.style.background='#ffffff'" onmouseout="this.style.background='rgba(255,255,255,0.9)'">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="17 8 12 3 7 8"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                    </svg>
-                    {{ $praktikum->cover_path ? 'Ubah Gambar Sampul' : 'Tambahkan Gambar Sampul' }}
-                </label>
-                <input type="file" id="cover_upload" name="cover" class="hidden" accept="image/jpeg,image/png,image/jpg" onchange="document.getElementById('coverUploadForm').submit()">
+                <input type="file" id="cover_upload" name="cover" accept="image/jpeg,image/png,image/jpg" onchange="this.form.requestSubmit()">
             </form>
         </div>
 
         {{-- 1. Base Gradient --}}
         <div class="absolute inset-0 pointer-events-none"
-            style="border-radius: inherit; background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0) 100%);">
+            style="border-radius: inherit; background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0) 100%);">
         </div>
 
         {{-- 2. Scrolled Overlay --}}
         <div class="absolute inset-0 pointer-events-none"
-            :style="`border-radius: inherit; opacity: ${Math.min(1, st / 200)}; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);`">
+            style="display:none;" aria-hidden="true">
         </div>
 
         {{-- Title --}}
@@ -97,6 +84,10 @@
         $isBagiModul = str_contains($currentRoute, 'bagi-modul');
         $isPraktikan = str_contains($currentRoute, 'praktikan');
         $isNilai = str_contains($currentRoute, 'nilai');
+        if (str_contains($currentRoute, '.tugas-akhir.')) {
+            $isModul = (request()->route('taSection') ?? 'modul') === 'modul';
+            $isNilai = request()->route('taSection') === 'nilai';
+        }
 
         $activeStyle = "padding:12px 24px; font-weight:600; font-size:14px; color:#293C79; text-decoration:none; border-bottom:2px solid #293C79;";
         $inactiveStyle = "padding:12px 24px; font-weight:500; font-size:14px; color:var(--c-fg-muted); text-decoration:none;";
@@ -119,4 +110,8 @@
         <a href="{{ route('eoffice.manprak.koor.nilai.index') }}"
             style="{{ $isNilai ? $activeStyle : $inactiveStyle }}">Absensi & Nilai</a>
     </div>
+    <div class="mp-praktikum-tabs-divider" aria-hidden="true"></div>
+    @if($slot->isNotEmpty())
+        {{ $slot }}
+    @endif
 </div>

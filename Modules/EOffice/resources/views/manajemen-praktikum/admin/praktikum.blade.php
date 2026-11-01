@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Daftar Praktikum">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Daftar Praktikum">
 
     <style>
         .praktikum-filter-search {
@@ -247,9 +247,11 @@
                                 @endif
                             </div>
                             <div class="flex items-center justify-center gap-1.5" onclick="event.stopPropagation()">
+                                <x-eoffice::manajemen-praktikum.ui.action-menu>
                                 <a href="{{ route('eoffice.manprak.admin.praktikum.detail', $p->id) }}"
                                     class="flex items-center justify-center w-8 h-8 rounded-lg border border-[#DFE1E7] bg-white text-[#666D80] hover:bg-[#F6F8FA] hover:text-[#0B266E] transition-colors"
                                     title="Detail Praktikum">
+                                    <span>Detail Praktikum</span>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2" stroke-linecap="round">
                                         <circle cx="12" cy="12" r="10"></circle>
@@ -261,6 +263,7 @@
                                     @click="$dispatch('open-edit-modal', { id: '{{ $p->id }}', nama: '{{ addslashes($p->nama) }}', matkul_id: '{{ $p->matkul_id }}', tahun_ajaran: '{{ $p->tahun_ajaran }}', semester: '{{ $p->semester }}', status: '{{ $p->is_active ? 'aktif' : 'nonaktif' }}', dosens: {{ json_encode($p->dosens->pluck('id')->isEmpty() ? [''] : $p->dosens->pluck('id')) }} })"
                                     class="flex items-center justify-center w-8 h-8 rounded-lg border border-[#DFE1E7] bg-white text-[#666D80] hover:bg-[#F6F8FA] hover:text-[#0D0D12] transition-colors"
                                     title="Edit Praktikum">
+                                    <span>Edit Praktikum</span>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2" stroke-linecap="round">
                                         <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
@@ -272,6 +275,7 @@
                                     @csrf @method('DELETE')
                                     <button type="submit"
                                         class="flex items-center justify-center w-8 h-8 rounded-lg border border-[#FADAE1] bg-[#FFF5F5] text-[#DF1C41] hover:bg-[#FEE2E2] transition-colors">
+                                        <span>Hapus Praktikum</span>
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                             stroke-width="2" stroke-linecap="round">
                                             <polyline points="3 6 5 6 21 6" />
@@ -280,6 +284,7 @@
                                         </svg>
                                     </button>
                                 </form>
+                                </x-eoffice::manajemen-praktikum.ui.action-menu>
                             </div>
                         </div>
                     @empty
@@ -298,133 +303,8 @@
         </div>
 
         {{-- Pagination Custom Fungsional --}}
-        @if(isset($praktikums) && method_exists($praktikums, 'hasPages') && ($praktikums->hasPages() || $praktikums->total() > 0))
-            <div
-                style="display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-top:1px solid var(--c-border);">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <div x-data="{ open: false, selected: '{{ request('per_page', 10) }}', options: [5, 10, 20] }"
-                        class="relative" @click.away="open = false">
-                        <div class="flex items-center gap-2 cursor-pointer border rounded-[8px] px-3 py-1.5 transition-colors focus:outline-none"
-                            :class="open ? 'border-[#0B266E] bg-[#EEF1FA] text-[#0B266E]' : 'border-[#DFE1E7] bg-white text-[#353849] hover:bg-[#F6F8FA]'"
-                            @click="open = !open">
-                            <span class="text-[12px] text-[#666D80]" :class="open ? 'text-[#0B266E]' : ''">Per
-                                halaman</span>
-                            <div class="flex items-center gap-1 font-semibold text-[12px]">
-                                <span x-text="selected"></span>
-                                <svg class="w-3.5 h-3.5 transition-transform duration-200"
-                                    :class="{'rotate-180': open, 'text-[#0B266E]': open, 'text-[#666D80]': !open}"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </div>
-                        </div>
-                        <div x-show="open" @click.away="open = false" style="display: none;"
-                            x-transition:enter="transition ease-out duration-100"
-                            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                            x-transition:leave="transition ease-in duration-75"
-                            x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                            class="absolute top-full left-0 mt-2 z-10 w-full min-w-[80px] bg-white border border-[#DFE1E7] rounded-[10px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 px-1.5 flex flex-col">
-                            <template x-for="option in options" :key="option">
-                                <label
-                                    class="flex items-center justify-between px-3 py-2 rounded-[6px] cursor-pointer text-[12px] transition-colors mb-0.5 last:mb-0"
-                                    :class="selected == option ? 'bg-[#F6F8FA] text-[#0B266E] font-medium' : 'text-[#353849] hover:bg-[#F6F8FA]'">
-                                    <input type="radio" :value="option" name="per_page" form="filter_praktikum_form"
-                                        x-model="selected"
-                                        @change="document.getElementById('filter_praktikum_form').submit()" class="hidden">
-                                    <span x-text="option"></span>
-                                    <svg x-show="selected == option" class="w-3.5 h-3.5 flex-shrink-0 text-[#0B266E] ml-2"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                                        stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </label>
-                            </template>
-                        </div>
-                    </div>
-                    <div style="font-size:13px; color:var(--c-fg-sec);">Menampilkan {{ $praktikums->firstItem() ?? 0 }}
-                        sampai {{ $praktikums->lastItem() ?? 0 }} dari {{ $praktikums->total() }} data</div>
-                </div>
-
-                <div style="display:flex; gap:4px;">
-                    {{-- Tombol Prev --}}
-                    @if ($praktikums->onFirstPage())
-                        <span
-                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#FAFAFA; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--c-border-strong);">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="15 18 9 12 15 6" />
-                            </svg>
-                        </span>
-                    @else
-                        <a href="{{ $praktikums->previousPageUrl() }}#daftar-praktikum"
-                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-fg); text-decoration:none;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="15 18 9 12 15 6" />
-                            </svg>
-                        </a>
-                    @endif
-
-                    {{-- Looping Nomor Halaman (Pola Custom) --}}
-                    @php
-                        $current = $praktikums->currentPage();
-                        $last = $praktikums->lastPage();
-
-                        if ($current % 3 == 1) {
-                            $start = $current;
-                        } else {
-                            $start = $current - 1;
-                        }
-
-                        // Jika sudah mentok di halaman terakhir
-                        if ($start + 2 > $last) {
-                            $start = max(1, $last - 2);
-                        }
-
-                        $end = min($start + 2, $last);
-                    @endphp
-
-                    @if($start > 1)
-                        <span
-                            style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--c-fg-sec);">...</span>
-                    @endif
-
-                    @for ($i = $start; $i <= $end; $i++)
-                        @if ($i == $current)
-                            <span
-                                style="width:32px; height:32px; border:none; background:var(--c-primary); color:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600;">{{ $i }}</span>
-                        @else
-                            <a href="{{ $praktikums->url($i) }}#daftar-praktikum"
-                                style="width:32px; height:32px; border:1px solid var(--c-border); background:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; font-weight:600; color:var(--c-fg); text-decoration:none;">{{ $i }}</a>
-                        @endif
-                    @endfor
-
-                    @if($end < $last)
-                        <span
-                            style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--c-fg-sec);">...</span>
-                    @endif
-
-                    {{-- Tombol Next --}}
-                    @if ($praktikums->hasMorePages())
-                        <a href="{{ $praktikums->nextPageUrl() }}#daftar-praktikum"
-                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-fg); text-decoration:none;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="9 18 15 12 9 6" />
-                            </svg>
-                        </a>
-                    @else
-                        <span
-                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#FAFAFA; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--c-border-strong);">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="9 18 15 12 9 6" />
-                            </svg>
-                        </span>
-                    @endif
-                </div>
-            </div>
+        @if(isset($praktikums) && $praktikums instanceof \Illuminate\Pagination\LengthAwarePaginator)
+            <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$praktikums" :options="[5, 10, 20]" fragment="daftar-praktikum" />
         @endif
     </div>
 
@@ -493,7 +373,7 @@
                                         class="truncate pr-2" :class="!selected ? 'text-[#94A3B8]' : ''"></span>
                                     <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                         :class="{'rotate-180': open, 'text-[#0B266E]': open, 'text-[#666D80]': !open}"
-                                        viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 20 20" fill="none" stroke="#666D80" stroke-width="2"
                                         stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
@@ -562,7 +442,7 @@
                                             class="truncate pr-2" :class="!selected ? 'text-[#94A3B8]' : ''"></span>
                                         <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                             :class="{'rotate-180': dropdownOpen, 'text-[#0B266E]': dropdownOpen, 'text-[#666D80]': !dropdownOpen}"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                            viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round">
                                             <polyline points="6 9 12 15 18 9"></polyline>
                                         </svg>
@@ -633,7 +513,7 @@
                                                 :class="dosens[index] ? 'text-[#0D0D12]' : 'text-[#94A3B8]'"></span>
                                             <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                                 :class="{'rotate-180': open, 'text-[#0B266E]': open, 'text-[#666D80]': !open}"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                                                 stroke-linecap="round" stroke-linejoin="round">
                                                 <polyline points="6 9 12 15 18 9"></polyline>
                                             </svg>
@@ -715,7 +595,7 @@
                                         class="truncate pr-2" :class="!selected ? 'text-[#94A3B8]' : ''"></span>
                                     <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                         :class="{'rotate-180': dropdownOpen, 'text-[#0B266E]': dropdownOpen, 'text-[#666D80]': !dropdownOpen}"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                                         stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
@@ -747,8 +627,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex gap-3 justify-end mt-6 pt-5 border-t border-[#DFE1E7]">
-                        <button type="button" onclick="document.getElementById('modalCreate').classList.add('hidden')"
+                    <div class="mp-modal-footer mp-modal-footer-bleed flex gap-3 justify-end mt-6 pt-5 border-t border-[#DFE1E7]" style="--mp-modal-footer-radius:16px;">
+                        <button type="button" @click="open = false"
                             class="mp-btn secondary md px-5">Batal</button>
                         <button type="submit" class="mp-btn primary md px-5">Simpan</button>
                     </div>
@@ -819,7 +699,7 @@
                                         :class="!editData.matkul_id ? 'text-[#94A3B8]' : ''"></span>
                                     <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                         :class="{'rotate-180': dropdownOpen, 'text-[#0B266E]': dropdownOpen, 'text-[#666D80]': !dropdownOpen}"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                                         stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
@@ -890,7 +770,7 @@
                                             :class="!editData.semester ? 'text-[#94A3B8]' : ''"></span>
                                         <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                             :class="{'rotate-180': dropdownOpen, 'text-[#0B266E]': dropdownOpen, 'text-[#666D80]': !dropdownOpen}"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                            viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round">
                                             <polyline points="6 9 12 15 18 9"></polyline>
                                         </svg>
@@ -952,7 +832,7 @@
                                                 :class="editData.dosens[index] ? 'text-[#0D0D12]' : 'text-[#94A3B8]'"></span>
                                             <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                                 :class="{'rotate-180': dropdownOpen, 'text-[#0B266E]': dropdownOpen, 'text-[#666D80]': !dropdownOpen}"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                                                 stroke-linecap="round" stroke-linejoin="round">
                                                 <polyline points="6 9 12 15 18 9"></polyline>
                                             </svg>
@@ -1032,7 +912,7 @@
                                         class="truncate pr-2" :class="!editData.status ? 'text-[#94A3B8]' : ''"></span>
                                     <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                         :class="{'rotate-180': dropdownOpen, 'text-[#0B266E]': dropdownOpen, 'text-[#666D80]': !dropdownOpen}"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                                         stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
@@ -1064,7 +944,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex gap-3 justify-end mt-6 pt-5 border-t border-[#DFE1E7]">
+                    <div class="mp-modal-footer mp-modal-footer-bleed flex gap-3 justify-end mt-6 pt-5 border-t border-[#DFE1E7]" style="--mp-modal-footer-radius:16px;">
                         <button type="button" @click="open = false" class="mp-btn secondary md px-5">Batal</button>
                         <button type="submit" class="mp-btn primary md px-5">Simpan Perubahan</button>
                     </div>
