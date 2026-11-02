@@ -1,7 +1,11 @@
 @php
     $userRoleNames = $user->roles->pluck('name')->map(fn($r) => strtolower($r))->toArray();
 
-    $himpunanPositions = ['ketua_himpunan','ketua_bidang','ketua_unit','staff_himpunan'];
+    $himpunanPositions = \Modules\ManajemenMahasiswa\Support\RoleHimpunan::POSISI;
+    $rolesBerbidang    = \Modules\ManajemenMahasiswa\Support\RoleHimpunan::BERBIDANG;
+    $bidangUserId      = $user->pengurusBidang?->bidang_id;
+    $bidangOptions     = $bidangOptions ?? collect();
+    $bidangTerkunci    = $bidangTerkunci ?? null;
     $isAlumni          = in_array('alumni', $userRoleNames);
     $isPengurus        = count(array_intersect($userRoleNames, $himpunanPositions)) > 0;
     $isMahasiswa       = in_array('mahasiswa', $userRoleNames) && !$isPengurus && !$isAlumni;
@@ -26,8 +30,8 @@
 
     $roleTone = function (string $role) use ($tone): array {
         return match(true) {
-            $role === 'ketua_himpunan'                     => $tone['primary'],
-            in_array($role, ['ketua_bidang','ketua_unit'])  => $tone['sky'],
+            in_array($role, \Modules\ManajemenMahasiswa\Support\RoleHimpunan::INTI)            => $tone['primary'],
+            in_array($role, \Modules\ManajemenMahasiswa\Support\RoleHimpunan::PIMPINAN_BIDANG) => $tone['sky'],
             $role === 'staff_himpunan'                      => $tone['neutral'],
             $role === 'alumni'                              => $tone['success'],
             $role === 'mahasiswa'                           => $tone['warning'],
@@ -36,28 +40,35 @@
         };
     };
 
+    // Label singkat (KAHIM, KABID, ...) — dipakai di pilihan form.
     $roleLabel = function(string $role): string {
         return match($role) {
-            'ketua_himpunan'       => 'Ketua Himpunan',
-            'ketua_bidang'         => 'Ketua Bidang',
-            'ketua_unit'           => 'Ketua Unit',
-            'staff_himpunan'       => 'Staff Himpunan',
             'alumni'               => 'Alumni',
             'mahasiswa'            => 'Mahasiswa',
             'pengurus_himpunan'    => 'Pengurus',
-            default                => ucwords(str_replace('_', ' ', $role)),
+            default                => \Modules\ManajemenMahasiswa\Support\RoleHimpunan::label($role),
         };
     };
 
-    // Role yang ditampilkan di badge (sembunyikan pengurus_himpunan karena umbrella)
-    $displayRoles = $user->roles->filter(fn($r) => $r->name !== 'pengurus_himpunan');
+    // Label badge: jabatan berbidang ikut nama bidang/unitnya, mis. "KABID / RISTEK".
+    $roleBadgeLabel = fn(string $role): string => in_array($role, $himpunanPositions, true)
+        ? \Modules\ManajemenMahasiswa\Support\RoleHimpunan::labelLengkap($user, $role)
+        : $roleLabel($role);
+
+    // Role yang ditampilkan di badge (sembunyikan pengurus_himpunan karena umbrella).
+    // unique('name'): tabel roles punya dua baris "mahasiswa" (capstone & global) —
+    // akun lama yang memegang keduanya tidak boleh tampil dengan badge ganda.
+    $displayRoles = $user->roles->filter(fn($r) => $r->name !== 'pengurus_himpunan')->unique('name');
 
     $nim        = $user->student->student_number ?? null;
     $cohortYear = $user->student->cohort_year ?? null;
 
-    // Apakah actor bisa edit user ini
+    // Apakah actor bisa edit user ini — aturan yang sama dengan updateRole()
+    // (ManajemenPenggunaController::bisaUbah): hanya akun dengan hak lebih rendah.
     $actor   = auth()->user();
-    $canEdit = !in_array('superadmin', $userRoleNames)
+    $canEdit = isset($bisaUbah)
+        ? $bisaUbah($user)
+        : !in_array('superadmin', $userRoleNames)
             && !in_array('admin', $userRoleNames)
             && !in_array('dosen', $userRoleNames)
             && $actor->id !== $user->id;
@@ -100,7 +111,7 @@
             @forelse($displayRoles as $role)
                 @php $t = $roleTone($role->name); @endphp
                 <span class="mp-role-badge" style="background:{{ $t[0] }};color:{{ $t[2] }};">
-                    {{ $roleLabel($role->name) }}
+                    {{ $roleBadgeLabel($role->name) }}
                 </span>
             @empty
                 <span class="mp-role-badge" style="background:#FADAE1;color:#DF1C41;">No Role</span>
@@ -120,7 +131,7 @@
                 <span>Ubah Role</span>
             </button>
         @else
-            <span class="mp-locked" title="Role pengguna ini tidak dapat diubah dari sini">
+            <span class="mp-locked" title="Anda tidak dapat mengubah role pengguna dengan hak setara atau lebih tinggi">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
@@ -175,7 +186,9 @@
                     <label>
                         <input type="checkbox" name="roles[]" value="{{ $role->name }}"
                             {{ $isCurrentRole ? 'checked' : '' }}
-                            class="mk-role-check" data-exclusive="0" style="display:none;">
+                            class="mk-role-check" data-exclusive="0"
+                            data-berbidang="{{ in_array($role->name, $rolesBerbidang, true) ? '1' : '0' }}"
+                            style="display:none;">
                         <div class="mk-role-pill {{ $isCurrentRole ? 'mk-role-active' : '' }}"
                             style="border-color:{{ $isCurrentRole ? $border : '#DFE1E7' }};background:{{ $isCurrentRole ? $bg : '#fff' }};color:{{ $isCurrentRole ? $color : '#666D80' }};"
                             data-active-bg="{{ $bg }}" data-active-border="{{ $border }}" data-active-color="{{ $color }}">
@@ -200,6 +213,37 @@
                         </div>
                     </label>
                 @endif
+            </div>
+
+            {{-- Bidang/Unit — wajib untuk KABID, WAKABID, KANIT, WAKANIT, dan Staff.
+                 Ditampilkan oleh _scripts saat salah satu role itu dicentang. --}}
+            @php
+                $punyaRoleBerbidang = count(array_intersect($userRoleNames, $rolesBerbidang)) > 0;
+                $bidangDipilih      = $bidangTerkunci ?? $bidangUserId;
+            @endphp
+            <div class="mk-bidang-field" style="margin-top:12px;max-width:320px;{{ $punyaRoleBerbidang ? '' : 'display:none;' }}">
+                <label class="uc-section-label" for="bidang-{{ $user->id }}" style="display:block;margin-bottom:6px;">
+                    Bidang / Unit <span style="color:#DF1C41;">*</span>
+                </label>
+                <x-manajemenmahasiswa::ui.select name="bidang_id" id="bidang-{{ $user->id }}">
+                    @unless($bidangTerkunci)
+                        <option value="" hidden {{ $bidangDipilih ? '' : 'selected' }}>Pilih bidang/unit</option>
+                    @endunless
+                    @foreach($bidangOptions->groupBy('jenis') as $jenis => $daftar)
+                        <optgroup label="{{ $jenis === \Modules\ManajemenMahasiswa\Models\Bidang::JENIS_UNIT ? 'Unit' : 'Bidang' }}">
+                            @foreach($daftar as $b)
+                                <option value="{{ $b->id }}" @selected((int) $bidangDipilih === (int) $b->id)>{{ $b->nama_bidang }}</option>
+                            @endforeach
+                        </optgroup>
+                    @endforeach
+                </x-manajemenmahasiswa::ui.select>
+                <p class="uc-hint" style="margin-top:6px;">
+                    @if($bidangTerkunci)
+                        Staff hanya bisa ditempatkan di bidang/unit Anda sendiri.
+                    @else
+                        KABID/WAKABID memegang Bidang, KANIT/WAKANIT memegang Unit, Staff boleh keduanya.
+                    @endif
+                </p>
             </div>
 
             <div class="uc-actions">

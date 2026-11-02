@@ -6,13 +6,16 @@
     @endpush
 
     @php
-        $roleOptions = [
-            ['name' => 'all',            'label' => 'Semua Role'],
-            ['name' => 'ketua_himpunan', 'label' => 'Ketua Himpunan'],
-            ['name' => 'ketua_bidang',   'label' => 'Ketua Bidang'],
-            ['name' => 'ketua_unit',     'label' => 'Ketua Unit'],
-            ['name' => 'staff_himpunan', 'label' => 'Staff Himpunan'],
-        ];
+        $roleOptions = collect(\Modules\ManajemenMahasiswa\Support\RoleHimpunan::LABEL)
+            ->map(fn ($label, $name) => ['name' => $name, 'label' => $label])
+            ->prepend(['name' => 'all', 'label' => 'Semua Role'])
+            ->values()
+            ->all();
+
+        // Filter Bidang/Unit hanya untuk KAHIM/WAKAHIM & admin; pimpinan bidang/unit
+        // sudah otomatis dibatasi ke bidang/unitnya sendiri.
+        $tampilFilterBidang = $category === 'Pengurus Himpunan' && !$bidangTerkunci;
+        $filterBidangAktif  = $tampilFilterBidang && ($bidangFilter ?? 'all') !== 'all';
     @endphp
 
     <div class="user-wrap">
@@ -108,7 +111,7 @@
                                         <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
                                     </svg>
                                     <span style="line-height:1;">Filter</span>
-                                    @if($angkatan)
+                                    @if($angkatan || $filterBidangAktif)
                                         <span class="filter-pop-dot"></span>
                                     @endif
                                 </button>
@@ -138,6 +141,22 @@
                                                 @endforeach
                                             </x-manajemenmahasiswa::ui.select>
                                         </div>
+
+                                        @if($tampilFilterBidang)
+                                            <div>
+                                                <label class="filter-pop-label" for="filterBidangPengurus">Bidang / Unit</label>
+                                                <x-manajemenmahasiswa::ui.select name="bidang" id="filterBidangPengurus">
+                                                    <option value="all">Semua Bidang/Unit</option>
+                                                    @foreach($bidangOptions->groupBy('jenis') as $jenis => $daftar)
+                                                        <optgroup label="{{ $jenis === \Modules\ManajemenMahasiswa\Models\Bidang::JENIS_UNIT ? 'Unit' : 'Bidang' }}">
+                                                            @foreach($daftar as $b)
+                                                                <option value="{{ $b->id }}" @selected((string) $bidangFilter === (string) $b->id)>{{ $b->nama_bidang }}</option>
+                                                            @endforeach
+                                                        </optgroup>
+                                                    @endforeach
+                                                </x-manajemenmahasiswa::ui.select>
+                                            </div>
+                                        @endif
 
                                         <div class="filter-pop-actions">
                                             <button type="submit" class="filter-pop-submit">Terapkan</button>

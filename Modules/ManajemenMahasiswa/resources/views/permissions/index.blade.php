@@ -263,7 +263,7 @@
             <div class="mp-modal-body">
                 <div class="mp-warning-box">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    <span>Aksi ini akan menghapus role Ketua Himpunan, Ketua Bidang, Ketua Unit, Staff Himpunan, dan Pengurus Himpunan dari seluruh anggota. Gunakan setiap pergantian periode kepengurusan.</span>
+                    <span>Aksi ini akan menghapus role KAHIM, WAKAHIM, KABID, WAKABID, KANIT, WAKANIT, Staff Himpunan, dan Pengurus Himpunan dari seluruh anggota, sekaligus melepas penempatan bidang/unitnya. Gunakan setiap pergantian periode kepengurusan.</span>
                 </div>
 
                 <div id="resetPengurusPreview" class="mp-preview-box">

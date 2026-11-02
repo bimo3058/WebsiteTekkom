@@ -36,7 +36,26 @@
         }
     }
 
+    // ── Dropdown Bidang/Unit: hanya untuk KABID, WAKABID, KANIT, WAKANIT, Staff ──
+    function butuhBidang(form) {
+        return Array.from(form.querySelectorAll('.mk-role-check[data-berbidang="1"]'))
+            .some(function (cb) { return cb.checked; });
+    }
+
+    function syncBidangField(form) {
+        var field = form.querySelector('.mk-bidang-field');
+        if (field) field.style.display = butuhBidang(form) ? '' : 'none';
+    }
+
     // ── Logika eksklusivitas & multi-select ───────────────────────────────────
+    document.addEventListener('change', function (e) {
+        if (e.target.classList.contains('mk-role-check') && e.target.closest('form')) {
+            // Dijalankan setelah handler di bawah selesai mengubah centang lain.
+            var formBidang = e.target.closest('form');
+            setTimeout(function () { syncBidangField(formBidang); }, 0);
+        }
+    });
+
     document.addEventListener('change', function (e) {
         var target = e.target;
         if (!target.classList.contains('mk-role-check')) return;
@@ -99,6 +118,17 @@
         }
 
         var values = checked.map(function (cb) { return cb.value; });
+
+        var bidangSelect = form.querySelector('select[name="bidang_id"]');
+        if (butuhBidang(form) && bidangSelect && !bidangSelect.value) {
+            e.preventDefault();
+            mkNotify({
+                title: 'Bidang/Unit Belum Dipilih',
+                message: 'KABID, WAKABID, KANIT, WAKANIT, dan Staff Himpunan wajib ditempatkan di satu bidang/unit.',
+                variant: 'warning',
+            });
+            return;
+        }
 
         if (values.includes('mahasiswa')) {
             // Dialog modul bersifat asinkron, jadi submit selalu ditahan dulu lalu form

@@ -153,37 +153,15 @@ function handleKategoriChange() {
     toggleBidangField();
 }
 
+// Sejak 2 Nov 2026 Bidang/Unit wajib untuk semua proker, termasuk Kegiatan Prodi —
+// kolomnya tidak lagi disembunyikan. Fungsi dipertahankan karena dipanggil
+// handleKategoriChange() & saat halaman dimuat.
 function toggleBidangField() {
-    const checked = document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked');
     const bidangRequired = document.getElementById('bidangRequired');
     const bidangWrapper  = document.getElementById('bidangFieldWrapper');
 
-    // "Hanya Prodi" = ada kategori dicentang DAN semuanya berflag prodi
-    let allProdi = checked.length > 0;
-    checked.forEach(cb => {
-        if (cb.getAttribute('data-is-prodi') !== '1') {
-            allProdi = false;
-        }
-    });
-    const isOnlyProdi = allProdi && checked.length > 0;
-
-    if (bidangRequired) bidangRequired.style.display = isOnlyProdi ? 'none' : '';
-
-    // Sembunyikan SELURUH kolom Bidang saat hanya Kegiatan Prodi yang dipilih.
-    // Saat disembunyikan, lepas centang bidang agar tidak ikut tersimpan.
-    if (bidangWrapper) {
-        if (isOnlyProdi) {
-            bidangWrapper.style.display = 'none';
-            document.querySelectorAll('#bidangGroup input').forEach(inp => {
-                if (inp.checked) {
-                    inp.checked = false;
-                    inp.closest('.checkbox-card').classList.remove('checked');
-                }
-            });
-        } else {
-            bidangWrapper.style.display = '';
-        }
-    }
+    if (bidangRequired) bidangRequired.style.display = '';
+    if (bidangWrapper) bidangWrapper.style.display = '';
 }
 
 // ── Initialize on page load ──

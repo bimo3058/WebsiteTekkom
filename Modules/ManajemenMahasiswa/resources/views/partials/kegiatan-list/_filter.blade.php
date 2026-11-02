@@ -65,6 +65,9 @@
                     <p class="filter-pop-title">Advanced Filters</p>
 
                     <div class="filter-pop-fields">
+                        {{-- Disembunyikan untuk KABID/WAKABID/KANIT/WAKANIT & Staff: daftarnya
+                             sudah otomatis hanya bidang/unit mereka (Kegiatan::scopeTerlihatOleh). --}}
+                        @unless($bidangTerkunci ?? false)
                         <div>
                             <label class="filter-pop-label" for="filterBidang">Bidang</label>
                             <x-manajemenmahasiswa::ui.select name="bidang" id="filterBidang">
@@ -75,6 +78,7 @@
                                 @endforeach
                             </x-manajemenmahasiswa::ui.select>
                         </div>
+                        @endunless
 
                         <div>
                             <label class="filter-pop-label" for="filterPeriode">Periode Kepengurusan</label>

@@ -282,22 +282,49 @@
                         </div>
                         <div class="vr-card-body">
 
+                            @php
+                                // Verifikator sah (PengumumanService::verifikatorUntuk): pimpinan
+                                // bidang/unit pengaju + DPM. Dipisah per grup supaya jelas.
+                                $RH = \Modules\ManajemenMahasiswa\Support\RoleHimpunan::class;
+                                $pimpinanBidang = $verifiers->filter(fn ($v) => $v->roles->pluck('name')->intersect($RH::PIMPINAN_BIDANG)->isNotEmpty()
+                                    && $v->pengurusBidang?->bidang_id === $bidangPengaju?->id);
+                                $verifikatorDpm = $verifiers->reject(fn ($v) => $pimpinanBidang->contains('id', $v->id));
+                                $namaBidang     = $bidangPengaju?->nama_bidang ?? '-';
+                                $labelPimpinan  = function ($v) use ($RH) {
+                                    $jabatan = collect($RH::PIMPINAN_BIDANG)->first(fn ($r) => $v->roles->contains('name', $r));
+                                    return $jabatan ? $RH::labelLengkap($v, $jabatan) : 'Pimpinan';
+                                };
+                            @endphp
                             <div class="form-group">
                                 <label>Verifikator <span class="required">*</span></label>
                                 <x-manajemenmahasiswa::ui.select name="verifier_id" id="verifierSelect" size="md" required
                                     :invalid="$errors->has('verifier_id')">
-                                    <option value="">— Pilih Ketua Verifikator —</option>
-                                    @foreach($verifiers as $verifier)
-                                        @php
-                                            $roleLabel = $verifier->roles->pluck('name')->map(function($r) {
-                                                return ucwords(str_replace('_', ' ', $r));
-                                            })->implode(', ');
-                                        @endphp
-                                        <option value="{{ $verifier->id }}" {{ old('verifier_id') == $verifier->id ? 'selected' : '' }}>
-                                            {{ $verifier->name }} — {{ $roleLabel }}
-                                        </option>
-                                    @endforeach
+                                    <option value="">— Pilih Verifikator —</option>
+                                    @if($pimpinanBidang->isNotEmpty())
+                                        <optgroup label="Pimpinan {{ $namaBidang }}">
+                                            @foreach($pimpinanBidang as $verifier)
+                                                <option value="{{ $verifier->id }}" {{ old('verifier_id') == $verifier->id ? 'selected' : '' }}>
+                                                    {{ $verifier->name }} — {{ $labelPimpinan($verifier) }}
+                                                </option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endif
+                                    @if($verifikatorDpm->isNotEmpty())
+                                        <optgroup label="DPM">
+                                            @foreach($verifikatorDpm as $verifier)
+                                                <option value="{{ $verifier->id }}" {{ old('verifier_id') == $verifier->id ? 'selected' : '' }}>
+                                                    {{ $verifier->name }} — DPM
+                                                </option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endif
                                 </x-manajemenmahasiswa::ui.select>
+                                <span style="display:block;margin-top:6px;font-size:11px;color:var(--c-fg-placeholder, #808897);">
+                                    Pengumuman diverifikasi oleh pimpinan bidang/unit Anda ({{ $namaBidang }}) atau DPM.
+                                    @if($pimpinanBidang->isEmpty())
+                                        Bidang/unit Anda belum memiliki KABID/WAKABID/KANIT/WAKANIT, jadi saat ini hanya DPM yang bisa dipilih.
+                                    @endif
+                                </span>
                                 @error('verifier_id') <span class="form-error">{{ $message }}</span> @enderror
                             </div>
 

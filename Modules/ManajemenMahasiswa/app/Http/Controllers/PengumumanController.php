@@ -15,6 +15,7 @@ use Modules\ManajemenMahasiswa\Models\RepoMulmed;
 use Modules\ManajemenMahasiswa\Models\PengumumanPersonalPin;
 use Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest;
 use Modules\ManajemenMahasiswa\Support\PerPage;
+use Modules\ManajemenMahasiswa\Support\RoleHimpunan;
 
 class PengumumanController extends Controller
 {
@@ -42,7 +43,7 @@ class PengumumanController extends Controller
         // Admin murni (list lama): superadmin, admin, admin_kemahasiswaan
         // Blog-card baru: pengurus himpunan + gpm + dosen + dosen_koordinator
         $adminRoles    = ['superadmin', 'admin', 'admin_kemahasiswaan'];
-        $blogCardRoles = ['pengurus_himpunan', 'staff_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'gpm', 'ketua_departemen', 'dpm', 'dosen', 'dosen_koordinator'];
+        $blogCardRoles = ['pengurus_himpunan', 'staff_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'wakil_ketua_bidang', 'ketua_unit', 'wakil_ketua_unit', 'gpm', 'ketua_departemen', 'dpm', 'dosen', 'dosen_koordinator'];
 
         $isAdmin        = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan'])->isNotEmpty();
         $isAdminView    = $roles->intersect($adminRoles)->isNotEmpty();
@@ -314,6 +315,14 @@ class PengumumanController extends Controller
         $gambarFiles = $request->file('poster', []);
         unset($validated['poster'], $validated['lampiran']);
 
+        // Staff tanpa bidang/unit tidak punya verifikator yang sah: pengumuman tetap
+        // disimpan, tapi sebagai draft — tidak pernah sempat berstatus published.
+        $diblokirTanpaBidang = $validated['status_publish'] === 'published'
+            && $this->pengumumanService->staffBelumPunyaBidang(Auth::user());
+        if ($diblokirTanpaBidang) {
+            $validated['status_publish'] = Pengumuman::STATUS_DRAFT;
+        }
+
         $pengumuman = $this->pengumumanService->create(Auth::id(), $validated);
 
         // File yang sudah diupload saat draf disimpan — tinggal dipindah kepemilikannya.
@@ -353,6 +362,14 @@ class PengumumanController extends Controller
                     'pengumuman_id' => $pengumuman->id,
                 ]);
             }
+        }
+
+        if ($diblokirTanpaBidang) {
+            $draft?->delete();
+
+            return redirect()
+                ->route('manajemenmahasiswa.pengumuman.show', $pengumuman->id)
+                ->with('error', 'Pengumuman disimpan sebagai draft. ' . PengumumanService::PESAN_STAFF_TANPA_BIDANG);
         }
 
         // Publish langsung jika diminta
@@ -484,6 +501,24 @@ class PengumumanController extends Controller
             && ($validated['status_publish'] === 'published'
                 || ($alreadyPublished && $contentChanged));
 
+        // Staff tanpa bidang/unit tidak punya verifikator yang sah, jadi pengumuman tidak
+        // boleh dinaikkan ke pending_review (bisa menggantung tanpa pengajuan):
+        //  - sudah published + konten diubah → perubahan ditolak;
+        //  - sudah published, konten sama → tetap published, tanpa verifikasi ulang;
+        //  - belum published → disimpan sebagai draft.
+        $diblokirTanpaBidang = false;
+        if ($needsVerification && $this->pengumumanService->staffBelumPunyaBidang(Auth::user())) {
+            if ($alreadyPublished && $contentChanged) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Perubahan pengumuman yang sudah terbit perlu diverifikasi ulang. ' . PengumumanService::PESAN_STAFF_TANPA_BIDANG);
+            }
+
+            $needsVerification   = false;
+            $diblokirTanpaBidang = !$alreadyPublished;
+            $validated['status_publish'] = $alreadyPublished ? Pengumuman::STATUS_PUBLISHED : Pengumuman::STATUS_DRAFT;
+        }
+
         if ($needsVerification) {
             $validated['status_publish'] = 'pending_review';
         }
@@ -528,6 +563,12 @@ class PengumumanController extends Controller
                 ->with('info', 'Pengumuman diperbarui. Silakan pilih verifikator untuk mempublikasikannya.');
         }
 
+        if ($diblokirTanpaBidang) {
+            return redirect()
+                ->route('manajemenmahasiswa.pengumuman.show', $id)
+                ->with('error', 'Pengumuman disimpan sebagai draft. ' . PengumumanService::PESAN_STAFF_TANPA_BIDANG);
+        }
+
         return redirect()
             ->route('manajemenmahasiswa.pengumuman.show', $id)
             ->with('success', 'Pengumuman berhasil diperbarui.');
@@ -558,6 +599,11 @@ class PengumumanController extends Controller
         $this->authorizeOwnerOrAdmin($pengumuman->user_id);
 
         if ($this->pengumumanService->requiresApproval(Auth::user())) {
+            // Tanpa bidang/unit tidak ada verifikator yang sah — status tidak diubah.
+            if ($this->pengumumanService->staffBelumPunyaBidang(Auth::user())) {
+                return back()->with('error', PengumumanService::PESAN_STAFF_TANPA_BIDANG);
+            }
+
             $this->pengumumanService->update($id, [
                 'status_publish' => 'pending_review',
             ]);
@@ -781,9 +827,17 @@ class PengumumanController extends Controller
                 ->with('info', 'Pengumuman ini tidak dalam status menunggu verifikasi.');
         }
 
-        $verifiers = $this->pengumumanService->getAvailableVerifiers();
+        if ($this->pengumumanService->staffBelumPunyaBidang(Auth::user())) {
+            return redirect()
+                ->route('manajemenmahasiswa.pengumuman.show', $pengumumanId)
+                ->with('error', PengumumanService::PESAN_STAFF_TANPA_BIDANG);
+        }
 
-        return view('manajemenmahasiswa::pengumuman.pengumuman-verification-request', compact('pengumuman', 'verifiers'));
+        // Hanya KABID/WAKABID/KANIT/WAKANIT bidang/unit staff sendiri + DPM.
+        $verifiers     = $this->pengumumanService->verifikatorUntuk(Auth::user());
+        $bidangPengaju = Auth::user()->pengurusBidang?->bidang;
+
+        return view('manajemenmahasiswa::pengumuman.pengumuman-verification-request', compact('pengumuman', 'verifiers', 'bidangPengaju'));
     }
 
     /**
@@ -797,19 +851,20 @@ class PengumumanController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk aksi ini.');
         }
 
-        // Fix #1: Validasi backend bahwa verifier_id benar-benar punya role ketua yang valid
-        $validVerifierRoles = ['ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'dpm'];
+        if ($this->pengumumanService->staffBelumPunyaBidang(Auth::user())) {
+            return redirect()
+                ->route('manajemenmahasiswa.pengumuman.show', $pengumumanId)
+                ->with('error', PengumumanService::PESAN_STAFF_TANPA_BIDANG);
+        }
+
+        // Fix #1 (diperketat 2 Nov 2026): verifikator harus pimpinan bidang/unit staff
+        // sendiri atau DPM — sama persis dengan pilihan di form (verifikatorUntuk()).
+        $idVerifikatorSah = $this->pengumumanService->verifikatorUntuk(Auth::user())->pluck('id')->all();
         $validated = $request->validate([
-            'verifier_id' => [
-                'required',
-                'exists:users,id',
-                Rule::exists('model_has_roles', 'model_id')
-                    ->where('model_type', 'App\Models\User')
-                    ->whereIn('role_id', function ($q) use ($validVerifierRoles) {
-                        $q->select('id')->from('roles')->whereIn('name', $validVerifierRoles);
-                    }),
-            ],
+            'verifier_id'   => ['required', 'integer', Rule::in($idVerifikatorSah)],
             'pesan_pengaju' => 'nullable|string|max:1000',
+        ], [
+            'verifier_id.in' => 'Verifikator harus KABID/WAKABID/KANIT/WAKANIT bidang/unit Anda atau DPM.',
         ]);
 
         try {
@@ -880,8 +935,12 @@ class PengumumanController extends Controller
         $user = Auth::user();
         $statusFilter = $request->query('status', 'pending');
         $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm']);
+        // KAHIM/WAKAHIM memantau semua pengajuan (read-only): tidak bisa dipilih staff
+        // dan tidak punya hak override di approve/reject — tombol aksi hanya muncul
+        // untuk pengajuan yang memang ditujukan kepadanya.
+        $hanyaPantau = !$isAdmin && RoleHimpunan::isInti($user);
 
-        if ($isAdmin) {
+        if ($isAdmin || $hanyaPantau) {
             $requests     = $this->pengumumanService->getAllRequests($statusFilter, PerPage::resolve($request));
             $pendingCount = $this->pengumumanService->getAllPendingCount();
         } else {
@@ -889,7 +948,7 @@ class PengumumanController extends Controller
             $pendingCount = $this->pengumumanService->getPendingForVerifier($user->id)->count();
         }
 
-        return view('manajemenmahasiswa::pengumuman.pengumuman-verifikasi', compact('requests', 'statusFilter', 'pendingCount', 'isAdmin'));
+        return view('manajemenmahasiswa::pengumuman.pengumuman-verifikasi', compact('requests', 'statusFilter', 'pendingCount', 'isAdmin', 'hanyaPantau'));
     }
 
     /**

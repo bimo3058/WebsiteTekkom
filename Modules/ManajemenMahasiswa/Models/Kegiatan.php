@@ -2,6 +2,7 @@
 
 namespace Modules\ManajemenMahasiswa\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\ManajemenMahasiswa\Support\PeriodeKepengurusan;
+use Modules\ManajemenMahasiswa\Support\RoleHimpunan;
 
 class Kegiatan extends Model
 {
@@ -296,6 +298,27 @@ class Kegiatan extends Model
     }
 
     /**
+     * Kegiatan yang boleh dilihat user di Rencana Proker & Pelaksanaan.
+     *
+     * KAHIM/WAKAHIM, admin, dan pengawas melihat semua. Pemegang role berbidang
+     * (KABID, WAKABID, KANIT, WAKANIT, Staff) hanya kegiatan yang diset ke
+     * bidang/unitnya. Kegiatan tanpa bidang otomatis tidak ikut. Yang belum diset
+     * bidangnya tidak melihat apa pun. Sinkron dengan KegiatanPolicy::view().
+     */
+    public function scopeTerlihatOleh($query, User $user)
+    {
+        if (RoleHimpunan::bisaLihatSemuaProker($user)) {
+            return $query;
+        }
+
+        $bidangId = RoleHimpunan::bidangId($user);
+
+        return $bidangId && $user->hasAnyRole(RoleHimpunan::BERBIDANG)
+            ? $query->byBidang($bidangId)
+            : $query->whereRaw('1 = 0');
+    }
+
+    /**
      * Apakah SEMUA kategori yang dipilih merupakan kategori Prodi?
      *
      * Hanya untuk kondisi itulah Bidang boleh dikosongkan. Definisinya ditaruh di
@@ -365,12 +388,14 @@ class Kegiatan extends Model
      * baru otomatis muncul begitu tahun berganti (S-63).
      *
      * @param  string|array<int, string>  $status
+     * @param  User|null  $user  bila diisi, hanya kegiatan yang terlihat olehnya (scopeTerlihatOleh)
      * @return array<int, int> tahun terbaru lebih dulu; minimal berisi tahun berjalan
      */
-    public static function daftarTahun(string|array $status): array
+    public static function daftarTahun(string|array $status, ?User $user = null): array
     {
         $daftar = static::query()
             ->whereIn('status', (array) $status)
+            ->when($user, fn($q) => $q->terlihatOleh($user))
             ->where(fn($q) => $q->whereNotNull('tahun')->orWhereNotNull('tanggal_mulai'))
             ->get(['tahun', 'tanggal_mulai'])
             ->map(fn($kegiatan) => $kegiatan->tahun ?? $kegiatan->tanggal_mulai?->year)
@@ -403,12 +428,14 @@ class Kegiatan extends Model
      * terjauh bila ada rencana untuk kabinet berikutnya.
      *
      * @param  string|array<int, string>  $status
+     * @param  User|null  $user  bila diisi, hanya kegiatan yang terlihat olehnya (scopeTerlihatOleh)
      * @return array<int, int> tahun awal periode, terbaru lebih dulu
      */
-    public static function daftarPeriode(string|array $status): array
+    public static function daftarPeriode(string|array $status, ?User $user = null): array
     {
         $periode = static::query()
             ->whereIn('status', (array) $status)
+            ->when($user, fn($q) => $q->terlihatOleh($user))
             ->whereNotNull('tanggal_mulai')
             ->pluck('tanggal_mulai')
             ->map(fn ($tanggal) => PeriodeKepengurusan::untukTanggal($tanggal))

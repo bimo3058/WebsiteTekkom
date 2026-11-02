@@ -7,7 +7,9 @@
 
 <x-manajemenmahasiswa::ui.page-header bordered
     title="Rencana Program Kerja"
-    subtitle="Daftar rencana proker dari {{ $bidangList->count() }} bidang himpunan & prodi">
+    subtitle="{{ $bidangTerkunci
+        ? 'Daftar rencana proker ' . ($bidangList->first()->nama_bidang ?? 'bidang/unit Anda (belum diatur)')
+        : 'Daftar rencana proker dari ' . $bidangList->count() . ' bidang himpunan & prodi' }}">
     <x-slot:actions>
         @if($canManage)
             <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-btn mk-btn--primary mk-btn--sm">
@@ -35,6 +37,7 @@
                     'item' => $proker,
                     'href' => route('manajemenmahasiswa.proker.show', $proker->id),
                     'tampilTahap' => true,
+                    'tandaiTanpaBidang' => true,
                 ])
             </div>
         @endforeach

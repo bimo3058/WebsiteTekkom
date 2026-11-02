@@ -25,6 +25,7 @@
                 @include('manajemenmahasiswa::partials.kegiatan-list._kartu', [
                     'item' => $item,
                     'href' => route('manajemenmahasiswa.pelaksanaan.show', $item->id),
+                    'tandaiTanpaBidang' => true,
                 ])
             </div>
         @endforeach

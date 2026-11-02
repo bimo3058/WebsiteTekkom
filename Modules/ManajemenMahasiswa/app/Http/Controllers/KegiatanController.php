@@ -146,7 +146,7 @@ class KegiatanController extends Controller
         // GPM, Kadep & DPM view-only — tidak masuk daftar pengelola (hanya bisa lihat)
         $isAdmin = $roles->intersect([
             'superadmin', 'admin_kemahasiswaan',
-            'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+            'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'wakil_ketua_bidang', 'ketua_unit', 'wakil_ketua_unit',
         ])->isNotEmpty();
 
         // Tombol "Tambah Kegiatan" (create langsung ke arsip) hanya untuk role kurasi admin
@@ -193,7 +193,7 @@ class KegiatanController extends Controller
         $roles = $user->roles->pluck('name');
         $roleKelola = $roles->intersect([
             'superadmin', 'admin_kemahasiswaan',
-            'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+            'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'wakil_ketua_bidang', 'ketua_unit', 'wakil_ketua_unit',
         ])->isNotEmpty();
         $canEdit   = $roleKelola && Gate::allows('update', $kegiatan);
         $canDelete = $roleKelola && Gate::allows('delete', $kegiatan);

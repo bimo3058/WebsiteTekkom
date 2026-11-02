@@ -10,6 +10,8 @@
     Variabel: $item (Kegiatan — muat relasi bidang, bidangs, kategoriKegiatan,
     kategoris, dosenPendampings.user), $href.
     Opsional: $tampilTahap (bool) — badge tahap di banner; muat relasi `salinan`.
+    Opsional: $tandaiTanpaBidang (bool) — badge "Belum ada bidang" untuk kegiatan tanpa
+    bidang/unit (Rencana Proker & Pelaksanaan).
 
     Baris terakhir kartu = Dosen Pendamping (bukan Ketua Pelaksana — diganti 27 Okt 2026
     atas permintaan Surya; ketua pelaksana tetap tampil di halaman detail).
@@ -35,7 +37,13 @@
 
     <div class="kegiatan-card-body">
         <div class="kegiatan-badges">
-            @if($item->bidangs->isNotEmpty())
+            {{-- Rencana Proker & Pelaksanaan: bidang/unit wajib sejak 2 Nov 2026. Kegiatan
+                 lama tanpa bidang hanya terlihat KAHIM/WAKAHIM & admin — ditandai supaya
+                 dilengkapi. Kolom lama `bidang_id` tidak dihitung karena visibilitas
+                 membaca pivot `bidangs`. --}}
+            @if(($tandaiTanpaBidang ?? false) && $item->bidangs->isEmpty())
+                <span class="badge-bidang" style="background:#F9ECCB;color:#956321;" title="Lengkapi bidang/unit agar proker terlihat oleh bidang/unit pemegangnya">Belum ada bidang</span>
+            @elseif($item->bidangs->isNotEmpty())
                 @foreach($item->bidangs as $b)
                     <span class="badge-bidang">{{ $b->nama_bidang }}</span>
                 @endforeach

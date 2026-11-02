@@ -311,9 +311,22 @@
                     </a>
                 </div>
 
+                {{-- KAHIM/WAKAHIM: lihat semua, tanpa hak menyetujui/menolak --}}
+                @if($hanyaPantau ?? false)
+                    <div class="alert-info" style="margin-bottom:14px;padding:10px 14px;border-radius:8px;background:var(--c-bg, #F6F8FA);border:1px solid var(--c-border, #DFE1E7);color:var(--c-fg-sec, #353849);font-size:12.5px;">
+                        <strong>Mode pantau:</strong> Anda dapat melihat semua pengajuan, tetapi persetujuan dilakukan oleh pimpinan bidang/unit pengaju atau DPM.
+                    </div>
+                @endif
+
                 {{-- ── Request List ─────────────────────────── --}}
                 @forelse($requests as $req)
-                    @php $isNewRequest = $req->created_at?->gt(now()->subHours(24)); @endphp
+                    @php
+                        $isNewRequest = $req->created_at?->gt(now()->subHours(24));
+                        // Admin & DPM boleh memproses semua; selain itu hanya pengajuan
+                        // yang memang ditujukan kepadanya (KAHIM/WAKAHIM = pantau saja).
+                        $bolehProses  = $isAdmin || (int) $req->verifier_id === (int) auth()->id();
+                        $milikSendiri = (int) $req->verifier_id === (int) auth()->id();
+                    @endphp
                     <div class="request-card">
                         <div class="request-card-header">
                             <div style="min-width:0; flex:1;">
@@ -339,6 +352,12 @@
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                         {{ $req->created_at->diffForHumans() }}
                                     </span>
+                                    @if(($hanyaPantau ?? false) && $req->verifier)
+                                        <span class="request-meta-item" title="Verifikator">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                            Verifikator: {{ $req->verifier->name }}
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
 
@@ -368,13 +387,13 @@
                         {{-- Catatan verifikator (jika sudah diproses) --}}
                         @if($req->catatan_verifikator)
                             <div class="verifikator-catatan">
-                                <strong>Catatan Anda:</strong> {{ $req->catatan_verifikator }}
+                                <strong>{{ $milikSendiri ? 'Catatan Anda' : 'Catatan verifikator' }}:</strong> {{ $req->catatan_verifikator }}
                                 <br><small>Diproses: {{ $req->verified_at?->diffForHumans() }}</small>
                             </div>
                         @endif
 
-                        {{-- Action Area (hanya untuk pending) --}}
-                        @if($req->isPending())
+                        {{-- Action Area (hanya untuk pending & yang berhak memproses) --}}
+                        @if($req->isPending() && $bolehProses)
                             <div class="request-actions">
                                 <div class="catatan-input-group">
                                     <label for="catatan-{{ $req->id }}">Catatan <span class="hint">(wajib jika menolak)</span></label>
@@ -426,7 +445,7 @@
                 {{-- Footer bersama: Per page + Showing X to Y of Z results + nomor halaman.
                      Hanya admin yang daftarnya dipaginasi (verifikator lain lihat antrean
                      miliknya sendiri yang selalu muat satu halaman). --}}
-                @if($isAdmin)
+                @if($isAdmin || ($hanyaPantau ?? false))
                     @include('manajemenmahasiswa::partials.table-footer', [
                         'paginator'  => $requests,
                         'standalone' => true,

@@ -16,10 +16,9 @@
     elseif (in_array('gpm', $roles)) $roleDisplay = 'GPM';
     elseif (in_array('dosen_koordinator', $roles)) $roleDisplay = 'Koordinator';
     elseif (in_array('dosen', $roles)) $roleDisplay = 'Dosen';
-    elseif (in_array('ketua_himpunan', $roles)) $roleDisplay = 'Ketua Himpunan';
-    elseif (in_array('ketua_bidang', $roles)) $roleDisplay = 'Ketua Bidang';
-    elseif (in_array('ketua_unit', $roles)) $roleDisplay = 'Ketua Unit';
-    elseif (in_array('staff_himpunan', $roles)) $roleDisplay = 'Staff Himpunan';
+    // Jabatan himpunan, urut senioritas: KAHIM, WAKAHIM, KABID / RISTEK, ...
+    elseif ($jabatan = collect(\Modules\ManajemenMahasiswa\Support\RoleHimpunan::POSISI)->first(fn ($r) => in_array($r, $roles)))
+        $roleDisplay = \Modules\ManajemenMahasiswa\Support\RoleHimpunan::labelLengkap($user, $jabatan);
     elseif (in_array('mahasiswa', $roles)) $roleDisplay = 'Mahasiswa';
     elseif (in_array('alumni', $roles)) $roleDisplay = 'Alumni';
     else $roleDisplay = 'User';

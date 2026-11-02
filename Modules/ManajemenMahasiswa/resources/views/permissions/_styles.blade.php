@@ -41,6 +41,10 @@
     .user-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border); border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); overflow: hidden; width: 100%; box-sizing: border-box; }
     .user-box-header { background: #fff; border-bottom: 1px solid var(--c-border); flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
     .user-box-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; padding: 20px 24px; }
+    /* Isi body tidak boleh menyusut: .mp-table-card ber-overflow:hidden, jadi sebagai
+       flex item ia bisa dipaksa mengecil seukuran sisa layar — baris tabel terpotong
+       dan body tidak pernah ter-scroll (halaman "Lihat Semua"). */
+    .user-box-body > * { flex-shrink: 0; }
     .user-box-body::-webkit-scrollbar { width: 6px; }
     .user-box-body::-webkit-scrollbar-thumb { background: var(--c-border-strong); border-radius: 10px; }
     @media (max-width: 767px) {

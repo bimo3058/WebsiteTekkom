@@ -27,18 +27,18 @@ class PengaduanController extends Controller
     public const PELAPOR_ROLES = [
         'mahasiswa',
         'pengurus_himpunan',
-        'ketua_himpunan',
-        'ketua_bidang',
-        'ketua_unit',
+        'ketua_himpunan', 'wakil_ketua_himpunan',
+        'ketua_bidang', 'wakil_ketua_bidang',
+        'ketua_unit', 'wakil_ketua_unit',
         'staff_himpunan',
     ];
 
     private const VIEWER_ROLES = [
         'mahasiswa',
         'pengurus_himpunan',
-        'ketua_himpunan',
-        'ketua_bidang',
-        'ketua_unit',
+        'ketua_himpunan', 'wakil_ketua_himpunan',
+        'ketua_bidang', 'wakil_ketua_bidang',
+        'ketua_unit', 'wakil_ketua_unit',
         'staff_himpunan',
         'gpm',
         'kaprodi',

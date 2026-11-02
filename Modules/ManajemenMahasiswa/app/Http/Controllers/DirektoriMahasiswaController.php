@@ -204,7 +204,7 @@ class DirektoriMahasiswaController extends Controller
         }
 
         // Semua jenis pengurus himpunan → layout admin
-        $pengurus = ['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
+        $pengurus = ['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'wakil_ketua_bidang', 'ketua_unit', 'wakil_ketua_unit', 'staff_himpunan'];
         foreach ($pengurus as $role) {
             if (\in_array($role, $roles)) {
                 return 'manajemenmahasiswa::layouts.admin';

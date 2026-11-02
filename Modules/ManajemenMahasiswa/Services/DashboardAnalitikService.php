@@ -17,6 +17,7 @@ use Modules\ManajemenMahasiswa\Models\ForumReport;
 use Modules\ManajemenMahasiswa\Models\Thread;
 use Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest;
 use Modules\ManajemenMahasiswa\Models\PengurusHimaskom;
+use Modules\ManajemenMahasiswa\Support\RoleHimpunan;
 
 class DashboardAnalitikService
 {
@@ -376,12 +377,7 @@ class DashboardAnalitikService
 
     private function getDpmHimpunanRoleFallback(?object $periodeAktif): array
     {
-        $roleLabels = [
-            'ketua_himpunan'       => 'Ketua Himpunan',
-            'ketua_bidang'         => 'Ketua Bidang',
-            'ketua_unit'           => 'Ketua Unit',
-            'staff_himpunan'       => 'Staff Himpunan',
-        ];
+        $roleLabels = RoleHimpunan::LABEL;
 
         $roleNames = array_keys($roleLabels);
         $pengurus = User::role($roleNames)
@@ -395,7 +391,7 @@ class DashboardAnalitikService
         }
         $perJabatan = array_filter($perJabatan, fn ($total) => $total > 0);
 
-        $pengurusIntiRoles = ['ketua_himpunan', 'ketua_bidang', 'ketua_unit'];
+        $pengurusIntiRoles = ['ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'wakil_ketua_bidang', 'ketua_unit', 'wakil_ketua_unit'];
         $pengurusInti = $pengurus
             ->filter(fn ($user) => $user->hasAnyRole($pengurusIntiRoles))
             ->take(8)
@@ -425,7 +421,7 @@ class DashboardAnalitikService
             'kpi_3_label'       => 'Pengurus Inti',
             'kpi_3_value'       => $pengurus->filter(fn ($user) => $user->hasAnyRole($pengurusIntiRoles))->count(),
             'kpi_4_label'       => 'Ketua Unit/Bidang',
-            'kpi_4_value'       => $pengurus->filter(fn ($user) => $user->hasAnyRole(['ketua_unit', 'ketua_bidang']))->count(),
+            'kpi_4_value'       => $pengurus->filter(fn ($user) => $user->hasAnyRole(['ketua_unit', 'wakil_ketua_unit', 'ketua_bidang', 'wakil_ketua_bidang']))->count(),
             'composition_label' => 'Komposisi Pengurus per Jabatan',
             'per_divisi'        => $perJabatan,
             'pengurus_inti'     => $pengurusInti,

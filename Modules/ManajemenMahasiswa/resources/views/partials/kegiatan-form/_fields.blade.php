@@ -104,23 +104,34 @@
                 $bidangTerpilih = in_array((int) $proker->bidang_id, $idsBidangTersimpan, true)
                     ? (int) $proker->bidang_id
                     : ($idsBidangTersimpan[0] ?? null);
+                // Pimpinan bidang/unit & staff hanya mendapat bidang/unitnya sendiri
+                // (RoleHimpunan::daftarBidangUntuk) — langsung terpilih.
+                if ($bidangList->count() === 1) {
+                    $bidangTerpilih = (int) $bidangList->first()->id;
+                }
                 $bidangLamaGanda = count($idsBidangTersimpan) > 1
                     ? $bidangList->whereIn('id', $idsBidangTersimpan)->pluck('nama_bidang')->implode(', ')
                     : null;
             @endphp
             <div class="col-md-6" id="bidangFieldWrapper">
-                <label class="form-label-custom">Bidang <span class="required" id="bidangRequired">*</span></label>
-                <div class="checkbox-card-group" id="bidangGroup" role="radiogroup" aria-label="Bidang pemegang proker">
-                    @foreach($bidangList as $bidang)
+                {{-- Wajib untuk semua proker, termasuk Kegiatan Prodi (2 Nov 2026): proker
+                     hanya terlihat oleh bidang/unit pemegangnya. --}}
+                <label class="form-label-custom">Bidang / Unit <span class="required" id="bidangRequired">*</span></label>
+                <div class="checkbox-card-group" id="bidangGroup" role="radiogroup" aria-label="Bidang/unit pemegang proker">
+                    @forelse($bidangList as $bidang)
                         <label class="checkbox-card" id="bidangCard{{ $bidang->id }}">
                             <input type="radio" name="bidang_id[]"
-                                   value="{{ $bidang->id }}"
+                                   value="{{ $bidang->id }}" required
                                    {{ (int) $bidang->id === $bidangTerpilih ? 'checked' : '' }}>
                             {{ $bidang->nama_bidang }}
                         </label>
-                    @endforeach
+                    @empty
+                        <div class="checkbox-hint" style="color: var(--c-error, #DF1C41);">
+                            Bidang/unit Anda belum diatur. Minta KAHIM/WAKAHIM atau admin mengaturnya di Manajemen Pengguna.
+                        </div>
+                    @endforelse
                 </div>
-                <div class="checkbox-hint">Pilih satu bidang yang memegang proker ini</div>
+                <div class="checkbox-hint">Pilih satu bidang/unit yang memegang proker ini</div>
                 @if($bidangLamaGanda)
                     <div class="checkbox-hint" style="color: var(--c-warning, #b45309);">
                         Sebelumnya tercatat di beberapa bidang ({{ $bidangLamaGanda }}). Pastikan bidang yang terpilih

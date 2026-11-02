@@ -33,7 +33,7 @@ class NotifikasiTugasService
 
         // Pembagian peran disalin apa adanya dari sidebar supaya tidak ada
         // pengguna yang tiba-tiba melihat antrean yang bukan haknya.
-        $isKetua         = (bool) array_intersect($roles, ['ketua_unit', 'ketua_bidang', 'ketua_himpunan']);
+        $isKetua         = (bool) array_intersect($roles, ['ketua_unit', 'wakil_ketua_unit', 'ketua_bidang', 'wakil_ketua_bidang', 'ketua_himpunan', 'wakil_ketua_himpunan']);
         $isAdminVerifier = (bool) array_intersect($roles, ['admin', 'admin_kemahasiswaan', 'superadmin', 'dpm']);
         $isStaffHimpunan = in_array('staff_himpunan', $roles) && !$isKetua && !$isAdminVerifier;
         $isVerifikatorData = (bool) array_intersect($roles, ['superadmin', 'admin_kemahasiswaan']);

@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\In;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
+use Modules\ManajemenMahasiswa\Support\RoleHimpunan;
 
 /**
  * "Kegiatan mana yang boleh diubah" di ketiga subbab Manajemen Kegiatan
@@ -29,7 +30,7 @@ class KegiatanPolicy
      * Pembuat hanya dianggap pemilik selama ia masih memegang salah satunya.
      */
     public const PEMBUAT_PROKER = [
-        'ketua_bidang', 'ketua_unit', 'ketua_himpunan',
+        ...RoleHimpunan::INTI, ...RoleHimpunan::PIMPINAN_BIDANG,
         'superadmin', 'admin_kemahasiswaan',
     ];
 
@@ -55,8 +56,10 @@ class KegiatanPolicy
      * 28 Sep 2026 (S-21). Disadari: hapus itu permanen (banner, surat, foto &
      * dokumen di storage ikut hilang, tanpa tempat sampah) dan tanpa audit log.
      * Akses Kelola tetap milik pembuat & admin (aturAkses()).
+     *
+     * WAKAHIM disetarakan dengan KAHIM (2 Nov 2026).
      */
-    public const KETUA_SEMUA = ['ketua_himpunan'];
+    public const KETUA_SEMUA = RoleHimpunan::INTI;
 
     /**
      * Satu-satunya role yang bisa ditambahkan di "Akses Kelola" — hak mengedit,
@@ -88,7 +91,7 @@ class KegiatanPolicy
      * data divisi, karena role bisa menumpuk: akun yang merangkap
      * staff_himpunan + ketua_unit tetap ditolak.
      */
-    public const JABATAN_KETUA = ['ketua_himpunan', 'ketua_bidang', 'ketua_unit'];
+    public const JABATAN_KETUA = [...RoleHimpunan::INTI, ...RoleHimpunan::PIMPINAN_BIDANG];
 
     /**
      * Boleh MELIHAT anggaran dan mengunduh dokumen kegiatan (proposal, RAB, surat,
@@ -101,7 +104,7 @@ class KegiatanPolicy
      */
     public const LIHAT_INTERNAL = [
         'superadmin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'ketua_departemen',
-        'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan',
+        ...RoleHimpunan::POSISI,
     ];
 
     /**
@@ -145,9 +148,30 @@ class KegiatanPolicy
     }
 
     /**
+     * Melihat detail kegiatan di Rencana Proker & Pelaksanaan.
+     *
+     * KAHIM, WAKAHIM, admin, dan pengawas (DPM/GPM/Ketua Departemen) melihat semua
+     * bidang/unit. KABID/WAKABID/KANIT/WAKANIT dan Staff hanya kegiatan yang diset ke
+     * bidang/unitnya (pivot mk_kegiatan_bidang). Kegiatan tanpa bidang, termasuk
+     * proker Prodi yang belum diberi bidang, hanya terlihat oleh kelompok pertama.
+     * Sinkron dengan Kegiatan::scopeTerlihatOleh().
+     */
+    public function view(User $user, Kegiatan $kegiatan): bool
+    {
+        return RoleHimpunan::bisaLihatSemuaProker($user)
+            || $this->bidangCocok($user, $kegiatan);
+    }
+
+    /**
      * Edit & simpan, termasuk Ajukan Proker dan Unggah ke Arsip (keduanya
-     * mengubah status kegiatan). Hanya pembuat, admin, Ketua Himpunan, dan
-     * staff himpunan yang ditambahkan di Akses Kelola.
+     * mengubah status kegiatan). Hanya admin, KAHIM/WAKAHIM, pembuat, pimpinan
+     * bidang/unit pemilik kegiatan, dan staff himpunan yang ditambahkan di Akses
+     * Kelola.
+     *
+     * KABID, WAKABID, KANIT, dan WAKANIT setara (2 Nov 2026): masing-masing boleh
+     * mengelola kegiatan bidang/unitnya walau dibuat pimpinan lain di bidang yang
+     * sama. Selain admin dan KAHIM/WAKAHIM, semua jalur terkunci ke bidang/unit
+     * pemegangnya lewat view().
      *
      * Ketua Pelaksana otomatis dianggap pengelola tanpa perlu dicantumkan di Akses
      * Kelola (keputusan Surya, 29 Okt 2026), dengan syarat yang sama persis:
@@ -157,8 +181,16 @@ class KegiatanPolicy
      */
     public function update(User $user, Kegiatan $kegiatan): bool
     {
-        return $user->hasAnyRole([...self::PENGELOLA_SEMUA, ...self::KETUA_SEMUA])
-            || $this->pemilik($user, $kegiatan)
+        if ($user->hasAnyRole([...self::PENGELOLA_SEMUA, ...self::KETUA_SEMUA])) {
+            return true;
+        }
+
+        if (!$this->view($user, $kegiatan)) {
+            return false;
+        }
+
+        return $this->pemilik($user, $kegiatan)
+            || $this->pimpinanBidangnya($user, $kegiatan)
             || (self::bisaJadiPengelola($user)
                 && ($this->ketuaPelaksana($user, $kegiatan)
                     || $kegiatan->pengelola()->whereKey($user->getKey())->exists()));
@@ -171,13 +203,18 @@ class KegiatanPolicy
     }
 
     /**
-     * Menghapus hanya pembuat, admin, dan Ketua Himpunan (KETUA_SEMUA). Pengelola
-     * tambahan (staff_himpunan) tidak pernah boleh menghapus.
+     * Menghapus hanya admin, KAHIM/WAKAHIM (KETUA_SEMUA), pembuat, dan pimpinan
+     * bidang/unit pemilik kegiatan. Pengelola tambahan (staff_himpunan) tidak
+     * pernah boleh menghapus.
      */
     public function delete(User $user, Kegiatan $kegiatan): bool
     {
-        return $user->hasAnyRole([...self::PENGELOLA_SEMUA, ...self::KETUA_SEMUA])
-            || $this->pemilik($user, $kegiatan);
+        if ($user->hasAnyRole([...self::PENGELOLA_SEMUA, ...self::KETUA_SEMUA])) {
+            return true;
+        }
+
+        return $this->view($user, $kegiatan)
+            && ($this->pemilik($user, $kegiatan) || $this->pimpinanBidangnya($user, $kegiatan));
     }
 
     /**
@@ -186,13 +223,37 @@ class KegiatanPolicy
      */
     public function aturAkses(User $user, Kegiatan $kegiatan): bool
     {
-        return $user->hasAnyRole(self::PENGELOLA_SEMUA)
-            || $this->pemilik($user, $kegiatan);
+        if ($user->hasAnyRole(self::PENGELOLA_SEMUA)) {
+            return true;
+        }
+
+        return $this->view($user, $kegiatan)
+            && ($this->pemilik($user, $kegiatan) || $this->pimpinanBidangnya($user, $kegiatan));
     }
 
     private function pemilik(User $user, Kegiatan $kegiatan): bool
     {
         return (int) $kegiatan->user_id === (int) $user->getKey()
             && $user->hasAnyRole(self::PEMBUAT_PROKER);
+    }
+
+    /** KABID/WAKABID/KANIT/WAKANIT dari bidang/unit yang sama dengan kegiatan. */
+    private function pimpinanBidangnya(User $user, Kegiatan $kegiatan): bool
+    {
+        return RoleHimpunan::isPimpinanBidang($user)
+            && $this->bidangCocok($user, $kegiatan);
+    }
+
+    /** Apakah bidang/unit user tercantum di pivot bidang kegiatan. */
+    private function bidangCocok(User $user, Kegiatan $kegiatan): bool
+    {
+        $bidangId = RoleHimpunan::bidangId($user);
+        if (!$bidangId || !$user->hasAnyRole(RoleHimpunan::BERBIDANG)) {
+            return false;
+        }
+
+        return $kegiatan->relationLoaded('bidangs')
+            ? $kegiatan->bidangs->contains('id', $bidangId)
+            : $kegiatan->bidangs()->where('mk_bidang.id', $bidangId)->exists();
     }
 }

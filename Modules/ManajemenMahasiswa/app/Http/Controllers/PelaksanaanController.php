@@ -11,13 +11,13 @@ use App\Models\Student;
 use App\Models\Lecturer;
 use App\Services\SupabaseStorage;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
-use Modules\ManajemenMahasiswa\Models\Bidang;
 use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
 use Modules\ManajemenMahasiswa\Policies\KegiatanPolicy;
 use Modules\ManajemenMahasiswa\Services\PengelolaKegiatanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
 use Modules\ManajemenMahasiswa\Support\PeriodeKepengurusan;
 use Modules\ManajemenMahasiswa\Support\PerPage;
+use Modules\ManajemenMahasiswa\Support\RoleHimpunan;
 
 class PelaksanaanController extends Controller
 {
@@ -38,24 +38,30 @@ class PelaksanaanController extends Controller
 
     public function index(Request $request)
     {
-        $bidangList = Bidang::orderBy('nama_bidang')->get();
+        $user = Auth::user();
+
+        // KAHIM/WAKAHIM & admin melihat semua bidang/unit; KABID, WAKABID, KANIT,
+        // WAKANIT & Staff hanya bidang/unitnya (Kegiatan::scopeTerlihatOleh), termasuk
+        // isi dropdown filter.
+        $bidangTerkunci = RoleHimpunan::terbatasBidang($user);
+        $bidangList     = RoleHimpunan::daftarBidangUntuk($user);
         // Ikut menghitung kegiatan yang kolom `tahun`-nya belum terisi lewat
         // tanggal mulainya — lihat Kegiatan::daftarTahun().
-        $tahunList = Kegiatan::daftarTahun(Kegiatan::STATUS_DISETUJUI);
+        $tahunList = Kegiatan::daftarTahun(Kegiatan::STATUS_DISETUJUI, $user);
         // Opsi "Belum ada tanggal" hanya dirender bila memang ada isinya (proker lama
         // yang diajukan sebelum tanggal mulai jadi syarat Ajukan Proker).
-        $adaTanpaTahun = Kegiatan::where('status', Kegiatan::STATUS_DISETUJUI)->tanpaTahun()->exists();
-        $periodeList   = Kegiatan::daftarPeriode(Kegiatan::STATUS_DISETUJUI);
+        $adaTanpaTahun = Kegiatan::where('status', Kegiatan::STATUS_DISETUJUI)->terlihatOleh($user)->tanpaTahun()->exists();
+        $periodeList   = Kegiatan::daftarPeriode(Kegiatan::STATUS_DISETUJUI, $user);
 
-        $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
         $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
-        $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
+        $isPengurus = $roles->intersect(['pengurus_himpunan', ...RoleHimpunan::POSISI])->isNotEmpty();
         $canManage = $roles->intersect(['superadmin', 'admin_kemahasiswaan'])->isNotEmpty() || $isPengurus; // GPM, Kadep & DPM view-only
 
         // Relasi yang dibutuhkan kartu bersama (kegiatan-list/_kartu) — sama di ketiga subbab.
         $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'dosenPendampings.user'])
             ->where('status', Kegiatan::STATUS_DISETUJUI)
+            ->terlihatOleh($user)
             ->orderBy('created_at', 'desc');
 
         // Filter bidang
@@ -101,7 +107,7 @@ class PelaksanaanController extends Controller
 
         return view('manajemenmahasiswa::pelaksanaan.index', compact(
             'pelaksanaanList', 'bidangList', 'tahunList', 'adaTanpaTahun', 'periodeList',
-            'isAdmin', 'isPengurus', 'canManage'
+            'isAdmin', 'isPengurus', 'canManage', 'bidangTerkunci'
         ));
     }
 
@@ -127,10 +133,13 @@ class PelaksanaanController extends Controller
             return $tolak;
         }
 
+        // Kegiatan bidang/unit lain tidak boleh dibuka lewat URL langsung.
+        Gate::authorize('view', $proker);
+
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
         $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
-        $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
+        $isPengurus = $roles->intersect(['pengurus_himpunan', ...RoleHimpunan::POSISI])->isNotEmpty();
         $canManage = $roles->intersect(['superadmin', 'admin_kemahasiswaan'])->isNotEmpty() || $isPengurus; // GPM, Kadep & DPM view-only
         // Anggaran & Dokumen hanya untuk role pengelola & pemantau (KegiatanPolicy::LIHAT_INTERNAL).
         $canViewRestricted = $user->hasAnyRole(KegiatanPolicy::LIHAT_INTERNAL);
@@ -138,13 +147,13 @@ class PelaksanaanController extends Controller
         // (staff_himpunan TIDAK termasuk, dosen DPM/GPM juga tidak — hanya pengurus inti + admin)
         $canArsip = $roles->intersect([
             'superadmin', 'admin_kemahasiswaan',
-            'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+            ...RoleHimpunan::INTI, ...RoleHimpunan::PIMPINAN_BIDANG,
         ])->isNotEmpty();
 
         // Hak hapus pelaksanaan: admin + ketua-ketua himpunan (GPM, Kadep & DPM view-only)
         $canDelete = $roles->intersect([
             'superadmin', 'admin_kemahasiswaan',
-            'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+            ...RoleHimpunan::INTI, ...RoleHimpunan::PIMPINAN_BIDANG,
         ])->isNotEmpty();
 
         // Lapis kedua di belakang role: kegiatan hanya boleh diubah pemiliknya,
@@ -185,10 +194,12 @@ class PelaksanaanController extends Controller
             return $tolak;
         }
 
+        Gate::authorize('view', $proker);
+
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
         $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
-        $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
+        $isPengurus = $roles->intersect(['pengurus_himpunan', ...RoleHimpunan::POSISI])->isNotEmpty();
         $canManage = $roles->intersect(['superadmin', 'admin_kemahasiswaan'])->isNotEmpty() || $isPengurus; // GPM, Kadep & DPM view-only
 
         if (!$canManage) {
@@ -198,7 +209,8 @@ class PelaksanaanController extends Controller
             return $tolak;
         }
 
-        $bidangList   = Bidang::orderBy('nama_bidang')->get();
+        // Pimpinan bidang/unit & staff hanya bisa memilih bidang/unitnya sendiri.
+        $bidangList   = RoleHimpunan::daftarBidangUntuk($user);
         $kategoriList = KategoriKegiatan::orderBy('nama_kategori')->get();
         $tahunList    = Kegiatan::select('tahun')->whereNotNull('tahun')
             ->distinct()->orderBy('tahun', 'desc')->pluck('tahun')->toArray();
@@ -276,6 +288,7 @@ class PelaksanaanController extends Controller
         if ($tolak = $this->tolakBilaStatusTakSesuai($proker, [Kegiatan::STATUS_DISETUJUI])) {
             return $tolak;
         }
+        Gate::authorize('view', $proker);
         if ($tolak = $this->tolakBilaBukanPengelola($proker)) {
             return $tolak;
         }
@@ -283,15 +296,11 @@ class PelaksanaanController extends Controller
         // Banner salinan Rencana Proker terkunci (S-61).
         $this->repoMulmedService->tolakUbahBannerRencana($request, $proker);
 
-        // Bidang wajib kecuali seluruh kategori yang dipilih berkategori Prodi —
-        // aturan yang sama persis dengan Rencana Proker. Sebelumnya di sini
-        // `bidang_id` selalu nullable, sehingga kegiatan "Kegiatan Himpunan" bisa
-        // disimpan tanpa bidang lalu tampil berlabel "Prodi" di kartu & detailnya,
-        // padahal aksi yang sama ditolak di Subbab 1.
-        $kategoriDipilih = $request->input('kategori_kegiatan_id', []);
-        $isOnlyProdi = is_array($kategoriDipilih) && Kegiatan::hanyaKategoriProdi($kategoriDipilih);
-        // Paling banyak satu bidang: satu proker dipegang satu bidang himpunan.
-        $bidangRule  = $isOnlyProdi ? 'nullable|array|max:1' : 'required|array|min:1|max:1';
+        // Bidang/unit WAJIB untuk setiap kegiatan, termasuk Kegiatan Prodi
+        // (2 Nov 2026) — sama dengan Rencana Proker. Visibilitas kegiatan ditentukan
+        // bidang/unitnya (Kegiatan::scopeTerlihatOleh). Tepat satu bidang: satu
+        // proker dipegang satu bidang himpunan.
+        $bidangRule = 'required|array|min:1|max:1';
 
         // Jam selesai hanya dibandingkan dengan jam mulai bila kegiatan berlangsung
         // dalam SATU hari — kegiatan lintas hari wajar berakhir di jam yang lebih awal.
@@ -315,7 +324,7 @@ class PelaksanaanController extends Controller
             'kategori_kegiatan_id'      => 'required|array|min:1|max:2',
             'kategori_kegiatan_id.*'    => 'integer|exists:mk_kategori_kegiatan,id',
             'bidang_id'                 => $bidangRule,
-            'bidang_id.*'               => 'integer|exists:mk_bidang,id',
+            'bidang_id.*'               => RoleHimpunan::aturanBidangKegiatan(Auth::user()),
             'deskripsi'                 => 'required|string|min:20|max:3000',
             'tanggal_mulai'             => 'required|date',
             'tanggal_selesai'           => $aturan('tanggal_selesai', 'date|after_or_equal:tanggal_mulai'),
@@ -346,9 +355,10 @@ class PelaksanaanController extends Controller
             'hapus_file.*'              => 'integer|exists:mk_repo_mulmed,id',
         ], [
             // Pesan bawaan Laravel masih berbahasa Inggris dan menyebut nama kolom mentah.
-            'bidang_id.required'             => 'Bidang pemegang proker wajib dipilih, kecuali kegiatan ini murni Kegiatan Prodi.',
-            'bidang_id.min'                  => 'Bidang pemegang proker wajib dipilih, kecuali kegiatan ini murni Kegiatan Prodi.',
+            'bidang_id.required'             => 'Bidang/unit pemegang proker wajib dipilih.',
+            'bidang_id.min'                  => 'Bidang/unit pemegang proker wajib dipilih.',
             'bidang_id.max'                  => 'Pilih satu bidang saja — satu proker dipegang satu bidang himpunan.',
+            'bidang_id.*.in'                 => RoleHimpunan::PESAN_BIDANG_TERKUNCI,
             'tanggal_mulai.required'         => 'Tanggal mulai wajib diisi. Kegiatan yang sudah masuk tahap pelaksanaan harus punya tanggal pasti supaya bisa muncul di filter Tahun dan diarsipkan.',
             'lokasi.required'                => 'Lokasi wajib diisi — tuliskan lokasi sebenarnya kegiatan berlangsung.',
             'anggaran.required'              => 'Anggaran wajib diisi — isi sesuai realisasi, atau 0 bila kegiatan tanpa biaya.',
@@ -476,7 +486,7 @@ class PelaksanaanController extends Controller
         // GPM & DPM adalah view-only — TIDAK boleh melakukan arsip
         $allowedRoles = [
             'superadmin', 'admin_kemahasiswaan',
-            'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+            ...RoleHimpunan::INTI, ...RoleHimpunan::PIMPINAN_BIDANG,
         ];
         $userRoles = Auth::user()->roles->pluck('name');
         $canArsip = $userRoles->intersect($allowedRoles)->isNotEmpty();
@@ -492,6 +502,7 @@ class PelaksanaanController extends Controller
         // atau tombol Back lalu klik lagi — melempar ModelNotFoundException dan user
         // dibuang ke halaman error, padahal kegiatannya justru sudah berhasil masuk arsip.
         $proker = Kegiatan::findOrFail($id);
+        Gate::authorize('view', $proker);
 
         if ($proker->status === Kegiatan::STATUS_SELESAI) {
             return redirect()
@@ -571,6 +582,7 @@ class PelaksanaanController extends Controller
         // dengan findOrFail yang dibatasi status, klik Hapus kedua kali (mis. setelah
         // tombol Back) berakhir di halaman error alih-alih pesan yang menjelaskan.
         $proker = Kegiatan::with('repoMulmed')->findOrFail($id);
+        Gate::authorize('view', $proker);
 
         if ($proker->status !== Kegiatan::STATUS_DISETUJUI) {
             return redirect()
