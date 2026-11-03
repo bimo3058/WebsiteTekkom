@@ -18,7 +18,7 @@ use Modules\ManajemenMahasiswa\Support\RoleHimpunan;
  * AKSI apa yang boleh dilakukan sebuah role, Policy ini menentukan KEGIATAN MANA.
  * Keduanya harus lolos, sehingga Policy tidak pernah memperluas hak sebuah role —
  * mis. staff_himpunan tetap tidak bisa menghapus walau ia terdaftar pengelola,
- * dan ketua bidang/unit tidak bisa masuk ke kegiatan buatan orang lain.
+ * dan ketua bidang/unit tidak bisa masuk ke kegiatan bidang/unit lain.
  *
  * Semua pengecekan role memakai daftar putih hasAnyRole(), karena di modul ini
  * satu akun bisa memegang beberapa role sekaligus.
@@ -80,6 +80,8 @@ class KegiatanPolicy
 
     public const PESAN_KETUA_PELAKSANA = 'Ketua pelaksana harus staff himpunan. Pilih ulang dari daftar.';
 
+    public const PESAN_KETUA_SEBIDANG = 'Ketua pelaksana harus staff himpunan dari bidang/unit pemegang proker ini. Pilih ulang dari daftar.';
+
     /**
      * Pemegang jabatan ini TIDAK PERNAH bisa ditambahkan di "Akses Kelola".
      *
@@ -129,10 +131,13 @@ class KegiatanPolicy
      * dibuat berketua mahasiswa non-staff (16 sudah di Arsip). Tanpa pengecualian,
      * kegiatan lama tidak bisa disimpan ulang sebelum ketuanya diganti, padahal
      * arsip harus mencatat ketua yang sebenarnya. Begitu diganti, aturan berlaku.
+     *
+     * $bidangId (S-72, Rencana Proker & Pelaksanaan): hanya staff bidang/unit itu.
      */
-    public static function idCalonKetuaPelaksana(?int $ketuaTersimpan = null): array
+    public static function idCalonKetuaPelaksana(?int $ketuaTersimpan = null, ?int $bidangId = null): array
     {
-        $ids = Student::whereHas('user', fn ($q) => $q->role(self::ROLE_KETUA_PELAKSANA))
+        $ids = Student::whereHas('user', fn ($q) => $q->role(self::ROLE_KETUA_PELAKSANA)
+                ->when($bidangId, fn ($u) => $u->whereHas('pengurusBidang', fn ($pb) => $pb->where('bidang_id', $bidangId))))
             ->pluck('id')->all();
 
         if ($ketuaTersimpan) {
@@ -145,6 +150,31 @@ class KegiatanPolicy
     public static function aturanKetuaPelaksana(?Kegiatan $kegiatan = null): In
     {
         return Rule::in(self::idCalonKetuaPelaksana($kegiatan?->ketua_pelaksana_id));
+    }
+
+    /**
+     * Ketua Pelaksana wajib staff bidang/unit pemegang proker (keputusan Surya,
+     * 3 Nov 2026, S-72). Dasarnya telusur Transparansi Penilaian kabinet 2024: 84 dari
+     * 86 Penanggung Jawab tercantum di bidang pemegang proker dan tidak ada yang
+     * terbukti dari bidang lain. Staff bidang lain juga tidak bisa membuka prokernya
+     * (view()). Ketua tersimpan tetap lolos selama bidang kegiatannya tidak diganti.
+     */
+    public static function aturanKetuaSebidang(?Kegiatan $kegiatan, ?int $bidangId): In
+    {
+        // Draft Kegiatan Prodi tanpa bidang (S-73): belum ada staff sebidang untuk dipilih.
+        if (!$bidangId) {
+            return Rule::in($kegiatan && $kegiatan->bidangs()->doesntExist()
+                ? array_filter([$kegiatan->ketua_pelaksana_id])
+                : []);
+        }
+
+        $bidangTetap = $kegiatan && $bidangId
+            && $kegiatan->bidangs()->where('mk_bidang.id', $bidangId)->exists();
+
+        return Rule::in(self::idCalonKetuaPelaksana(
+            $bidangTetap ? $kegiatan->ketua_pelaksana_id : null,
+            $bidangId,
+        ));
     }
 
     /**
@@ -172,6 +202,10 @@ class KegiatanPolicy
      * mengelola kegiatan bidang/unitnya walau dibuat pimpinan lain di bidang yang
      * sama. Selain admin dan KAHIM/WAKAHIM, semua jalur terkunci ke bidang/unit
      * pemegangnya lewat view().
+     *
+     * Staff (Ketua Pelaksana & Akses Kelola) hanya sampai Pelaksanaan: route edit
+     * Laporan & Arsip tidak memuat staff_himpunan, jadi setelah diarsipkan hanya
+     * otoritas lebih tinggi yang bisa mengedit (S-75).
      *
      * Ketua Pelaksana otomatis dianggap pengelola tanpa perlu dicantumkan di Akses
      * Kelola (keputusan Surya, 29 Okt 2026), dengan syarat yang sama persis:

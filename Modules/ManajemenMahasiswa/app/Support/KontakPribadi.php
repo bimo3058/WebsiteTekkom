@@ -11,7 +11,7 @@ use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 /**
  * Kontak pribadi (Email Pribadi + WhatsApp/Telepon) milik seorang mahasiswa/alumni.
  *
- * Dipakai form edit Direktori Mahasiswa dan Direktori Alumni, baik jalur pengelola
+ * Dipakai form edit Direktori Mahasiswa (jalur pemilik) dan Direktori Alumni, baik jalur pengelola
  * maupun jalur pemilik — satu aturan validasi dan satu cara menulis, supaya data yang
  * ditolak di satu bab tidak lolos lewat bab lain.
  *

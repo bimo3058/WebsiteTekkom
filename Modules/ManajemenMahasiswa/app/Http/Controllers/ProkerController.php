@@ -236,8 +236,6 @@ class ProkerController extends Controller
         // Model kosong supaya partial form bisa dipakai seragam untuk create & edit.
         $proker = new Kegiatan();
 
-        // Pimpinan bidang/unit hanya bisa memilih bidang/unitnya sendiri.
-        $bidangList   = RoleHimpunan::daftarBidangUntuk(Auth::user());
         $kategoriList = KategoriKegiatan::orderBy('nama_kategori')->get();
         $mahasiswaList = Student::with('user')->get()->sortBy(fn($s) => $s->user->name ?? '');
         $dosenList     = Lecturer::with('user')->get()->sortBy(fn($l) => $l->user->name ?? '');
@@ -251,11 +249,11 @@ class ProkerController extends Controller
         $existingDokumen     = collect();
 
         return view('manajemenmahasiswa::proker.create', compact(
-            'proker', 'bidangList', 'kategoriList',
+            'proker', 'kategoriList',
             'mahasiswaList', 'dosenList',
             'existingPanitia', 'existingPanitiaIds', 'existingDosen',
             'selectedKategoriIds', 'selectedBidangIds', 'existingDokumen'
-        ) + $this->pengelolaService->dataForm($proker));
+        ) + RoleHimpunan::dataFormKegiatan(Auth::user()) + $this->pengelolaService->dataForm($proker));
     }
 
     public function store(Request $request)
@@ -311,7 +309,6 @@ class ProkerController extends Controller
 
         $existingDokumen = $proker->repoMulmed->where('tipe_file', 'document');
 
-        $bidangList    = RoleHimpunan::daftarBidangUntuk(Auth::user());
         $kategoriList  = KategoriKegiatan::orderBy('nama_kategori')->get();
         $mahasiswaList = Student::with('user')->get()->sortBy(fn($s) => $s->user->name ?? '');
         $dosenList     = Lecturer::with('user')->get()->sortBy(fn($l) => $l->user->name ?? '');
@@ -326,11 +323,11 @@ class ProkerController extends Controller
         $existingDosen       = $dosenList->whereIn('id', $existingDosenIds);
 
         return view('manajemenmahasiswa::proker.edit', compact(
-            'proker', 'bidangList', 'kategoriList',
+            'proker', 'kategoriList',
             'mahasiswaList', 'dosenList',
             'existingPanitia', 'existingPanitiaIds', 'existingDosen',
             'selectedKategoriIds', 'selectedBidangIds', 'existingDokumen'
-        ) + $this->pengelolaService->dataForm($proker));
+        ) + RoleHimpunan::dataFormKegiatan(Auth::user()) + $this->pengelolaService->dataForm($proker));
     }
 
     public function update(Request $request, $id)
@@ -562,12 +559,18 @@ class ProkerController extends Controller
 
     private function validateProker(Request $request, ?Kegiatan $proker = null): array
     {
-        // Bidang/unit WAJIB untuk setiap proker, termasuk Kegiatan Prodi (2 Nov 2026):
+        RoleHimpunan::kunciIsianKegiatan($request, Auth::user());
+
+        // Bidang/unit wajib saat menyimpan draft, kecuali kategorinya hanya Kegiatan Prodi
+        // (keputusan Surya, S-73). Saat Ajukan tetap wajib untuk semua (cekKelengkapan):
         // visibilitas proker ditentukan bidang/unitnya (Kegiatan::scopeTerlihatOleh),
         // jadi proker tanpa bidang hanya terlihat oleh KAHIM/WAKAHIM & admin.
-        // Tepat satu bidang: satu proker dipegang satu bidang himpunan
+        // Paling banyak satu bidang: satu proker dipegang satu bidang himpunan
         // (antarbidang HIMASKOM praktis tidak pernah memegang proker bersama).
-        $bidangRule = 'required|array|min:1|max:1';
+        $kategoriDipilih = array_filter((array) $request->input('kategori_kegiatan_id', []), 'is_numeric');
+        $bidangRule = Kegiatan::hanyaKategoriProdi($kategoriDipilih)
+            ? 'nullable|array|max:1'
+            : 'required|array|min:1|max:1';
         $bidangItemRule = RoleHimpunan::aturanBidangKegiatan(Auth::user());
 
         // Jam selesai hanya dibandingkan dengan jam mulai bila kegiatan berlangsung
@@ -582,8 +585,8 @@ class ProkerController extends Controller
         }
 
         // Field perencanaan diduplikat dari Subbab 2 (Pelaksanaan) supaya rencana
-        // bisa disusun lengkap sejak awal. Selain Judul (penanda draft di daftar),
-        // semuanya `nullable` saat menyimpan: kelengkapan baru ditegakkan di
+        // bisa disusun lengkap sejak awal. Selain Judul (penanda draft di daftar) dan
+        // Bidang/Unit, semuanya `nullable` saat menyimpan: kelengkapan baru ditegakkan di
         // ajukan() — ketua bisa menyimpan kerangka, staff_himpunan yang melengkapi
         // kemudian. Deskripsi pun tanpa min:20 di sini supaya deskripsi yang baru
         // separuh ditulis tetap bisa disimpan; minimalnya ditagih saat Ajukan.
@@ -612,7 +615,7 @@ class ProkerController extends Controller
             'lokasi'                 => 'nullable|string|max:150',
             'target_peserta'         => 'nullable|integer|min:1',
             'anggaran'               => 'nullable|numeric|min:0|max:9999999999999',
-            'ketua_pelaksana_id'     => ['nullable', 'exists:students,id', KegiatanPolicy::aturanKetuaPelaksana($proker)],
+            'ketua_pelaksana_id'     => ['nullable', 'exists:students,id', KegiatanPolicy::aturanKetuaSebidang($proker, (int) collect($request->input('bidang_id'))->first() ?: null)],
             'dosen_pendamping_ids'   => 'nullable|array',
             'dosen_pendamping_ids.*' => 'exists:lecturers,id',
             'dosen_peran'            => 'nullable|array',
@@ -630,8 +633,8 @@ class ProkerController extends Controller
             // Pesan bawaan Laravel masih berbahasa Inggris dan menyebut nama kolom
             // mentah ("The tanggal mulai field is required when..."), jadi aturan
             // baru di atas diberi pesan sendiri supaya jelas di kotak error form.
-            'bidang_id.required'             => 'Bidang/unit pemegang proker wajib dipilih.',
-            'bidang_id.min'                  => 'Bidang/unit pemegang proker wajib dipilih.',
+            'bidang_id.required'             => 'Bidang/unit pemegang proker wajib dipilih, kecuali kategorinya hanya Kegiatan Prodi.',
+            'bidang_id.min'                  => 'Bidang/unit pemegang proker wajib dipilih, kecuali kategorinya hanya Kegiatan Prodi.',
             'bidang_id.max'                  => 'Pilih satu bidang saja — satu proker dipegang satu bidang himpunan.',
             'bidang_id.*.in'                 => RoleHimpunan::PESAN_BIDANG_TERKUNCI,
             'tanggal_mulai.required_with'    => 'Tanggal mulai wajib diisi kalau tanggal selesai sudah ditentukan.',
@@ -639,7 +642,7 @@ class ProkerController extends Controller
             'jam_mulai.date_format'          => 'Jam mulai harus berupa jam yang benar, contoh 09:00.',
             'jam_selesai.date_format'        => 'Jam selesai harus berupa jam yang benar, contoh 15:00.',
             'jam_selesai.after'              => 'Jam selesai harus lebih lambat dari jam mulai. Kalau kegiatannya lintas hari, isi dulu tanggal selesainya.',
-            'ketua_pelaksana_id.in'          => KegiatanPolicy::PESAN_KETUA_PELAKSANA,
+            'ketua_pelaksana_id.in'          => KegiatanPolicy::PESAN_KETUA_SEBIDANG,
         ] + KegiatanController::pesanValidasiDokumen());
     }
 

@@ -447,7 +447,6 @@ class DirektoriMahasiswaController extends Controller
         return view('manajemenmahasiswa::direktori.mahasiswa-index', compact(
             'mahasiswa',
             'angkatanList',
-            'isAdmin',
             'isGpm',
             'isPengurus',
             'isMahasiswa',
@@ -513,7 +512,6 @@ class DirektoriMahasiswaController extends Controller
         return view('manajemenmahasiswa::direktori.mahasiswa-show', compact(
             'mhs',
             'riwayatKegiatan',
-            'isAdmin',
             'isPengurus',
             'isGpm',
             'isMahasiswa',
@@ -524,44 +522,34 @@ class DirektoriMahasiswaController extends Controller
     }
 
     // -------------------------------------------------------------------------
-    // Edit — Dua wajah, satu halaman:
-    //   • pengelola membuka baris ORANG LAIN → Status Kemahasiswaan + kontak
-    //     (email pribadi, WhatsApp), tiap perubahan tercatat di audit log;
-    //   • pemilik baris (termasuk pengelola yang membuka barisnya sendiri)
-    //     → hanya data pribadinya (email pribadi, WhatsApp).
+    // Edit — Hanya pemilik baris: data pribadinya (email pribadi, WhatsApp).
     // Nama, NIM, dan Angkatan milik SSO dan tidak bisa diubah siapa pun di sini.
+    //
+    // Form "Edit Data Mahasiswa" milik pengelola dicabut sejak S-71 (disetujui Bu Eve,
+    // 3 Nov 2026): kontak diubah sendiri oleh mahasiswa.
     // -------------------------------------------------------------------------
 
     public function edit(int $id)
     {
         $mhs = Kemahasiswaan::with(['user', 'user.student'])->findOrFail($id);
 
-        // Gerbang role di route hanya menyaring "role apa"; ini yang menyaring
-        // "baris siapa". Mahasiswa yang mengetik id orang lain berhenti di sini (403).
-        $this->authorize('update', $mhs);
+        $this->pastikanPemilik($mhs);
 
-        $sebagaiPengelola = Auth::user()->can('ubahDataMahasiswa', $mhs);
-
-        return view('manajemenmahasiswa::direktori.mahasiswa-edit', compact('mhs', 'sebagaiPengelola'))
+        return view('manajemenmahasiswa::direktori.mahasiswa-edit', compact('mhs'))
             ->with('layout', $this->resolveLayout());
     }
 
     // -------------------------------------------------------------------------
-    // Update — Simpan kontak (pengelola: dengan audit log; pemilik: tanpa audit)
+    // Update — Simpan kontak oleh pemilik baris
     // -------------------------------------------------------------------------
 
     public function update(Request $request, int $id)
     {
         $mhs = Kemahasiswaan::with('user')->findOrFail($id);
 
-        // Sama seperti edit(): route menyaring role, baris ini menyaring pemilik.
-        $this->authorize('update', $mhs);
+        $this->pastikanPemilik($mhs);
 
-        if (Auth::user()->can('ubahDataMahasiswa', $mhs)) {
-            return $this->simpanDataPengelola($request, $mhs);
-        }
-
-        // Jalur pemilik. Nama, NIM, dan Angkatan milik SSO UNDIP dan tidak pernah
+        // Nama, NIM, dan Angkatan milik SSO UNDIP dan tidak pernah
         // ditulis di sini. Status, tahun_lulus, dan profesi juga tidak: aturannya tidak
         // dipasang DAN kolomnya tidak diteruskan, sehingga kiriman `status=...` dari
         // form yang diutak-atik tidak berefek — bukan sekadar disembunyikan di tampilan.
@@ -580,57 +568,16 @@ class DirektoriMahasiswaController extends Controller
     }
 
     // -------------------------------------------------------------------------
-    // Simpan data oleh pengelola pada baris orang lain (KemahasiswaanPolicy::ubahDataMahasiswa):
-    // kontak (email pribadi, WhatsApp).
+    // Gerbang role di route hanya menyaring "role apa"; ini yang menyaring "baris siapa".
     //
-    // Kontak sebenarnya milik mahasiswa — jadi tiap perubahan tercatat di audit log
-    // beserta pelakunya (siapa, kapan, dari apa ke apa). Penyimpanan dan log satu
-    // transaksi: bila log gagal tertulis, tidak ada yang berubah.
-    //
-    // Status kemahasiswaan (dan jalur menjadikan Alumni dari form ini) dicabut sejak S-53
-    // (bimbingan Bu Eve & Pak Sidik, 29 Okt 2026): tidak bisa disinkronkan dengan SIAP Undip.
-    // Alumni kini hanya lewat Permission (ubah role / Cek Alumni Otomatis).
+    // Policy dipanggil langsung, BUKAN lewat authorize(): Gate::before di
+    // AppServiceProvider meloloskan superadmin pada semua ability, sehingga authorize()
+    // tidak pernah menolak superadmin dan ia tetap bisa mengubah baris orang lain.
     // -------------------------------------------------------------------------
 
-    private function simpanDataPengelola(Request $request, Kemahasiswaan $mhs)
+    private function pastikanPemilik(Kemahasiswaan $mhs): void
     {
-        $request->validate(KontakPribadi::aturan($mhs->user), KontakPribadi::pesan(), KontakPribadi::atribut());
-
-        $kontak = KontakPribadi::perubahan($request, $mhs->user, $mhs->kontak);
-
-        if (!$kontak) {
-            return redirect()
-                ->route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id)
-                ->with('success', 'Tidak ada perubahan yang disimpan.');
-        }
-
-        DB::transaction(function () use ($mhs, $kontak) {
-            $lama = [];
-            $baru = [];
-
-            KontakPribadi::tulis($mhs->user_id, $mhs->user, $kontak);
-
-            foreach ($kontak as $kolom => [$nilaiLama, $nilaiBaru]) {
-                $lama[$kolom] = $nilaiLama;
-                $baru[$kolom] = $nilaiBaru;
-            }
-
-            // Nilai kontak hanya disimpan di old/new data log modul, tidak di deskripsi
-            // yang juga ditulis ke log terpusat.
-            \App\Services\AuditLogger::update(
-                module:  'manajemen_mahasiswa',
-                desc:    "Mengubah data {$mhs->nama} ({$mhs->nim}): " . implode(', ', KontakPribadi::ringkasan($kontak)),
-                subject: $mhs,
-                oldData: $lama,
-                newData: $baru,
-            );
-        });
-
-        $mhs->user?->clearUserCache();
-
-        return redirect()
-            ->route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id)
-            ->with('success', 'Data mahasiswa berhasil diperbarui.');
+        abort_unless((new KemahasiswaanPolicy)->update(Auth::user(), $mhs), 403);
     }
 
     // -------------------------------------------------------------------------

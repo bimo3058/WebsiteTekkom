@@ -126,6 +126,13 @@
         cursor: not-allowed;
         pointer-events: none;
     }
+    /* Terpilih otomatis dan tidak bisa diubah (bidang/unit sendiri, Kegiatan Himpunan). */
+    .checkbox-card.terkunci,
+    .checkbox-card.terkunci input { cursor: not-allowed; }
+    .checkbox-card.terkunci:hover {
+        border-color: var(--c-primary);
+        background: var(--c-primary-subtle);
+    }
     .checkbox-hint {
         font-size: 11px;
         color: var(--c-fg-muted);

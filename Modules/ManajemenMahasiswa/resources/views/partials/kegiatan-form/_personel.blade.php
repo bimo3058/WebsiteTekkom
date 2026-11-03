@@ -13,6 +13,10 @@
       $ketuaTersimpan     id ketua yang tersimpan di database (null saat membuat baru);
                           tetap boleh dipilih walau bukan staff himpunan, lihat
                           KegiatanPolicy::idCalonKetuaPelaksana
+      $ketuaSebidang      (opsional) calon ketua mengikuti Bidang/Unit yang terpilih di form,
+                          dipakai Rencana Proker & Pelaksanaan (S-72); Arsip tidak memakainya
+      $bidangAsal         id bidang yang tersimpan di kegiatan; ketua tersimpan tetap
+                          tampil selama salah satunya terpilih (aturanKetuaSebidang)
       $dosenTerpilih      koleksi Lecturer terpilih — sudah memperhitungkan old()
       $panitiaTerpilih    koleksi Student terpilih — sudah memperhitungkan old()
       $panitiaPeranLama   old('panitia_peran', []); jabatan dari database dibaca
@@ -33,6 +37,8 @@
 
     // Ketua Pelaksana wajib staff himpunan; Panitia tetap boleh semua mahasiswa.
     $idCalonKetua = \Modules\ManajemenMahasiswa\Policies\KegiatanPolicy::idCalonKetuaPelaksana($ketuaTersimpan ?? null);
+    $ketuaSebidang = $ketuaSebidang ?? false;
+    $bidangPengurus = $ketuaSebidang ? \Modules\ManajemenMahasiswa\Models\PengurusBidang::pluck('bidang_id', 'user_id') : collect();
     $opsiKetua = $mahasiswaList->whereIn('id', $idCalonKetua)->map(fn ($mhs) => [
         'id'     => $mhs->id,
         'nama'   => $mhs->user->name ?? 'N/A',
@@ -42,7 +48,10 @@
         // tetap boleh tersimpan, tetapi tidak ikut mengelola (KegiatanPolicy::update).
         'userId' => $mhs->user_id,
         'akses'  => $mhs->user && \Modules\ManajemenMahasiswa\Policies\KegiatanPolicy::bisaJadiPengelola($mhs->user),
+        'bidangId'  => (string) ($bidangPengurus[$mhs->user_id] ?? ''),
+        'tersimpan' => (int) $mhs->id === (int) ($ketuaTersimpan ?? 0),
     ])->values();
+    $saringKetua = $ketuaSebidang ? ['bidangAsal' => array_map('strval', $bidangAsal ?? [])] : null;
 
     $opsiDosen = $dosenList->map(fn ($dosen) => [
         'id'   => $dosen->id,
@@ -66,7 +75,7 @@
 
 <div class="row g-3 mb-3">
     {{-- ── Ketua Pelaksana (pilih satu) ── --}}
-    <div class="col-md-6 mk-pilih" x-data="mkPilihSatu(@js($opsiKetua), @js((string) ($ketuaId ?? '')))"
+    <div class="col-md-6 mk-pilih" x-data="mkPilihSatu(@js($opsiKetua), @js((string) ($ketuaId ?? '')), @js($saringKetua))"
          x-effect="const k = opsi.find(o => String(o.id) === nilaiKirim);
                    Object.assign($store.mkKetua, k
                        ? { userId: String(k.userId), nama: k.nama, akses: k.akses }
@@ -107,10 +116,15 @@
                         <div class="sub-text" x-text="o.sub"></div>
                     </div>
                 </template>
-                <div class="panitia-empty" x-show="hasil.length === 0">Tidak ada staff himpunan yang cocok</div>
+                @if($ketuaSebidang)
+                    <div class="panitia-empty" x-show="hasil.length === 0"
+                         x-text="!bidangId ? 'Pilih Bidang / Unit terlebih dahulu' : (query && query !== namaTerpilih ? 'Tidak ada staff himpunan yang cocok' : 'Belum ada staff di bidang/unit ini. Atur bidangnya di halaman Permission.')"></div>
+                @else
+                    <div class="panitia-empty" x-show="hasil.length === 0">Tidak ada staff himpunan yang cocok</div>
+                @endif
             </div>
         </div>
-        <div class="checkbox-hint">Hanya staff himpunan. Ketua Pelaksana otomatis bisa mengedit kegiatan ini.</div>
+        <div class="checkbox-hint">{{ $ketuaSebidang ? 'Hanya staff himpunan dari bidang/unit pemegang proker.' : 'Hanya staff himpunan.' }} Ketua Pelaksana otomatis bisa mengedit kegiatan ini.</div>
     </div>
 </div>
 

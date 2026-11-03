@@ -4,8 +4,10 @@ namespace Modules\ManajemenMahasiswa\Support;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Modules\ManajemenMahasiswa\Models\Bidang;
+use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
 
 /**
  * Sumber tunggal role jabatan himpunan: daftar role, label tampilan, dan bidang/unit
@@ -152,6 +154,47 @@ class RoleHimpunan
         }
 
         return Bidang::whereKey(self::bidangId($user))->get();
+    }
+
+    /**
+     * Data kolom Bidang/Unit di form Rencana Proker & Pelaksanaan (S-72): semua
+     * bidang/unit selalu tampil supaya form semua role sama. Bagi pemegang role
+     * berbidang, hanya bidang/unitnya yang terpilih dan sisanya nonaktif.
+     *
+     * @return array{bidangList: Collection<int, Bidang>, bidangTerkunci: bool, bidangMilikId: ?int}
+     */
+    public static function dataFormKegiatan(User $user): array
+    {
+        $terkunci = self::terbatasBidang($user);
+
+        return [
+            'bidangList'     => Bidang::orderBy('nama_bidang')->get(),
+            'bidangTerkunci' => $terkunci,
+            'bidangMilikId'  => $terkunci ? self::bidangId($user) : null,
+        ];
+    }
+
+    /**
+     * Tegakkan isian terkunci di server (S-72): bagi pemegang role berbidang, bidang
+     * selalu bidang/unitnya dan Kegiatan Himpunan selalu ikut. Kegiatan Prodi tetap
+     * pilihan mereka (proker kerja sama dengan prodi). Input form diabaikan, jadi
+     * form yang dimanipulasi pun tidak bisa mengubahnya.
+     */
+    public static function kunciIsianKegiatan(Request $request, User $user): void
+    {
+        if (!self::terbatasBidang($user)) {
+            return;
+        }
+
+        $kategoriHimpunan = KategoriKegiatan::where('nama_kategori', KategoriKegiatan::NAMA_HIMPUNAN)->value('id');
+
+        $request->merge([
+            'bidang_id'            => array_values(array_filter([self::bidangId($user)])),
+            'kategori_kegiatan_id' => array_values(array_unique(array_filter([
+                ...(array) $request->input('kategori_kegiatan_id', []),
+                $kategoriHimpunan,
+            ]))),
+        ]);
     }
 
     /**

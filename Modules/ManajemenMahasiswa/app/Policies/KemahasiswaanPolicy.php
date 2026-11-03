@@ -24,8 +24,8 @@ use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 class KemahasiswaanPolicy
 {
     /**
-     * Role yang boleh mengubah kontak direktori milik mahasiswa mana pun.
-     * Sinkron dengan gerbang route `direktori.mahasiswa.edit`.
+     * Pengelola direktori. Sejak S-71 (3 Nov 2026) tidak lagi mengubah kontak mahasiswa;
+     * daftar ini masih dipakai AlumniPolicy untuk form edit Direktori Alumni.
      */
     public const PENGELOLA = [
         'superadmin',
@@ -50,32 +50,15 @@ class KemahasiswaanPolicy
     /**
      * Membuka form edit dan menyimpan perubahannya.
      *
-     * Pemilik baris selalu boleh — itulah yang menggantikan halaman "Profil Saya".
-     * Field yang boleh ia ubah dibatasi terpisah di controller (audit hanya untuk
-     * pengelola, lihat ubahDataMahasiswa); Policy ini hanya menjawab "baris siapa",
-     * bukan "kolom apa".
+     * Hanya pemilik baris, role apa pun — itulah yang menggantikan halaman "Profil Saya".
+     * Field yang boleh ia ubah dibatasi terpisah di controller; Policy ini hanya menjawab
+     * "baris siapa", bukan "kolom apa".
+     *
+     * Dipanggil langsung oleh controller, bukan lewat authorize(): Gate::before meloloskan
+     * superadmin sebelum method ini sempat berjalan.
      */
     public function update(User $user, Kemahasiswaan $mhs): bool
     {
-        if ((int) $mhs->user_id === (int) $user->getKey()) {
-            return true;
-        }
-
-        return $user->hasAnyRole(self::PENGELOLA);
-    }
-
-    /**
-     * Mengubah data mahasiswa lain sebagai pengelola: kontak (email pribadi, WhatsApp)
-     * — boleh diperbaiki admin atas keputusan Bu Eve (13 Okt 2026), dan tiap perubahan
-     * tercatat di audit log. Nama, NIM, dan angkatan tetap milik SSO. Status
-     * kemahasiswaan dicabut dari direktori sejak S-53 (29 Okt 2026).
-     *
-     * Pengelola tidak memakai jalur ini di barisnya sendiri (kasus pengelola yang juga
-     * terdaftar sebagai mahasiswa): kontaknya ia ubah lewat jalur pemilik.
-     */
-    public function ubahDataMahasiswa(User $user, Kemahasiswaan $mhs): bool
-    {
-        return $user->hasAnyRole(self::PENGELOLA)
-            && (int) $mhs->user_id !== (int) $user->getKey();
+        return (int) $mhs->user_id === (int) $user->getKey();
     }
 }

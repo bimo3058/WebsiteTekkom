@@ -130,6 +130,12 @@
         cursor: not-allowed;
         pointer-events: none;
     }
+    .checkbox-card.terkunci,
+    .checkbox-card.terkunci input { cursor: not-allowed; }
+    .checkbox-card.terkunci:hover {
+        border-color: var(--c-primary);
+        background: var(--c-primary-subtle);
+    }
     .checkbox-hint {
         font-size: 11px;
         color: var(--c-fg-muted);
@@ -576,6 +582,10 @@
     $bidangTerpilih = in_array((int) $kegiatan->bidang_id, $idsBidangTersimpan, true)
         ? (int) $kegiatan->bidang_id
         : ($idsBidangTersimpan[0] ?? null);
+    // Pemegang role berbidang: bidang/unitnya terpilih, yang lain tampil nonaktif (S-74).
+    if ($bidangTerkunci) {
+        $bidangTerpilih = $bidangMilikId;
+    }
     $bidangLamaGanda = count($idsBidangTersimpan) > 1
         ? $bidangList->whereIn('id', $idsBidangTersimpan)->pluck('nama_bidang')->implode(', ')
         : null;
@@ -624,31 +634,39 @@
                 <label class="form-label-custom">Kategori <span class="required">*</span></label>
                 <div class="checkbox-card-group" id="kategoriGroup">
                     @foreach($kategoriList as $kategori)
-                        <label class="checkbox-card" id="kategoriCard{{ $kategori->id }}">
+                        @php
+                            // Pemegang role berbidang: Kegiatan Himpunan selalu terpilih
+                            // (RoleHimpunan::kunciIsianKegiatan), Kegiatan Prodi tetap pilihan.
+                            $kategoriTerkunci = $bidangTerkunci && $kategori->nama_kategori === \Modules\ManajemenMahasiswa\Models\KategoriKegiatan::NAMA_HIMPUNAN;
+                        @endphp
+                        <label class="checkbox-card {{ $kategoriTerkunci ? 'terkunci' : '' }}" id="kategoriCard{{ $kategori->id }}">
                             <input type="checkbox" name="kategori_kegiatan_id[]"
                                    value="{{ $kategori->id }}"
                                    data-is-prodi="{{ stripos($kategori->nama_kategori, 'prodi') !== false ? '1' : '0' }}"
+                                   @if($kategoriTerkunci) onclick="return false" aria-disabled="true" @endif
                                    onchange="handleKategoriChange()"
-                                   {{ in_array($kategori->id, $selectedKategoriIds) ? 'checked' : '' }}>
+                                   {{ $kategoriTerkunci || in_array($kategori->id, $selectedKategoriIds) ? 'checked' : '' }}>
                             {{ $kategori->nama_kategori }}
                         </label>
                     @endforeach
                 </div>
-                <div class="checkbox-hint">Pilih maksimal 2 kategori</div>
+                <div class="checkbox-hint">{{ $bidangTerkunci ? 'Centang Kegiatan Prodi bila kegiatan ini bekerja sama dengan prodi.' : 'Pilih maksimal 2 kategori' }}</div>
             </div>
             <div class="col-md-6" id="bidangFieldWrapper">
                 <label class="form-label-custom">Bidang <span class="required" id="bidangRequired">*</span></label>
                 <div class="checkbox-card-group" id="bidangGroup" role="radiogroup" aria-label="Bidang pemegang kegiatan">
                     @foreach($bidangList as $bidang)
-                        <label class="checkbox-card" id="bidangCard{{ $bidang->id }}">
+                        @php $bidangMilik = $bidangTerkunci && (int) $bidang->id === $bidangMilikId; @endphp
+                        <label @class(['checkbox-card', 'terkunci' => $bidangMilik, 'disabled' => $bidangTerkunci && !$bidangMilik]) id="bidangCard{{ $bidang->id }}">
                             <input type="radio" name="bidang_id[]"
                                    value="{{ $bidang->id }}"
+                                   @disabled($bidangTerkunci && !$bidangMilik)
                                    {{ (int) $bidang->id === $bidangTerpilih ? 'checked' : '' }}>
                             {{ $bidang->nama_bidang }}
                         </label>
                     @endforeach
                 </div>
-                <div class="checkbox-hint">Pilih satu bidang yang memegang kegiatan ini</div>
+                <div class="checkbox-hint">{{ $bidangTerkunci ? 'Terisi otomatis dari bidang/unit Anda dan tidak bisa diubah.' : 'Pilih satu bidang yang memegang kegiatan ini' }}</div>
                 @if($bidangLamaGanda)
                     <div class="checkbox-hint" style="color: var(--c-warning, #b45309);">
                         Sebelumnya tercatat di beberapa bidang ({{ $bidangLamaGanda }}). Pastikan bidang yang terpilih
@@ -719,9 +737,6 @@
             'panitiaPeranLama' => $panitiaPeranLama,
         ])
     </div>
-
-    {{-- Akses Kelola — hanya dirender untuk pemilik kegiatan & override --}}
-    @include('manajemenmahasiswa::partials.kegiatan-form._akses_kelola')
 
     <!-- Detail Tambahan -->
     <div class="form-card">

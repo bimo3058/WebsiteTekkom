@@ -11,7 +11,8 @@
     Variabel wajib: $proker (boleh instance kosong untuk mode create),
     $formAction, $formMethod ('POST'|'PUT'), $backUrl, $headerTitle,
     $headerSubtitle, $submitLabel, $showDokumentasi, $tahapRencana,
-    $bidangList, $kategoriList, $mahasiswaList, $dosenList,
+    $bidangList, $bidangTerkunci, $bidangMilikId (RoleHimpunan::dataFormKegiatan),
+    $kategoriList, $mahasiswaList, $dosenList,
     $selectedKategoriIds, $selectedBidangIds, $existingPanitia, $existingPanitiaIds.
     Saat $showFoto: $existingFoto. Saat $showDokumen: $existingDokumen.
 
@@ -27,8 +28,8 @@
     $showDokumentasi = $showDokumentasi ?? false;
     $showFoto        = $showFoto ?? $showDokumentasi;
     $showDokumen     = $showDokumen ?? $showDokumentasi;
-    // Tahap Rencana Proker: selain Judul, SEMUA detail boleh dikosongkan saat
-    // menyimpan draft — ketua membuat kerangka, pengurus melengkapi kemudian.
+    // Tahap Rencana Proker: selain Judul dan Bidang/Unit (S-73), SEMUA detail boleh
+    // dikosongkan saat menyimpan draft — ketua membuat kerangka, pengurus melengkapi kemudian.
     // Tanda * di tahap ini berarti "wajib sebelum diajukan" (lihat
     // ProkerController::SYARAT_AJUKAN): tombol Ajukan nonaktif selama masih ada
     // yang kosong. Karena itu kolom bertanda * TIDAK boleh diberi atribut
@@ -83,17 +84,25 @@
                 <label class="form-label-custom">Kategori <span class="required">*</span></label>
                 <div class="checkbox-card-group" id="kategoriGroup">
                     @foreach($kategoriList as $kategori)
-                        <label class="checkbox-card" id="kategoriCard{{ $kategori->id }}">
+                        @php
+                            // Pemegang role berbidang: Kegiatan Himpunan selalu terpilih
+                            // (RoleHimpunan::kunciIsianKegiatan), Kegiatan Prodi tetap pilihan.
+                            $kategoriTerkunci = $bidangTerkunci && $kategori->nama_kategori === \Modules\ManajemenMahasiswa\Models\KategoriKegiatan::NAMA_HIMPUNAN;
+                        @endphp
+                        <label class="checkbox-card {{ $kategoriTerkunci ? 'terkunci' : '' }}" id="kategoriCard{{ $kategori->id }}">
                             <input type="checkbox" name="kategori_kegiatan_id[]"
                                    value="{{ $kategori->id }}"
                                    data-is-prodi="{{ stripos($kategori->nama_kategori, 'prodi') !== false ? '1' : '0' }}"
+                                   @if($kategoriTerkunci) onclick="return false" aria-disabled="true" @endif
                                    onchange="handleKategoriChange()"
-                                   {{ in_array($kategori->id, $selectedKategoriIds) ? 'checked' : '' }}>
+                                   {{ $kategoriTerkunci || in_array($kategori->id, $selectedKategoriIds) ? 'checked' : '' }}>
                             {{ $kategori->nama_kategori }}
                         </label>
                     @endforeach
                 </div>
-                <div class="checkbox-hint">Pilih maksimal 2 kategori</div>
+                <div class="checkbox-hint">
+                    {{ $bidangTerkunci ? 'Centang Kegiatan Prodi bila proker ini bekerja sama dengan prodi.' : 'Pilih maksimal 2 kategori' }}
+                </div>
             </div>
             @php
                 // Satu proker dipegang SATU bidang himpunan, jadi pilihannya radio.
@@ -104,10 +113,9 @@
                 $bidangTerpilih = in_array((int) $proker->bidang_id, $idsBidangTersimpan, true)
                     ? (int) $proker->bidang_id
                     : ($idsBidangTersimpan[0] ?? null);
-                // Pimpinan bidang/unit & staff hanya mendapat bidang/unitnya sendiri
-                // (RoleHimpunan::daftarBidangUntuk) — langsung terpilih.
-                if ($bidangList->count() === 1) {
-                    $bidangTerpilih = (int) $bidangList->first()->id;
+                // Pemegang role berbidang: bidang/unitnya terpilih, yang lain tampil nonaktif.
+                if ($bidangTerkunci) {
+                    $bidangTerpilih = $bidangMilikId;
                 }
                 $bidangLamaGanda = count($idsBidangTersimpan) > 1
                     ? $bidangList->whereIn('id', $idsBidangTersimpan)->pluck('nama_bidang')->implode(', ')
@@ -117,21 +125,35 @@
                 {{-- Wajib untuk semua proker, termasuk Kegiatan Prodi (2 Nov 2026): proker
                      hanya terlihat oleh bidang/unit pemegangnya. --}}
                 <label class="form-label-custom">Bidang / Unit <span class="required" id="bidangRequired">*</span></label>
-                <div class="checkbox-card-group" id="bidangGroup" role="radiogroup" aria-label="Bidang/unit pemegang proker">
-                    @forelse($bidangList as $bidang)
-                        <label class="checkbox-card" id="bidangCard{{ $bidang->id }}">
+                {{-- data-kosong-prodi: draft Rencana boleh tanpa bidang bila hanya Kegiatan Prodi (S-73). --}}
+                <div class="checkbox-card-group" id="bidangGroup" role="radiogroup" aria-label="Bidang/unit pemegang proker"
+                     @if($tahapRencana && !$bidangTerkunci) data-kosong-prodi="1" @endif>
+                    @foreach($bidangList as $bidang)
+                        @php $bidangMilik = $bidangTerkunci && (int) $bidang->id === $bidangMilikId; @endphp
+                        <label @class(['checkbox-card', 'terkunci' => $bidangMilik, 'disabled' => $bidangTerkunci && !$bidangMilik]) id="bidangCard{{ $bidang->id }}">
                             <input type="radio" name="bidang_id[]"
                                    value="{{ $bidang->id }}" required
+                                   @disabled($bidangTerkunci && !$bidangMilik)
                                    {{ (int) $bidang->id === $bidangTerpilih ? 'checked' : '' }}>
                             {{ $bidang->nama_bidang }}
                         </label>
-                    @empty
-                        <div class="checkbox-hint" style="color: var(--c-error, #DF1C41);">
-                            Bidang/unit Anda belum diatur. Minta KAHIM/WAKAHIM atau admin mengaturnya di Manajemen Pengguna.
-                        </div>
-                    @endforelse
+                    @endforeach
                 </div>
-                <div class="checkbox-hint">Pilih satu bidang/unit yang memegang proker ini</div>
+                @if($bidangTerkunci && !$bidangMilikId)
+                    <div class="checkbox-hint" style="color: var(--c-error, #DF1C41);">
+                        Bidang/unit Anda belum diatur. Minta KAHIM/WAKAHIM atau admin mengaturnya di halaman Permission.
+                    </div>
+                @else
+                    <div class="checkbox-hint">
+                        @if($bidangTerkunci)
+                            Terisi otomatis dari bidang/unit Anda dan tidak bisa diubah.
+                        @elseif($tahapRencana)
+                            Pilih satu bidang/unit yang memegang proker ini. Draft Kegiatan Prodi saja boleh dikosongkan dulu, tetapi wajib diisi sebelum diajukan.
+                        @else
+                            Pilih satu bidang/unit yang memegang proker ini
+                        @endif
+                    </div>
+                @endif
                 @if($bidangLamaGanda)
                     <div class="checkbox-hint" style="color: var(--c-warning, #b45309);">
                         Sebelumnya tercatat di beberapa bidang ({{ $bidangLamaGanda }}). Pastikan bidang yang terpilih
@@ -199,6 +221,8 @@
         @include('manajemenmahasiswa::partials.kegiatan-form._personel', [
             'ketuaId'          => old('ketua_pelaksana_id', $proker->ketua_pelaksana_id),
             'ketuaTersimpan'   => $proker->ketua_pelaksana_id,
+            'ketuaSebidang'    => true,
+            'bidangAsal'       => $proker->exists ? $proker->bidangs()->pluck('mk_bidang.id')->all() : [],
             'dosenTerpilih'    => $existingDosen,
             'panitiaTerpilih'  => old('panitia_ids') !== null
                 ? $mahasiswaList->whereIn('id', old('panitia_ids'))

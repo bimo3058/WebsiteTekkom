@@ -1,8 +1,8 @@
 {{--
     Bagian "Akses Kelola" — siapa saja, selain pemilik, yang boleh mengubah
-    kegiatan ini. Dipakai bersama:
-      • Rencana Proker (create & edit) dan Pelaksanaan (edit), lewat _fields.blade.php
-      • Laporan & Arsip (create & edit), yang punya form sendiri
+    kegiatan ini. Dipakai Rencana Proker (create & edit) dan Pelaksanaan (edit), lewat
+    _fields.blade.php. Tidak ada di Laporan & Arsip: setelah diarsipkan staff tidak bisa
+    mengedit lagi, hanya otoritas lebih tinggi (S-75, route edit Arsip).
 
     Hanya dirender untuk pemilik kegiatan & override (KegiatanPolicy::aturAkses).
     Pengelola biasa tidak melihatnya, dan server mengabaikan input ini darinya
@@ -25,10 +25,11 @@
         'nama' => $calon['nama'],
         'sub'  => $calon['role'],
         'cari' => \Illuminate\Support\Str::lower($calon['nama']),
+        'bidangId' => (string) ($calon['bidangId'] ?? ''),
     ])->values();
 @endphp
 <div class="form-card mk-pilih"
-     x-data="mkPilihBanyak(@js($opsiPengelola), @js(array_values($pengelolaTerpilih)), () => $store.mkKetua.akses ? $store.mkKetua.userId : '')">
+     x-data="mkPilihBanyak(@js($opsiPengelola), @js(array_values($pengelolaTerpilih)), () => $store.mkKetua.akses ? $store.mkKetua.userId : '', true)">
     <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Akses Kelola</div>
 
     <input type="hidden" name="akses_kelola_dikirim" value="1">
@@ -37,7 +38,7 @@
         Pembuat: <strong style="color: var(--c-fg-sec);">{{ $namaPembuat }}</strong>.
         Admin dan Ketua Himpunan otomatis bisa mengedit dan menghapus semua kegiatan.
         Ketua Pelaksana otomatis ikut mengelola.
-        Tambahkan staff himpunan lain yang boleh ikut mengubah kegiatan ini.
+        Tambahkan staff himpunan lain dari bidang/unit yang sama yang boleh ikut mengubah kegiatan ini.
     </p>
 
     <label class="form-label-custom" for="pengelolaSearchInput">
@@ -83,10 +84,11 @@
                     <span class="check-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 </div>
             </template>
-            <div class="panitia-empty" x-show="hasil.length === 0">Tidak ada staff himpunan yang cocok</div>
+            <div class="panitia-empty" x-show="hasil.length === 0"
+                 x-text="!bidangId ? 'Pilih Bidang / Unit terlebih dahulu' : (query ? 'Tidak ada staff himpunan yang cocok' : 'Belum ada staff lain di bidang/unit ini. Atur bidangnya di halaman Permission.')"></div>
         </div>
     </div>
-    <div class="checkbox-hint">Staff yang ditambahkan hanya bisa mengedit, tidak bisa menghapus. Ketua Bidang/Unit lain tidak bisa ditambahkan karena satu proker dipegang satu bidang.</div>
+    <div class="checkbox-hint">Hanya staff himpunan sebidang. Mereka hanya bisa mengedit, tidak bisa menghapus. Ketua Bidang/Unit lain tidak bisa ditambahkan karena satu proker dipegang satu bidang.</div>
 
     {{-- Baris hak per pengelola + hidden input pengelola_ids[] --}}
     <div id="pengelolaRolesContainer" class="mt-3 d-flex flex-column gap-2">

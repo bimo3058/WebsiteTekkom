@@ -153,15 +153,17 @@ function handleKategoriChange() {
     toggleBidangField();
 }
 
-// Sejak 2 Nov 2026 Bidang/Unit wajib untuk semua proker, termasuk Kegiatan Prodi —
-// kolomnya tidak lagi disembunyikan. Fungsi dipertahankan karena dipanggil
-// handleKategoriChange() & saat halaman dimuat.
+// Draft Rencana Proker boleh disimpan tanpa bidang bila kategorinya hanya Kegiatan
+// Prodi (S-73, ditegakkan juga di ProkerController::validateProker). Tanda * tetap ada
+// karena bidang wajib sebelum diajukan.
 function toggleBidangField() {
-    const bidangRequired = document.getElementById('bidangRequired');
-    const bidangWrapper  = document.getElementById('bidangFieldWrapper');
+    const grup = document.getElementById('bidangGroup');
+    if (!grup || !grup.dataset.kosongProdi) return;
 
-    if (bidangRequired) bidangRequired.style.display = '';
-    if (bidangWrapper) bidangWrapper.style.display = '';
+    const checked   = [...document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked')];
+    const hanyaProdi = checked.length > 0 && checked.every(cb => cb.dataset.isProdi === '1');
+
+    grup.querySelectorAll('input[type="radio"]').forEach(rb => { rb.required = !hanyaProdi; });
 }
 
 // ── Initialize on page load ──

@@ -4,18 +4,13 @@
 @include('manajemenmahasiswa::partials.sitkom-ui')
 
 {{--
-    Satu halaman, dua wajah (aturannya ada di KemahasiswaanPolicy):
-      $sebagaiPengelola = true  → pengelola membuka baris ORANG LAIN: Kontak (email pribadi,
-                                  WhatsApp), tercatat di audit log.
-      $sebagaiPengelola = false → pemilik baris (termasuk pengelola yang membuka barisnya
-                                  sendiri): hanya data pribadinya, yaitu email pribadi dan WhatsApp.
+    Hanya untuk pemilik baris (aturannya ada di KemahasiswaanPolicy): email pribadi dan WhatsApp.
+    Form "Edit Data Mahasiswa" milik pengelola dicabut sejak S-71 (3 Nov 2026).
     Nama, NIM, dan Angkatan milik SSO dan hanya tampil sebagai teks di subjudul.
     Status kemahasiswaan tidak lagi diubah di sini (S-53, 29 Okt 2026): tidak bisa disinkronkan
     dengan SIAP Undip. Menjadikan alumni hanya lewat Permission.
 --}}
 @php
-    $sebagaiPengelola = $sebagaiPengelola ?? false;
-
     // Prioritaskan users.whatsapp (sumber kanonik dari Settings global)
     // Fallback ke mk_kemahasiswaan.kontak jika belum tersinkron
     $savedWa = $mhs->user?->whatsapp ?? $mhs->kontak ?? '';
@@ -84,11 +79,9 @@
     }
 </style>
 
-<x-manajemenmahasiswa::ui.page-header bordered :title="$sebagaiPengelola ? 'Edit Data Mahasiswa' : 'Edit Data Saya'">
+<x-manajemenmahasiswa::ui.page-header bordered title="Edit Data Saya">
     {{ $mhs->nama }} · {{ $mhs->nim }} · Angkatan {{ $mhs->angkatan }}
-    @unless($sebagaiPengelola)
-        — data dari SSO, tidak dapat diubah.
-    @endunless
+    — data dari SSO, tidak dapat diubah.
     <x-slot:actions>
         <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id) }}" class="mk-btn mk-btn--secondary mk-btn--sm">
             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -108,13 +101,8 @@
 
     <div class="mm-sec">
         <div class="mm-sec-head">
-            @if($sebagaiPengelola)
-                <h2>Kontak</h2>
-                <p>Isi atau perbaiki bila mahasiswa melapor perubahan atau datanya belum terisi. Perubahan ikut tersinkron ke profil global dan CV mahasiswa.</p>
-            @else
-                <h2>Data Pribadi</h2>
-                <p>Email pribadi dan WhatsApp diubah oleh pemiliknya sendiri, lalu tersinkron ke profil global dan CV.</p>
-            @endif
+            <h2>Data Pribadi</h2>
+            <p>Email pribadi dan WhatsApp diubah oleh pemiliknya sendiri, lalu tersinkron ke profil global dan CV.</p>
         </div>
 
         <div class="mm-sec-fields">

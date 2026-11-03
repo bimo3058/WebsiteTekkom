@@ -21,6 +21,7 @@ use Modules\ManajemenMahasiswa\Services\RencanaProkerService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
 use Modules\ManajemenMahasiswa\Support\PeriodeKepengurusan;
 use Modules\ManajemenMahasiswa\Support\PerPage;
+use Modules\ManajemenMahasiswa\Support\RoleHimpunan;
 
 class KegiatanController extends Controller
 {
@@ -237,7 +238,7 @@ class KegiatanController extends Controller
             'kategoriList',
             'mahasiswaList',
             'dosenList',
-        ) + $this->pengelolaService->dataForm(new Kegiatan()));
+        ));
     }
 
     /**
@@ -316,7 +317,7 @@ class KegiatanController extends Controller
         $validated['bidang_id'] = $bidangIds[0] ?? null;
 
         // Remove non-kegiatan fields before creating
-        unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan'], $validated['panitia_ids'], $validated['panitia_peran'], $validated['dosen_pendamping_ids']);
+        unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan'], $validated['panitia_ids'], $validated['panitia_peran'], $validated['dosen_pendamping_ids'], $validated['dosen_peran']);
 
         $kegiatan = Kegiatan::create($validated);
 
@@ -325,7 +326,6 @@ class KegiatanController extends Controller
         $kegiatan->bidangs()->sync($bidangIds);
         $kegiatan->panitia()->sync($panitiaSyncData);
         $kegiatan->syncDosenPendamping($dosenPendampingIds, $request->input('dosen_peran', []));
-        $this->pengelolaService->sync($kegiatan, $request);
 
         // Handle foto uploads
         $this->repoMulmedService->simpanUnggahan($request, $kegiatan);
@@ -351,7 +351,6 @@ class KegiatanController extends Controller
             return $tolak;
         }
 
-        $bidangList       = Bidang::orderBy('nama_bidang')->get();
         $kategoriList     = KategoriKegiatan::orderBy('nama_kategori')->get();
         $mahasiswaList    = Student::with('user')->get()->sortBy(fn($s) => $s->user->name ?? '');
         $dosenList        = Lecturer::with('user')->get()->sortBy(fn($l) => $l->user->name ?? '');
@@ -360,11 +359,10 @@ class KegiatanController extends Controller
         // diturunkan dari tanggal mulai saat menyimpan.
         return view('manajemenmahasiswa::kegiatan.edit', compact(
             'kegiatan',
-            'bidangList',
             'kategoriList',
             'mahasiswaList',
             'dosenList',
-        ) + $this->pengelolaService->dataForm($kegiatan));
+        ) + RoleHimpunan::dataFormKegiatan(Auth::user()));
     }
 
     /**
@@ -383,6 +381,9 @@ class KegiatanController extends Controller
 
         // Banner salinan Rencana Proker terkunci juga di Arsip (S-61).
         $this->repoMulmedService->tolakUbahBannerRencana($request, $kegiatan);
+
+        // KABID dkk. tidak bisa memindahkan arsip ke bidang lain (S-74).
+        RoleHimpunan::kunciIsianKegiatan($request, Auth::user());
 
         $jam = $this->aturanJam($request);
 
@@ -473,7 +474,7 @@ class KegiatanController extends Controller
         $validated['bidang_id'] = $bidangIds[0] ?? null;
 
         // Remove non-kegiatan fields before updating
-        unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan'], $validated['hapus_file'], $validated['panitia_ids'], $validated['panitia_peran'], $validated['dosen_pendamping_ids']);
+        unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan'], $validated['hapus_file'], $validated['panitia_ids'], $validated['panitia_peran'], $validated['dosen_pendamping_ids'], $validated['dosen_peran']);
 
         $kegiatan->update($validated);
 
@@ -482,7 +483,6 @@ class KegiatanController extends Controller
         $kegiatan->bidangs()->sync($bidangIds);
         $kegiatan->panitia()->sync($panitiaSyncData);
         $kegiatan->syncDosenPendamping($dosenPendampingIds, $request->input('dosen_peran', []));
-        $this->pengelolaService->sync($kegiatan, $request);
 
         // Handle new file uploads
         $this->repoMulmedService->simpanUnggahan($request, $kegiatan);

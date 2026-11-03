@@ -424,13 +424,13 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('cv')->where('id', '[0-9]+');
                 });
 
-                // Edit biodata — admin kemahasiswaan (semua mahasiswa) + mahasiswa/alumni (dirinya sendiri).
+                // Edit biodata — hanya dirinya sendiri, role apa pun (S-71). Pengelola tetap
+                // terdaftar di sini untuk kasus pengelola yang juga punya baris mahasiswa.
                 //
                 // Gerbang role di sini sengaja longgar; yang menentukan BARIS MILIK SIAPA
                 // adalah KemahasiswaanPolicy::update() yang dipanggil di edit() dan
                 // update(). Tanpa Policy itu, setiap mahasiswa yang lolos gerbang ini bisa
-                // mengetik /{id}/edit milik orang lain. Kolom Status juga hanya ditulis
-                // untuk pengelola — lihat update() di controller.
+                // mengetik /{id}/edit milik orang lain.
                 Route::middleware('role:superadmin|admin_kemahasiswaan|mahasiswa|alumni')->group(function () {
                     Route::get('/{id}/edit', [DirektoriMahasiswaController::class, 'edit'])
                         ->name('edit')->where('id', '[0-9]+');

@@ -19,7 +19,7 @@
     'formMethod'      => 'POST',
     'backUrl'         => route('manajemenmahasiswa.proker.index'),
     'headerTitle'     => 'Buat Rencana Proker',
-    'headerSubtitle'  => 'Cukup isi Judul untuk menyimpan draft. Kolom bertanda <span style="color:var(--c-error);">*</span> lainnya wajib dilengkapi sebelum proker diajukan ke Pelaksanaan Kegiatan.',
+    'headerSubtitle'  => 'Cukup isi Judul dan Bidang/Unit untuk menyimpan draft (Kegiatan Prodi saja boleh tanpa Bidang/Unit). Kolom bertanda <span style="color:var(--c-error);">*</span> lainnya wajib dilengkapi sebelum proker diajukan ke Pelaksanaan Kegiatan.',
     'submitLabel'     => 'Simpan',
 ])
 

@@ -209,8 +209,6 @@ class PelaksanaanController extends Controller
             return $tolak;
         }
 
-        // Pimpinan bidang/unit & staff hanya bisa memilih bidang/unitnya sendiri.
-        $bidangList   = RoleHimpunan::daftarBidangUntuk($user);
         $kategoriList = KategoriKegiatan::orderBy('nama_kategori')->get();
         $tahunList    = Kegiatan::select('tahun')->whereNotNull('tahun')
             ->distinct()->orderBy('tahun', 'desc')->pluck('tahun')->toArray();
@@ -232,7 +230,7 @@ class PelaksanaanController extends Controller
         $existingDosen       = $dosenList->whereIn('id', $existingDosenIds);
 
         return view('manajemenmahasiswa::pelaksanaan.edit', compact(
-            'proker', 'bidangList', 'kategoriList', 'tahunList',
+            'proker', 'kategoriList', 'tahunList',
             'mahasiswaList', 'dosenList',
             'existingFoto', 'existingDokumen',
             'existingPanitia', 'existingPanitiaIds', 'existingDosen',
@@ -241,7 +239,7 @@ class PelaksanaanController extends Controller
         ) + [
             'wajibDariRencana' => $this->wajibDariRencana($proker),
             'kunciDariRencana' => true,
-        ] + $this->pengelolaService->dataForm($proker));
+        ] + RoleHimpunan::dataFormKegiatan($user) + $this->pengelolaService->dataForm($proker));
     }
 
     /**
@@ -296,6 +294,8 @@ class PelaksanaanController extends Controller
         // Banner salinan Rencana Proker terkunci (S-61).
         $this->repoMulmedService->tolakUbahBannerRencana($request, $proker);
 
+        RoleHimpunan::kunciIsianKegiatan($request, Auth::user());
+
         // Bidang/unit WAJIB untuk setiap kegiatan, termasuk Kegiatan Prodi
         // (2 Nov 2026) — sama dengan Rencana Proker. Visibilitas kegiatan ditentukan
         // bidang/unitnya (Kegiatan::scopeTerlihatOleh). Tepat satu bidang: satu
@@ -337,7 +337,7 @@ class PelaksanaanController extends Controller
             'lokasi'                    => 'required|string|max:150',
             'target_peserta'            => $aturan('target_peserta', 'integer|min:1'),
             'anggaran'                  => 'required|numeric|min:0|max:9999999999999',
-            'ketua_pelaksana_id'        => ['required', 'exists:students,id', KegiatanPolicy::aturanKetuaPelaksana($proker)],
+            'ketua_pelaksana_id'        => ['required', 'exists:students,id', KegiatanPolicy::aturanKetuaSebidang($proker, (int) collect($request->input('bidang_id'))->first() ?: null)],
             'dosen_pendamping_ids'      => $aturan('dosen_pendamping_ids', 'array'),
             'dosen_pendamping_ids.*'    => 'exists:lecturers,id',
             'dosen_peran'               => 'nullable|array',
@@ -363,7 +363,7 @@ class PelaksanaanController extends Controller
             'lokasi.required'                => 'Lokasi wajib diisi — tuliskan lokasi sebenarnya kegiatan berlangsung.',
             'anggaran.required'              => 'Anggaran wajib diisi — isi sesuai realisasi, atau 0 bila kegiatan tanpa biaya.',
             'ketua_pelaksana_id.required'    => 'Ketua pelaksana wajib dipilih.',
-            'ketua_pelaksana_id.in'          => KegiatanPolicy::PESAN_KETUA_PELAKSANA,
+            'ketua_pelaksana_id.in'          => KegiatanPolicy::PESAN_KETUA_SEBIDANG,
             'tanggal_selesai.after_or_equal' => 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.',
             'jam_mulai.date_format'          => 'Jam mulai harus berupa jam yang benar, contoh 09:00.',
             'jam_selesai.date_format'        => 'Jam selesai harus berupa jam yang benar, contoh 15:00.',
