@@ -502,10 +502,12 @@ class PersetujuanController extends Controller
      */
     public function destroy($id)
     {
+        abort_unless(auth()->user()->hasRole('superadmin'), 403, 'Aksi ini hanya dapat dilakukan oleh Superadmin.');
+
         $peminjaman = Peminjaman::findOrFail($id);
 
         if ($peminjaman->berkas_pendukung) {
-            app(\App\Services\SupabaseStorage::class)->delete($peminjaman->berkas_pendukung);
+            app(\App\Services\SupabaseStorage::class)->delete($peminjaman->berkas_pendukung, 'eoffice');
         }
 
         $peminjaman->forceDelete();

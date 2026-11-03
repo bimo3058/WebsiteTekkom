@@ -4,6 +4,7 @@ namespace Modules\EOffice\Http\Controllers\ManajemenRuangan\User;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Modules\EOffice\Models\Ruangan;
 use Modules\EOffice\Models\Peminjaman;
 use Modules\EOffice\Models\Pengaturan;
@@ -63,7 +64,12 @@ class UserPeminjamanController extends Controller
         $isPhoneLocked = !empty($user->whatsapp);
 
         $request->validate([
-            'ruangan_id' => 'required|exists:eo_mr_ruangans,id',
+            'ruangan_id' => [
+                'required',
+                Rule::exists('eo_mr_ruangans', 'id')
+                    ->where('is_active', true)
+                    ->whereNot('kategori', 'Sidang'),
+            ],
             'nomor_telepon' => $isPhoneLocked
                 ? 'required|string|max:30'
                 : [
@@ -84,6 +90,8 @@ class UserPeminjamanController extends Controller
             'jam_selesai' => 'required|after:jam_mulai',
             'file_berkas' => 'nullable|file|mimes:pdf|max:2048'
         ], [
+            'ruangan_id.required' => 'Ruangan wajib dipilih.',
+            'ruangan_id.exists' => 'Ruangan yang dipilih sedang dinonaktifkan atau tidak tersedia untuk peminjaman umum.',
             'nomor_telepon.required' => 'Nomor telepon / WhatsApp wajib diisi.',
             'nomor_telepon.regex' => 'Nomor WhatsApp tidak valid. Masukkan nomor seluler aktif Indonesia (contoh: 08123456789).',
         ]);

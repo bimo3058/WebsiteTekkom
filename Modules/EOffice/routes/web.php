@@ -699,7 +699,9 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::post('/persetujuan/{id}/override', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateOverride'])->name('persetujuan.override');
                 Route::get('/persetujuan/api/check-collision', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'checkCollision'])->name('persetujuan.check-collision');
                 Route::get('/persetujuan/api/pending-count', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'getPendingCount'])->name('persetujuan.pending-count');
-                Route::delete('/riwayat/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'destroy'])->name('riwayat.destroy');
+                Route::delete('/riwayat/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'destroy'])
+                    ->name('riwayat.destroy')
+                    ->middleware('role:superadmin');
 
                 // Jadwal Akademik (Filter dari tabel Internal)
                 Route::get('jadwal-akademik', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'index'])->name('jadwal-akademik.index');
