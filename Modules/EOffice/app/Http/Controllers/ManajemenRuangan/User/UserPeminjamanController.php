@@ -86,14 +86,19 @@ class UserPeminjamanController extends Controller
                 ],
             'tujuan' => 'required|string|max:500',
             'tanggal_pinjam' => 'required|date',
-            'jam_mulai' => 'required',
-            'jam_selesai' => 'required|after:jam_mulai',
+            'jam_mulai' => 'required|date_format:H:i',
+            'jam_selesai' => 'required|date_format:H:i|after:jam_mulai',
             'file_berkas' => 'nullable|file|mimes:pdf|max:2048'
         ], [
             'ruangan_id.required' => 'Ruangan wajib dipilih.',
             'ruangan_id.exists' => 'Ruangan yang dipilih sedang dinonaktifkan atau tidak tersedia untuk peminjaman umum.',
             'nomor_telepon.required' => 'Nomor telepon / WhatsApp wajib diisi.',
             'nomor_telepon.regex' => 'Nomor WhatsApp tidak valid. Masukkan nomor seluler aktif Indonesia (contoh: 08123456789).',
+            'jam_mulai.required' => 'Jam mulai peminjaman wajib diisi.',
+            'jam_mulai.date_format' => 'Format jam mulai tidak valid (contoh: 08:00).',
+            'jam_selesai.required' => 'Jam selesai peminjaman wajib diisi.',
+            'jam_selesai.date_format' => 'Format jam selesai tidak valid (contoh: 10:00).',
+            'jam_selesai.after' => 'Jam selesai harus lebih akhir dari jam mulai.',
         ]);
 
         // Sanitasi dan standardisasi format nomor telepon / WhatsApp

@@ -570,7 +570,6 @@ class JadwalController extends Controller
             $debugLog .= "Total Fail HariMap: $failHariCount\n";
             $debugLog .= "Total Fail Gate: $failGateCount\n";
             \Log::info($debugLog);
-            file_put_contents(storage_path('logs/siap_debug.log'), $debugLog);
 
         } catch (\Exception $e) {
             \Log::error('[SIAP Import] PhpSpreadsheet gagal: ' . $e->getMessage());
@@ -843,7 +842,7 @@ class JadwalController extends Controller
                     
                     foreach ($peminjamanConflicts as $p) {
                         $peminjamanDetails[] = [
-                            'nama' => $p->kegiatan,
+                            'nama' => $p->tujuan,
                             'waktu' => substr($p->jam_mulai, 0, 5) . ' - ' . substr($p->jam_selesai, 0, 5)
                         ];
                     }

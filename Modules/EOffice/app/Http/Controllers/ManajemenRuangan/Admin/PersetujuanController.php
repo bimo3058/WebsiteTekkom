@@ -146,6 +146,8 @@ class PersetujuanController extends Controller
 
     private function getExportQuery(Request $request)
     {
+        Peminjaman::autoExpirePending();
+
         $now = now();
         $date = $now->format('Y-m-d');
         $time = $now->format('H:i:s');

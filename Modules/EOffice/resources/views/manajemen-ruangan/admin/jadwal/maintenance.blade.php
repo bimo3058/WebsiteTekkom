@@ -1279,7 +1279,7 @@
                             </tr>
                         @empty
         <tr>
-            <td colspan="5" class="py-12 text-center text-gray-500 text-[13px]">
+            <td colspan="6" class="py-12 text-center text-gray-500 text-[13px]">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#E2E8F0" stroke-width="1.5"
                     stroke-linecap="round" class="mx-auto mb-3">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>

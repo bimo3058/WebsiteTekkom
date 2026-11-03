@@ -173,6 +173,13 @@ class RuanganController extends Controller
 
     public function destroy(Ruangan $ruangan)
     {
+        $storage = app(\App\Services\SupabaseStorage::class);
+        foreach ($ruangan->fotos as $foto) {
+            if (!empty($foto->path_foto)) {
+                $storage->delete($foto->path_foto, 'eoffice');
+            }
+        }
+
         $ruangan->delete();
 
         return redirect()->route('eoffice.peminjaman.admin.ruangan.index')->with('success', 'Ruangan berhasil dihapus.');
