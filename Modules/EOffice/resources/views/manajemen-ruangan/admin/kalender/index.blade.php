@@ -802,6 +802,10 @@
                         }).catch(() => { this.isSearching = false; });
                 },
                 selectUser(user) {
+                    if (user.is_blacklisted) {
+                        alert('Pengguna ' + user.name + ' (' + (user.external_id || user.email) + ') sedang dalam status Blacklist dan tidak dapat meminjam ruangan.');
+                        return;
+                    }
                     this.nim = user.external_id || user.email;
                     this.searchQuery = user.name + ' (' + this.nim + ')';
                     this.suggestions = [];
@@ -1198,7 +1202,9 @@
                                             <template x-for="user in suggestions" :key="user.id">
                                                 <li @click="selectUser(user)"
                                                     class="px-4 py-2.5 hover:bg-primary-50 cursor-pointer border-b border-gray-100 last:border-b-0">
-                                                    <div class="font-bold text-sm text-gray-800" x-text="user.name">
+                                                    <div class="font-bold text-sm text-gray-800 flex items-center justify-between">
+                                                        <span x-text="user.name"></span>
+                                                        <span x-show="user.is_blacklisted" class="text-[10px] font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded">BLACKLIST</span>
                                                     </div>
                                                     <div
                                                         class="flex items-center gap-2 mt-0.5 text-[11px] font-medium text-gray-500">

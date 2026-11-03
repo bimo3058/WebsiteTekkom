@@ -181,6 +181,14 @@ class KalenderController extends Controller
                 return redirect()->back()->withInput()->with('error', 'Peminjam dengan identitas tersebut tidak ditemukan di sistem.');
             }
 
+            // Interceptor: Cek status blacklist / Banned account
+            $blacklist = \Modules\EOffice\Models\MrBlacklist::where('user_id', $targetUser->id)->first();
+            if ($blacklist) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['Bentrok' => "Peminjam atas nama {$targetUser->name} ({$request->nim}) sedang dalam status Blacklist dan tidak dapat meminjam ruangan. Alasan: " . ($blacklist->alasan ?? 'Pelanggaran ketentuan')]);
+            }
+
             $peminjaman = Peminjaman::create([
                 'user_id' => $targetUser->id,
                 'ruangan_id' => $request->ruangan_id,
@@ -315,6 +323,7 @@ class KalenderController extends Controller
         }
 
         $searchTerm = '%' . strtolower($query) . '%';
+        $blacklistedUserIds = \Modules\EOffice\Models\MrBlacklist::pluck('user_id')->toArray();
 
         $users = \App\Models\User::where(function ($q) use ($searchTerm) {
                 $q->whereRaw('LOWER(name) LIKE ?', [$searchTerm])
@@ -322,7 +331,11 @@ class KalenderController extends Controller
                     ->orWhereRaw('LOWER(external_id) LIKE ?', [$searchTerm]);
             })
             ->take(5)
-            ->get(['id', 'name', 'email', 'external_id']);
+            ->get(['id', 'name', 'email', 'external_id'])
+            ->map(function ($u) use ($blacklistedUserIds) {
+                $u->is_blacklisted = in_array($u->id, $blacklistedUserIds);
+                return $u;
+            });
 
         return response()->json($users);
     }

@@ -799,12 +799,13 @@ class JadwalController extends Controller
             }
         }
 
+        $conflictsList = [];
         $akademikDetails = [];
         $peminjamanDetails = [];
 
         foreach ($ruangans as $r_id) {
             foreach ($dates as $dateOrHari) {
-                // 1. Hitung Bentrok dengan Jadwal Internal/Akademik
+                // 1. Hitung Bentrok dengan Jadwal Internal (Akademik & Agenda Internal Lainnya)
                 $queryCheck = MrJadwalInternal::where('ruangan_id', $r_id)
                     ->where(function ($q) use ($jamMulai, $jamSelesai) {
                         $q->where('jam_mulai', '<', $jamSelesai)
@@ -818,12 +819,50 @@ class JadwalController extends Controller
                 if ($tipe === 'rutin' || $kategori === 'Jadwal Akademik (Kuliah)') {
                     $queryCheck->where('hari', $dateOrHari);
                 } else {
-                    $queryCheck->where('tanggal_spesifik', $dateOrHari);
+                    // Tipe spesifik: cek spesifik lain DAN cek perkuliahan rutin yang aktif di hari tersebut
+                    $dayOfWeek = \Carbon\Carbon::parse($dateOrHari)->dayOfWeekIso;
+                    $isHoliday = \Modules\EOffice\Models\TanggalLibur::where('tanggal', $dateOrHari)->exists();
+
+                    $queryCheck->where(function ($cq) use ($dateOrHari, $dayOfWeek, $isHoliday) {
+                        $cq->where('tanggal_spesifik', $dateOrHari);
+                        if (!$isHoliday) {
+                            $cq->orWhere(function ($rq) use ($dayOfWeek, $dateOrHari) {
+                                $rq->where('tipe_jadwal', 'rutin')
+                                    ->where('hari', $dayOfWeek)
+                                    ->where(function ($tq) use ($dateOrHari) {
+                                        $tq->whereNull('tgl_mulai_efektif')
+                                            ->orWhere('tgl_mulai_efektif', '<=', $dateOrHari);
+                                    })
+                                    ->where(function ($tq) use ($dateOrHari) {
+                                        $tq->whereNull('tgl_selesai_efektif')
+                                            ->orWhere('tgl_selesai_efektif', '>=', $dateOrHari);
+                                    });
+                            });
+                        }
+                    });
                 }
 
                 $conflicts = $queryCheck->get();
                 foreach ($conflicts as $c) {
-                    $nama = $c->kategori === 'Jadwal Akademik (Kuliah)' ? ($c->mata_kuliah . ' - ' . $c->kelas) : $c->keterangan;
+                    $isAkademik = ($c->kategori === 'Jadwal Akademik (Kuliah)' || !empty($c->mata_kuliah));
+                    if ($isAkademik) {
+                        $tipeLabel = $c->tipe_jadwal === 'rutin' ? 'Kuliah Rutin' : 'Akademik';
+                        $nama = $c->mata_kuliah ? ($c->mata_kuliah . ($c->kelas ? ' - Kelas ' . $c->kelas : '')) : ($c->keterangan ?: 'Jadwal Perkuliahan');
+                    } else {
+                        $tipeLabel = 'Agenda Internal';
+                        $nama = $c->keterangan ?: ($c->kategori ?: 'Pemeliharaan / Blokir Ruangan');
+                    }
+
+                    $waktuRange = substr($c->jam_mulai, 0, 5) . ' - ' . substr($c->jam_selesai, 0, 5) . ' WIB';
+                    $tglIndo = $tipe === 'rutin' ? null : \Carbon\Carbon::parse($dateOrHari)->locale('id')->translatedFormat('l, d F Y');
+
+                    $conflictsList[] = [
+                        'tipe' => $tipeLabel,
+                        'nama' => $nama,
+                        'waktu' => $waktuRange,
+                        'tanggal' => $tglIndo,
+                    ];
+
                     $akademikDetails[] = [
                         'nama' => $nama,
                         'waktu' => substr($c->jam_mulai, 0, 5) . ' - ' . substr($c->jam_selesai, 0, 5)
@@ -832,7 +871,7 @@ class JadwalController extends Controller
 
                 // 2. Hitung Bentrok dengan Peminjaman Mahasiswa
                 if ($tipe === 'spesifik' && $kategori !== 'Jadwal Akademik (Kuliah)') {
-                    $peminjamanConflicts = \Modules\EOffice\Models\Peminjaman::where('ruangan_id', $r_id)
+                    $peminjamanConflicts = \Modules\EOffice\Models\Peminjaman::with('user')->where('ruangan_id', $r_id)
                         ->where('tanggal_pinjam', $dateOrHari)
                         ->whereIn('status', ['menunggu', 'disetujui'])
                         ->where(function ($q) use ($jamMulai, $jamSelesai) {
@@ -841,6 +880,18 @@ class JadwalController extends Controller
                         })->get();
                     
                     foreach ($peminjamanConflicts as $p) {
+                        $namaPemohon = $p->user ? " ({$p->user->name})" : '';
+                        $nama = ($p->tujuan ?: 'Peminjaman Ruangan') . $namaPemohon;
+                        $waktuRange = substr($p->jam_mulai, 0, 5) . ' - ' . substr($p->jam_selesai, 0, 5) . ' WIB';
+                        $tglIndo = \Carbon\Carbon::parse($dateOrHari)->locale('id')->translatedFormat('l, d F Y');
+
+                        $conflictsList[] = [
+                            'tipe' => 'Peminjaman Mahasiswa',
+                            'nama' => $nama,
+                            'waktu' => $waktuRange,
+                            'tanggal' => $tglIndo,
+                        ];
+
                         $peminjamanDetails[] = [
                             'nama' => $p->tujuan,
                             'waktu' => substr($p->jam_mulai, 0, 5) . ' - ' . substr($p->jam_selesai, 0, 5)
@@ -850,9 +901,13 @@ class JadwalController extends Controller
             }
         }
 
-        if (count($akademikDetails) > 0 || count($peminjamanDetails) > 0) {
+        $totalConflicts = count($conflictsList);
+        if ($totalConflicts > 0) {
             return response()->json([
                 'conflict' => true,
+                'count' => $totalConflicts,
+                'message' => "Terdapat {$totalConflicts} jadwal yang beririsan dengan waktu yang dipilih.",
+                'conflicts' => $conflictsList,
                 'akademik_details' => $akademikDetails,
                 'peminjaman_details' => $peminjamanDetails,
             ]);

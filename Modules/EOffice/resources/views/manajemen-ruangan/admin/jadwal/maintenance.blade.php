@@ -317,14 +317,36 @@
                                                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                             </svg>
                                         </div>
-                                        <div>
-                                            <h5 class="text-[13px] font-bold text-red-800">Peringatan Super
-                                                Override!</h5>
+                                        <div class="flex-1 min-w-0">
+                                            <h5 class="text-[13px] font-bold text-red-800 flex items-center gap-2">
+                                                <span>Peringatan Super Override!</span>
+                                                <span class="text-[10px] font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full"
+                                                    x-text="(warningData.conflicts ? warningData.conflicts.length : (warningData.count || 0)) + ' Jadwal Beririsan'"></span>
+                                            </h5>
                                             <p class="text-[12px] font-medium text-red-700 mt-1 leading-relaxed"
                                                 x-text="warningData.message"></p>
-                                            <p
-                                                class="text-[10px] font-bold text-red-600 mt-2.5 uppercase tracking-wider">
-                                                Menekan Simpan = Membatalkan Semua Jadwal Tersebut</p>
+
+                                            <!-- DAFTAR RINCIAN JADWAL BENTROK (SEPERTI KALENDER GLOBAL) -->
+                                            <div class="flex flex-col gap-1.5 mt-2.5 max-h-44 overflow-y-auto pr-1"
+                                                x-show="warningData.conflicts && warningData.conflicts.length > 0">
+                                                <template x-for="(c, idx) in warningData.conflicts" :key="idx">
+                                                    <div class="flex items-start gap-2 text-xs bg-white/80 p-2 rounded-lg border border-red-100">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0"></span>
+                                                        <div class="leading-relaxed min-w-0">
+                                                            <span class="font-bold text-red-900" x-text="'[' + c.tipe + '] ' + c.nama"></span>
+                                                            <div class="text-[11px] text-red-600/90 font-medium flex items-center gap-1.5 mt-0.5">
+                                                                <span x-show="c.tanggal" x-text="c.tanggal"></span>
+                                                                <span x-show="c.tanggal" class="text-red-300">&bull;</span>
+                                                                <span x-text="c.waktu"></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                            </div>
+
+                                            <p class="text-[10px] font-bold text-red-600 mt-2.5 uppercase tracking-wider">
+                                                Menekan Simpan = Menggusur perkuliahan di tanggal ini & membatalkan peminjaman mahasiswa tersebut
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
