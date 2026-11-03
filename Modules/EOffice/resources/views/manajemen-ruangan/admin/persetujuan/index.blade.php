@@ -19,7 +19,7 @@
                 <form action="{{ route('eoffice.peminjaman.admin.persetujuan.index') }}" method="GET"
                     class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 m-0 relative w-full lg:w-auto">
                     {{-- Search --}}
-                    <div class="relative w-full sm:flex-1 lg:w-auto lg:flex-none" x-data="{ searchQuery: '{{ addslashes(request('search')) }}' }">
+                    <div class="relative w-full sm:flex-1 lg:w-auto lg:flex-none" x-data="{ searchQuery: @js(request('search', '')) }">
                         <button type="submit" class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-400 hover:text-[#0B266E] transition-colors bg-transparent border-0 outline-none">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
@@ -70,7 +70,7 @@
                                 {{-- 1. Ruangan --}}
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-700 mb-1.5 relative z-10 w-full bg-white">Ruangan</label>
-                                    <div x-data="roomFilterSelect('{{ request('ruangan_id') }}', '{{ addslashes(request('ruangan_id') ? ($ruangans->firstWhere('id', request('ruangan_id'))->nama ?? 'Semua Ruangan') : 'Semua Ruangan') }}')" class="relative w-full" @click.away="handleClose()">
+                                    <div x-data="roomFilterSelect('{{ request('ruangan_id') }}', @js(request('ruangan_id') ? ($ruangans->firstWhere('id', request('ruangan_id'))->nama ?? 'Semua Ruangan') : 'Semua Ruangan'))" class="relative w-full" @click.away="handleClose()">
                                         
                                         <input type="hidden" name="ruangan_id" :value="selectedId">
 
@@ -362,8 +362,26 @@
 
                                 {{-- Kolom 6: Aksi --}}
                                 <td style="text-align: center;">
+                                    @php
+                                        $actionData = [
+                                            'id' => $pinjam->id,
+                                            'name' => $pinjam->user->name ?? 'User',
+                                            'nim' => $pinjam->user->student->student_number ?? $pinjam->user->external_id ?? '-',
+                                            'telp' => $pinjam->nomor_telepon ?? $pinjam->user->whatsapp ?? '-',
+                                            'status' => $pinjam->status,
+                                            'ruanganId' => $pinjam->ruangan_id,
+                                            'tanggal' => $pinjam->tanggal_pinjam,
+                                            'jamMulai' => substr($pinjam->jam_mulai, 0, 5),
+                                            'jamSelesai' => substr($pinjam->jam_selesai, 0, 5),
+                                            'ruanganName' => $pinjam->ruangan->nama ?? 'Ruangan Dihapus',
+                                            'kegiatan' => $pinjam->tujuan,
+                                            'formatTanggal' => \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->locale('id')->translatedFormat('l, d F Y'),
+                                            'berkasUrl' => $berkasUrl,
+                                            'sourceLabel' => $pinjam->source_label,
+                                        ];
+                                    @endphp
                                     <button
-                                        @click="openAction({{ $pinjam->id }}, '{{ addslashes($pinjam->user->name ?? "User") }}', '{{ addslashes($pinjam->user->student->student_number ?? $pinjam->user->external_id ?? "-") }}', '{{ addslashes($pinjam->nomor_telepon ?? $pinjam->user->whatsapp ?? "-") }}', '{{ $pinjam->status }}', '{{ $pinjam->ruangan_id }}', '{{ $pinjam->tanggal_pinjam }}', '{{ substr($pinjam->jam_mulai, 0, 5) }}', '{{ substr($pinjam->jam_selesai, 0, 5) }}', '{{ addslashes($pinjam->ruangan->nama ?? 'Ruangan Dihapus') }}', '{{ addslashes($pinjam->tujuan) }}', '{{ \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->translatedFormat('d M Y') }}', '{{ $berkasUrl }}', '{{ addslashes($pinjam->source_label) }}')"
+                                        @click="openAction(@js($actionData))"
                                         class="h-8 px-4 rounded-md bg-white border border-gray-200 text-[#0B266E] text-[12px] font-bold hover:bg-gray-50 shadow-sm transition-colors cursor-pointer">
                                         Kelola
                                     </button>
@@ -599,10 +617,12 @@
                                     <div class="text-slate-500 font-medium">Ruangan</div>
                                     <div class="text-slate-800 font-bold" x-text="selectedRuanganName"></div>
 
-                                    <div class="text-slate-500 font-medium">Waktu</div>
-                                    <div class="text-slate-800 font-bold">
-                                        <span x-text="selectedFormatTanggal"></span> <span
-                                            class="bg-blue-50 text-[#0B266E] px-1.5 py-0.5 rounded text-xs ml-1 font-semibold border border-blue-200"
+                                    <div class="text-slate-500 font-medium">Tanggal</div>
+                                    <div class="text-slate-800 font-bold" x-text="selectedFormatTanggal"></div>
+
+                                    <div class="text-slate-500 font-medium flex items-center">Waktu</div>
+                                    <div class="text-slate-800 font-bold flex items-center">
+                                        <span class="bg-blue-50 text-[#0B266E] px-2 py-0.5 rounded text-xs font-semibold border border-blue-200"
                                             x-text="selectedJamMulai + ' - ' + selectedJamSelesai + ' WIB'"></span>
                                     </div>
 
@@ -724,7 +744,7 @@
                                                     get selectedName() {
                                                         const room = [
                                                             @foreach($ruangans as $ruangan)
-                                                                 {id: '{{ $ruangan->id }}', name: '{{ addslashes($ruangan->nama) }}'},
+                                                                 {id: '{{ $ruangan->id }}', name: @js($ruangan->nama)},
                                                             @endforeach
                                                         ].find(r => r.id == currentRoom);
                                                         return room ? room.name : 'Pilih Ruangan...';
@@ -986,6 +1006,23 @@
                 },
 
                 openAction(id, name, nim, telp, status, ruanganId, tanggal, jamMulai, jamSelesai, ruanganName, kegiatan, formatTanggal, berkasUrl, sourceLabel = 'Peminjaman Langsung') {
+                    if (typeof id === 'object' && id !== null) {
+                        const d = id;
+                        id = d.id;
+                        name = d.name;
+                        nim = d.nim;
+                        telp = d.telp;
+                        status = d.status;
+                        ruanganId = d.ruanganId;
+                        tanggal = d.tanggal;
+                        jamMulai = d.jamMulai;
+                        jamSelesai = d.jamSelesai;
+                        ruanganName = d.ruanganName;
+                        kegiatan = d.kegiatan;
+                        formatTanggal = d.formatTanggal;
+                        berkasUrl = d.berkasUrl;
+                        sourceLabel = d.sourceLabel || 'Peminjaman Langsung';
+                    }
                     this.selectedId = id;
                     this.selectedName = name;
                     this.selectedNim = nim;

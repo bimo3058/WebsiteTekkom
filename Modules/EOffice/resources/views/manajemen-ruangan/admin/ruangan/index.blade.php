@@ -27,7 +27,7 @@
                     <form action="{{ route('eoffice.peminjaman.admin.ruangan.index') }}" method="GET"
                         class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 m-0 relative w-full lg:w-auto">
                         {{-- Search --}}
-                        <div class="relative w-full sm:flex-1 lg:w-auto lg:flex-none" x-data="{ searchQuery: '{{ addslashes(request('search')) }}' }">
+                        <div class="relative w-full sm:flex-1 lg:w-auto lg:flex-none" x-data="{ searchQuery: @js(request('search', '')) }">
                             <button type="submit" class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-400 hover:text-[#0B266E] transition-colors bg-transparent border-0 outline-none">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
@@ -307,7 +307,7 @@
                                                 style="margin:0;">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button" @click="confirmDelete('delete-form-{{ $r->id }}', '{{ addslashes($r->nama) }}')"
+                                                <button type="button" @click="confirmDelete('delete-form-{{ $r->id }}', @js($r->nama))"
                                                     class="w-full text-left px-2.5 py-1.5 mt-0.5 text-[12px] text-red-600 hover:bg-red-50 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors cursor-pointer">
                                                     <svg class="w-[14px] h-[14px] text-red-600" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">

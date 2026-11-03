@@ -204,7 +204,7 @@
                                 @if(!in_array(strtolower($booking->status), ['dibatalkan', 'ditolak', 'selesai']))
                                     @if($bisaDibatalkan)
                                         <button type="button"
-                                                @click="openCancelModal('{{ route('eoffice.peminjaman.user.saya.batal', $booking->id) }}', '{{ addslashes($booking->ruangan->nama) }}', '{{ $tgl->locale('id')->translatedFormat('d M Y') }}')"
+                                                @click="openCancelModal('{{ route('eoffice.peminjaman.user.saya.batal', $booking->id) }}', @js($booking->ruangan->nama), '{{ $tgl->locale('id')->translatedFormat('d M Y') }}')"
                                                 class="h-[34px] px-3 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-600 text-[12px] font-semibold transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
                                                 title="Batalkan Peminjaman">
                                             <svg class="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">

@@ -306,7 +306,7 @@
                                             search: '',
                                             rooms: [
                                                 @foreach($ruangans as $r)
-                                                    {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }} - Lt. {{ $r->lantai }}'},
+                                                    {id: '{{ $r->id }}', name: @js("{$r->nama} - Lt. {$r->lantai}")},
                                                 @endforeach
                                             ],
                                             get filteredRooms() {
@@ -717,7 +717,7 @@
                         class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 m-0 relative w-full lg:w-auto">
                         <!-- Search Bar -->
                         <div class="relative w-full sm:flex-1 lg:w-auto lg:flex-none"
-                            x-data="{ searchQuery: '{{ addslashes(request('search')) }}' }">
+                            x-data="{ searchQuery: @js(request('search', '')) }">
                             <button type="submit"
                                 class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-400 hover:text-[#0B266E] transition-colors bg-transparent border-0 outline-none">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
@@ -1332,7 +1332,7 @@
                                                                                 search: '',
                                                                                 rooms: [
                                                                                     @foreach($ruangans as $r)
-                                                                                        {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }} - Lt. {{ $r->lantai }}'},
+                                                                                        {id: '{{ $r->id }}', name: @js("{$r->nama} - Lt. {$r->lantai}")},
                                                                                     @endforeach
                                                                                 ],
                                                                                 get filteredRooms() {

@@ -118,7 +118,7 @@
                             activeTab: 'Semua',
                             selectedCat: '{{ $selectedKategori }}',
                             selectedRoomId: '{{ $selectedRoomId }}',
-                            selectedRoomName: '{{ $selectedRoomId ? addslashes($allRuangansDaftar->firstWhere('id', $selectedRoomId)->nama ?? 'Semua Ruangan') : 'Semua Ruangan' }}',
+                            selectedRoomName: @js($selectedRoomId ? ($allRuangansDaftar->firstWhere('id', $selectedRoomId)->nama ?? 'Semua Ruangan') : 'Semua Ruangan'),
                             rooms: {{ $allRuangansDaftar->map(fn($r) => ['id' => $r->id, 'nama' => $r->nama, 'kategori' => $r->kategori])->toJson() }},
                             categories: {{ $kategoriList->toJson() }},
                             get displayLabel() {
@@ -461,12 +461,12 @@
                                             @endphp
                                             <td style="border: 1px solid #E5E7EB; padding: 0; position: relative; height: {{ $gridHeight }}px; vertical-align: top; background: {{ $bgCell }}; min-width: 72px;"
                                                 @if(!$isClosedAllDay)
-                                                    @mousedown.prevent="startDragAbsolute($event, '{{ $ruang->id }}', '{{ addslashes($ruang->nama) }}', '{{ $dateStr }}', {{ $bukaInt }}, {{ $totalHours }}, {{ $eventBoundsJson }})"
+                                                    @mousedown.prevent="startDragAbsolute($event, '{{ $ruang->id }}', @js($ruang->nama), '{{ $dateStr }}', {{ $bukaInt }}, {{ $totalHours }}, {{ $eventBoundsJson }})"
                                                 @mousemove.prevent="doDragAbsolute($event)"
                                                 @mouseup.prevent="stopDragAbsolute()"
                                                 @touchstart.passive="handleTouchStart($event)"
                                                 @touchmove.passive="handleTouchMove($event)"
-                                                @touchend="handleTouchEnd($event, '{{ $ruang->id }}', '{{ addslashes($ruang->nama) }}', '{{ $dateStr }}', {{ $bukaInt }}, {{ $totalHours }}, {{ $eventBoundsJson }})"
+                                                @touchend="handleTouchEnd($event, '{{ $ruang->id }}', @js($ruang->nama), '{{ $dateStr }}', {{ $bukaInt }}, {{ $totalHours }}, {{ $eventBoundsJson }})"
                                                 @mouseenter="hoverCol = '{{ $dateStr }}_{{ $ruang->id }}'"
                                                 @mouseleave="hoverCol = null; if(isDragging) stopDragAbsolute()"
                                                 :style="hoverCol === '{{ $dateStr }}_{{ $ruang->id }}' && !isDragging ? 'background: #F8FAFC;' : ''"
@@ -505,14 +505,31 @@
                                                     $isOwn = ($ev['user_id'] ?? null) === auth()->id();
                                                     $tujuan = $ev['tujuan'];
                                                     
+                                                    $modalData = null;
                                                     if ($status === 'disetujui') {
                                                         if ($isPraktikum) {
                                                             $bg = 'rgba(219, 234, 254, 0.95)'; $border = '#60A5FA'; $tColor = '#1E40AF';
                                                             $label = $tujuan ?: 'Praktikum';
-                                                            $onClick = "openDetailModal('".addslashes($label)."', '-', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'praktikum', '')";
+                                                            $modalData = [
+                                                                'kegiatan' => $label,
+                                                                'kelas' => '-',
+                                                                'ruangan' => $ruang->nama,
+                                                                'tanggal' => $day->translatedFormat('l, d M Y'),
+                                                                'waktu' => "{$ev['jam_mulai']} - {$ev['jam_selesai']}",
+                                                                'status' => 'praktikum',
+                                                                'tujuan' => '',
+                                                            ];
                                                         } else {
                                                             $bg = 'rgba(237, 233, 254, 0.9)'; $border = '#C4B5FD'; $label = 'Terpakai'; $tColor = '#5B21B6';
-                                                            $onClick = "openDetailModal('Terpakai', '-', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'terpakai', '')";
+                                                            $modalData = [
+                                                                'kegiatan' => 'Terpakai',
+                                                                'kelas' => '-',
+                                                                'ruangan' => $ruang->nama,
+                                                                'tanggal' => $day->translatedFormat('l, d M Y'),
+                                                                'waktu' => "{$ev['jam_mulai']} - {$ev['jam_selesai']}",
+                                                                'status' => 'terpakai',
+                                                                'tujuan' => '',
+                                                            ];
                                                         }
                                                     } elseif ($status === 'internal') {
                                                         $isKuliah = in_array($type, ['Jadwal Akademik (Kuliah)', 'Kuliah Pengganti', 'Pindah Kelas', 'Pindah / Pengganti Kelas']);
@@ -531,7 +548,15 @@
 
                                                         if ($isLainnya) {
                                                             $label = 'Terpakai';
-                                                            $onClick = "openDetailModal('Terpakai', '-', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'terpakai', '')";
+                                                            $modalData = [
+                                                                'kegiatan' => 'Terpakai',
+                                                                'kelas' => '-',
+                                                                'ruangan' => $ruang->nama,
+                                                                'tanggal' => $day->translatedFormat('l, d M Y'),
+                                                                'waktu' => "{$ev['jam_mulai']} - {$ev['jam_selesai']}",
+                                                                'status' => 'terpakai',
+                                                                'tujuan' => '',
+                                                            ];
                                                         } else {
                                                             $cleanTujuan = trim(str_ireplace(['digunakan untuk', ' - Kelas ', ' (Kelas ', ')'], ['', '-', '-', ''], $tujuan));
                                                             $label = $cleanTujuan ?: ($type ?: 'Kegiatan');
@@ -541,20 +566,52 @@
                                                                 $kelas = trim(array_pop($parts));
                                                                 $matkul = trim(implode('-', $parts));
                                                             }
-                                                            $onClick = "openDetailModal('".addslashes($matkul)."', '".addslashes($kelas)."', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'internal', '')";
+                                                            $modalData = [
+                                                                'kegiatan' => $matkul,
+                                                                'kelas' => $kelas,
+                                                                'ruangan' => $ruang->nama,
+                                                                'tanggal' => $day->translatedFormat('l, d M Y'),
+                                                                'waktu' => "{$ev['jam_mulai']} - {$ev['jam_selesai']}",
+                                                                'status' => 'internal',
+                                                                'tujuan' => '',
+                                                            ];
                                                         }
                                                     } elseif ($status === 'menunggu' && $isPraktikum) {
                                                         $bg = 'rgba(219, 234, 254, 0.9)'; $border = '#60A5FA'; $label = 'Agenda Akademik'; $tColor = '#1E40AF';
-                                                        $onClick = "openDetailModal('Agenda Akademik', '-', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'agenda_akademik', '')";
+                                                        $modalData = [
+                                                            'kegiatan' => 'Agenda Akademik',
+                                                            'kelas' => '-',
+                                                            'ruangan' => $ruang->nama,
+                                                            'tanggal' => $day->translatedFormat('l, d M Y'),
+                                                            'waktu' => "{$ev['jam_mulai']} - {$ev['jam_selesai']}",
+                                                            'status' => 'agenda_akademik',
+                                                            'tujuan' => '',
+                                                        ];
                                                     } elseif ($status === 'menunggu' && $isOwn) {
                                                         $bg = 'rgba(254, 249, 195, 0.9)'; $border = '#FBBF24'; $label = 'Menunggu'; $tColor = '#B45309';
-                                                        $onClick = "openDetailModal('Menunggu Konfirmasi', '-', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'menunggu', '".addslashes($tujuan)."')";
+                                                        $modalData = [
+                                                            'kegiatan' => 'Menunggu Konfirmasi',
+                                                            'kelas' => '-',
+                                                            'ruangan' => $ruang->nama,
+                                                            'tanggal' => $day->translatedFormat('l, d M Y'),
+                                                            'waktu' => "{$ev['jam_mulai']} - {$ev['jam_selesai']}",
+                                                            'status' => 'menunggu',
+                                                            'tujuan' => $tujuan,
+                                                        ];
                                                     } elseif ($status === 'menunggu') {
                                                         $bg = 'rgba(237, 233, 254, 0.9)'; $border = '#C4B5FD'; $label = 'Terpakai'; $tColor = '#5B21B6';
-                                                        $onClick = "openDetailModal('Terpakai', '-', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'terpakai', '')";
+                                                        $modalData = [
+                                                            'kegiatan' => 'Terpakai',
+                                                            'kelas' => '-',
+                                                            'ruangan' => $ruang->nama,
+                                                            'tanggal' => $day->translatedFormat('l, d M Y'),
+                                                            'waktu' => "{$ev['jam_mulai']} - {$ev['jam_selesai']}",
+                                                            'status' => 'terpakai',
+                                                            'tujuan' => '',
+                                                        ];
                                                     }
                                                 @endphp
-                                                <div @mousedown.stop @click.stop="{!! $onClick !!}"
+                                                <div @mousedown.stop @click.stop="openDetailModal(@js($modalData))"
                                                     class="absolute left-0.5 right-0.5 rounded shadow-sm overflow-hidden flex flex-col justify-center items-center px-1 py-0.5 cursor-pointer hover:shadow-md transition-all z-10"
                                                     style="top: {{ $top }}px; height: {{ $height }}px; background: {{ $bg }}; border: 1px solid {{ $border }}; backdrop-filter: blur(2px);"
                                                     @mouseover="$el.style.transform='translateY(-2px)'" @mouseout="$el.style.transform='translateY(0)'">
@@ -1003,7 +1060,11 @@
                 detailData: { kegiatan: '', kelas: '', ruangan: '', tanggal: '', waktu: '', status: '', tujuan: '' },
 
                 openDetailModal(kegiatan, kelas, ruangan, tanggal, waktu, status = '', tujuan = '') {
-                    this.detailData = { kegiatan, kelas, ruangan, tanggal, waktu, status, tujuan };
+                    if (typeof kegiatan === 'object' && kegiatan !== null) {
+                        this.detailData = { ...kegiatan };
+                    } else {
+                        this.detailData = { kegiatan, kelas, ruangan, tanggal, waktu, status, tujuan };
+                    }
                     this.showDetailModal = true;
                 },
                 closeDetailModal() { this.showDetailModal = false; },

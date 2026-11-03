@@ -100,7 +100,7 @@
                 <form action="{{ route('eoffice.peminjaman.admin.riwayat.index') }}" method="GET"
                     class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 m-0 relative w-full lg:w-auto">
                     {{-- Search --}}
-                    <div class="relative w-full sm:flex-1 lg:w-auto lg:flex-none" x-data="{ searchQuery: '{{ addslashes(request('search')) }}' }">
+                    <div class="relative w-full sm:flex-1 lg:w-auto lg:flex-none" x-data="{ searchQuery: @js(request('search', '')) }">
                         <button type="submit" class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-400 hover:text-[#0B266E] transition-colors bg-transparent border-0 outline-none">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
@@ -167,7 +167,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-700 mb-1.5 relative z-10 w-full bg-white">Ruangan</label>
-                                    <div x-data="roomFilterSelect('{{ request('ruangan_id') }}', '{{ addslashes(request('ruangan_id') ? ($ruangans->firstWhere('id', request('ruangan_id'))->nama ?? 'Semua Ruangan') : 'Semua Ruangan') }}')" class="relative w-full" @click.away="handleClose()">
+                                    <div x-data="roomFilterSelect('{{ request('ruangan_id') }}', @js(request('ruangan_id') ? ($ruangans->firstWhere('id', request('ruangan_id'))->nama ?? 'Semua Ruangan') : 'Semua Ruangan'))" class="relative w-full" @click.away="handleClose()">
                                         
                                         <input type="hidden" name="ruangan_id" :value="selectedId">
 

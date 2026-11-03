@@ -123,7 +123,7 @@
                             activeTab: 'Semua',
                             selectedCat: '{{ request()->get('kategori', 'Semua Kategori') }}',
                             selectedRoomId: '{{ $selectedRoomId }}',
-                            selectedRoomName: '{{ $selectedRoomId ? addslashes($allRuangansDaftar->firstWhere('id', $selectedRoomId)->nama ?? 'Semua Ruangan') : 'Semua Ruangan' }}',
+                            selectedRoomName: @js($selectedRoomId ? ($allRuangansDaftar->firstWhere('id', $selectedRoomId)->nama ?? 'Semua Ruangan') : 'Semua Ruangan'),
                             rooms: {{ $allRuangansDaftar->map(fn($r) => ['id' => $r->id, 'nama' => $r->nama, 'kategori' => $r->kategori])->toJson() }},
                             categories: {{ $kategoriList->toJson() }},
                             get displayLabel() {
@@ -469,11 +469,11 @@
                                         $eventBoundsJson = json_encode($eventBounds);
                                     @endphp
                                     <td style="border: 1px solid #E5E7EB; padding: 0; position: relative; height: {{ $gridHeight }}px; vertical-align: top; background: {{ $bgCell }}; min-width: 72px;"
-                                        @mousedown.prevent="startDragAbsolute($event, '{{ $ruang->id }}', '{{ addslashes($ruang->nama) }}', '{{ $dateStr }}', {{ $bukaInt }}, {{ $totalHours }}, {{ $eventBoundsJson }})"
+                                        @mousedown.prevent="startDragAbsolute($event, '{{ $ruang->id }}', @js($ruang->nama), '{{ $dateStr }}', {{ $bukaInt }}, {{ $totalHours }}, {{ $eventBoundsJson }})"
                                         @mousemove.prevent="doDragAbsolute($event)" @mouseup.prevent="stopDragAbsolute()"
                                         @touchstart.passive="handleTouchStart($event)"
                                         @touchmove.passive="handleTouchMove($event)"
-                                        @touchend="handleTouchEnd($event, '{{ $ruang->id }}', '{{ addslashes($ruang->nama) }}', '{{ $dateStr }}', {{ $bukaInt }}, {{ $totalHours }}, {{ $eventBoundsJson }})"
+                                        @touchend="handleTouchEnd($event, '{{ $ruang->id }}', @js($ruang->nama), '{{ $dateStr }}', {{ $bukaInt }}, {{ $totalHours }}, {{ $eventBoundsJson }})"
                                         @mouseenter="hoverCol = '{{ $dateStr }}_{{ $ruang->id }}'"
                                         @mouseleave="hoverCol = null; if(isDragging) stopDragAbsolute()"
                                         :style="hoverCol === '{{ $dateStr }}_{{ $ruang->id }}' && !isDragging ? 'background: #F8FAFC;' : ''"
