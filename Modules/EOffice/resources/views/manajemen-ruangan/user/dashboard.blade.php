@@ -153,8 +153,8 @@
                             class="px-5 py-3.5 border-b border-gray-100 last:border-b-0 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
                             <div class="min-w-0 flex-1 pr-4">
                                 <h4 class="text-[13px] font-medium text-[#111827] leading-tight mb-0.5 truncate"
-                                    title="{{ $booking->ruangan->nama }}">
-                                    {{ $booking->ruangan->nama }}
+                                    title="{{ $booking->ruangan?->nama ?? 'Ruangan Dihapus' }}">
+                                    {{ $booking->ruangan?->nama ?? 'Ruangan Dihapus' }}
                                 </h4>
                                 <div class="text-[11px] text-gray-500 line-clamp-1" title="{{ $booking->tujuan }}">
                                     {{ $booking->tujuan }}
@@ -208,8 +208,8 @@
                                 <tr class="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
                                     <td class="px-5 py-3.5 align-top">
                                         <div class="text-[13px] font-medium text-[#111827] mb-0.5 truncate max-w-[150px]"
-                                            title="{{ $booking->ruangan->nama }}">
-                                            {{ $booking->ruangan->nama }}
+                                            title="{{ $booking->ruangan?->nama ?? 'Ruangan Dihapus' }}">
+                                            {{ $booking->ruangan?->nama ?? 'Ruangan Dihapus' }}
                                         </div>
                                         <div class="text-[11px] text-gray-500">
                                             {{ $booking->tanggal_pinjam?->translatedFormat('d M Y') }}<br>

@@ -55,7 +55,7 @@
                                                         <div style="max-width: 220px;">
                                                             <div class="text-[13px] font-medium text-[#111827] flex items-center gap-2">
                                                                 <span class="truncate"
-                                                                    title="{{ $riwayat->ruangan->nama }}">{{ $riwayat->ruangan->nama }}</span>
+                                                                    title="{{ $riwayat->ruangan?->nama ?? 'Ruangan Dihapus' }}">{{ $riwayat->ruangan?->nama ?? 'Ruangan Dihapus' }}</span>
                                                                 @if($riwayat->created_by && $riwayat->created_by !== $riwayat->user_id)
                                                                     <span
                                                                         class="bg-gray-100 text-gray-500 border border-gray-200 text-[9px] px-1.5 py-0.5 rounded font-bold tracking-wider whitespace-nowrap flex-shrink-0"
@@ -143,7 +143,7 @@
                                                                 x-transition:leave-end="opacity-0 scale-95"
                                                                 class="absolute right-0 bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-1.5 w-[140px] {{ $isBottomRow ? 'bottom-full mb-2 origin-bottom-right' : 'top-full mt-2 origin-top-right' }}">
                                                                 <button type="button" @click='showDropdown = false; $dispatch("open-detail", {{ json_encode([
-                                    "ruangan" => $riwayat->ruangan->nama,
+                                    "ruangan" => $riwayat->ruangan?->nama ?? 'Ruangan Dihapus',
                                     "tujuan" => $riwayat->tujuan,
                                     "tanggal" => \Carbon\Carbon::parse($riwayat->tanggal_pinjam)->translatedFormat("l, d F Y"),
                                     "jam" => \Carbon\Carbon::parse($riwayat->jam_mulai)->format("H:i") . " - " . \Carbon\Carbon::parse($riwayat->jam_selesai)->format("H:i") . " WIB",

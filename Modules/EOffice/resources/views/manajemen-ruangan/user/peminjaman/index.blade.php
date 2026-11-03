@@ -111,11 +111,11 @@
                                 {{-- Room Title & Badges --}}
                                 <div class="flex flex-wrap items-center gap-2 mb-1.5">
                                     <h3 class="text-[15px] sm:text-[16px] font-bold text-gray-900 tracking-tight leading-snug">
-                                        {{ $booking->ruangan->nama }}
+                                        {{ $booking->ruangan?->nama ?? 'Ruangan Dihapus' }}
                                     </h3>
-                                    @if($booking->ruangan->lokasi)
+                                    @if($booking->ruangan?->lokasi)
                                         <span class="inline-flex items-center text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                                            {{ $booking->ruangan->lokasi }}@if($booking->ruangan->lantai) · Lt. {{ $booking->ruangan->lantai }}@endif
+                                            {{ $booking->ruangan?->lokasi }}@if($booking->ruangan?->lantai) · Lt. {{ $booking->ruangan?->lantai }}@endif
                                         </span>
                                     @endif
                                     @if($booking->created_by && $booking->created_by !== $booking->user_id)
@@ -179,10 +179,10 @@
                                 {{-- Tombol Detail --}}
                                 <button type="button"
                                         @click='openDetailModal({{ json_encode([
-                                            "ruangan" => $booking->ruangan->nama,
-                                            "lokasi" => $booking->ruangan->lokasi ?? "Gedung Utama",
-                                            "lantai" => (string) ($booking->ruangan->lantai ?? "-"),
-                                            "kapasitas" => (string) ($booking->ruangan->kapasitas ?? "-"),
+                                            "ruangan" => $booking->ruangan?->nama ?? 'Ruangan Dihapus',
+                                            "lokasi" => $booking->ruangan?->lokasi ?? "Gedung Utama",
+                                            "lantai" => (string) ($booking->ruangan?->lantai ?? "-"),
+                                            "kapasitas" => (string) ($booking->ruangan?->kapasitas ?? "-"),
                                             "tanggal" => $tgl->locale("id")->translatedFormat("l, d F Y"),
                                             "jam" => \Carbon\Carbon::parse($booking->jam_mulai)->format("H:i") . " - " . \Carbon\Carbon::parse($booking->jam_selesai)->format("H:i") . " WIB",
                                             "tujuan" => $booking->tujuan,
@@ -204,7 +204,7 @@
                                 @if(!in_array(strtolower($booking->status), ['dibatalkan', 'ditolak', 'selesai']))
                                     @if($bisaDibatalkan)
                                         <button type="button"
-                                                @click="openCancelModal('{{ route('eoffice.peminjaman.user.saya.batal', $booking->id) }}', @js($booking->ruangan->nama), '{{ $tgl->locale('id')->translatedFormat('d M Y') }}')"
+                                                @click="openCancelModal('{{ route('eoffice.peminjaman.user.saya.batal', $booking->id) }}', @js($booking->ruangan?->nama ?? 'Ruangan Dihapus'), '{{ $tgl->locale('id')->translatedFormat('d M Y') }}')"
                                                 class="h-[34px] px-3 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-600 text-[12px] font-semibold transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
                                                 title="Batalkan Peminjaman">
                                             <svg class="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
