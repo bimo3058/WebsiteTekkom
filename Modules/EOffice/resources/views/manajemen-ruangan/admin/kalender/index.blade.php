@@ -741,6 +741,15 @@
                 conflictsList: [],
                 isCheckingCollision: false,
                 collisionTimeout: null,
+                get formattedTanggalIndo() {
+                    if (!this.tanggal) return '';
+                    const [y, m, d] = this.tanggal.split('-').map(Number);
+                    if (!y || !m || !d) return this.tanggal;
+                    const dateObj = new Date(y, m - 1, d);
+                    const hari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][dateObj.getDay()];
+                    const bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][m];
+                    return `${hari}, ${d} ${bulan} ${y}`;
+                },
                 get isPastTime() {
                     if (!this.tanggal || !this.jam) return false;
                     let today = new Date();
@@ -854,9 +863,9 @@
                                 <div>
                                     <h3 class="text-sm font-bold text-[#1A1C1E] tracking-tight" id="modal-title">Input
                                         Peminjaman</h3>
-                                    <p class="text-[10px] text-[#0B266E] font-medium">Mengunci penjadwalan paksa untuk
+                                    <p class="text-[10px] text-[#0B266E] font-medium">Penjadwalan langsung untuk
                                         <span class="font-bold" x-text="ruangan_nama"></span> pada <span
-                                            class="font-bold" x-text="tanggal + ' pukul ' + jam + ' WIB'"></span></p>
+                                            class="font-bold" x-text="formattedTanggalIndo + ' pukul ' + jam + ' WIB'"></span></p>
                                 </div>
                             </div>
                             <button type="button" @click="show = false"
@@ -933,6 +942,9 @@
                                                     class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800"
                                                     :required="modeAction === 'internal'"
                                                     :disabled="modeAction !== 'internal'">
+                                            </div>
+                                            <div class="col-span-2 text-[10px] text-slate-500 mt-0.5 ml-0.5">
+                                                <p class="leading-relaxed"><b>Info:</b> Jam operasional peminjaman reguler adalah <b>{{ $jamBuka ?? '08:00' }} - {{ $jamTutup ?? '16:00' }}</b>. Sebagai Admin, Anda bebas melewati batas ini untuk pemblokiran 24 jam jika diperlukan.</p>
                                             </div>
                                         </div>
 
@@ -1093,6 +1105,9 @@
                                             <input type="time" name="jam_selesai" x-model="jam_selesai"
                                                 class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800"
                                                 :required="modeAction === 'dosen'" :disabled="modeAction !== 'dosen'">
+                                        </div>
+                                        <div class="col-span-2 text-[10px] text-slate-500 mt-0.5 ml-0.5">
+                                            <p class="leading-relaxed"><b>Info:</b> Jam operasional peminjaman reguler adalah <b>{{ $jamBuka ?? '08:00' }} - {{ $jamTutup ?? '16:00' }}</b>. Sebagai Admin, Anda bebas melewati batas ini untuk penjadwalan khusus jika diperlukan.</p>
                                         </div>
                                     </div>
 

@@ -4,6 +4,7 @@ namespace Modules\EOffice\Services;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Modules\EOffice\Models\MrBlacklist;
 use Modules\EOffice\Models\MrJadwalInternal;
 use Modules\EOffice\Models\Peminjaman;
 use Modules\EOffice\Models\Ruangan;
@@ -92,8 +93,8 @@ class RoomBookingService
 
         // Ambil pengaturan operasional admin
         $settings = Pengaturan::pluck('value', 'key')->toArray();
-        $jamBuka = $settings['jam_buka'] ?? '08:00';
-        $jamTutup = $settings['jam_tutup'] ?? '16:00';
+        $jamBuka = substr($settings['jam_buka'] ?? '08:00', 0, 5);
+        $jamTutup = substr($settings['jam_tutup'] ?? '16:00', 0, 5);
         $bukaAkhirPekan = filter_var($settings['buka_akhir_pekan'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $batasHMinBooking = (int) ($settings['batas_h_min_booking'] ?? 0);
 
@@ -205,10 +206,31 @@ class RoomBookingService
             $jamMulai = substr($payload['jam_mulai'], 0, 5);
             $jamSelesai = substr($payload['jam_selesai'], 0, 5);
             $source = isset($payload['source']) ? strtolower((string) $payload['source']) : null;
+            if ($source === 'kerja_praktik') {
+                $source = 'kp';
+            }
+            if ($source && !in_array($source, ['kp', 'capstone', 'praktikum'])) {
+                throw new \Exception("Pemesanan gagal: Sumber modul '{$source}' tidak dikenali oleh sistem manajemen ruangan.");
+            }
+
             $sourceId = $payload['source_id'] ?? null;
             $userId = $payload['user_id'] ?? auth()->id();
+            if (!$userId) {
+                throw new \Exception('Pemesanan gagal: Identitas pemohon (user_id) tidak valid.');
+            }
+
+            // 0. Pengecekan Sanksi / Blacklist Peminjaman Ruangan
+            $isBlacklisted = MrBlacklist::where('user_id', $userId)->first();
+            if ($isBlacklisted) {
+                $alasan = $isBlacklisted->alasan ? " (Alasan: {$isBlacklisted->alasan})" : '';
+                throw new \Exception("Pemesanan gagal: Akun pemohon sedang ditangguhkan dari layanan peminjaman ruangan{$alasan}.");
+            }
             $tujuan = $payload['tujuan'] ?? $payload['keperluan'] ?? 'Kegiatan Akademik';
-            $nomorTelepon = $payload['nomor_telepon'] ?? null;
+            $targetUser = \App\Models\User::find($userId);
+            $nomorTelepon = $payload['nomor_telepon'] ?? $targetUser?->whatsapp ?? null;
+            if (!empty($payload['nomor_telepon']) && $targetUser && empty($targetUser->whatsapp)) {
+                $targetUser->update(['whatsapp' => $payload['nomor_telepon']]);
+            }
             $berkasPendukung = $payload['berkas_pendukung'] ?? null;
 
             // 1. Validasi Urutan Jam
@@ -218,8 +240,8 @@ class RoomBookingService
 
             // 2. Ambil Pengaturan Operasional Admin
             $settings = Pengaturan::pluck('value', 'key')->toArray();
-            $jamBuka = $settings['jam_buka'] ?? '08:00';
-            $jamTutup = $settings['jam_tutup'] ?? '16:00';
+            $jamBuka = substr($settings['jam_buka'] ?? '08:00', 0, 5);
+            $jamTutup = substr($settings['jam_tutup'] ?? '16:00', 0, 5);
             $bukaAkhirPekan = filter_var($settings['buka_akhir_pekan'] ?? false, FILTER_VALIDATE_BOOLEAN);
             $batasHMinBooking = (int) ($settings['batas_h_min_booking'] ?? 0);
 
@@ -303,10 +325,9 @@ class RoomBookingService
                 throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan karena {$statusText} ({$label}: {$bentrokPeminjaman->tujuan}).");
             }
 
-            // 3. Tentukan Status Berdasarkan Kebijakan Modul (Dual-Pipeline)
-            $isAutoApprove = in_array($source, ['kp', 'kerja_praktik', 'capstone']);
-            $status = $isAutoApprove ? 'disetujui' : 'menunggu';
-            $waktuApproval = $isAutoApprove ? now() : null;
+            // 3. Status Peminjaman dari Modul (Selalu 'menunggu' untuk diverifikasi & disetujui Admin Ruangan)
+            $status = 'menunggu';
+            $waktuApproval = null;
 
             // 4. Simpan ke database
             $peminjaman = Peminjaman::create([
@@ -340,7 +361,14 @@ class RoomBookingService
      */
     public function cancelBooking(string $source, $sourceId, ?string $alasan = null): bool
     {
+        if (empty($sourceId)) {
+            return false;
+        }
+
         $normalizedSource = strtolower((string) $source);
+        if ($normalizedSource === 'kerja_praktik') {
+            $normalizedSource = 'kp';
+        }
 
         $peminjaman = Peminjaman::where('source', $normalizedSource)
             ->where('source_id', $sourceId)
@@ -357,6 +385,190 @@ class RoomBookingService
             'waktu_approval' => now(),
         ]);
 
+        if ($peminjaman->user) {
+            $peminjaman->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($peminjaman, true));
+        }
+
         return true;
+    }
+
+    /**
+     * Menjadwalkan ulang (Reschedule) peminjaman ruangan dari modul eksternal (KP, Capstone, Praktikum).
+     * Menerapkan audit trail lengkap: Jadwal lama dibatalkan secara tertib, jadwal baru dibuat berstatus 'menunggu'.
+     *
+     * @param string $source
+     * @param int|string $sourceId
+     * @param array $payload
+     * @return Peminjaman
+     * @throws \Exception
+     */
+    public function rescheduleBooking(string $source, $sourceId, array $payload): Peminjaman
+    {
+        if (empty($sourceId)) {
+            throw new \Exception('Reschedule gagal: Parameter source_id tidak boleh kosong.');
+        }
+
+        $normalizedSource = strtolower((string) $source);
+        if ($normalizedSource === 'kerja_praktik') {
+            $normalizedSource = 'kp';
+        }
+
+        return DB::transaction(function () use ($normalizedSource, $sourceId, $payload) {
+            // 1. Cari peminjaman aktif yang akan di-reschedule
+            $oldBooking = Peminjaman::where('source', $normalizedSource)
+                ->where('source_id', $sourceId)
+                ->whereIn('status', ['menunggu', 'disetujui'])
+                ->lockForUpdate()
+                ->first();
+
+            if (!$oldBooking) {
+                throw new \Exception("Reschedule gagal: Data peminjaman aktif untuk modul {$normalizedSource} dengan ID {$sourceId} tidak ditemukan.");
+            }
+
+            // 2. Siapkan parameter baru (ambil dari payload baru, atau fallback ke data lama jika tidak diubah)
+            $newRuanganId = $payload['ruangan_id'] ?? $oldBooking->ruangan_id;
+            $newTanggal = isset($payload['tanggal_pinjam']) ? $payload['tanggal_pinjam'] : ($payload['tanggal'] ?? $oldBooking->tanggal_pinjam);
+            $parsedDate = Carbon::parse($newTanggal);
+            $formattedTanggal = $parsedDate->format('Y-m-d');
+            $newJamMulai = substr($payload['jam_mulai'] ?? $oldBooking->jam_mulai, 0, 5);
+            $newJamSelesai = substr($payload['jam_selesai'] ?? $oldBooking->jam_selesai, 0, 5);
+            $userId = $payload['user_id'] ?? $oldBooking->user_id;
+            $tujuan = $payload['tujuan'] ?? $payload['keperluan'] ?? $oldBooking->tujuan;
+
+            // Resolusi Nomor Telepon yang cerdas (Graceful Fallback)
+            $targetUser = \App\Models\User::find($userId);
+            $nomorTelepon = $payload['nomor_telepon'] ?? $oldBooking->nomor_telepon ?? $targetUser?->whatsapp ?? null;
+
+            // Jika ada nomor telepon baru dan user belum punya nomor WA, update profil user
+            if (!empty($payload['nomor_telepon']) && $targetUser && empty($targetUser->whatsapp)) {
+                $targetUser->update(['whatsapp' => $payload['nomor_telepon']]);
+            }
+
+            // 3. Validasi Urutan Jam
+            if ($newJamSelesai <= $newJamMulai) {
+                throw new \Exception('Reschedule gagal: Jam selesai harus lebih besar dari jam mulai.');
+            }
+
+            // 4. Pengecekan Sanksi / Blacklist
+            $isBlacklisted = MrBlacklist::where('user_id', $userId)->first();
+            if ($isBlacklisted) {
+                $alasan = $isBlacklisted->alasan ? " (Alasan: {$isBlacklisted->alasan})" : '';
+                throw new \Exception("Reschedule gagal: Akun pemohon sedang ditangguhkan dari layanan peminjaman ruangan{$alasan}.");
+            }
+
+            // 5. Validasi Operasional Kampus
+            $settings = Pengaturan::pluck('value', 'key')->toArray();
+            $jamBuka = substr($settings['jam_buka'] ?? '08:00', 0, 5);
+            $jamTutup = substr($settings['jam_tutup'] ?? '16:00', 0, 5);
+            $bukaAkhirPekan = filter_var($settings['buka_akhir_pekan'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+            $now = Carbon::now();
+            if ($parsedDate->isPast() && !$parsedDate->isToday()) {
+                throw new \Exception('Reschedule gagal: Tanggal baru yang dipilih sudah lewat.');
+            }
+            if ($parsedDate->isToday() && $newJamMulai < $now->format('H:i')) {
+                throw new \Exception('Reschedule gagal: Jam mulai baru yang dipilih sudah lewat.');
+            }
+            if (!$bukaAkhirPekan && $parsedDate->isWeekend()) {
+                throw new \Exception('Reschedule gagal: Ruangan kampus tutup pada akhir pekan (Sabtu/Minggu).');
+            }
+            $holiday = TanggalLibur::where('tanggal', $formattedTanggal)->first();
+            if ($holiday) {
+                throw new \Exception("Reschedule gagal: Tanggal {$formattedTanggal} adalah Hari Libur Nasional (" . ($holiday->keterangan ?: 'Tutup') . ').');
+            }
+            if ($newJamMulai < $jamBuka || $newJamSelesai > $jamTutup) {
+                throw new \Exception("Reschedule gagal: Waktu peminjaman baru ({$newJamMulai} - {$newJamSelesai}) berada di luar jam operasional ruangan ({$jamBuka} - {$jamTutup}).");
+            }
+
+            // 6. Lock Ruangan Baru
+            $ruangan = Ruangan::where('id', $newRuanganId)->lockForUpdate()->first();
+            if (!$ruangan || !$ruangan->is_active) {
+                throw new \Exception('Ruangan baru yang dipilih tidak ditemukan atau sedang tidak aktif.');
+            }
+
+            $dayOfWeekIso = (int) $parsedDate->format('N');
+
+            // 7. Cek Bentrok dengan Jadwal Internal (Kuliah Rutin / Blokir)
+            $bentrokInternal = MrJadwalInternal::where('ruangan_id', $newRuanganId)
+                ->where(function ($q) use ($newJamMulai, $newJamSelesai) {
+                    $q->where('jam_mulai', '<', $newJamSelesai)
+                        ->where('jam_selesai', '>', $newJamMulai);
+                })->where(function ($q) use ($dayOfWeekIso, $formattedTanggal) {
+                    $q->where(function ($sub) use ($dayOfWeekIso, $formattedTanggal) {
+                        $sub->where('tipe_jadwal', 'rutin')
+                            ->where('hari', $dayOfWeekIso)
+                            ->where(function ($eff) use ($formattedTanggal) {
+                                $eff->whereNull('tgl_mulai_efektif')
+                                    ->orWhere('tgl_mulai_efektif', '<=', $formattedTanggal);
+                            })
+                            ->where(function ($eff) use ($formattedTanggal) {
+                                $eff->whereNull('tgl_selesai_efektif')
+                                    ->orWhere('tgl_selesai_efektif', '>=', $formattedTanggal);
+                            });
+                    })->orWhere(function ($sub) use ($formattedTanggal) {
+                        $sub->where('tipe_jadwal', 'spesifik')
+                            ->where('tanggal_spesifik', $formattedTanggal);
+                    });
+                })->first();
+
+            if ($bentrokInternal) {
+                $namaBentrok = $bentrokInternal->kategori === 'Jadwal Akademik (Kuliah)'
+                    ? ($bentrokInternal->mata_kuliah . ' (' . $bentrokInternal->kelas . ')')
+                    : $bentrokInternal->keterangan;
+                throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan pada jam tersebut karena terisi: {$namaBentrok}.");
+            }
+
+            // 8. Cek Bentrok dengan Peminjaman Lain (KECUALIKAN diri sendiri: id != $oldBooking->id)
+            $bentrokPeminjaman = Peminjaman::where('ruangan_id', $newRuanganId)
+                ->where('tanggal_pinjam', $formattedTanggal)
+                ->where('id', '!=', $oldBooking->id)
+                ->whereIn('status', ['menunggu', 'disetujui'])
+                ->where(function ($q) use ($newJamMulai, $newJamSelesai) {
+                    $q->where('jam_mulai', '<', $newJamSelesai)
+                        ->where('jam_selesai', '>', $newJamMulai);
+                })->first();
+
+            if ($bentrokPeminjaman) {
+                $label = $bentrokPeminjaman->source_label ?: 'Peminjaman Lain';
+                $statusText = $bentrokPeminjaman->status === 'menunggu'
+                    ? 'sedang dalam proses pengajuan persetujuan'
+                    : 'sudah dipesan resmi';
+                throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan karena {$statusText} ({$label}: {$bentrokPeminjaman->tujuan}).");
+            }
+
+            // 9. AUDIT TRAIL: Tandai data lama sebagai DIBATALKAN karena Reschedule
+            $infoWaktuLama = "{$oldBooking->tanggal_pinjam} ({$oldBooking->jam_mulai}-{$oldBooking->jam_selesai} WIB)";
+            $infoWaktuBaru = "{$formattedTanggal} ({$newJamMulai}-{$newJamSelesai} WIB)";
+
+            $oldBooking->update([
+                'status' => 'dibatalkan',
+                'alasan_penolakan' => "Dijadwalkan ulang (Reschedule) ke {$infoWaktuBaru}",
+                'waktu_approval' => now(),
+            ]);
+
+            // 10. Buat record peminjaman baru yang berstatus 'menunggu'
+            $newBooking = Peminjaman::create([
+                'user_id' => $userId,
+                'ruangan_id' => $newRuanganId,
+                'nomor_telepon' => $nomorTelepon,
+                'tujuan' => $tujuan,
+                'tanggal_pinjam' => $formattedTanggal,
+                'jam_mulai' => $newJamMulai,
+                'jam_selesai' => $newJamSelesai,
+                'status' => 'menunggu',
+                'waktu_approval' => null,
+                'source' => $normalizedSource,
+                'source_id' => $sourceId,
+                'berkas_pendukung' => $payload['berkas_pendukung'] ?? $oldBooking->berkas_pendukung,
+                'created_by' => auth()->id() ?? $userId,
+            ]);
+
+            // Kirim notifikasi update ke user
+            if ($newBooking->user) {
+                $newBooking->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($newBooking, false));
+            }
+
+            return $newBooking;
+        });
     }
 }

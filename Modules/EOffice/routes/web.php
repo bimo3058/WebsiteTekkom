@@ -678,8 +678,6 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
         $MRRoomIntegrationController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\Api\RoomIntegrationController::class;
         Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () use ($MRRoomIntegrationController) {
             Route::get('ketersediaan-ruangan', [$MRRoomIntegrationController, 'checkAvailability'])->name('ketersediaan-ruangan');
-            Route::post('booking-eksternal', [$MRRoomIntegrationController, 'bookRoom'])->name('booking-eksternal');
-            Route::post('batal-eksternal', [$MRRoomIntegrationController, 'cancelBooking'])->name('batal-eksternal');
         });
 
         // ── ADMIN ────────────────────────────────────────────────────────────
