@@ -269,7 +269,7 @@ function parseCpmkDeskripsiForPdf(string $deskripsi): string {
             <td colspan="7">
                 <ul style="margin: 0; padding-left: 15px;">
                     @foreach($cpmk as $item)
-                        <li><strong>{{ $item['kode'] }}</strong>: {{ parseCpmkDeskripsiForPdf($item['deskripsi']) }}</li>
+                        <li><strong>{{ $item['cpmk_kode'] ?? $item['kode'] ?? '' }}</strong>: {{ parseCpmkDeskripsiForPdf($item['cpmk_deskripsi'] ?? $item['deskripsi'] ?? '') }}</li>
                     @endforeach
                 </ul>
             </td>

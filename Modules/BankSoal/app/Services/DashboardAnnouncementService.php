@@ -4,7 +4,9 @@ namespace Modules\BankSoal\Services;
 
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Modules\BankSoal\Enums\KompreSessionStatus;
 use Modules\BankSoal\Enums\PendaftaranStatus;
+use Modules\BankSoal\Models\Komprehensif\KompreSession;
 use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
 use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
 use Modules\BankSoal\Models\RPS\RpsReview;
@@ -66,6 +68,15 @@ class DashboardAnnouncementService
             ->get()
             ->keyBy('periode_ujian_id');
 
+        // Sesi ujian yang sudah selesai — dipakai menyembunyikan pengumuman jadwal
+        // setelah mahasiswa menyelesaikan ujian.
+        $finishedSessions = KompreSession::where('user_id', $userId)
+            ->whereIn('jadwal_id', $userRegistrations->pluck('jadwal_ujian_id')->filter())
+            ->where('status', KompreSessionStatus::Finished->value)
+            ->orderByDesc('finished_at')
+            ->get()
+            ->keyBy('jadwal_id');
+
         foreach ($activePeriodes as $periode) {
             $pendaftar = $userRegistrations->get($periode->id);
 
@@ -81,8 +92,17 @@ class DashboardAnnouncementService
 
             if ($status === PendaftaranStatus::Approved) {
                 if ($pendaftar->jadwal) {
-                    // Jadwal dikonfirmasi
-                    $this->notifJadwalDikonfirmasi($items, $pendaftar, $periode);
+                    $jadwal       = $pendaftar->jadwal;
+                    $waktuSelesai = Carbon::parse($jadwal->tanggal_ujian->format('Y-m-d') . ' ' . $jadwal->waktu_selesai);
+
+                    // Pengumuman jadwal disembunyikan jika ujian sudah selesai dikerjakan
+                    // atau jendela ujian sudah lewat tanpa sesi (no-show).
+                    $ujianSudahBerakhir = $finishedSessions->has($jadwal->id) || now()->gt($waktuSelesai);
+
+                    if (!$ujianSudahBerakhir) {
+                        // Jadwal dikonfirmasi
+                        $this->notifJadwalDikonfirmasi($items, $pendaftar, $periode);
+                    }
                 } else {
                     // Disetujui — menunggu jadwal
                     $this->notifDisetujui($items, $pendaftar, $periode);

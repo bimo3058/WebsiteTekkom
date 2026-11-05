@@ -1,4 +1,4 @@
-<x-banksoal::layouts.dosen-admin>
+<x-banksoal::layouts.dosen-admin :bank-soal="true">
     @section('breadcrumbs')
         <a href="{{ route('banksoal.rps.dosen.index') }}"
             class="text-slate-500 hover:text-primary transition-colors">Manajemen RPS</a>
@@ -564,17 +564,23 @@
         </style>
     @endpush
 
-    <div class="page-header">
-        <div class="header-content">
-            <h1>Ajukan RPS Baru</h1>
-            <p>Pilih metode pembuatan RPS di bawah ini untuk memulai pengajuan.</p>
-        </div>
-        <a href="{{ route('banksoal.rps.dosen.index') }}" class="btn btn-secondary">
-            Kembali
-        </a>
-    </div>
+    <x-banksoal::ui.bank-soal-page>
+        <x-slot:header>
+            <div class="bs-heading-row">
+                <div>
+                    <div class="bs-heading-label">
+                        <h1>Ajukan RPS Baru</h1>
+                        <span class="bs-role-badge">Dosen</span>
+                    </div>
+                    <p>Pilih metode pembuatan RPS di bawah ini untuk memulai pengajuan.</p>
+                </div>
+                <a href="{{ route('banksoal.rps.dosen.index') }}" class="dosen-management-btn">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </a>
+            </div>
+        </x-slot:header>
 
-    <x-banksoal::notification.alerts />
+        <x-banksoal::notification.alerts />
 
     @php
         $creationMethod = old('creation_method', 'upload');
@@ -860,7 +866,7 @@
                             <div></div>
                         </div>
 
-                        <div id="cpmkRowsGenerator" class="cpmk-rows">
+                        <div id="cpmkRowsGenerator" class="cpmk-rows" data-cpmk-rows>
                             <!-- Rows will be injected and bound dynamically -->
                         </div>
                     </div>
@@ -1202,6 +1208,8 @@
         </div>
     </template>
 
+    </x-banksoal::ui.bank-soal-page>
+
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function () {
@@ -1296,11 +1304,56 @@
                     }
                 }
 
-                function initDosenSelect(selectedIds = []) {
-                    if (window.BanksoalRpsUploadForm && typeof window.BanksoalRpsUploadForm.loadDosenOptions === 'function') {
-                        window.BanksoalRpsUploadForm.loadDosenOptions();
+                async function initDosenSelect(selectedIds = []) {
+                    const sel = document.getElementById('dosenSelect');
+                    if (!sel) return;
+
+                    try {
+                        const res = await fetch("{{ route('banksoal.rps.dosen.dosen') }}");
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const data = await res.json();
+
+                        if (sel.tomselect) {
+                            sel.tomselect.destroy();
+                        }
+
+                        sel.innerHTML = '<option value="">Pilih dosen pengampu lain</option>';
+                        data.forEach(dosen => {
+                            const opt = document.createElement('option');
+                            opt.value = String(dosen.id);
+                            opt.textContent = dosen.name;
+                            if (selectedIds.map(String).includes(String(dosen.id))) {
+                                opt.selected = true;
+                            }
+                            sel.appendChild(opt);
+                        });
+
+                        if (typeof TomSelect !== 'undefined') {
+                            const ts = new TomSelect(sel, {
+                                plugins: { remove_button: { title: "Hapus dosen ini" } },
+                                maxOptions: 100,
+                                searchField: ["text"],
+                                persist: false,
+                                hideSelected: false,
+                                render: {
+                                    item: function(data, escape) {
+                                        return `<div class="item" style="background:#f1f5f9;color:#0b266e;font-weight:600;border:1px solid #cbd5e1;border-radius:6px;padding:2px 8px;font-size:12px;margin:2px;">${escape(data.text)}</div>`;
+                                    },
+                                    option: function(data, escape) {
+                                        return `<div class="option py-2 px-3">${escape(data.text)}</div>`;
+                                    }
+                                }
+                            });
+                            attachTomSelectToggleDeselect(ts);
+                            if (selectedIds.length > 0) {
+                                ts.setValue(selectedIds.map(String), true);
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Gagal memuat dosen pengampu lain:', e);
                     }
                 }
+                window.initDosenSelect = initDosenSelect;
 
                 function setCreationMethod(method) {
                     if (creationMethodInput) creationMethodInput.value = method;
@@ -1556,7 +1609,8 @@
                 async function loadDraftIfExists(mkId, autoRestore = false) {
                     if (!mkId) return;
                     try {
-                        const res  = await fetch('{{ url("/api/v1/bank-soal/rps/dosen/draft/") }}/' + mkId, {
+                        const url = "{{ route('banksoal.rps.dosen.get-draft', ['mkId' => 'PLACEHOLDER']) }}".replace('PLACEHOLDER', mkId);
+                        const res  = await fetch(url, {
                             headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                         });
                         const data = await res.json();
@@ -1573,7 +1627,7 @@
                             hideDraftResumeBanner();
                         }
                     } catch (e) {
-                        // Gagal fetch draft — tidak kritis
+                        console.warn('Draft load failed:', e);
                     }
                 }
 
@@ -1712,6 +1766,19 @@
                         }
                     }
 
+                    if (draft.dosen_lain && Array.isArray(draft.dosen_lain)) {
+                        const sel = document.getElementById('dosenSelect');
+                        if (sel) {
+                            if (sel.tomselect) {
+                                sel.tomselect.setValue(draft.dosen_lain.map(String));
+                            } else {
+                                Array.from(sel.options).forEach(opt => {
+                                    opt.selected = draft.dosen_lain.map(String).includes(String(opt.value));
+                                });
+                            }
+                        }
+                    }
+
                     if (!window.lastDraftSaved) window.lastDraftSaved = {};
                     window.lastDraftSaved[method] = draft.updated_at?.substring(11, 16) || draft.updated_at || '';
                     updateDraftButtonState();
@@ -1759,7 +1826,7 @@
                                             item.style.fontSize = '13px';
                                             item.style.cursor = 'pointer';
                                             item.innerHTML = `
-                                                <input type="checkbox" class="cpl-checkbox-item" value="${cpl.id}" style="margin-top: 3px; accent-color: var(--primary-blue);" data-code="${cpl.kode}">
+                                                <input type="checkbox" name="cpl_ids[]" class="cpl-checkbox-item" value="${cpl.id}" style="margin-top: 3px; accent-color: var(--primary-blue);" data-code="${cpl.kode}">
                                                 <div><strong>${cpl.kode}</strong>: ${cpl.deskripsi}</div>
                                             `;
                                             cplCheckboxContainer.appendChild(item);
@@ -1767,6 +1834,10 @@
                                     }
                                 }
                                 updateCplSelectDropdowns(data);
+                                if (window.BanksoalRpsUploadForm) {
+                                    window.BanksoalRpsUploadForm.cplOptions = data;
+                                    window.BanksoalRpsUploadForm.renderAllCplSelects();
+                                }
                             });
 
                         const draftPromise = loadDraftIfExists(mkId);
@@ -1915,12 +1986,12 @@
 
                 // Helper to attach toggle deselect hook & Navy badge formatting on TomSelect instance
                 function attachTomSelectToggleDeselect(ts) {
-                    if (!ts || typeof ts.hook !== 'function') return;
+                    if (!ts) return;
 
                     if (!ts._hasToggleHook) {
                         ts._hasToggleHook = true;
                         const orig_onOptionSelect = ts.onOptionSelect;
-                        ts.hook('instead', 'onOptionSelect', (evt, option) => {
+                        ts.onOptionSelect = function (evt, option) {
                             if (!option && evt && evt.target) {
                                 option = evt.target.closest('.option');
                             }
@@ -1940,7 +2011,7 @@
                                 return;
                             }
                             orig_onOptionSelect.call(ts, evt, option);
-                        });
+                        };
                     }
 
                     const updateDisplayAndSort = () => {
@@ -1956,7 +2027,7 @@
                             return (a.$order || 0) - (b.$order || 0);
                         });
 
-                        const count = ts.items.length;
+                        const count = ts.items ? ts.items.length : 0;
                         const control = ts.control;
                         if (control) {
                             control.style.display = 'flex';
@@ -2196,31 +2267,7 @@
                     });
                 }
 
-                // Generator CPMK row builder
-                document.getElementById('addCpmkRowBtnGenerator').addEventListener('click', function () {
-                    const index = Date.now();
-                    const tpl = document.getElementById('cpmkRowTemplate').innerHTML;
-                    const html = tpl.replace(/__INDEX__/g, index);
-                    const container = document.createElement('div');
-                    container.innerHTML = html;
-                    document.getElementById('cpmkRowsGenerator').appendChild(container.firstElementChild);
-                    updateCplSelectDropdowns(currentCplsList);
-                    triggerAutoSave();
-                });
-
-                // CPMK removal
-                document.addEventListener('click', function (e) {
-                    if (e.target.closest('[data-remove-cpmk-row]')) {
-                        const row = e.target.closest('[data-cpmk-row]');
-                        const rowsContainer = row.parentNode;
-                        if (rowsContainer.querySelectorAll('[data-cpmk-row]').length > 1) {
-                            row.remove();
-                            triggerAutoSave();
-                        } else {
-                            alert('Minimal harus menyertakan 1 CPMK!');
-                        }
-                    }
-                });
+                // CPMK rows are managed by RpsCpmkRows component
 
                 // Render 16 Pertemuan Grid dynamically (if legacy containers exist)
                 const pertemuanSebelumUtsContainer = document.getElementById('pertemuan_sebelum_uts_container');
@@ -2459,11 +2506,30 @@
                         const confirmSubmit = confirm("Apakah kamu sudah yakin? Form yang telah dikirim tidak dapat ditarik kembali.");
                         if (!confirmSubmit) return;
                         if (window.showLoader) window.showLoader();
+
+                        const uploadFormEl = document.getElementById('uploadForm');
+                        if (uploadFormEl) {
+                            // Sync dosen_lain to uploadForm
+                            uploadFormEl.querySelectorAll('input[name="dosen_lain[]"]').forEach(el => el.remove());
+                            const dosenIds = getDosenLainIds();
+                            dosenIds.forEach(id => {
+                                const input = document.createElement('input');
+                                input.type = 'hidden';
+                                input.name = 'dosen_lain[]';
+                                input.value = id;
+                                uploadFormEl.appendChild(input);
+                            });
+                        }
+
                         // Re-enable all disabled inputs in upload panel before submit
                         methodUploadPanel.querySelectorAll('input, select, textarea').forEach(input => {
                             if (!input.hasAttribute('data-always-disabled')) input.disabled = false;
                         });
-                        this.submit();
+                        if (uploadFormEl) {
+                            uploadFormEl.submit();
+                        } else {
+                            this.submit();
+                        }
                         return;
                     }
 
@@ -2527,6 +2593,52 @@
 
                     // Restore disabled state
                     temporarilyDisabled.forEach(input => { input.disabled = true; });
+
+                    // Append dosen_lain
+                    const dosenIds = getDosenLainIds();
+                    formData.delete('dosen_lain[]');
+                    dosenIds.forEach(id => {
+                        formData.append('dosen_lain[]', id);
+                    });
+
+                    // Remove any partial/DOM pertemuan_data from FormData and append all 16 meetings
+                    for (const key of Array.from(formData.keys())) {
+                        if (key.startsWith('pertemuan_data[')) {
+                            formData.delete(key);
+                        }
+                    }
+                    const pData = window.pertemuanData || {};
+                    for (let i = 1; i <= 16; i++) {
+                        if (i === 8 || i === 16) {
+                            formData.append(`pertemuan_data[${i}][pertemuan]`, String(i));
+                            formData.append(`pertemuan_data[${i}][kemampuan_akhir]`, i === 8 ? 'UTS' : 'UAS');
+                            formData.append(`pertemuan_data[${i}][pokok_bahasan]`, '-');
+                            formData.append(`pertemuan_data[${i}][metode]`, '-');
+                            formData.append(`pertemuan_data[${i}][waktu]`, '0');
+                            formData.append(`pertemuan_data[${i}][bobot]`, '0');
+                            formData.append(`pertemuan_data[${i}][pengalaman_belajar]`, '-');
+                            formData.append(`pertemuan_data[${i}][kriteria_penilaian]`, '-');
+                            continue;
+                        }
+                        const d = pData[i] || {};
+                        formData.append(`pertemuan_data[${i}][pertemuan]`, String(i));
+                        formData.append(`pertemuan_data[${i}][kemampuan_akhir]`, d.kemampuan_akhir || '');
+                        formData.append(`pertemuan_data[${i}][pokok_bahasan]`, d.pokok_bahasan || '');
+                        formData.append(`pertemuan_data[${i}][metode]`, d.metode || '');
+                        formData.append(`pertemuan_data[${i}][waktu]`, d.waktu || '150');
+                        formData.append(`pertemuan_data[${i}][bobot]`, d.bobot || '5');
+                        formData.append(`pertemuan_data[${i}][pengalaman_belajar]`, d.pengalaman_belajar || '');
+                        formData.append(`pertemuan_data[${i}][kriteria_penilaian]`, d.kriteria_penilaian || '');
+
+                        const tc = d.target_cpmk;
+                        if (Array.isArray(tc)) {
+                            tc.forEach(c => formData.append(`pertemuan_data[${i}][target_cpmk][]`, c));
+                        } else if (typeof tc === 'string' && tc) {
+                            tc.split(',').map(s => s.trim()).filter(Boolean).forEach(c => {
+                                formData.append(`pertemuan_data[${i}][target_cpmk][]`, c);
+                            });
+                        }
+                    }
 
                     console.log("FormData entries:");
                     for (let [key, val] of formData.entries()) {
@@ -2827,7 +2939,7 @@
                 const next = document.getElementById('btnNextPertemuan');
                 if (prev) prev.disabled = idx <= 0;
                 if (next) next.textContent = idx >= PERTEMUAN_REAL.length - 1
-                    ? '← Ke Referensi →' : 'Selanjutnya ›';
+                    ? 'Lanjut ke Referensi ›' : 'Selanjutnya ›';
             }
 
             function prevPertemuan() {
@@ -2840,8 +2952,14 @@
                 if (idx < PERTEMUAN_REAL.length - 1) {
                     goToPertemuan(PERTEMUAN_REAL[idx + 1]);
                 } else {
-                    // Semua pertemuan sudah selesai — scroll ke referensi
-                    document.getElementById('references_container')?.scrollIntoView({ behavior: 'smooth' });
+                    const refCard = document.getElementById('references_container')?.closest('.form-card');
+                    if (refCard) {
+                        refCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        const firstRef = refCard.querySelector('input[name="referensi_data[]"]');
+                        if (firstRef) {
+                            setTimeout(() => firstRef.focus({ preventScroll: true }), 250);
+                        }
+                    }
                 }
             }
 
