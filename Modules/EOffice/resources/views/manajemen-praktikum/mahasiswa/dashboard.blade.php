@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Dashboard Mahasiswa">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Dashboard Mahasiswa">
     @php
         /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\DaftarPraktikan[] $daftarPraktikan */
         /** @var \Modules\EOffice\Models\Praktikum|null $terdaftarDi */
@@ -165,36 +165,8 @@
             </div>
 
             {{-- Pagination Custom Fungsional --}}
-            @if($tugasPaginator->hasPages() || $tugasPaginator->total() > 0)
-            <div style="flex-shrink:0; display:flex; align-items:center; justify-content:flex-end; padding:12px 20px; border-top:1px solid var(--c-border); background:#fff;">
-                <div style="display:flex; gap:8px;">
-                    {{-- Tombol Prev --}}
-                    @if ($tugasPaginator->onFirstPage())
-                        <span style="width:36px; height:36px; border:1px solid #DFE1E7; background:#F9FAFB; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#A4ABB8;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                        </span>
-                    @else
-                        <a href="{{ $tugasPaginator->previousPageUrl() }}#daftar-tugas" style="width:36px; height:36px; border:1px solid #DFE1E7; background:#fff; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#353849; text-decoration:none;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                        </a>
-                    @endif
-
-                    {{-- Current Page --}}
-                    <span style="width:36px; height:36px; border:none; background:#0B266E; color:#fff; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:600; box-shadow: 0 2px 4px rgba(11, 38, 110, 0.2);">
-                        {{ $tugasPaginator->currentPage() }}
-                    </span>
-                    {{-- Tombol Next --}}
-                    @if ($tugasPaginator->hasMorePages())
-                        <a href="{{ $tugasPaginator->nextPageUrl() }}#daftar-tugas" style="width:36px; height:36px; border:1px solid #DFE1E7; background:#fff; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#353849; text-decoration:none;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                        </a>
-                    @else
-                        <span style="width:36px; height:36px; border:1px solid #DFE1E7; background:#F9FAFB; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#A4ABB8;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                        </span>
-                    @endif
-                </div>
-            </div>
+            @if(isset($tugasPaginator) && $tugasPaginator instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$tugasPaginator" fragment="daftar-tugas" />
             @endif
         </div>
 

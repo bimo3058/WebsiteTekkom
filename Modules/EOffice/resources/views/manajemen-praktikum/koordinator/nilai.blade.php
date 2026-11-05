@@ -1,7 +1,7 @@
-<x-eoffice::manajemen-praktikum.layout
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null"
     pageTitle="{{ $praktikum ? $praktikum->nama : 'Belum Ada Praktikum' }} / Absensi & Nilai Modul">
     @if(isset($praktikum) && $praktikum)
-        <x-eoffice::manajemen-praktikum.koor-header :praktikum="$praktikum" />
+
     @endif
 
     @php
@@ -15,29 +15,32 @@
         <div class="mp-alert warning flex-shrink-0" style="margin-top:24px;">Anda belum memiliki praktikum aktif.</div>
     @else
 
-        <div x-data="{ 
+        <div style="row-gap:0!important" @final-assessment-change="finalAssessment=$event.detail.changed ? $event.detail.payload : null" @ta-weight-change="taWeightChanges[$event.detail.id]=$event.detail.changed" x-data="{
+                                                                        finalAssessment:null,
+                                                                        moduleWeightsLocked: {{ $praktikum->moduleWeightsLocked() ? 'true' : 'false' }},
+                                                                        taWeightChanges: {}, finalWeights: null,
                                                                         globalSearch: '', 
                                                                         globalKelompok: '', 
                                                                         globalShift: '',
+                                                                        extraWeights: {{ json_encode(collect($praktikum->komponen_modul ?? [])->pluck('bobot','id')->all()) }},
                                                                         bobot_tp: {{ $praktikum->bobot_tp ?? 10 }},
                                                                         bobot_praktikum: {{ $praktikum->bobot_praktikum ?? 30 }},
                                                                         bobot_laporan: {{ $praktikum->bobot_laporan ?? 30 }},
                                                                         bobot_responsi: {{ $praktikum->bobot_responsi ?? 30 }},
                                                                         get hasChanges() {
-                                                                            return parseInt(this.bobot_tp) !== {{ $praktikum->bobot_tp ?? 10 }} ||
+if (this.finalWeights !== null || this.finalAssessment !== null) return true;
+return JSON.stringify(this.extraWeights) !== JSON.stringify({{ json_encode(collect($praktikum->komponen_modul ?? [])->pluck('bobot','id')->all()) }}) || Object.values(this.taWeightChanges).some(Boolean) || Number(this.bobot_tp) !== {{ $praktikum->bobot_tp ?? 10 }} ||
                                                                                    parseInt(this.bobot_praktikum) !== {{ $praktikum->bobot_praktikum ?? 30 }} ||
                                                                                    parseInt(this.bobot_laporan) !== {{ $praktikum->bobot_laporan ?? 30 }} ||
                                                                                    parseInt(this.bobot_responsi) !== {{ $praktikum->bobot_responsi ?? 30 }};
                                                                         }
                                                                     }">
 
-            {{-- Outer card wraps filter row + all accordions --}}
-            <div
-                style="background:#fff; border:1px solid #DFE1E7; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.04); margin-bottom:24px; overflow:hidden;">
-
+            <x-eoffice::manajemen-praktikum.koor-header :praktikum="$praktikum">
                 {{-- Filter Header Row --}}
                 <div
-                    style="padding:16px 20px; display:flex; flex-direction:row; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:16px; border-bottom:1px solid #DFE1E7;">
+                    style="background:white;border:1px solid #DFE1E7;border-radius:12px 12px 0 0;margin-top:15px;padding:16px 20px; display:flex; flex-direction:row; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:16px; border-bottom:1px solid #DFE1E7;"
+                    >
 
                     <div style="font-size: 15px; font-weight: 700; color: #0D0D12; white-space: nowrap; flex-shrink: 0;">
                         Absensi &amp; Nilai
@@ -47,107 +50,55 @@
                         style="display: flex; flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 10px; flex-shrink: 0;">
 
                         <div style="position: relative;">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="2"
-                                stroke-linecap="round" stroke-linejoin="round"
-                                style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events:none;">
-                                <circle cx="11" cy="11" r="8" />
-                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                            </svg>
+                            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" stroke-linecap="round" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                             <input type="text" x-model="globalSearch" placeholder="Cari nama / NIM..." class="mp-input"
                                 style="padding-left: 32px; height: 36px; width: 210px; font-size: 13px;">
                         </div>
 
-                        <div class="relative" x-data="{ openK: false, searchK: '' }" @click.away="openK = false">
-                            <div @click="openK = !openK"
-                                style="height:36px; min-width:150px; font-size:13px; padding:0 12px; background:#fff; border:1px solid #DFE1E7; border-radius:8px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; color:#353849;">
-                                <span
-                                    x-text="globalKelompok === '' ? 'Semua Kelompok' : 'Kelompok ' + globalKelompok"></span>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666D80"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    :style="openK ? 'transform:rotate(180deg)' : ''"
-                                    style="transition:transform 0.2s; margin-left:8px;">
-                                    <polyline points="6 9 12 15 18 9" />
-                                </svg>
-                            </div>
-                            <div x-show="openK"
-                                style="display:none; position:absolute; top:40px; left:0; width:180px; background:#fff; border:1px solid #DFE1E7; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.05); z-index:50;">
-                                <div style="padding:8px; border-bottom:1px solid #F3F4F6;">
-                                    <input type="text" x-model="searchK" placeholder="Cari kelompok..."
-                                        style="width:100%; border:1px solid #DFE1E7; border-radius:6px; padding:6px 10px; font-size:12px; outline:none; box-sizing:border-box;">
-                                </div>
-                                <div style="max-height:200px; overflow-y:auto; padding:4px 0;">
-                                    <div @click="globalKelompok = ''; openK = false; searchK = ''"
-                                        class="hover:bg-gray-50 transition-colors"
-                                        style="padding:8px 12px; font-size:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;"
-                                        :style="globalKelompok === '' ? 'background:#EEF2FF; color:#0B266E;' : 'color:#353849;'">
-                                        <span style="font-size:13px; margin-left:8px; flex:1;">Semua Kelompok</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative" x-data="{ openS: false, searchS: '' }" @click.away="openS = false">
-                            <div @click="openS = !openS"
-                                style="height:36px; min-width:130px; font-size:13px; padding:0 12px; background:#fff; border:1px solid #DFE1E7; border-radius:8px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; color:#353849;">
-                                <span x-text="globalShift === '' ? 'Semua Shift' : 'Shift ' + globalShift"></span>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666D80"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    :style="openS ? 'transform:rotate(180deg)' : ''"
-                                    style="transition:transform 0.2s; margin-left:8px;">
-                                    <polyline points="6 9 12 15 18 9" />
-                                </svg>
-                            </div>
-                            <div x-show="openS"
-                                style="display:none; position:absolute; top:40px; left:0; width:160px; background:#fff; border:1px solid #DFE1E7; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.05); z-index:50;">
-                                <div style="padding:8px; border-bottom:1px solid #F3F4F6;">
-                                    <input type="text" x-model="searchS" placeholder="Cari shift..."
-                                        style="width:100%; border:1px solid #DFE1E7; border-radius:6px; padding:6px 10px; font-size:12px; outline:none; box-sizing:border-box;">
-                                </div>
-                                <div style="max-height:200px; overflow-y:auto; padding:4px 0;">
-                                    <div @click="globalShift = ''; openS = false; searchS = ''"
-                                        class="hover:bg-gray-50 transition-colors"
-                                        style="padding:8px 12px; font-size:13px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:8px;"
-                                        :style="globalShift === '' ? 'background:#EEF2FF; color:#0B266E;' : 'color:#353849;'">
-
-                                        <span style="font-size:13px; flex:1; margin-left:8px;">Semua Shift</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
+                        <x-eoffice::manajemen-praktikum.ui.grade-group-filter model="globalKelompok" label="Semua Kelompok" searchPlaceholder="Cari kelompok..." />
+                        <x-eoffice::manajemen-praktikum.ui.grade-group-filter model="globalShift" label="Semua Shift" searchPlaceholder="Cari shift..." />
 
                         <form method="POST" action="{{ route('eoffice.manprak.koor.nilai.bobot.update', $praktikum->id) }}"
-                            id="bobotForm" style="display:none;">
+                            id="bobotForm" style="display:none;" x-data="{showWeightConfirm:false,weightConfirmed:false}" x-ref="moduleWeightForm" @submit="if(!hasChanges){$event.preventDefault();return;}if(!weightConfirmed){$event.preventDefault();showWeightConfirm=true}">
+                            @include('eoffice::manajemen-praktikum.partials.module-weight-confirmation')
+                            @php
+                                $weightTa=\Modules\EOffice\Models\TugasAkhir::where('praktikum_id',$praktikum->id)->first();
+                            @endphp
+                            <input type="hidden" name="ta_version" value="{{ $weightTa?->version }}">
+                            @foreach(['version','modules','ta'] as $field)
+                            <input type="hidden" name="final_weights[{{ $field }}]" :disabled="!finalWeights" :value="finalWeights ? finalWeights.{{ $field }} : ''">
+                            @endforeach
                             @csrf
+                            <input type="hidden" name="final_payload" :disabled="!finalAssessment" :value="JSON.stringify(finalAssessment)">
                             <input type="hidden" name="bobot_tp" :value="bobot_tp">
+                            <input type="hidden" name="module_version" value="{{ $praktikum->komponen_modul_version ?? 0 }}">
+                            @foreach($praktikum->komponen_modul ?? [] as $extra)
+                                <input type="hidden" name="extra_weights[{{ $extra['id'] }}]" :value="extraWeights.{{ $extra['id'] }}">
+                            @endforeach
                             <input type="hidden" name="bobot_praktikum" :value="bobot_praktikum">
                             <input type="hidden" name="bobot_laporan" :value="bobot_laporan">
                             <input type="hidden" name="bobot_responsi" :value="bobot_responsi">
                         </form>
 
-                        <button type="button" @click="document.getElementById('bobotForm').submit()"
-                            :style="(hasChanges ? 'background:#0B266E; color:#fff; border: 1px solid #0B266E;' : 'background:#F4F6F8; color:#0B266E; border: 1px solid #DFE1E7;') + ' height: 36px; min-width: 100px; padding: 0 12px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.2s;'">
+                        <button type="button" :disabled="!hasChanges" @click="if(hasChanges) document.getElementById('bobotForm').requestSubmit()"
+                            :style="(hasChanges ? 'background:#0B266E; color:#fff; border: 1px solid #0B266E;' : 'background:#F4F6F8; color:#0B266E; border: 1px solid #DFE1E7;') + ' height: 36px; min-width: 100px; padding: 0 12px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; transition: all 0.2s; cursor:' + (hasChanges ? 'pointer' : 'not-allowed') + ';pointer-events:auto;'">
                             Simpan
                         </button>
 
-                        <a href="{{ route('eoffice.manprak.koor.nilai.export-csv') }}"
-                            style="height: 36px; padding: 0 14px; background: #fff; border: 1px solid #DFE1E7; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: inline-flex; align-items: center; gap: 6px; text-decoration: none; white-space: nowrap; font-size: 13px; font-weight: 600; color: #353849; cursor: pointer;"
-                            onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#FFF'">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round">
-                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                                <polyline points="7 10 12 15 17 10" />
-                                <line x1="12" y1="15" x2="12" y2="3" />
-                            </svg>
-                            Download CSV
-                        </a>
+                        <x-eoffice::manajemen-praktikum.ui.nilai-csv-picker :praktikum="$praktikum" :moduls="$allModuls" role="koor" />
 
                     </div>
                 </div>
 
+            </x-eoffice::manajemen-praktikum.koor-header>
+
+            {{-- Outer card wraps filter row + all accordions --}}
+            <div
+                style="background:#fff; border:1px solid #DFE1E7; border-top:0;border-radius:0 0 12px 12px!important; box-shadow:0 1px 3px rgba(0,0,0,0.04); margin-bottom:0; overflow:hidden;">
+
                 {{-- Module Accordions --}}
                 @forelse($allModuls as $modul)
-                    <div x-data="{ 
+                    <div style="row-gap:0!important" x-data="{ 
                                                                                                                                                                                                                                                                                                                                                     expanded: false,
                                                                                                                                                                                                                                                                                                                                                     page: 1,
                                                                                                                                                                                                                                                                                                                                                     perPage: 10,
@@ -199,8 +150,8 @@
                                                                                                                                                                                                                                                                                                                                                         return count;
                                                                                                                                                                                                                                                                                                                                                     }
                                                                                                                                                                                                                                                                                                                                                 }"
-                        style="border-bottom:1px solid #DFE1E7;">
-                        <div style="padding:16px 20px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;"
+                        style="border-bottom:1px solid #DFE1E7!important;">
+                        <div style="box-shadow:inset 0 -1px 0 #DFE1E7;padding:16px 20px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;"
                             @click="expanded = !expanded" onmouseover="this.style.background='#F9FAFB'"
                             onmouseout="this.style.background='transparent'">
                             <div>
@@ -216,63 +167,64 @@
                             </svg>
                         </div>
 
-                        <div x-show="expanded" style="display:none; border-top:1px solid #DFE1E7;" x-transition>
+                        <x-eoffice::manajemen-praktikum.ui.grade-accordion>
                             <div style="overflow-x:auto;">
                                 <table class="mp-table" style="min-width:1100px;">
                                     <thead>
                                         <tr style="background:#F9FAFB;">
-                                            <th class="mp-th text-left" style="padding:12px 16px;width:50px;">NO</th>
+                                            <th class="mp-th text-center" style="padding:12px 16px;width:50px;text-align:center;">NO</th>
                                             <th class="mp-th text-left" style="padding:12px 16px;width:250px;">NAMA MAHASISWA
                                             </th>
                                             <th class="mp-th text-left" style="padding:12px 16px;width:150px;">NIM</th>
                                             <th class="mp-th text-center"
-                                                style="padding:12px 16px;width:100px;border-left:1px solid #DFE1E7;">KELOMPOK
+                                                style="padding:12px 16px;width:100px;">KELOMPOK
                                             </th>
                                             <th class="mp-th text-center"
-                                                style="padding:12px 16px;width:100px;border-right:1px solid #DFE1E7;">SHIFT</th>
-                                            <th class="mp-th text-center" style="padding:12px 16px;width:100px;">Kehadiran</th>
+                                                style="padding:12px 16px;width:100px;">SHIFT</th>
+                                            <th class="mp-th text-center" style="padding:12px 16px;width:100px;text-align:center;">KEHADIRAN</th>
                                             <th class="mp-th text-center"
                                                 style="padding:12px 16px;width:120px;border-left:1px solid #DFE1E7;background:#EEF2FF;color:#4338CA;font-weight:600;">
-                                                Tugas Pendahuluan
+                                                TUGAS PENDAHULUAN
                                                 <div
                                                     style="margin-top:4px; display:flex; align-items:center; justify-content:center; gap:4px; font-size:11px;">
-                                                    <input type="number" x-model="bobot_tp"
+                                                    <input type="number" x-model="bobot_tp" :disabled="moduleWeightsLocked" min="0" max="100" step="1"
                                                         style="width:36px; height:23px; font-size:13px; text-align:center; border:1px solid #CBD5E1; border-radius:4px; padding:0; color:#4338CA;">
                                                     %
                                                 </div>
                                             </th>
                                             <th class="mp-th text-center"
                                                 style="padding:12px 16px;width:120px;background:#F0FDF4;color:#15803D;font-weight:600;">
-                                                Praktikum
+                                                PRAKTIKUM
                                                 <div
                                                     style="margin-top:4px; display:flex; align-items:center; justify-content:center; gap:4px; font-size:11px;">
-                                                    <input type="number" x-model="bobot_praktikum"
+                                                    <input type="number" x-model="bobot_praktikum" :disabled="moduleWeightsLocked" min="0" max="100" step="1"
                                                         style="width:36px; height:23px; font-size:13px; text-align:center; border:1px solid #CBD5E1; border-radius:4px; padding:0; color:#15803D;">
                                                     %
                                                 </div>
                                             </th>
                                             <th class="mp-th text-center"
                                                 style="padding:12px 16px;width:120px;background:#FEFCE8;color:#A16207;font-weight:600;">
-                                                Laporan
+                                                {{ mb_strtoupper($praktikum->laporanLabel()) }}
                                                 <div
                                                     style="margin-top:4px; display:flex; align-items:center; justify-content:center; gap:4px; font-size:11px;">
-                                                    <input type="number" x-model="bobot_laporan"
+                                                    <input type="number" x-model="bobot_laporan" :disabled="moduleWeightsLocked" min="0" max="100" step="1"
                                                         style="width:36px; height:23px; font-size:13px; text-align:center; border:1px solid #CBD5E1; border-radius:4px; padding:0; color:#A16207;">
                                                     %
                                                 </div>
                                             </th>
                                             <th class="mp-th text-center"
                                                 style="padding:12px 16px;width:120px;background:#FFF7ED;color:#C2410C;font-weight:600;">
-                                                Responsi
+                                                RESPONSI
                                                 <div
                                                     style="margin-top:4px; display:flex; align-items:center; justify-content:center; gap:4px; font-size:11px;">
-                                                    <input type="number" x-model="bobot_responsi"
+                                                    <input type="number" x-model="bobot_responsi" :disabled="moduleWeightsLocked" min="0" max="100" step="1"
                                                         style="width:36px; height:23px; font-size:13px; text-align:center; border:1px solid #CBD5E1; border-radius:4px; padding:0; color:#C2410C;">
                                                     %
                                                 </div>
                                             </th>
+                                            @include('eoffice::manajemen-praktikum.partials.module-extra-headers', ['extraMode'=>'koor'])
                                             <th class="mp-th text-left"
-                                                style="padding:12px 16px;border-left:1px solid #DFE1E7;">Keterangan</th>
+                                                style="padding:12px 16px;border-left:1px solid #DFE1E7;">KETERANGAN</th>
                                             <th class="mp-th text-center"
                                                 style="padding:12px 16px;border-left:1px solid #DFE1E7;">RATA-RATA</th>
                                         </tr>
@@ -287,7 +239,7 @@
                                             <tr class="mp-tr group" style="border-bottom:1px solid #DFE1E7;"
                                                 x-show="paginatedRows.some(r => r.id === {{ $idx }})">
                                                 <td class="group-hover:bg-gray-50 transition-all"
-                                                    style="padding:12px 16px; color:#666D80; font-size:13px;">{{ $idx + 1 }}</td>
+                                                    style="padding:12px 16px; color:#666D80; font-size:13px;text-align:center;font-weight:700;">{{ $idx + 1 }}</td>
                                                 <td class="group-hover:bg-gray-50 transition-all" style="padding:12px 16px;">
                                                     <div style="display:flex;align-items:center;gap:10px;">
                                                         <div class="mp-av sky"
@@ -346,39 +298,42 @@
                                                     $valResp = isset($njMap['responsi']) ? floatval($njMap['responsi']) : 0;
                                                 @endphp
                                                 {{-- Tugas Pendahuluan --}}
-                                                <td class="group-hover:brightness-95 transition-all"
-                                                    style="padding:12px 16px;text-align:center;background:#EAF0FA;color:#0D0D12;font-size:13px;">
-                                                    {{ isset($njMap['tugas_pendahuluan']) ? number_format($njMap['tugas_pendahuluan'], 0) : '0' }}
-                                                </td>
+                                                <td class="mp-grade-history-cell group-hover:brightness-95 transition-all"
+                                                    style="position:relative;padding-right:32px!important;padding:12px 16px;text-align:center;background:#EAF0FA;color:#0D0D12;font-size:13px;">
+                                                    {{ isset($njMap['tugas_pendahuluan']) ? number_format($njMap['tugas_pendahuluan'], 0, ',', '') : '0' }}
+                                                <x-eoffice::manajemen-praktikum.ui.module-score-history :module-id="$modul->id" :student-id="$dp->id" score-key="tugas_pendahuluan" score-label="Tugas Pendahuluan" :student-name="$dp->user?->name ?? 'Mahasiswa'" /></td>
                                                 {{-- Praktikum (Tugas Pengganti) --}}
-                                                <td class="group-hover:brightness-95 transition-all"
-                                                    style="padding:12px 16px;text-align:center;background:#F0FDF4;color:#0D0D12;font-size:13px;">
-                                                    {{ isset($njMap['tugas_pengganti']) ? number_format($njMap['tugas_pengganti'], 0) : '0' }}
-                                                </td>
+                                                <td class="mp-grade-history-cell group-hover:brightness-95 transition-all"
+                                                    style="position:relative;padding-right:32px!important;padding:12px 16px;text-align:center;background:#F0FDF4;color:#0D0D12;font-size:13px;">
+                                                    {{ isset($njMap['tugas_pengganti']) ? number_format($njMap['tugas_pengganti'], 0, ',', '') : '0' }}
+                                                <x-eoffice::manajemen-praktikum.ui.module-score-history :module-id="$modul->id" :student-id="$dp->id" score-key="tugas_pengganti" score-label="Praktikum" :student-name="$dp->user?->name ?? 'Mahasiswa'" /></td>
                                                 {{-- Laporan --}}
-                                                <td class="group-hover:brightness-95 transition-all"
-                                                    style="padding:12px 16px;text-align:center;background:#FEF9C3;color:#0D0D12;font-size:13px;">
-                                                    {{ isset($njMap['laporan']) ? number_format($njMap['laporan'], 0) : '0' }}
-                                                </td>
+                                                <td class="mp-grade-history-cell group-hover:brightness-95 transition-all"
+                                                    style="position:relative;padding-right:32px!important;padding:12px 16px;text-align:center;background:#FEF9C3;color:#0D0D12;font-size:13px;">
+                                                    {{ isset($njMap['laporan']) ? number_format($njMap['laporan'], 0, ',', '') : '0' }}
+                                                <x-eoffice::manajemen-praktikum.ui.module-score-history :module-id="$modul->id" :student-id="$dp->id" score-key="laporan" score-label="Laporan" :student-name="$dp->user?->name ?? 'Mahasiswa'" /></td>
                                                 {{-- Responsi --}}
-                                                <td class="group-hover:brightness-95 transition-all"
-                                                    style="padding:12px 16px;text-align:center;background:#FFF7ED;color:#0D0D12;font-size:13px;">
-                                                    {{ isset($njMap['responsi']) ? number_format($njMap['responsi'], 0) : '0' }}
-                                                </td>
+                                                <td class="mp-grade-history-cell group-hover:brightness-95 transition-all"
+                                                    style="position:relative;padding-right:32px!important;padding:12px 16px;text-align:center;background:#FFF7ED;color:#0D0D12;font-size:13px;">
+                                                    {{ isset($njMap['responsi']) ? number_format($njMap['responsi'], 0, ',', '') : '0' }}
+                                                <x-eoffice::manajemen-praktikum.ui.module-score-history :module-id="$modul->id" :student-id="$dp->id" score-key="responsi" score-label="Responsi" :student-name="$dp->user?->name ?? 'Mahasiswa'" /></td>
+                                            @include('eoffice::manajemen-praktikum.partials.module-extra-cells', ['extraMode'=>'koor'])
                                                 {{-- Keterangan --}}
                                                 <td class="group-hover:bg-gray-50 transition-all"
-                                                    style="padding:12px 16px;font-size:12px;color:#666D80;border-left:1px solid #DFE1E7;">
-                                                    {{ $absensi?->keterangan ?? '—' }}
+                                                    style="padding:12px 16px;font-size:12px;color:#666D80;border-left:1px solid #DFE1E7;text-align:{{ filled($absensi?->keterangan) ? 'left' : 'center' }};">
+                                                    {{ filled($absensi?->keterangan) ? $absensi->keterangan : '—' }}
                                                 </td>
                                                 {{-- RATA-RATA --}}
                                                 <td class="group-hover:bg-gray-50 transition-all"
                                                     style="padding:12px 16px;text-align:center;color:#0D0D12;font-size:13px;font-weight:500;border-left:1px solid #DFE1E7;"
                                                     x-data="{
                                                                                                                                                                                                                                         get rataRata() {
-                                                                                                                                                                                                                                            let totalBobot = parseInt(bobot_tp || 0) + parseInt(bobot_praktikum || 0) + parseInt(bobot_laporan || 0) + parseInt(bobot_responsi || 0);
-                                                                                                                                                                                                                                            if (totalBobot === 0) return 0;
-                                                                                                                                                                                                                                            let sum = ({{$valTP}} * (bobot_tp || 0)) + ({{$valPrak}} * (bobot_praktikum || 0)) + ({{$valLap}} * (bobot_laporan || 0)) + ({{$valResp}} * (bobot_responsi || 0));
-                                                                                                                                                                                                                                            return (sum / totalBobot).toFixed(0);
+let totalBobot = Number(bobot_tp || 0) + Number(bobot_praktikum || 0) + Number(bobot_laporan || 0) + Number(bobot_responsi || 0) + Object.values(extraWeights).reduce((sum,w)=>sum+Number(w||0),0);
+if (totalBobot !== 100) return '—';
+                                                                                                                                                                                                                                            let sum = ({{$valTP}} * (bobot_tp || 0)) + ({{$valPrak}} * (bobot_praktikum || 0)) + ({{$valLap}} * (bobot_laporan || 0)) + ({{$valResp}} * (bobot_responsi || 0)); 
+const extraScores = {{ json_encode(collect($njMap)->only(collect($praktikum->komponen_modul ?? [])->pluck('id')->all())->all()) }};
+sum += Object.entries(extraWeights).reduce((sum,[key,w])=>sum+Number(extraScores[key]||0)*Number(w||0),0);
+                                                                                                                                                                                                                                            return (sum / totalBobot).toFixed(2).replace('.',',');
                                                                                                                                                                                                                                         }
                                                                                                                                                                                                                                     }">
                                                     <span x-text="rataRata"></span>
@@ -396,102 +351,31 @@
                             </div>
 
                             {{-- Pagination Footer --}}
-                            <div
-                                :style="visibleRows.length > 0 ? 'display:flex; justify-content:space-between; align-items:center; width:100%; padding:12px 20px; border-top:1px solid #DFE1E7; box-sizing:border-box; flex-wrap:nowrap; gap:16px;' : 'display:none;'">
-                                {{-- Left: Per halaman dropdown + info teks --}}
-                                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                                    <div x-data="{ openP: false, options: [10, 20, 30] }" class="relative"
-                                        @click.away="openP = false">
-                                        <div class="flex items-center gap-2 cursor-pointer border rounded-[8px] px-3 py-1.5 transition-colors focus:outline-none"
-                                            :class="openP ? 'border-[#0B266E] bg-[#EEF1FA] text-[#0B266E]' : 'border-[#DFE1E7] bg-white text-[#353849] hover:bg-[#F6F8FA]'"
-                                            @click="openP = !openP">
-                                            <span class="text-[12px] text-[#666D80]" :class="openP ? 'text-[#0B266E]' : ''">Per
-                                                halaman</span>
-                                            <div class="flex items-center gap-1 font-semibold text-[12px]">
-                                                <span x-text="perPage"></span>
-                                                <svg class="w-3.5 h-3.5 transition-transform duration-200"
-                                                    :class="{'rotate-180': openP, 'text-[#0B266E]': openP, 'text-[#666D80]': !openP}"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                                                    stroke-linecap="round" stroke-linejoin="round">
-                                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                                </svg>
-                                            </div>
-                                        </div>
-                                        <div x-show="openP" @click.away="openP = false" style="display: none;"
-                                            x-transition:enter="transition ease-out duration-100"
-                                            x-transition:enter-start="opacity-0 scale-95"
-                                            x-transition:enter-end="opacity-100 scale-100"
-                                            x-transition:leave="transition ease-in duration-75"
-                                            x-transition:leave-start="opacity-100 scale-100"
-                                            x-transition:leave-end="opacity-0 scale-95"
-                                            class="absolute bottom-full left-0 mb-2 z-10 w-full min-w-[80px] bg-white border border-[#DFE1E7] rounded-[10px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 px-1.5 flex flex-col">
-                                            <template x-for="option in options" :key="option">
-                                                <div @click="perPage = option; openP = false"
-                                                    class="flex items-center justify-between px-3 py-2 rounded-[6px] cursor-pointer text-[12px] transition-colors mb-0.5 last:mb-0 no-underline"
-                                                    :class="perPage == option ? 'bg-[#F6F8FA] text-[#0B266E] font-medium' : 'text-[#353849] hover:bg-[#F6F8FA]'">
-                                                    <span x-text="option"></span>
-                                                    <svg x-show="perPage == option"
-                                                        class="w-3.5 h-3.5 flex-shrink-0 text-[#0B266E] ml-2"
-                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                                                        stroke-linecap="round" stroke-linejoin="round">
-                                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                                    </svg>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-                                    <div style="font-size:13px; color:#666D80;">Menampilkan <span
-                                            x-text="((page - 1) * perPage) + 1"></span>
-                                        sampai <span x-text="Math.min(page * perPage, visibleRows.length)"></span> dari <span
-                                            x-text="visibleRows.length"></span> data</div>
-                                </div>
+                            <x-eoffice::manajemen-praktikum.ui.client-pagination :separator="true" />
 
-                                {{-- Right: Page nav buttons --}}
-                                <div style="display:flex; gap:4px; flex-shrink:0;">
-                                    <button @click="if(page > 1) page--" :disabled="page === 1"
-                                        :style="page === 1 ? 'color:#D1D5DB; cursor:not-allowed; border:1px solid #F3F4F6; background:#FAFAFA;' : 'color:#666D80; cursor:pointer; border:1px solid #DFE1E7; background:#fff;'"
-                                        class="hover:bg-gray-50 flex items-center justify-center transition-all"
-                                        style="width:32px; height:32px; border-radius:6px; outline:none;">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <polyline points="15 18 9 12 15 6"></polyline>
-                                        </svg>
-                                    </button>
-                                    <div style="width:32px; height:32px; background:#0B266E; color:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600;"
-                                        x-text="page"></div>
-                                    <button @click="if(page < totalPages) page++"
-                                        :disabled="page === totalPages || totalPages === 0"
-                                        :style="page === totalPages || totalPages === 0 ? 'color:#D1D5DB; cursor:not-allowed; border:1px solid #F3F4F6; background:#FAFAFA;' : 'color:#666D80; cursor:pointer; border:1px solid #DFE1E7; background:#fff;'"
-                                        class="hover:bg-gray-50 flex items-center justify-center transition-all"
-                                        style="width:32px; height:32px; border-radius:6px; outline:none;">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <polyline points="9 18 15 12 9 6"></polyline>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-
-                        </div>{{-- /x-show expanded --}}
+                        </x-eoffice::manajemen-praktikum.ui.grade-accordion>
                     </div>{{-- /accordion item --}}
                 @empty
                     <div style="padding:48px; text-align:center;">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5"
-                            stroke-linecap="round" style="margin:0 auto 12px;display:block;">
-                            <path d="M9 11l3 3L22 4" />
-                            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
-                        </svg>
+                        <x-eoffice::manajemen-praktikum.ui.empty-icon name="medal" />
                         <div style="font-size:13px;font-weight:500;color:#666D80;">Belum ada modul yang tersedia.</div>
                     </div>
                 @endforelse
 
+                <x-eoffice::manajemen-praktikum.ui.tugas-akhir-card :praktikum="$praktikum" :students="$daftarPraktikan" role="koor" section="nilai" />
+                <div @final-weight-change="finalWeights=$event.detail.changed ? $event.detail.values : null">
+                    <x-eoffice::manajemen-praktikum.ui.final-grades :praktikum="$praktikum" role="koor" :embedded="true" />
+                </div>
             </div>{{-- /outer card --}}
 
         </div>{{-- /x-data --}}
 
+
         {{-- Publikasi Nilai Section --}}
         @php
             $totalPraktikan = $daftarPraktikan->count();
+            $publicationTa=\Modules\EOffice\Models\TugasAkhir::where('praktikum_id',$praktikum->id)->where('published',true)->first();
+            $publicationGrades=$publicationTa ? \Modules\EOffice\Models\TaNilai::where('tugas_akhir_id',$publicationTa->id)->get() : collect();
             $koorCount = 0;
             $dosenCount = 0;
             foreach ($daftarPraktikan as $dp) {
@@ -502,12 +386,13 @@
             }
             $allKoorApproved = $totalPraktikan > 0 && $koorCount === $totalPraktikan;
             $allDosenApproved = $totalPraktikan > 0 && $dosenCount === $totalPraktikan;
+            if($publicationTa){ $allKoorApproved=$allKoorApproved && $publicationGrades->count()===$totalPraktikan && $publicationGrades->every(fn($g)=>$g->disetujui_koor); $allDosenApproved=$allDosenApproved && $publicationGrades->count()===$totalPraktikan && $publicationGrades->every(fn($g)=>$g->disetujui_dosen); }
         @endphp
 
         <div
-            style="background:#fff; border:1px solid #DFE1E7; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.04); margin-bottom:48px; padding:20px 24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px;">
+            style="background:#fff; border:1px solid #DFE1E7; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.04); margin-bottom:0; padding:20px 24px!important;padding-block:20px!important; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px;">
 
-            <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; flex-direction:column; gap:12px;flex:1;min-width:240px;">
                 <div style="font-size:15px; font-weight:700; color:#0D0D12;">
                     Publikasi Nilai
                 </div>
@@ -542,40 +427,32 @@
                     </label>
 
                 </div>
-                <p style="font-size:12px; color:#666D80; line-height:1.6; margin:0; max-width:600px;">
+                <p style="font-size:12px; color:#666D80; line-height:1.6; margin:0;">
                     <strong style="color:#0D0D12;">Informasi:</strong> Nilai akan dipublikasikan ke mahasiswa setelah
                     disetujui oleh Dosen dan Koordinator.
                 </p>
             </div>
 
             @if(!$allKoorApproved)
-                <form method="POST" action="{{ route('eoffice.manprak.koor.nilai.approve') }}">
+                <form method="POST" action="{{ route('eoffice.manprak.koor.nilai.approve') }}" x-data="{showPublicationConfirm:false,publicationConfirmed:false,publicationSubmitting:false}" x-ref="publicationForm" @submit="if(publicationSubmitting){$event.preventDefault();return;}if(!publicationConfirmed){$event.preventDefault();showPublicationConfirm=true}else{publicationSubmitting=true}">
+                    <x-eoffice::manajemen-praktikum.ui.publication-confirmation role="koor" />
                     @csrf
-                    <button type="submit" class="mp-btn primary md"
-                        style="background:#6366F1; box-shadow:0 2px 6px rgba(99,102,241,.3);"
-                        onmouseover="this.style.background='#4F46E5'" onmouseout="this.style.background='#6366F1'">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round">
-                            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-                            <polyline points="22 4 12 14.01 9 11.01" />
-                        </svg>
-                        Simpan
+                    @foreach($publicationGrades as $taGrade)<input type="hidden" name="ta_versions[{{ $taGrade->id }}]" value="{{ $taGrade->version }}">@endforeach
+                    <button type="submit" :disabled="publicationSubmitting" class="mp-btn primary md"
+                        style="background:#0B266E; color:#FFFFFF; padding:10px 16px; border-radius:8px; font-size:13px; font-weight:700; box-shadow:0 2px 6px rgba(11,38,110,.2);"
+                        onmouseover="this.style.background='#091958'" onmouseout="this.style.background='#0B266E'">
+                        Kirim Persetujuan
                     </button>
                 </form>
             @else
-                <form method="POST" action="{{ route('eoffice.manprak.koor.nilai.approve') }}">
+                <form method="POST" action="{{ route('eoffice.manprak.koor.nilai.approve') }}" x-data="{showCancelConfirm:false,cancelConfirmed:false}" x-ref="cancelPublicationForm" @submit="if(!cancelConfirmed){$event.preventDefault();showCancelConfirm=true}">
+                    <x-eoffice::manajemen-praktikum.ui.cancel-publication-confirmation />
                     @csrf
+                    @foreach($publicationGrades as $taGrade)<input type="hidden" name="ta_versions[{{ $taGrade->id }}]" value="{{ $taGrade->version }}">@endforeach
                     @method('DELETE')
                     <button type="submit" class="mp-btn neutral md"
-                        style="background:#fff; border:1px solid #DFE1E7; color:#DC2626;"
-                        onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background='#fff'"
-                        onclick="return confirm('Batalkan persetujuan nilai?')">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round">
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="15" y1="9" x2="9" y2="15" />
-                            <line x1="9" y1="9" x2="15" y2="15" />
-                        </svg>
+                        style="background:#FFF1F2; border:1px solid #FECDD3; color:#DF1C41;"
+                        onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background='#FFF1F2'">
                         Batalkan Publikasi
                     </button>
                 </form>

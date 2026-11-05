@@ -31,7 +31,7 @@ class DaftarPraktikanController extends Controller
                 ->orWhere('email', 'like', "%{$search}%"));
         }
 
-        $praktikans = $query->paginate(20)->withQueryString();
+        $praktikans = $query->paginate(max(1, min(100, request()->integer('per_page', 20))))->withQueryString();
 
         return view('eoffice::manajemen-praktikum.admin.daftar-praktikan', compact(
             'praktikumList',

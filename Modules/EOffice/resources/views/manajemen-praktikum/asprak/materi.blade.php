@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Materi Modul">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Materi Modul">
 
 {{-- Header --}}
 <div class="mp-page-header">
@@ -13,6 +13,54 @@
 
 {{-- Main Scrollable Container --}}
 <div style="display:flex;flex-direction:column;gap:24px;min-height:0;flex:1;overflow-y:auto;padding-right:8px;">
+
+@php
+    $modulDenganMateriLama = $modulsForSelect->filter(fn ($modul) => $modul->modulSumber?->materi?->isNotEmpty());
+@endphp
+
+@if($modulDenganMateriLama->isNotEmpty())
+<div style="flex-shrink:0;">
+    <div class="sec-head">
+        <span class="sec-bar"></span>
+        <span class="sec-title">Materi Periode Sebelumnya</span>
+        <span class="sec-rule"></span>
+    </div>
+    <div class="mp-card">
+        <div class="mp-card-header">
+            <div>
+                <span class="mp-card-title">Gunakan Materi Sebelumnya</span>
+                <div style="font-size:12px;color:#666D80;margin-top:4px;">Pilih secara sadar materi yang masih relevan. Materi lama tidak digunakan otomatis.</div>
+            </div>
+        </div>
+        @foreach($modulDenganMateriLama as $modulPilihan)
+            <div style="padding:18px 22px;border-top:1px solid #DFE1E7;">
+                <div style="font-size:13px;font-weight:700;color:#0D0D12;margin-bottom:10px;">{{ $modulPilihan->urutan }}. {{ $modulPilihan->nama }}</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;">
+                    @foreach($modulPilihan->modulSumber->materi as $materiLama)
+                        @php $sudahDipakai = $materis->contains(fn ($materi) => (int) $materi->materi_sumber_id === (int) $materiLama->id); @endphp
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid #DFE1E7;border-radius:9px;background:#fff;">
+                            <div style="min-width:0;">
+                                <div style="font-size:12px;font-weight:650;color:#353849;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $materiLama->judul }}</div>
+                                <div style="font-size:11px;color:#808897;margin-top:3px;">{{ $modulPilihan->modulSumber->praktikum?->semester ?? '' }} {{ $modulPilihan->modulSumber->praktikum?->tahun_ajaran ?? '' }}</div>
+                            </div>
+                            @if($sudahDipakai)
+                                <span style="font-size:11px;font-weight:700;color:#047857;background:#ECFDF5;padding:5px 8px;border-radius:999px;white-space:nowrap;">Sudah digunakan</span>
+                            @else
+                                <form method="POST" action="{{ route('eoffice.manprak.asprak.materi.reuse') }}">
+                                    @csrf
+                                    <input type="hidden" name="modul_id" value="{{ $modulPilihan->id }}">
+                                    <input type="hidden" name="materi_sumber_id" value="{{ $materiLama->id }}">
+                                    <button type="submit" class="mp-btn secondary sm" style="white-space:nowrap;">Gunakan Materi</button>
+                                </form>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach
+    </div>
+</div>
+@endif
 
 {{-- Upload Section --}}
 @if(isset($praktikum) && $praktikum->is_active)
@@ -31,9 +79,9 @@
                 <label class="block text-[12px] font-semibold text-[#353849] mb-3">Modul <span style="color:#DF1C41;">*</span></label>
                 @php
                 $modulOptions = [];
-                if(isset($modulList)) {
-                    foreach($modulList as $m) {
-                        $modulOptions[] = ['value' => (string)$m->id, 'label' => $m->judul];
+                if(isset($modulsForSelect)) {
+                    foreach($modulsForSelect as $m) {
+                        $modulOptions[] = ['value' => (string)$m->id, 'label' => $m->urutan . '. ' . $m->nama];
                     }
                 }
             @endphp
@@ -42,7 +90,6 @@
                 :options="$modulOptions"
                 :selected="(string)request('modul_id', (isset($modul) ? $modul?->id : ''))"
                 placeholder="Pilih Modul..."
-                onChange="$event.target.form.submit()"
                 minWidth="200px"
             />
                 @error('modul_id')
@@ -170,7 +217,7 @@
                 {{-- Actions --}}
                 <div style="display:flex;gap:8px;flex-shrink:0;margin-top:2px;">
                     @if($materi->file_path)
-                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice') }}" target="_blank" class="mp-btn primary sm" style="text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:6px;">
+                    <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($materi->file_path, 'eoffice', $materi->judul ?? basename($materi->file_path)) }}" target="_blank" class="mp-btn primary sm" style="text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:6px;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         Lihat
                     </a>

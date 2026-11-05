@@ -3,7 +3,7 @@
     /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\MatkulPraktikum[] $matkulList */
     /** @var \Illuminate\Support\Collection|object[] $dosenList */
 @endphp
-<x-eoffice::manajemen-praktikum.layout pageTitle="Edit Praktikum — {{ $praktikum->nama }}">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Edit Praktikum — {{ $praktikum->nama }}">
 
     {{-- Header --}}
     <div class="mp-page-header" style="flex-shrink:0;">

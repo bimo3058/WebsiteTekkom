@@ -1,3 +1,38 @@
+        @php
+            // Resolve navigation from the current route, never from role priority.
+            $breadcrumbRole = str_replace('manprak.', '', $activeSection['match'] ?? 'manprak.mahasiswa');
+            $praktikumListRoute = "eoffice.manprak.{$breadcrumbRole}.praktikum.index";
+            $praktikumListHref = route($praktikumListRoute);
+            $praktikumHref = null;
+            if ($breadcrumbPraktikum) {
+                $praktikumHref = match ($breadcrumbRole) {
+                    'admin' => route('eoffice.manprak.admin.praktikum.detail', $breadcrumbPraktikum->id),
+                    'mahasiswa' => route('eoffice.manprak.mahasiswa.pengumuman.index', ['praktikum_id' => $breadcrumbPraktikum->id]),
+                    default => route("eoffice.manprak.{$breadcrumbRole}.praktikum.show", $breadcrumbPraktikum->id),
+                };
+            }
+            $breadcrumbTitle = $pageTitle ?? 'Dashboard';
+            if ($breadcrumbPraktikum && str_starts_with($breadcrumbTitle, $breadcrumbPraktikum->nama . ' / ')) {
+                $breadcrumbTitle = substr($breadcrumbTitle, strlen($breadcrumbPraktikum->nama . ' / '));
+            }
+            $breadcrumbParentLabel = null;
+            $breadcrumbParentHref = null;
+            if ($breadcrumbPraktikum && str_contains($currentRoute, '.tugas-akhir.')) {
+                $taSection = request()->route('taSection') ?? 'modul';
+                $taParent = $taSection === 'nilai' ? ($breadcrumbRole === 'asprak' ? 'absensi' : 'nilai') : $taSection;
+                $breadcrumbParentLabel = match($taSection) { 'nilai' => 'Absensi & Nilai', 'tugas' => 'Tugas', default => $breadcrumbRole === 'koor' ? 'Kelola Modul' : 'Modul' };
+                $breadcrumbParentHref = $breadcrumbRole === 'dosen' && $taSection !== 'tugas'
+                    ? route("eoffice.manprak.dosen.{$taParent}.index", $breadcrumbPraktikum->id)
+                    : route("eoffice.manprak.{$breadcrumbRole}.{$taParent}.index", ['praktikum_id' => $breadcrumbPraktikum->id]);
+            } elseif ($breadcrumbPraktikum && str_contains($currentRoute, '.tugas.') && !str_ends_with($currentRoute, '.tugas.index')) {
+                $breadcrumbParentLabel = 'Tugas';
+                $breadcrumbParentHref = route("eoffice.manprak.{$breadcrumbRole}.tugas.index", ['praktikum_id' => $breadcrumbPraktikum->id]);
+                $breadcrumbTitle = str_contains($breadcrumbTitle, ' / ') ? substr($breadcrumbTitle, strrpos($breadcrumbTitle, ' / ') + 3) : $breadcrumbTitle;
+            } elseif ($breadcrumbPraktikum && str_contains($currentRoute, '.modul.') && !str_ends_with($currentRoute, '.modul.index')) {
+                $breadcrumbParentLabel = 'Modul';
+                $breadcrumbParentHref = route("eoffice.manprak.{$breadcrumbRole}.modul.index", ['praktikum_id' => $breadcrumbPraktikum->id]);
+            }
+        @endphp
         <header class="mp-topbar">
             <nav class="mp-breadcrumb" aria-label="Breadcrumb">
                 <button type="button" class="mp-icon-button mp-mobile-menu" x-ref="mpMenuButton"
@@ -7,9 +42,17 @@
                 </button>
                 <a class="mp-breadcrumb-root" href="{{ route('eoffice.dashboard') }}">E-Office</a>
                 <span class="mp-breadcrumb-root" aria-hidden="true">/</span>
-                <a href="{{ route('eoffice.manprak.dashboard') }}">Praktikum</a>
+                <a href="{{ $praktikumListHref }}">Praktikum</a>
                 <span aria-hidden="true">/</span>
-                <strong aria-current="page" title="{{ $pageTitle ?? 'Dashboard' }}">{{ $pageTitle ?? 'Dashboard' }}</strong>
+                @if($breadcrumbPraktikum)
+                    <a class="mp-breadcrumb-praktikum" href="{{ $praktikumHref }}" title="{{ $breadcrumbPraktikum->nama }}">{{ $breadcrumbPraktikum->nama }}</a>
+                    <span aria-hidden="true">/</span>
+                @endif
+                @if($breadcrumbParentHref)
+                    <a href="{{ $breadcrumbParentHref }}">{{ $breadcrumbParentLabel }}</a>
+                    <span aria-hidden="true">/</span>
+                @endif
+                <strong aria-current="page" title="{{ $breadcrumbTitle }}">{{ $breadcrumbTitle }}</strong>
             </nav>
             <div class="mp-topbar-actions">
                 @if($notifCount > 0)

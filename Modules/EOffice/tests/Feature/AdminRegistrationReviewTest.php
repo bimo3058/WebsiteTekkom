@@ -310,13 +310,17 @@ class AdminRegistrationReviewTest extends TestCase
         $this->assertSame('disetujui', PendaftaranKoordinator::find(1)->status_dosen);
     }
 
-    public function test_detail_renders_documents_override_form_and_keeps_audit_reason_escaped(): void
+    public function test_detail_hides_admin_decision_before_review_and_keeps_audit_reason_escaped(): void
     {
         $controller = new RegistrationReviewController;
         $request = $this->requestAs();
         $html = $controller->show($request, 'koor', 1)->render();
-        $this->assertStringContainsString('Override &amp; Setujui', $html);
-        $this->assertStringContainsString('name="override_reason"', $html);
+        $this->assertStringNotContainsString('Keputusan admin', $html);
+        $this->assertStringNotContainsString('name="override_reason"', $html);
+        $this->assertStringNotContainsString('Motivasi', $html);
+        $this->assertStringNotContainsString('Catatan reviewer', $html);
+        $this->assertStringNotContainsString('Riwayat alasan penolakan', $html);
+        $this->assertStringNotContainsString('aria-label="Jenis pendaftaran"', $html);
         $this->assertStringContainsString('/dokumen/transkrip_path', $html);
         $this->assertStringContainsString('Tidak diunggah', $html);
         $this->controller()->approve($this->requestAs(input: ['override_dosen' => 1, 'override_reason' => '<script>alert("audit")</script>']), 1);
@@ -367,15 +371,17 @@ class AdminRegistrationReviewTest extends TestCase
         $this->assertSame(0, DB::table('eo_notifikasi')->count());
     }
 
-    public function test_asprak_detail_shows_cv_and_coordinator_review_without_lecturer_override(): void
+    public function test_asprak_detail_hides_legacy_fields_and_shows_admin_decision_after_coordinator_review(): void
     {
         DB::table('pendaftaran_asprak')->insert([
             'id' => 1, 'user_id' => 2, 'praktikum_id' => self::PRAKTIKUM, 'status' => 'pending',
             'status_koor' => 'disetujui', 'cv_path' => 'asprak/2/cv.pdf', 'jadwal' => json_encode(['Senin 08:00']),
         ]);
         $html = (new RegistrationReviewController)->show($this->requestAs(), 'asprak', 1)->render();
-        $this->assertStringContainsString('/dokumen/cv_path', $html);
-        $this->assertStringContainsString('Senin 08:00', $html);
+        $this->assertStringNotContainsString('/dokumen/cv_path', $html);
+        $this->assertStringNotContainsString('Senin 08:00', $html);
+        $this->assertStringNotContainsString('Motivasi', $html);
+        $this->assertStringNotContainsString('Catatan reviewer', $html);
         $this->assertStringContainsString('Setujui pendaftaran', $html);
         $this->assertStringNotContainsString('name="override_dosen"', $html);
     }
@@ -385,5 +391,26 @@ class AdminRegistrationReviewTest extends TestCase
         $storage = \Mockery::mock(SupabaseStorage::class);
         $storage->shouldReceive('download')->once()->andReturnNull();
         $this->httpError(fn () => (new RegistrationReviewController)->document($this->requestAs(), 'koor', 1, 'transkrip_path', $storage), 404);
+    }
+
+    public function test_coordinator_assignment_restores_revoked_memberships_without_duplicates(): void
+    {
+        foreach (['koor', 'asprak'] as $role) {
+            DB::table('asprak_praktikum')->insert([
+                'user_id' => 2,
+                'praktikum_id' => self::PRAKTIKUM,
+                'role' => $role,
+                'deleted_at' => now(),
+            ]);
+        }
+
+        (new KoorPraktikumService)->assign(
+            \Modules\EOffice\Models\Praktikum::findOrFail(self::PRAKTIKUM),
+            User::findOrFail(2),
+        );
+
+        $this->assertSame(2, DB::table('asprak_praktikum')->count());
+        $this->assertSame(0, DB::table('asprak_praktikum')->whereNotNull('deleted_at')->count());
+        $this->assertSame(2, (int) DB::table('eo_praktikum')->value('koor_id'));
     }
 }

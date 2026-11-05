@@ -16,6 +16,8 @@ class Modul extends Model
 
     protected $fillable = [
         'praktikum_id',
+        'modul_sumber_id',
+        'pengajuan_modul_id',
         'nama',
         'deskripsi',
         'urutan',
@@ -28,6 +30,16 @@ class Modul extends Model
     public function praktikum()
     {
         return $this->belongsTo(Praktikum::class, 'praktikum_id');
+    }
+
+    public function modulSumber()
+    {
+        return $this->belongsTo(self::class, 'modul_sumber_id');
+    }
+
+    public function pengajuan()
+    {
+        return $this->belongsTo(PengajuanModul::class, 'pengajuan_modul_id');
     }
 
     public function modulAsprak()

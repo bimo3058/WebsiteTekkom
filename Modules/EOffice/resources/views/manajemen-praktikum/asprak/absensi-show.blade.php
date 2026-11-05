@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Absensi &amp; Nilai">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Absensi &amp; Nilai">
 
     {{-- Header --}}
     <div x-data="{ 
@@ -99,7 +99,7 @@
                         @click="open = !open; if(open) $nextTick(() => $refs.searchKel.focus())">
                         <span x-text="kelompok === '' ? 'Semua Kelompok' : kelompok" class="truncate"
                             :style="kelompok === '' ? 'color:#808897' : 'color:#0D0D12; font-weight:500;'"></span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="2"
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round"
                             :style="open ? 'transform:rotate(180deg)' : ''" style="transition:transform 0.2s;">
                             <polyline points="6 9 12 15 18 9"></polyline>
@@ -159,7 +159,7 @@
                         @click="open = !open; if(open) $nextTick(() => $refs.searchShf.focus())">
                         <span x-text="shift === '' ? 'Semua Shift' : shift" class="truncate"
                             :style="shift === '' ? 'color:#808897' : 'color:#0D0D12; font-weight:500;'"></span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="2"
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round"
                             :style="open ? 'transform:rotate(180deg)' : ''" style="transition:transform 0.2s;">
                             <polyline points="6 9 12 15 18 9"></polyline>
@@ -206,6 +206,7 @@
             <table class="mp-table" style="min-width: 1400px; font-family: 'Inter', sans-serif;">
                 <thead>
                     <tr style="background:#F9FAFB;">
+                                            @include('eoffice::manajemen-praktikum.partials.module-extra-headers', ['extraMode'=>'asprak-show'])
                         <th class="mp-th text-left"
                             style="padding:10px 16px;width:40px;position:sticky;left:0;background:#F9FAFB;z-index:2;">NO
                         </th>
@@ -224,7 +225,7 @@
                             Tugas Pendahuluan</th>
                         <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#F0FDF4;">
                             Praktikum</th>
-                        <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#FEF9C3;">Laporan
+                        <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#FEF9C3;">{{ $praktikum->laporanLabel() }}
                         </th>
                         <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#FFF7ED;">Responsi
                         </th>
@@ -249,6 +250,7 @@
                         {{-- Alpine scope to handle disabled states reactively and search filter --}}
                         <tr class="mp-tr group" style="border-bottom:1px solid #DFE1E7;"
                             x-data="{ 
+extras: {{ json_encode(collect($praktikum->komponen_modul ?? [])->mapWithKeys(fn($c)=>[$c['id']=>$njMap[$c['id']]->nilai ?? ''])->all()) }},
                                 status: '{{ $status }}', 
                                 name: '{{ addslashes(strtolower($p->user?->name ?? '')) }}', 
                                 nim: '{{ addslashes(strtolower($p->user?->student?->student_number ?? $p->user?->email ?? '')) }}', 
@@ -309,45 +311,46 @@
                             </td>
 
                             {{-- Tugas Pendahuluan --}}
-                            <td class="group-hover:brightness-95 transition-all" style="padding:8px 12px;text-align:center;vertical-align:middle;"
+                            <td class="mp-grade-history-cell group-hover:brightness-95 transition-all" style="position:relative;padding-right:32px!important;padding:8px 12px;text-align:center;vertical-align:middle;"
                                 :style="status === 'hadir' ? 'background:#EAF0FA;' : 'background:#F1F5F9;'">
                                 <input type="number" name="nilai[{{ $p->id }}][tugas_pendahuluan]"
                                     x-model="tp" min="0" max="100" step="1"
                                     x-bind:disabled="status !== 'hadir'" :placeholder="status === 'hadir' ? '0–100' : '—'"
                                     class="mp-input" style="width:80px;text-align:center;font-size:13px;font-weight:600;color:#0D0D12;"
                                     :style="status === 'hadir' ? 'border-color:#C7D2FE;background:#FFF;' : 'border-color:#E2E8F0;background:#F8FAFC;'">
-                            </td>
+                            <x-eoffice::manajemen-praktikum.ui.module-score-history :module-id="$modul->id" :student-id="$p->id" score-key="tugas_pendahuluan" score-label="Tugas Pendahuluan" :student-name="$p->user?->name ?? 'Mahasiswa'" /></td>
 
                             {{-- Praktikum (Tugas Pengganti) --}}
-                            <td class="group-hover:brightness-95 transition-all" style="padding:8px 12px;text-align:center;vertical-align:middle;"
+                            <td class="mp-grade-history-cell group-hover:brightness-95 transition-all" style="position:relative;padding-right:32px!important;padding:8px 12px;text-align:center;vertical-align:middle;"
                                 :style="status === 'hadir' ? 'background:#F0FDF4;' : 'background:#F1F5F9;'">
                                 <input type="number" name="nilai[{{ $p->id }}][tugas_pengganti]"
                                     x-model="prak" min="0" max="100" step="1"
                                     x-bind:disabled="status !== 'hadir'" :placeholder="status === 'hadir' ? '0–100' : '—'"
                                     class="mp-input" style="width:80px;text-align:center;font-size:13px;font-weight:600;color:#0D0D12;"
                                     :style="status === 'hadir' ? 'border-color:#BBF7D0;background:#FFF;' : 'border-color:#E2E8F0;background:#F8FAFC;'">
-                            </td>
+                            <x-eoffice::manajemen-praktikum.ui.module-score-history :module-id="$modul->id" :student-id="$p->id" score-key="tugas_pengganti" score-label="Praktikum" :student-name="$p->user?->name ?? 'Mahasiswa'" /></td>
 
                             {{-- Laporan --}}
-                            <td class="group-hover:brightness-95 transition-all" style="padding:8px 12px;text-align:center;vertical-align:middle;"
+                            <td class="mp-grade-history-cell group-hover:brightness-95 transition-all" style="position:relative;padding-right:32px!important;padding:8px 12px;text-align:center;vertical-align:middle;"
                                 :style="status === 'hadir' ? 'background:#FEF9C3;' : 'background:#F1F5F9;'">
                                 <input type="number" name="nilai[{{ $p->id }}][laporan]"
                                     x-model="lap" min="0" max="100" step="1"
                                     x-bind:disabled="status !== 'hadir'" :placeholder="status === 'hadir' ? '0–100' : '—'"
                                     class="mp-input" style="width:80px;text-align:center;font-size:13px;font-weight:600;color:#0D0D12;"
                                     :style="status === 'hadir' ? 'border-color:#FEF08A;background:#FFF;' : 'border-color:#E2E8F0;background:#F8FAFC;'">
-                            </td>
+                            <x-eoffice::manajemen-praktikum.ui.module-score-history :module-id="$modul->id" :student-id="$p->id" score-key="laporan" score-label="Laporan" :student-name="$p->user?->name ?? 'Mahasiswa'" /></td>
 
                             {{-- Responsi --}}
-                            <td class="group-hover:brightness-95 transition-all" style="padding:8px 12px;text-align:center;vertical-align:middle;"
+                            <td class="mp-grade-history-cell group-hover:brightness-95 transition-all" style="position:relative;padding-right:32px!important;padding:8px 12px;text-align:center;vertical-align:middle;"
                                 :style="status === 'hadir' ? 'background:#FFF7ED;' : 'background:#F1F5F9;'">
                                 <input type="number" name="nilai[{{ $p->id }}][responsi]"
                                     x-model="resp" min="0" max="100" step="1"
                                     x-bind:disabled="status !== 'hadir'" :placeholder="status === 'hadir' ? '0–100' : '—'"
                                     class="mp-input" style="width:80px;text-align:center;font-size:13px;font-weight:600;color:#0D0D12;"
                                     :style="status === 'hadir' ? 'border-color:#FED7AA;background:#FFF;' : 'border-color:#E2E8F0;background:#F8FAFC;'">
-                            </td>
+                            <x-eoffice::manajemen-praktikum.ui.module-score-history :module-id="$modul->id" :student-id="$p->id" score-key="responsi" score-label="Responsi" :student-name="$p->user?->name ?? 'Mahasiswa'" /></td>
 
+                                            @include('eoffice::manajemen-praktikum.partials.module-extra-cells', ['extraMode'=>'asprak-show'])
                             {{-- Keterangan --}}
                             <td class="group-hover:bg-gray-50 transition-all" style="padding:12px 16px;vertical-align:middle;border-left:1px solid #DFE1E7;">
                                 <input name="absensi[{{ $p->id }}][keterangan]" value="{{ $row?->keterangan }}"
@@ -358,9 +361,11 @@
                             {{-- RATA-RATA --}}
                             <td class="group-hover:bg-gray-50 transition-all" style="padding:12px 16px;text-align:center;font-weight:700;color:#0D0D12;font-size:13px;border-left:1px solid #DFE1E7;">
                                 <span x-text="(() => {
-                                    let totalBobot = parseInt(bobot_tp || 0) + parseInt(bobot_praktikum || 0) + parseInt(bobot_laporan || 0) + parseInt(bobot_responsi || 0);
-                                    if (totalBobot === 0) return 0;
+const extraWeights = {{ json_encode(collect($praktikum->komponen_modul ?? [])->pluck('bobot','id')->all()) }};
+let totalBobot = Number(bobot_tp || 0) + Number(bobot_praktikum || 0) + Number(bobot_laporan || 0) + Number(bobot_responsi || 0) + Object.values(extraWeights).reduce((sum,w)=>sum+Number(w||0),0);
+if (totalBobot !== 100) return '—';
                                     let sum = (parseInt(tp || 0) * (bobot_tp || 0)) + (parseInt(prak || 0) * (bobot_praktikum || 0)) + (parseInt(lap || 0) * (bobot_laporan || 0)) + (parseInt(resp || 0) * (bobot_responsi || 0));
+sum += Object.entries(extraWeights).reduce((sum,[key,w])=>sum+Number(extras[key]||0)*Number(w||0),0);
                                     return (sum / totalBobot).toFixed(0);
                                 })()"></span>
                             </td>
