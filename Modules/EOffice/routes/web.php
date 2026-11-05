@@ -730,6 +730,12 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
     Route::prefix('eoffice/peminjaman')->name('eoffice.peminjaman.')->group(function () use ($MRAdminRuanganController, $MRAdminPengaturanController) {
         Route::get('/dashboard', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\DashboardController::class, 'index'])->name('dashboard');
 
+        // ── INTEGRASI ANTAR-MODUL (API INTERNAL) ──────────────────────────────
+        $MRRoomIntegrationController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\Api\RoomIntegrationController::class;
+        Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () use ($MRRoomIntegrationController) {
+            Route::get('ketersediaan-ruangan', [$MRRoomIntegrationController, 'checkAvailability'])->name('ketersediaan-ruangan');
+        });
+
         // ── ADMIN ────────────────────────────────────────────────────────────
         Route::middleware(['role:superadmin|admin_eoffice'])
             ->prefix('admin')->name('admin.')
@@ -749,7 +755,9 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::post('/persetujuan/{id}/override', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateOverride'])->name('persetujuan.override');
                 Route::get('/persetujuan/api/check-collision', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'checkCollision'])->name('persetujuan.check-collision');
                 Route::get('/persetujuan/api/pending-count', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'getPendingCount'])->name('persetujuan.pending-count');
-                Route::delete('/riwayat/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'destroy'])->name('riwayat.destroy');
+                Route::delete('/riwayat/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'destroy'])
+                    ->name('riwayat.destroy')
+                    ->middleware('role:superadmin');
 
                 // Jadwal Akademik (Filter dari tabel Internal)
                 Route::get('jadwal-akademik', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'index'])->name('jadwal-akademik.index');
@@ -766,6 +774,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::get('kalender-global', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'index'])->name('kalender-global.index');
                 Route::post('kalender-global/express', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'expressBooking'])->name('kalender-global.express');
                 Route::get('kalender-global/search-users', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'searchUsers'])->name('kalender-global.search-users');
+                Route::get('kalender-global/check-collision', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'checkCollision'])->name('kalender-global.check-collision');
 
 
                 // Settings
@@ -793,6 +802,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 // Transaksi
                 Route::get('/saya', [$MRUserPeminjamanController, 'saya'])->name('saya');
                 Route::post('/saya/batal/{id}', [$MRUserPeminjamanController, 'batalkanBooking'])->name('saya.batal');
+                Route::get('/saya/berkas/{id}', [$MRUserPeminjamanController, 'lihatBerkas'])->name('saya.berkas')->middleware('signed');
                 Route::get('/riwayat', [$MRUserPeminjamanController, 'riwayat'])->name('riwayat');
                 Route::post('/riwayat/{id}/hide', [$MRUserPeminjamanController, 'hideRiwayat'])->name('riwayat.hide');
 

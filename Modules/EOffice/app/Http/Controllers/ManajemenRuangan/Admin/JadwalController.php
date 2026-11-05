@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\EOffice\Models\MrJadwalInternal;
 use Modules\EOffice\Models\Ruangan;
+use Modules\EOffice\Models\Pengaturan;
 
 class JadwalController extends Controller
 {
@@ -119,8 +120,11 @@ class JadwalController extends Controller
         $jadwals = $query->paginate((int) $request->query('per_page', 10))->withQueryString();
         $ruangans = Ruangan::where('is_active', true)->get();
 
+        $jamBuka = Pengaturan::where('key', 'jam_buka')->value('value') ?? '08:00';
+        $jamTutup = Pengaturan::where('key', 'jam_tutup')->value('value') ?? '16:00';
+
         $bladeFile = $isAkademik ? 'index' : 'maintenance';
-        return view('eoffice::manajemen-ruangan.admin.jadwal.' . $bladeFile, compact('jadwals', 'tipe', 'ruangans', 'viewMode', 'search', 'filterHari', 'filterRuangan', 'sort', 'filterKategori', 'filterStatusWaktu'));
+        return view('eoffice::manajemen-ruangan.admin.jadwal.' . $bladeFile, compact('jadwals', 'tipe', 'ruangans', 'viewMode', 'search', 'filterHari', 'filterRuangan', 'sort', 'filterKategori', 'filterStatusWaktu', 'jamBuka', 'jamTutup'));
     }
 
     public function store(Request $request)
@@ -246,20 +250,10 @@ class JadwalController extends Controller
                                 'waktu_approval' => now()
                             ]);
 
-                            // Insert Database Notification (Jejak Audit)
-                            \Illuminate\Support\Facades\DB::table('notifications')->insert([
-                                'id' => \Illuminate\Support\Str::uuid()->toString(),
-                                'type' => 'App\Notifications\PeminjamanDibatalkan',
-                                'notifiable_type' => 'App\Models\User',
-                                'notifiable_id' => $p->user_id,
-                                'data' => json_encode([
-                                    'title' => 'Peminjaman Dibatalkan Sistem',
-                                    'message' => "Peminjaman Anda {$newStatus} secara otomatis karena ruangan digunakan untuk {$request->kategori}.",
-                                    'peminjaman_id' => $p->id
-                                ]),
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ]);
+                            // Kirim notifikasi resmi kepada peminjam
+                            if ($p->user) {
+                                $p->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($p, true));
+                            }
                         }
                     }
                 }
@@ -367,20 +361,10 @@ class JadwalController extends Controller
                         'waktu_approval' => now()
                     ]);
 
-                    // Insert Database Notification (Jejak Audit)
-                    \Illuminate\Support\Facades\DB::table('notifications')->insert([
-                        'id' => \Illuminate\Support\Str::uuid()->toString(),
-                        'type' => 'App\Notifications\PeminjamanDibatalkan',
-                        'notifiable_type' => 'App\Models\User',
-                        'notifiable_id' => $p->user_id,
-                        'data' => json_encode([
-                            'title' => 'Peminjaman Dibatalkan Sistem',
-                            'message' => "Peminjaman Anda {$newStatus} secara otomatis karena ruangan digunakan untuk {$request->kategori}.",
-                            'peminjaman_id' => $p->id
-                        ]),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
+                    // Kirim notifikasi resmi kepada peminjam
+                    if ($p->user) {
+                        $p->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($p, true));
+                    }
                 }
             }
 
@@ -586,7 +570,6 @@ class JadwalController extends Controller
             $debugLog .= "Total Fail HariMap: $failHariCount\n";
             $debugLog .= "Total Fail Gate: $failGateCount\n";
             \Log::info($debugLog);
-            file_put_contents(storage_path('logs/siap_debug.log'), $debugLog);
 
         } catch (\Exception $e) {
             \Log::error('[SIAP Import] PhpSpreadsheet gagal: ' . $e->getMessage());
@@ -612,91 +595,157 @@ class JadwalController extends Controller
                 ->withErrors(['File atau format payload jadwal tidak valid.']);
         }
 
+        $validRooms = Ruangan::where('is_active', true)->pluck('nama', 'id')->all();
         $insertBatch = [];
+        $skippedCount = 0;
         $now = now();
 
         foreach ($payload as $row) {
-            // Jika ruangan masih kosong karena manual mapping dibiarkan kosong, maka diskip!
-            if (empty($row['ruangan_id']))
+            // 1. Lewati baris jika ruangan masih kosong / unmapped
+            if (empty($row['ruangan_id'])) {
+                $skippedCount++;
                 continue;
+            }
+
+            $ruanganId = (string) $row['ruangan_id'];
+
+            // 2. Pastikan ruangan_id sah dan aktif di database
+            if (!isset($validRooms[$ruanganId])) {
+                $skippedCount++;
+                continue;
+            }
+
+            // 3. Validasi hari (1 = Senin s.d. 7 = Minggu)
+            $hari = (int) ($row['hari'] ?? 0);
+            if ($hari < 1 || $hari > 7) {
+                $skippedCount++;
+                continue;
+            }
+
+            // 4. Validasi format jam
+            $jamMulai = trim((string) ($row['jam_mulai'] ?? ''));
+            $jamSelesai = trim((string) ($row['jam_selesai'] ?? ''));
+
+            if (!preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $jamMulai) || !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $jamSelesai)) {
+                $skippedCount++;
+                continue;
+            }
+
+            if ($jamMulai >= $jamSelesai) {
+                $skippedCount++;
+                continue;
+            }
+
+            // 5. Validasi mata kuliah
+            $mataKuliah = trim((string) ($row['mata_kuliah'] ?? ''));
+            if ($mataKuliah === '') {
+                $skippedCount++;
+                continue;
+            }
+
+            $kelas = trim((string) ($row['kelas'] ?? ''));
 
             $insertBatch[] = [
                 'id' => \Illuminate\Support\Str::uuid()->toString(),
-                'ruangan_id' => $row['ruangan_id'],
+                'ruangan_id' => $ruanganId,
                 'tipe_jadwal' => 'rutin',
                 'kategori' => 'Jadwal Akademik (Kuliah)',
-                'hari' => $row['hari'],
+                'hari' => $hari,
                 'tanggal_spesifik' => null,
-                'jam_mulai' => $row['jam_mulai'],
-                'jam_selesai' => $row['jam_selesai'],
-                'keterangan' => $row['mata_kuliah'] . '-' . $row['kelas'],
+                'jam_mulai' => $jamMulai,
+                'jam_selesai' => $jamSelesai,
+                'keterangan' => $mataKuliah . ($kelas !== '' ? '-' . $kelas : ''),
                 'tgl_mulai_efektif' => $request->tgl_mulai_efektif_global,
                 'tgl_selesai_efektif' => $request->tgl_selesai_efektif_global,
-                'mata_kuliah' => $row['mata_kuliah'],
+                'mata_kuliah' => $mataKuliah,
                 'kode_mk' => $row['kode_mk'] ?? null,
-                'kelas' => $row['kelas'] ?? null,
-                'sks' => $row['sks'] ?? null,
-                'kuota' => $row['kuota'] ?? null,
+                'kelas' => $kelas ?: null,
+                'sks' => isset($row['sks']) ? (int) $row['sks'] : null,
+                'kuota' => isset($row['kuota']) ? (int) $row['kuota'] : null,
                 'pengampu' => $row['pengampu'] ?? null,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
         }
 
-        MrJadwalInternal::insert($insertBatch);
-
-        // --- MULAI: LOGIKA SAPU BERSIH (AUTO-REJECT / AUTO-REVOKE) ---
-        // Cari semua peminjaman mahasiswa yang belum berlalu
-        $peminjamans = \Modules\EOffice\Models\Peminjaman::whereIn('status', ['menunggu', 'disetujui'])
-            ->where('tanggal_pinjam', '>=', \Carbon\Carbon::today()->format('Y-m-d'))
-            ->get();
+        if (empty($insertBatch)) {
+            return redirect()->route('eoffice.peminjaman.admin.jadwal-akademik.index')
+                ->withErrors(['Tidak ada jadwal perkuliahan valid yang dapat disimpan. Pastikan pemetaan ruangan telah dipilih dengan benar di sandbox.']);
+        }
 
         $ditolakCount = 0;
         $dibatalkanCount = 0;
 
-        foreach ($peminjamans as $p) {
-            $hariPinjam = \Carbon\Carbon::parse($p->tanggal_pinjam)->format('N');
-            
-            // Cek apakah ada di insertBatch yang bentrok
-            $isConflict = false;
-            foreach ($insertBatch as $jadwal) {
-                if ($jadwal['ruangan_id'] == $p->ruangan_id && $jadwal['hari'] == $hariPinjam) {
-                    // Cek rentang tanggal efektif akademik
-                    $startEfektif = $jadwal['tgl_mulai_efektif'];
-                    $endEfektif = $jadwal['tgl_selesai_efektif'];
-                    if ($p->tanggal_pinjam >= $startEfektif && $p->tanggal_pinjam <= $endEfektif) {
-                        // Cek irisan waktu (overlap jam)
-                        if ($p->jam_mulai < $jadwal['jam_selesai'] && $p->jam_selesai > $jadwal['jam_mulai']) {
-                            $isConflict = true;
-                            break;
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($insertBatch, &$ditolakCount, &$dibatalkanCount) {
+                foreach (array_chunk($insertBatch, 100) as $chunk) {
+                    MrJadwalInternal::insert($chunk);
+                }
+
+                // --- MULAI: LOGIKA SAPU BERSIH (AUTO-REJECT / AUTO-REVOKE) ---
+                $peminjamans = \Modules\EOffice\Models\Peminjaman::whereIn('status', ['menunggu', 'disetujui'])
+                    ->where('tanggal_pinjam', '>=', \Carbon\Carbon::today()->format('Y-m-d'))
+                    ->get();
+
+                foreach ($peminjamans as $p) {
+                    $hariPinjam = (int) \Carbon\Carbon::parse($p->tanggal_pinjam)->format('N');
+
+                    $isConflict = false;
+                    foreach ($insertBatch as $jadwal) {
+                        if ($jadwal['ruangan_id'] == $p->ruangan_id && (int) $jadwal['hari'] === $hariPinjam) {
+                            $startEfektif = $jadwal['tgl_mulai_efektif'];
+                            $endEfektif = $jadwal['tgl_selesai_efektif'];
+                            if ($p->tanggal_pinjam >= $startEfektif && $p->tanggal_pinjam <= $endEfektif) {
+                                if ($p->jam_mulai < $jadwal['jam_selesai'] && $p->jam_selesai > $jadwal['jam_mulai']) {
+                                    $isConflict = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if ($isConflict) {
+                        if ($p->status === 'menunggu') {
+                            $p->update([
+                                'status' => 'ditolak',
+                                'alasan_penolakan' => 'Ditolak otomatis karena bentrok dengan Jadwal Perkuliahan baru',
+                                'waktu_approval' => now()
+                            ]);
+                            $ditolakCount++;
+                            try {
+                                $p->user?->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($p, false));
+                            } catch (\Throwable $e) {
+                                // Notification failure is non-blocking
+                            }
+                        } elseif ($p->status === 'disetujui') {
+                            $p->update([
+                                'status' => 'dibatalkan',
+                                'alasan_penolakan' => 'Dibatalkan sepihak oleh sistem. Ruangan dialihfungsikan secara mendadak untuk keperluan Perkuliahan Akademik',
+                                'waktu_approval' => now()
+                            ]);
+                            $dibatalkanCount++;
+                            try {
+                                $p->user?->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($p, true));
+                            } catch (\Throwable $e) {
+                                // Notification failure is non-blocking
+                            }
                         }
                     }
                 }
-            }
-
-            if ($isConflict) {
-                if ($p->status === 'menunggu') {
-                    $p->update([
-                        'status' => 'ditolak',
-                        'alasan_penolakan' => 'Ditolak otomatis karena bentrok dengan Jadwal Akademik baru',
-                        'waktu_approval' => now()
-                    ]);
-                    $ditolakCount++;
-                } elseif ($p->status === 'disetujui') {
-                    $p->update([
-                        'status' => 'dibatalkan',
-                        'alasan_penolakan' => 'Dibatalkan sepihak oleh sistem. Ruangan dialihfungsikan secara mendadak untuk keperluan Akademik',
-                        'waktu_approval' => now()
-                    ]);
-                    $dibatalkanCount++;
-                }
-            }
+                // --- SELESAI: LOGIKA SAPU BERSIH ---
+            });
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('[SIAP Execute Import] Transaksi database gagal: ' . $e->getMessage());
+            return redirect()->route('eoffice.peminjaman.admin.jadwal-akademik.index')
+                ->withErrors(['Gagal menyimpan jadwal perkuliahan: Terjadi kesalahan database (' . $e->getMessage() . ')']);
         }
-        // --- SELESAI: LOGIKA SAPU BERSIH ---
 
-        $msgInfo = 'Impor data berhasil. Sebanyak ' . count($insertBatch) . ' jadwal akademik telah ditambahkan ke dalam sistem.';
+        $msgInfo = 'Impor data berhasil. Sebanyak ' . count($insertBatch) . ' jadwal perkuliahan telah ditambahkan ke dalam sistem.';
+        if ($skippedCount > 0) {
+            $msgInfo .= " ({$skippedCount} baris dilewati karena ruangan tidak dipetakan atau format data tidak valid).";
+        }
         if ($ditolakCount > 0 || $dibatalkanCount > 0) {
-            $msgInfo .= " (Sistem telah melakukan sterilisasi: $ditolakCount permohonan baru ditolak otomatis & $dibatalkanCount jadwal disetujui dibatalkan otomatis karena bentrok).";
+            $msgInfo .= " Sistem telah melakukan sterilisasi: {$ditolakCount} permohonan baru ditolak otomatis & {$dibatalkanCount} jadwal disetujui dibatalkan otomatis karena bentrok.";
         }
 
         return redirect()->route('eoffice.peminjaman.admin.jadwal-akademik.index')
@@ -750,12 +799,13 @@ class JadwalController extends Controller
             }
         }
 
+        $conflictsList = [];
         $akademikDetails = [];
         $peminjamanDetails = [];
 
         foreach ($ruangans as $r_id) {
             foreach ($dates as $dateOrHari) {
-                // 1. Hitung Bentrok dengan Jadwal Internal/Akademik
+                // 1. Hitung Bentrok dengan Jadwal Internal (Akademik & Agenda Internal Lainnya)
                 $queryCheck = MrJadwalInternal::where('ruangan_id', $r_id)
                     ->where(function ($q) use ($jamMulai, $jamSelesai) {
                         $q->where('jam_mulai', '<', $jamSelesai)
@@ -769,12 +819,50 @@ class JadwalController extends Controller
                 if ($tipe === 'rutin' || $kategori === 'Jadwal Akademik (Kuliah)') {
                     $queryCheck->where('hari', $dateOrHari);
                 } else {
-                    $queryCheck->where('tanggal_spesifik', $dateOrHari);
+                    // Tipe spesifik: cek spesifik lain DAN cek perkuliahan rutin yang aktif di hari tersebut
+                    $dayOfWeek = \Carbon\Carbon::parse($dateOrHari)->dayOfWeekIso;
+                    $isHoliday = \Modules\EOffice\Models\TanggalLibur::where('tanggal', $dateOrHari)->exists();
+
+                    $queryCheck->where(function ($cq) use ($dateOrHari, $dayOfWeek, $isHoliday) {
+                        $cq->where('tanggal_spesifik', $dateOrHari);
+                        if (!$isHoliday) {
+                            $cq->orWhere(function ($rq) use ($dayOfWeek, $dateOrHari) {
+                                $rq->where('tipe_jadwal', 'rutin')
+                                    ->where('hari', $dayOfWeek)
+                                    ->where(function ($tq) use ($dateOrHari) {
+                                        $tq->whereNull('tgl_mulai_efektif')
+                                            ->orWhere('tgl_mulai_efektif', '<=', $dateOrHari);
+                                    })
+                                    ->where(function ($tq) use ($dateOrHari) {
+                                        $tq->whereNull('tgl_selesai_efektif')
+                                            ->orWhere('tgl_selesai_efektif', '>=', $dateOrHari);
+                                    });
+                            });
+                        }
+                    });
                 }
 
                 $conflicts = $queryCheck->get();
                 foreach ($conflicts as $c) {
-                    $nama = $c->kategori === 'Jadwal Akademik (Kuliah)' ? ($c->mata_kuliah . ' - ' . $c->kelas) : $c->keterangan;
+                    $isAkademik = ($c->kategori === 'Jadwal Akademik (Kuliah)' || !empty($c->mata_kuliah));
+                    if ($isAkademik) {
+                        $tipeLabel = $c->tipe_jadwal === 'rutin' ? 'Kuliah Rutin' : 'Akademik';
+                        $nama = $c->mata_kuliah ? ($c->mata_kuliah . ($c->kelas ? ' - Kelas ' . $c->kelas : '')) : ($c->keterangan ?: 'Jadwal Perkuliahan');
+                    } else {
+                        $tipeLabel = 'Agenda Internal';
+                        $nama = $c->keterangan ?: ($c->kategori ?: 'Pemeliharaan / Blokir Ruangan');
+                    }
+
+                    $waktuRange = substr($c->jam_mulai, 0, 5) . ' - ' . substr($c->jam_selesai, 0, 5) . ' WIB';
+                    $tglIndo = $tipe === 'rutin' ? null : \Carbon\Carbon::parse($dateOrHari)->locale('id')->translatedFormat('l, d F Y');
+
+                    $conflictsList[] = [
+                        'tipe' => $tipeLabel,
+                        'nama' => $nama,
+                        'waktu' => $waktuRange,
+                        'tanggal' => $tglIndo,
+                    ];
+
                     $akademikDetails[] = [
                         'nama' => $nama,
                         'waktu' => substr($c->jam_mulai, 0, 5) . ' - ' . substr($c->jam_selesai, 0, 5)
@@ -783,7 +871,7 @@ class JadwalController extends Controller
 
                 // 2. Hitung Bentrok dengan Peminjaman Mahasiswa
                 if ($tipe === 'spesifik' && $kategori !== 'Jadwal Akademik (Kuliah)') {
-                    $peminjamanConflicts = \Modules\EOffice\Models\Peminjaman::where('ruangan_id', $r_id)
+                    $peminjamanConflicts = \Modules\EOffice\Models\Peminjaman::with('user')->where('ruangan_id', $r_id)
                         ->where('tanggal_pinjam', $dateOrHari)
                         ->whereIn('status', ['menunggu', 'disetujui'])
                         ->where(function ($q) use ($jamMulai, $jamSelesai) {
@@ -792,8 +880,20 @@ class JadwalController extends Controller
                         })->get();
                     
                     foreach ($peminjamanConflicts as $p) {
+                        $namaPemohon = $p->user ? " ({$p->user->name})" : '';
+                        $nama = ($p->tujuan ?: 'Peminjaman Ruangan') . $namaPemohon;
+                        $waktuRange = substr($p->jam_mulai, 0, 5) . ' - ' . substr($p->jam_selesai, 0, 5) . ' WIB';
+                        $tglIndo = \Carbon\Carbon::parse($dateOrHari)->locale('id')->translatedFormat('l, d F Y');
+
+                        $conflictsList[] = [
+                            'tipe' => 'Peminjaman Mahasiswa',
+                            'nama' => $nama,
+                            'waktu' => $waktuRange,
+                            'tanggal' => $tglIndo,
+                        ];
+
                         $peminjamanDetails[] = [
-                            'nama' => $p->kegiatan,
+                            'nama' => $p->tujuan,
                             'waktu' => substr($p->jam_mulai, 0, 5) . ' - ' . substr($p->jam_selesai, 0, 5)
                         ];
                     }
@@ -801,9 +901,13 @@ class JadwalController extends Controller
             }
         }
 
-        if (count($akademikDetails) > 0 || count($peminjamanDetails) > 0) {
+        $totalConflicts = count($conflictsList);
+        if ($totalConflicts > 0) {
             return response()->json([
                 'conflict' => true,
+                'count' => $totalConflicts,
+                'message' => "Terdapat {$totalConflicts} jadwal yang beririsan dengan waktu yang dipilih.",
+                'conflicts' => $conflictsList,
                 'akademik_details' => $akademikDetails,
                 'peminjaman_details' => $peminjamanDetails,
             ]);

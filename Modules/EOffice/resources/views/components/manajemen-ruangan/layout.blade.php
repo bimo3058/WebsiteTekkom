@@ -9,14 +9,41 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
         rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css" />
     <style>
         [x-cloak] {
             display: none !important;
         }
 
+        /* ── Touch & Tap Optimization (Mobile, Tablet & Touchscreens) ── */
+        a, button, [role="button"], input, select, textarea {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Prevent sticky pseudo-hover delay on touchscreens (iOS/Android/iPad) */
+        @media (hover: none) and (pointer: coarse) {
+            .mr-nav-link:hover:not(.is-active) {
+                background: transparent !important;
+            }
+            .safe-area-pb a:hover,
+            .safe-area-pb button:hover {
+                background-color: transparent !important;
+            }
+        }
+
         /* Custom NProgress Color (Biru Dongker) */
+        #nprogress {
+            pointer-events: none;
+        }
+
         #nprogress .bar {
             background: #0B266E !important;
+            position: fixed;
+            z-index: 9999;
+            top: 0;
+            left: 0;
+            width: 100%;
             height: 3px !important;
         }
 
@@ -795,6 +822,13 @@
         $isAdmin = $user && ($user->hasRole('superadmin') || $user->hasRole('admin_eoffice'));
         $multiRole = false;
 
+        $accountRole = match (true) {
+            $user?->hasRole('superadmin')    => 'Superadmin',
+            $user?->hasRole('admin_eoffice') => 'Admin E-Office',
+            $user?->hasRole('dosen')         => 'Dosen',
+            default                          => 'Mahasiswa',
+        };
+
         // Icons
         $iHome = "M4.8787 8.90834L10.5858 3.54999C11.3669 2.81667 12.6332 2.81667 13.4142 3.54999L19.1213 8.90834M4.8787 8.90834C4.31629 9.43653 4.00002 10.1531 4.00002 10.9V18.1833C4.00002 19.7389 5.34317 21 7.00002 21H9V16C9 14.8954 9.89543 14 11 14H13C14.1046 14 15 14.8954 15 16V21H17C18.6569 21 20 19.7389 20 18.1833V10.9C20 10.153 19.684 9.43656 19.1213 8.90834M4.8787 8.90834L3.00031 10.6722M19.1213 8.90834L21 10.6722";
         $iUser = "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z";
@@ -912,7 +946,7 @@
         }
     @endphp
 
-    <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: localStorage.getItem('mr_sb') !== '0' }"
+    <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: window.innerWidth >= 1024 ? (localStorage.getItem('mr_sb') !== '0') : (localStorage.getItem('mr_sb') === '1') }"
         x-init="$watch('sidebarOpen', v => localStorage.setItem('mr_sb', v ? '1' : '0'))">
 
         {{-- SIDEBAR DESKTOP --}}
@@ -955,7 +989,7 @@
                                     <span x-show="sidebarOpen">{{ $item['label'] }}</span>
                                     @if(isset($item['badge']))
                                         <span @if(isset($item['poll_url'])) x-data="{ count: {{ $item['badge'] }} }"
-                                            x-init="setInterval(async () => { try { let res = await fetch('{{ $item['poll_url'] }}'); let json = await res.json(); count = json.count; } catch(e) {} }, 30000);"
+                                            x-init="setInterval(async () => { try { let res = await fetch('{{ $item['poll_url'] }}'); let json = await res.json(); count = json.count; window.dispatchEvent(new CustomEvent('pending-approval-updated', { detail: json.count })); } catch(e) {} }, 60000);"
                                         x-show="sidebarOpen && count > 0" x-text="count > 99 ? '99+' : count" @else
                                             x-show="sidebarOpen" @endif
                                             class="inline-flex items-center justify-center px-1.5 min-w-[20px] h-[20px] rounded-full bg-rose-100 text-rose-600 text-[10px] font-bold shrink-0 ml-auto"
@@ -1029,7 +1063,20 @@
                             loading: false,
                             error: false,
                             items: [],
-                            unreadCount: {{ auth()->check() ? auth()->user()->unreadNotifications->count() : 0 }},
+                            unreadCount: {{ auth()->check() ? auth()->user()->unreadNotifications()->count() : 0 }},
+                            init() {
+                                setInterval(async () => {
+                                    try {
+                                        const res = await fetch('{{ route('eoffice.peminjaman.user.notifikasi.count') }}', {
+                                            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                                        });
+                                        if (res.ok) {
+                                            const data = await res.json();
+                                            this.unreadCount = data.count;
+                                        }
+                                    } catch (_) {}
+                                }, 60000);
+                            },
                             async toggle() {
                                 this.openNotif = !this.openNotif;
                                 if (!this.openNotif) return;
@@ -1083,7 +1130,15 @@
                                     <template x-if="unreadCount > 0">
                                         <form method="POST"
                                             action="{{ route('eoffice.peminjaman.user.notifikasi.read-all') }}"
-                                            class="m-0 shrink-0" id="mark-all-read-form">
+                                            class="m-0 shrink-0" id="mark-all-read-form"
+                                            @submit.prevent="
+                                                unreadCount = 0;
+                                                items.forEach(i => i.is_read = true);
+                                                fetch('{{ route('eoffice.peminjaman.user.notifikasi.read-all') }}', {
+                                                    method: 'POST',
+                                                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+                                                }).catch(() => {});
+                                            ">
                                             @csrf
                                             <button type="submit"
                                                 class="text-[12px] font-semibold text-[#0B266E] hover:underline cursor-pointer bg-transparent border-none p-0 whitespace-nowrap">Tandai
@@ -1148,17 +1203,24 @@
                         {{-- Separator --}}
                         <div class="hidden md:block w-px h-[24px] bg-[#DFE1E7]"></div>
 
-                        {{-- User Profile --}}
-                        <div class="flex items-center gap-1.5 md:gap-2.5">
-                            <div class="flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden rounded-full w-[30px] h-[30px] text-[10px] md:w-[36px] md:h-[36px] md:text-[13px]"
-                                style="background: linear-gradient(135deg, #1F2937, #111827);">
-                                {{ $initials }}
+                        {{-- User Profile (Matched with E-Office Global Dashboard) --}}
+                        <a href="{{ route('profile.edit') }}"
+                            class="flex items-center gap-2 md:gap-2.5 min-w-0 no-underline text-inherit group cursor-pointer"
+                            title="Pengaturan profil {{ $name }}" aria-label="Pengaturan profil {{ $name }}">
+                            <div class="flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden rounded-full w-[34px] h-[34px] text-[12px] shadow-sm"
+                                style="background: linear-gradient(135deg, #5C78B8, #0B266E);">
+                                @if($user?->avatar_url)
+                                    <img src="{{ $user->avatar_url }}" alt="" class="w-full h-full object-cover">
+                                @else
+                                    {{ $initials }}
+                                @endif
                             </div>
-                            <div class="hidden md:flex flex-col min-w-[100px]">
-                                <span class="text-[13px] font-semibold text-[#0D0D12] truncate">{{ $name }}</span>
-                                <span class="text-[11px] text-[#666D80] truncate">{{ $user?->email ?? '' }}</span>
+                            <div class="hidden md:flex flex-col min-w-0 max-w-[130px] lg:max-w-[190px] leading-tight text-left">
+                                <strong class="text-[13px] font-semibold text-[#0D0D12] group-hover:text-[#0B266E] truncate block transition-colors"
+                                    title="{{ $name }}">{{ $name }}</strong>
+                                <span class="text-[11px] text-[#666D80] truncate block mt-0.5">{{ $accountRole }}</span>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -1169,13 +1231,7 @@
                         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
                             x-transition.opacity.duration.300ms class="mp-flash mp-flash-success"
                             style="justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.2" stroke-linecap="round">
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                {{ session('success') }}
-                            </div>
+                            <span>{{ session('success') }}</span>
                             <button @click="show = false"
                                 style="background: transparent; border: none; cursor: pointer; color: inherit; padding: 0; display: flex; align-items: center; opacity: 0.6;"
                                 onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">
@@ -1191,15 +1247,7 @@
                         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
                             x-transition.opacity.duration.300ms class="mp-flash mp-flash-error"
                             style="justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <line x1="12" y1="8" x2="12" y2="12" />
-                                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                                </svg>
-                                {{ session('error') }}
-                            </div>
+                            <span>{{ session('error') }}</span>
                             <button @click="show = false"
                                 style="background: transparent; border: none; cursor: pointer; color: inherit; padding: 0; display: flex; align-items: center; opacity: 0.6;"
                                 onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">
@@ -1215,15 +1263,7 @@
                         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 6000)"
                             x-transition.opacity.duration.300ms class="mp-flash mp-flash-error"
                             style="justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <line x1="12" y1="8" x2="12" y2="12" />
-                                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                                </svg>
-                                <span>{{ $errors->first() }}</span>
-                            </div>
+                            <span>{{ $errors->first() }}</span>
                             <button @click="show = false"
                                 style="background: transparent; border: none; cursor: pointer; color: inherit; padding: 0; display: flex; align-items: center; opacity: 0.6;"
                                 onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">
@@ -1298,36 +1338,6 @@
                     }).catch(err => console.error(err));
                 });
             }
-
-            // AJAX Polling khusus Notifikasi tiap 10 detik
-            setInterval(() => {
-                fetch('{{ route('eoffice.peminjaman.user.notifikasi.count') }}', {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        const count = data.count;
-                        let badge = document.getElementById('notif-badge');
-
-                        if (count > 0) {
-                            let displayCount = count > 99 ? '99+' : count;
-                            if (badge) {
-                                badge.innerText = displayCount;
-                                badge.style.display = 'flex';
-                            } else {
-                                // Buat badge jika belum ada (dari state 0 ke >0)
-                                const btn = document.querySelector('[x-data="{ openNotif: false }"] button');
-                                if (btn) {
-                                    btn.insertAdjacentHTML('beforeend', `<span id="notif-badge" class="absolute flex items-center justify-center rounded-full min-w-[18px] h-[18px] px-[4px] bg-[#F43F5E] border-2 border-white text-white text-[10px] font-bold top-[-5px] right-[-5px] shadow-sm leading-none">${displayCount}</span>`);
-                                }
-                            }
-                        } else {
-                            // Hilangkan jika 0
-                            if (badge) badge.style.display = 'none';
-                        }
-                    })
-                    .catch(err => console.error('Notif Polling Error:', err));
-            }, 10000);
         });
     </script>
 

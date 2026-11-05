@@ -11,6 +11,8 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        Peminjaman::autoExpirePending();
+
         $user = auth()->user();
         $isAdmin = $user && ($user->hasRole('superadmin') || $user->hasRole('admin_eoffice'));
 
@@ -33,7 +35,7 @@ class DashboardController extends Controller
                 ->take(7)
                 ->get();
 
-            Peminjaman::autoExpirePending(); // Ensure garbage collection triggers metrics updates
+
             $pendingApproval = Peminjaman::where('status', 'menunggu')->count();
 
             return view('eoffice::manajemen-ruangan.admin.dashboard', compact('totalRuangan', 'dipakaiHariIni', 'upcomingActivities', 'pendingApproval'));
