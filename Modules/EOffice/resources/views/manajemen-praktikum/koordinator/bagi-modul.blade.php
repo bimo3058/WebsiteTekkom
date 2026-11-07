@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Pembagian Modul ke Asisten">
+<x-eoffice::manajemen-praktikum.layout pageTitle="Pembagian Modul ke Asisten" :breadcrumbPraktikum="$praktikum">
 
     @php
         /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\AsistenPraktikum[] $asistenList */
@@ -9,14 +9,12 @@
     <div class="mp-page-header">
         <div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                <h1 class="mp-page-title">Pembagian Modul ke Asisten Praktikum</h1>
-                <span class="mp-badge"
-                    style="background:#E0E7FF;color:#6366F1;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px;"><span
-                        class="dot" style="background:#6366F1;"></span>Koordinator</span>
+                <h1 class="mp-page-title">Pembagian Modul ke Asisten</h1>
             </div>
             <p class="mp-page-sub">Tentukan asisten mana yang mengelola modul mana ·
                 {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
         </div>
+        <a href="{{ route('eoffice.manprak.koor.modul.index') }}" class="mp-btn secondary md" style="text-decoration:none;color:#0B266E;">Kembali</a>
     </div>
 
     <div class="sec-head">
@@ -25,21 +23,21 @@
         <span class="sec-rule"></span>
     </div>
 
-    <div class="flex gap-[14px] flex-1 min-h-0">
+    <div class="flex gap-3.5 flex-1 min-h-0">
 
-        {{-- Panel Kiri: Daftar Asisten Praktikum --}}
-        <div class="mp-card flex-shrink-0" style="width:280px;">
+        {{-- Panel Kiri: Daftar Asisten --}}
+        <div class="mp-card shrink-0" style="width:280px;">
             <div class="mp-card-header">
                 <div>
-                    <span class="mp-card-title">Asisten Praktikum</span>
+                    <span class="mp-card-title">Asisten</span>
                     <div style="font-size:12px;color:#666D80;margin-top:2px;">{{ $asistenList->count() }} asisten
-                        praktikum terdaftar</div>
+                        terdaftar</div>
                 </div>
             </div>
             <div class="overflow-y-auto flex-1">
                 @forelse($asistenList ?? [] as $a)
                     <div style="padding:10px 20px;border-bottom:1px solid #DFE1E7;">
-                        <div class="flex items-center gap-[10px]">
+                        <div class="flex items-center gap-2.5">
                             <div class="mp-av green">{{ strtoupper(substr($a->user?->name ?? 'A', 0, 2)) }}</div>
                             <div class="min-w-0">
                                 <div style="font-size:12px;font-weight:600;color:#0D0D12;" class="truncate">
@@ -47,13 +45,7 @@
                                 <div style="font-size:10px;color:#666D80;">{{ $a->modulAsprak->count() }} modul</div>
                             </div>
                         </div>
-                        @if($a->modulAsprak->isNotEmpty())
-                            <div class="flex flex-wrap gap-1 mt-2">
-                                @foreach($a->modulAsprak as $ma)
-                                    <span class="mp-badge sky sm">{{ $ma->modul?->nama }}</span>
-                                @endforeach
-                            </div>
-                        @endif
+
                     </div>
                 @empty
                     <div style="padding:48px;text-align:center;">
@@ -69,12 +61,12 @@
         </div>
 
         {{-- Panel Kanan --}}
-        <div class="flex flex-col gap-[14px] flex-1 min-w-0 overflow-y-auto">
+        <div class="flex flex-col gap-3.5 flex-1 min-w-0 overflow-y-auto">
 
             {{-- Form Assign --}}
             @if(isset($praktikum) && $praktikum->is_active)
-                <div class="mp-card flex-shrink-0" style="padding:20px;">
-                    <div style="font-weight:700;font-size:14px;color:#0D0D12;margin-bottom:16px;">Assign Asisten Praktikum
+                <div class="mp-card shrink-0" style="padding:20px;">
+                    <div style="font-weight:700;font-size:14px;color:#0D0D12;margin-bottom:16px;">Assign Asisten
                         ke Modul</div>
                     <form method="POST" action="{{ route('eoffice.manprak.koor.bagi-modul.store') }}">
                         @csrf
@@ -82,12 +74,14 @@
                             <div>
                                 <label class="block text-[12px] font-semibold text-[#353849] mb-1">Pilih Asisten <span
                                         class="text-red-500">*</span></label>
-                                <select name="asprak_id" required class="mp-input mp-select w-full">
-                                    <option value="">— Pilih Asisten Praktikum —</option>
-                                    @foreach($asistenList ?? [] as $a)
-                                        <option value="{{ $a->id }}">{{ $a->user?->name }}</option>
-                                    @endforeach
-                                </select>
+                                @php
+                                    $asistenOptions = [];
+                                    foreach ($asistenList ?? [] as $a) {
+                                        $asistenOptions[] = ['value' => (string) $a->id, 'label' => $a->user?->name ?? 'Asisten'];
+                                    }
+                                @endphp
+                                <x-eoffice::manajemen-praktikum.ui.select name="asprak_id" :options="$asistenOptions"
+                                    :selected="(string) old('asprak_id', '')" placeholder="Pilih Asisten..." minWidth="200px" />
                             </div>
                             <div>
                                 <label class="block text-[12px] font-semibold text-[#353849] mb-1">Pilih Modul <span
@@ -101,11 +95,11 @@
                                     }
                                 @endphp
                                 <x-eoffice::manajemen-praktikum.ui.select name="modul_id" :options="$modulOptions"
-                                    :selected="(string) request('modul_id', (isset($modul) ? $modul?->id : ''))"
-                                    placeholder="Pilih Modul..." onChange="$event.target.form.submit()" minWidth="200px" />
+                                    :selected="(string) old('modul_id', request('modul_id', (isset($modul) ? $modul?->id : '')))"
+                                    placeholder="Pilih Modul..." minWidth="200px" />
                             </div>
                         </div>
-                        <button type="submit" class="mp-btn primary md">Assign Modul</button>
+                        <div style="display:flex;justify-content:flex-end;"><button type="submit" class="mp-btn primary md" style="font-size:13px;padding:10px 16px;background:#0B266E;color:#FFFFFF;">Assign Modul</button></div>
                     </form>
                 </div>
             @endif
@@ -114,16 +108,14 @@
             <div class="mp-card flex-1 min-h-0">
                 <div class="mp-card-header" style="flex-shrink:0;">
                     <span class="mp-card-title">Distribusi Saat Ini</span>
-                    <div class="right">
-                        <span class="mp-badge neutral sm">{{ count($distribusiList ?? []) }} entri</span>
-                    </div>
+
                 </div>
                 <div style="flex-shrink:0;">
                     <table class="mp-table" style="width:100%;">
                         <thead>
                             <tr style="background:#F9FAFB;">
                                 <th class="mp-th text-left" style="padding:10px 16px;">Modul</th>
-                                <th class="mp-th text-left" style="padding:10px 16px;width:200px;">Asisten Praktikum
+                                <th class="mp-th text-left" style="padding:10px 16px;width:200px;">Asisten
                                 </th>
                                 <th class="mp-th text-left" style="padding:10px 16px;width:80px;">Aksi</th>
                             </tr>

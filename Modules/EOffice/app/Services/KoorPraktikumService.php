@@ -27,11 +27,17 @@ class KoorPraktikumService
         }
 
         foreach (['koor', 'asprak'] as $role) {
-            AsprakPraktikum::firstOrCreate([
+            $membership = AsprakPraktikum::withTrashed()->firstOrNew([
                 'praktikum_id' => $praktikum->id,
                 'user_id' => $user->id,
                 'role' => $role,
             ]);
+
+            if (! $membership->exists) {
+                $membership->save();
+            } elseif ($membership->trashed()) {
+                $membership->restore();
+            }
         }
     }
 }

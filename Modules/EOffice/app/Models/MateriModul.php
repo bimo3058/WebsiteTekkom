@@ -16,6 +16,7 @@ class MateriModul extends Model
 
     protected $fillable = [
         'modul_id',
+        'materi_sumber_id',
         'user_id',
         'judul',
         'deskripsi',
@@ -33,5 +34,10 @@ class MateriModul extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function materiSumber()
+    {
+        return $this->belongsTo(self::class, 'materi_sumber_id');
     }
 }

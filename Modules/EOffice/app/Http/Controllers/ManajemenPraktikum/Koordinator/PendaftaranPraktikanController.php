@@ -64,7 +64,7 @@ class PendaftaranPraktikanController extends Controller
             $query->whereHas('user', fn ($q) => $q->where('name', 'like', "%{$search}%"));
         }
 
-        $pendaftaran = $query->paginate(15)->withQueryString();
+        $pendaftaran = $query->paginate(max(1, min(100, request()->integer('per_page', 15))))->withQueryString();
 
         $periodeAktif = PeriodePendaftaran::where('praktikum_id', $praktikum?->id)
             ->where('jenis', 'praktikan')

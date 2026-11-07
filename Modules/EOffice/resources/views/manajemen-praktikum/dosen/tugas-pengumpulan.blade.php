@@ -5,10 +5,10 @@
         'responsi' => 'Responsi',
         'tugas_pengganti' => 'Tugas Pengganti'
     ];
-    $jenisLabel = $jenisTugasMap[$tugas->jenis_tugas] ?? ucwords(str_replace('_', ' ', $tugas->jenis_tugas));
+    $jenisLabel = $tugas->jenisLabel();
     $praktikum = $tugas->modul?->praktikum;
 @endphp
-<x-eoffice::manajemen-praktikum.layout :pageTitle="($praktikum?->nama ?? 'Praktikum') . ' / ' . $jenisLabel . ' / Pengumpulan Tugas'">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? $tugas->modul?->praktikum ?? null" :pageTitle="($praktikum?->nama ?? 'Praktikum') . ' / ' . $jenisLabel . ' / Pengumpulan Tugas'">
 
     {{-- Header --}}
     <div class="mp-page-header">
@@ -269,7 +269,7 @@
                                                     $fPath = is_array($fPathObj) && isset($fPathObj['path']) ? $fPathObj['path'] : $fPathObj;
                                                     $fName = is_array($fPathObj) && isset($fPathObj['original_name']) ? $fPathObj['original_name'] : pathinfo($fPath, PATHINFO_BASENAME);
                                                 @endphp
-                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($fPath, 'eoffice') }}"
+                                                <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($fPath, 'eoffice', $fName) }}"
                                                     target="_blank"
                                                     style="display:flex; align-items:center; padding:6px 10px; border:1px solid #DFE1E7; border-radius:6px; background:#fff; text-decoration:none; transition:border-color 0.2s; margin-bottom:4px;"
                                                     onmouseover="this.style.borderColor='#0B266E'" onmouseout="this.style.borderColor='#DFE1E7'"
@@ -286,7 +286,7 @@
                                         </div>
                                     @elseif($p && $p->file_path)
                                         <div style="display:flex;flex-direction:column;gap:4px;">
-                                            <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->file_path, 'eoffice') }}"
+                                            <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($p->file_path, 'eoffice') }}"
                                                 target="_blank"
                                                 style="font-size:12px;font-weight:600;color:#0B266E;text-decoration:none;"
                                                 title="{{ basename($p->file_path) }}">
@@ -342,12 +342,26 @@
                                     @if($p && ($p->file_revisi_asprak || $p->catatan_revisi))
                                         <div style="padding:6px 8px;background:#FEF2F2;border:1px solid #FEE2E2;border-radius:6px;font-size:11px;width:100%;box-sizing:border-box;">
                                             @if($p->file_revisi_asprak)
-                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->file_revisi_asprak, 'eoffice') }}"
-                                                    target="_blank"
-                                                    style="font-weight:600;color:#95122B;text-decoration:none;display:block;word-break:break-all;"
-                                                    title="{{ basename($p->file_revisi_asprak) }}">
-                                                    &#128196; {{ Str::limit(basename($p->file_revisi_asprak), 12) }}
-                                                </a>
+                                                @php 
+                                                    $revFiles = json_decode($p->file_revisi_asprak, true);
+                                                    if (!is_array($revFiles)) {
+                                                        $revFiles = [$p->file_revisi_asprak];
+                                                    }
+                                                @endphp
+                                                @foreach($revFiles as $rf)
+                                                    @php 
+                                                        $rPath = is_array($rf) ? ($rf['path'] ?? null) : $rf;
+                                                        $rName = is_array($rf) ? ($rf['original_name'] ?? basename($rPath)) : basename($rPath);
+                                                    @endphp
+                                                    @if($rPath)
+                                                        <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($rPath, 'eoffice', $rName) }}"
+                                                            target="_blank"
+                                                            style="font-weight:600;color:#95122B;text-decoration:none;display:block;word-break:break-all;margin-bottom:4px;"
+                                                            title="{{ $rName }}">
+                                                            &#128196; {{ Str::limit($rName, 12) }}
+                                                        </a>
+                                                    @endif
+                                                @endforeach
                                             @endif
                                             @if($p->catatan_revisi)
                                                 <div style="color:#7C1028;font-style:italic;margin-top:2px;word-break:break-word;"
@@ -369,7 +383,7 @@
                                                     $fPath = is_array($fPathObj) && isset($fPathObj['path']) ? $fPathObj['path'] : $fPathObj;
                                                     $fName = is_array($fPathObj) && isset($fPathObj['original_name']) ? $fPathObj['original_name'] : pathinfo($fPath, PATHINFO_BASENAME);
                                                 @endphp
-                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($fPath, 'eoffice') }}"
+                                                <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($fPath, 'eoffice', $fName) }}"
                                                     target="_blank"
                                                     style="display:flex; align-items:center; padding:6px 10px; border:1px solid #DFE1E7; border-radius:6px; background:#fff; text-decoration:none; transition:border-color 0.2s; margin-bottom:4px;"
                                                     onmouseover="this.style.borderColor='#0F6E56'" onmouseout="this.style.borderColor='#DFE1E7'"
@@ -411,83 +425,8 @@
                 </table>
             </div>
 
-            @if(method_exists($praktikans, 'total') && $praktikans->total() > 0)
-                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:12px 20px; border-top:1px solid #DFE1E7; box-sizing:border-box; flex-wrap:nowrap; gap:16px;">
-                    {{-- Left: Per halaman dropdown + info teks --}}
-                    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                        <div x-data="{ openP: false, options: [10, 20, 30], perPage: {{ $praktikans->perPage() }} }"
-                            class="relative" @click.away="openP = false">
-                            <div class="flex items-center gap-2 cursor-pointer border rounded-[8px] px-3 py-1.5 transition-colors focus:outline-none"
-                                :class="openP ? 'border-[#0B266E] bg-[#EEF1FA] text-[#0B266E]' : 'border-[#DFE1E7] bg-white text-[#353849] hover:bg-[#F6F8FA]'"
-                                @click="openP = !openP">
-                                <span class="text-[12px] text-[#666D80]" :class="openP ? 'text-[#0B266E]' : ''">Per halaman</span>
-                                <div class="flex items-center gap-1 font-semibold text-[12px]">
-                                    <span x-text="perPage"></span>
-                                    <svg class="w-3.5 h-3.5 transition-transform duration-200"
-                                        :class="{'rotate-180': openP, 'text-[#0B266E]': openP, 'text-[#666D80]': !openP}"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="6 9 12 15 18 9"></polyline>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div x-show="openP" @click.away="openP = false" style="display: none;"
-                                x-transition:enter="transition ease-out duration-100"
-                                x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                                x-transition:leave="transition ease-in duration-75"
-                                x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                                class="absolute bottom-full left-0 mb-2 z-10 w-full min-w-[80px] bg-white border border-[#DFE1E7] rounded-[10px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 px-1.5 flex flex-col">
-                                <template x-for="option in options" :key="option">
-                                    <a :href="`?${new URLSearchParams({...Object.fromEntries(new URLSearchParams(window.location.search)), per_page: option, page: 1}).toString()}`"
-                                        class="flex items-center justify-between px-3 py-2 rounded-[6px] cursor-pointer text-[12px] transition-colors mb-0.5 last:mb-0 no-underline"
-                                        :class="perPage == option ? 'bg-[#F6F8FA] text-[#0B266E] font-medium' : 'text-[#353849] hover:bg-[#F6F8FA]'">
-                                        <span x-text="option"></span>
-                                        <svg x-show="perPage == option" class="w-3.5 h-3.5 flex-shrink-0 text-[#0B266E] ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                    </a>
-                                </template>
-                            </div>
-                        </div>
-                        <div style="font-size:12px; color:#666D80;">
-                            Menampilkan {{ $praktikans->firstItem() }} sampai {{ $praktikans->lastItem() }} dari {{ $praktikans->total() }} data
-                        </div>
-                    </div>
-
-                    {{-- Right: pagination buttons --}}
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        @if ($praktikans->onFirstPage())
-                            <span style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:#F8FAFC; border:1px solid #DFE1E7; color:#A4ABB8; cursor:not-allowed;">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="15 18 9 12 15 6"></polyline>
-                                </svg>
-                            </span>
-                        @else
-                            <a href="{{ $praktikans->previousPageUrl() }}" style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:white; border:1px solid #DFE1E7; color:#353849; cursor:pointer; text-decoration:none;" class="hover:bg-gray-50">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="15 18 9 12 15 6"></polyline>
-                                </svg>
-                            </a>
-                        @endif
-
-                        <span style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:#0B266E; color:white; font-size:13px; font-weight:600;">
-                            {{ $praktikans->currentPage() }}
-                        </span>
-
-                        @if ($praktikans->hasMorePages())
-                            <a href="{{ $praktikans->nextPageUrl() }}" style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:white; border:1px solid #DFE1E7; color:#353849; cursor:pointer; text-decoration:none;" class="hover:bg-gray-50">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="9 18 15 12 9 6"></polyline>
-                                </svg>
-                            </a>
-                        @else
-                            <span style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:#F8FAFC; border:1px solid #DFE1E7; color:#A4ABB8; cursor:not-allowed;">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="9 18 15 12 9 6"></polyline>
-                                </svg>
-                            </span>
-                        @endif
-                    </div>
-                </div>
+            @if(isset($praktikans) && $praktikans instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$praktikans" :options="[10, 20, 30]" />
             @endif
         </div>
     @else

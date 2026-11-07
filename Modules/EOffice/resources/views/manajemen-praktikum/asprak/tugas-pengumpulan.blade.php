@@ -1,16 +1,23 @@
-﻿@php
+@php
     $jenisTugasMap = [
         'tugas_pendahuluan' => 'Tugas Pendahuluan',
         'laporan' => 'Laporan',
         'responsi' => 'Responsi',
         'tugas_pengganti' => 'Tugas Pengganti'
     ];
-    $jenisLabel = $jenisTugasMap[$tugas->jenis_tugas] ?? ucwords(str_replace('_', ' ', $tugas->jenis_tugas));
+    $jenisLabel = $tugas->jenisLabel();
 @endphp
-<x-eoffice::manajemen-praktikum.layout :pageTitle="($tugas->modul?->praktikum?->nama ?? 'Praktikum') . ' / ' . $jenisLabel . ' / Pengumpulan Tugas'">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? $tugas->modul?->praktikum ?? null" :pageTitle="($tugas->modul?->praktikum?->nama ?? 'Praktikum') . ' / ' . $jenisLabel . ' / Pengumpulan Tugas'">
+
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
 
     {{-- Header --}}
-    <div class="mp-page-header">
+    <x-slot name="header">
+    <div class="mp-page-header" style="margin:0">
         <div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
                 <h1 class="mp-page-title">{{ $tugas->judul }}</h1>
@@ -23,10 +30,12 @@
         </div>
     </div>
 
+    </x-slot>
+
     {{-- Info Section (Stat Cards) --}}
     <div class="mp-stats-grid cols-4" style="margin-bottom:24px;">
         @php
-            $totalMhs = method_exists($praktikans, 'total') ? $praktikans->total() : $praktikans->count();
+            $totalMhs = $totalPraktikan ?? (method_exists($praktikans, 'total') ? $praktikans->total() : $praktikans->count());
 
             $sudahDikumpul = $pengumpulan->count();
             $menungguPenilaian = $pengumpulan->where('status_pengumpulan', '!=', 'acc')->where('status_pengumpulan', '!=', 'revisi')->count();
@@ -115,10 +124,21 @@
         </div>
     </div>
 
-    @if($praktikans->count() > 0)
-        <div class="mp-card">
-            <div class="mp-card-header">
+
+        <div class="mp-card" style="border:1px solid #DFE1E7;border-radius:12px;overflow:hidden" x-data="{changed:{},get hasChanges(){return Object.values(this.changed).some(Boolean)}}">
+            <div class="mp-card-header" style="padding:16px 20px;border-bottom:1px solid #DFE1E7;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
                 <span class="mp-card-title">Pengumpulan Tugas</span>
+                <form method="GET" action="{{ url()->current() }}" x-ref="submissionFilters" x-data="{globalSearch:{{ json_encode(request('search','')) }},globalKelompok:{{ json_encode(request('kelompok','')) }},globalShift:{{ json_encode(request('shift','')) }},timer:null,apply(){clearTimeout(this.timer);this.timer=setTimeout(()=>this.$refs.submissionFilters.requestSubmit(),400)}}" x-init="$watch('globalSearch',()=>apply());$watch('globalKelompok',()=>apply());$watch('globalShift',()=>apply())" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto">
+                    <div style="position:relative"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="search" name="search" x-model="globalSearch" placeholder="Cari nama / NIM..." aria-label="Cari nama atau NIM" class="mp-input" style="padding-left:32px;height:36px;width:210px;font-size:13px"></div>
+                    <input type="hidden" name="kelompok" :value="globalKelompok"><input type="hidden" name="shift" :value="globalShift"><input type="hidden" name="per_page" value="{{ request('per_page',10) }}">
+                    <x-eoffice::manajemen-praktikum.ui.grade-group-filter model="globalKelompok" label="Semua Kelompok" searchPlaceholder="Cari kelompok..." />
+                    <x-eoffice::manajemen-praktikum.ui.grade-group-filter model="globalShift" label="Semua Shift" searchPlaceholder="Cari shift..." />
+                    <button type="submit" hidden>Terapkan Filter</button>
+                </form>
+                <form id="moduleSubmissionGrades" method="POST" action="{{ route('eoffice.manprak.asprak.tugas.nilai-jenis',$tugas->id) }}" @submit="if(!hasChanges) $event.preventDefault()">
+                    @csrf
+                    <button type="submit" class="mp-btn primary md" style="height:36px;min-width:100px;padding:0 12px;border-radius:8px;font-size:13px;font-weight:700" disabled :disabled="!hasChanges || {{ !$tugas->modul?->praktikum?->is_active ? 'true':'false' }}" :style="{cursor:hasChanges ? 'pointer' : 'not-allowed',background:hasChanges ? '#0B266E' : '#F4F6F8',color:hasChanges ? '#fff' : '#0B266E',border:hasChanges ? '1px solid #0B266E' : '1px solid #DFE1E7',pointerEvents:'auto'}">Simpan</button>
+                </form>
             </div>
 
             @php
@@ -176,54 +196,56 @@
 
             <div style="overflow-x:auto;">
                 <table class="mp-table"
-                    style="width:100%;border-collapse:collapse;min-width:1250px;font-size:13px;text-align:left;">
+                    style="width:100%;border-collapse:collapse;min-width:1400px;font-size:13px;text-align:left;">
                     <thead>
                         <tr style="background:#F9FAFB;border-bottom:1px solid #DFE1E7;">
-                            <th class="mp-th text-left" style="padding:14px 16px;width:40px;">NO.</th>
-                            <th class="mp-th text-left" style="padding:14px 16px;width:200px;">Mahasiswa</th>
-                            <th class="mp-th text-left" style="padding:14px 16px;width:120px;">NIM</th>
+                            <th class="mp-th text-center" style="padding:12px 16px;width:50px;text-align:center;">NO</th>
+                            <th class="mp-th text-left" style="padding:12px 16px;width:250px;">NAMA MAHASISWA</th>
+                            <th class="mp-th text-left" style="padding:12px 16px;width:150px;">NIM</th>
                             <th class="mp-th text-center"
-                                style="padding:14px 16px;width:100px;border-left:1px solid #DFE1E7;border-right:1px solid #DFE1E7;">
-                                Kelompok</th>
+                                style="padding:12px 16px;width:100px;">
+                                KELOMPOK</th>
                             <th class="mp-th text-center"
-                                style="padding:14px 16px;width:100px;border-right:1px solid #DFE1E7;">Shift</th>
-                            <th class="mp-th text-left" style="padding:14px 16px;width:150px;">Dokumen</th>
-                            <th class="mp-th text-left" style="padding:14px 16px;width:140px;">Waktu Submit</th>
-                            <th class="mp-th text-left" style="padding:14px 16px;width:110px;">Nilai</th>
-                            <th class="mp-th text-left" style="padding:14px 16px;width:90px;">Status</th>
-                            <th class="mp-th text-left" style="padding:14px 16px;width:90px;">Kirim Revisi</th>
-                            <th class="mp-th text-left" style="padding:14px 16px;width:150px;">Dokumen Revisi</th>
-                            <th class="mp-th text-left" style="padding:14px 16px;width:140px;">Waktu Submit Revisi</th>
+                                style="padding:12px 16px;width:100px;">SHIFT</th>
+                            <th class="mp-th text-left" style="padding:12px 16px;width:150px;">DOKUMEN</th>
+                            <th class="mp-th text-left" style="padding:12px 16px;width:140px;">WAKTU PENGUMPULAN</th>
+                            <th class="mp-th text-left" style="padding:12px 16px;width:110px;">NILAI</th>
+                            <th class="mp-th text-left" style="padding:12px 16px;width:90px;">STATUS</th>
+                            <th class="mp-th text-left" style="padding:12px 16px;width:90px;">REVISI</th>
+                            <th class="mp-th text-left" style="padding:12px 16px;width:150px;">DOKUMEN REVISI</th>
+                            <th class="mp-th text-left" style="padding:12px 16px;width:140px;">WAKTU PENGUMPULAN REVISI</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($praktikans as $idx => $pr)
-                            @php
-                                $p = $pengumpulan[$pr->id] ?? null;
-                                $st = $p ? ($p->status_pengumpulan ?? 'belum_dicek') : 'belum_kumpul';
-                                $waktuSubmit = null;
-                                $latestRevision = null;
-                                if ($p) {
-                                    $firstSub = $p->riwayat->where('is_revision', false)->sortBy('created_at')->first() ?? $p->riwayat->sortBy('created_at')->first();
-                                    $waktuSubmit = $firstSub ? $firstSub->created_at : $p->created_at;
-                                    $latestRevision = $p->riwayat->where('is_revision', true)->sortByDesc('created_at')->first();
-                                }
-                                $noUrut = method_exists($praktikans, 'currentPage') ? (($praktikans->currentPage() - 1) * $praktikans->perPage()) + $idx + 1 : $idx + 1;
-                            @endphp
+                                @php
+                                    $p = $pengumpulan[$pr->id] ?? null;
+                                    $st = $p ? ($p->status_pengumpulan ?? 'belum_dicek') : 'belum_kumpul';
+                                    $waktuSubmit = null;
+                                    $latestRevision = null;
+                                    $firstSub = null;
+                                    if ($p) {
+                                        $firstSub = $p->riwayat->where('is_revision', false)->sortByDesc('created_at')->first() ?? $p->riwayat->sortByDesc('created_at')->first();
+                                        $waktuSubmit = $firstSub ? $firstSub->created_at : $p->created_at;
+                                        $latestRevision = $p->riwayat->where('is_revision', true)->sortByDesc('created_at')->first();
+                                    }
+                                    $submittedFiles=($firstSub && !empty($firstSub->files)) ? $firstSub->files : ($p?->files ?? []);
+                                    $noUrut = method_exists($praktikans, 'currentPage') ? (($praktikans->currentPage() - 1) * $praktikans->perPage()) + $idx + 1 : $idx + 1;
+                                @endphp
                             <tr style="border-bottom:1px solid #EEF0F5;transition:background .1s;"
                                 onmouseover="this.style.background='#FAFBFC'" onmouseout="this.style.background=''">
-                                <td style="padding:14px 16px;vertical-align:middle;color:#808897;font-size:12px;">{{ $noUrut }}
+                                <td style="padding:12px 16px;vertical-align:middle;color:#666D80;font-size:13px;text-align:center;font-weight:700;">{{ $noUrut }}
                                 </td>
 
                                 {{-- Mahasiswa --}}
-                                <td style="padding:14px 16px;vertical-align:middle;">
+                                <td style="padding:12px 16px;vertical-align:middle;">
                                     <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-                                        <div class="mp-av yellow" style="width:34px;height:34px;flex-shrink:0;">
+                                        <div class="mp-av sky" style="width:28px;height:28px;font-size:11px;flex-shrink:0;">
                                             {{ strtoupper(substr($pr->user?->name ?? 'M', 0, 2)) }}</div>
                                         <div style="min-width:0;">
                                             <div style="font-size:13px;font-weight:600;color:#0D0D12;">
-                                                {!! $pr->user?->name ?? '&ndash;' !!}</div>
-                                            <div style="font-size:11px;color:#666D80;">{{ $pr->user?->email }}</div>
+                                                {{ $pr->user?->name ?? '—' }}</div>
+                                            <div style="font-size:11.5px;color:#666D80;margin-top:2px;">{{ $pr->user?->email }}</div>
                                             
                                         </div>
                                     </div>
@@ -231,14 +253,14 @@
 
                                 {{-- NIM --}}
                                 <td
-                                    style="padding:14px 16px;vertical-align:middle;font-size:12px;font-weight:600;color:#353849;">
-                                    {!! $pr->user?->student?->student_number ?? '&ndash;' !!}
+                                    style="padding:12px 16px;vertical-align:middle;font-size:12px;font-weight:600;color:#0D0D12;">
+                                    {{ $pr->user?->student?->student_number ?? '—' }}
                                 </td>
 
                                 {{-- KELOMPOK COLUMN with Dynamic Rowspan --}}
                                 @if($kelompokRowspan[$idx] > 0)
                                     <td rowspan="{{ $kelompokRowspan[$idx] }}"
-                                        style="padding:16px;text-align:center;vertical-align:middle;border-left:1px solid #DFE1E7;border-right:1px solid #DFE1E7;background:#FFF;font-size:18px;font-weight:700;color:#0D0D12;">
+                                        style="padding:12px 16px;text-align:center;vertical-align:middle;border-left:1px solid #DFE1E7;border-right:1px solid #DFE1E7;background:#FFF;font-size:15px;font-weight:700;color:#0D0D12;">
                                         @if($pr->kelompok)
                                             {{ $pr->kelompok }}
                                         @else
@@ -250,7 +272,7 @@
                                 {{-- SHIFT COLUMN with Dynamic Rowspan --}}
                                 @if($shiftRowspan[$idx] > 0)
                                     <td rowspan="{{ $shiftRowspan[$idx] }}"
-                                        style="padding:16px;text-align:center;vertical-align:middle;border-right:1px solid #DFE1E7;background:#FFF;font-size:18px;font-weight:700;color:#0D0D12;">
+                                        style="padding:12px 16px;text-align:center;vertical-align:middle;border-right:1px solid #DFE1E7;background:#FFF;font-size:15px;font-weight:700;color:#0D0D12;">
                                         @if($pr->shift)
                                             {{ $pr->shift }}
                                         @else
@@ -260,16 +282,16 @@
                                 @endif
 
                                 {{-- Dokumen --}}
-                                <td style="padding:14px 16px;vertical-align:middle;">
-                                    @if($p && $firstSub && !empty($firstSub->files))
+                                <td style="padding:12px 16px;vertical-align:middle;">
+                                    @if($p && !empty($submittedFiles))
                                         <div style="display:flex;flex-direction:column;gap:4px;">
-                                            @foreach($firstSub->files as $fPathObj)
+                                            @foreach($submittedFiles as $fPathObj)
                                                 @php 
                                                     $fPath = is_array($fPathObj) && isset($fPathObj['path']) ? $fPathObj['path'] : $fPathObj;
                                                     $fName = is_array($fPathObj) && isset($fPathObj['original_name']) ? $fPathObj['original_name'] : pathinfo($fPath, PATHINFO_BASENAME);
                                                 @endphp
-                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($fPath, 'eoffice') }}"
-                                                    target="_blank"
+                                                <a href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($fPath, 'eoffice', $fName) }}"
+                                                    target="_blank" rel="noopener noreferrer"
                                                     style="display:flex; align-items:center; padding:6px 10px; border:1px solid #DFE1E7; border-radius:6px; background:#fff; text-decoration:none; transition:border-color 0.2s; margin-bottom:4px;"
                                                     onmouseover="this.style.borderColor='#0B266E'" onmouseout="this.style.borderColor='#DFE1E7'"
                                                     title="{{ $fName }}">
@@ -283,22 +305,13 @@
                                             
                                             
                                         </div>
-                                    @elseif($p && $p->file_path)
-                                        <div style="display:flex;flex-direction:column;gap:4px;">
-                                            <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->file_path, 'eoffice') }}"
-                                                target="_blank"
-                                                style="font-size:12px;font-weight:600;color:#0B266E;text-decoration:none;"
-                                                title="{{ basename($p->file_path) }}">
-                                                {{ Str::limit(basename($p->file_path), 15) }}
-                                            </a>
-                                        </div>
                                     @else
                                         <span style="font-size:12px;color:#A4ABB8;">Belum mengumpulkan</span>
                                     @endif
                                 </td>
 
                                 {{-- Waktu Submit --}}
-                                <td style="padding:14px 16px;vertical-align:middle;">
+                                <td style="padding:12px 16px;vertical-align:middle;">
                                     @if($waktuSubmit)
                                         <span style="color:#0F6E56;font-weight:600;font-size:12px;">
                                             {{ \Carbon\Carbon::parse($waktuSubmit)->locale('id')->isoFormat('D MMMM YYYY, HH:mm') }}
@@ -310,47 +323,25 @@
                                 </td>
 
                                 {{-- Nilai --}}
-                                <td style="padding:14px 16px;vertical-align:middle;">
+                                <td class="mp-grade-history-cell" style="position:relative;padding-right:32px!important;padding:12px 16px;vertical-align:middle;">
                                     @php
                                         $njValue = $nilaiJenis[$pr->id]?->nilai ?? null;
                                         $currentNilai = $p ? $p->nilai : null;
                                         $displayNilai = $currentNilai ?? $njValue ?? '';
                                     @endphp
 
-                                    @if($p)
-                                        @if(isset($tugas->modul->praktikum) && $tugas->modul->praktikum->is_active)
-                                            <form method="POST" action="{{ route('eoffice.manprak.asprak.tugas.nilai', $p->id) }}"
-                                                style="display:flex;gap:4px;align-items:center;margin:0;">
-                                                @csrf
-                                                <input type="number" name="nilai" min="0" max="100" step="0.5" placeholder="0-100"
-                                                    value="{{ $displayNilai }}" class="mp-input"
-                                                    style="width:60px;font-size:12px;padding:4px 6px;">
-                                                <button type="submit" class="mp-btn ghost sm"
-                                                    style="white-space:nowrap;padding:4px 6px;font-size:11px;">{{ $st === 'acc' ? 'Edit' : 'ACC' }}</button>
-                                            </form>
-                                        @else
-                                            <span style="font-size:12px;font-weight:600;">{!! $displayNilai ?: '&ndash;' !!}</span>
-                                        @endif
+                                    @if($tugas->modul?->praktikum?->is_active)
+                                    <div x-data="{score:{{ json_encode(old('nilai.'.$pr->id.'.nilai_jenis',(string)$displayNilai)) }},initial:{{ json_encode((string)$displayNilai) }},get dirty(){return (this.score==='' || this.score===null)!==(this.initial==='') || (this.score!=='' && this.score!==null && Number(this.score)!==Number(this.initial))}}" x-effect="changed[{{ json_encode((string)$pr->id) }}]=dirty">
+                                        <x-eoffice::manajemen-praktikum.ui.grade-score-input :integer="true" model="score" :label="'Nilai '.$pr->user?->name" form="moduleSubmissionGrades" />
+                                        <input type="hidden" form="moduleSubmissionGrades" name="nilai[{{ $pr->id }}][nilai_jenis]" :value="score" :disabled="!dirty">
+                                    </div>
                                     @else
-                                        @if(isset($tugas->modul->praktikum) && $tugas->modul->praktikum->is_active)
-                                            <form method="POST"
-                                                action="{{ route('eoffice.manprak.asprak.tugas.nilai-jenis', $tugas->id) }}"
-                                                style="display:flex;gap:4px;align-items:center;margin:0;">
-                                                @csrf
-                                                <input type="number" name="nilai[{{ $pr->id }}][nilai_jenis]" min="0" max="100"
-                                                    step="0.5" placeholder="0-100" value="{{ $displayNilai }}" class="mp-input"
-                                                    style="width:60px;font-size:12px;padding:4px 6px;">
-                                                <button type="submit" class="mp-btn ghost sm"
-                                                    style="white-space:nowrap;padding:4px 6px;font-size:11px;color:#0B266E;">Simpan</button>
-                                            </form>
-                                        @else
-                                            <span style="font-size:12px;font-weight:600;">{!! $displayNilai ?: '&ndash;' !!}</span>
-                                        @endif
+                                        <span style="font-size:12px;font-weight:600">{{ $displayNilai!==''?str_replace('.',',',(string)$displayNilai):'—' }}</span>
                                     @endif
-                                </td>
+                                <x-eoffice::manajemen-praktikum.ui.module-score-history :module-id="$tugas->modul_id" :student-id="$pr->id" :score-key="$tugas->jenis_tugas" :score-label="$tugas->judul ?? 'Nilai'" :student-name="$pr->user?->name ?? 'Mahasiswa'" /></td>
 
                                 {{-- Status --}}
-                                <td style="padding:14px 16px;vertical-align:middle;">
+                                <td style="padding:12px 16px;vertical-align:middle;">
                                     @if($st === 'acc')
                                         <span class="mp-badge success sm" style="padding:2px 6px;font-size:10px;"><span
                                                 class="dot"></span>ACC</span>
@@ -367,100 +358,40 @@
                                 </td>
 
                                 {{-- Kirim Revisi --}}
-                                <td style="padding:14px 16px;vertical-align:middle;">
+                                <td style="padding:12px 16px;vertical-align:middle;">
                                     @if($st === 'acc' || $st === 'belum_kumpul')
                                         <span style="font-size:12px;color:#999;">&ndash;</span>
                                     @else
-                                        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start;">
+                                        <div style="display:flex;flex-direction:column;gap:6px;align-items:stretch;">
                                             @if(isset($tugas->modul->praktikum) && $tugas->modul->praktikum->is_active)
-                                                <div x-data="{ showRevisiModal: false }">
-                                                    <button type="button" @click="showRevisiModal = true" class="mp-btn secondary sm"
-                                                        style="white-space:nowrap;padding:4px 8px;font-size:11px;">Revisi</button>
-
-                                                    <!-- Modal Overlay -->
-                                                    <div x-show="showRevisiModal" x-transition:enter="transition ease-out duration-200"
-                                                        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                                                        x-transition:leave="transition ease-in duration-150"
-                                                        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                                                        style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15, 23, 42, 0.45);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;"
-                                                        @click.self="showRevisiModal = false">
-
-                                                        <!-- Modal Content -->
-                                                        <div
-                                                            style="background:#fff;border-radius:12px;width:100%;max-width:480px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);border:1px solid #DFE1E7;display:flex;flex-direction:column;overflow:hidden;">
-
-                                                            <!-- Modal Header -->
-                                                            <div
-                                                                style="padding:16px 20px;border-bottom:1px solid #EEF0F5;display:flex;align-items:center;justify-content:between;">
-                                                                <div style="font-size:15px;font-weight:700;color:#0D0D12;">Beri Catatan
-                                                                    & Lampiran Revisi</div>
-                                                                <button type="button" @click="showRevisiModal = false"
-                                                                    style="background:none;border:none;cursor:pointer;color:#666D80;padding:4px;margin-left:auto;">
-                                                                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24"
-                                                                        stroke="currentColor" stroke-width="2">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                                            d="M6 18L18 6M6 6l12 12" />
-                                                                    </svg>
-                                                                </button>
-                                                            </div>
-
-                                                            <!-- Form -->
-                                                            <form method="POST"
-                                                                action="{{ route('eoffice.manprak.asprak.tugas.revisi', $p->id) }}"
-                                                                enctype="multipart/form-data" style="margin:0;">
-                                                                @csrf
-                                                                <div
-                                                                    style="padding:20px;display:flex;flex-direction:column;gap:16px;text-align:left;">
-                                                                    <div>
-                                                                        <label
-                                                                            style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Catatan
-                                                                            Revisi <span style="color:#DF1C41;">*</span></label>
-                                                                        <textarea name="catatan_revisi" required rows="4"
-                                                                            placeholder="Tuliskan catatan perbaikan untuk mahasiswa..."
-                                                                            class="mp-input"
-                                                                            style="width:100%;resize:none;font-size:13px;"></textarea>
-                                                                    </div>
-                                                                    <div>
-                                                                        <label
-                                                                            style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Lampiran
-                                                                            File Pendukung (Opsional)</label>
-                                                                        <input type="file" name="file_revisi" class="mp-input"
-                                                                            style="width:100%;font-size:12px;">
-                                                                        <span
-                                                                            style="font-size:11px;color:#666D80;display:block;margin-top:4px;">Format:
-                                                                            PDF, DOCX, ZIP, RAR (maks. 10MB)</span>
-                                                                    </div>
-                                                                </div>
-
-                                                                <!-- Modal Footer -->
-                                                                <div
-                                                                    style="padding:16px 20px;background:#F9FAFB;border-top:1px solid #EEF0F5;display:flex;justify-content:end;gap:8px;">
-                                                                    <button type="button" @click="showRevisiModal = false"
-                                                                        class="mp-btn secondary md">Batal</button>
-                                                                    <button type="submit" class="mp-btn primary md">Kirim
-                                                                        Revisi</button>
-                                                                </div>
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                @include('eoffice::manajemen-praktikum.asprak.module-revision-modal')
                                             @endif
 
-                                            @if($p && ($p->file_revisi_asprak || $p->catatan_revisi))
-                                                <div
-                                                    style="padding:6px 8px;background:#FEF2F2;border:1px solid #FEE2E2;border-radius:6px;font-size:11px;width:100%;box-sizing:border-box;">
-                                                    @if($p->file_revisi_asprak)
-                                                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->file_revisi_asprak, 'eoffice') }}"
-                                                            target="_blank"
-                                                            style="font-weight:600;color:#95122B;text-decoration:none;display:block;word-break:break-all;"
-                                                            title="{{ basename($p->file_revisi_asprak) }}">
-                                                            ?? {{ Str::limit(basename($p->file_revisi_asprak), 12) }}
-                                                        </a>
-                                                    @endif
-                                                    @if($p->catatan_revisi)
-                                                        <div style="color:#7C1028;font-style:italic;margin-top:2px;word-break:break-word;"
-                                                            title="{{ $p->catatan_revisi }}">&#128172;: {{ Str::limit($p->catatan_revisi, 25) }}
-                                                        </div>
+                                            @if($p && $p->file_revisi_asprak)
+                                                <div style="display:flex;flex-direction:column;gap:4px;">
+                                                    @php 
+                                                        $revFiles = json_decode($p->file_revisi_asprak, true);
+                                                    @endphp
+                                                    @if(is_array($revFiles))
+                                                        @foreach($revFiles as $rf)
+                                                            @php 
+                                                                $rPath = is_array($rf) ? ($rf['path'] ?? null) : $rf;
+                                                                $rName = is_array($rf) ? ($rf['original_name'] ?? basename($rPath)) : basename($rPath);
+                                                            @endphp
+                                                            @if($rPath)
+                                                                <a href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($rPath, 'eoffice', $rName) }}"
+                                                                    target="_blank" rel="noopener noreferrer"
+                                                                    style="display:flex; align-items:center; padding:6px 10px; border:1px solid #DFE1E7; border-radius:6px; background:#fff; text-decoration:none; transition:border-color 0.2s; margin-bottom:4px;"
+                                                                    onmouseover="this.style.borderColor='#0B266E'" onmouseout="this.style.borderColor='#DFE1E7'"
+                                                                    title="{{ $rName }}">
+                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-right:8px;">
+                                                                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                                                                        <polyline points="13 2 13 9 20 9"></polyline>
+                                                                    </svg>
+                                                                    <span style="font-size:11px; font-weight:500; color:#353849; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 120px;">{{ $rName }}</span>
+                                                                </a>
+                                                            @endif
+                                                        @endforeach
                                                     @endif
                                                 </div>
                                             @endif
@@ -469,7 +400,7 @@
                                 </td>
 
                                 {{-- Dokumen Revisi --}}
-                                <td style="padding:14px 16px;vertical-align:middle;">
+                                <td style="padding:12px 16px;vertical-align:middle;">
                                     @if($latestRevision && !empty($latestRevision->files))
                                         <div style="display:flex;flex-direction:column;gap:4px;">
                                             @foreach($latestRevision->files as $fPathObj)
@@ -477,8 +408,8 @@
                                                     $fPath = is_array($fPathObj) && isset($fPathObj['path']) ? $fPathObj['path'] : $fPathObj;
                                                     $fName = is_array($fPathObj) && isset($fPathObj['original_name']) ? $fPathObj['original_name'] : pathinfo($fPath, PATHINFO_BASENAME);
                                                 @endphp
-                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($fPath, 'eoffice') }}"
-                                                    target="_blank"
+                                                <a href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($fPath, 'eoffice', $fName) }}"
+                                                    target="_blank" rel="noopener noreferrer"
                                                     style="display:flex; align-items:center; padding:6px 10px; border:1px solid #DFE1E7; border-radius:6px; background:#fff; text-decoration:none; transition:border-color 0.2s; margin-bottom:4px;"
                                                     onmouseover="this.style.borderColor='#0F6E56'" onmouseout="this.style.borderColor='#DFE1E7'"
                                                     title="{{ $fName }}">
@@ -497,7 +428,7 @@
                                 </td>
 
                                 {{-- Waktu Submit Revisi --}}
-                                <td style="padding:14px 16px;vertical-align:middle;">
+                                <td style="padding:12px 16px;vertical-align:middle;">
                                     @if($latestRevision)
                                         <span style="color:#0F6E56;font-weight:600;font-size:12px;">
                                             {{ \Carbon\Carbon::parse($latestRevision->created_at)->locale('id')->isoFormat('D MMMM YYYY, HH:mm') }}
@@ -511,7 +442,7 @@
                         @empty
                             <tr>
                                 <td colspan="12" style="padding:48px;text-align:center;color:#666D80;">
-                                    Belum ada praktikan terdaftar.
+                                    {{ filled(request('search')) || filled(request('kelompok')) || filled(request('shift')) ? 'Data tidak ditemukan.' : 'Belum ada praktikan terdaftar.' }}
                                 </td>
                             </tr>
                         @endforelse
@@ -519,96 +450,10 @@
                 </table>
             </div>
 
-            @if(method_exists($praktikans, 'total') && $praktikans->total() > 0)
-                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:12px 20px; border-top:1px solid #DFE1E7; box-sizing:border-box; flex-wrap:nowrap; gap:16px;">
-                    {{-- Left: Per halaman dropdown + info teks --}}
-                    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                        <div x-data="{ openP: false, options: [10, 20, 30], perPage: {{ $praktikans->perPage() }} }"
-                            class="relative" @click.away="openP = false">
-                            <div class="flex items-center gap-2 cursor-pointer border rounded-[8px] px-3 py-1.5 transition-colors focus:outline-none"
-                                :class="openP ? 'border-[#0B266E] bg-[#EEF1FA] text-[#0B266E]' : 'border-[#DFE1E7] bg-white text-[#353849] hover:bg-[#F6F8FA]'"
-                                @click="openP = !openP">
-                                <span class="text-[12px] text-[#666D80]" :class="openP ? 'text-[#0B266E]' : ''">Per halaman</span>
-                                <div class="flex items-center gap-1 font-semibold text-[12px]">
-                                    <span x-text="perPage"></span>
-                                    <svg class="w-3.5 h-3.5 transition-transform duration-200"
-                                        :class="{'rotate-180': openP, 'text-[#0B266E]': openP, 'text-[#666D80]': !openP}"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="6 9 12 15 18 9"></polyline>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div x-show="openP" @click.away="openP = false" style="display: none;"
-                                x-transition:enter="transition ease-out duration-100"
-                                x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                                x-transition:leave="transition ease-in duration-75"
-                                x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                                class="absolute bottom-full left-0 mb-2 z-10 w-full min-w-[80px] bg-white border border-[#DFE1E7] rounded-[10px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 px-1.5 flex flex-col">
-                                <template x-for="option in options" :key="option">
-                                    <a :href="`?${new URLSearchParams({...Object.fromEntries(new URLSearchParams(window.location.search)), per_page: option, page: 1}).toString()}`"
-                                        class="flex items-center justify-between px-3 py-2 rounded-[6px] cursor-pointer text-[12px] transition-colors mb-0.5 last:mb-0 no-underline"
-                                        :class="perPage == option ? 'bg-[#F6F8FA] text-[#0B266E] font-medium' : 'text-[#353849] hover:bg-[#F6F8FA]'">
-                                        <span x-text="option"></span>
-                                        <svg x-show="perPage == option" class="w-3.5 h-3.5 flex-shrink-0 text-[#0B266E] ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                    </a>
-                                </template>
-                            </div>
-                        </div>
-                        <div style="font-size:12px; color:#666D80;">
-                            Menampilkan {{ $praktikans->firstItem() }} sampai {{ $praktikans->lastItem() }} dari {{ $praktikans->total() }} data
-                        </div>
-                    </div>
-
-                    {{-- Right: standard pagination buttons --}}
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        @if ($praktikans->onFirstPage())
-                            <span style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:#F8FAFC; border:1px solid #DFE1E7; color:#A4ABB8; cursor:not-allowed;">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="15 18 9 12 15 6"></polyline>
-                                </svg>
-                            </span>
-                        @else
-                            <a href="{{ $praktikans->previousPageUrl() }}" style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:white; border:1px solid #DFE1E7; color:#353849; cursor:pointer; text-decoration:none;" class="hover:bg-gray-50">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="15 18 9 12 15 6"></polyline>
-                                </svg>
-                            </a>
-                        @endif
-
-                        <span style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:#0B266E; color:white; font-size:13px; font-weight:600;">
-                            {{ $praktikans->currentPage() }}
-                        </span>
-
-                        @if ($praktikans->hasMorePages())
-                            <a href="{{ $praktikans->nextPageUrl() }}" style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:white; border:1px solid #DFE1E7; color:#353849; cursor:pointer; text-decoration:none;" class="hover:bg-gray-50">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="9 18 15 12 9 6"></polyline>
-                                </svg>
-                            </a>
-                        @else
-                            <span style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:#F8FAFC; border:1px solid #DFE1E7; color:#A4ABB8; cursor:not-allowed;">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="9 18 15 12 9 6"></polyline>
-                                </svg>
-                            </span>
-                        @endif
-                    </div>
-                </div>
+            @if(isset($praktikans) && $praktikans instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$praktikans" :options="[10, 20, 30]" />
             @endif
         </div>
-    @else
-        <div class="mp-card" style="display:flex;align-items:center;justify-content:center;min-height:240px;padding:48px;">
-            <div style="text-align:center;">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5"
-                    stroke-linecap="round" style="margin:0 auto 16px;display:block;opacity:0.6;">
-                    <path
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <div style="font-size:14px;font-weight:600;color:#666D80;">Belum ada praktikan terdaftar.</div>
-            </div>
-        </div>
-    @endif
+
 
 </x-eoffice::manajemen-praktikum.layout>

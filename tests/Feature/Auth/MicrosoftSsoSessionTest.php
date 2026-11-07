@@ -18,6 +18,16 @@ class MicrosoftSsoSessionTest extends TestCase
 {
     private const TENANT = '11111111-1111-1111-1111-111111111111';
 
+    public function test_login_displays_escaped_sso_failure_message(): void
+    {
+        $this->withSession(['error' => 'Login SSO gagal. Referensi: test-reference <script>alert(1)</script>'])
+            ->get(route('login'))
+            ->assertOk()
+            ->assertSee('Referensi: test-reference')
+            ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false)
+            ->assertDontSee('<script>alert(1)</script>', false);
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

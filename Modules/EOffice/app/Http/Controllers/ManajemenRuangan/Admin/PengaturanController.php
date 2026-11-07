@@ -36,8 +36,18 @@ class PengaturanController extends Controller
     {
         $request->validate([
             'jam_buka' => 'required|date_format:H:i',
-            'jam_tutup' => 'required|date_format:H:i',
+            'jam_tutup' => 'required|date_format:H:i|after:jam_buka',
             'batas_h_min_booking' => 'required|integer|min:0|max:30',
+        ], [
+            'jam_buka.required' => 'Jam buka operasional wajib diisi.',
+            'jam_buka.date_format' => 'Format jam buka tidak valid (contoh: 08:00).',
+            'jam_tutup.required' => 'Jam tutup operasional wajib diisi.',
+            'jam_tutup.date_format' => 'Format jam tutup tidak valid (contoh: 16:00).',
+            'jam_tutup.after' => 'Jam tutup operasional harus lebih akhir daripada jam buka.',
+            'batas_h_min_booking.required' => 'Batas minimum H- booking wajib diisi.',
+            'batas_h_min_booking.integer' => 'Batas minimum H- booking harus berupa angka bulat.',
+            'batas_h_min_booking.min' => 'Batas minimum H- booking tidak boleh kurang dari 0 hari.',
+            'batas_h_min_booking.max' => 'Batas minimum H- booking maksimal 30 hari.',
         ]);
 
         Pengaturan::updateOrCreate(['key' => 'jam_buka'], ['value' => $request->jam_buka]);

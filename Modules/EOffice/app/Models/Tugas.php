@@ -11,6 +11,23 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Tugas extends Model
 {
+    protected static function booted(): void
+    {
+        static::saving(function (self $task) {
+            $modul=Modul::findOrFail($task->modul_id);
+            \Illuminate\Support\Facades\DB::transaction(function () use ($task,$modul) {
+                $praktikum=Praktikum::whereKey($modul->praktikum_id)->lockForUpdate()->firstOrFail();
+                if (!array_key_exists($task->jenis_tugas,$praktikum->moduleTaskTypes())) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['jenis_tugas'=>'Komponen penilaian tidak tersedia. Muat ulang halaman.']);
+                }
+                if ($task->exists && $task->isDirty('jenis_tugas') && $praktikum->moduleComponentsLocked()) throw \Illuminate\Validation\ValidationException::withMessages(['jenis_tugas'=>'Jenis tugas tidak dapat diubah setelah tugas modul dibuka.']);
+                if ($task->is_published) {
+                    if (!$praktikum->moduleWeightsValid()) throw \Illuminate\Validation\ValidationException::withMessages(['bobot'=>'Lengkapi bobot seluruh komponen dengan total 100% sebelum membuka tugas.']);
+                    if (!$praktikum->komponen_modul_locked_at) $praktikum->update(['komponen_modul_locked_at'=>now()]);
+                }
+            });
+        });
+    }
     protected $table = 'tugas_praktikum';
 
     /**
@@ -47,7 +64,8 @@ class Tugas extends Model
      */
     public function jenisLabel(): string
     {
-        return self::JENIS[$this->jenis_tugas] ?? ucfirst($this->jenis_tugas ?? '-');
+        $praktikum=Praktikum::whereHas('modul',fn ($q)=>$q->where('id',$this->modul_id))->first();
+        return $praktikum?->moduleTaskTypes()[$this->jenis_tugas] ?? self::JENIS[$this->jenis_tugas] ?? ucfirst($this->jenis_tugas ?? '-');
     }
 
     // ── Relationships ──────────────────────────────────────────────────────────

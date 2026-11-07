@@ -4,6 +4,7 @@ namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Validation\ValidationException;
 use Modules\EOffice\Models\AsprakPraktikum;
 use Modules\EOffice\Models\DaftarPraktikan;
 use Modules\EOffice\Models\Modul;
@@ -138,15 +139,12 @@ class ModulController extends Controller
     }
 
     /**
-     * Update modul (hanya modul di praktikum asprak ini).
+     * Perbarui deskripsi dan lampiran modul yang diampu, tanpa mengubah struktur.
      */
     public function update(Request $request, $id)
     {
         $request->validate([
-            'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string|max:500',
-            'urutan' => 'nullable|integer|min:1',
-            'jadwal_minggu' => 'nullable|string|max:100',
             'lampiran' => 'nullable|array|max:3',
             'lampiran.*' => 'file|max:5120',
         ]);
@@ -168,48 +166,68 @@ class ModulController extends Controller
             return back()->with('error', 'Gagal menyimpan: Anda belum di-assign sebagai pengampu pada modul ini.');
         }
 
-        $modul->update(array_merge(
-            $request->only(['nama', 'deskripsi']),
-            [
-                'urutan' => $request->input('urutan', $modul->urutan),
-                'jadwal_minggu' => $request->input('jadwal_minggu', $modul->jadwal_minggu),
-            ]
-        ));
-        $modul->touch(); // Paksa update timestamp meskipun tidak ada atribut utama yg berubah
-
         $supabase = app(\App\Services\SupabaseStorage::class);
 
-        // Hapus materi yang ditandai dihapus
-        if ($request->has('deleted_files') && is_array($request->deleted_files)) {
-            $materiToDel = $modul->materi()->whereIn('id', $request->deleted_files)->get();
-            foreach ($materiToDel as $materiLama) {
-                if ($materiLama->file_path) {
-                    $supabase->delete($materiLama->file_path, 'eoffice');
-                }
-                $materiLama->delete();
-            }
+        $deletedIds = collect($request->input('deleted_files', []))->filter()->unique();
+        $remainingAttachmentCount = $modul->materi()->whereNotIn('id', $deletedIds)->count();
+        if ($remainingAttachmentCount + count($request->file('lampiran', [])) > 3) {
+            throw ValidationException::withMessages([
+                'lampiran' => 'Batas akumulasi maksimal lampiran adalah 3 file per modul.',
+            ]);
         }
 
-        // Jika upload file baru tanpa limit per modul
+        $materiToDelete = $deletedIds->isEmpty()
+            ? collect()
+            : $modul->materi()->whereIn('id', $deletedIds)->get();
+
+        // Tambahkan file baru dengan batas akumulasi maksimal tiga lampiran.
         if ($request->hasFile('lampiran')) {
             $files = $request->file('lampiran');
+            $uploadedFiles = [];
+            $uploadFailed = false;
             foreach ($files as $file) {
                 $path = $supabase->upload($file, 'materi-modul', 'eoffice');
                 if ($path) {
-                    \Modules\EOffice\Models\MateriModul::create([
-                        'modul_id' => $modul->id,
-                        'user_id' => $user->id,
+                    $uploadedFiles[] = [
                         'judul' => $file->getClientOriginalName(),
                         'deskripsi' => $request->deskripsi,
                         'file_path' => $path,
                         'tipe_file' => $file->getClientMimeType(),
-                    ]);
-                    $modul->touch(); // Paksa lagi incase
+                    ];
+                } else {
+                    $uploadFailed = true;
                 }
             }
+            if ($uploadFailed) {
+                foreach ($uploadedFiles as $uploadedFile) {
+                    $supabase->delete($uploadedFile['file_path'], 'eoffice');
+                }
+                throw ValidationException::withMessages([
+                    'lampiran' => 'Lampiran gagal diunggah. Perubahan modul belum disimpan.',
+                ]);
+            }
+            foreach ($uploadedFiles as $uploadedFile) {
+                $modul->materi()->create([
+                    'user_id' => $user->id,
+                    ...$uploadedFile,
+                ]);
+            }
+            $modul->touch();
         }
 
-        return back()->with('success', 'Modul berhasil diperbarui.');
+        // Hapus lampiran lama hanya setelah seluruh upload baru dipastikan berhasil.
+        foreach ($materiToDelete as $materiLama) {
+            if ($materiLama->file_path && ! \Modules\EOffice\Models\MateriModul::where('file_path', $materiLama->file_path)
+                ->where('id', '!=', $materiLama->id)->exists()) {
+                $supabase->delete($materiLama->file_path, 'eoffice');
+            }
+            $materiLama->delete();
+        }
+
+        $modul->update($request->only(['deskripsi']));
+        $modul->touch();
+
+        return back()->with('success', 'Konten modul berhasil diperbarui.');
     }
 
     /**

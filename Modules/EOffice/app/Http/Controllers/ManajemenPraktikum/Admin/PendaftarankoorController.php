@@ -6,8 +6,10 @@ use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Modules\EOffice\Models\PendaftaranKoordinator;
+use Modules\EOffice\Models\PeriodePendaftaran;
 use Modules\EOffice\Models\Praktikum;
 use Modules\EOffice\Services\KoorPraktikumService;
 use Modules\EOffice\Services\NotifikasiService;
@@ -43,13 +45,27 @@ class PendaftaranKoorController extends Controller
         }
 
         $pendaftaran = $query->paginate($request->input('per_page', 5))->withQueryString();
+
+        $namaBerkasTambahan = collect();
+        if (Schema::hasTable('manprak_periode_pendaftaran')) {
+            $namaBerkasTambahan = PeriodePendaftaran::whereIn('praktikum_id', $pendaftaran->pluck('praktikum_id')->unique())
+                ->where('jenis', 'koor')
+                ->latest('created_at')
+                ->get()
+                ->unique('praktikum_id')
+                ->pluck('nama_berkas_tambahan', 'praktikum_id');
+        }
         
         $praktikumList = \Modules\EOffice\Models\Praktikum::with('matkul')
             ->where('status', 'aktif')
             ->orderByDesc('created_at')
             ->get();
 
-        return view('eoffice::manajemen-praktikum.admin.pendaftaran-koor', compact('pendaftaran', 'praktikumList'));
+        return view('eoffice::manajemen-praktikum.admin.pendaftaran-koor', compact(
+            'pendaftaran',
+            'praktikumList',
+            'namaBerkasTambahan'
+        ));
     }
 
     /**

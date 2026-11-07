@@ -11,6 +11,8 @@ use Modules\EOffice\Models\Modul;
 use Modules\EOffice\Models\ModulAsprak;
 use Modules\EOffice\Models\Nilai;
 use Modules\EOffice\Models\NilaiJenisTugas;
+use Modules\EOffice\Models\Praktikum;
+use Modules\EOffice\Models\PengajuanModul;
 
 class AbsensiController extends Controller
 {
@@ -25,7 +27,7 @@ class AbsensiController extends Controller
             : collect();
 
         if ($asprak && $moduls->isEmpty()) {
-            session()->now('error', 'Akses terbatas: Anda belum di-assign sebagai pengampu pada modul manapun di praktikum ini.');
+            session()->now('warning', 'Belum ada modul yang ditugaskan kepada Anda. Tugas akhir yang sudah dipublikasikan tetap dapat dikelola.');
         }
 
         $praktikum = $asprak ? $asprak->praktikum : null;
@@ -95,77 +97,40 @@ class AbsensiController extends Controller
 
     public function store(Request $request, int $modulId)
     {
-        $request->validate([
-            'absensi' => 'required|array',
-            'absensi.*.status' => 'nullable|in:hadir,terlambat,alpa,tidak_hadir',
-            'absensi.*.keterangan' => 'nullable|string|max:255',
-            'tanggal' => 'required|date',
-            'nilai' => 'nullable|array',
-            'nilai.*.tugas_pendahuluan' => 'nullable|numeric|min:0|max:100',
-            'nilai.*.laporan' => 'nullable|numeric|min:0|max:100',
-            'nilai.*.responsi' => 'nullable|numeric|min:0|max:100',
-            'nilai.*.tugas_pengganti' => 'nullable|numeric|min:0|max:100',
-        ]);
-
-        $jenisList = ['tugas_pendahuluan', 'laporan', 'responsi', 'tugas_pengganti'];
-
-        foreach ($request->absensi as $daftarPraktikanId => $item) {
-            $status = $item['status'];
-
-            Absensi::updateOrCreate(
-                ['modul_id' => $modulId, 'daftar_praktikan_id' => $daftarPraktikanId],
-                [
-                    'tanggal' => $request->tanggal,
-                    'status' => $status,
-                    'keterangan' => $item['keterangan'] ?? null,
-                ]
-            );
-
-            // Jika ada data nilai, update nilai_jenis_tugas & pengumpulan_tugas
-            if ($request->has("nilai.{$daftarPraktikanId}") && in_array($status, ['hadir', 'terlambat'])) {
-                $nilaiData = $request->nilai[$daftarPraktikanId];
-
-                foreach ($jenisList as $jenis) {
-                    $nilaiValue = isset($nilaiData[$jenis]) && $nilaiData[$jenis] !== ''
-                        ? (float) $nilaiData[$jenis]
-                        : null;
-
-                    // 1. Update source of truth (nilai_jenis_tugas)
-                    NilaiJenisTugas::updateOrCreate(
-                        [
-                            'daftar_praktikan_id' => $daftarPraktikanId,
-                            'modul_id' => $modulId,
-                            'jenis_tugas' => $jenis,
-                        ],
-                        ['nilai' => $nilaiValue]
-                    );
-
-                    // 2. Sync to pengumpulan_tugas if Tugas exists
-                    $tugas = \Modules\EOffice\Models\Tugas::where('modul_id', $modulId)
-                        ->where('jenis_tugas', $jenis)
-                        ->first();
-
-                    if ($tugas) {
-                        $pengumpulan = \Modules\EOffice\Models\PengumpulanTugas::firstOrCreate(
-                            [
-                                'tugas_id' => $tugas->id,
-                                'daftar_praktikan_id' => $daftarPraktikanId,
-                            ]
-                        );
-                        $pengumpulan->update([
-                            'nilai' => $nilaiValue,
-                            'status_pengumpulan' => $nilaiValue !== null ? 'acc' : 'belum_dicek',
-                        ]);
-                    }
+        $modul=Modul::with('praktikum')->findOrFail($modulId);
+        abort_unless($this->ownsModul($modulId),403,'Anda tidak berhak mengubah absensi modul ini.');
+        $types=array_keys($modul->praktikum->moduleTaskTypes());
+        $rules=['absensi'=>'present|array','absensi.*.status'=>'nullable|in:hadir,terlambat,alpa,tidak_hadir','absensi.*.keterangan'=>'nullable|string|max:255','tanggal'=>'required|date','nilai'=>'nullable|array','nilai.*'=>'array'];
+        foreach($types as $type) $rules['nilai.*.'.$type]='nullable|numeric|min:0|max:100';
+        $data=$request->validate($rules);
+        $ids=array_unique(array_merge(array_keys($data['absensi']),array_keys($data['nilai'] ?? [])));
+        $allowed=DaftarPraktikan::where('praktikum_id',$modul->praktikum_id)->whereIn('id',$ids)->pluck('id')->map(fn($id)=>(string)$id)->all();
+        if(array_diff($ids,$allowed)) throw \Illuminate\Validation\ValidationException::withMessages(['nilai'=>'Mahasiswa tidak terdaftar pada praktikum ini.']);
+        foreach($data['nilai'] ?? [] as $values) if(array_diff(array_keys($values),$types)) throw \Illuminate\Validation\ValidationException::withMessages(['nilai'=>'Kolom penilaian telah berubah. Muat ulang halaman.']);
+        \Illuminate\Support\Facades\DB::transaction(function() use($modul,$modulId,$data){
+            $praktikum=Praktikum::whereKey($modul->praktikum_id)->lockForUpdate()->firstOrFail();
+            if(!$praktikum->is_active) throw \Illuminate\Validation\ValidationException::withMessages(['nilai'=>'Praktikum telah diarsipkan.']);
+            if(PengajuanModul::where('praktikum_id',$modul->praktikum_id)->whereIn('status',['draft','diajukan','perlu_revisi'])->exists()) throw \Illuminate\Validation\ValidationException::withMessages(['nilai'=>'Rancangan modul harus diselesaikan sebelum menyimpan absensi dan nilai.']);
+            foreach($data['absensi'] as $id=>$item){
+                if(empty($item['status'])){
+                    if(filled($item['keterangan'] ?? null)) throw \Illuminate\Validation\ValidationException::withMessages(['absensi'=>'Pilih kehadiran sebelum mengisi keterangan.']);
+                    Absensi::where('modul_id',$modulId)->where('daftar_praktikan_id',$id)->delete();
+                }else Absensi::updateOrCreate(['modul_id'=>$modulId,'daftar_praktikan_id'=>$id],['tanggal'=>$data['tanggal'],'status'=>$item['status'],'keterangan'=>$item['keterangan'] ?? null]);
+            }
+            // Attendance is informational: a grade can be saved without an attendance selection.
+            foreach($data['nilai'] ?? [] as $id=>$values) foreach($values as $type=>$score){
+                $value=$score===null || $score==='' ? null : (float)$score;
+                NilaiJenisTugas::updateOrCreate(['daftar_praktikan_id'=>$id,'modul_id'=>$modulId,'jenis_tugas'=>$type],['nilai'=>$value]);
+                $task=\Modules\EOffice\Models\Tugas::where('modul_id',$modulId)->where('jenis_tugas',$type)->first();
+                if($task){
+                    $submission=\Modules\EOffice\Models\PengumpulanTugas::firstOrCreate(['tugas_id'=>$task->id,'daftar_praktikan_id'=>$id]);
+                    $submission->update(['nilai'=>$value,'status_pengumpulan'=>$value!==null?'acc':'belum_dicek']);
                 }
             }
-        }
-
-        // Auto-sync persentase kehadiran ke nilai_praktikum
-        $modul = Modul::findOrFail($modulId);
-        $this->syncNilaiAbsensi($modul->praktikum_id);
-
-        return back()->with('success', 'Absensi dan Nilai berhasil disimpan.');
+            if(collect($data['absensi'])->contains(fn($item)=>filled($item['status'] ?? null))) Praktikum::whereKey($modul->praktikum_id)->whereNull('started_at')->update(['status_pelaksanaan'=>'berjalan','started_at'=>now()]);
+            $this->syncNilaiAbsensi($modul->praktikum_id);
+        });
+        return $request->expectsJson() ? response()->json(['message'=>'Absensi dan nilai berhasil disimpan.']) : back()->with('success','Absensi dan nilai berhasil disimpan.');
     }
 
     public function update(Request $request, int $absensiId)
@@ -180,12 +145,25 @@ class AbsensiController extends Controller
             abort(403, 'Anda tidak berhak mengubah absensi ini.');
         }
 
+        $modul = Modul::findOrFail($absensi->modul_id);
+        $masihAdaRancangan = PengajuanModul::where('praktikum_id', $modul->praktikum_id)
+            ->whereIn('status', ['draft', 'diajukan', 'perlu_revisi'])
+            ->exists();
+        if ($masihAdaRancangan) {
+            return back()->with('error', 'Absensi belum dapat diisi karena rancangan modul masih perlu diselesaikan atau dibatalkan oleh koordinator.');
+        }
+
         $absensi->update($request->only(['status', 'keterangan']));
 
-        $modul = Modul::find($absensi->modul_id);
-        if ($modul) {
-            $this->syncNilaiAbsensi($modul->praktikum_id);
+        if (filled($absensi->status)) {
+            Praktikum::whereKey($modul->praktikum_id)
+                ->whereNull('started_at')
+                ->update([
+                    'status_pelaksanaan' => 'berjalan',
+                    'started_at' => now(),
+                ]);
         }
+        $this->syncNilaiAbsensi($modul->praktikum_id);
 
         return back()->with('success', 'Absensi berhasil diperbarui.');
     }
@@ -255,58 +233,18 @@ class AbsensiController extends Controller
         $praktikum = $asprak ? $asprak->praktikum : null;
         if (!$praktikum) abort(404);
 
-        $daftarPraktikan = DaftarPraktikan::where('praktikum_id', $praktikum->id)
-            ->with(['user', 'user.student', 'absensi'])
-            ->orderByRaw("CASE WHEN (shift IS NULL OR shift = '') THEN 1 ELSE 0 END, shift ASC")
-            ->orderByRaw("CASE WHEN (kelompok IS NULL OR kelompok = '') THEN 1 ELSE 0 END, kelompok ASC")
-            ->orderBy('created_at')
-            ->get();
-
-        $modulIds = $moduls->pluck('id')->toArray();
-        $nilaiJenisAll = NilaiJenisTugas::whereIn('modul_id', $modulIds)->get();
-        $nilaiJenisMap = [];
-        foreach ($nilaiJenisAll as $nj) {
-            $nilaiJenisMap[$nj->modul_id][$nj->daftar_praktikan_id][$nj->jenis_tugas] = $nj->nilai;
+        $selected=$moduls->map(fn($modul)=>(string)$modul->getRawOriginal('id'))->all();
+        if ($request->filled('modul_id')) $selected=array_values(array_intersect($selected,[(string)$request->input('modul_id')]));
+        $allowed=$selected;
+        if (\Modules\EOffice\Models\TugasAkhir::where('praktikum_id',$praktikum->id)->where('published',true)->exists()) $allowed[]='tugas_akhir';
+        if (\Illuminate\Support\Facades\Schema::hasTable('eo_prak_final_results')) $allowed[]='nilai_akhir';
+        if ($request->has('cards')) {
+            $data=$request->validate(['cards'=>'required|array|min:1','cards.*'=>'required|string|distinct']);
+            abort_if((bool)array_diff($data['cards'],$allowed),403);
+            $selected=$data['cards'];
         }
-
-        $headers = [
-            "Content-type" => "text/csv",
-            "Content-Disposition" => "attachment; filename=Rekap_Nilai_{$praktikum->kode}.csv",
-            "Pragma" => "no-cache",
-            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-            "Expires" => "0"
-        ];
-
-        $callback = function () use ($daftarPraktikan, $moduls, $nilaiJenisMap) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, ['No', 'Nama Praktikan', 'NIM', 'Kelompok', 'Shift', 'Modul', 'Kehadiran', 'Tugas Pendahuluan', 'Laporan', 'Responsi', 'Tugas Pengganti', 'Keterangan']);
-
-            $no = 1;
-            foreach ($daftarPraktikan as $dp) {
-                foreach ($moduls as $m) {
-                    $absensi = $dp->absensi->firstWhere('modul_id', $m->id);
-                    $njMap = $nilaiJenisMap[$m->id][$dp->id] ?? [];
-                    $row = [
-                        $no,
-                        $dp->user?->name ?? '-',
-                        $dp->user?->student?->student_number ?? $dp->user?->email ?? '-',
-                        $dp->kelompok ?? '-',
-                        $dp->shift ?? '-',
-                        $m->nama,
-                        $absensi ? ucfirst($absensi->status) : '-',
-                        $njMap['tugas_pendahuluan'] ?? '-',
-                        $njMap['laporan'] ?? '-',
-                        $njMap['responsi'] ?? '-',
-                        $njMap['tugas_pengganti'] ?? '-',
-                        $absensi?->keterangan ?? '-',
-                    ];
-                    fputcsv($file, $row);
-                }
-                $no++;
-            }
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        if (!$selected) return back()->with('error','Tidak ada rekap yang dapat diekspor.');
+        $request->merge(['cards'=>$selected]);
+        return app(\Modules\EOffice\Services\ManajemenPraktikum\NilaiCsvExport::class)->download($request,$praktikum);
     }
 }

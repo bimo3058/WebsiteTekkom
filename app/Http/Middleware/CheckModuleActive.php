@@ -5,7 +5,9 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use App\Models\SystemModule;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckModuleActive
@@ -26,13 +28,15 @@ class CheckModuleActive
         }
 
         // Enforce max upload per modul
-        foreach ($request->allFiles() as $file) {
-            $files = is_array($file) ? $file : [$file];
-            foreach ($files as $f) {
-                $maxMB = $module->setting('max_upload', 10);
-                if ($f->getSize() > ($maxMB * 1024 * 1024)) {
-                    return back()->with('error', "Ukuran file melebihi batas maksimal {$maxMB} MB untuk modul ini.");
-                }
+        $maxMB = $module->setting('max_upload', 10);
+        foreach (Arr::flatten($request->allFiles()) as $file) {
+            // Inputs such as tahap[0][lampiran][] can be nested more than one level.
+            // Empty optional inputs are not uploaded files; validation handles invalid uploads.
+            if (!$file instanceof UploadedFile || !$file->isValid()) {
+                continue;
+            }
+            if ($file->getSize() > ($maxMB * 1024 * 1024)) {
+                return back()->with('error', "Ukuran file melebihi batas maksimal {$maxMB} MB untuk modul ini.");
             }
         }
 

@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Detail Modul">
+<x-eoffice::manajemen-praktikum.layout pageTitle="Detail Modul" :breadcrumbPraktikum="$modul->praktikum">
 
 {{-- Page Header --}}
 <div class="mp-page-header">
@@ -8,8 +8,7 @@
             <span class="mp-badge" style="background:#D0D6E9;color:#5D6DA2;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px;"><span class="dot" style="background:#5D6DA2;"></span>Koordinator</span>
         </div>
         <p class="mp-page-sub">
-            {{ $modul->praktikum?->nama }} · {{ $modul->jadwal_minggu ?? 'Jadwal belum diisi' }}
-            · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
+            {{ $modul->praktikum?->nama }}
         </p>
     </div>
     <div class="mp-page-actions">
@@ -19,7 +18,7 @@
 </div>
 
 {{-- Stats --}}
-<div class="mp-stats-grid cols-4">
+<div class="mp-stats-grid cols-3">
     <div class="mp-stat">
         <div class="mp-stat-icon sky">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -41,13 +40,6 @@
         <div class="mp-stat-label">Asisten Praktikum</div>
         <div class="mp-stat-value">{{ $modul->modulAsprak->count() }}</div>
     </div>
-    <div class="mp-stat">
-        <div class="mp-stat-icon yellow">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </div>
-        <div class="mp-stat-label">Praktikan</div>
-        <div class="mp-stat-value">{{ $daftarPraktikan->count() }}</div>
-    </div>
 </div>
 
 <div class="sec-head">
@@ -56,35 +48,8 @@
     <span class="sec-rule"></span>
 </div>
 
-<div class="grid grid-cols-[360px_1fr] gap-[14px] flex-1 min-h-0">
-    <div class="flex flex-col gap-[14px]">
-        {{-- Edit Form --}}
-        @if($modul->praktikum?->is_active)
-        <div class="mp-card flex-shrink-0" style="padding:20px;">
-            <div style="font-weight:700;font-size:14px;color:#0D0D12;margin-bottom:16px;">Edit Modul</div>
-            <form method="POST" action="{{ route('eoffice.manprak.koor.modul.update', $modul->id) }}" class="flex flex-col gap-3">
-                @csrf @method('PUT')
-                <div>
-                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Nama Modul</label>
-                    <input name="nama" value="{{ $modul->nama }}" required class="mp-input w-full">
-                </div>
-                <div>
-                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Urutan</label>
-                    <input type="number" name="urutan" value="{{ $modul->urutan }}" min="1" required class="mp-input w-full">
-                </div>
-                <div>
-                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Jadwal / Minggu</label>
-                    <input name="jadwal_minggu" value="{{ $modul->jadwal_minggu }}" class="mp-input w-full" placeholder="Jadwal / minggu">
-                </div>
-                <div>
-                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Deskripsi</label>
-                    <textarea name="deskripsi" rows="4" class="mp-input w-full resize-none">{{ $modul->deskripsi }}</textarea>
-                </div>
-                <button class="mp-btn primary md w-full">Simpan Perubahan</button>
-            </form>
-        </div>
-        @endif
-
+<div class="grid grid-cols-1 lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)] gap-3.5 flex-1 min-h-0">
+    <div class="flex flex-col gap-3.5 min-w-0">
         {{-- Asisten Praktikum Modul --}}
         <div class="mp-card flex-shrink-0">
             <div class="mp-card-header">
@@ -112,7 +77,7 @@
         </div>
     </div>
 
-    <div class="flex flex-col gap-[14px] overflow-y-auto">
+    <div class="flex flex-col gap-3.5 min-w-0">
         {{-- Materi Modul --}}
         <div class="mp-card flex-shrink-0">
             <div class="mp-card-header">
@@ -146,7 +111,7 @@
             <div class="flex justify-between gap-3" style="padding:12px 20px;border-bottom:1px solid #DFE1E7;">
                 <div>
                     <div style="font-weight:600;font-size:13px;color:#0D0D12;">{{ $tugas->judul }}</div>
-                    <div style="font-size:12px;color:#666D80;margin-top:3px;">{{ $tugas->deadline?->format('d M Y H:i') ?? 'Tanpa deadline' }}</div>
+                    <div style="font-size:12px;color:#666D80;margin-top:3px;">{{ $tugas->deadline?->format('d M Y H:i') ?? 'Tanpa tenggat' }}</div>
                 </div>
                 <span class="mp-badge neutral sm" style="white-space:nowrap;align-self:center;">{{ $tugas->pengumpulan->count() }} pengumpulan</span>
             </div>
