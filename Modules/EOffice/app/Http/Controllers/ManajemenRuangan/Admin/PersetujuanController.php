@@ -97,6 +97,8 @@ class PersetujuanController extends Controller
         if ($request->filled('source')) {
             if ($request->source === 'umum') {
                 $query->whereNull('source');
+            } elseif ($request->source === 'kp' || $request->source === 'kerja_praktik') {
+                $query->whereIn('source', ['kp', 'kerja_praktik']);
             } else {
                 $query->where('source', $request->source);
             }
@@ -169,6 +171,8 @@ class PersetujuanController extends Controller
         if ($request->filled('source')) {
             if ($request->source === 'umum') {
                 $query->whereNull('source');
+            } elseif ($request->source === 'kp' || $request->source === 'kerja_praktik') {
+                $query->whereIn('source', ['kp', 'kerja_praktik']);
             } else {
                 $query->where('source', $request->source);
             }

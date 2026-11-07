@@ -28,6 +28,7 @@ class RoomIntegrationController extends Controller
             'kapasitas' => 'nullable|integer',
             'kategori' => 'nullable|string',
             'bypass_h_min' => 'nullable|boolean',
+            'source' => 'nullable|string',
         ]);
 
         try {
@@ -41,7 +42,8 @@ class RoomIntegrationController extends Controller
                 $request->input('jam_selesai'),
                 $request->input('kapasitas'),
                 $request->input('kategori'),
-                $bypassHMin
+                $bypassHMin,
+                $request->input('source')
             );
 
             return response()->json([

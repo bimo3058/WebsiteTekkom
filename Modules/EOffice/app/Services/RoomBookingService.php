@@ -21,8 +21,9 @@ class RoomBookingService
      * @param string $jamMulai Format: H:i (e.g. '08:00')
      * @param string $jamSelesai Format: H:i (e.g. '10:00')
      * @param int|null $kapasitasMin Filter minimal kapasitas ruangan
-     * @param string|null $kategori Filter kategori ruangan (misal: 'Laboratorium', 'Ruang Sidang', dll)
+     * @param string|null $kategori Filter kategori ruangan ('Kelas', 'Laboratorium', 'Sidang')
      * @param bool $bypassHMin Lewati batasan H-min (default true untuk pemesanan agenda resmi/modul eksternal)
+     * @param string|null $source Sumber modul pemanggil ('kp', 'capstone', 'praktikum')
      * @return array
      */
     public function getAvailableRooms(
@@ -31,7 +32,8 @@ class RoomBookingService
         string $jamSelesai,
         ?int $kapasitasMin = null,
         ?string $kategori = null,
-        bool $bypassHMin = true
+        bool $bypassHMin = true,
+        ?string $source = null
     ): array {
         $parsedDate = Carbon::parse($tanggal);
         $formattedDate = $parsedDate->format('Y-m-d');
@@ -40,8 +42,30 @@ class RoomBookingService
         $jamMulaiNorm = substr($jamMulai, 0, 5);
         $jamSelesaiNorm = substr($jamSelesai, 0, 5);
 
+        // Normalisasi kategori: jika pemanggil mengirim 'Ruang Sidang', petakan ke 'Sidang'
+        if ($kategori) {
+            $catLower = strtolower(trim($kategori));
+            if ($catLower === 'ruang sidang' || $catLower === 'sidang') {
+                $kategori = Ruangan::KATEGORI_SIDANG;
+            } elseif ($catLower === 'kelas' || $catLower === 'ruang kelas') {
+                $kategori = Ruangan::KATEGORI_KELAS;
+            } elseif ($catLower === 'laboratorium' || $catLower === 'lab') {
+                $kategori = Ruangan::KATEGORI_LAB;
+            }
+        }
+
         // Ambil master ruangan yang aktif
         $ruanganQuery = Ruangan::where('is_active', true)->orderBy('nama', 'asc');
+
+        // Aturan Pembatasan Modul Eksternal:
+        // Modul KP dan Praktikum DILARANG meminjam Ruang Sidang (khusus Capstone & Admin)
+        $normalizedSource = $source ? strtolower(trim((string) $source)) : null;
+        if ($normalizedSource === 'kerja_praktik') {
+            $normalizedSource = 'kp';
+        }
+        if (in_array($normalizedSource, ['kp', 'praktikum'])) {
+            $ruanganQuery->where('kategori', '!=', Ruangan::KATEGORI_SIDANG);
+        }
 
         if ($kapasitasMin && $kapasitasMin > 0) {
             $ruanganQuery->where('kapasitas', '>=', $kapasitasMin);
@@ -274,6 +298,18 @@ class RoomBookingService
             $ruangan = Ruangan::where('id', $ruanganId)->lockForUpdate()->first();
             if (!$ruangan || !$ruangan->is_active) {
                 throw new \Exception('Ruangan yang dipilih tidak ditemukan atau sedang tidak aktif.');
+            }
+
+            // 8. Validasi Pembatasan Kategori Ruangan per Modul:
+            // Ruangan berkategori 'Sidang' hanya boleh dipesan oleh modul Capstone (Sidang TA/Capstone).
+            // Modul KP, Praktikum, atau modul lain DITOLAK meminjam Ruang Sidang.
+            if ($ruangan->kategori === Ruangan::KATEGORI_SIDANG && $source !== 'capstone') {
+                $sourceLabel = match ($source) {
+                    'kp' => 'Kerja Praktik (Seminar KP)',
+                    'praktikum' => 'Praktikum',
+                    default => 'Modul ' . ($source ?: 'Umum'),
+                };
+                throw new \Exception("Pemesanan gagal: {$sourceLabel} tidak diizinkan meminjam Ruangan berkategori 'Sidang' ({$ruangan->nama}). Ruang Sidang khusus diperuntukkan bagi agenda Sidang Capstone/Tugas Akhir.");
             }
 
             $dayOfWeekIso = (int) $parsedDate->format('N');

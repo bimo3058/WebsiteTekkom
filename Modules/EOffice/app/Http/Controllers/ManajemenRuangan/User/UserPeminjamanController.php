@@ -18,7 +18,7 @@ class UserPeminjamanController extends Controller
         Peminjaman::autoExpirePending();
 
         $ruangans = Ruangan::where('is_active', true)
-            ->where('kategori', '!=', 'Sidang')
+            ->where('kategori', '!=', Ruangan::KATEGORI_SIDANG)
             ->with([
                 'fotos',
                 'peminjamans' => function ($q) {
@@ -40,7 +40,7 @@ class UserPeminjamanController extends Controller
     public function showRuangan($id)
     {
         $room = Ruangan::where('is_active', true)
-            ->where('kategori', '!=', 'Sidang')
+            ->where('kategori', '!=', Ruangan::KATEGORI_SIDANG)
             ->with('fotos')
             ->findOrFail($id);
         $fasilitas = is_array($room->fasilitas) ? $room->fasilitas : (json_decode($room->fasilitas, true) ?? []);
@@ -68,7 +68,7 @@ class UserPeminjamanController extends Controller
                 'required',
                 Rule::exists('eo_mr_ruangans', 'id')
                     ->where('is_active', true)
-                    ->whereNot('kategori', 'Sidang'),
+                    ->whereNot('kategori', Ruangan::KATEGORI_SIDANG),
             ],
             'nomor_telepon' => $isPhoneLocked
                 ? 'required|string|max:30'
@@ -284,18 +284,22 @@ class UserPeminjamanController extends Controller
         $selectedRoomId = $request->get('ruangan_id');
         $selectedKategori = $request->get('kategori');
 
-        $allowedCategories = ['Kelas', 'Laboratorium', 'Aula', 'Fasilitas Umum'];
         $allRuangansQuery = Ruangan::where('is_active', true)
-            ->whereIn('kategori', $allowedCategories)
+            ->where('kategori', '!=', Ruangan::KATEGORI_SIDANG)
             ->orderBy('nama');
 
-        // List semua ruangan (yang boleh dipinjam) untuk dropdown filter
+        // List semua ruangan (yang boleh dipinjam mahasiswa) untuk dropdown filter
         $allRuangansDaftar = $allRuangansQuery->get();
         $kategoriList = $allRuangansDaftar->pluck('kategori')->filter()->unique()->values();
 
+        // Validasi input kategori jika URL dimanipulasi dengan kategori selain yang diizinkan
+        if ($selectedKategori && !in_array($selectedKategori, Ruangan::KATEGORI_MAHASISWA) && $selectedKategori !== 'Semua Kategori' && $selectedKategori !== 'Semua') {
+            $selectedKategori = null;
+        }
+
         // Sensible Default: Jika tidak ada ruangan/kategori yang dipilih, default ke Kelas
         if (!$selectedRoomId && !$selectedKategori) {
-            $selectedKategori = 'Kelas';
+            $selectedKategori = Ruangan::KATEGORI_KELAS;
         }
 
         if ($selectedRoomId) {
@@ -433,7 +437,7 @@ class UserPeminjamanController extends Controller
 
         $user = auth()->user();
         $isOwner = (int) $booking->user_id === (int) $user->id;
-        $isAdmin = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['admin', 'superadmin', 'admin_eoffice']);
+        $isAdmin = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['superadmin', 'admin_eoffice']);
 
         if (! $isOwner && ! $isAdmin) {
             abort(403, 'Akses Ditolak: Anda tidak memiliki izin untuk melihat dokumen ini.');
