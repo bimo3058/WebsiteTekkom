@@ -26,12 +26,26 @@ class Peminjaman extends Model
         'alasan_penolakan',
         'waktu_approval',
         'created_by',
+        'is_hidden_by_user',
+        'source',
+        'source_id',
     ];
 
     protected $casts = [
         'tanggal_pinjam' => 'date',
         'waktu_approval' => 'datetime',
+        'source_id' => 'integer',
     ];
+
+    public function getSourceLabelAttribute(): string
+    {
+        return match (strtolower((string) $this->source)) {
+            'kp', 'kerja_praktik' => 'Seminar KP',
+            'capstone' => 'Sidang Capstone',
+            'praktikum' => 'Praktikum',
+            default => 'Peminjaman Langsung',
+        };
+    }
 
     public function getAlasanPenolakanAttribute($value)
     {

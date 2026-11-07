@@ -64,16 +64,9 @@ class CbtEngineController extends Controller
             return back()->with('error', 'Sesi ujian telah berakhir. Anda tidak dapat masuk lagi.');
         }
 
-        // Jika sudah ada sesi ongoing (misal token diinput ulang), langsung ke engine
-        $existingSession = KompreSession::where('user_id', auth()->id())
-            ->where('status', KompreSessionStatus::Ongoing)
-            ->first();
-
-        if ($existingSession) {
-            return redirect()->route('komprehensif.mahasiswa.engine.run');
-        }
-
-        // ✅ Langsung generate soal & mulai sesi — tidak perlu waiting room
+        // ✅ Cek + pembuatan sesi dilakukan atomik di service (anti race condition).
+        // Jika sesi ongoing sudah ada (mis. token diinput ulang / dobel klik),
+        // service mengembalikan sesi yang sama, bukan membuat sesi baru.
         try {
             $this->cbtService->startSession($jadwal, auth()->id());
         } catch (\Exception $e) {

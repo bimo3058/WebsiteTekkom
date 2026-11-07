@@ -37,7 +37,7 @@
     <x-mobile-navigation-assets />
 </head>
 
-<body class="banksoal-management {{ $rpsPreview ? 'bs-rps-preview' : '' }} font-sans antialiased text-slate-900 bg-slate-50 selection:bg-primary selection:text-white">
+<body class="banksoal-management bs-gpm-layout {{ $rpsPreview ? 'bs-rps-preview' : '' }} font-sans antialiased text-slate-900 bg-slate-50 selection:bg-primary selection:text-white">
     <div x-data="{ sidebarOpen: true }" class="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
 
         <!-- Sidebar Component -->

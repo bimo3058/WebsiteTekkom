@@ -77,7 +77,13 @@
                     <td class="text-center">{{ \Carbon\Carbon::parse($pinjam->jam_selesai)->format('H:i') }}</td>
                     <td>{{ $pinjam->tujuan }}</td>
                     <td class="text-center status-{{ strtolower($pinjam->status) }}">{{ strtoupper($pinjam->status) }}</td>
-                    <td>{{ $pinjam->alasan_penolakan ?? '-' }}</td>
+                    <td>
+                        @if(str_contains($pinjam->alasan_penolakan ?? '', 'Dibatalkan Sistem: Kedaluwarsa'))
+                            <span style="color: #EF4444; font-weight: 600;">{{ $pinjam->alasan_penolakan }}</span>
+                        @else
+                            {{ $pinjam->alasan_penolakan ?? '-' }}
+                        @endif
+                    </td>
                     <td class="text-center">{{ $pinjam->created_at ? $pinjam->created_at->format('d/m/Y H:i') : '-' }}</td>
                     <td class="text-center">{{ $pinjam->waktu_approval ? \Carbon\Carbon::parse($pinjam->waktu_approval)->format('d/m/Y H:i') : '-' }}</td>
                 </tr>
