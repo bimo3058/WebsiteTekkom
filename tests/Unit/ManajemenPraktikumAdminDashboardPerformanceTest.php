@@ -47,7 +47,7 @@ class ManajemenPraktikumAdminDashboardPerformanceTest extends TestCase
             $table->timestamps();
         });
 
-        Schema::create('eo_praktikum', function (Blueprint $table) {
+        Schema::create('eo_prak_praktikum', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->string('nama');
             $table->string('status');
@@ -55,25 +55,25 @@ class ManajemenPraktikumAdminDashboardPerformanceTest extends TestCase
             $table->timestamps();
         });
 
-        Schema::create('eo_praktikum_dosen', function (Blueprint $table) {
+        Schema::create('eo_prak_praktikum_dosen', function (Blueprint $table) {
             $table->id();
             $table->string('praktikum_id');
             $table->unsignedBigInteger('dosen_id');
         });
 
-        Schema::create('pendaftaran_asprak', function (Blueprint $table) {
+        Schema::create('eo_prak_pendaftaran_asprak', function (Blueprint $table) {
             $table->id();
             $table->string('status');
             $table->string('status_koor');
         });
 
-        Schema::create('pendaftaran_koordinator', function (Blueprint $table) {
+        Schema::create('eo_prak_pendaftaran_koordinator', function (Blueprint $table) {
             $table->id();
             $table->string('status');
             $table->string('status_dosen');
         });
 
-        Schema::create('manprak_periode_pendaftaran', function (Blueprint $table) {
+        Schema::create('eo_prak_periode_pendaftaran', function (Blueprint $table) {
             $table->id();
             $table->string('praktikum_id');
             $table->string('jenis');
@@ -113,7 +113,7 @@ class ManajemenPraktikumAdminDashboardPerformanceTest extends TestCase
         $this->assertSame(2, $data['pendingTindakan']);
         $this->assertCount(
             1,
-            $queries->filter(fn (string $sql) => str_contains($sql, 'eo_praktikum_dosen'))
+            $queries->filter(fn (string $sql) => str_contains($sql, 'eo_prak_praktikum_dosen'))
         );
     }
 
@@ -143,7 +143,7 @@ class ManajemenPraktikumAdminDashboardPerformanceTest extends TestCase
 
     private function seedDashboard(int $lecturerCount): void
     {
-        DB::table('eo_praktikum')->insert([
+        DB::table('eo_prak_praktikum')->insert([
             ['id' => 'active', 'nama' => 'Praktikum Aktif', 'status' => 'aktif', 'deleted_at' => null, 'created_at' => now(), 'updated_at' => now()],
             ['id' => 'deleted', 'nama' => 'Praktikum Terhapus', 'status' => 'aktif', 'deleted_at' => now(), 'created_at' => now(), 'updated_at' => now()],
         ]);
@@ -165,20 +165,20 @@ class ManajemenPraktikumAdminDashboardPerformanceTest extends TestCase
             ]);
         }
 
-        DB::table('eo_praktikum_dosen')->insert([
+        DB::table('eo_prak_praktikum_dosen')->insert([
             ['praktikum_id' => 'active', 'dosen_id' => 1],
             ['praktikum_id' => 'deleted', 'dosen_id' => 1],
         ]);
 
-        DB::table('pendaftaran_asprak')->insert([
+        DB::table('eo_prak_pendaftaran_asprak')->insert([
             'status' => 'pending',
             'status_koor' => 'disetujui',
         ]);
-        DB::table('pendaftaran_koordinator')->insert([
+        DB::table('eo_prak_pendaftaran_koordinator')->insert([
             'status' => 'pending',
             'status_dosen' => 'disetujui',
         ]);
-        DB::table('manprak_periode_pendaftaran')->insert([
+        DB::table('eo_prak_periode_pendaftaran')->insert([
             'praktikum_id' => 'active',
             'jenis' => 'asprak',
             'is_aktif' => true,

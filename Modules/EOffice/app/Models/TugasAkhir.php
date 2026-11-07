@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class TugasAkhir extends Model
 {
     use HasUuids;
-    protected $table = 'eo_tugas_akhir';
+    protected $table = 'eo_prak_tugas_akhir';
     protected $guarded = [];
     protected $casts = ['tahap' => 'array', 'komponen' => 'array', 'lampiran' => 'array', 'riwayat' => 'array', 'published' => 'boolean'];
 

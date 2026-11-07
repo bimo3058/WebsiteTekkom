@@ -14,14 +14,14 @@ use Symfony\Component\HttpFoundation\Response;
  * MASALAH YANG DISELESAIKAN
  * ─────────────────────────
  * Asprak hanya boleh mengelola MODUL yang di-assign kepadanya via tabel
- * `modul_asprak` (asprak_id → asprak_praktikum.id). Tanpa middleware ini,
+ * `eo_prak_modul_asprak` (asprak_id → eo_prak_asprak_praktikum.id). Tanpa middleware ini,
  * asprak bisa mengakses modul praktikum lain cukup dengan mengganti ID di URL.
  *
  * CARA KERJA
  * ──────────
  * 1. Resolve `AsistenPraktikum` yang aktif untuk user ini.
  * 2. Jika request menyertakan `modulId` / `modul_id` di route, cek bahwa
- *    modul tersebut ada di `modul_asprak` untuk asprak ini.
+ *    modul tersebut ada di `eo_prak_modul_asprak` untuk asprak ini.
  * 3. Inject `$asprak` (dan `$modul` jika ada) ke request attributes.
  *
  * PENGGUNAAN DI ROUTE

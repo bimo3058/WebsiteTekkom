@@ -47,7 +47,7 @@ class DaftarPraktikanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
+            'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
             'file'         => 'nullable|file|mimes:csv,xlsx,xls|max:5120',
             'user_ids'     => 'nullable|array',
             'user_ids.*'   => 'exists:users,id',

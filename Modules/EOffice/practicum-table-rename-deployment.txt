@@ -1,0 +1,20 @@
+PENYESUAIAN NAMA TABEL PRAKTIKUM
+
+Commit ini menyelaraskan model, query, validasi, seeder, dan fixture tes dengan
+prefix eo_prak_. Perubahan peminjaman ruang, penjadwalan, serta role CERC/admin
+praktikum tidak termasuk di dalamnya.
+
+Peta nama lama dan baru terdapat pada konstanta TABLES di:
+Modules/EOffice/database/migrations/2026_11_05_000002_standardize_practicum_table_names.php
+
+Jika menggunakan database bersama yang sudah diganti namanya, ambil commit ini,
+lalu jalankan php artisan optimize:clear dan restart server lokal.
+
+Untuk database lain yang masih menggunakan nama lama, deploy kode ini bersamaan
+dengan migrasi tersebut. Jalankan hanya migrasi terkait, bukan seluruh migrasi
+pekerjaan lokal yang belum selesai:
+php artisan migrate --path=Modules/EOffice/database/migrations/2026_11_05_000002_standardize_practicum_table_names.php
+
+Migrasi mempertahankan isi tabel dan berhenti jika nama lama dan nama tujuan
+sama-sama tersedia. Jangan gunakan migrate:fresh atau membuat ulang tabel lama.
+Rollback nama database harus disertai pengembalian versi kode yang sesuai.

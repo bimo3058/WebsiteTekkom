@@ -11,22 +11,23 @@ use Tests\TestCase;
 
 class ModuleAssessmentTest extends TestCase
 {
+    use \Tests\Support\RunsLegacyPracticumMigrations;
     protected function setUp(): void
     {
         parent::setUp();
         config(['database.connections.component_test'=>['driver'=>'sqlite','database'=>':memory:']]);
         DB::setDefaultConnection('component_test');
         DB::purge('component_test');
-        Schema::create('eo_praktikum',function(Blueprint $t){$t->uuid('id')->primary();$t->string('nama');foreach(['tp','praktikum','laporan','responsi'] as $key)$t->integer('bobot_'.$key)->default($key==='tp'?10:30);$t->timestamps();$t->softDeletes();});
-        (require base_path('Modules/EOffice/database/migrations/2026_10_09_230000_add_module_assessment_components.php'))->up();
-        Schema::create('modul_praktikum',function(Blueprint $t){$t->id();$t->uuid('praktikum_id');$t->string('nama');$t->timestamps();});
-        Schema::create('tugas_praktikum',function(Blueprint $t){$t->id();$t->integer('modul_id');$t->string('jenis_tugas');$t->string('judul');$t->boolean('is_published')->default(false);$t->timestamps();});
-        Schema::create('pengumpulan_tugas',function(Blueprint $t){$t->id();$t->integer('tugas_id');});
-        Schema::create('nilai_jenis_tugas',function(Blueprint $t){$t->id();$t->integer('modul_id');$t->string('daftar_praktikan_id');$t->string('jenis_tugas');$t->float('nilai')->nullable();$t->timestamps();});
-        Schema::create('daftar_praktikan',function(Blueprint $t){$t->string('id');$t->uuid('praktikum_id');});
-        Schema::create('nilai_praktikum',function(Blueprint $t){$t->id();$t->string('daftar_praktikan_id');$t->boolean('disetujui_koor')->default(false);$t->boolean('disetujui_dosen')->default(false);$t->boolean('dipublikasikan')->default(false);});
-        DB::table('eo_praktikum')->insert(['id'=>'prak','nama'=>'Praktikum Multimedia']);
-        DB::table('modul_praktikum')->insert([['id'=>1,'praktikum_id'=>'prak','nama'=>'Modul 1'],['id'=>2,'praktikum_id'=>'prak','nama'=>'Modul 2']]);
+        Schema::create('eo_prak_praktikum',function(Blueprint $t){$t->uuid('id')->primary();$t->string('nama');foreach(['tp','praktikum','laporan','responsi'] as $key)$t->integer('bobot_'.$key)->default($key==='tp'?10:30);$t->timestamps();$t->softDeletes();});
+        $this->runLegacyPracticumMigration(base_path('Modules/EOffice/database/migrations/2026_10_09_230000_add_module_assessment_components.php'));
+        Schema::create('eo_prak_modul_praktikum',function(Blueprint $t){$t->id();$t->uuid('praktikum_id');$t->string('nama');$t->timestamps();});
+        Schema::create('eo_prak_tugas_praktikum',function(Blueprint $t){$t->id();$t->integer('modul_id');$t->string('jenis_tugas');$t->string('judul');$t->boolean('is_published')->default(false);$t->timestamps();});
+        Schema::create('eo_prak_pengumpulan_tugas',function(Blueprint $t){$t->id();$t->integer('tugas_id');});
+        Schema::create('eo_prak_nilai_jenis_tugas',function(Blueprint $t){$t->id();$t->integer('modul_id');$t->string('daftar_praktikan_id');$t->string('jenis_tugas');$t->float('nilai')->nullable();$t->timestamps();});
+        Schema::create('eo_prak_daftar_praktikan',function(Blueprint $t){$t->string('id');$t->uuid('praktikum_id');});
+        Schema::create('eo_prak_nilai_praktikum',function(Blueprint $t){$t->id();$t->string('daftar_praktikan_id');$t->boolean('disetujui_koor')->default(false);$t->boolean('disetujui_dosen')->default(false);$t->boolean('dipublikasikan')->default(false);});
+        DB::table('eo_prak_praktikum')->insert(['id'=>'prak','nama'=>'Praktikum Multimedia']);
+        DB::table('eo_prak_modul_praktikum')->insert([['id'=>1,'praktikum_id'=>'prak','nama'=>'Modul 1'],['id'=>2,'praktikum_id'=>'prak','nama'=>'Modul 2']]);
     }
 
     private function data(array $extra=[]): array
@@ -73,8 +74,8 @@ class ModuleAssessmentTest extends TestCase
 
     public function test_legacy_submission_locks_components(): void
     {
-        DB::table('tugas_praktikum')->insert(['id'=>1,'modul_id'=>1,'jenis_tugas'=>'laporan','judul'=>'Laporan','is_published'=>false]);
-        DB::table('pengumpulan_tugas')->insert(['tugas_id'=>1]);
+        DB::table('eo_prak_tugas_praktikum')->insert(['id'=>1,'modul_id'=>1,'jenis_tugas'=>'laporan','judul'=>'Laporan','is_published'=>false]);
+        DB::table('eo_prak_pengumpulan_tugas')->insert(['tugas_id'=>1]);
         $this->assertTrue(Praktikum::first()->moduleComponentsLocked());
         $this->expectException(ValidationException::class);$this->save($this->data());
     }
@@ -102,15 +103,15 @@ class ModuleAssessmentTest extends TestCase
         Tugas::create(['modul_id'=>1,'jenis_tugas'=>'laporan','judul'=>'Laporan','is_published'=>true]);
         $this->save($this->data(['version'=>1,'bobot_responsi'=>10,'tambahan'=>[1=>['nama'=>'Form Data','bobot'=>20]]]));
         $this->assertEquals(20,Praktikum::first()->moduleWeights()['tambahan_1']);
-        DB::table('daftar_praktikan')->insert(['id'=>'student','praktikum_id'=>'prak']);
-        DB::table('nilai_praktikum')->insert(['daftar_praktikan_id'=>'student','disetujui_koor'=>true]);
+        DB::table('eo_prak_daftar_praktikan')->insert(['id'=>'student','praktikum_id'=>'prak']);
+        DB::table('eo_prak_nilai_praktikum')->insert(['daftar_praktikan_id'=>'student','disetujui_koor'=>true]);
         $this->expectException(ValidationException::class);$this->save($this->data(['version'=>2]));
     }
 
     public function test_unknown_component_and_invalid_weights_cannot_publish_tasks(): void
     {
         try {Tugas::create(['modul_id'=>1,'jenis_tugas'=>'tambahan_1','judul'=>'Form','is_published'=>false]);$this->fail('Unknown component accepted.');} catch(ValidationException $e){$this->assertArrayHasKey('jenis_tugas',$e->errors());}
-        DB::table('eo_praktikum')->update(['bobot_tp'=>9]);
+        DB::table('eo_prak_praktikum')->update(['bobot_tp'=>9]);
         $this->expectException(ValidationException::class);
         Tugas::create(['modul_id'=>1,'jenis_tugas'=>'laporan','judul'=>'Laporan','is_published'=>true]);
     }
@@ -193,8 +194,8 @@ class ModuleAssessmentTest extends TestCase
         $this->assertSame('60',$name->getAttribute('maxlength'));
         $this->assertStringContainsString("input.value=''",html_entity_decode($html));
         Tugas::create(['modul_id'=>1,'jenis_tugas'=>'laporan','judul'=>'Laporan','is_published'=>true]);
-        DB::table('daftar_praktikan')->insert(['id'=>'student','praktikum_id'=>'prak']);
-        DB::table('nilai_praktikum')->insert(['daftar_praktikan_id'=>'student','disetujui_koor'=>true]);
+        DB::table('eo_prak_daftar_praktikan')->insert(['id'=>'student','praktikum_id'=>'prak']);
+        DB::table('eo_prak_nilai_praktikum')->insert(['daftar_praktikan_id'=>'student','disetujui_koor'=>true]);
         $html=view('eoffice::components.manajemen-praktikum.ui.module-components',['praktikum'=>Praktikum::first()])->render();
         $dom=new \DOMDocument();@$dom->loadHTML($html);$xpath=new \DOMXPath($dom);
         $this->assertTrue($xpath->query('//input[@name="tambahan[1][nama]"]')->item(0)->hasAttribute('readonly'));

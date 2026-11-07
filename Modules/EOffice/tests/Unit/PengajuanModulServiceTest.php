@@ -26,7 +26,7 @@ class PengajuanModulServiceTest extends TestCase
             $table->string('name');
             $table->timestamps();
         });
-        Schema::create('eo_praktikum', function (Blueprint $table) {
+        Schema::create('eo_prak_praktikum', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('nama');
             $table->unsignedBigInteger('matkul_id')->nullable();
@@ -39,7 +39,7 @@ class PengajuanModulServiceTest extends TestCase
             $table->softDeletes();
             $table->timestamps();
         });
-        Schema::create('pengajuan_modul', function (Blueprint $table) {
+        Schema::create('eo_prak_pengajuan_modul', function (Blueprint $table) {
             $table->id();
             $table->uuid('praktikum_id');
             $table->uuid('praktikum_sumber_id')->nullable();
@@ -53,7 +53,7 @@ class PengajuanModulServiceTest extends TestCase
             $table->timestamp('direview_at')->nullable();
             $table->timestamps();
         });
-        Schema::create('modul_praktikum', function (Blueprint $table) {
+        Schema::create('eo_prak_modul_praktikum', function (Blueprint $table) {
             $table->id();
             $table->uuid('praktikum_id');
             $table->unsignedBigInteger('modul_sumber_id')->nullable();
@@ -65,7 +65,7 @@ class PengajuanModulServiceTest extends TestCase
             $table->string('jadwal_minggu')->nullable();
             $table->timestamps();
         });
-        Schema::create('pengajuan_modul_item', function (Blueprint $table) {
+        Schema::create('eo_prak_pengajuan_modul_item', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('pengajuan_modul_id');
             $table->unsignedBigInteger('modul_sumber_id')->nullable();
@@ -81,7 +81,7 @@ class PengajuanModulServiceTest extends TestCase
             ['id' => 1, 'name' => 'Koordinator'],
             ['id' => 2, 'name' => 'Dosen'],
         ]);
-        DB::table('eo_praktikum')->insert([
+        DB::table('eo_prak_praktikum')->insert([
             'id' => self::PRAKTIKUM_ID,
             'nama' => 'Praktikum Test',
             'matkul_id' => 10,
@@ -113,13 +113,13 @@ class PengajuanModulServiceTest extends TestCase
 
     public function test_penghapusan_modul_dengan_asisten_ditolak_dengan_petunjuk_dan_tanpa_perubahan(): void
     {
-        Schema::create('modul_asprak', function (Blueprint $table) {
+        Schema::create('eo_prak_modul_asprak', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('modul_id');
             $table->unsignedBigInteger('asprak_id');
         });
         $modul = \Modules\EOffice\Models\Modul::create(['praktikum_id' => self::PRAKTIKUM_ID, 'nama' => 'Modul lama', 'urutan' => 1]);
-        DB::table('modul_asprak')->insert(['modul_id' => $modul->id, 'asprak_id' => 1]);
+        DB::table('eo_prak_modul_asprak')->insert(['modul_id' => $modul->id, 'asprak_id' => 1]);
         $service = new PengajuanModulService;
         $pengajuan = $service->buatDraft(Praktikum::findOrFail(self::PRAKTIKUM_ID), 1);
         $pengajuan->items()->first()->update(['aksi' => 'hapus', 'nama_baru' => null, 'urutan_baru' => null]);
@@ -132,8 +132,8 @@ class PengajuanModulServiceTest extends TestCase
             $this->assertStringContainsString('Pembagian Modul ke Asisten', $exception->errors()['pengajuan'][0]);
         }
         $this->assertSame('diajukan', $pengajuan->fresh()->status);
-        $this->assertDatabaseHas('modul_praktikum', ['id' => $modul->id]);
-        $this->assertDatabaseHas('modul_asprak', ['modul_id' => $modul->id, 'asprak_id' => 1]);
+        $this->assertDatabaseHas('eo_prak_modul_praktikum', ['id' => $modul->id]);
+        $this->assertDatabaseHas('eo_prak_modul_asprak', ['modul_id' => $modul->id, 'asprak_id' => 1]);
         $pengajuan->update(['status' => 'dibatalkan']);
         $this->assertSame([], $service->hambatanPenghapusan($pengajuan));
     }
@@ -146,11 +146,11 @@ class PengajuanModulServiceTest extends TestCase
         $pengajuan->items()->create(['aksi' => 'tambah', 'nama_baru' => 'Pengenalan', 'urutan_baru' => 1]);
 
         $service->ajukan($pengajuan->fresh(), 'Pengajuan awal');
-        $this->assertDatabaseCount('modul_praktikum', 0);
+        $this->assertDatabaseCount('eo_prak_modul_praktikum', 0);
 
         $service->setujui($pengajuan->fresh(), 2, null);
 
-        $this->assertDatabaseHas('modul_praktikum', [
+        $this->assertDatabaseHas('eo_prak_modul_praktikum', [
             'praktikum_id' => self::PRAKTIKUM_ID,
             'nama' => 'Pengenalan',
             'urutan' => 1,
@@ -173,7 +173,7 @@ class PengajuanModulServiceTest extends TestCase
     public function test_modul_periode_sebelumnya_menjadi_dasar_dan_satu_keputusan_bersifat_final(): void
     {
         $praktikumLamaId = '0199f101-0000-7000-8000-000000000099';
-        DB::table('eo_praktikum')->insert([
+        DB::table('eo_prak_praktikum')->insert([
             'id' => $praktikumLamaId,
             'nama' => 'Praktikum Lama',
             'matkul_id' => 10,
@@ -181,7 +181,7 @@ class PengajuanModulServiceTest extends TestCase
             'tahun_ajaran' => '2025/2026',
             'semester' => 'Genap',
         ]);
-        $modulLamaId = DB::table('modul_praktikum')->insertGetId([
+        $modulLamaId = DB::table('eo_prak_modul_praktikum')->insertGetId([
             'praktikum_id' => $praktikumLamaId,
             'nama' => 'Routing Dasar',
             'urutan' => 1,
@@ -199,7 +199,7 @@ class PengajuanModulServiceTest extends TestCase
         $service->ajukan($pengajuan->fresh(), null);
         $service->setujui($pengajuan->fresh(), 2, 'Disetujui');
 
-        $this->assertDatabaseHas('modul_praktikum', [
+        $this->assertDatabaseHas('eo_prak_modul_praktikum', [
             'praktikum_id' => self::PRAKTIKUM_ID,
             'modul_sumber_id' => $modulLamaId,
             'nama' => 'Routing Statis',

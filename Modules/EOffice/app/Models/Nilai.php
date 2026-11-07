@@ -5,13 +5,13 @@ namespace Modules\EOffice\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Nilai akhir per daftar_praktikan.
+ * Nilai akhir per eo_prak_daftar_praktikan.
  *
- * Tabel: nilai_praktikum
+ * Tabel: eo_prak_nilai_praktikum
  */
 class Nilai extends Model
 {
-    protected $table = 'nilai_praktikum';
+    protected $table = 'eo_prak_nilai_praktikum';
 
     protected $fillable = [
         'daftar_praktikan_id',

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class TaNilai extends Model
 {
     use HasUuids;
-    protected $table = 'eo_ta_nilai';
+    protected $table = 'eo_prak_ta_nilai';
     protected $guarded = [];
     protected $casts = ['skor' => 'array', 'riwayat' => 'array', 'disetujui_koor' => 'boolean', 'disetujui_dosen' => 'boolean'];
 

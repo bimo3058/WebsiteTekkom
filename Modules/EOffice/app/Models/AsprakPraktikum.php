@@ -9,14 +9,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * Asisten / Koordinator yang sudah aktif bertugas di praktikum.
  *
- * Tabel: asprak_praktikum
+ * Tabel: eo_prak_asprak_praktikum
  * role: asprak | koor
  */
 class AsprakPraktikum extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'asprak_praktikum';
+    protected $table = 'eo_prak_asprak_praktikum';
 
     protected $fillable = [
         'praktikum_id',

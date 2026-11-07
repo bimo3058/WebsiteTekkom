@@ -39,12 +39,12 @@ class AdminRegistrationReviewTest extends TestCase
             'model_has_roles' => ['model_id', 'model_type', 'role_id'],
             'model_has_permissions' => ['model_id', 'model_type', 'permission_id'],
             'role_has_permissions' => ['role_id', 'permission_id'],
-            'asprak_praktikum' => ['user_id', 'praktikum_id', 'role', 'deleted_at'],
-            'eo_praktikum_dosen' => ['praktikum_id', 'dosen_id'],
+            'eo_prak_asprak_praktikum' => ['user_id', 'praktikum_id', 'role', 'deleted_at'],
+            'eo_prak_praktikum_dosen' => ['praktikum_id', 'dosen_id'],
             'eo_notifikasi' => ['user_id', 'judul', 'pesan', 'peminjaman_id', 'is_read'],
-            'pendaftaran_koordinator' => ['user_id', 'praktikum_id', 'ipk', 'motivasi', 'status', 'status_dosen', 'catatan_dosen', 'alasan_penolakan', 'transkrip_path', 'berkas_cerc_path', 'direview_oleh', 'direview_pada'],
-            'pendaftaran_asprak' => ['user_id', 'praktikum_id', 'ipk', 'motivasi', 'jadwal', 'status', 'status_koor', 'catatan_koor', 'alasan_penolakan', 'transkrip_path', 'berkas_cerc_path', 'cv_path', 'direview_oleh', 'direview_pada'],
-            'pendaftaran_praktikan' => ['user_id', 'praktikum_id', 'periode_id', 'irs_path', 'status', 'alasan_penolakan', 'catatan_koor', 'direview_oleh', 'direview_pada'],
+            'eo_prak_pendaftaran_koordinator' => ['user_id', 'praktikum_id', 'ipk', 'motivasi', 'status', 'status_dosen', 'catatan_dosen', 'alasan_penolakan', 'transkrip_path', 'berkas_cerc_path', 'direview_oleh', 'direview_pada'],
+            'eo_prak_pendaftaran_asprak' => ['user_id', 'praktikum_id', 'ipk', 'motivasi', 'jadwal', 'status', 'status_koor', 'catatan_koor', 'alasan_penolakan', 'transkrip_path', 'berkas_cerc_path', 'cv_path', 'direview_oleh', 'direview_pada'],
+            'eo_prak_pendaftaran_praktikan' => ['user_id', 'praktikum_id', 'periode_id', 'irs_path', 'status', 'alasan_penolakan', 'catatan_koor', 'direview_oleh', 'direview_pada'],
         ] as $table => $columns) {
             Schema::create($table, function (Blueprint $t) use ($columns) {
                 $t->id();
@@ -54,7 +54,7 @@ class AdminRegistrationReviewTest extends TestCase
                 $t->timestamps();
             });
         }
-        Schema::create('eo_praktikum', function (Blueprint $t) {
+        Schema::create('eo_prak_praktikum', function (Blueprint $t) {
             $t->uuid('id')->primary();
             $t->string('nama');
             $t->unsignedBigInteger('koor_id')->nullable();
@@ -88,9 +88,9 @@ class AdminRegistrationReviewTest extends TestCase
             DB::table('roles')->insert(['id' => $i + 1, 'name' => $role, 'module' => 'eoffice', 'guard_name' => 'web']);
         }
         DB::table('model_has_roles')->insert(['model_id' => 2, 'model_type' => User::class, 'role_id' => 4]);
-        DB::table('eo_praktikum')->insert(['id' => self::PRAKTIKUM, 'nama' => 'Sistem Digital']);
-        DB::table('eo_praktikum_dosen')->insert(['praktikum_id' => self::PRAKTIKUM, 'dosen_id' => 3]);
-        DB::table('pendaftaran_koordinator')->insert([
+        DB::table('eo_prak_praktikum')->insert(['id' => self::PRAKTIKUM, 'nama' => 'Sistem Digital']);
+        DB::table('eo_prak_praktikum_dosen')->insert(['praktikum_id' => self::PRAKTIKUM, 'dosen_id' => 3]);
+        DB::table('eo_prak_pendaftaran_koordinator')->insert([
             'id' => 1, 'user_id' => 2, 'praktikum_id' => self::PRAKTIKUM,
             'status' => 'pending', 'status_dosen' => 'menunggu',
             'transkrip_path' => 'koor-transkrip/2/transkrip.pdf', 'created_at' => now(),
@@ -150,12 +150,12 @@ class AdminRegistrationReviewTest extends TestCase
             $this->invalid(fn () => $this->controller()->approve($this->requestAs(input: ['override_dosen' => 1, 'override_reason' => $reason]), 1), 'override_reason');
         }
         $this->assertSame('pending', PendaftaranKoordinator::find(1)->status);
-        $this->assertSame(0, DB::table('asprak_praktikum')->count());
+        $this->assertSame(0, DB::table('eo_prak_asprak_praktikum')->count());
     }
 
     public function test_admin_override_assigns_both_roles_and_preserves_original_lecturer_review(): void
     {
-        DB::table('pendaftaran_koordinator')->where('id', 1)->update([
+        DB::table('eo_prak_pendaftaran_koordinator')->where('id', 1)->update([
             'status' => 'rejected', 'status_dosen' => 'ditolak', 'catatan_dosen' => 'Catatan asli dosen',
             'direview_oleh' => 3, 'direview_pada' => '2026-09-10 09:00:00', 'alasan_penolakan' => 'Kandidat lain dipilih',
         ]);
@@ -168,8 +168,8 @@ class AdminRegistrationReviewTest extends TestCase
         $this->assertSame('Catatan asli dosen', $row->catatan_dosen);
         $this->assertSame(3, (int) $row->direview_oleh);
         $this->assertSame('2026-09-10 09:00:00', $row->direview_pada->format('Y-m-d H:i:s'));
-        $this->assertSame(2, (int) DB::table('eo_praktikum')->value('koor_id'));
-        $this->assertEqualsCanonicalizing(['koor', 'asprak'], DB::table('asprak_praktikum')->pluck('role')->all());
+        $this->assertSame(2, (int) DB::table('eo_prak_praktikum')->value('koor_id'));
+        $this->assertEqualsCanonicalizing(['koor', 'asprak'], DB::table('eo_prak_asprak_praktikum')->pluck('role')->all());
         $this->assertEqualsCanonicalizing(['mahasiswa', 'koor_prak', 'asprak'], User::find(2)->roles->pluck('name')->all());
         $audit = EoAuditLog::where('action', 'OVERRIDE_APPROVAL')->firstOrFail();
         $this->assertSame(trim($reason), $audit->new_data['override_reason']);
@@ -180,7 +180,7 @@ class AdminRegistrationReviewTest extends TestCase
         $this->assertSame(1, DB::table('audit_logs')->where('action', 'OVERRIDE_APPROVAL')->count());
         $this->assertSame(1, DB::table('eo_notifikasi')->count());
         $this->invalid(fn () => $this->controller()->approve($this->requestAs(input: ['override_dosen' => 1, 'override_reason' => $reason]), 1), 'approval');
-        $this->assertSame(2, DB::table('asprak_praktikum')->count());
+        $this->assertSame(2, DB::table('eo_prak_asprak_praktikum')->count());
     }
 
     public function test_superadmin_can_override_pending_lecturer_review(): void
@@ -192,7 +192,7 @@ class AdminRegistrationReviewTest extends TestCase
 
     public function test_normal_final_approval_still_works_after_lecturer_accepts(): void
     {
-        DB::table('pendaftaran_koordinator')->where('id', 1)->update(['status_dosen' => 'disetujui']);
+        DB::table('eo_prak_pendaftaran_koordinator')->where('id', 1)->update(['status_dosen' => 'disetujui']);
         $this->controller()->approve($this->requestAs(), 1);
         $this->assertSame('approved', PendaftaranKoordinator::find(1)->status);
         $this->assertSame(1, DB::table('audit_logs')->where('action', 'APPROVE')->count());
@@ -200,10 +200,10 @@ class AdminRegistrationReviewTest extends TestCase
 
     public function test_override_does_not_replace_an_existing_coordinator(): void
     {
-        DB::table('eo_praktikum')->update(['koor_id' => 3]);
+        DB::table('eo_prak_praktikum')->update(['koor_id' => 3]);
         $this->invalid(fn () => $this->controller()->approve($this->requestAs(input: ['override_dosen' => 1, 'override_reason' => 'Data telah diperiksa kembali.']), 1), 'approval');
         $this->assertSame('pending', PendaftaranKoordinator::find(1)->status);
-        $this->assertSame(3, (int) DB::table('eo_praktikum')->value('koor_id'));
+        $this->assertSame(3, (int) DB::table('eo_prak_praktikum')->value('koor_id'));
         $this->assertSame(0, DB::table('audit_logs')->count());
     }
 
@@ -221,7 +221,7 @@ class AdminRegistrationReviewTest extends TestCase
             $this->assertSame('Simulated assignment failure', $e->getMessage());
         }
         $this->assertSame('pending', PendaftaranKoordinator::find(1)->status);
-        $this->assertNull(DB::table('eo_praktikum')->value('koor_id'));
+        $this->assertNull(DB::table('eo_prak_praktikum')->value('koor_id'));
         $this->assertSame(0, DB::table('eo_audit_logs')->count());
     }
 
@@ -239,9 +239,9 @@ class AdminRegistrationReviewTest extends TestCase
 
     public function test_documents_are_served_for_each_registration_type_through_fixed_fields(): void
     {
-        DB::table('pendaftaran_asprak')->insert(['id' => 1, 'transkrip_path' => 'asprak/2/transkrip.pdf', 'berkas_cerc_path' => 'asprak/2/cerc.pdf', 'cv_path' => 'asprak/2/cv.pdf']);
-        DB::table('pendaftaran_praktikan')->insert(['id' => 1, 'irs_path' => 'praktikan-irs/2/irs.pdf']);
-        DB::table('pendaftaran_koordinator')->where('id', 1)->update(['berkas_cerc_path' => 'koor/2/cerc.pdf']);
+        DB::table('eo_prak_pendaftaran_asprak')->insert(['id' => 1, 'transkrip_path' => 'asprak/2/transkrip.pdf', 'berkas_cerc_path' => 'asprak/2/cerc.pdf', 'cv_path' => 'asprak/2/cv.pdf']);
+        DB::table('eo_prak_pendaftaran_praktikan')->insert(['id' => 1, 'irs_path' => 'praktikan-irs/2/irs.pdf']);
+        DB::table('eo_prak_pendaftaran_koordinator')->where('id', 1)->update(['berkas_cerc_path' => 'koor/2/cerc.pdf']);
         $cases = [
             ['koor', 'transkrip_path', 'koor-transkrip/2/transkrip.pdf'],
             ['koor', 'berkas_cerc_path', 'koor/2/cerc.pdf'],
@@ -271,7 +271,7 @@ class AdminRegistrationReviewTest extends TestCase
         $this->httpError(fn () => $controller->document($request, 'unknown', 1, 'transkrip_path', $storage), 404);
         $this->httpError(fn () => $controller->document($request, 'koor', 1, 'irs_path', $storage), 404);
         foreach ([null, '', '../secret', 'folder/../secret', '/etc/passwd', 'C:\\secret.pdf', 'https://example.test/file.pdf'] as $path) {
-            DB::table('pendaftaran_koordinator')->where('id', 1)->update(['transkrip_path' => $path]);
+            DB::table('eo_prak_pendaftaran_koordinator')->where('id', 1)->update(['transkrip_path' => $path]);
             $this->httpError(fn () => $controller->document($request, 'koor', 1, 'transkrip_path', $storage), 404);
         }
     }
@@ -287,7 +287,7 @@ class AdminRegistrationReviewTest extends TestCase
 
     public function test_lecturer_cannot_change_or_delete_an_admin_approved_registration(): void
     {
-        DB::table('pendaftaran_koordinator')->where('id', 1)->update(['status' => 'approved']);
+        DB::table('eo_prak_pendaftaran_koordinator')->where('id', 1)->update(['status' => 'approved']);
         $request = $this->requestAs('dosen');
         $controller = new DosenController(new NotifikasiService);
         $controller->approve($request, 1);
@@ -300,7 +300,7 @@ class AdminRegistrationReviewTest extends TestCase
 
     public function test_lecturer_bulk_rejection_skips_registration_approved_by_admin(): void
     {
-        DB::table('pendaftaran_koordinator')->insert([
+        DB::table('eo_prak_pendaftaran_koordinator')->insert([
             'id' => 2, 'user_id' => 1, 'praktikum_id' => self::PRAKTIKUM,
             'status' => 'approved', 'status_dosen' => 'menunggu',
         ]);
@@ -334,7 +334,7 @@ class AdminRegistrationReviewTest extends TestCase
     public function test_praktikan_list_filters_registrations_and_renders_irs_links(): void
     {
         foreach (['pending', 'approved', 'rejected'] as $i => $status) {
-            DB::table('pendaftaran_praktikan')->insert(['id' => $i + 1, 'user_id' => 2, 'praktikum_id' => self::PRAKTIKUM, 'status' => $status, 'irs_path' => 'irs/file.pdf']);
+            DB::table('eo_prak_pendaftaran_praktikan')->insert(['id' => $i + 1, 'user_id' => 2, 'praktikum_id' => self::PRAKTIKUM, 'status' => $status, 'irs_path' => 'irs/file.pdf']);
         }
         $controller = new RegistrationReviewController;
         $view = $controller->index($this->requestAs(input: ['status' => 'pending', 'search' => 'Mahasiswa']));
@@ -365,15 +365,15 @@ class AdminRegistrationReviewTest extends TestCase
             $this->assertStringContainsString('audit_logs', $e->getMessage());
         }
         $this->assertSame('pending', PendaftaranKoordinator::find(1)->status);
-        $this->assertNull(DB::table('eo_praktikum')->value('koor_id'));
-        $this->assertSame(0, DB::table('asprak_praktikum')->count());
+        $this->assertNull(DB::table('eo_prak_praktikum')->value('koor_id'));
+        $this->assertSame(0, DB::table('eo_prak_asprak_praktikum')->count());
         $this->assertSame(['mahasiswa'], User::find(2)->roles->pluck('name')->all());
         $this->assertSame(0, DB::table('eo_notifikasi')->count());
     }
 
     public function test_asprak_detail_hides_legacy_fields_and_shows_admin_decision_after_coordinator_review(): void
     {
-        DB::table('pendaftaran_asprak')->insert([
+        DB::table('eo_prak_pendaftaran_asprak')->insert([
             'id' => 1, 'user_id' => 2, 'praktikum_id' => self::PRAKTIKUM, 'status' => 'pending',
             'status_koor' => 'disetujui', 'cv_path' => 'asprak/2/cv.pdf', 'jadwal' => json_encode(['Senin 08:00']),
         ]);
@@ -396,7 +396,7 @@ class AdminRegistrationReviewTest extends TestCase
     public function test_coordinator_assignment_restores_revoked_memberships_without_duplicates(): void
     {
         foreach (['koor', 'asprak'] as $role) {
-            DB::table('asprak_praktikum')->insert([
+            DB::table('eo_prak_asprak_praktikum')->insert([
                 'user_id' => 2,
                 'praktikum_id' => self::PRAKTIKUM,
                 'role' => $role,
@@ -409,8 +409,8 @@ class AdminRegistrationReviewTest extends TestCase
             User::findOrFail(2),
         );
 
-        $this->assertSame(2, DB::table('asprak_praktikum')->count());
-        $this->assertSame(0, DB::table('asprak_praktikum')->whereNotNull('deleted_at')->count());
-        $this->assertSame(2, (int) DB::table('eo_praktikum')->value('koor_id'));
+        $this->assertSame(2, DB::table('eo_prak_asprak_praktikum')->count());
+        $this->assertSame(0, DB::table('eo_prak_asprak_praktikum')->whereNotNull('deleted_at')->count());
+        $this->assertSame(2, (int) DB::table('eo_prak_praktikum')->value('koor_id'));
     }
 }

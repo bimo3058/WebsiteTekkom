@@ -7,12 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Periode pendaftaran koor/asprak per praktikum.
- * Tabel: manprak_periode_pendaftaran
+ * Tabel: eo_prak_periode_pendaftaran
  * jenis: koor | asprak | praktikan
  */
 class PeriodePendaftaran extends Model
 {
-    protected $table = 'manprak_periode_pendaftaran';
+    protected $table = 'eo_prak_periode_pendaftaran';
 
     protected $fillable = [
         'praktikum_id',
