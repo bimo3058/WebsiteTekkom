@@ -78,12 +78,9 @@
                                     'judul'  => $pengumuman->judul,
                                 ])
 
-                                {{-- Teks, atau pratinjau berkas kalau pengumumannya tanpa teks --}}
-                                @include('manajemenmahasiswa::pengumuman._detail-konten', [
-                                    'pengumuman' => $pengumuman,
-                                    'images'     => $images,
-                                    'lampiran'   => $lampiran,
-                                ])
+                                <div class="content-section">
+                                    {!! $pengumuman->konten !!}
+                                </div>
                             </div>
                         </div>
                     </div>
