@@ -25,6 +25,7 @@ use Tests\TestCase;
 
 class FinalGradeBookTest extends TestCase
 {
+    use \Tests\Support\RunsLegacyPracticumMigrations;
     protected function setUp(): void
     {
         parent::setUp();
@@ -43,7 +44,7 @@ class FinalGradeBookTest extends TestCase
             $t->integer('cohort_year');
             $t->timestamps();
         });
-        Schema::create('eo_praktikum', function (Blueprint $t) {
+        Schema::create('eo_prak_praktikum', function (Blueprint $t) {
             $t->uuid('id')->primary();
             $t->string('nama');
             $t->integer('koor_id')->default(1);
@@ -53,16 +54,16 @@ class FinalGradeBookTest extends TestCase
             }$t->timestamps();
             $t->softDeletes();
         });
-        (require base_path('Modules/EOffice/database/migrations/2026_10_09_230000_add_module_assessment_components.php'))->up();
-        Schema::table('eo_praktikum', fn (Blueprint $t) => $t->string('status')->default('aktif'));
-        Schema::create('modul_praktikum', function (Blueprint $t) {
+        $this->runLegacyPracticumMigration(base_path('Modules/EOffice/database/migrations/2026_10_09_230000_add_module_assessment_components.php'));
+        Schema::table('eo_prak_praktikum', fn (Blueprint $t) => $t->string('status')->default('aktif'));
+        Schema::create('eo_prak_modul_praktikum', function (Blueprint $t) {
             $t->id();
             $t->uuid('praktikum_id');
             $t->string('nama');
             $t->integer('urutan')->default(1);
             $t->timestamps();
         });
-        Schema::create('daftar_praktikan', function (Blueprint $t) {
+        Schema::create('eo_prak_daftar_praktikan', function (Blueprint $t) {
             $t->uuid('id')->primary();
             $t->uuid('praktikum_id');
             $t->integer('user_id');
@@ -70,7 +71,7 @@ class FinalGradeBookTest extends TestCase
             $t->string('kelompok')->nullable();
             $t->timestamps();
         });
-        Schema::create('nilai_jenis_tugas', function (Blueprint $t) {
+        Schema::create('eo_prak_nilai_jenis_tugas', function (Blueprint $t) {
             $t->id();
             $t->integer('modul_id');
             $t->uuid('daftar_praktikan_id');
@@ -78,7 +79,7 @@ class FinalGradeBookTest extends TestCase
             $t->decimal('nilai', 8, 4)->nullable();
             $t->timestamps();
         });
-        Schema::create('nilai_praktikum', function (Blueprint $t) {
+        Schema::create('eo_prak_nilai_praktikum', function (Blueprint $t) {
             $t->id();
             $t->uuid('daftar_praktikan_id');
             $t->boolean('disetujui_koor')->default(false);
@@ -86,7 +87,7 @@ class FinalGradeBookTest extends TestCase
             $t->boolean('dipublikasikan')->default(false);
             $t->timestamps();
         });
-        Schema::create('eo_praktikum_dosen', function (Blueprint $t) {
+        Schema::create('eo_prak_praktikum_dosen', function (Blueprint $t) {
             $t->uuid('praktikum_id');
             $t->integer('dosen_id');
         });
@@ -101,37 +102,37 @@ class FinalGradeBookTest extends TestCase
             $t->json('new_data')->nullable();
             $t->timestamp('created_at')->nullable();
         });
-        Schema::create('absensi_praktikum', function (Blueprint $t) {
+        Schema::create('eo_prak_absensi_praktikum', function (Blueprint $t) {
             $t->id();
             $t->uuid('daftar_praktikan_id');
         });
         foreach (['2026_10_07_000001_create_tugas_akhir_tables.php', '2026_10_07_000002_create_ta_absensi_table.php', '2026_10_07_000003_add_tipe_to_tugas_akhir.php', '2026_10_30_000001_create_practicum_final_grades.php','2026_11_01_000001_add_final_assessment_columns_and_score_history.php'] as $file) {
-            (require base_path('Modules/EOffice/database/migrations/'.$file))->up();
+            $this->runLegacyPracticumMigration(base_path('Modules/EOffice/database/migrations/'.$file));
         }
         DB::table('users')->insert([['id' => 1, 'name' => 'Koor'], ['id' => 2, 'name' => 'Mahasiswa A'], ['id' => 3, 'name' => 'Mahasiswa B'], ['id' => 4, 'name' => 'Dosen']]);
-        DB::table('eo_praktikum_dosen')->insert(['praktikum_id' => 'prak', 'dosen_id' => 4]);
-        DB::table('eo_praktikum')->insert(['id' => 'prak', 'nama' => 'Praktikum Test', 'bobot_gabungan_modul' => 60, 'bobot_gabungan_ta' => 40]);
+        DB::table('eo_prak_praktikum_dosen')->insert(['praktikum_id' => 'prak', 'dosen_id' => 4]);
+        DB::table('eo_prak_praktikum')->insert(['id' => 'prak', 'nama' => 'Praktikum Test', 'bobot_gabungan_modul' => 60, 'bobot_gabungan_ta' => 40]);
         foreach ([2 => 2023, 3 => 2024] as $id => $year) {
             DB::table('students')->insert(['user_id' => $id, 'student_number' => '211201'.substr((string) $year, 2).'140136', 'cohort_year' => $year]);
-            DB::table('daftar_praktikan')->insert(['id' => 's'.$id, 'praktikum_id' => 'prak', 'user_id' => $id, 'shift' => '1', 'kelompok' => '1']);
-            DB::table('nilai_praktikum')->insert(['daftar_praktikan_id' => 's'.$id]);
+            DB::table('eo_prak_daftar_praktikan')->insert(['id' => 's'.$id, 'praktikum_id' => 'prak', 'user_id' => $id, 'shift' => '1', 'kelompok' => '1']);
+            DB::table('eo_prak_nilai_praktikum')->insert(['daftar_praktikan_id' => 's'.$id]);
         }
-        DB::table('modul_praktikum')->insert([['id' => 1, 'praktikum_id' => 'prak', 'nama' => 'Modul 1'], ['id' => 2, 'praktikum_id' => 'prak', 'nama' => 'Modul 2']]);
+        DB::table('eo_prak_modul_praktikum')->insert([['id' => 1, 'praktikum_id' => 'prak', 'nama' => 'Modul 1'], ['id' => 2, 'praktikum_id' => 'prak', 'nama' => 'Modul 2']]);
         TugasAkhir::create(['praktikum_id' => 'prak', 'ketentuan' => 'TA', 'published' => true, 'tahap' => [['id' => 'stage', 'nama' => 'Tahap', 'revisi_metode' => 'rata_rata']], 'komponen' => [['id' => 'c', 'tahap_id' => 'stage', 'nama' => 'Laporan', 'bobot' => 100]]]);
     }
 
     private function moduleSubmissionFixture(): \Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak\TugasController
     {
-        Schema::create('asprak_praktikum',function(Blueprint $t){$t->id();$t->string('praktikum_id');$t->integer('user_id');$t->string('role');$t->softDeletes();});
-        Schema::create('modul_asprak',function(Blueprint $t){$t->id();$t->integer('modul_id');$t->integer('asprak_id');});
-        Schema::create('tugas_praktikum',function(Blueprint $t){$t->id();$t->integer('modul_id');$t->string('jenis_tugas');$t->string('judul');$t->timestamps();});
-        Schema::create('pengumpulan_tugas',function(Blueprint $t){$t->id();$t->integer('tugas_id');$t->string('daftar_praktikan_id');$t->float('nilai')->nullable();$t->string('status_pengumpulan')->default('belum_dicek');$t->text('file_revisi_asprak')->nullable();$t->text('catatan_revisi')->nullable();$t->boolean('is_revision')->default(false);$t->timestamps();});
-        Schema::table('nilai_praktikum',fn(Blueprint $t)=>$t->float('nilai_tugas')->nullable());
-        Schema::create('riwayat_pengumpulan_tugas',function(Blueprint $t){$t->id();$t->integer('pengumpulan_tugas_id');$t->string('file_path')->nullable();$t->boolean('is_revision')->default(false);$t->timestamps();});
-        DB::table('asprak_praktikum')->insert(['id'=>1,'praktikum_id'=>'prak','user_id'=>1,'role'=>'asprak']);
-        DB::table('modul_asprak')->insert(['modul_id'=>1,'asprak_id'=>1]);
-        DB::table('tugas_praktikum')->insert(['id'=>1,'modul_id'=>1,'jenis_tugas'=>'laporan','judul'=>'Laporan']);
-        DB::table('pengumpulan_tugas')->insert(['id'=>1,'tugas_id'=>1,'daftar_praktikan_id'=>'s2','file_revisi_asprak'=>json_encode([['path'=>'revision/old.pdf','original_name'=>'Old.pdf']]),'status_pengumpulan'=>'revisi']);
+        Schema::create('eo_prak_asprak_praktikum',function(Blueprint $t){$t->id();$t->string('praktikum_id');$t->integer('user_id');$t->string('role');$t->softDeletes();});
+        Schema::create('eo_prak_modul_asprak',function(Blueprint $t){$t->id();$t->integer('modul_id');$t->integer('asprak_id');});
+        Schema::create('eo_prak_tugas_praktikum',function(Blueprint $t){$t->id();$t->integer('modul_id');$t->string('jenis_tugas');$t->string('judul');$t->timestamps();});
+        Schema::create('eo_prak_pengumpulan_tugas',function(Blueprint $t){$t->id();$t->integer('tugas_id');$t->string('daftar_praktikan_id');$t->float('nilai')->nullable();$t->string('status_pengumpulan')->default('belum_dicek');$t->text('file_revisi_asprak')->nullable();$t->text('catatan_revisi')->nullable();$t->boolean('is_revision')->default(false);$t->timestamps();});
+        Schema::table('eo_prak_nilai_praktikum',fn(Blueprint $t)=>$t->float('nilai_tugas')->nullable());
+        Schema::create('eo_prak_riwayat_pengumpulan_tugas',function(Blueprint $t){$t->id();$t->integer('pengumpulan_tugas_id');$t->string('file_path')->nullable();$t->boolean('is_revision')->default(false);$t->timestamps();});
+        DB::table('eo_prak_asprak_praktikum')->insert(['id'=>1,'praktikum_id'=>'prak','user_id'=>1,'role'=>'asprak']);
+        DB::table('eo_prak_modul_asprak')->insert(['modul_id'=>1,'asprak_id'=>1]);
+        DB::table('eo_prak_tugas_praktikum')->insert(['id'=>1,'modul_id'=>1,'jenis_tugas'=>'laporan','judul'=>'Laporan']);
+        DB::table('eo_prak_pengumpulan_tugas')->insert(['id'=>1,'tugas_id'=>1,'daftar_praktikan_id'=>'s2','file_revisi_asprak'=>json_encode([['path'=>'revision/old.pdf','original_name'=>'Old.pdf']]),'status_pengumpulan'=>'revisi']);
         $this->actingAs(User::find(1));
         return app(\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak\TugasController::class);
     }
@@ -154,39 +155,39 @@ class FinalGradeBookTest extends TestCase
     public function test_module_json_grade_save_without_attendance_preserves_other_cells(): void
     {
         $this->moduleSubmissionFixture();
-        Schema::create('pengajuan_modul',function(Blueprint $t){$t->id();$t->string('praktikum_id');$t->string('status');});
-        DB::table('nilai_jenis_tugas')->insert(['modul_id'=>1,'daftar_praktikan_id'=>'s2','jenis_tugas'=>'responsi','nilai'=>75]);
+        Schema::create('eo_prak_pengajuan_modul',function(Blueprint $t){$t->id();$t->string('praktikum_id');$t->string('status');});
+        DB::table('eo_prak_nilai_jenis_tugas')->insert(['modul_id'=>1,'daftar_praktikan_id'=>'s2','jenis_tugas'=>'responsi','nilai'=>75]);
         $controller=app(\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak\AbsensiController::class);
         $payload=['tanggal'=>'2026-10-31','absensi'=>[],'nilai'=>['s2'=>['laporan'=>'80.25']]];
         $make=fn($data)=>Request::create('/save','POST',[],[],[],['CONTENT_TYPE'=>'application/json','HTTP_ACCEPT'=>'application/json'],json_encode($data));
         $this->assertSame(200,$controller->store($make($payload),1)->status());
-        $this->assertEquals(80.25,DB::table('nilai_jenis_tugas')->where('jenis_tugas','laporan')->value('nilai'));
-        $this->assertEquals(75,DB::table('nilai_jenis_tugas')->where('jenis_tugas','responsi')->value('nilai'));
-        $this->assertSame(0,DB::table('absensi_praktikum')->count());
+        $this->assertEquals(80.25,DB::table('eo_prak_nilai_jenis_tugas')->where('jenis_tugas','laporan')->value('nilai'));
+        $this->assertEquals(75,DB::table('eo_prak_nilai_jenis_tugas')->where('jenis_tugas','responsi')->value('nilai'));
+        $this->assertSame(0,DB::table('eo_prak_absensi_praktikum')->count());
         $payload['nilai']['s2']['laporan']=null;$controller->store($make($payload),1);
-        $this->assertNull(DB::table('nilai_jenis_tugas')->where('jenis_tugas','laporan')->value('nilai'));
+        $this->assertNull(DB::table('eo_prak_nilai_jenis_tugas')->where('jenis_tugas','laporan')->value('nilai'));
         $payload['nilai']['foreign']=['laporan'=>100];
         try{$controller->store($make($payload),1);$this->fail('Foreign participant accepted');}catch(ValidationException $e){$this->assertNotEmpty($e->errors());}
-        $payload['nilai']=['s2'=>['laporan'=>90]];DB::table('eo_praktikum')->update(['is_active'=>false]);
+        $payload['nilai']=['s2'=>['laporan'=>90]];DB::table('eo_prak_praktikum')->update(['is_active'=>false]);
         try{$controller->store($make($payload),1);$this->fail('Archived grade changed');}catch(ValidationException $e){$this->assertNotEmpty($e->errors());}
-        $this->assertNull(DB::table('nilai_jenis_tugas')->where('jenis_tugas','laporan')->value('nilai'));
+        $this->assertNull(DB::table('eo_prak_nilai_jenis_tugas')->where('jenis_tugas','laporan')->value('nilai'));
     }
 
     public function test_module_bulk_save_updates_only_supplied_students_and_rejects_foreign_ids(): void
     {
         $controller=$this->moduleSubmissionFixture();
-        DB::table('nilai_jenis_tugas')->insert(['modul_id'=>1,'daftar_praktikan_id'=>'s3','jenis_tugas'=>'laporan','nilai'=>78]);
+        DB::table('eo_prak_nilai_jenis_tugas')->insert(['modul_id'=>1,'daftar_praktikan_id'=>'s3','jenis_tugas'=>'laporan','nilai'=>78]);
         $controller->updateNilaiJenis(Request::create('/test','POST',['nilai'=>['s2'=>['nilai_jenis'=>0]]]),1);
-        $this->assertSame(0.0,(float)DB::table('nilai_jenis_tugas')->where('daftar_praktikan_id','s2')->value('nilai'));
-        $this->assertSame(78.0,(float)DB::table('nilai_jenis_tugas')->where('daftar_praktikan_id','s3')->value('nilai'));
-        $this->assertSame('acc',DB::table('pengumpulan_tugas')->where('id',1)->value('status_pengumpulan'));
+        $this->assertSame(0.0,(float)DB::table('eo_prak_nilai_jenis_tugas')->where('daftar_praktikan_id','s2')->value('nilai'));
+        $this->assertSame(78.0,(float)DB::table('eo_prak_nilai_jenis_tugas')->where('daftar_praktikan_id','s3')->value('nilai'));
+        $this->assertSame('acc',DB::table('eo_prak_pengumpulan_tugas')->where('id',1)->value('status_pengumpulan'));
         try {
             $controller->updateNilaiJenis(Request::create('/test','POST',['nilai'=>['s2'=>['nilai_jenis'=>50],'foreign'=>['nilai_jenis'=>90]]]),1);
             $this->fail('Foreign participant accepted');
         } catch (ValidationException $e) { $this->assertArrayHasKey('nilai',$e->errors()); }
-        $this->assertSame(0.0,(float)DB::table('nilai_jenis_tugas')->where('daftar_praktikan_id','s2')->value('nilai'));
+        $this->assertSame(0.0,(float)DB::table('eo_prak_nilai_jenis_tugas')->where('daftar_praktikan_id','s2')->value('nilai'));
         $controller->updateNilaiJenis(Request::create('/test','POST',['nilai'=>['s2'=>['nilai_jenis'=>'']]]),1);
-        $this->assertNull(DB::table('nilai_jenis_tugas')->where('daftar_praktikan_id','s2')->value('nilai'));
+        $this->assertNull(DB::table('eo_prak_nilai_jenis_tugas')->where('daftar_praktikan_id','s2')->value('nilai'));
     }
 
     public function test_submission_filters_search_all_students_and_keep_unfiltered_totals(): void
@@ -206,13 +207,13 @@ class FinalGradeBookTest extends TestCase
     {
         $controller=$this->moduleSubmissionFixture();
         $controller->beriRevisi(Request::create('/test','POST',['retained_files'=>['revision/old.pdf']]),1);
-        $this->assertSame('Old.pdf',json_decode(DB::table('pengumpulan_tugas')->where('id',1)->value('file_revisi_asprak'),true)[0]['original_name']);
+        $this->assertSame('Old.pdf',json_decode(DB::table('eo_prak_pengumpulan_tugas')->where('id',1)->value('file_revisi_asprak'),true)[0]['original_name']);
         foreach ([[],['foreign/file.pdf']] as $retained) {
             try {
                 $controller->beriRevisi(Request::create('/test','POST',['retained_files'=>$retained]),1);
                 $this->fail('Invalid retained files accepted');
             } catch (ValidationException $e) { $this->assertNotEmpty($e->errors()); }
-            $this->assertSame('revision/old.pdf',json_decode(DB::table('pengumpulan_tugas')->where('id',1)->value('file_revisi_asprak'),true)[0]['path']);
+            $this->assertSame('revision/old.pdf',json_decode(DB::table('eo_prak_pengumpulan_tugas')->where('id',1)->value('file_revisi_asprak'),true)[0]['path']);
         }
     }
 
@@ -224,9 +225,9 @@ class FinalGradeBookTest extends TestCase
         $controller=app(\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak\TugasController::class);
         $request=Request::create('/test','POST',[],[],['file_revisi'=>[\Illuminate\Http\UploadedFile::fake()->create('New.pdf',1,'application/pdf')]]);
         $controller->beriRevisi($request,1);
-        $files=json_decode(DB::table('pengumpulan_tugas')->where('id',1)->value('file_revisi_asprak'),true);
+        $files=json_decode(DB::table('eo_prak_pengumpulan_tugas')->where('id',1)->value('file_revisi_asprak'),true);
         $this->assertSame([['path'=>'revision/new.pdf','original_name'=>'New.pdf']],$files);
-        $this->assertSame('revisi',DB::table('pengumpulan_tugas')->where('id',1)->value('status_pengumpulan'));
+        $this->assertSame('revisi',DB::table('eo_prak_pengumpulan_tugas')->where('id',1)->value('status_pengumpulan'));
     }
 
     public function test_revision_upload_failure_does_not_overwrite_existing_files(): void
@@ -237,7 +238,7 @@ class FinalGradeBookTest extends TestCase
         $controller=app(\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak\TugasController::class);
         $request=Request::create('/test','POST',['retained_files'=>['revision/old.pdf']],[],['file_revisi'=>[\Illuminate\Http\UploadedFile::fake()->create('New.pdf',1,'application/pdf')]]);
         $controller->beriRevisi($request,1);
-        $files=json_decode(DB::table('pengumpulan_tugas')->where('id',1)->value('file_revisi_asprak'),true);
+        $files=json_decode(DB::table('eo_prak_pengumpulan_tugas')->where('id',1)->value('file_revisi_asprak'),true);
         $this->assertSame('revision/old.pdf',$files[0]['path']);
     }
 
@@ -254,8 +255,8 @@ class FinalGradeBookTest extends TestCase
     {
         $this->moduleSubmissionFixture();
         Schema::table('users',fn(Blueprint $t)=>$t->string('email')->nullable());
-        Schema::table('pengumpulan_tugas',fn(Blueprint $t)=>$t->text('file_path')->nullable());
-        DB::table('pengumpulan_tugas')->where('id',1)->update(['file_path'=>json_encode([['path'=>'uploads/random.pdf','original_name'=>'Print IRS.pdf']])]);
+        Schema::table('eo_prak_pengumpulan_tugas',fn(Blueprint $t)=>$t->text('file_path')->nullable());
+        DB::table('eo_prak_pengumpulan_tugas')->where('id',1)->update(['file_path'=>json_encode([['path'=>'uploads/random.pdf','original_name'=>'Print IRS.pdf']])]);
         DB::table('users')->where('id',2)->update(['email'=>'student@example.test']);
         $tugas=\Modules\EOffice\Models\Tugas::with('modul.praktikum')->findOrFail(1);
         $praktikans=\Modules\EOffice\Models\DaftarPraktikan::with('user.student')->orderBy('id')->get();
@@ -304,7 +305,7 @@ class FinalGradeBookTest extends TestCase
         ob_start(); $response->sendContent(); $csv = ob_get_clean();
         $this->assertStringContainsString('Mahasiswa A', $csv);
         $this->assertStringContainsString('Mahasiswa B', $csv);
-        DB::table('nilai_praktikum')->where('daftar_praktikan_id', 's3')->update(['dipublikasikan'=>false]);
+        DB::table('eo_prak_nilai_praktikum')->where('daftar_praktikan_id', 's3')->update(['dipublikasikan'=>false]);
         $this->assertEmpty($book->report($practicum->fresh(), null, true)['rows']);
         try { $controller->exportCsv($request); $this->fail('Unpublished grades exported'); }
         catch (\Symfony\Component\HttpKernel\Exception\HttpException $error) { $this->assertSame(403, $error->getStatusCode()); }
@@ -432,7 +433,7 @@ class FinalGradeBookTest extends TestCase
         foreach (['s2', 's3'] as $student) {
             foreach ([1, 2] as $module) {
                 foreach (['tugas_pendahuluan', 'tugas_pengganti', 'laporan', 'responsi'] as $type) {
-                    DB::table('nilai_jenis_tugas')->insert(['modul_id' => $module, 'daftar_praktikan_id' => $student, 'jenis_tugas' => $type, 'nilai' => $score]);
+                    DB::table('eo_prak_nilai_jenis_tugas')->insert(['modul_id' => $module, 'daftar_praktikan_id' => $student, 'jenis_tugas' => $type, 'nilai' => $score]);
                 }
             }
             TaNilai::create(['tugas_akhir_id' => TugasAkhir::first()->id, 'praktikan_id' => $student, 'skor' => ['c' => $score], 'riwayat' => []]);
@@ -444,7 +445,7 @@ class FinalGradeBookTest extends TestCase
         $book = app(FinalGradeBook::class);
         DB::transaction(fn () => $book->propose(Praktikum::first()));
         DB::transaction(fn () => $book->publish(Praktikum::first()));
-        DB::table('nilai_praktikum')->update(['dipublikasikan' => true, 'disetujui_koor' => true, 'disetujui_dosen' => true]);
+        DB::table('eo_prak_nilai_praktikum')->update(['dipublikasikan' => true, 'disetujui_koor' => true, 'disetujui_dosen' => true]);
     }
 
     public function test_nim_uses_seventh_and_eighth_digits_and_rejects_mismatched_data(): void
@@ -480,11 +481,11 @@ class FinalGradeBookTest extends TestCase
     public function test_individual_module_columns_use_ordered_values_and_frozen_publication(): void
     {
         $this->scores('82.25');
-        DB::table('nilai_jenis_tugas')->where('modul_id',2)->update(['nilai'=>90.5]);
+        DB::table('eo_prak_nilai_jenis_tugas')->where('modul_id',2)->update(['nilai'=>90.5]);
         $book=app(FinalGradeBook::class);$praktikum=Praktikum::first();
         $this->assertSame(['82.25','90.50'],array_values($book->report($praktikum)['rows']['s2']['module_values']));
         $this->publish();
-        DB::table('nilai_jenis_tugas')->update(['nilai'=>0]);
+        DB::table('eo_prak_nilai_jenis_tugas')->update(['nilai'=>0]);
         $this->assertSame(['82.25','90.50'],array_values($book->report($praktikum->fresh(),'2')['rows']['s2']['module_values']));
         foreach(['koor','dosen','mahasiswa'] as $role){
             $this->actingAs(User::find($role==='mahasiswa'?2:1));
@@ -498,7 +499,7 @@ class FinalGradeBookTest extends TestCase
         $row = $this->book()['rows']['s2'];
         $this->assertSame('0.00', $row['final']);
         $this->assertSame('E', $row['letter']);
-        DB::table('nilai_jenis_tugas')->insert(['modul_id' => 1, 'daftar_praktikan_id' => 's2', 'jenis_tugas' => 'laporan', 'nilai' => 100]);
+        DB::table('eo_prak_nilai_jenis_tugas')->insert(['modul_id' => 1, 'daftar_praktikan_id' => 's2', 'jenis_tugas' => 'laporan', 'nilai' => 100]);
         $row = $this->book()['rows']['s2'];
         $this->assertSame('15.00', $row['module']);
         $this->assertSame('9.00', $row['final']);
@@ -510,13 +511,13 @@ class FinalGradeBookTest extends TestCase
         $rows = $this->book()['rows'];
         $this->assertSame('85.00', $rows['s2']['final']);
         $this->assertSame('A', $rows['s3']['letter']);
-        DB::table('nilai_jenis_tugas')->update(['nilai' => '84.994']);
+        DB::table('eo_prak_nilai_jenis_tugas')->update(['nilai' => '84.994']);
         TaNilai::query()->update(['skor' => json_encode(['c' => '84.994'])]);
         $rows = $this->book()['rows'];
         $this->assertSame('84.99', $rows['s3']['final']);
         $this->assertSame('AB', $rows['s3']['letter']);
         $this->assertSame('A', $rows['s2']['letter']);
-        DB::table('nilai_jenis_tugas')->update(['nilai' => '84.995']);
+        DB::table('eo_prak_nilai_jenis_tugas')->update(['nilai' => '84.995']);
         $this->assertSame('84.99', $this->book()['rows']['s3']['final'], 'Rounding the module subtotal first would incorrectly produce 85.00.');
     }
 
@@ -534,7 +535,7 @@ class FinalGradeBookTest extends TestCase
 
     public function test_invalid_weights_and_cohort_block_proposal(): void
     {
-        DB::table('eo_praktikum')->update(['bobot_gabungan_ta' => null]);
+        DB::table('eo_prak_praktikum')->update(['bobot_gabungan_ta' => null]);
         $this->assertNull($this->book()['rows']['s2']['final']);
         $this->expectException(ValidationException::class);
         DB::transaction(fn () => app(FinalGradeBook::class)->propose(Praktikum::first()));
@@ -554,7 +555,7 @@ class FinalGradeBookTest extends TestCase
         }
         $controller->weights(Request::create('/test', 'POST', ['version' => 0, 'modules' => 70, 'ta' => 30]));
         $this->assertSame(70, (int) Praktikum::first()->bobot_gabungan_modul);
-        DB::table('nilai_praktikum')->update(['disetujui_koor' => true]);
+        DB::table('eo_prak_nilai_praktikum')->update(['disetujui_koor' => true]);
         $this->expectException(ValidationException::class);
         $controller->weights(Request::create('/test', 'POST', ['version' => 1, 'modules' => 80, 'ta' => 20]));
     }
@@ -578,7 +579,7 @@ class FinalGradeBookTest extends TestCase
         $this->scores('80');
         $book = app(FinalGradeBook::class);
         DB::transaction(fn () => $book->propose(Praktikum::first()));
-        DB::table('nilai_jenis_tugas')->where('id', 1)->update(['nilai' => 0]);
+        DB::table('eo_prak_nilai_jenis_tugas')->where('id', 1)->update(['nilai' => 0]);
         $this->expectException(ValidationException::class);
         DB::transaction(fn () => $book->publish(Praktikum::first()));
     }
@@ -597,7 +598,7 @@ class FinalGradeBookTest extends TestCase
         $this->assertSame('AB', $report['rows']['s3']['letter']);
         $this->assertSame($old->id, $report['policy']->id);
         $this->assertSame('BA', $this->book()['rows']['s3']['letter']);
-        DB::table('nilai_praktikum')->where('daftar_praktikan_id', 's3')->update(['dipublikasikan' => false]);
+        DB::table('eo_prak_nilai_praktikum')->where('daftar_praktikan_id', 's3')->update(['dipublikasikan' => false]);
         $this->assertEmpty(app(FinalGradeBook::class)->report(Praktikum::first(), '3')['rows']);
     }
 
@@ -632,7 +633,7 @@ class FinalGradeBookTest extends TestCase
         $this->scores('80');
         $this->publish();
         NilaiJenisTugas::first()->update(['nilai' => 70]);
-        $this->assertSame(0, DB::table('nilai_praktikum')->where('dipublikasikan', true)->count());
+        $this->assertSame(0, DB::table('eo_prak_nilai_praktikum')->where('dipublikasikan', true)->count());
         $this->assertEmpty(app(FinalGradeBook::class)->report(Praktikum::first(), '2')['rows']);
         $this->assertSame(2, DB::table('eo_prak_final_results')->count());
     }

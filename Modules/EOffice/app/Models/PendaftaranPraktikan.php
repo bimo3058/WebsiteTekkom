@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Pendaftaran mahasiswa sebagai praktikan (verifikasi Cetak IRS oleh koor).
  *
- * Tabel: pendaftaran_praktikan
+ * Tabel: eo_prak_pendaftaran_praktikan
  * status: pending | approved | rejected
  */
 class PendaftaranPraktikan extends Model
@@ -22,7 +22,7 @@ class PendaftaranPraktikan extends Model
     /** Pesan standar penolakan otomatis / cepat */
     public const PESAN_TOLAK_IRS_DEFAULT = 'Anda belum mengambil IRS praktikum';
 
-    protected $table = 'pendaftaran_praktikan';
+    protected $table = 'eo_prak_pendaftaran_praktikan';
 
     protected $fillable = [
         'user_id',

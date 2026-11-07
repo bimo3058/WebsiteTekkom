@@ -33,7 +33,7 @@ class PendaftaranAsprakController extends Controller
         $pendaftaran = $query->paginate($request->input('per_page', 5))->withQueryString();
 
         $namaBerkasTambahan = collect();
-        if (Schema::hasTable('manprak_periode_pendaftaran')) {
+        if (Schema::hasTable('eo_prak_periode_pendaftaran')) {
             $namaBerkasTambahan = PeriodePendaftaran::whereIn('praktikum_id', $pendaftaran->pluck('praktikum_id')->unique())
                 ->where('jenis', 'asprak')
                 ->latest('created_at')
@@ -75,7 +75,7 @@ class PendaftaranAsprakController extends Controller
             $user->roles()->syncWithoutDetaching([$roleAsprak->id]);
         }
 
-        // Tambahkan ke asprak_praktikum
+        // Tambahkan ke eo_prak_asprak_praktikum
         \Modules\EOffice\Models\AsprakPraktikum::firstOrCreate([
             'praktikum_id' => $pendaftaran->praktikum_id,
             'user_id'      => $pendaftaran->user_id,

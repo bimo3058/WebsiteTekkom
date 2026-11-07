@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Distribusi Asisten Praktikum ke Modul.
  *
- * Tabel: modul_asprak
+ * Tabel: eo_prak_modul_asprak
  */
 class ModulAsprak extends Model
 {
-    protected $table = 'modul_asprak';
+    protected $table = 'eo_prak_modul_asprak';
 
     protected $fillable = [
         'modul_id',
