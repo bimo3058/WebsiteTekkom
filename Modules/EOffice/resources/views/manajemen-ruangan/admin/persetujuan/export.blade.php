@@ -12,7 +12,7 @@
         .text-center { text-align: center; }
         .status-disetujui { color: #047857; }
         .status-ditolak { color: #9D174D; }
-        .status-selesai { color: #5E53F4; }
+        .status-dibatalkan { color: #9D174D; }
     </style>
 </head>
 <body>

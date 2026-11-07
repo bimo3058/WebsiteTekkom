@@ -100,20 +100,14 @@
                                                             $st = ['bg' => '#F3F4F6', 'color' => '#374151', 'border' => '#E5E7EB'];
                                                             if (strtolower($riwayat->status) === 'disetujui')
                                                                 $st = ['bg' => '#ECFDF5', 'color' => '#047857', 'border' => '#A7F3D0'];
-                                                            elseif (strtolower($riwayat->status) === 'ditolak')
+                                                            elseif (strtolower($riwayat->status) === 'ditolak' || strtolower($riwayat->status) === 'dibatalkan')
                                                                 $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
                                                             elseif (strtolower($riwayat->status) === 'menunggu')
                                                                 $st = ['bg' => '#FFF9E6', 'color' => '#B45309', 'border' => '#FFEBB3'];
-                                                            elseif (strtolower($riwayat->status) === 'selesai')
-                                                                $st = ['bg' => '#F1E9FF', 'color' => '#5E53F4', 'border' => '#D1BFFF'];
-                                                            elseif (strtolower($riwayat->status) === 'dibatalkan')
-                                                                $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
-
-                                                            $statusText = strtolower($riwayat->status) === 'disetujui' ? 'selesai' : $riwayat->status;
                                                         @endphp
                                                         <span
                                                             style="font-size:11px; font-weight:700; color:{{ $st['color'] }}; background:{{ $st['bg'] }}; border:1px solid {{ $st['border'] }}; padding:3px 12px; border-radius:9999px; white-space:nowrap; letter-spacing:0.02em; text-transform:uppercase; display:inline-block;">
-                                                            {{ $statusText }}
+                                                            {{ $riwayat->status }}
                                                         </span>
                                                     </td>
                                                     <td style="padding:11px 16px; text-align: center;">
@@ -416,10 +410,9 @@
                                     :class="{
                                         'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]': selected.status && selected.status.toLowerCase() === 'disetujui',
                                         'bg-[#FFF1F2] text-[#9D174D] border-[#FECDD3]': selected.status && (selected.status.toLowerCase() === 'ditolak' || selected.status.toLowerCase() === 'dibatalkan'),
-                                        'bg-[#FFF9E6] text-[#B45309] border-[#FFEBB3]': selected.status && selected.status.toLowerCase() === 'menunggu',
-                                        'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]': selected.status && selected.status.toLowerCase() === 'selesai'
+                                        'bg-[#FFF9E6] text-[#B45309] border-[#FFEBB3]': selected.status && selected.status.toLowerCase() === 'menunggu'
                                     }"
-                                    x-text="selected.status ? (selected.status.toLowerCase() === 'disetujui' ? 'SELESAI' : selected.status) : ''">
+                                    x-text="selected.status || ''">
                                 </span>
                             </div>
 

@@ -3,7 +3,7 @@
     <div class="mp-page-header flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h1 class="mp-page-title">Arsip & Rekap</h1>
-            <p class="mp-page-sub">Gudang arsip seluruh data histori pengajuan ruangan yang telah berstatus Selesai, Ditolak, atau Dibatalkan.</p>
+            <p class="mp-page-sub">Gudang arsip seluruh data histori pengajuan ruangan yang telah terlaksana (Disetujui), Ditolak, atau Dibatalkan.</p>
         </div>
 
         {{-- Quick Export Dropdown --}}
@@ -481,7 +481,7 @@
                             <td>
                                 @php
                                     $st = ['bg' => '#F3F4F6', 'color' => '#374151', 'border' => '#E5E7EB'];
-                                    if (strtolower($pinjam->status) === 'disetujui' || strtolower($pinjam->status) === 'selesai')
+                                    if (strtolower($pinjam->status) === 'disetujui')
                                         $st = ['bg' => '#ECFDF5', 'color' => '#047857', 'border' => '#A7F3D0'];
                                     elseif (strtolower($pinjam->status) === 'ditolak' || strtolower($pinjam->status) === 'dibatalkan')
                                         $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
@@ -851,8 +851,7 @@
                                     :class="{
                                         'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]': detailData.status === 'disetujui',
                                         'bg-[#FFF1F2] text-[#9D174D] border-[#FECDD3]': detailData.status === 'ditolak' || detailData.status === 'dibatalkan',
-                                        'bg-[#FFF9E6] text-[#B45309] border-[#FFEBB3]': detailData.status === 'menunggu',
-                                        'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]': detailData.status === 'selesai'
+                                        'bg-[#FFF9E6] text-[#B45309] border-[#FFEBB3]': detailData.status === 'menunggu'
                                     }"
                                     x-text="detailData.status">
                                 </span>
