@@ -670,7 +670,7 @@
                                         {{ strip_tags($draft->konten) ?: '(Tidak ada konten teks)' }}
                                     </div>
                                     <div class="draft-item-meta">
-                                        Diperbarui: {{ $draft->updated_at->diffForHumans() }}
+                                        Diperbarui: {{ $draft->updated_at->locale('id')->diffForHumans() }}
                                     </div>
                                 </div>
                                 <form action="{{ route('manajemenmahasiswa.pengumuman.drafts.destroy', $draft->id) }}"

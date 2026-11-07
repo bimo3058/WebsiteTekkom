@@ -1,4 +1,5 @@
 <x-manajemenmahasiswa::layouts.admin>
+    @include('manajemenmahasiswa::pengumuman._pin-notif')
 
     @push('styles')
     <style>
@@ -163,22 +164,16 @@
         .pg-author-name { font-size:12px; font-weight:600; color:var(--c-fg-sec, #353849); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         .pg-date { font-size:11px; color:var(--c-fg-muted, #666D80); white-space:nowrap; flex-shrink:0; font-variant-numeric:tabular-nums; }
 
-        /* Action bar */
-        .pg-card-actions {
-            display:flex; align-items:center; gap:6px;
-            padding:10px 14px; border-top:1px solid var(--c-border, #DFE1E7);
-            background:var(--c-bg, #F6F8FA); flex-shrink:0;
-        }
-        .pg-action-btn {
-            display:inline-flex; align-items:center; gap:5px; padding:6px 12px; border-radius:8px;
-            border:1px solid var(--c-border, #DFE1E7); background:#fff;
-            font-size:12px; font-weight:600; color:var(--c-fg-sec, #353849);
-            cursor:pointer; text-decoration:none; transition:all .15s;
-        }
-        .pg-action-btn:hover { border-color:var(--c-primary, #0B266E); color:var(--c-primary, #0B266E); background:var(--c-primary-subtle, #EEF1F8); }
-        .pg-action-btn.danger:hover { border-color:var(--c-error, #DF1C41); color:var(--c-error, #DF1C41); background:var(--c-error-subtle, #FADAE1); }
-        .pg-action-btn.pin-on { border-color:var(--c-warning, #956321); color:var(--c-warning, #956321); background:var(--c-warning-subtle, #F9ECCB); }
-        .pg-spacer { flex:1; }
+        /* Menu "..." (Edit/Hapus) memakai .mk-menu bersama (partials/button-theme).
+           Panelnya melayang di atas gambar, jadi z-index-nya dinaikkan dari badge. */
+        .pg-img-actions .mk-menu { z-index: 5; min-width: 170px; }
+        /* Selama menu terbuka, panel tidak boleh terpotong overflow:hidden kartu/gambar
+           (gambar kartu di layar sempit lebih pendek dari panel menu). Sudut gambar
+           tetap dibulatkan & efek zoom dimatikan supaya tidak meluber keluar kartu. */
+        .pg-card.pg-menu-open { position: relative; z-index: 20; overflow: visible; }
+        .pg-card.pg-menu-open .pg-card-img { overflow: visible; }
+        .pg-card.pg-menu-open .pg-card-img img,
+        .pg-card.pg-menu-open .pg-card-img-placeholder { border-radius: 13px 13px 0 0; transform: none; }
 
         /* Empty state */
         .pg-empty { grid-column:1/-1; padding:44px 20px; text-align:center; color:var(--c-fg-muted, #666D80); }
@@ -348,41 +343,86 @@
                                     <span class="pg-badge-overlay pg-badge-archived">Archived</span>
                                 @endif
 
-                                {{-- Right overlay: personal pin + global pin buttons --}}
+                                {{-- Right overlay: satu tombol "..." berisi semua aksi kartu.
+                                     Pola & urutan sama dengan halaman Pengumuman superadmin
+                                     (pengumuman-admin): Edit, Pin Pribadi, Pin Global, Hapus.
+                                     Pin Pribadi untuk semua user, jadi menunya selalu ada;
+                                     Edit/Hapus hanya untuk pembuat atau admin/koordinator
+                                     ($canEdit/$canDelete, sinkron dengan authorizeOwnerOrAdmin),
+                                     Pin Global hanya admin. --}}
                                 <div class="pg-img-actions" onclick="event.stopPropagation()">
-                                    {{-- Personal pin --}}
-                                    <form method="POST"
-                                        action="{{ route('manajemenmahasiswa.pengumuman.personal_pin', $item->id) }}"
-                                        style="margin:0;">
-                                        @csrf
-                                        <button type="submit"
+                                    <div style="position:relative;" x-data="{ open: false }"
+                                        x-effect="$el.closest('.pg-card').classList.toggle('pg-menu-open', open)">
+                                        <button type="button"
                                             class="pg-icon-btn {{ $isPinnedPersonal ? 'pin-active-personal' : '' }}"
-                                            title="{{ $isPinnedPersonal ? 'Hapus pin pribadi' : 'Pin untuk saya' }}">
-                                            <svg width="13" height="13" viewBox="0 0 24 24"
-                                                fill="{{ $isPinnedPersonal ? 'currentColor' : 'none' }}"
-                                                stroke="currentColor" stroke-width="2">
-                                                <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+                                            @click="open = !open" @click.outside="open = false"
+                                            :aria-expanded="open" aria-haspopup="menu"
+                                            title="{{ $isPinnedPersonal ? 'Aksi lainnya (dipin pribadi)' : 'Aksi lainnya' }}">
+                                            <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24">
+                                                <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
                                             </svg>
                                         </button>
-                                    </form>
 
-                                    {{-- Global pin (admin only) --}}
-                                    @if($canPinGlobal)
-                                        <form method="POST"
-                                            action="{{ route('manajemenmahasiswa.pengumuman.pin', $item->id) }}"
-                                            style="margin:0;">
-                                            @csrf @method('PATCH')
-                                            <button type="submit"
-                                                class="pg-icon-btn {{ $isPinnedGlobal ? 'pin-active-global' : '' }}"
-                                                title="{{ $isPinnedGlobal ? 'Unpin global' : 'Pin global (semua user)' }}">
-                                                <svg width="13" height="13" viewBox="0 0 24 24"
-                                                    fill="{{ $isPinnedGlobal ? 'currentColor' : 'none' }}"
-                                                    stroke="currentColor" stroke-width="2">
-                                                    <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6h2v-6h5v-2l-2-2z"/>
-                                                </svg>
-                                            </button>
-                                        </form>
-                                    @endif
+                                        <div class="mk-menu" role="menu" x-show="open" x-cloak style="display: none;"
+                                            x-transition:enter="transition ease-out duration-100"
+                                            x-transition:enter-start="opacity-0 scale-95"
+                                            x-transition:enter-end="opacity-100 scale-100">
+
+                                            @if($canEdit)
+                                                <a href="{{ route('manajemenmahasiswa.pengumuman.edit', $item->id) }}"
+                                                    class="mk-menu-item" role="menuitem">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                                    </svg>
+                                                    Edit
+                                                </a>
+                                            @endif
+
+                                            <form method="POST" action="{{ route('manajemenmahasiswa.pengumuman.personal_pin', $item->id) }}">
+                                                @csrf
+                                                <button type="submit" role="menuitem"
+                                                    class="mk-menu-item {{ $isPinnedPersonal ? 'is-active' : '' }}">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24"
+                                                        fill="{{ $isPinnedPersonal ? 'currentColor' : 'none' }}"
+                                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+                                                    </svg>
+                                                    {{ $isPinnedPersonal ? 'Lepas Pin Pribadi' : 'Pin Pribadi' }}
+                                                </button>
+                                            </form>
+
+                                            @if($canPinGlobal)
+                                                <form method="POST" action="{{ route('manajemenmahasiswa.pengumuman.pin', $item->id) }}">
+                                                    @csrf @method('PATCH')
+                                                    <button type="submit" role="menuitem"
+                                                        class="mk-menu-item {{ $isPinnedGlobal ? 'is-active' : '' }}">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24"
+                                                            fill="{{ $isPinnedGlobal ? 'currentColor' : 'none' }}"
+                                                            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6h2v-6h5v-2l-2-2z"/>
+                                                        </svg>
+                                                        {{ $isPinnedGlobal ? 'Lepas Pin Global' : 'Pin Global' }}
+                                                    </button>
+                                                </form>
+                                            @endif
+
+                                            @if($canDelete)
+                                                <div class="mk-menu-sep"></div>
+                                                <form method="POST" action="{{ route('manajemenmahasiswa.pengumuman.remove', $item->id) }}"
+                                                    onsubmit="return mkConfirmSubmit(this, 'Hapus pengumuman ini?', { title: 'Hapus Pengumuman', confirmText: 'Ya, Hapus' })">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="mk-menu-item" role="menuitem">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                            <polyline points="3 6 5 6 21 6"/>
+                                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                                        </svg>
+                                                        Hapus
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -399,45 +439,10 @@
                                         <span class="pg-author-name">{{ $authorName }}</span>
                                     </div>
                                     <span class="pg-date">
-                                        {{ ($item->published_at ?? $item->created_at)->translatedFormat('d M Y') }}
+                                        {{ ($item->published_at ?? $item->created_at)->locale('id')->translatedFormat('d M Y') }}
                                     </span>
                                 </div>
                             </div>
-
-                            {{-- Action bar: Edit / Delete ──────────────── --}}
-                            @if($canEdit || $canDelete)
-                                <div class="pg-card-actions" onclick="event.stopPropagation()">
-                                    @if($canEdit)
-                                        <a href="{{ route('manajemenmahasiswa.pengumuman.edit', $item->id) }}"
-                                            class="pg-action-btn" title="Edit">
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="2">
-                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                            </svg>
-                                            Edit
-                                        </a>
-                                    @endif
-
-                                    @if($canDelete)
-                                        <form method="POST"
-                                            action="{{ route('manajemenmahasiswa.pengumuman.remove', $item->id) }}"
-                                            onsubmit="return mkConfirmSubmit(this, 'Hapus pengumuman ini?', { title: 'Hapus Pengumuman', confirmText: 'Ya, Hapus' })" style="margin:0;">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" title="Hapus">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                                    stroke="currentColor" stroke-width="2">
-                                                    <polyline points="3 6 5 6 21 6"/>
-                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                                </svg>
-                                                Hapus
-                                            </button>
-                                        </form>
-                                    @endif
-
-                                    <div class="pg-spacer"></div>
-                                </div>
-                            @endif
 
                         </div>
                     @empty

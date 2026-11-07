@@ -431,9 +431,19 @@ class PengumumanController extends Controller
         }
 
         $pengumuman = $this->pengumumanService->pinPengumuman($id);
-        $status = $pengumuman->is_pinned ? 'dipin secara global' : 'di-unpin dari pin global';
 
-        return back()->with('success', "Pengumuman berhasil {$status}.");
+        // Pop-up hasil pin (pengumuman/_pin-notif): Pin Global hanya untuk admin.
+        return back()->with('pin_notif', $pengumuman->is_pinned
+            ? [
+                'title'   => 'Pin Global Berhasil',
+                'message' => "Pengumuman \"{$pengumuman->judul}\" berhasil dipin sebagai Pin Global. Pengumuman ini tampil sebagai Pengumuman Penting di urutan teratas untuk semua pengguna.",
+                'variant' => 'success',
+            ]
+            : [
+                'title'   => 'Pin Global Dilepas',
+                'message' => "Pin Global pada pengumuman \"{$pengumuman->judul}\" berhasil dilepas.",
+                'variant' => 'info',
+            ]);
     }
 
     /**
@@ -447,8 +457,20 @@ class PengumumanController extends Controller
             return response()->json(['is_pinned' => $isPinned]);
         }
 
-        $status = $isPinned ? 'dipin secara pribadi' : 'di-unpin dari pin pribadi';
-        return back()->with('success', "Pengumuman berhasil {$status}.");
+        $judul = Pengumuman::whereKey($id)->value('judul');
+
+        // Pop-up hasil pin (pengumuman/_pin-notif): Pin Pribadi hanya berlaku untuk akun ini.
+        return back()->with('pin_notif', $isPinned
+            ? [
+                'title'   => 'Pin Pribadi Berhasil',
+                'message' => "Pengumuman \"{$judul}\" berhasil dipin sebagai Pin Pribadi. Pengumuman ini tampil di urutan teratas daftar pengumuman Anda saja.",
+                'variant' => 'success',
+            ]
+            : [
+                'title'   => 'Pin Pribadi Dilepas',
+                'message' => "Pin Pribadi pada pengumuman \"{$judul}\" berhasil dilepas.",
+                'variant' => 'info',
+            ]);
     }
 
     /**
