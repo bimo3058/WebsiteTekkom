@@ -300,14 +300,31 @@
                                         {{ $pinjam->ruangan->nama ?? 'Dihapus' }}
                                     </div>
                                     <div class="mt-1">
-                                        @if(in_array(strtolower((string)$pinjam->source), ['kp', 'kerja_praktik']))
+                                        @if(in_array(strtolower(trim((string)$pinjam->source)), ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik']) || str_contains((string)$pinjam->tujuan, 'Seminar KP') || str_contains((string)$pinjam->tujuan, 'Kerja Praktik'))
                                             <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Seminar KP</span>
-                                        @elseif(strtolower((string)$pinjam->source) === 'capstone')
+                                        @elseif(strtolower((string)$pinjam->source) === 'capstone' || str_contains((string)$pinjam->tujuan, '[CAPSTONE'))
                                             <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">Sidang Capstone</span>
                                         @elseif(strtolower((string)$pinjam->source) === 'praktikum')
                                             <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Praktikum</span>
                                         @else
                                             <span class="inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200">Langsung</span>
+                                        @endif
+
+                                        @if($pinjam->replaces_peminjaman_id && $pinjam->replacesPeminjaman)
+                                            @php
+                                                $oldTgl = \Carbon\Carbon::parse($pinjam->replacesPeminjaman->tanggal_pinjam)->translatedFormat('d M Y');
+                                                $oldJam = \Carbon\Carbon::parse($pinjam->replacesPeminjaman->jam_mulai)->format('H:i') . '-' . \Carbon\Carbon::parse($pinjam->replacesPeminjaman->jam_selesai)->format('H:i');
+                                                $oldRuang = $pinjam->replacesPeminjaman->ruangan->nama ?? 'Ruangan Lama';
+                                            @endphp
+                                            <div class="mt-1">
+                                                <span class="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200"
+                                                    title="Menggantikan peminjaman #{{ $pinjam->replaces_peminjaman_id }}: {{ $oldRuang }} ({{ $oldTgl }}, {{ $oldJam }} WIB)">
+                                                    <svg class="w-2.5 h-2.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                    </svg>
+                                                    <span>Ganti Jadwal (#{{ $pinjam->replaces_peminjaman_id }})</span>
+                                                </span>
+                                            </div>
                                         @endif
                                     </div>
                                 </td>
@@ -378,6 +395,8 @@
                                             'formatTanggal' => \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->locale('id')->translatedFormat('l, d F Y'),
                                             'berkasUrl' => $berkasUrl,
                                             'sourceLabel' => $pinjam->source_label,
+                                            'isReschedule' => (bool)$pinjam->replaces_peminjaman_id,
+                                            'oldScheduleInfo' => $pinjam->replacesPeminjaman ? (($pinjam->replacesPeminjaman->ruangan->nama ?? 'Ruangan Lama') . ' pada ' . \Carbon\Carbon::parse($pinjam->replacesPeminjaman->tanggal_pinjam)->translatedFormat('d M Y') . ' (' . substr($pinjam->replacesPeminjaman->jam_mulai, 0, 5) . '-' . substr($pinjam->replacesPeminjaman->jam_selesai, 0, 5) . ' WIB)') : '',
                                         ];
                                     @endphp
                                     <button
@@ -639,9 +658,24 @@
                                             </a>
                                         </template>
                                         <template x-if="!selectedBerkasUrl">
-                                            <span class="text-gray-400 italic text-[12px]">Tidak dilampirkan</span>
+                                            <span class="text-gray-400 italic text-[12px]" x-text="selectedSourceLabel && selectedSourceLabel !== 'Peminjaman Langsung' ? 'Agenda Resmi ' + selectedSourceLabel + ' (Tanpa berkas tambahan)' : 'Tidak dilampirkan'"></span>
                                         </template>
                                     </div>
+
+                                    <template x-if="isReschedule">
+                                        <div class="col-span-2 mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-xs">
+                                            <div class="font-bold flex items-center gap-1.5 text-amber-800">
+                                                <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                </svg>
+                                                <span>Pemberitahuan Admin Ruang: Jadwal Pengganti (Reschedule)</span>
+                                            </div>
+                                            <p class="mt-1 text-slate-700 leading-relaxed">
+                                                Pengajuan ini menggantikan jadwal peminjaman: <strong class="text-slate-900" x-text="oldScheduleInfo"></strong>.
+                                                Jika Anda klik <strong>Setujui</strong>, jadwal lama tersebut akan otomatis dibatalkan oleh sistem.
+                                            </p>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
 
@@ -939,6 +973,8 @@
                 selectedJamMulai: '',
                 selectedJamSelesai: '',
                 selectedBerkasUrl: '',
+                isReschedule: false,
+                oldScheduleInfo: '',
 
                 currentRoom: '',
                 currentDate: '',
@@ -1022,6 +1058,11 @@
                         formatTanggal = d.formatTanggal;
                         berkasUrl = d.berkasUrl;
                         sourceLabel = d.sourceLabel || 'Peminjaman Langsung';
+                        this.isReschedule = Boolean(d.isReschedule);
+                        this.oldScheduleInfo = d.oldScheduleInfo || '';
+                    } else {
+                        this.isReschedule = false;
+                        this.oldScheduleInfo = '';
                     }
                     this.selectedId = id;
                     this.selectedName = name;

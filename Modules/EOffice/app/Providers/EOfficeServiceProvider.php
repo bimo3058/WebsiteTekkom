@@ -77,6 +77,7 @@ class EOfficeServiceProvider extends ServiceProvider
         $this->commands([
             \Modules\EOffice\Console\Commands\TutupPeriodePendaftaranKadaluarsa::class,
             \Modules\EOffice\Console\Commands\PrunePeminjamanNotificationsCommand::class,
+            \Modules\EOffice\Console\Commands\TestRoomIntegrationCommand::class,
         ]);
     }
 

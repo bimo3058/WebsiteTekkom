@@ -11,6 +11,11 @@ class Peminjaman extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // Konstanta sumber peminjaman eksternal
+    public const SOURCE_KP = 'kp';
+    public const SOURCE_CAPSTONE = 'capstone';
+    public const SOURCE_PRAKTIKUM = 'praktikum';
+
     protected $table = 'eo_mr_peminjamans';
 
     protected $fillable = [
@@ -29,22 +34,59 @@ class Peminjaman extends Model
         'is_hidden_by_user',
         'source',
         'source_id',
+        'replaces_peminjaman_id',
     ];
 
     protected $casts = [
         'tanggal_pinjam' => 'date',
         'waktu_approval' => 'datetime',
-        'source_id' => 'integer',
+        'source_id' => 'string',
     ];
 
     public function getSourceLabelAttribute(): string
     {
-        return match (strtolower((string) $this->source)) {
-            'kp', 'kerja_praktik' => 'Seminar KP',
-            'capstone' => 'Sidang Capstone',
-            'praktikum' => 'Praktikum',
-            default => 'Peminjaman Langsung',
-        };
+        $src = strtolower(trim((string) $this->source));
+        if ($src === 'capstone' || str_contains((string) $this->tujuan, '[CAPSTONE')) {
+            return 'Sidang Capstone';
+        }
+
+        if (in_array($src, ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik']) || str_contains((string) $this->tujuan, 'Seminar KP') || str_contains((string) $this->tujuan, 'Kerja Praktik')) {
+            return 'Seminar KP';
+        }
+
+        if ($src === 'praktikum' || str_contains((string) $this->tujuan, 'Praktikum')) {
+            return 'Praktikum';
+        }
+
+        return 'Peminjaman Langsung';
+    }
+
+    public function getIsPastEventAttribute(): bool
+    {
+        if (!$this->tanggal_pinjam) {
+            return false;
+        }
+
+        $tglStr = $this->tanggal_pinjam instanceof \Carbon\CarbonInterface
+            ? $this->tanggal_pinjam->format('Y-m-d')
+            : \Carbon\Carbon::parse($this->tanggal_pinjam)->format('Y-m-d');
+
+        $jamStr = $this->jam_selesai ? substr((string) $this->jam_selesai, 0, 8) : '23:59:59';
+
+        return \Carbon\Carbon::parse("{$tglStr} {$jamStr}")->isPast();
+    }
+
+    public function getDisplayStatusAttribute(): string
+    {
+        if ($this->trashed() && strtolower((string) $this->status) === 'disetujui' && $this->is_past_event) {
+            return 'disetujui';
+        }
+
+        if ($this->trashed() && strtolower((string) $this->status) !== 'dibatalkan') {
+            return 'dibatalkan';
+        }
+
+        return (string) $this->status;
     }
 
     public function getAlasanPenolakanAttribute($value)
@@ -82,13 +124,24 @@ class Peminjaman extends Model
         return $this->belongsTo(Ruangan::class);
     }
 
+    public function replacesPeminjaman()
+    {
+        return $this->belongsTo(self::class, 'replaces_peminjaman_id');
+    }
+
+    public function replacementBookings()
+    {
+        return $this->hasMany(self::class, 'replaces_peminjaman_id');
+    }
+
     public static function autoExpirePending()
     {
         $now = \Carbon\Carbon::now();
         $today = $now->format('Y-m-d');
         $currentTime = $now->format('H:i:s');
 
-        $expired = self::where('status', 'menunggu')
+        // 1. Peminjaman menunggu reguler yang waktu pelaksanaannya sudah lewat
+        $expired = self::with(['replacesPeminjaman'])->where('status', 'menunggu')
             ->where(function ($q) use ($today, $currentTime) {
                 $q->where('tanggal_pinjam', '<', $today)
                     ->orWhere(function ($subQ) use ($today, $currentTime) {
@@ -97,14 +150,31 @@ class Peminjaman extends Model
                     });
             })->get();
 
-        foreach ($expired as $pinjam) {
+        // 2. Peminjaman reschedule yang waktu jadwal lamanya sudah tiba/terlewat
+        $expiredReschedules = self::with(['replacesPeminjaman'])
+            ->where('status', 'menunggu')
+            ->whereNotNull('replaces_peminjaman_id')
+            ->whereHas('replacesPeminjaman', function ($rq) use ($today, $currentTime) {
+                $rq->where('tanggal_pinjam', '<', $today)
+                    ->orWhere(function ($subQ) use ($today, $currentTime) {
+                        $subQ->where('tanggal_pinjam', '=', $today)
+                            ->where('jam_mulai', '<=', $currentTime);
+                    });
+            })->get();
+
+        $allExpired = $expired->merge($expiredReschedules)->unique('id');
+
+        foreach ($allExpired as $pinjam) {
+            $prevStatus = $pinjam->status;
+            $alasan = 'Dibatalkan Sistem: Melewati batas waktu persetujuan Admin Ruang';
+
             $pinjam->update([
                 'status' => 'ditolak',
-                'alasan_penolakan' => 'Dibatalkan Sistem: Kedaluwarsa',
-                'waktu_approval' => now()
+                'alasan_penolakan' => $alasan,
+                'waktu_approval' => now(),
             ]);
+
+            event(new \Modules\EOffice\Events\RoomBookingStatusChanged($pinjam, 'ditolak', $prevStatus, $alasan));
         }
-
-
     }
 }

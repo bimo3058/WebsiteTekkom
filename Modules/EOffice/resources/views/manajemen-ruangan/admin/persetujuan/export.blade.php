@@ -76,7 +76,10 @@
                     <td class="text-center">{{ \Carbon\Carbon::parse($pinjam->jam_mulai)->format('H:i') }}</td>
                     <td class="text-center">{{ \Carbon\Carbon::parse($pinjam->jam_selesai)->format('H:i') }}</td>
                     <td>{{ $pinjam->tujuan }}</td>
-                    <td class="text-center status-{{ strtolower($pinjam->status) }}">{{ strtoupper($pinjam->status) }}</td>
+                    @php
+                        $exportStatus = strtoupper($pinjam->display_status);
+                    @endphp
+                    <td class="text-center status-{{ strtolower($exportStatus) }}">{{ $exportStatus }}</td>
                     <td>
                         @if(str_contains($pinjam->alasan_penolakan ?? '', 'Dibatalkan Sistem: Kedaluwarsa'))
                             <span style="color: #EF4444; font-weight: 600;">{{ $pinjam->alasan_penolakan }}</span>

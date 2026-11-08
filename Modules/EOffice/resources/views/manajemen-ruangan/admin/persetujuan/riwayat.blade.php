@@ -454,14 +454,31 @@
                                     {{ $pinjam->ruangan->nama ?? 'Dihapus' }}
                                 </div>
                                 <div class="mt-1">
-                                    @if(in_array(strtolower((string)$pinjam->source), ['kp', 'kerja_praktik']))
+                                    @if(in_array(strtolower(trim((string)$pinjam->source)), ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik']) || str_contains((string)$pinjam->tujuan, 'Seminar KP') || str_contains((string)$pinjam->tujuan, 'Kerja Praktik'))
                                         <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Seminar KP</span>
-                                    @elseif(strtolower((string)$pinjam->source) === 'capstone')
+                                    @elseif(strtolower((string)$pinjam->source) === 'capstone' || str_contains((string)$pinjam->tujuan, '[CAPSTONE'))
                                         <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">Sidang Capstone</span>
                                     @elseif(strtolower((string)$pinjam->source) === 'praktikum')
                                         <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Praktikum</span>
                                     @else
                                         <span class="inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200">Langsung</span>
+                                    @endif
+
+                                    @if($pinjam->replaces_peminjaman_id && $pinjam->replacesPeminjaman)
+                                        @php
+                                            $oldTgl = \Carbon\Carbon::parse($pinjam->replacesPeminjaman->tanggal_pinjam)->translatedFormat('d M Y');
+                                            $oldJam = \Carbon\Carbon::parse($pinjam->replacesPeminjaman->jam_mulai)->format('H:i') . '-' . \Carbon\Carbon::parse($pinjam->replacesPeminjaman->jam_selesai)->format('H:i');
+                                            $oldRuang = $pinjam->replacesPeminjaman->ruangan->nama ?? 'Ruangan Lama';
+                                        @endphp
+                                        <div class="mt-1">
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200"
+                                                title="Menggantikan peminjaman #{{ $pinjam->replaces_peminjaman_id }}: {{ $oldRuang }} ({{ $oldTgl }}, {{ $oldJam }} WIB)">
+                                                <svg class="w-2.5 h-2.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                </svg>
+                                                <span>Ganti Jadwal (#{{ $pinjam->replaces_peminjaman_id }})</span>
+                                            </span>
+                                        </div>
                                     @endif
                                 </div>
                             </td>
@@ -480,16 +497,18 @@
                             </td>
                             <td>
                                 @php
+                                    $displayStatus = $pinjam->display_status;
+
                                     $st = ['bg' => '#F3F4F6', 'color' => '#374151', 'border' => '#E5E7EB'];
-                                    if (strtolower($pinjam->status) === 'disetujui')
+                                    if (strtolower($displayStatus) === 'disetujui')
                                         $st = ['bg' => '#ECFDF5', 'color' => '#047857', 'border' => '#A7F3D0'];
-                                    elseif (strtolower($pinjam->status) === 'ditolak' || strtolower($pinjam->status) === 'dibatalkan')
+                                    elseif (strtolower($displayStatus) === 'ditolak' || strtolower($displayStatus) === 'dibatalkan')
                                         $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
-                                    elseif (strtolower($pinjam->status) === 'menunggu')
+                                    elseif (strtolower($displayStatus) === 'menunggu')
                                         $st = ['bg' => '#FFF9E6', 'color' => '#B45309', 'border' => '#FFEBB3'];
                                 @endphp
                                 <span style="font-size:11px; font-weight:700; color:{{ $st['color'] }}; background:{{ $st['bg'] }}; border:1px solid {{ $st['border'] }}; padding:3px 10px; border-radius:9999px; white-space:nowrap; text-transform:uppercase; display:inline-block;">
-                                    {{ $pinjam->status }}
+                                    {{ $displayStatus }}
                                 </span>
                             </td>
                             <td class="text-center">
@@ -548,7 +567,7 @@
                                             'waktu_diproses' => $pinjam->waktu_approval ? \Carbon\Carbon::parse($pinjam->waktu_approval)->translatedFormat('d M Y, H:i') : '-',
                                             'diproses_oleh' => '-',
                                             'alasan_penolakan' => $pinjam->alasan_penolakan,
-                                            'status' => $pinjam->status,
+                                            'status' => $displayStatus,
                                             'asal_modul' => $pinjam->source_label
                                         ]) }})"
                                             class="w-full text-left px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-gray-100 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors cursor-pointer">

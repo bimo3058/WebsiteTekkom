@@ -20,12 +20,6 @@
         </div>
 
         <div class="mp-card" style="margin-top: 15px;">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 border-b border-gray-100 gap-4 relative z-10 w-full">
-                <h2 class="text-[16px] font-bold text-gray-800 tracking-tight">
-                    Riwayat Peminjaman
-                </h2>
-            </div>
-
             @if($riwayats->count() > 0)
                 <div class="mp-table-wrap">
                     <table class="mp-table">
