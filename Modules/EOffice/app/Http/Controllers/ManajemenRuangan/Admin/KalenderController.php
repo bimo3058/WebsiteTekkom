@@ -106,12 +106,6 @@ class KalenderController extends Controller
             'keterangan' => 'required|string',
             'nim' => 'required_if:tipe_aksi,dosen',
             'kategori' => 'required_if:tipe_aksi,internal|string',
-            'mata_kuliah' => 'nullable|string|max:255',
-            'kode_mk' => 'nullable|string|max:100',
-            'kelas' => 'nullable|string|max:50',
-            'sks' => 'nullable|integer',
-            'kuota' => 'nullable|integer',
-            'pengampu' => 'nullable|string|max:255'
         ]);
 
         $collisionData = $this->getCollisions($request->ruangan_id, $request->tanggal, $request->jam_mulai, $request->jam_selesai);
@@ -126,12 +120,6 @@ class KalenderController extends Controller
                 'jam_mulai' => $request->jam_mulai,
                 'jam_selesai' => $request->jam_selesai,
                 'keterangan' => $request->keterangan,
-                'mata_kuliah' => $request->mata_kuliah,
-                'kode_mk' => $request->kode_mk,
-                'kelas' => $request->kelas,
-                'sks' => $request->sks,
-                'kuota' => $request->kuota,
-                'pengampu' => $request->pengampu
             ]);
 
             // Eksekusi "Hukum Mengalah": Batalkan peminjaman mahasiswa yang tertimpa secara tertib
