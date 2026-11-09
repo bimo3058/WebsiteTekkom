@@ -184,6 +184,7 @@ class KalenderController extends Controller
                 'jam_mulai' => $request->jam_mulai,
                 'jam_selesai' => $request->jam_selesai,
                 'tujuan' => $request->keterangan,
+                'nomor_telepon' => $targetUser->whatsapp ?? null,
                 'status' => 'disetujui',
                 'waktu_approval' => now(),
                 'created_by' => auth()->id()

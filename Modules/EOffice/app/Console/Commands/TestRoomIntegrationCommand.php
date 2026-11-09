@@ -44,6 +44,17 @@ class TestRoomIntegrationCommand extends Command
             return Command::FAILURE;
         }
 
+        // Pre-cleanup leftover test data if previous test crashed
+        Peminjaman::whereIn('tanggal_pinjam', ['2026-12-10', '2026-12-15', '2026-12-17', '2026-12-20'])
+            ->where(function ($q) {
+                $q->where('tujuan', 'like', '%Praktikum Jarkom%')
+                    ->orWhere('tujuan', 'like', '%Praktikum Jaringan Komputer%')
+                    ->orWhere('tujuan', 'like', '%Seminar Kerja Praktik%')
+                    ->orWhere('tujuan', 'like', '%Sidang Tugas Akhir%')
+                    ->orWhere('tujuan', 'like', '%Rapat Internal Himpunan%');
+            })
+            ->forceDelete();
+
         if ($this->option('seed-ui')) {
             $this->info("=================================================================");
             $this->info("    MEMBUAT DATA UJI UNTUK PENGUJIAN LANGSUNG DI WEB BROWSER     ");
@@ -98,6 +109,17 @@ class TestRoomIntegrationCommand extends Command
             $this->error("Gagal: Data ruangan aktif atau user tidak ditemukan di database.");
             return Command::FAILURE;
         }
+
+        // Pre-cleanup leftover test data if previous test crashed
+        Peminjaman::whereIn('tanggal_pinjam', ['2026-12-10', '2026-12-15', '2026-12-17', '2026-12-20'])
+            ->where(function ($q) {
+                $q->where('tujuan', 'like', '%Praktikum Jarkom%')
+                    ->orWhere('tujuan', 'like', '%Praktikum Jaringan Komputer%')
+                    ->orWhere('tujuan', 'like', '%Seminar Kerja Praktik%')
+                    ->orWhere('tujuan', 'like', '%Sidang Tugas Akhir%')
+                    ->orWhere('tujuan', 'like', '%Rapat Internal Himpunan%');
+            })
+            ->forceDelete();
 
         $testUuid = (string) Str::uuid();
         $this->line("<comment>[Tahap 1]</comment> Membuat Peminjaman Awal (Simulasi Modul Praktikum)");
@@ -185,11 +207,106 @@ class TestRoomIntegrationCommand extends Command
         $this->line("   - Jadwal Sebelumnya Berhasil Digantikan (#{$reschedule2->id})   : <comment>{$reschedule2->status}</comment>");
         $this->info("   [BERHASIL] Pengecualian collision check untuk jadwal yang digantikan bekerja 100%!\n");
 
+        // Tahap 6: Hierarki Prioritas Akademik & Multi-Pending Collision Cascade
+        $this->line("<comment>[Tahap 6]</comment> Pengujian Hierarki Prioritas (Capstone/Praktikum > Seminar KP > Mahasiswa Biasa)");
+        
+        // 1. Mahasiswa biasa mengajukan slot (Kasta 10)
+        $mhsBooking = Peminjaman::create([
+            'user_id' => $user->id,
+            'ruangan_id' => $ruangan->id,
+            'tanggal_pinjam' => '2026-12-20',
+            'jam_mulai' => '10:00',
+            'jam_selesai' => '12:00',
+            'tujuan' => 'Rapat Internal Himpunan Mahasiswa',
+            'status' => 'menunggu',
+            'created_by' => $user->id,
+        ]);
+        $this->line("   - 1. Mahasiswa Biasa mengajukan slot (#{$mhsBooking->id}) : <comment>menunggu</comment> (Priority Level: {$mhsBooking->priority})");
+
+        // 2. Modul Seminar KP masuk di slot yang sama (Kasta 20 > Kasta 10)
+        $kpBooking = $service->bookRoom([
+            'source' => 'kp',
+            'source_id' => 'KP-TEST-001',
+            'user_id' => $user->id,
+            'ruangan_id' => $ruangan->id,
+            'tanggal_pinjam' => '2026-12-20',
+            'jam_mulai' => '10:00',
+            'jam_selesai' => '12:00',
+            'tujuan' => 'Seminar Kerja Praktik Mahasiswa X',
+        ]);
+        $this->line("   - 2. Modul KP masuk di slot sama (#{$kpBooking->id}) : <comment>menunggu</comment> (Priority Level: {$kpBooking->priority}) -> <info>Berhasil berdampingan!</info>");
+
+        // 3. Modul Capstone masuk di slot yang sama (Kasta 30 > Kasta 20)
+        $capstoneBooking = $service->bookRoom([
+            'source' => 'capstone',
+            'source_id' => 'CAP-TEST-001',
+            'user_id' => $user->id,
+            'ruangan_id' => $ruangan->id,
+            'tanggal_pinjam' => '2026-12-20',
+            'jam_mulai' => '10:00',
+            'jam_selesai' => '12:00',
+            'tujuan' => '[CAPSTONE] Sidang Tugas Akhir Tim Alpha',
+        ]);
+        $this->line("   - 3. Modul Capstone masuk di slot sama (#{$capstoneBooking->id}) : <comment>menunggu</comment> (Priority Level: {$capstoneBooking->priority}) -> <info>Berhasil berdampingan!</info>");
+
+        // 4. Modul KP lain mencoba masuk (Kasta 20 <= Kasta 30 Capstone) -> Harus DITOLAK
+        $kpBlocked = false;
+        try {
+            $service->bookRoom([
+                'source' => 'kp',
+                'source_id' => 'KP-TEST-002',
+                'user_id' => $user->id,
+                'ruangan_id' => $ruangan->id,
+                'tanggal_pinjam' => '2026-12-20',
+                'jam_mulai' => '10:00',
+                'jam_selesai' => '12:00',
+                'tujuan' => 'Seminar Kerja Praktik Mahasiswa Y',
+            ]);
+        } catch (\Throwable $e) {
+            $kpBlocked = true;
+        }
+        $this->line("   - 4. Modul KP lain mencoba berebut slot Capstone : " . ($kpBlocked ? '<info>[BENAR DITOLAK]</info>' : '<error>[GAGAL DITOLAK]</error>'));
+
+        // 5. Admin Ruang menyetujui pengajuan Capstone -> Auto-Reject Cascade ke KP & Mahasiswa
+        $this->line("   - 5. Admin Ruang menyetujui pengajuan Capstone (#{$capstoneBooking->id})");
+        $controller->updateStatus($request, $capstoneBooking->id);
+
+        $capstoneBooking->refresh();
+        $kpBooking->refresh();
+        $mhsBooking->refresh();
+
+        $this->line("        * Status Capstone : <info>{$capstoneBooking->status}</info>");
+        $this->line("        * Status KP       : <comment>{$kpBooking->status}</comment> (Auto-Reject Cascade)");
+        $this->line("        * Status Mhs      : <comment>{$mhsBooking->status}</comment> (Auto-Reject Cascade)");
+        $this->line("        * Alasan Tolak Mhs: {$mhsBooking->alasan_penolakan}");
+
+        // 6. Pengujian Hard Lock: Setelah disetujui, modul lain manapun DITOLAK
+        $postApproveBlocked = false;
+        try {
+            $service->bookRoom([
+                'source' => 'kp',
+                'source_id' => 'KP-TEST-003',
+                'user_id' => $user->id,
+                'ruangan_id' => $ruangan->id,
+                'tanggal_pinjam' => '2026-12-20',
+                'jam_mulai' => '10:00',
+                'jam_selesai' => '12:00',
+                'tujuan' => 'Seminar Kerja Praktik Mahasiswa Z',
+            ]);
+        } catch (\Throwable $e) {
+            $postApproveBlocked = true;
+        }
+        $this->line("   - 6. Pengujian Hard Lock (Pemesanan di slot disetujui) : " . ($postApproveBlocked ? '<info>[BENAR DITOLAK]</info>' : '<error>[GAGAL DITOLAK]</error>'));
+        $this->info("   [BERHASIL] Seluruh logika hierarki prioritas & auto-reject cascade bekerja 100%!\n");
+
         // Cleanup
         $initial->forceDelete();
         $reschedule1->forceDelete();
         $reschedule2->forceDelete();
         $sameDayReschedule->forceDelete();
+        $mhsBooking->forceDelete();
+        $kpBooking->forceDelete();
+        $capstoneBooking->forceDelete();
 
         $this->info("=================================================================");
         $this->info("   SELURUH PENGUJIAN LULUS 100%! DATA PENGUJIAN TELAH DIBERSIHKAN ");

@@ -189,12 +189,25 @@ class RoomBookingService
                 $conflictType = 'peminjaman_sah';
                 $conflictReason = 'Terpakai: ' . ($firstPeminjaman->source_label ?: 'Peminjaman') . ' - ' . ($firstPeminjaman->tujuan ?: 'Kegiatan Kampus');
             } elseif ($peminjamanPendingConflicts->has($room->id)) {
-                $firstPending = $peminjamanPendingConflicts->get($room->id)->first();
-                $isAvailable = false;
-                $conflictType = 'menunggu';
-                $conflictReason = 'Sedang Dalam Pengajuan: ' . ($firstPending->source_label ?: 'Peminjaman') . ' (' . ($firstPending->tujuan ?: 'Menunggu Persetujuan') . ')';
-                $hasPendingWarning = true;
-                $pendingReason = $conflictReason;
+                $roomPendings = $peminjamanPendingConflicts->get($room->id);
+                $callerPriority = Peminjaman::getPriorityLevel($source);
+
+                $blockingPending = $roomPendings->first(function ($p) use ($callerPriority) {
+                    return $p->priority >= $callerPriority;
+                });
+
+                if ($blockingPending) {
+                    $isAvailable = false;
+                    $conflictType = 'menunggu';
+                    $conflictReason = 'Sedang Dalam Pengajuan: ' . ($blockingPending->source_label ?: 'Peminjaman') . ' (' . ($blockingPending->tujuan ?: 'Menunggu Persetujuan') . ')';
+                    $hasPendingWarning = true;
+                    $pendingReason = $conflictReason;
+                } else {
+                    $firstLower = $roomPendings->first();
+                    $isAvailable = true;
+                    $hasPendingWarning = true;
+                    $pendingReason = 'Terdapat antrean peminjaman (' . ($firstLower->source_label ?: 'Peminjaman') . ') yang masih menunggu persetujuan. Agenda resmi Anda akan masuk sebagai prioritas akademik di meja Admin Ruang.';
+                }
             }
 
             $results[] = [
@@ -349,21 +362,44 @@ class RoomBookingService
                 throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan karena terisi: {$namaBentrok}.");
             }
 
-            // 2. Cek bentrok dengan Peminjaman (yang sudah Disetujui atau Sedang Dalam Pengajuan)
-            $bentrokPeminjaman = Peminjaman::where('ruangan_id', $ruanganId)
+            // 2. Cek bentrok dengan Peminjaman Resmi yang sudah Disetujui (Hard Lock)
+            $bentrokApproved = Peminjaman::where('ruangan_id', $ruanganId)
                 ->where('tanggal_pinjam', $tanggal)
-                ->whereIn('status', ['menunggu', 'disetujui'])
+                ->where('status', 'disetujui')
                 ->where(function ($q) use ($jamMulai, $jamSelesai) {
                     $q->where('jam_mulai', '<', $jamSelesai)
                         ->where('jam_selesai', '>', $jamMulai);
                 })->first();
 
-            if ($bentrokPeminjaman) {
-                $label = $bentrokPeminjaman->source_label ?: 'Peminjaman Lain';
-                $statusText = $bentrokPeminjaman->status === 'menunggu'
-                    ? 'sedang dalam proses pengajuan persetujuan'
-                    : 'sudah dipesan resmi';
-                throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan karena {$statusText} ({$label}: {$bentrokPeminjaman->tujuan}).");
+            if ($bentrokApproved) {
+                $label = $bentrokApproved->source_label ?: 'Peminjaman Lain';
+                throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan karena sudah dipesan dan disetujui resmi ({$label}: {$bentrokApproved->tujuan}). Silakan pilih jadwal/ruangan lain atau hubungi Admin Ruang untuk koordinasi.");
+            }
+
+            // 3. Cek bentrok dengan Peminjaman yang masih Menunggu Persetujuan (Soft Lock dengan Hierarki Prioritas)
+            $incomingPriority = Peminjaman::getPriorityLevel($source, $tujuan);
+
+            $bentrokMenunggu = Peminjaman::where('ruangan_id', $ruanganId)
+                ->where('tanggal_pinjam', $tanggal)
+                ->where('status', 'menunggu')
+                ->where(function ($q) use ($jamMulai, $jamSelesai) {
+                    $q->where('jam_mulai', '<', $jamSelesai)
+                        ->where('jam_selesai', '>', $jamMulai);
+                })->get();
+
+            if ($bentrokMenunggu->isNotEmpty()) {
+                // Cari apakah ada antrean menunggu yang memiliki prioritas sama atau lebih tinggi
+                $blockingPending = $bentrokMenunggu->first(function ($item) use ($incomingPriority) {
+                    return $item->priority >= $incomingPriority;
+                });
+
+                if ($blockingPending) {
+                    $label = $blockingPending->source_label ?: 'Peminjaman Lain';
+                    throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan karena sedang dalam proses pengajuan persetujuan ({$label}: {$blockingPending->tujuan}).");
+                }
+
+                // Jika seluruh antrean menunggu memiliki prioritas lebih rendah daripada $incomingPriority,
+                // pemesanan akademik prioritas ini diizinkan masuk berdampingan ke meja Admin Ruang.
             }
 
             // 3. Status Peminjaman dari Modul (Selalu 'menunggu' untuk diverifikasi & disetujui Admin Ruangan)

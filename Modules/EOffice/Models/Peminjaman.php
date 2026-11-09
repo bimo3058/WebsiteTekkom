@@ -16,6 +16,12 @@ class Peminjaman extends Model
     public const SOURCE_CAPSTONE = 'capstone';
     public const SOURCE_PRAKTIKUM = 'praktikum';
 
+    // Prioritas Hierarki Peminjaman
+    public const PRIORITY_CAPSTONE = 30;
+    public const PRIORITY_PRAKTIKUM = 30;
+    public const PRIORITY_KP = 20;
+    public const PRIORITY_UMUM = 10;
+
     protected $table = 'eo_mr_peminjamans';
 
     protected $fillable = [
@@ -61,6 +67,104 @@ class Peminjaman extends Model
         return 'Peminjaman Langsung';
     }
 
+    public static function getPriorityLevel(?string $source, ?string $tujuan = null): int
+    {
+        $src = strtolower(trim((string) $source));
+        if ($src === 'capstone' || str_contains((string) $tujuan, '[CAPSTONE')) {
+            return self::PRIORITY_CAPSTONE;
+        }
+
+        if ($src === 'praktikum' || str_contains((string) $tujuan, 'Praktikum')) {
+            return self::PRIORITY_PRAKTIKUM;
+        }
+
+        if (in_array($src, ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik']) || str_contains((string) $tujuan, 'Seminar KP') || str_contains((string) $tujuan, 'Kerja Praktik')) {
+            return self::PRIORITY_KP;
+        }
+
+        return self::PRIORITY_UMUM;
+    }
+
+    public function getPriorityAttribute(): int
+    {
+        return self::getPriorityLevel($this->source, $this->tujuan);
+    }
+
+    public function getConflictingPendingsAttribute()
+    {
+        if ($this->status !== 'menunggu') {
+            return collect();
+        }
+
+        $dateStr = $this->tanggal_pinjam instanceof \Carbon\CarbonInterface
+            ? $this->tanggal_pinjam->format('Y-m-d')
+            : (string) $this->tanggal_pinjam;
+
+        $jamMulai = substr((string) $this->jam_mulai, 0, 5);
+        $jamSelesai = substr((string) $this->jam_selesai, 0, 5);
+
+        return self::with(['user'])->where('ruangan_id', $this->ruangan_id)
+            ->where('tanggal_pinjam', $dateStr)
+            ->where('status', 'menunggu')
+            ->where('id', '!=', $this->id)
+            ->where(function ($q) use ($jamMulai, $jamSelesai) {
+                $q->where('jam_mulai', '<', $jamSelesai)
+                    ->where('jam_selesai', '>', $jamMulai);
+            })
+            ->get();
+    }
+
+    public function getConflictGroupInfo(): array
+    {
+        if ($this->status !== 'menunggu') {
+            return [];
+        }
+
+        $conflicts = $this->conflicting_pendings;
+        if ($conflicts->isEmpty()) {
+            return [];
+        }
+
+        // Gabungkan peminjaman ini dengan seluruh peminjaman yang bentrok
+        $all = collect([$this])->merge($conflicts)->sortByDesc(function ($p) {
+            return sprintf('%03d_%010d', $p->priority, 9999999999 - $p->id);
+        })->values();
+
+        $total = $all->count();
+        $items = [];
+
+        foreach ($all as $index => $item) {
+            $rankNum = $index + 1;
+            $category = ($item->priority >= self::PRIORITY_KP) ? 'Akademik' : 'Umum';
+            $peminjamName = $item->user->name ?? 'User';
+            $label = $item->source_label;
+            $tujuan = $item->tujuan;
+
+            $cleanTujuan = trim(preg_replace('/^\[CAPSTONE[^\]]*\]/i', '', (string) $tujuan));
+            $detailSuffix = !empty($cleanTujuan) && $cleanTujuan !== $label ? " ({$cleanTujuan})" : '';
+
+            $line = "[Prioritas {$rankNum} - {$category}] {$label} - {$peminjamName}{$detailSuffix}";
+
+            // Peringkat 1 otomatis ditandai (Rekomendasi Disetujui) jika memiliki prioritas lebih tinggi dari kandidat lain
+            if ($index === 0 && $total > 1) {
+                $line .= ' (Rekomendasi Disetujui)';
+            }
+
+            $items[] = [
+                'id' => $item->id,
+                'text' => $line,
+                'is_current' => ($item->id === $this->id),
+            ];
+        }
+
+        return [
+            'total' => $total,
+            'header' => "PERHATIAN ADMIN RUANG: SLOT INI DIPEREBUTKAN {$total} PENGAJUAN",
+            'items' => $items,
+            'footer' => "Jika Anda menyetujui pengajuan ini, sistem akan otomatis menolak pengajuan lainnya dan memberi notifikasi ke pemohon.",
+        ];
+    }
+
     public function getIsPastEventAttribute(): bool
     {
         if (!$this->tanggal_pinjam) {
@@ -78,14 +182,6 @@ class Peminjaman extends Model
 
     public function getDisplayStatusAttribute(): string
     {
-        if ($this->trashed() && strtolower((string) $this->status) === 'disetujui' && $this->is_past_event) {
-            return 'disetujui';
-        }
-
-        if ($this->trashed() && strtolower((string) $this->status) !== 'dibatalkan') {
-            return 'dibatalkan';
-        }
-
         return (string) $this->status;
     }
 
@@ -116,6 +212,49 @@ class Peminjaman extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function getCreatorRoleLabelAttribute(): ?string
+    {
+        if (!$this->created_by || $this->created_by === $this->user_id) {
+            return null;
+        }
+
+        if (!$this->relationLoaded('creator')) {
+            $this->load('creator.roles');
+        }
+
+        if (!$this->creator || !$this->creator->roles || $this->creator->roles->isEmpty()) {
+            return null;
+        }
+
+        return $this->creator->roles
+            ->pluck('name')
+            ->map(fn($name) => ucwords(str_replace('_', ' ', (string) $name)))
+            ->implode(', ');
+    }
+
+    public function getTeleponAttribute(): ?string
+    {
+        if (!empty($this->nomor_telepon)) {
+            return $this->nomor_telepon;
+        }
+
+        return $this->user?->whatsapp ?? null;
+    }
+
+    public function getCreatorTeleponAttribute(): ?string
+    {
+        if (!$this->created_by || $this->created_by === $this->user_id) {
+            return null;
+        }
+
+        return $this->creator?->whatsapp ?? null;
     }
 
 
