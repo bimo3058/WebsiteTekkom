@@ -15,7 +15,7 @@
             <div class="flex items-center gap-4">
                 <span class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xl font-bold text-slate-500" x-text="initials(user)"></span>
                 <div>
-                    <h1 class="flex flex-wrap items-center gap-2 text-2xl font-bold tracking-tight text-slate-900"><span x-text="user.name"></span><span x-show="user.is_sso" class="rounded-full border border-violet-400 px-2.5 py-0.5 text-xs font-semibold text-violet-600">SSO</span></h1>
+                    <h1 class="flex flex-wrap items-center gap-2 text-2xl font-bold tracking-tight text-foreground"><span x-text="user.name"></span><span x-show="user.is_sso" class="rounded-full border border-violet-400 px-2.5 py-0.5 text-xs font-semibold text-violet-600">SSO</span></h1>
                     <p class="mt-1 text-sm text-slate-500" x-text="[user.nim,user.nip].filter(Boolean).join(' / ')||'—'"></p>
                 </div>
             </div>
@@ -31,7 +31,7 @@
                         <p class="text-sm font-medium text-slate-800" x-text="user.cohort_year || '—'"></p>
                     </div>
                     <div class="grid grid-cols-[130px_1fr] items-center gap-3">
-                        <p class="text-sm text-slate-500">Access Role</p>
+                        <p class="text-sm text-slate-500">Peran Akses</p>
                         <p class="flex flex-wrap gap-1">
                             <template x-for="slug in user.roles" :key="slug">
                                 <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize" :class="rolePillClass(slug)" x-text="roleLabel(slug)"></span>
@@ -55,22 +55,22 @@
                 </div>
             </div>
 
-            <div class="rounded-xl border border-slate-200 p-4 sm:p-5">
+            <div class="rounded-xl border border-border p-4 sm:p-5">
                 <div class="grid gap-6 md:grid-cols-2">
                     <div>
-                        <h2 class="text-base font-bold text-slate-900">Role &amp; Permissions</h2>
-                        <p class="mt-1.5 text-sm text-slate-500">Manage roles and module permissions for each user</p>
+                        <h2 class="text-base font-bold text-foreground">Peran &amp; Permissions</h2>
+                        <p class="mt-1.5 text-sm text-slate-500">Kelola peran dan izin modul tiap pengguna</p>
                     </div>
                     <div>
-                        <p class="mb-2 text-sm text-slate-500">Acces Role</p>
-                        <div class="rounded-xl border border-[#2f3d8a] px-3 py-2" aria-label="Access Role (lihat saja)">
+                        <p class="mb-2 text-sm text-slate-500">Peran Akses</p>
+                        <div class="rounded-xl border border-primary px-3 py-2" aria-label="Peran Akses (lihat saja)">
                             <span class="flex flex-wrap gap-1.5">
                                 <template x-for="slug in user.roles" :key="slug">
                                     <span class="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[13px] font-medium text-slate-800" x-text="roleLabel(slug)"></span>
                                 </template>
                             </span>
                         </div>
-                        <p x-show="user.other_roles.length" class="mt-2 text-xs text-slate-400" x-text="'Role lainnya: '+user.other_roles.join(', ')"></p>
+                        <p x-show="user.other_roles.length" class="mt-2 text-xs text-slate-400" x-text="'Peran lainnya: '+user.other_roles.join(', ')"></p>
                     </div>
                 </div>
             </div>

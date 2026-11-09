@@ -15,10 +15,8 @@ class UserPeminjamanController extends Controller
     // Feature 2 & 3: Catalog & Interactive Calendar Booking
     public function booking(Request $request)
     {
-        Peminjaman::autoExpirePending();
-
         $ruangans = Ruangan::where('is_active', true)
-            ->where('kategori', '!=', 'Sidang')
+            ->where('kategori', '!=', Ruangan::KATEGORI_SIDANG)
             ->with([
                 'fotos',
                 'peminjamans' => function ($q) {
@@ -40,7 +38,7 @@ class UserPeminjamanController extends Controller
     public function showRuangan($id)
     {
         $room = Ruangan::where('is_active', true)
-            ->where('kategori', '!=', 'Sidang')
+            ->where('kategori', '!=', Ruangan::KATEGORI_SIDANG)
             ->with('fotos')
             ->findOrFail($id);
         $fasilitas = is_array($room->fasilitas) ? $room->fasilitas : (json_decode($room->fasilitas, true) ?? []);
@@ -68,7 +66,7 @@ class UserPeminjamanController extends Controller
                 'required',
                 Rule::exists('eo_mr_ruangans', 'id')
                     ->where('is_active', true)
-                    ->whereNot('kategori', 'Sidang'),
+                    ->whereNot('kategori', Ruangan::KATEGORI_SIDANG),
             ],
             'nomor_telepon' => $isPhoneLocked
                 ? 'required|string|max:30'
@@ -270,8 +268,6 @@ class UserPeminjamanController extends Controller
 
     public function kalender(Request $request)
     {
-        Peminjaman::autoExpirePending();
-
         $today = \Carbon\Carbon::today();
 
         // --- Week Mode ---
@@ -284,18 +280,22 @@ class UserPeminjamanController extends Controller
         $selectedRoomId = $request->get('ruangan_id');
         $selectedKategori = $request->get('kategori');
 
-        $allowedCategories = ['Kelas', 'Laboratorium', 'Aula', 'Fasilitas Umum'];
         $allRuangansQuery = Ruangan::where('is_active', true)
-            ->whereIn('kategori', $allowedCategories)
+            ->where('kategori', '!=', Ruangan::KATEGORI_SIDANG)
             ->orderBy('nama');
 
-        // List semua ruangan (yang boleh dipinjam) untuk dropdown filter
+        // List semua ruangan (yang boleh dipinjam mahasiswa) untuk dropdown filter
         $allRuangansDaftar = $allRuangansQuery->get();
         $kategoriList = $allRuangansDaftar->pluck('kategori')->filter()->unique()->values();
 
+        // Validasi input kategori jika URL dimanipulasi dengan kategori selain yang diizinkan
+        if ($selectedKategori && !in_array($selectedKategori, Ruangan::KATEGORI_MAHASISWA) && $selectedKategori !== 'Semua Kategori' && $selectedKategori !== 'Semua') {
+            $selectedKategori = null;
+        }
+
         // Sensible Default: Jika tidak ada ruangan/kategori yang dipilih, default ke Kelas
         if (!$selectedRoomId && !$selectedKategori) {
-            $selectedKategori = 'Kelas';
+            $selectedKategori = Ruangan::KATEGORI_KELAS;
         }
 
         if ($selectedRoomId) {
@@ -369,13 +369,11 @@ class UserPeminjamanController extends Controller
     // Feature 4: Peminjaman Saya
     public function saya()
     {
-        Peminjaman::autoExpirePending();
-
         $now = \Carbon\Carbon::now();
         $dateToday = $now->copy()->format('Y-m-d');
         $timeNow = $now->copy()->format('H:i:s');
 
-        $peminjamans = Peminjaman::with('ruangan')
+        $peminjamans = Peminjaman::with(['ruangan', 'user', 'creator.roles'])
             ->where('user_id', auth()->id())
             ->where(function ($q) use ($dateToday, $timeNow) {
                 $q->where('status', 'menunggu')
@@ -403,6 +401,15 @@ class UserPeminjamanController extends Controller
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
+        // Validasi Otorisasi: Peminjaman dari modul atau yang didaftarkan oleh Admin/TU tidak boleh dibatalkan mandiri oleh mahasiswa
+        $isSelfSubmitted = empty($peminjaman->source) && (!$peminjaman->created_by || (int)$peminjaman->created_by === (int)auth()->id());
+        if (!$isSelfSubmitted) {
+            $penjelasan = !empty($peminjaman->source)
+                ? "Jadwal ini merupakan agenda resmi dari modul {$peminjaman->source_label}."
+                : "Jadwal ini dialokasikan resmi oleh Admin Ruang/TU.";
+            return redirect()->back()->withErrors("{$penjelasan} Pembatalan tidak dapat dilakukan secara mandiri oleh mahasiswa. Silakan hubungi Admin Ruang atau koordinator modul terkait.");
+        }
+
         // Validasi apakah waktu mulai peminjaman sudah berlalu atau sedang berlangsung
         $tglPinjam = is_string($peminjaman->tanggal_pinjam)
             ? $peminjaman->tanggal_pinjam
@@ -414,10 +421,15 @@ class UserPeminjamanController extends Controller
         }
 
         if ($peminjaman->status == 'menunggu' || $peminjaman->status == 'disetujui') {
+            $prevStatus = $peminjaman->status;
             $peminjaman->update([
                 'status' => 'dibatalkan',
                 'waktu_approval' => now()
             ]);
+
+            // Dispatch event agar kalender dan modul listener otomatis tersinkronisasi
+            event(new \Modules\EOffice\Events\RoomBookingStatusChanged($peminjaman, 'dibatalkan', $prevStatus, 'Dibatalkan mandiri oleh pemohon'));
+
             return redirect()->back()->with('success', 'Peminjaman berhasil dibatalkan secara mandiri.');
         }
 
@@ -433,7 +445,7 @@ class UserPeminjamanController extends Controller
 
         $user = auth()->user();
         $isOwner = (int) $booking->user_id === (int) $user->id;
-        $isAdmin = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['admin', 'superadmin', 'admin_eoffice']);
+        $isAdmin = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['superadmin', 'admin_eoffice']);
 
         if (! $isOwner && ! $isAdmin) {
             abort(403, 'Akses Ditolak: Anda tidak memiliki izin untuk melihat dokumen ini.');
@@ -469,8 +481,6 @@ class UserPeminjamanController extends Controller
     // Feature 5: Riwayat Peminjaman (Finished/Rejected/Canceled)
     public function riwayat()
     {
-        Peminjaman::autoExpirePending();
-
         $now = \Carbon\Carbon::now();
         $dateToday = $now->copy()->format('Y-m-d');
         $timeNow = $now->copy()->format('H:i:s');
@@ -492,7 +502,7 @@ class UserPeminjamanController extends Controller
             })
             ->update(['is_hidden_by_user' => true]);
 
-        $riwayats = Peminjaman::with('ruangan')
+        $riwayats = Peminjaman::with(['ruangan', 'user', 'creator.roles'])
             ->where('user_id', auth()->id())
             ->where('is_hidden_by_user', false)
             ->where(function ($q) use ($dateToday, $timeNow) {

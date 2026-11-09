@@ -19,8 +19,24 @@ class Group extends Model
         'period_id', 'status', 'supervisor_1_id', 'supervisor_2_id',
         'group_mode', 'has_existing_group', 'code', 'is_solo',
         'has_active_proposal', 'readiness_status', 'finalization_notes',
-        'finalized_at', 'finalized_by',
+        'finalized_at', 'finalized_by', 'nilai_dosen_deadline', 'milestone_deadline',
     ];
+
+    protected $casts = [
+        'nilai_dosen_deadline' => 'datetime',
+        'milestone_deadline' => 'datetime',
+    ];
+
+    /**
+     * Display name fallback — capstone_groups has no `name` column.
+     * Returns `code` so legacy `$group->name` callers never throw
+     * MissingAttributeException. Controllers should still prefer
+     * `$group->name ?? $group->code ?? 'Group '.$group->id`.
+     */
+    public function getNameAttribute(): ?string
+    {
+        return $this->attributes['name'] ?? $this->attributes['code'] ?? null;
+    }
 
     /**
      * Assign title_id — ONLY callable from FinalizationService.
@@ -92,6 +108,17 @@ class Group extends Model
     }
 
     /**
+     * EXPO gate: the group has at least one APPROVED TA-phase document
+     * (the draft TA from the documents/workflow page). This is the single
+     * source of truth for expo availability — a capstone_ta_submissions
+     * row is NOT required.
+     */
+    public function hasApprovedTaDraftDocument(): bool
+    {
+        return $this->documents()->where('phase', 'TA')->where('status', 'APPROVED')->exists();
+    }
+
+    /**
      * Cache field — source of truth is supervisions table.
      */
     public function supervisor1()
@@ -138,6 +165,27 @@ class Group extends Model
         return (int) $this->supervisor_1_id === $lecturerId
             || (int) $this->supervisor_2_id === $lecturerId
             || $this->supervisions()->where('supervisor_id', $lecturerId)->exists();
+    }
+
+    /**
+     * Scope groups where a lecturer holds a specific supervisor slot.
+     *
+     * Mirrors scopeSupervisedBy: capstone_supervisions is the source of
+     * truth (role SUPERVISOR_1 / SUPERVISOR_2), while supervisor_1_id and
+     * supervisor_2_id keep imported/legacy records accessible.
+     * Used to split schedule visibility by slot (SEMPRO → supervisor 2,
+     * TA defense → supervisor 1).
+     */
+    public function scopeSupervisedByInSlot(Builder $query, int $lecturerId, string $slot): Builder
+    {
+        $column = $slot === 'SUPERVISOR_1' ? 'supervisor_1_id' : 'supervisor_2_id';
+
+        return $query->where(function (Builder $scope) use ($lecturerId, $slot, $column) {
+            $scope->where($column, $lecturerId)
+                ->orWhereHas('supervisions', fn (Builder $supervisions) => $supervisions
+                    ->where('supervisor_id', $lecturerId)
+                    ->where('role', $slot));
+        });
     }
 
     /**

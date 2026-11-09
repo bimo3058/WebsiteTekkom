@@ -561,18 +561,18 @@
                                                             $label = 'Menunggu';
                                                             $eventType = $ev['source_label'] ?? 'Peminjaman (Menunggu)';
                                                         } else {
-                                                            if (in_array(strtolower((string) $source), ['kp', 'kerja_praktik'])) {
+                                                            if (in_array(strtolower(trim((string) $source)), ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik']) || str_contains((string) ($ev['title'] ?? ''), 'Seminar KP') || str_contains((string) ($ev['title'] ?? ''), 'Kerja Praktik')) {
                                                                 $bg = '#E0F2FE';
                                                                 $border = '#38BDF8';
                                                                 $text = '#0369A1';
-                                                                $label = 'Seminar KP';
-                                                                $eventType = 'Seminar KP';
-                                                            } elseif (strtolower((string) $source) === 'capstone') {
+                                                                $label = 'KP';
+                                                                $eventType = 'KP';
+                                                            } elseif (strtolower(trim((string) $source)) === 'capstone' || str_contains((string) ($ev['title'] ?? ''), '[CAPSTONE')) {
                                                                 $bg = '#F3E8FF';
                                                                 $border = '#C084FC';
                                                                 $text = '#6B21A8';
-                                                                $label = 'Sidang Capstone';
-                                                                $eventType = 'Sidang Capstone';
+                                                                $label = 'CATA';
+                                                                $eventType = 'CATA';
                                                             } elseif (strtolower((string) $source) === 'praktikum') {
                                                                 $bg = '#FFEDD5';
                                                                 $border = '#FB923C';

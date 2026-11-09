@@ -117,7 +117,6 @@
                 @endif
 
                 {{-- Grup: Master Data --}}
-                @if($sb_adm_fas || $sb_adm_rua)
                 <div>
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 px-1 opacity-80">
                         Master Data</p>
@@ -151,7 +150,6 @@
                         </a>
                     </div>
                 </div>
-                @endif
 
                 {{-- Grup: Sistem Web --}}
                 @if($sb_adm_pgt)

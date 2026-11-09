@@ -2,8 +2,8 @@
 
 namespace Modules\Capstone\Services;
 
-use Modules\Capstone\Models\Group;
 use InvalidArgumentException;
+use Modules\Capstone\Models\Group;
 
 class GroupStateMachine
 {
@@ -21,7 +21,8 @@ class GroupStateMachine
         'PDC1_ACTIVE' => ['READY_FOR_SEMPRO', 'KELOMPOK_FINAL'], // KELOMPOK_FINAL on period reopen
         'READY_FOR_SEMPRO' => ['SEMPRO_DONE', 'PDC1_ACTIVE'], // PDC1_ACTIVE on sempro fail
         'SEMPRO_DONE' => ['PDC2_ACTIVE'],
-        'PDC2_ACTIVE' => ['PDC2_READY_FOR_EXPO'],
+        'PDC2_ACTIVE' => ['PDC2_READY_FOR_EXPO', 'TA_DRAFT'],
+        'TA_DRAFT' => ['PDC2_READY_FOR_EXPO'],
         'PDC2_READY_FOR_EXPO' => ['EXPO_REGISTERED'],
         'EXPO_REGISTERED' => ['EXPO_DONE', 'PDC2_ACTIVE', 'PDC2_READY_FOR_EXPO'], // Withdrawal returns to ready; failure returns to PDC2.
         'EXPO_DONE' => ['PDC2_COMPLETED'],
@@ -44,6 +45,7 @@ class GroupStateMachine
         'READY_FOR_SEMPRO',
         'SEMPRO_DONE',
         'PDC2_ACTIVE',
+        'TA_DRAFT',
         'PDC2_READY_FOR_EXPO',
         'EXPO_REGISTERED',
         'EXPO_DONE',
@@ -56,7 +58,7 @@ class GroupStateMachine
      */
     public function canTransition(string $from, string $to): bool
     {
-        if (!isset(self::TRANSITIONS[$from])) {
+        if (! isset(self::TRANSITIONS[$from])) {
             return false;
         }
 
@@ -72,10 +74,10 @@ class GroupStateMachine
     {
         $currentStatus = $group->status;
 
-        if (!$this->canTransition($currentStatus, $newStatus)) {
+        if (! $this->canTransition($currentStatus, $newStatus)) {
             throw new InvalidArgumentException(
-                "Invalid group state transition: {$currentStatus} → {$newStatus}. " .
-                "Allowed transitions from {$currentStatus}: " .
+                "Invalid group state transition: {$currentStatus} → {$newStatus}. ".
+                "Allowed transitions from {$currentStatus}: ".
                 implode(', ', self::TRANSITIONS[$currentStatus] ?? [])
             );
         }
@@ -98,6 +100,7 @@ class GroupStateMachine
     public function statusOrder(string $status): int
     {
         $index = array_search($status, self::ALL_STATUSES);
+
         return $index !== false ? $index : -1;
     }
 
