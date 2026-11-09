@@ -9,11 +9,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SeminarEvaluation extends Model
 {
     protected $table = 'capstone_seminar_evaluations';
+
     protected $fillable = [
         'schedule_id',
         'examiner_id',
         'rubric_json',
         'score',
+        'result',
         'status',
     ];
 

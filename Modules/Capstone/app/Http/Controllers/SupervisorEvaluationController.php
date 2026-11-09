@@ -2,25 +2,34 @@
 
 namespace Modules\Capstone\Http\Controllers;
 
-use Modules\Capstone\Models\AssessmentComponent;
-use Modules\Capstone\Models\Group;
-use Modules\Capstone\Models\GroupMember;
-use Modules\Capstone\Models\PeriodAssessmentComponent;
-use Modules\Capstone\Models\Schedule;
-use Modules\Capstone\Models\SeminarSchedule;
-use Modules\Capstone\Models\Supervision;
-use Modules\Capstone\Models\TaDefenseEvaluation;
-use Modules\Capstone\Models\TaDefenseExaminer;
-use Modules\Capstone\Models\TaDefenseSchedule;
-use Modules\Capstone\Repositories\AssessmentScoreRepository;
-use Modules\Capstone\Services\NotificationService;
-use Modules\Capstone\Support\CapstoneActor;
+use App\Models\Student;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Modules\Capstone\Models\AssessmentComponent;
+use Modules\Capstone\Models\ExpoRegistration;
+use Modules\Capstone\Models\ExpoSelfEvaluation;
+use Modules\Capstone\Models\ExpoStudentDocument;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Models\PeriodAssessmentComponent;
+use Modules\Capstone\Models\Schedule;
+use Modules\Capstone\Models\SeminarEvaluation;
+use Modules\Capstone\Models\SeminarSchedule;
+use Modules\Capstone\Models\Supervision;
+use Modules\Capstone\Models\TaDefenseEvaluation;
+use Modules\Capstone\Models\TaDefenseExaminer;
+use Modules\Capstone\Models\TaDefenseSchedule;
+use Modules\Capstone\Models\TaSubmission;
+use Modules\Capstone\Repositories\AssessmentScoreRepository;
+use Modules\Capstone\Services\GradeCalculationService;
+use Modules\Capstone\Services\GroupLifecycleService;
+use Modules\Capstone\Services\NotificationService;
+use Modules\Capstone\Support\CapstoneActor;
+use Modules\Capstone\Support\EvaluationDeadline;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SupervisorEvaluationController extends Controller
@@ -58,6 +67,7 @@ class SupervisorEvaluationController extends Controller
             foreach ($groupSchedules as $schedule) {
                 $evalType = $schedule['evaluation_type'];
                 if (! isset($evaluations[$evalType])) {
+                    $editableStatuses = GroupLifecycleService::EDITABLE_STATUSES[$evalType] ?? [];
                     $evaluations[$evalType] = [
                         'schedule_id' => $schedule['schedule_id'],
                         'schedule_type' => $schedule['schedule_type'],
@@ -65,14 +75,20 @@ class SupervisorEvaluationController extends Controller
                         'room' => $schedule['room'],
                         'deadline' => $schedule['deadline'],
                         'status' => strtolower((string) $schedule['status']),
+                        // Schedule entries may carry a stricter editability
+                        // rule (e.g. EXPO review is only actionable while the
+                        // submission is pending).
+                        'editable' => $schedule['editable'] ?? in_array($group->status, $editableStatuses, true),
+                        'evaluation_type' => $evalType,
                     ];
                 }
             }
 
             return [
                 'id' => $group->id,
-                'name' => $group->name,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
                 'code' => $group->code,
+                'status' => $group->status,
                 'period' => [
                     'id' => $group->period->id,
                     'name' => $group->period->name,
@@ -207,9 +223,10 @@ class SupervisorEvaluationController extends Controller
     {
         $schedules = [];
 
-        // SEMPRO → BIMBINGAN_SEMPRO
+        // SEMPRO → BIMBINGAN_SEMPRO (cancelled stays hidden; notified only)
         $seminarSchedules = SeminarSchedule::where('group_id', $group->id)
             ->whereIn('type', ['SEMPRO'])
+            ->where('status', '!=', 'CANCELLED')
             ->get();
 
         foreach ($seminarSchedules as $sempro) {
@@ -218,34 +235,34 @@ class SupervisorEvaluationController extends Controller
             );
         }
 
-        // EXPO evaluation should be visible only when group is registered for expo.
-        if ($group->status === 'EXPO_REGISTERED') {
-            $expo = SeminarSchedule::where('group_id', $group->id)
-                ->where('type', 'EXPO')
-                ->orderByDesc('id')
-                ->first();
-
-            if ($expo) {
-                $schedules[] = $this->formatSeminarScheduleForSupervisor(
-                    $expo, 'SEMINAR', 'EXPO', $group, $supervision, $supervisorId
-                );
-
-                $schedules[] = $this->formatSeminarScheduleForSupervisor(
-                    $expo, 'SEMINAR', 'MILESTONE', $group, $supervision, $supervisorId
-                );
-
-                $schedules[] = $this->formatSeminarScheduleForSupervisor(
-                    $expo, 'SEMINAR', 'NILAI_DOSEN', $group, $supervision, $supervisorId
-                );
-            } else {
-                $schedules[] = $this->formatStatusBasedEvaluationForSupervisor(
+        // NILAI_DOSEN and MILESTONE open as soon as the group reaches
+        // PDC2_ACTIVE — no EXPO schedule or registration is required.
+        // EXPO is the group-level review (approve/reject) of the
+        // representative's self-evaluation + document submission.
+        foreach (['NILAI_DOSEN', 'MILESTONE'] as $pdc2Type) {
+            if (in_array($group->status, GroupLifecycleService::EDITABLE_STATUSES[$pdc2Type] ?? [], true)) {
+                $schedules[] = $this->formatScheduleLessEvaluationForSupervisor(
                     $group,
                     $supervision,
                     $supervisorId,
-                    'EXPO',
-                    'EXPO'
+                    $pdc2Type
                 );
             }
+        }
+
+        // EXPO: show the review card only when a submission is on the table
+        // (submitted, previously approved, or rejected awaiting a re-submit).
+        $expoRegistration = ExpoRegistration::where('group_id', $group->id)
+            ->where('status', 'REGISTERED')
+            ->orderByDesc('id')
+            ->first();
+        if ($expoRegistration && $expoRegistration->review_status !== null) {
+            $schedules[] = $this->formatExpoReviewForSupervisor(
+                $expoRegistration,
+                $group,
+                $supervision,
+                $supervisorId
+            );
         }
 
         // TA_DEFENSE → BIMBINGAN_TA (per-student, only if student has TA_READY_FOR_SIDANG or higher status)
@@ -265,7 +282,7 @@ class SupervisorEvaluationController extends Controller
                 $allStudentIds->push($student->id);
             }
         }
-        $submissionMap = \Modules\Capstone\Models\TaSubmission::whereIn('student_id', $allStudentIds->unique()->values())
+        $submissionMap = TaSubmission::whereIn('student_id', $allStudentIds->unique()->values())
             ->get()
             ->keyBy('student_id');
 
@@ -315,7 +332,7 @@ class SupervisorEvaluationController extends Controller
             'deadline' => $deadline,
             'group' => [
                 'id' => $group->id,
-                'name' => $group->name,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
                 'code' => $group->code,
             ],
             'students' => $group->members->map(fn ($m) => [
@@ -336,7 +353,7 @@ class SupervisorEvaluationController extends Controller
     /**
      * Format TA defense schedule data for supervisor response
      */
-    private function formatTaDefenseScheduleForSupervisor($taDefenseSchedule, string $scheduleType, string $evalType, $group, $supervision, int $supervisorId, ?\App\Models\Student $student = null): array
+    private function formatTaDefenseScheduleForSupervisor($taDefenseSchedule, string $scheduleType, string $evalType, $group, $supervision, int $supervisorId, ?Student $student = null): array
     {
         // Use provided student or fall back to backward-compat
         $student = $student ?? $taDefenseSchedule->student;
@@ -360,7 +377,7 @@ class SupervisorEvaluationController extends Controller
             'deadline' => $deadline,
             'group' => [
                 'id' => $group->id,
-                'name' => $group->name,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
                 'code' => $group->code,
             ],
             'student' => $student ? [
@@ -379,19 +396,20 @@ class SupervisorEvaluationController extends Controller
     }
 
     /**
-     * Format NILAI_DOSEN evaluation data for supervisor response (no schedule, just evaluation)
+     * Format schedule-less PDC2 evaluation card (NILAI_DOSEN, MILESTONE).
+     * No seminar schedule is required; the soft deadline is persisted on
+     * the group so the value is stable across requests.
      */
-    private function formatNilaiDosenForSupervisor($group, $supervision, int $supervisorId): array
+    private function formatScheduleLessEvaluationForSupervisor($group, $supervision, int $supervisorId, string $evalType): array
     {
-        $status = $this->getEvaluationStatus($group, $supervisorId, 'NILAI_DOSEN');
+        $status = $this->getEvaluationStatus($group, $supervisorId, $evalType);
 
-        // NILAI_DOSEN has no specific date - use current date + 7 days as soft deadline
-        $deadline = date('Y-m-d H:i:s', strtotime('+7 days'));
+        $deadline = $this->resolveSoftDeadline($group, $evalType);
 
         return [
             'schedule_id' => null,
             'schedule_type' => 'PDC2',
-            'evaluation_type' => 'NILAI_DOSEN',
+            'evaluation_type' => $evalType,
             'date' => null,
             'start_time' => null,
             'end_time' => null,
@@ -399,7 +417,7 @@ class SupervisorEvaluationController extends Controller
             'deadline' => $deadline,
             'group' => [
                 'id' => $group->id,
-                'name' => $group->name,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
                 'code' => $group->code,
             ],
             'students' => $group->members->map(fn ($m) => [
@@ -436,7 +454,7 @@ class SupervisorEvaluationController extends Controller
             'deadline' => $deadline,
             'group' => [
                 'id' => $group->id,
-                'name' => $group->name,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
                 'code' => $group->code,
             ],
             'students' => $group->members->map(fn ($m) => [
@@ -455,15 +473,64 @@ class SupervisorEvaluationController extends Controller
     }
 
     /**
+     * Format the group-level EXPO review card: the representative's
+     * self-evaluation + document submission, approved or rejected once per
+     * group. No scoring — status maps from the registration review state.
+     */
+    private function formatExpoReviewForSupervisor(ExpoRegistration $registration, $group, $supervision, int $supervisorId): array
+    {
+        $status = match ($registration->review_status) {
+            'APPROVED' => 'COMPLETED',
+            'REJECTED' => 'REJECTED',
+            default => 'PENDING',
+        };
+
+        $window = app(GroupLifecycleService::class)->formAccess($group, 'EXPO');
+
+        return [
+            'schedule_id' => null,
+            'schedule_type' => 'EXPO',
+            'evaluation_type' => 'EXPO',
+            'date' => $registration->registered_at?->toDateString(),
+            'start_time' => null,
+            'end_time' => null,
+            'room' => null,
+            'deadline' => null,
+            'group' => [
+                'id' => $group->id,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
+                'code' => $group->code,
+            ],
+            'students' => $group->members->map(fn ($m) => [
+                'id' => $m->student->id,
+                'name' => $m->student->name,
+                'nim' => $m->student->nim,
+                'is_leader' => $m->is_leader,
+            ])->values(),
+            'status' => $status,
+            // Review is only actionable while a fresh submission is pending
+            // review and the group is still inside the EXPO window.
+            'editable' => $status === 'PENDING' && $window['editable'],
+            'review_status' => $registration->review_status,
+            'review_feedback' => $registration->review_feedback,
+            'supervisor_role' => $supervision->role,
+            'period' => [
+                'id' => $group->period->id,
+                'name' => $group->period->name,
+            ],
+        ];
+    }
+
+    /**
      * Get evaluation form with components and existing scores
      */
     public function form(Request $request, int $groupId): JsonResponse
     {
         $user = CapstoneActor::lecturer(Auth::user());
-        $evaluationType = $request->input('type'); // BIMBINGAN_SEMPRO, NILAI_DOSEN, EXPO, MILESTONE, BIMBINGAN_TA
+        $evaluationType = $request->input('type'); // BIMBINGAN_SEMPRO, NILAI_DOSEN, MILESTONE, BIMBINGAN_TA
 
         // Validate evaluation type
-        $validTypes = ['BIMBINGAN_SEMPRO', 'NILAI_DOSEN', 'EXPO', 'MILESTONE', 'BIMBINGAN_TA'];
+        $validTypes = ['BIMBINGAN_SEMPRO', 'NILAI_DOSEN', 'MILESTONE', 'BIMBINGAN_TA'];
         if (! in_array($evaluationType, $validTypes)) {
             return $this->errorResponse('Invalid evaluation type', 400);
         }
@@ -478,6 +545,8 @@ class SupervisorEvaluationController extends Controller
         }
 
         $group = Group::with(['members.student', 'period'])->findOrFail($groupId);
+
+        $formAccess = app(GroupLifecycleService::class)->formAccess($group, $evaluationType);
 
         // Get components for this evaluation type (schema-aware)
         if ($this->usesPeriodAssessmentComponents()) {
@@ -556,17 +625,8 @@ class SupervisorEvaluationController extends Controller
                 ];
             });
 
-        // Require EXPO schedule for MILESTONE and NILAI_DOSEN evaluations
-        if (in_array($evaluationType, ['MILESTONE', 'NILAI_DOSEN'], true)) {
-            $expoSchedule = SeminarSchedule::where('group_id', $groupId)
-                ->where('type', 'EXPO')
-                ->orderByDesc('id')
-                ->first();
-
-            if (! $expoSchedule) {
-                return $this->errorResponse('EXPO schedule is required for this evaluation type.', 400);
-            }
-        }
+        // NILAI_DOSEN and MILESTONE are schedule-less: scorable from
+        // PDC2_ACTIVE onward, no EXPO schedule required.
 
         // Get schedule info
         $scheduleInfo = $this->getScheduleForType($groupId, $evaluationType);
@@ -574,14 +634,249 @@ class SupervisorEvaluationController extends Controller
         return $this->successResponse([
             'group' => [
                 'id' => $group->id,
-                'name' => $group->name,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
                 'code' => $group->code,
             ],
             'evaluation_type' => $evaluationType,
+            'editable' => $formAccess['editable'],
+            'editable_reason' => $formAccess['reason'],
+            'group_status' => $formAccess['group_status'],
             'supervisor_role' => $supervision->role,
             'schedule' => $scheduleInfo,
             'components' => $components->toArray(),
             'students' => $students->values()->toArray(),
+        ]);
+    }
+
+    /**
+     * Group-level EXPO submission for review: the representative's
+     * self-evaluation scores + supporting document + review state.
+     * Read-only counterpart of form(); scoring via store() stays disabled
+     * for EXPO — approval/rejection happens through reviewExpo().
+     */
+    public function expoReview(Request $request, int $groupId): JsonResponse
+    {
+        $user = CapstoneActor::lecturer(Auth::user());
+
+        $supervision = Supervision::where('group_id', $groupId)
+            ->where('supervisor_id', $user->id)
+            ->first();
+
+        if (! $supervision) {
+            return $this->unauthorizedResponse('You are not a supervisor of this group');
+        }
+
+        $group = Group::with(['members.student', 'period'])->findOrFail($groupId);
+        $registration = ExpoRegistration::where('group_id', $groupId)
+            ->where('status', 'REGISTERED')
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $registration) {
+            return $this->errorResponse('No active expo registration for this group', 404);
+        }
+
+        // Cross-period (global) events grade on the group's own period.
+        $componentPeriodId = $registration->expoEvent?->period_id ?? $group->period_id;
+        $components = PeriodAssessmentComponent::with('template')
+            ->where('period_id', $componentPeriodId)
+            ->where('type', 'EXPO')
+            ->orderBy('sort_order')
+            ->get();
+        $scores = ExpoSelfEvaluation::where('expo_registration_id', $registration->id)->with('student')->get();
+        $scoresByComponent = $scores->keyBy('period_component_id');
+        $document = ExpoStudentDocument::where('expo_registration_id', $registration->id)->first();
+        $submitter = $scores->first()?->student;
+
+        $totalWeighted = 0.0;
+        $totalWeight = 0.0;
+        foreach ($components as $component) {
+            $score = $scoresByComponent->get($component->id);
+            if ($score !== null && $score->score !== null) {
+                $weight = (float) ($component->weight ?? 1);
+                $totalWeighted += $score->score * $weight;
+                $totalWeight += $weight;
+            }
+        }
+        $weighted = $totalWeight > 0 ? round($totalWeighted / $totalWeight, 2) : null;
+
+        $window = app(GroupLifecycleService::class)->formAccess($group, 'EXPO');
+
+        return $this->successResponse([
+            'group' => [
+                'id' => $group->id,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
+                'code' => $group->code,
+            ],
+            'period' => ['id' => $group->period->id, 'name' => $group->period->name],
+            'supervisor_role' => $supervision->role,
+            'registration' => [
+                'id' => $registration->id,
+                'registered_at' => $registration->registered_at,
+                'review_status' => $registration->review_status,
+                'review_feedback' => $registration->review_feedback,
+                'reviewed_at' => $registration->reviewed_at,
+            ],
+            'submitted_by' => $submitter
+                ? ['id' => $submitter->id, 'name' => $submitter->name, 'nim' => $submitter->nim]
+                : null,
+            'components' => $components->map(fn ($component) => [
+                'period_component_id' => $component->id,
+                'code' => $component->code,
+                'name' => $component->name,
+                'weight' => $component->weight,
+                'score' => $scoresByComponent->get($component->id)?->score,
+                'notes' => $scoresByComponent->get($component->id)?->notes,
+            ])->values(),
+            'weighted_score' => $weighted,
+            'document' => $document
+                ? [
+                    'id' => $document->id,
+                    'original_name' => $document->original_name,
+                    'status' => $document->status,
+                    'feedback' => $document->feedback,
+                    'uploaded_by' => $document->student
+                        ? ['id' => $document->student->id, 'name' => $document->student->name]
+                        : null,
+                    'created_at' => $document->created_at,
+                    // Same route the bimbingan review already uses for expo-{id}.
+                    'download_path' => "/dosen/documents/expo-{$document->id}/download",
+                ]
+                : null,
+            'members' => $group->members->map(fn ($m) => [
+                'id' => $m->student->id,
+                'name' => $m->student->name,
+                'nim' => $m->student->nim,
+                'is_leader' => $m->is_leader,
+                'is_representative' => $submitter !== null && $m->student->id === $submitter->id,
+            ])->values(),
+            'editable' => $registration->review_status === 'SUBMITTED' && (bool) $window['editable'],
+            'editable_reason' => $registration->review_status === 'SUBMITTED'
+                ? $window['reason']
+                : 'The submission is not awaiting review.',
+        ]);
+    }
+
+    /**
+     * Approve or reject the group's EXPO submission (one decision per
+     * group). APPROVED locks the submission and lets the EXPO score count
+     * towards PDC2; REJECTED reopens it so the representative can re-score
+     * and re-upload the document.
+     */
+    public function reviewExpo(Request $request, int $groupId): JsonResponse
+    {
+        $user = CapstoneActor::lecturer(Auth::user());
+
+        $validated = $request->validate([
+            'status' => 'required|in:APPROVED,REJECTED',
+            'feedback' => 'required_if:status,REJECTED|nullable|string|max:2000',
+        ]);
+
+        $supervision = Supervision::where('group_id', $groupId)
+            ->where('supervisor_id', $user->id)
+            ->first();
+
+        if (! $supervision) {
+            return $this->unauthorizedResponse('You are not a supervisor of this group');
+        }
+
+        $group = Group::with('members')->findOrFail($groupId);
+        $window = app(GroupLifecycleService::class)->formAccess($group, 'EXPO');
+
+        if (! $window['editable']) {
+            return $this->errorResponse(
+                $window['reason'] ?? 'The EXPO submission cannot be reviewed in the current group status.',
+                403
+            );
+        }
+
+        $result = DB::transaction(function () use ($groupId, $validated, $user) {
+            $registration = ExpoRegistration::where('group_id', $groupId)
+                ->where('status', 'REGISTERED')
+                ->orderByDesc('id')
+                ->lockForUpdate()
+                ->first();
+
+            if (! $registration) {
+                return ['error' => 'No active expo registration for this group', 'code' => 404];
+            }
+
+            if ($registration->review_status !== 'SUBMITTED') {
+                return ['error' => 'This submission is not awaiting review.', 'code' => 409];
+            }
+
+            if (! ExpoSelfEvaluation::where('expo_registration_id', $registration->id)->exists()) {
+                return ['error' => 'The representative has not submitted a self-evaluation yet.', 'code' => 422];
+            }
+
+            $registration->update([
+                'review_status' => $validated['status'],
+                'review_feedback' => $validated['feedback'] ?? null,
+                'reviewed_by' => $user->id,
+                'reviewed_at' => now(),
+            ]);
+
+            return ['registration' => $registration->fresh()];
+        });
+
+        if (isset($result['error'])) {
+            return $this->errorResponse($result['error'], $result['code']);
+        }
+
+        $groupName = $group->name ?? "Group {$groupId}";
+        $decision = $validated['status'] === 'APPROVED' ? 'approved' : 'rejected';
+        $feedback = $validated['feedback'] ?? null;
+
+        // Notify every member of the decision.
+        try {
+            $notificationService = app(NotificationService::class);
+            $memberUserIds = GroupMember::where('group_id', $groupId)
+                ->with('student')
+                ->get()
+                ->pluck('student.user_id')
+                ->filter()
+                ->unique()
+                ->values();
+            foreach ($memberUserIds as $memberUserId) {
+                $notificationService->send(
+                    $memberUserId,
+                    $validated['status'] === 'APPROVED' ? 'EXPO_APPROVED' : 'EXPO_REJECTED',
+                    $validated['status'] === 'APPROVED' ? 'EXPO Submission Approved' : 'EXPO Submission Rejected',
+                    $feedback
+                        ? "Your EXPO submission for {$groupName} was {$decision} by your supervisor. Feedback: {$feedback}"
+                        : "Your EXPO submission for {$groupName} was {$decision} by your supervisor.",
+                    'Group',
+                    $groupId
+                );
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send EXPO review notification: '.$e->getMessage());
+        }
+
+        // The EXPO score only counts towards PDC2 once approved.
+        if ($validated['status'] === 'APPROVED') {
+            try {
+                app(GradeCalculationService::class)->recalculateAndNotify($groupId, 'EXPO');
+            } catch (\Exception $e) {
+                Log::error("Failed to recalculate PDC2 grades for group {$groupId}: ".$e->getMessage());
+            }
+        }
+
+        // Centralized lifecycle advancement (idempotent; never blocks).
+        try {
+            $advancedTo = app(GroupLifecycleService::class)->advanceIfComplete($group);
+            if ($advancedTo) {
+                Log::info("Group {$groupId} advanced to {$advancedTo} after EXPO {$decision}");
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to advance lifecycle for group {$groupId}: ".$e->getMessage());
+        }
+
+        return $this->successResponse([
+            'message' => "EXPO submission {$decision} successfully",
+            'group_id' => $groupId,
+            'review_status' => $validated['status'],
+            'review_feedback' => $feedback,
         ]);
     }
 
@@ -595,7 +890,7 @@ class SupervisorEvaluationController extends Controller
         // Schema-aware validation - accept both field names for flexibility
         $usesPeriodComponents = $this->usesPeriodAssessmentComponents();
         $componentIdField = $usesPeriodComponents ? 'period_component_id' : 'component_id';
-        $componentTable = $usesPeriodComponents ? 'period_assessment_components' : 'assessment_components';
+        $componentTable = $usesPeriodComponents ? 'capstone_period_assessment_components' : 'capstone_assessment_components';
 
         Log::info('SupervisorEvaluationController::store', [
             'uses_period_components' => $usesPeriodComponents,
@@ -607,7 +902,7 @@ class SupervisorEvaluationController extends Controller
         // Validate with flexible field name (accepts both period_component_id and component_id)
         $validated = $request->validate([
             'group_id' => 'required|exists:capstone_groups,id',
-            'evaluation_type' => 'required|in:BIMBINGAN_SEMPRO,NILAI_DOSEN,EXPO,MILESTONE,BIMBINGAN_TA',
+            'evaluation_type' => 'required|in:BIMBINGAN_SEMPRO,NILAI_DOSEN,MILESTONE,BIMBINGAN_TA',
             'scores' => 'required|array',
             'scores.*.student_id' => 'required|exists:students,id',
             'scores.*.score' => 'required|numeric|min:1|max:100',
@@ -638,6 +933,14 @@ class SupervisorEvaluationController extends Controller
 
         $group = Group::findOrFail($groupId);
 
+        // Enforce the submittable lifecycle window (form() exposes the same
+        // flag as `editable`, so legit clients never reach this branch).
+        $formAccess = app(GroupLifecycleService::class)->formAccess($group, $evaluationType);
+
+        if (! $formAccess['editable']) {
+            return $this->errorResponse($formAccess['reason'] ?? 'This evaluation is not submittable in the current group status.', 403);
+        }
+
         // Verify all students are members of this group
         $groupStudentIds = GroupMember::where('group_id', $groupId)->pluck('student_id')->toArray();
         foreach ($validated['scores'] as $score) {
@@ -646,9 +949,15 @@ class SupervisorEvaluationController extends Controller
             }
         }
 
-        // Get schedule info for deadline tracking (deadline no longer blocks submission)
+        // Get schedule info for deadline tracking (deadline no longer blocks submission).
+        // Schedule-less types (NILAI_DOSEN, MILESTONE) fall back to the
+        // persisted soft deadline so late detection keeps working.
         $schedule = $this->getScheduleForType($groupId, $evaluationType);
-        $deadlinePassed = $schedule && $schedule['evaluation_deadline'] && now() > $schedule['evaluation_deadline'];
+        $deadline = $schedule['evaluation_deadline'] ?? null;
+        if (! $deadline && in_array($evaluationType, ['NILAI_DOSEN', 'MILESTONE'], true)) {
+            $deadline = $this->resolveSoftDeadline($group, $evaluationType);
+        }
+        $deadlinePassed = $deadline && now() > $deadline;
 
         DB::beginTransaction();
         try {
@@ -697,7 +1006,7 @@ class SupervisorEvaluationController extends Controller
             DB::commit();
 
             // Check if all bimbingan evaluations are complete after this submission
-            if (in_array($evaluationType, ['BIMBINGAN_SEMPRO', 'NILAI_DOSEN', 'EXPO', 'MILESTONE'], true)) {
+            if (in_array($evaluationType, ['BIMBINGAN_SEMPRO', 'NILAI_DOSEN', 'MILESTONE'], true)) {
                 $isComplete = $this->areAllBimbinganScoresComplete($groupId, $evaluationType);
 
                 if ($isComplete) {
@@ -705,7 +1014,7 @@ class SupervisorEvaluationController extends Controller
 
                     // Trigger grade recalculation
                     try {
-                        $gradeService = app(\Modules\Capstone\Services\GradeCalculationService::class);
+                        $gradeService = app(GradeCalculationService::class);
                         $gradeService->recalculateAndNotify($groupId, $evaluationType);
                     } catch (\Exception $e) {
                         Log::error("Failed to recalculate grades for group {$groupId}: ".$e->getMessage());
@@ -713,31 +1022,15 @@ class SupervisorEvaluationController extends Controller
                 }
             }
 
-            // If EXPO-related evaluation submitted, check EXPO_DONE readiness
-            if (in_array($evaluationType, ['NILAI_DOSEN', 'EXPO', 'MILESTONE'], true)) {
-                $group = Group::find($groupId);
-                if ($group) {
-                    $schedulingService = app(\Modules\Capstone\Services\SchedulingService::class);
-                    $schedulingService->tryTransitionToExpoDone($group);
-                }
-            }
+            // Centralized lifecycle advancement (idempotent; never blocks the response)
+            try {
+                $advancedTo = app(GroupLifecycleService::class)->advanceIfComplete(Group::find($groupId));
 
-            // If BIMBINGAN_SEMPRO submitted, check SEMPRO completion (supervisor may submit after examiners)
-            if ($evaluationType === 'BIMBINGAN_SEMPRO') {
-                $group = Group::find($groupId);
-                if ($group && $group->status === 'READY_FOR_SEMPRO') {
-                    $schedulingService = app(\Modules\Capstone\Services\SchedulingService::class);
-                    $schedulingService->checkAndCompleteSempro($group);
+                if ($advancedTo) {
+                    Log::info("Group {$groupId} advanced to {$advancedTo} after {$evaluationType} submission");
                 }
-            }
-
-            // If NILAI_DOSEN or MILESTONE submitted, check PDC2_ACTIVE → TA_DRAFT readiness
-            if (in_array($evaluationType, ['NILAI_DOSEN', 'MILESTONE'], true)) {
-                $group = Group::find($groupId);
-                if ($group && $group->status === 'PDC2_ACTIVE') {
-                    $schedulingService = app(\Modules\Capstone\Services\SchedulingService::class);
-                    $schedulingService->tryTransitionToTaDraft($group);
-                }
+            } catch (\Exception $e) {
+                Log::error("Failed to advance lifecycle for group {$groupId}: ".$e->getMessage());
             }
 
             // Send notification if deadline has passed
@@ -745,12 +1038,11 @@ class SupervisorEvaluationController extends Controller
                 try {
                     $notificationService = app(NotificationService::class);
                     $groupName = $group->name ?? "Group {$groupId}";
-                    $deadlineFormatted = $schedule['evaluation_deadline'] ? date('d M Y H:i', strtotime($schedule['evaluation_deadline'])) : 'Unknown';
+                    $deadlineFormatted = $deadline ? date('d M Y H:i', strtotime($deadline)) : 'Unknown';
 
                     $evaluationName = match ($evaluationType) {
                         'BIMBINGAN_SEMPRO' => 'SEMPRO',
                         'NILAI_DOSEN' => 'Nilai Dosen Pembimbing',
-                        'EXPO' => 'Evaluasi EXPO',
                         'MILESTONE' => 'Milestone',
                         'BIMBINGAN_TA' => 'TA Defense',
                         default => $evaluationType,
@@ -838,7 +1130,7 @@ class SupervisorEvaluationController extends Controller
 
         // Schema-aware component count
         if ($this->usesPeriodAssessmentComponents()) {
-            $componentCount = PeriodAssessmentComponent::whereHas('period.groups', fn ($q) => $q->where('groups.id', $groupId))
+            $componentCount = PeriodAssessmentComponent::where('period_id', $group->period_id)
                 ->where('type', $evaluationType)
                 ->count();
         } else {
@@ -889,9 +1181,8 @@ class SupervisorEvaluationController extends Controller
         $scheduleType = match ($evaluationType) {
             'BIMBINGAN_SEMPRO' => 'SEMINAR',
             'BIMBINGAN_TA' => 'TA_DEFENSE',
-            'EXPO' => 'EXPO',
-            'MILESTONE' => 'EXPO',
-            'NILAI_DOSEN' => 'EXPO',
+            'MILESTONE' => null,
+            'NILAI_DOSEN' => null,
             default => null,
         };
 
@@ -935,28 +1226,60 @@ class SupervisorEvaluationController extends Controller
                     'evaluation_deadline' => $deadline,
                 ];
             }
-        } elseif ($scheduleType === 'EXPO') {
-            $schedule = SeminarSchedule::where('group_id', $groupId)
-                ->where('type', 'EXPO')
-                ->orderByDesc('id')
-                ->first();
-            if ($schedule) {
-                $deadline = null;
-                if ($schedule->date) {
-                    $deadline = date('Y-m-d H:i:s', strtotime($schedule->date.' +2 days'));
-                }
-
-                return [
-                    'id' => $schedule->id,
-                    'type' => 'EXPO',
-                    'date' => $schedule->date,
-                    'room' => $schedule->room,
-                    'evaluation_deadline' => $deadline,
-                ];
-            }
         }
 
         return null;
+    }
+
+    /**
+     * Persisted soft deadline for schedule-less supervisor evaluations.
+     *
+     * Previously recomputed as now + 7 days on every request, so the value
+     * drifted forever and could never pass. Now resolved once and stored
+     * on the group: seeded from the EXPO schedule (date + 2 days) when one
+     * exists, otherwise now + 7 days.
+     */
+    private function resolveSoftDeadline(Group $group, string $evaluationType): ?string
+    {
+        $column = match ($evaluationType) {
+            'NILAI_DOSEN' => 'nilai_dosen_deadline',
+            'MILESTONE' => 'milestone_deadline',
+            default => null,
+        };
+
+        if (! $column) {
+            return null;
+        }
+
+        // Pre-migration fallback: columns missing → previous transient
+        // behavior (no persistence), so old databases keep working.
+        if (! Schema::hasColumn('capstone_groups', $column)) {
+            $expo = SeminarSchedule::where('group_id', $group->id)
+                ->where('type', 'EXPO')
+                ->orderByDesc('id')
+                ->first();
+
+            return ($expo && $expo->date)
+                ? EvaluationDeadline::fromDate($expo->date)
+                : date('Y-m-d H:i:s', strtotime('+7 days'));
+        }
+
+        if ($group->{$column}) {
+            return date('Y-m-d H:i:s', strtotime((string) $group->{$column}));
+        }
+
+        $expo = SeminarSchedule::where('group_id', $group->id)
+            ->where('type', 'EXPO')
+            ->orderByDesc('id')
+            ->first();
+
+        $deadline = ($expo && $expo->date)
+            ? EvaluationDeadline::fromDate($expo->date)
+            : date('Y-m-d H:i:s', strtotime('+7 days'));
+
+        $group->update([$column => $deadline]);
+
+        return $deadline;
     }
 
     /**
@@ -964,12 +1287,14 @@ class SupervisorEvaluationController extends Controller
      */
     public function adminScheduleSummary(Request $request, int $scheduleId): JsonResponse
     {
-        $request->validate(['schedule_source'=>'nullable|in:schedule,seminar,ta']);
+        $request->validate(['schedule_source' => 'nullable|in:schedule,seminar,ta']);
         $source = $request->input('schedule_source');
         // Explicit sources prevent collisions between the independent schedule tables.
         $schedule = in_array($source, [null, 'schedule'], true)
             ? Schedule::with(['group.period', 'group.members.student'])->find($scheduleId) : null;
-        if (! $schedule && $source === 'schedule') return $this->notFoundResponse('Schedule not found');
+        if (! $schedule && $source === 'schedule') {
+            return $this->notFoundResponse('Schedule not found');
+        }
         $isTaDefense = false;
         $isSeminar = false;
         $taSchedule = null;
@@ -979,7 +1304,9 @@ class SupervisorEvaluationController extends Controller
             // Try TaDefenseSchedule for TA defense schedules
             $taSchedule = in_array($source, [null, 'ta'], true)
                 ? TaDefenseSchedule::with(['group.period', 'group.members.student', 'student', 'students'])->find($scheduleId) : null;
-            if (! $taSchedule && $source === 'ta') return $this->notFoundResponse('Schedule not found');
+            if (! $taSchedule && $source === 'ta') {
+                return $this->notFoundResponse('Schedule not found');
+            }
             if ($taSchedule) {
                 $isTaDefense = true;
                 $schedule = (object) [
@@ -1017,7 +1344,7 @@ class SupervisorEvaluationController extends Controller
         $evaluationTypes = match ($schedule->type) {
             'SEMINAR', 'SEMPRO' => ['SEMPRO', 'BIMBINGAN_SEMPRO'],
             'TA_DEFENSE' => ['SIDANG_TA', 'BIMBINGAN_TA'],
-            'EXPO' => ['EXPO', 'MILESTONE'],
+            'EXPO' => ['MILESTONE'],
             default => [],
         };
 
@@ -1200,7 +1527,7 @@ class SupervisorEvaluationController extends Controller
         }
 
         // Check if examiner
-        $isSeminarExaminer = \Modules\Capstone\Models\SeminarEvaluation::whereHas('schedule', fn ($q) => $q->where('group_id', $groupId))
+        $isSeminarExaminer = SeminarEvaluation::whereHas('schedule', fn ($q) => $q->where('group_id', $groupId))
             ->where('examiner_id', $evaluatorId)
             ->exists();
 
@@ -1208,7 +1535,7 @@ class SupervisorEvaluationController extends Controller
             return 'Examiner';
         }
 
-        $isTaExaminer = \Modules\Capstone\Models\TaDefenseExaminer::whereHas('schedule', fn ($q) => $q->where('group_id', $groupId))
+        $isTaExaminer = TaDefenseExaminer::whereHas('schedule', fn ($q) => $q->where('group_id', $groupId))
             ->where('examiner_id', $evaluatorId)
             ->exists();
 
@@ -1250,7 +1577,7 @@ class SupervisorEvaluationController extends Controller
         $evaluationTypes = match ($schedule->type) {
             'SEMINAR' => ['SEMPRO', 'BIMBINGAN_SEMPRO'],
             'TA_DEFENSE' => ['SIDANG_TA', 'BIMBINGAN_TA'],
-            'EXPO' => ['EXPO', 'MILESTONE'],
+            'EXPO' => ['MILESTONE'],
             default => [],
         };
 
@@ -1394,7 +1721,7 @@ class SupervisorEvaluationController extends Controller
         }
 
         $grades = [];
-        $gradeService = app(\Modules\Capstone\Services\GradeCalculationService::class);
+        $gradeService = app(GradeCalculationService::class);
 
         // For TA_DEFENSE, only get grades for the specific student
         if ($isTaDefense) {

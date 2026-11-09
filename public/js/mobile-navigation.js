@@ -13,11 +13,25 @@
         const moduleLinks = menu.querySelector('[data-mobile-module-links]');
         const body = document.body;
         body.dataset.mobileShell = '';
-        // Keep the dialog outside Alpine shells with transforms or overflow clipping.
-        body.append(backdrop, menu);
-        let opened = false, returnFocus = button;
-        const closeButton = menu.querySelector('[data-mobile-close]');
-        const backgroundStates = new Map();
+        if (!menu.id) menu.id = 'mobile-module-menu';
+        button.setAttribute('aria-controls', menu.id);
+        let opened = false, returnFocus = button, snapshots = [];
+        const originalInert = menu.inert;
+        const originalRole = menu.getAttribute('role');
+        const originalTabindex = menu.getAttribute('tabindex');
+        // Capstone hides the explicit close button; backdrop tap, Escape, or navigation still closes the menu.
+        const hideCloseButton = !!document.querySelector('.sitkom-shell-capstone');
+        let closeButton = null;
+        if (!hideCloseButton) {
+            closeButton = document.createElement('button');
+            closeButton.type = 'button';
+            closeButton.className = 'mobile-navigation-close';
+            closeButton.dataset.mobileClose = '';
+            closeButton.innerHTML = '<span>Tutup menu</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';
+            menu.prepend(closeButton);
+        }
+        // Focus target when the menu opens: the close button, or the menu itself when hidden (Capstone).
+        const closeFocusTarget = closeButton || menu;
 
         function buildModuleMenu() {
             moduleLinks.replaceChildren();
@@ -100,9 +114,9 @@
             button.setAttribute('aria-expanded', 'true');
             backdrop.hidden = false;
             body.classList.add('mobile-navigation-is-open');
-            closeButton.focus({preventScroll:true});
-            menu.getBoundingClientRect(); // Commit the starting position before sliding upward.
-            requestAnimationFrame(() => { if (opened) menu.classList.add('mobile-navigation-open'); });
+            closeFocusTarget.focus({preventScroll:true});
+            const focusMenu = () => requestAnimationFrame(() => { if (opened) closeFocusTarget.focus(); });
+            if (window.Alpine) window.Alpine.nextTick(focusMenu); else focusMenu();
         }
         function closeMenu(restoreFocus = true) {
             opened = false;
@@ -166,12 +180,9 @@
         mobile.addEventListener('change', viewportChanged);
         button.addEventListener('click', () => opened ? closeMenu() : openMenu());
         backdrop.addEventListener('click', () => closeMenu());
-        closeButton.addEventListener('click', () => closeMenu());
-        menu.addEventListener('click', event => {
-            if (event.target.closest('a[href]:not([aria-disabled="true"])')) closeMenu(false);
-        });
+        if (closeButton) closeButton.addEventListener('click', () => closeMenu());
         menu.addEventListener('transitionend', () => {
-            if (opened && !menu.contains(document.activeElement)) closeButton.focus({preventScroll:true});
+            if (opened && !menu.contains(document.activeElement)) closeFocusTarget.focus({preventScroll:true});
         });
         document.addEventListener('keydown', event => {
             if (!opened) return;
@@ -183,7 +194,7 @@
             }
         }, true);
         document.addEventListener('focusin', event => {
-            if (opened && !menu.contains(event.target)) closeButton.focus();
+            if (opened && !menu.contains(event.target)) closeFocusTarget.focus();
         });
         document.addEventListener('click', event => {
             if (!mobile.matches || !sidebar) return;
