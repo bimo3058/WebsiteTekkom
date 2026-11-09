@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Detail Modul">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$modul->praktikum ?? null" pageTitle="Detail Modul">
 
 {{-- Header --}}
 <div class="mp-page-header">
@@ -90,16 +90,16 @@
                 @csrf @method('PUT')
                 <div>
                     <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:#353849;">Nama Modul</label>
-                    <input name="nama" value="{{ $modul->nama }}" required class="mp-input" style="width:100%;">
+                    <input value="{{ $modul->nama }}" readonly class="mp-input" style="width:100%;background:#F9FAFB;cursor:not-allowed;">
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                     <div>
                         <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:#353849;">Urutan</label>
-                        <input type="number" name="urutan" value="{{ $modul->urutan }}" min="1" required class="mp-input" style="width:100%;">
+                        <input type="number" value="{{ $modul->urutan }}" readonly class="mp-input" style="width:100%;background:#F9FAFB;cursor:not-allowed;">
                     </div>
                     <div>
                         <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:#353849;">Jadwal</label>
-                        <input name="jadwal_minggu" value="{{ $modul->jadwal_minggu }}" class="mp-input" style="width:100%;">
+                        <input value="{{ $modul->jadwal_minggu }}" readonly class="mp-input" style="width:100%;background:#F9FAFB;cursor:not-allowed;">
                     </div>
                 </div>
                 <div>
@@ -157,7 +157,7 @@
                     </div>
                 </div>
                 @if($materi->file_path)
-                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice') }}" target="_blank" class="mp-btn primary sm flex-shrink-0" style="text-decoration:none;">Unduh</a>
+                <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($materi->file_path, 'eoffice', $materi->judul ?? basename($materi->file_path)) }}" target="_blank" class="mp-btn primary sm flex-shrink-0" style="text-decoration:none;">Lihat Berkas</a>
                 @endif
             </div>
             @empty
@@ -185,7 +185,7 @@
                     <div>
                         <div style="font-weight:600;font-size:13px;color:#0D0D12;">{{ $tugas->judul }}</div>
                         <div style="font-size:11px;color:#666D80;margin-top:2px;">
-                            Deadline: {{ $tugas->deadline?->format('d M Y H:i') ?? 'Tanpa deadline' }}
+                            Tenggat: {{ $tugas->deadline?->format('d M Y H:i') ?? 'Tanpa tenggat' }}
                         </div>
                     </div>
                     @if($tugas->is_published)

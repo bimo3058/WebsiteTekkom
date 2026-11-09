@@ -53,6 +53,7 @@ class EOfficeServiceProvider extends ServiceProvider
         $this->app->register(RouteServiceProvider::class);
 
         // Services
+        $this->app->scoped(\Modules\EOffice\Services\ManajemenPraktikum\ScoreHistory::class);
         $this->app->singleton(
             \Modules\EOffice\Services\NotifikasiService::class,
             \Modules\EOffice\Services\NotifikasiService::class
@@ -76,6 +77,7 @@ class EOfficeServiceProvider extends ServiceProvider
     {
         $this->commands([
             \Modules\EOffice\Console\Commands\TutupPeriodePendaftaranKadaluarsa::class,
+            \Modules\EOffice\Console\Commands\PrunePeminjamanNotificationsCommand::class,
         ]);
     }
 
@@ -87,6 +89,7 @@ class EOfficeServiceProvider extends ServiceProvider
         $this->app->booted(function () {
             $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
             $schedule->command('eoffice:periode-pendaftaran:tutup-kadaluarsa')->hourly();
+            $schedule->command('eoffice:prune-peminjaman-notifications')->daily();
         });
     }
 

@@ -1,0 +1,10 @@
+@props(['stored'=>[]])
+<div x-data="{ files: [], removed: [], error: '', sync() { const transfer=new DataTransfer(); this.files.forEach(file=>transfer.items.add(file)); this.$refs.input.files=transfer.files; }, add(event) { const added=Array.from(event.target.files); if(this.files.length+added.length+Number(this.$refs.input.dataset.storedCount || {{ count($stored) }})-this.removed.length>3 || added.some(f=>f.size>5*1024*1024)) { this.error='Maksimal 3 berkas, masing-masing 5 MB.'; this.sync(); return; } this.error=''; this.files.push(...added); this.sync(); } }">
+    <input type="file" x-ref="input" {{ $attributes }} multiple @change="add($event)" style="display:none">
+    <button type="button" class="ta-upload" @click="$refs.input.click()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 4v16M4 12h16"/></svg> Tambah Berkas</button>
+    <div class="ta-upload-hint"><span>Maksimal 3 berkas per bagian.</span><span>Maks. 5 MB per berkas</span></div>
+    <p x-show="error" x-text="error" style="font-size:12px;color:#DF1C41" role="alert"></p>
+    @foreach($stored as $file)<div class="ta-file" x-show="!removed.includes(@js($file['path']))"><span>{{ $file['nama'] }}</span><button type="button" @click="removed.push(@js($file['path']))" aria-label="Hapus berkas tersimpan" title="Hapus berkas tersimpan" class="ta-file-remove"><x-eoffice::manajemen-praktikum.ui.icon name="close" /></button></div>@endforeach
+    <template x-for="path in removed" :key="path"><input type="hidden" name="hapus_lampiran[]" :value="path"></template>
+    <template x-for="(file,index) in files" :key="index"><div class="ta-file"><span x-text="file.name"></span><button type="button" @click="files.splice(index,1); sync()" aria-label="Hapus berkas terpilih" title="Hapus berkas terpilih" class="ta-file-remove"><x-eoffice::manajemen-praktikum.ui.icon name="close" /></button></div></template>
+</div>

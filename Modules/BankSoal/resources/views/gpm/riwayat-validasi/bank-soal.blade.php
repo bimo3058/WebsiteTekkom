@@ -37,7 +37,18 @@
             background: #081c52;
         }
     </style>
-    <x-banksoal::ui.page-header title="Riwayat Validasi Bank Soal" subtitle="Pantau riwayat paket soal mata kuliah yang telah selesai dievaluasi" />
+    <x-banksoal::ui.bank-soal-page>
+        <x-slot:header>
+            <div class="bs-heading-row">
+                <div>
+                    <div class="bs-heading-label">
+                        <h1>Riwayat Validasi Bank Soal</h1>
+                        <span class="bs-role-badge">GPM</span>
+                    </div>
+                    <p>Pantau riwayat paket soal mata kuliah yang telah selesai dievaluasi.</p>
+                </div>
+            </div>
+        </x-slot:header>
 
     <div class="mb-6 border-b border-slate-200">
         <nav class="flex gap-6 text-sm font-semibold">
@@ -160,4 +171,5 @@
             </div>
         @endif
     </div>
+    </x-banksoal::ui.bank-soal-page>
 </x-banksoal::layouts.gpm-master>

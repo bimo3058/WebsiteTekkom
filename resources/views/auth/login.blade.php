@@ -283,6 +283,10 @@
         </div>
 
         {{-- Alerts --}}
+        @if (session('error'))
+            <div class="sk-alert sk-alert-error" role="alert">{{ session('error') }}</div>
+        @endif
+
         @if (session('status'))
             <div class="sk-alert sk-alert-warning">{{ session('status') }}</div>
         @endif
@@ -299,7 +303,7 @@
             Login via SSO UNDIP
         </a>
 
-        @if (app()->isLocal())
+        <!-- @if (app()->isLocal())
             {{-- Divider --}}
             <div class="sk-divider">Development only</div>
 
@@ -342,7 +346,7 @@
                     <button type="submit" class="sk-btn-submit">Login</button>
                 </div>
             </form>
-        @endif
+        @endif -->
 
     </div>
 

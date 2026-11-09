@@ -13,20 +13,36 @@
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
         </button>
     </div>
-    <nav class="mp-sidebar-nav" aria-label="Menu manajemen praktikum">
+    @php
+        $initialOpenSection = collect($sections)->search(
+            fn ($section) => str_contains($currentRoute, $section['match'])
+        );
+        $initialOpenSection = $initialOpenSection === false ? 0 : $initialOpenSection;
+    @endphp
+    <nav class="mp-sidebar-nav" aria-label="Menu manajemen praktikum"
+         x-data="{ openRoleSection: {{ $initialOpenSection }} }">
         @foreach($sections as $section)
             @php $sectionActive = str_contains($currentRoute, $section['match']); @endphp
-            <section class="mp-nav-section" x-data="{ openSection: {{ ($sectionActive || !$multiRole) ? 'true' : 'false' }} }" aria-label="Menu {{ $section['label'] }}">
+            <section class="mp-nav-section" aria-label="Menu {{ $section['label'] }}">
                 @if($multiRole)
-                    <button type="button" class="mp-role-toggle" :aria-expanded="openSection" aria-controls="mp-role-{{ $loop->index }}"
+                    <button type="button" class="mp-role-toggle {{ $sectionActive ? 'is-active' : '' }}"
+                            :aria-expanded="openRoleSection === {{ $loop->index }}"
+                            aria-controls="mp-role-{{ $loop->index }}"
                             title="Menu {{ $section['label'] }}" aria-label="Menu {{ $section['label'] }}"
-                            @click="if (!sidebarOpen) { sidebarOpen = true; openSection = true; } else { openSection = !openSection; }">
+                            @click="if (!sidebarOpen) { sidebarOpen = true; openRoleSection = {{ $loop->index }}; } else { openRoleSection = openRoleSection === {{ $loop->index }} ? null : {{ $loop->index }}; }">
                         <span class="mp-role-initial" aria-hidden="true">{{ mb_substr($section['label'], 0, 1) }}</span>
                         <span class="mp-role-name" x-show="sidebarOpen">{{ $section['label'] }}</span>
-                        <svg x-show="sidebarOpen" :class="{ 'is-open': openSection }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                        <svg x-show="sidebarOpen" :class="{ 'is-open': openRoleSection === {{ $loop->index }} }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                     </button>
                 @endif
-                <div id="mp-role-{{ $loop->index }}" x-show="openSection || !sidebarOpen">
+                <div id="mp-role-{{ $loop->index }}" class="mp-role-content" x-cloak
+                     x-show="{{ $multiRole ? 'openRoleSection === ' . $loop->index . ' || !sidebarOpen' : 'true' }}"
+                     x-transition:enter="mp-role-content-transition"
+                     x-transition:enter-start="mp-role-content-collapsed"
+                     x-transition:enter-end="mp-role-content-expanded"
+                     x-transition:leave="mp-role-content-transition"
+                     x-transition:leave-start="mp-role-content-expanded"
+                     x-transition:leave-end="mp-role-content-collapsed">
                     @foreach($section['groups'] as $groupLabel => $items)
                         <div class="mp-nav-group">
                             <div class="mp-nav-label" x-show="sidebarOpen">{{ $groupLabel }}</div>

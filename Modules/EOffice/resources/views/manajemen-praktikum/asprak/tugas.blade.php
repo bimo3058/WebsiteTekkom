@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout :pageTitle="($praktikum->nama ?? 'Praktikum') . ' / Tugas'">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" :pageTitle="($praktikum->nama ?? 'Praktikum') . ' / Tugas'">
 
     {{-- Asprak Header Banner --}}
     @if(isset($praktikum) && $praktikum)
@@ -6,32 +6,7 @@
     @endif
 
     <style>
-        .modul-accordion-content {
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            transition: max-height 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.1s ease;
-        }
-
-        .modul-accordion-content.is-open {
-            max-height: 2500px;
-            opacity: 1;
-            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
-        }
-
-        .tugas-accordion-content {
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            transition: max-height 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.1s ease;
-        }
-
-        .tugas-accordion-content.is-open {
-            max-height: 1500px;
-            opacity: 1;
-            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
-        }
-    </style>
+</style>
 
     <div style="display: flex; flex-direction: column; gap: 16px; padding-top: 4px;">
         @forelse($modulList as $item)
@@ -42,19 +17,19 @@
             @endphp
 
             <div x-data="{ modulOpen: false }"
-                style="background: #fff; border: 1px solid var(--c-border); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); overflow: hidden; @if(!$isMine) opacity:0.8; @endif">
+                style="background: #fff; border: 1px solid var(--c-border); border-radius: 8px; box-shadow:none; overflow: hidden; @if(!$isMine) opacity:0.8; @endif">
                 {{-- Card Header: Modul Info --}}
-                <div @click="modulOpen = !modulOpen"
-                    style="padding: 16px 24px; background: #fff; border-bottom: 1px solid var(--c-border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s;"
+                <div @click="modulOpen = !modulOpen" :style="{boxShadow:modulOpen ? 'inset 0 -1px 0 var(--c-border)' : 'none'}"
+                    style="padding: 16px 24px; background: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s;"
                     onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
                     <div>
                         <h3 style="font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 4px 0;">{{ $modul->nama }}</h3>
-                        <div style="font-size: 13px; color: #6B7280;">
+                        <div style="font-size:13px; color:#666D80;">
                             Asisten:
                             @if($item['asprak']->isNotEmpty()) {{ $item['asprak']->join(', ') }} @else - @endif
                         </div>
                     </div>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round"
                         :style="modulOpen ? 'transform: rotate(180deg);' : 'transform: rotate(0deg);'">
                         <polyline points="6 9 12 15 18 9"></polyline>
@@ -62,10 +37,10 @@
                 </div>
 
                 {{-- List of Tugas as Accordions --}}
-                <div class="modul-accordion-content" :class="{ 'is-open': modulOpen }">
+                <x-eoffice::manajemen-praktikum.ui.grade-accordion state="modulOpen">
                     <div style="display: flex; flex-direction: column;">
                         @php
-                            $requiredTypes = ['tugas_pendahuluan' => 'Tugas Pendahuluan', 'laporan' => 'Laporan', 'responsi' => 'Responsi', 'tugas_pengganti' => 'Tugas Pengganti'];
+                            $requiredTypes = $praktikum->moduleTaskTypes();
                         @endphp
 
                         @foreach($requiredTypes as $type => $label)
@@ -81,7 +56,7 @@
                                         $oldFiles = [$t->file_path];
                                 }
                             @endphp
-                            <div x-data="{ open: false, isEditing: false }" style="border-bottom: 1px solid var(--c-border);">
+                            <div x-data="{ open: false, isEditing: false }" style="{{ $loop->last ? '' : 'border-bottom:1px solid var(--c-border);' }}">
 
                                 {{-- Accordion Header --}}
                                 <div style="padding: 14px 24px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff; transition: background 0.15s;"
@@ -103,18 +78,18 @@
                                         @if($t)
                                             <div style="font-size: 12px; color: #666D80; display: flex; gap: 10px;">
                                                 @if($dlAC && $dlACC)
-                                                    <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Deadline AC:
+                                                    <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Tenggat AC:
                                                         {{ $dlAC->format('d/m/Y, H:i') }}</span>
-                                                    <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Deadline ACC:
+                                                    <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Tenggat ACC:
                                                         {{ $dlACC->format('d/m/Y, H:i') }}</span>
                                                 @elseif($dlACC)
-                                                    <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Deadline AC: -</span>
-                                                    <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Deadline ACC:
+                                                    <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Tenggat AC: -</span>
+                                                    <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Tenggat ACC:
                                                         {{ $dlACC->format('d/m/Y, H:i') }}</span>
                                                 @elseif($dlAC)
-                                                    <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Deadline AC:
+                                                    <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Tenggat AC:
                                                         {{ $dlAC->format('d/m/Y, H:i') }}</span>
-                                                    <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Deadline ACC: -</span>
+                                                    <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Tenggat ACC: -</span>
                                                 @else
                                                     <span style="color:#A4ABB8;">Tanpa batas waktu</span>
                                                 @endif
@@ -126,19 +101,20 @@
                                             @if($isMine)
                                             <button type="button" @click.stop="open = true; isEditing = true;"
                                                 title="{{ $t ? 'Edit Tugas' : 'Buat Tugas' }}"
-                                                style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; background: #EEF2FF; color: #4F46E5; border: 1px solid #E0E7FF; outline:none; cursor:pointer;">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                                style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: transparent; color: #293C79; border: none; outline:none; cursor:pointer; padding: 0; transition:opacity 0.2s;"
+                                                onmouseover="this.style.opacity='0.7'"
+                                                onmouseout="this.style.opacity='1'">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
                                                     stroke-linejoin="round">
-                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                                                 </svg>
                                             </button>
                                             @endif
                                             <div @click="open = !open; isEditing = false;"
                                                 style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; background: transparent; color: #666D80; cursor: pointer;">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                    stroke="#666D80" stroke-width="2" stroke-linecap="round"
                                                     stroke-linejoin="round"
                                                     :style="open ? 'transform: rotate(180deg);' : 'transform: rotate(0deg);'">
                                                     <polyline points="6 9 12 15 18 9"></polyline>
@@ -149,7 +125,7 @@
                                 </div>
 
                                 {{-- Accordion Body (View & Edit Modes) --}}
-                                <div class="tugas-accordion-content" :class="{ 'is-open': open }">
+                                <x-eoffice::manajemen-praktikum.ui.grade-accordion state="open">
 
                                     {{-- VIEW MODE --}}
                                     <div x-show="!isEditing"
@@ -167,7 +143,7 @@
                                                             $pathStr = is_array($f) && isset($f['path']) ? $f['path'] : $f;
                                                             $baseName = is_array($f) && isset($f['original_name']) ? $f['original_name'] : pathinfo($pathStr, PATHINFO_BASENAME);
                                                         @endphp
-                                                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($pathStr, 'eoffice') }}"
+                                                        <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($pathStr, 'eoffice', $baseName) }}"
                                                             target="_blank" title="{{ $baseName }}"
                                                             style="display: flex; flex-direction: column; width: 140px; height: 140px; border: 1px solid #DFE1E7; border-radius: 8px; overflow: hidden; text-decoration: none; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
                                                             <div
@@ -182,7 +158,7 @@
                                                                 </svg>
                                                             </div>
                                                             <div
-                                                                style="background: #293C79; color: #fff; padding: 10px 12px; font-size: 13px; font-weight: 600; text-align: center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="{{ $baseName }}">
+                                                                style="background: #0B266E; color: #fff; padding: 10px 12px; font-size: 13px; font-weight: 600; text-align: center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="{{ $baseName }}">
                                                                 {{ $baseName }}
                                                             </div>
                                                         </a>
@@ -265,17 +241,19 @@
                                                                 const dt = new DataTransfer();
                                                                 this.filesArr.forEach(f => dt.items.add(f));
                                                                 this.$refs.fileInput.files = dt.files;
+                                                                this.$refs.filePicker.value = '';
                                                             }
                                                          }">
                                                 <label
                                                     style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Berkas
                                                     Lampiran <span style="color:#A4ABB8;">(opsional)</span></label>
 
-                                                <input type="file" name="files[]" multiple x-ref="fileInput"
+                                                <input type="file" multiple x-ref="filePicker" accept="*/*"
                                                     @change="handleFiles($event.target.files)" style="display:none;">
+                                                <input type="file" name="files[]" multiple x-ref="fileInput" style="display:none;">
                                                 <input type="hidden" name="is_published" value="1">
 
-                                                <button type="button" @click="$refs.fileInput.click()"
+                                                <button type="button" @click="$refs.filePicker.click()" title="Pilih berkas lampiran"
                                                     style="width: 100%; border: 1px dashed var(--c-border); border-radius: 8px; padding: 14px; background: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; font-weight: 500; color: #293C79; cursor: pointer; transition: background 0.15s;"
                                                     onmouseover="this.style.background='#F6F8FA'"
                                                     onmouseout="this.style.background='#fff'">
@@ -345,7 +323,7 @@
                                                                             <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
                                                                             <polyline points="13 2 13 9 20 9"></polyline>
                                                                         </svg>
-                                                                        <a href="{{ \App\Services\SupabaseStorage::class ? app(\App\Services\SupabaseStorage::class)->publicUrl($pathStr, 'eoffice') : '#' }}" target="_blank"
+                                                                        <a rel="noopener noreferrer" href="{{ \App\Services\SupabaseStorage::class ? app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($pathStr, 'eoffice', $baseName) : '#' }}" target="_blank"
                                                                             style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; color: #293C79; flex: 1; min-width: 0;"
                                                                             title="{{ $baseName }}">{{ $baseName }}</a>
                                                                     </div>
@@ -369,7 +347,7 @@
                                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                                                 <div>
                                                     <label
-                                                        style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Deadline
+                                                        style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Tenggat
                                                         AC <span style="color:#DF1C41;">*</span></label>
                                                     <div style="position:relative;">
                                                         <input type="text" name="deadline"
@@ -390,7 +368,7 @@
                                                 </div>
                                                 <div>
                                                     <label
-                                                        style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Deadline
+                                                        style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Tenggat
                                                         ACC <span style="color:#DF1C41;">*</span></label>
                                                     <div style="position:relative;">
                                                         <input type="text" name="deadline_acc"
@@ -420,23 +398,25 @@
                                             </div>
                                         </form>
                                     </div>
-                                </div>
+                                </x-eoffice::manajemen-praktikum.ui.grade-accordion>
 
                             </div>
                         @endforeach
                     </div>
-                </div>
+                </x-eoffice::manajemen-praktikum.ui.grade-accordion>
 
             </div>
         @empty
             <div
                 style="padding: 48px; text-align: center; border: 1px solid var(--c-border); border-radius: 8px; background: #fff;">
+                <x-eoffice::manajemen-praktikum.ui.empty-icon name="task" />
                 <div style="font-size: 14px; font-weight: 600; color: #111827;">Belum Ada Modul & Tugas</div>
                 <div style="font-size: 13px; color: #6B7280; margin-top: 4px;">Anda belum di-assign modul manapun.</div>
             </div>
         @endforelse
     </div>
 
+    <x-eoffice::manajemen-praktikum.ui.tugas-akhir-card :praktikum="$praktikum ?? null" role="asprak" section="tugas" />
 </x-eoffice::manajemen-praktikum.layout>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">

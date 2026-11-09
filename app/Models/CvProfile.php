@@ -12,6 +12,22 @@ class CvProfile extends Model
 
     protected $table = 'cv_profiles';
 
+    /**
+     * Default attribute values — ensures JSON fields are never null,
+     * even for legacy rows that pre-date newer columns.
+     */
+    protected $attributes = [
+        'tentang_diri'        => '',
+        'pendidikan'          => '[]',
+        'pengalaman_kerja'    => '[]',
+        'kegiatan_organisasi' => '[]',
+        'proyek'              => '[]',
+        'keahlian'            => '[]',
+        'sertifikasi'         => '[]',
+        'bahasa'              => '[]',
+        'template'            => 'modern',
+    ];
+
     protected $fillable = [
         'user_id',
         'tentang_diri',

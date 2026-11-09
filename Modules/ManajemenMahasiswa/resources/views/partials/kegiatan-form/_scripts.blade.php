@@ -1,0 +1,271 @@
+<script>
+// ── Char counter (judul & deskripsi) ──
+function updateCharCount(inputId, countId, max) {
+    const el  = document.getElementById(inputId);
+    const cnt = document.getElementById(countId);
+    if (!el || !cnt) return;
+    const len = el.value.length;
+    cnt.textContent = len;
+    cnt.style.color = len >= max ? 'var(--c-error)' : (len > max * 0.9 ? 'var(--c-warning)' : 'var(--c-fg-muted)');
+}
+document.addEventListener('DOMContentLoaded', () => {
+    ['judulInput','deskripsiInput'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.dispatchEvent(new Event('input'));
+    });
+});
+
+// ── Banner Preview ──
+function previewBanner(input) {
+    const preview = document.getElementById('bannerPreview');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// ── Lightbox ──
+function openLightbox(src) {
+    const modal = document.getElementById('lightboxModal');
+    const img = document.getElementById('lightboxImage');
+    img.src = src;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden'; // prevent scrolling
+}
+
+function closeLightbox(e) {
+    if (e && e.target !== document.getElementById('lightboxModal') && e.target.tagName !== 'BUTTON') {
+        // Allow clicking the image to do nothing, but clicking outside closes
+        if (e.target.tagName === 'IMG') return;
+    }
+    const modal = document.getElementById('lightboxModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+@if($showDokumentasi)
+// ── File Deletion (existing files) ──
+function markFileForDeletion(fileId) {
+    const el = document.getElementById('existingFile' + fileId);
+    if (el) {
+        el.style.opacity = '0.3';
+        el.style.pointerEvents = 'none';
+    }
+    const container = document.getElementById('deleteFileInputs');
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'hapus_file[]';
+    input.value = fileId;
+    container.appendChild(input);
+}
+
+// ── Multi-File Upload: Foto ──
+let fotoFiles = [];
+
+function handleFotoSelect(input) {
+    const newFiles = Array.from(input.files);
+    newFiles.forEach(file => {
+        if (fotoFiles.length >= 10) return;
+        fotoFiles.push(file);
+    });
+    renderFotoPreviews();
+    syncFotoInput();
+}
+
+function removeFoto(index) {
+    fotoFiles.splice(index, 1);
+    renderFotoPreviews();
+    syncFotoInput();
+}
+
+function renderFotoPreviews() {
+    const grid = document.getElementById('fotoPreviewGrid');
+    grid.innerHTML = '';
+    fotoFiles.forEach((file, i) => {
+        const item = document.createElement('div');
+        item.className = 'file-preview-item';
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            item.innerHTML = `
+                <button type="button" class="btn-remove-file mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="removeFoto(${i})" title="Hapus foto" aria-label="Hapus foto ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                <img src="${e.target.result}" alt="${file.name}" style="cursor: pointer;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
+                <div class="file-info">${file.name}<br><span class="file-size">${formatFileSize(file.size)}</span></div>
+            `;
+        };
+        reader.readAsDataURL(file);
+        grid.appendChild(item);
+    });
+}
+
+function syncFotoInput() {
+    const dt = new DataTransfer();
+    fotoFiles.forEach(f => dt.items.add(f));
+    document.getElementById('fotoInput').files = dt.files;
+}
+
+// ── Multi-File Upload: Dokumen ──
+let dokumenFiles = [];
+
+function handleDokumenSelect(input) {
+    const newFiles = Array.from(input.files);
+    newFiles.forEach(file => {
+        if (dokumenFiles.length >= 2) return;
+        dokumenFiles.push(file);
+    });
+    renderDokumenPreviews();
+    syncDokumenInput();
+}
+
+function removeDokumen(index) {
+    dokumenFiles.splice(index, 1);
+    renderDokumenPreviews();
+    syncDokumenInput();
+}
+
+function renderDokumenPreviews() {
+    const list = document.getElementById('dokumenPreviewList');
+    list.innerHTML = '';
+    dokumenFiles.forEach((file, i) => {
+        const ext = file.name.split('.').pop().toLowerCase();
+        const icons = { pdf: 'PDF', doc: 'DOC', docx: 'DOC', xls: 'XLS', xlsx: 'XLS', ppt: 'PPT', pptx: 'PPT' };
+        const icon = icons[ext] || '\u25A1';
+        const item = document.createElement('div');
+        item.className = 'doc-preview-item';
+        item.innerHTML = `
+            <span class="doc-icon">${icon}</span>
+            <div class="doc-info">
+                <div class="doc-name">${file.name}</div>
+                <div class="doc-size">${formatFileSize(file.size)} • ${ext.toUpperCase()}</div>
+            </div>
+            <button type="button" class="btn-remove-doc mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="removeDokumen(${i})" title="Hapus dokumen" aria-label="Hapus dokumen ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        `;
+        list.appendChild(item);
+    });
+}
+
+function syncDokumenInput() {
+    const dt = new DataTransfer();
+    dokumenFiles.forEach(f => dt.items.add(f));
+    document.getElementById('dokumenInput').files = dt.files;
+}
+
+// ── Helper ──
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+// ── Drag & Drop ──
+['fotoUploadArea', 'dokumenUploadArea'].forEach(id => {
+    const area = document.getElementById(id);
+    if (!area) return;
+    ['dragenter', 'dragover'].forEach(evt => {
+        area.addEventListener(evt, e => { e.preventDefault(); area.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+        area.addEventListener(evt, e => { e.preventDefault(); area.classList.remove('dragover'); });
+    });
+    area.addEventListener('drop', e => {
+        const files = e.dataTransfer.files;
+        if (id === 'fotoUploadArea') {
+            Array.from(files).forEach(f => { if (fotoFiles.length < 10 && f.type.startsWith('image/')) fotoFiles.push(f); });
+            renderFotoPreviews();
+            syncFotoInput();
+        } else {
+            Array.from(files).forEach(f => { if (dokumenFiles.length < 2) dokumenFiles.push(f); });
+            renderDokumenPreviews();
+            syncDokumenInput();
+        }
+    });
+});
+@endif
+
+// ── Toggle Bidang Field based on Kategori (checkbox version) ──
+function handleKategoriChange() {
+    const checkboxes = document.querySelectorAll('#kategoriGroup input[type="checkbox"]');
+    const checked = document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked');
+    const maxKategori = 2;
+
+    checkboxes.forEach(cb => {
+        const card = cb.closest('.checkbox-card');
+        if (cb.checked) {
+            card.classList.add('checked');
+        } else {
+            card.classList.remove('checked');
+        }
+    });
+
+    if (checked.length >= maxKategori) {
+        checkboxes.forEach(cb => {
+            if (!cb.checked) {
+                cb.closest('.checkbox-card').classList.add('disabled');
+                cb.disabled = true;
+            }
+        });
+    } else {
+        checkboxes.forEach(cb => {
+            cb.closest('.checkbox-card').classList.remove('disabled');
+            cb.disabled = false;
+        });
+    }
+
+    toggleBidangField();
+}
+
+function toggleBidangField() {
+    const checked = document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked');
+    const bidangRequired = document.getElementById('bidangRequired');
+    const bidangWrapper  = document.getElementById('bidangFieldWrapper');
+
+    // "Hanya Prodi" = ada kategori dicentang DAN semuanya berflag prodi
+    let allProdi = checked.length > 0;
+    checked.forEach(cb => {
+        if (cb.getAttribute('data-is-prodi') !== '1') {
+            allProdi = false;
+        }
+    });
+    const isOnlyProdi = allProdi && checked.length > 0;
+
+    if (bidangRequired) bidangRequired.style.display = isOnlyProdi ? 'none' : '';
+
+    // Sembunyikan SELURUH kolom Bidang saat hanya Kegiatan Prodi yang dipilih.
+    // Saat disembunyikan, lepas centang bidang agar tidak ikut tersimpan.
+    if (bidangWrapper) {
+        if (isOnlyProdi) {
+            bidangWrapper.style.display = 'none';
+            document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(inp => {
+                if (inp.checked) {
+                    inp.checked = false;
+                    inp.closest('.checkbox-card').classList.remove('checked');
+                }
+            });
+        } else {
+            bidangWrapper.style.display = '';
+        }
+    }
+}
+
+// ── Initialize on page load ──
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.checkbox-card input[type="checkbox"]:checked').forEach(cb => {
+        cb.closest('.checkbox-card').classList.add('checked');
+    });
+
+    document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', function() {
+            if (this.checked) {
+                this.closest('.checkbox-card').classList.add('checked');
+            } else {
+                this.closest('.checkbox-card').classList.remove('checked');
+            }
+        });
+    });
+
+    handleKategoriChange();
+});
+</script>

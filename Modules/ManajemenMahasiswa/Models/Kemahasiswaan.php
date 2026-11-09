@@ -20,7 +20,6 @@ class Kemahasiswaan extends Model
         'nim',
         'angkatan',
         'status',
-        'ipk',
         'tahun_lulus',
         'profesi',
         'kontak',
@@ -29,7 +28,6 @@ class Kemahasiswaan extends Model
     protected $casts = [
         'angkatan'    => 'integer',
         'tahun_lulus' => 'integer',
-        'ipk'         => 'decimal:2',
     ];
 
     // -------------------------------------------------------------------------
@@ -97,11 +95,27 @@ class Kemahasiswaan extends Model
         return $query->where('angkatan', $angkatan);
     }
 
+    /**
+     * Pencarian nama / NIM yang mengabaikan besar-kecil huruf.
+     * PostgreSQL (Supabase) memperlakukan LIKE sebagai case-sensitive, sehingga
+     * "budi" tidak akan menemukan "Budi". Pakai ILIKE di pgsql, LIKE di driver lain.
+     */
     public function scopeSearch(Builder $query, string $keyword): Builder
     {
-        return $query->where(function ($q) use ($keyword) {
-            $q->where('nama', 'like', "%{$keyword}%")
-              ->orWhere('nim', 'like', "%{$keyword}%");
+        $keyword = trim($keyword);
+
+        if ($keyword === '') {
+            return $query;
+        }
+
+        $operator = $query->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+
+        // Escape wildcard agar "100%" tidak dibaca sebagai pola "cocokkan apa saja"
+        $needle = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $keyword) . '%';
+
+        return $query->where(function ($q) use ($needle, $operator) {
+            $q->where('nama', $operator, $needle)
+              ->orWhere('nim', $operator, $needle);
         });
     }
 

@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Pendaftaran Aktif">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Pendaftaran Aktif">
 
 <div class="mp-page-header" style="margin-bottom: 24px;">
     <div>
@@ -80,7 +80,7 @@
             </div>
 
             {{-- Modal Form Asprak --}}
-            <div x-show="open" style="display:none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300 p-4" x-cloak>
+            <div x-show="open" style="display:none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-all duration-300 p-4" x-cloak>
                 
                     <div class="relative bg-white rounded-xl shadow-2xl w-[600px] max-w-[90%] max-h-[90vh] overflow-y-auto" style="border:1px solid #E5E7EB;" @click.away="open = false" x-show="open"
                             x-transition:enter="transition ease-out duration-300"
@@ -92,7 +92,6 @@
                         
                         <div class="mp-card-header flex justify-between items-center" style="flex-shrink:0;">
                             <span class="mp-card-title">{{ $pAsprak->judul ?: "Pendaftaran Asisten Praktikum - " . $p->nama }}</span>
-                            <button @click="open = false" style="background:none; border:none; cursor:pointer; color:#666D80;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                         </div>
                         
                         <div class="overflow-y-auto" style="padding:24px;">
@@ -172,21 +171,6 @@
                                     </div>
                                     </div>
 
-                                    <div style="margin-bottom: 24px;">
-                                        <label style="display:block;font-size:13px;font-weight:600;color:#353849;margin-bottom:8px;">Jadwal <span style="color:#DF1C41;">*</span> <span style="font-weight:400;color:#666D80;font-size:11px;">(Pilih hari luang)</span></label>
-                                        <div style="display:flex;flex-wrap:wrap;gap:12px;">
-                                            @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'] as $hari)
-                                            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                                                <div style="position:relative; width:20px; height:20px; border-radius:6px; border:1px solid #DFE1E7; display:flex; align-items:center; justify-content:center; background:#fff; transition:all 0.2s;">
-                                                    <input type="checkbox" name="jadwal[]" value="{{ $hari }}" style="position:absolute; inset:0; opacity:0; cursor:pointer;" onchange="this.parentElement.style.background = this.checked ? '#2A3E7B' : '#fff'; this.parentElement.style.borderColor = this.checked ? '#2A3E7B' : '#DFE1E7'; this.nextElementSibling.style.display = this.checked ? 'block' : 'none'">
-                                                    <svg style="display:none; pointer-events:none; width:14px; height:14px; color:#fff;" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
-                                                </div>
-                                                <span style="font-size:13px;color:#353849;">{{ $hari }}</span>
-                                            </label>
-                                            @endforeach
-                                        </div>
-                                    </div>
-
                                     @if($pAsprak->nama_berkas_tambahan)
                                     <div style="margin-bottom: 24px;">
                                         <label style="display:block;font-size:13px;font-weight:600;color:#353849;margin-bottom:6px;">{{ $pAsprak->nama_berkas_tambahan }} <span style="color:#DF1C41;">*</span> <span style="font-weight:400;color:#666D80;font-size:11px;">(@if($pAsprak->keterangan_berkas_tambahan){{ $pAsprak->keterangan_berkas_tambahan }}, @endif.pdf maks 5 MB)</span></label>
@@ -208,10 +192,16 @@
                                     </div>
                                     @endif
 
-                                    <button type="submit" class="mp-btn primary md w-full" style="justify-content:center;">
-                                        Kirim Pendaftaran Asisten
-                                    </button>
+                                    <div class="mp-modal-footer mp-modal-footer-bleed" style="display:flex;justify-content:flex-end;gap:12px;">
+                                        <button type="button" @click="open = false" class="mp-btn secondary md" style="color:#353849;">Batal</button>
+                                        <button type="submit" class="mp-btn primary md" style="background:#0B266E;color:#FFFFFF;">Kirim Pendaftaran Asisten</button>
+                                    </div>
                                 </form>
+                            @endif
+                            @if($isAsprakDiPraktikumIni || ($existingAsprak && in_array($existingAsprak->status, ['pending','approved'])))
+                                    <div class="mp-modal-footer mp-modal-footer-bleed" style="margin-top:20px;">
+                                    <button type="button" @click="open = false" class="mp-btn secondary md" style="color:#353849;">Batal</button>
+                                </div>
                             @endif
                         </div>
                     </div>
@@ -266,7 +256,7 @@
             </div>
 
             {{-- Modal Form Koor --}}
-            <div x-show="open" style="display:none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300 p-4" x-cloak>
+            <div x-show="open" style="display:none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-all duration-300 p-4" x-cloak>
                 
                     <div class="relative bg-white rounded-xl shadow-2xl w-[600px] max-w-[90%] max-h-[90vh] overflow-y-auto" style="border:1px solid #E5E7EB;" @click.away="open = false" x-show="open"
                             x-transition:enter="transition ease-out duration-300"
@@ -278,7 +268,6 @@
                         
                         <div class="mp-card-header flex justify-between items-center" style="flex-shrink:0;">
                             <span class="mp-card-title">{{ $pKoor->judul ?: "Pendaftaran Koordinator - " . $p->nama }}</span>
-                            <button @click="open = false" style="background:none; border:none; cursor:pointer; color:#666D80;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                         </div>
                         
                         <div class="overflow-y-auto" style="padding:24px;">
@@ -395,10 +384,16 @@
                                         @endif
                                     </div>
 
-                                    <button type="submit" class="mp-btn navy md w-full" style="justify-content:center;">
-                                        Kirim Pendaftaran Koordinator
-                                    </button>
+                                    <div class="mp-modal-footer mp-modal-footer-bleed" style="display:flex;justify-content:flex-end;gap:12px;">
+                                        <button type="button" @click="open = false" class="mp-btn secondary md" style="color:#353849;">Batal</button>
+                                        <button type="submit" class="mp-btn primary md" style="background:#0B266E;color:#FFFFFF;">Kirim Pendaftaran Koordinator</button>
+                                    </div>
                                 </form>
+                            @endif
+                            @if($isKoorDiPraktikumIni || ($existingKoor && in_array($existingKoor->status, ['pending','approved'])))
+                                    <div class="mp-modal-footer mp-modal-footer-bleed" style="margin-top:20px;">
+                                    <button type="button" @click="open = false" class="mp-btn secondary md" style="color:#353849;">Batal</button>
+                                </div>
                             @endif
                         </div>
                     </div>

@@ -1,9 +1,12 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
+@include('manajemenmahasiswa::partials.card-frame')
+
+@include('manajemenmahasiswa::partials.kegiatan-theme')
 
 <style>
     /* ── Form Card ── */
     .form-card {
-        background: #ffffff;
+        background: var(--c-surface);
         border-radius: 12px;
         padding: 24px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
@@ -12,49 +15,29 @@
     .form-card-title {
         font-weight: 700;
         font-size: 16px;
-        color: #0D0D12;
+        color: var(--c-fg);
         margin-bottom: 20px;
         display: flex;
         align-items: center;
         gap: 8px;
         padding-bottom: 14px;
-        border-bottom: 1px solid #f3f4f6;
+        border-bottom: 1px solid var(--c-surface-muted);
     }
 
-    /* ── Custom Form Styles ── */
-    .form-label-custom {
-        font-weight: 600;
-        font-size: 13px;
-        color: #374151;
-        margin-bottom: 6px;
-    }
-    .form-label-custom .required {
-        color: #dc2626;
-    }
-    .form-control-custom,
-    .form-select-custom {
-        border: 1.5px solid #DFE1E7;
-        border-radius: 10px;
-        padding: 10px 14px;
-        font-size: 14px;
-        font-weight: 500;
-        color: #0D0D12;
-        transition: all 0.2s;
-        background: #fff;
-    }
-    .form-control-custom:focus,
-    .form-select-custom:focus {
-        border-color: #0B266E;
-        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
-        outline: none;
-    }
-    .form-control-custom::placeholder {
-        color: #666D80;
-        font-weight: 400;
-    }
+    /* ── Label & kotak isian: partials/sitkom-ui (gaya Edit User SITKOM) ── */
     textarea.form-control-custom {
         min-height: 140px;
         resize: vertical;
+    }
+    /* Kolom angka (Peserta & Anggaran) tanpa tombol panah naik/turun bawaan browser. */
+    input[type="number"].form-control-custom {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+    input[type="number"].form-control-custom::-webkit-outer-spin-button,
+    input[type="number"].form-control-custom::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
     }
 
     /* ── Searchable Select ── */
@@ -69,8 +52,8 @@
         top: 100%;
         left: 0;
         right: 0;
-        background: #fff;
-        border: 1.5px solid #DFE1E7;
+        background: var(--c-surface);
+        border: 1.5px solid var(--c-border);
         border-top: none;
         border-radius: 0 0 10px 10px;
         max-height: 200px;
@@ -87,17 +70,17 @@
         cursor: pointer;
         font-size: 13px;
         font-weight: 500;
-        color: #374151;
+        color: var(--c-fg-sec);
         transition: background 0.15s;
-        border-bottom: 1px solid #f9fafb;
+        border-bottom: 1px solid var(--c-surface-subtle);
     }
     .search-select-option:hover {
-        background: #eef2ff;
-        color: #0B266E;
+        background: var(--c-primary-subtle);
+        color: var(--c-primary);
     }
     .search-select-option .sub-text {
         font-size: 11px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 400;
     }
 
@@ -113,31 +96,31 @@
         align-items: center;
         gap: 8px;
         padding: 10px 16px;
-        border: 1.5px solid #DFE1E7;
+        border: 1.5px solid var(--c-border);
         border-radius: 10px;
-        background: #fff;
+        background: var(--c-surface);
         cursor: pointer;
         transition: all 0.2s;
         font-size: 13px;
         font-weight: 500;
-        color: #374151;
+        color: var(--c-fg-sec);
         user-select: none;
     }
     .checkbox-card:hover {
-        border-color: #5C78B8;
-        background: #eef2ff;
+        border-color: var(--c-primary-border);
+        background: var(--c-primary-subtle);
     }
     .checkbox-card input[type="checkbox"] {
         width: 16px;
         height: 16px;
-        accent-color: #0B266E;
+        accent-color: var(--c-primary);
         cursor: pointer;
         flex-shrink: 0;
     }
     .checkbox-card.checked {
-        border-color: #0B266E;
-        background: #eef2ff;
-        color: #091958;
+        border-color: var(--c-primary);
+        background: var(--c-primary-subtle);
+        color: var(--c-primary-hover);
         font-weight: 600;
     }
     .checkbox-card.disabled {
@@ -147,24 +130,24 @@
     }
     .checkbox-hint {
         font-size: 11px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 400;
         margin-top: 6px;
     }
 
     /* ── Banner Preview ── */
     .banner-upload-area {
-        border: 2px dashed #C1C7CF;
+        border: 2px dashed var(--c-border-strong);
         border-radius: 12px;
         padding: 30px;
         text-align: center;
         cursor: pointer;
         transition: all 0.2s;
-        background: #fafafa;
+        background: var(--c-surface-subtle);
     }
     .banner-upload-area:hover {
-        border-color: #0B266E;
-        background: #eef2ff;
+        border-color: var(--c-primary);
+        background: var(--c-primary-subtle);
     }
     .banner-upload-area .upload-icon {
         font-size: 36px;
@@ -172,13 +155,13 @@
         opacity: 0.5;
     }
     .banner-upload-area p {
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-size: 13px;
         font-weight: 500;
         margin: 0;
     }
     .banner-upload-area small {
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-size: 12px;
     }
     .banner-preview {
@@ -242,7 +225,7 @@
         background: rgba(255,255,255,0.1);
         backdrop-filter: blur(8px);
         border: 1px solid rgba(255,255,255,0.15);
-        color: #fff;
+        color: var(--c-surface);
         font-size: 20px;
         cursor: pointer;
         display: flex;
@@ -264,7 +247,7 @@
         top: 10px;
         left: 10px;
         background: rgba(0,0,0,0.6);
-        color: #fff;
+        color: var(--c-surface);
         font-size: 11px;
         font-weight: 600;
         padding: 4px 10px;
@@ -273,18 +256,18 @@
 
     /* ── Multi File Upload ── */
     .file-upload-area {
-        border: 2px dashed #C1C7CF;
+        border: 2px dashed var(--c-border-strong);
         border-radius: 12px;
         padding: 24px;
         text-align: center;
         cursor: pointer;
         transition: all 0.2s;
-        background: #fafafa;
+        background: var(--c-surface-subtle);
     }
     .file-upload-area:hover,
     .file-upload-area.dragover {
-        border-color: #0B266E;
-        background: #eef2ff;
+        border-color: var(--c-primary);
+        background: var(--c-primary-subtle);
     }
     .file-upload-area .upload-icon {
         font-size: 28px;
@@ -292,13 +275,13 @@
         opacity: 0.5;
     }
     .file-upload-area p {
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-size: 13px;
         font-weight: 500;
         margin: 0;
     }
     .file-upload-area small {
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-size: 12px;
     }
     .file-preview-grid {
@@ -311,8 +294,8 @@
         position: relative;
         border-radius: 10px;
         overflow: hidden;
-        border: 1px solid #DFE1E7;
-        background: #f9fafb;
+        border: 1px solid var(--c-border);
+        background: var(--c-surface-subtle);
         transition: all 0.2s;
     }
     .file-preview-item img {
@@ -324,46 +307,30 @@
         padding: 8px 10px;
         font-size: 11px;
         font-weight: 600;
-        color: #374151;
+        color: var(--c-fg-sec);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
     .file-preview-item .file-size {
         font-size: 10px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 400;
     }
+    /* Hanya posisi; warna & ukuran dari .mk-btn. */
     .file-preview-item .btn-remove-file {
         position: absolute;
         top: 4px;
         right: 4px;
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: rgba(220, 38, 38, 0.85);
-        color: #fff;
-        border: none;
-        font-size: 12px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.15s;
-        line-height: 1;
-    }
-    .file-preview-item .btn-remove-file:hover {
-        background: #dc2626;
-        transform: scale(1.1);
     }
     .doc-preview-item {
         display: flex;
         align-items: center;
         gap: 10px;
         padding: 12px 14px;
-        border: 1px solid #DFE1E7;
+        border: 1px solid var(--c-border);
         border-radius: 10px;
-        background: #f9fafb;
+        background: var(--c-surface-subtle);
         position: relative;
         margin-bottom: 8px;
     }
@@ -378,38 +345,22 @@
     .doc-preview-item .doc-name {
         font-size: 13px;
         font-weight: 600;
-        color: #374151;
+        color: var(--c-fg-sec);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
     .doc-preview-item .doc-size {
         font-size: 11px;
-        color: #666D80;
+        color: var(--c-fg-muted);
     }
     .doc-preview-item .btn-remove-doc {
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        background: #fee2e2;
-        color: #dc2626;
-        border: none;
-        font-size: 13px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         flex-shrink: 0;
-        transition: all 0.15s;
-    }
-    .doc-preview-item .btn-remove-doc:hover {
-        background: #dc2626;
-        color: #fff;
     }
     .existing-file-label {
         font-size: 12px;
         font-weight: 700;
-        color: #666D80;
+        color: var(--c-fg-muted);
         text-transform: uppercase;
         letter-spacing: 0.3px;
         margin-bottom: 10px;
@@ -417,66 +368,65 @@
     }
 
     /* ── Back Button ── */
-    .detail-header {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        margin-bottom: 24px;
-    }
     .btn-back {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: #ffffff;
-        border: 1px solid #DFE1E7;
+        width: 32px;
+        min-width: 32px;
+        height: 32px;
+        padding: 0;
+        border-radius: 8px;
+        background: var(--c-surface);
+        border: 1px solid var(--c-border);
         display: flex;
         align-items: center;
         justify-content: center;
         text-decoration: none;
-        color: #374151;
-        font-size: 18px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        color: var(--c-fg-sec);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
         transition: all 0.2s;
         flex-shrink: 0;
     }
     .btn-back:hover {
-        background: #f3f4f6;
-        border-color: #C1C7CF;
-        color: #0D0D12;
+        background: var(--c-bg);
+        border-color: var(--c-border);
+        color: var(--c-fg);
+        transform: none;
     }
 
     /* ── Buttons ── */
     .btn-submit {
-        background: #0B266E;
-        color: #ffffff;
+        background: var(--c-primary);
+        color: var(--c-surface);
         font-weight: 600;
         font-size: 14px;
-        padding: 12px 28px;
+        min-height: 40px;
+        padding: 0 18px;
         border-radius: 10px;
         border: none;
         cursor: pointer;
         transition: all 0.2s;
     }
     .btn-submit:hover {
-        background: #091958;
+        background: var(--c-primary-hover);
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(11, 38, 110, 0.3);
+        box-shadow: 0 4px 12px var(--c-primary-shadow-strong);
     }
     .btn-cancel {
-        background: #f3f4f6;
-        color: #374151;
+        background: var(--c-surface);
+        color: var(--c-fg-sec);
         font-weight: 600;
         font-size: 14px;
-        padding: 12px 28px;
+        min-height: 40px;
+        padding: 0 18px;
         border-radius: 10px;
-        border: none;
+        border: 1px solid var(--c-border);
         cursor: pointer;
         text-decoration: none;
         transition: all 0.2s;
     }
     .btn-cancel:hover {
-        background: #DFE1E7;
-        color: #0D0D12;
+        background: var(--c-primary-subtle);
+        border-color: var(--c-primary);
+        color: var(--c-primary);
     }
 
     /* ── Multi-Select Panitia ── */
@@ -489,41 +439,41 @@
         gap: 8px;
         min-height: 44px;
         padding: 8px 12px;
-        border: 1.5px solid #DFE1E7;
+        border: 1.5px solid var(--c-border);
         border-radius: 10px;
-        background: #fff;
+        background: var(--c-surface);
         cursor: text;
         transition: border-color 0.2s, box-shadow 0.2s;
         align-items: center;
     }
     .panitia-chips-container:focus-within {
-        border-color: #0B266E;
-        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
+        border-color: var(--c-primary);
+        box-shadow: 0 0 0 3px var(--c-primary-subtle);
     }
     .panitia-chip {
         display: inline-flex;
         align-items: center;
         gap: 6px;
         padding: 4px 10px;
-        background: #eef2ff;
-        color: #091958;
+        background: var(--c-primary-subtle);
+        color: var(--c-primary-hover);
         border-radius: 20px;
         font-size: 12px;
         font-weight: 600;
-        border: 1px solid #5C78B8;
+        border: 1px solid var(--c-primary-border);
         transition: all 0.15s;
         white-space: nowrap;
     }
     .panitia-chip:hover {
-        background: #eef2ff;
+        background: var(--c-primary-subtle);
     }
     .panitia-chip-remove {
         width: 16px;
         height: 16px;
         border-radius: 50%;
-        background: #5C78B8;
-        color: #091958;
-        border: none;
+        background: transparent;
+        color: var(--c-primary);
+        border: 1px solid transparent;
         font-size: 11px;
         cursor: pointer;
         display: inline-flex;
@@ -535,7 +485,7 @@
         flex-shrink: 0;
     }
     .panitia-chip-remove:hover {
-        background: #dc2626;
+        background: var(--c-primary);
         color: #fff;
     }
     .panitia-search-input {
@@ -543,14 +493,14 @@
         outline: none;
         font-size: 13px;
         font-weight: 500;
-        color: #0D0D12;
+        color: var(--c-fg);
         flex: 1;
         min-width: 120px;
         background: transparent;
         padding: 2px 0;
     }
     .panitia-search-input::placeholder {
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 400;
     }
     .panitia-dropdown {
@@ -558,8 +508,8 @@
         top: 100%;
         left: 0;
         right: 0;
-        background: #fff;
-        border: 1.5px solid #DFE1E7;
+        background: var(--c-surface);
+        border: 1.5px solid var(--c-border);
         border-top: none;
         border-radius: 0 0 10px 10px;
         max-height: 220px;
@@ -576,31 +526,31 @@
         cursor: pointer;
         font-size: 13px;
         font-weight: 500;
-        color: #374151;
+        color: var(--c-fg-sec);
         transition: background 0.15s;
-        border-bottom: 1px solid #f9fafb;
+        border-bottom: 1px solid var(--c-surface-subtle);
         display: flex;
         align-items: center;
         gap: 8px;
     }
     .panitia-option:hover {
-        background: #eef2ff;
-        color: #0B266E;
+        background: var(--c-primary-subtle);
+        color: var(--c-primary);
     }
     .panitia-option.selected {
-        background: #f0fdf4;
-        color: #16a34a;
+        background: var(--c-success-subtle);
+        color: var(--c-success);
         pointer-events: none;
         opacity: 0.6;
     }
     .panitia-option .sub-text {
         font-size: 11px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 400;
     }
     .panitia-option .check-icon {
         margin-left: auto;
-        color: #16a34a;
+        color: var(--c-success);
         font-size: 13px;
         display: none;
     }
@@ -611,14 +561,14 @@
         padding: 14px;
         text-align: center;
         font-size: 13px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 400;
     }
     .panitia-count-badge {
         font-size: 11px;
         font-weight: 600;
-        color: #666D80;
-        background: #f3f4f6;
+        color: var(--c-fg-muted);
+        background: var(--c-surface-muted);
         padding: 2px 8px;
         border-radius: 20px;
         margin-left: 6px;
@@ -626,47 +576,36 @@
 </style>
 
 @php
-    $ketuaNama = '';
-    if ($kegiatan->ketua_pelaksana_id) {
-        $ketua = $kegiatan->ketuaPelaksana;
-        $ketuaNama = $ketua?->user?->name ?? '';
-    }
-    $dosenNama = '';
-    if ($kegiatan->dosen_pendamping_id) {
-        $dosen = $kegiatan->dosenPendamping;
-        $dosenNama = $dosen?->user?->name ?? '';
-    }
+    // Dosen pendamping yang sudah ada — untuk pre-populate chips
+    $existingDosenIds = old('dosen_pendamping_ids', $kegiatan->dosenPendampings->pluck('id')->toArray());
+    $existingDosen    = $dosenList->whereIn('id', $existingDosenIds);
     $existingFoto = $kegiatan->repoMulmed->where('tipe_file', 'image');
     $existingDokumen = $kegiatan->repoMulmed->where('tipe_file', 'document');
     $selectedKategoriIds = old('kategori_kegiatan_id', $kegiatan->kategoris->pluck('id')->toArray());
     $selectedBidangIds = old('bidang_id', $kegiatan->bidangs->pluck('id')->toArray());
-    // Panitia yang sudah ada — untuk pre-populate chips
-    $existingPanitia = $kegiatan->panitia ?? collect();
-    $existingPanitiaIds = old('panitia_ids', $existingPanitia->pluck('id')->toArray());
+    // Panitia untuk pre-populate chips.
+    // Saat form dikembalikan karena validasi gagal, dipulihkan dari isian terakhir
+    // user (old()) dan BUKAN dari database — kalau tidak, panitia yang barusan
+    // ditambah/dihapus tapi belum tersimpan diam-diam kembali ke data lama.
+    $panitiaIdsLama   = old('panitia_ids');
+    $panitiaPeranLama = old('panitia_peran', []);
+    $existingPanitia  = $panitiaIdsLama !== null
+        ? $mahasiswaList->whereIn('id', $panitiaIdsLama)
+        : ($kegiatan->panitia ?? collect());
 @endphp
 
 <!-- Header -->
-<div class="detail-header">
-    <a href="{{ route('manajemenmahasiswa.kegiatan.show', $kegiatan->id) }}" class="btn-back">
-        &larr;
-    </a>
-    <div>
-        <h3 class="fw-bold mb-0" style="font-size:1.45rem;color:#0D0D12;letter-spacing:-.02em;">Edit Kegiatan</h3>
-        <p class="mb-0" style="font-size:.82rem;color:#666D80;font-weight:500;">Perbarui informasi kegiatan <strong>{{ $kegiatan->judul }}</strong></p>
-    </div>
-</div>
+<x-manajemenmahasiswa::ui.page-header bordered title="Edit Kegiatan">
+    Perbarui informasi kegiatan <strong>{{ $kegiatan->judul }}</strong>
+    <x-slot:leading>
+        <a href="{{ route('manajemenmahasiswa.kegiatan.show', $kegiatan->id) }}" class="btn-back mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" aria-label="Kembali">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+        </a>
+    </x-slot:leading>
+</x-manajemenmahasiswa::ui.page-header>
 
 <!-- Validation Errors -->
-@if($errors->any())
-    <div class="alert alert-danger" style="border-radius: 10px; border: none; background: #fee2e2; color: #991b1b; font-size: 14px;">
-        <strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Terjadi kesalahan:</strong>
-        <ul class="mb-0 mt-1">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="error" title="Terjadi Kesalahan" :messages="$errors->all()" class="mb-3" />
 
 <form action="{{ route('manajemenmahasiswa.kegiatan.update', $kegiatan->id) }}" method="POST" enctype="multipart/form-data">
     @csrf
@@ -678,8 +617,10 @@
 
         <div class="mb-3">
             <label class="form-label-custom">Judul Kegiatan <span class="required">*</span></label>
-            <input type="text" name="judul" class="form-control form-control-custom"
-                   value="{{ old('judul', $kegiatan->judul) }}" required maxlength="255">
+            <input type="text" name="judul" id="judulInput" class="form-control form-control-custom"
+                   value="{{ old('judul', $kegiatan->judul) }}" required maxlength="255"
+                   oninput="updateCharCount('judulInput','judulCount',255)">
+            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="judulCount">0</span>/255 karakter</div>
         </div>
 
         <div class="row g-3 mb-3">
@@ -717,7 +658,13 @@
 
         <div class="mb-3">
             <label class="form-label-custom">Deskripsi <span class="required">*</span></label>
-            <textarea name="deskripsi" class="form-control form-control-custom" required>{{ old('deskripsi', $kegiatan->deskripsi) }}</textarea>
+            <textarea name="deskripsi" id="deskripsiInput" class="form-control form-control-custom"
+                      required minlength="20" maxlength="3000"
+                      oninput="updateCharCount('deskripsiInput','deskripsiCount',3000)">{{ old('deskripsi', $kegiatan->deskripsi) }}</textarea>
+            <div class="d-flex justify-content-between align-items-center" style="margin-top:4px;">
+                <span style="font-size:11px;color:var(--c-fg-muted);font-weight:500;">Minimal 20 karakter</span>
+                <span style="font-size:11px;color:var(--c-fg-muted);font-weight:500;"><span id="deskripsiCount">0</span>/3000 karakter</span>
+            </div>
         </div>
 
     </div>
@@ -760,100 +707,16 @@
     <div class="form-card">
         <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Personel Kegiatan</div>
 
-        <div class="row g-3 mb-3">
-            <div class="col-md-6">
-                <label class="form-label-custom">Ketua Pelaksana</label>
-                <div class="search-select-wrapper">
-                    <input type="hidden" name="ketua_pelaksana_id" id="ketuaPelaksanaId"
-                           value="{{ old('ketua_pelaksana_id', $kegiatan->ketua_pelaksana_id) }}">
-                    <input type="text" class="form-control form-control-custom" id="ketuaPelaksanaSearch"
-                           placeholder="Cari nama mahasiswa..."
-                           value="{{ $ketuaNama }}"
-                           autocomplete="off"
-                           onfocus="showDropdown('ketuaPelaksanaDropdown')"
-                           oninput="filterOptions('ketuaPelaksanaSearch', 'ketuaPelaksanaDropdown')">
-                    <div class="search-select-dropdown" id="ketuaPelaksanaDropdown">
-                        @foreach($mahasiswaList as $mhs)
-                            <div class="search-select-option"
-                                 onclick="selectOption('ketuaPelaksanaId', '{{ $mhs->id }}', 'ketuaPelaksanaSearch', '{{ $mhs->user->name ?? 'N/A' }}', 'ketuaPelaksanaDropdown')"
-                                 data-name="{{ strtolower($mhs->user->name ?? '') }}"
-                                 data-nim="{{ $mhs->student_number }}">
-                                {{ $mhs->user->name ?? 'N/A' }}
-                                <div class="sub-text">NIM: {{ $mhs->student_number }} • Angkatan {{ $mhs->cohort_year }}</div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label-custom">Dosen Pendamping <span style="color: #666D80; font-weight: 400;">(opsional)</span></label>
-                <div class="search-select-wrapper">
-                    <input type="hidden" name="dosen_pendamping_id" id="dosenPendampingId"
-                           value="{{ old('dosen_pendamping_id', $kegiatan->dosen_pendamping_id) }}">
-                    <input type="text" class="form-control form-control-custom" id="dosenPendampingSearch"
-                           placeholder="Cari nama dosen..."
-                           value="{{ $dosenNama }}"
-                           autocomplete="off"
-                           onfocus="showDropdown('dosenPendampingDropdown')"
-                           oninput="filterOptions('dosenPendampingSearch', 'dosenPendampingDropdown')">
-                    <div class="search-select-dropdown" id="dosenPendampingDropdown">
-                        @foreach($dosenList as $dosen)
-                            <div class="search-select-option"
-                                 onclick="selectOption('dosenPendampingId', '{{ $dosen->id }}', 'dosenPendampingSearch', '{{ $dosen->user->name ?? 'N/A' }}', 'dosenPendampingDropdown')"
-                                 data-name="{{ strtolower($dosen->user->name ?? '') }}"
-                                 data-nip="{{ $dosen->employee_number }}">
-                                {{ $dosen->user->name ?? 'N/A' }}
-                                <div class="sub-text">NIP: {{ $dosen->employee_number }}</div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- ── Panitia Kegiatan (Multi-Select) ── --}}
-        <div class="mb-1">
-            <label class="form-label-custom">
-                Panitia Kegiatan
-                <span style="color: #666D80; font-weight: 400;">(opsional)</span>
-                <span class="panitia-count-badge" id="panitiaCountBadge" style="display:none;">0 dipilih</span>
-            </label>
-            <div class="panitia-select-wrapper" id="panitiaSelectWrapper">
-                <div class="panitia-chips-container" id="panitiaChipsContainer" onclick="focusPanitiaSearch()">
-                    <input type="text" class="panitia-search-input" id="panitiaSearchInput"
-                           placeholder="Cari dan tambah panitia..."
-                           autocomplete="off"
-                           oninput="filterPanitiaOptions(this.value)"
-                           onfocus="showPanitiaDropdown()">
-                </div>
-                <div class="panitia-dropdown" id="panitiaDropdown">
-                    @foreach($mahasiswaList as $mhs)
-                        <div class="panitia-option"
-                             data-id="{{ $mhs->id }}"
-                             data-name="{{ $mhs->user->name ?? 'N/A' }}"
-                             data-name-lower="{{ strtolower($mhs->user->name ?? '') }}"
-                             data-nim="{{ $mhs->student_number }}"
-                             data-angkatan="{{ $mhs->cohort_year }}"
-                             onclick="togglePanitia(this)">
-                            <div>
-                                {{ $mhs->user->name ?? 'N/A' }}
-                                <div class="sub-text">NIM: {{ $mhs->student_number }} • Angkatan {{ $mhs->cohort_year }}</div>
-                            </div>
-                            <span class="check-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-                        </div>
-                    @endforeach
-                    <div class="panitia-empty" id="panitiaEmpty" style="display:none;">Tidak ada mahasiswa yang cocok</div>
-                </div>
-                {{-- Hidden inputs di-generate JS --}}
-                <div id="panitiaHiddenInputs"></div>
-            </div>
-            <div class="checkbox-hint">Pilih satu atau lebih mahasiswa sebagai panitia. Ketik nama untuk mencari.</div>
-            
-            {{-- Container for Jabatan Inputs --}}
-            <div id="panitiaRolesContainer" class="mt-3 d-flex flex-column gap-2"></div>
-        </div>
+        @include('manajemenmahasiswa::partials.kegiatan-form._personel', [
+            'ketuaId'          => old('ketua_pelaksana_id', $kegiatan->ketua_pelaksana_id),
+            'dosenTerpilih'    => $existingDosen,
+            'panitiaTerpilih'  => $existingPanitia,
+            'panitiaPeranLama' => $panitiaPeranLama,
+        ])
     </div>
+
+    {{-- Akses Kelola — hanya dirender untuk pemilik kegiatan & override --}}
+    @include('manajemenmahasiswa::partials.kegiatan-form._akses_kelola')
 
     <!-- Detail Tambahan -->
     <div class="form-card">
@@ -867,28 +730,38 @@
             </div>
             <div class="col-md-6">
                 <label class="form-label-custom">Anggaran (Rp)</label>
+                @php
+                    // Cast `decimal:2` membuat anggaran keluar sebagai "2000000.00"; ekor
+                    // desimalnya dibuang supaya kolom angka tidak menampilkan ".00".
+                    $anggaranValue = old('anggaran', $kegiatan->anggaran);
+                    if (is_string($anggaranValue) && str_contains($anggaranValue, '.')) {
+                        $anggaranValue = rtrim(rtrim($anggaranValue, '0'), '.');
+                    }
+                @endphp
+                {{-- step="any": step="1000" membuat browser diam-diam menolak angka yang
+                     bukan kelipatan seribu (mis. 750500) tanpa keterangan apa pun di form. --}}
                 <input type="number" name="anggaran" class="form-control form-control-custom"
-                       value="{{ old('anggaran', $kegiatan->anggaran) }}" min="0" max="9999999999999" step="1000">
+                       value="{{ $anggaranValue }}" min="0" max="9999999999999" step="any">
             </div>
         </div>
     </div>
 
     <!-- Banner -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg> Banner Kegiatan</div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg> Banner Kegiatan *</div>
 
         @if($kegiatan->banner)
             <div class="banner-current">
                 <span class="badge-current">Banner Saat Ini</span>
                 <img src="{{ $kegiatan->banner_url }}" alt="Banner saat ini" class="banner-preview" style="display: block;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
             </div>
-            <p style="font-size: 13px; color: #666D80; margin-bottom: 12px;">Upload gambar baru untuk mengganti banner saat ini.</p>
+            <p style="font-size: 13px; color: var(--c-fg-muted); margin-bottom: 12px;">Upload gambar baru untuk mengganti banner saat ini.</p>
         @endif
 
         <div class="banner-upload-area" onclick="document.getElementById('bannerInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
             <p>Klik untuk upload banner {{ $kegiatan->banner ? 'baru' : 'kegiatan' }}</p>
-            <small>Format: JPG, PNG, WebP • Maks: 10MB<br><span style="color: #0B266E; font-weight: 500;">Rekomendasi: Resolusi 1280 x 720 (Rasio 16:9)</span></small>
+            <small>Format: JPG, PNG, WebP • Maks: 5MB<br><span style="color: var(--c-primary); font-weight: 500;">Rekomendasi: Resolusi 1280 x 720 (Rasio 16:9)</span></small>
         </div>
         <input type="file" name="banner" id="bannerInput" accept="image/jpeg,image/png,image/webp"
                style="display: none;" onchange="previewBanner(this)">
@@ -897,14 +770,14 @@
 
     <!-- Foto Kegiatan -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Foto Kegiatan <span style="color: #666D80; font-weight: 400; font-size: 13px;">(opsional, maks 10 foto)</span></div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Foto Kegiatan <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks 10 foto)</span></div>
 
         @if($existingFoto->count() > 0)
             <div class="existing-file-label">Foto yang sudah diupload</div>
             <div class="file-preview-grid" style="margin-bottom: 16px;">
                 @foreach($existingFoto as $foto)
                     <div class="file-preview-item" id="existingFile{{ $foto->id }}">
-                        <button type="button" class="btn-remove-file" onclick="markFileForDeletion({{ $foto->id }})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                        <button type="button" class="btn-remove-file mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="markFileForDeletion({{ $foto->id }})" title="Hapus foto" aria-label="Hapus foto {{ $foto->nama_file }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                         <img src="{{ $foto->url }}" alt="{{ $foto->judul_file }}" style="cursor: pointer;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
                         <div class="file-info">{{ $foto->nama_file }}</div>
                     </div>
@@ -915,7 +788,7 @@
         <div class="file-upload-area" id="fotoUploadArea" onclick="document.getElementById('fotoInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
             <p>Klik atau drag & drop foto baru ke sini</p>
-            <small>Format: JPG, PNG, WebP • Maks: 10MB per file</small>
+            <small>Format: JPG, PNG, WebP • Maks: 5MB per file</small>
         </div>
         <input type="file" name="foto_kegiatan[]" id="fotoInput" accept="image/jpeg,image/png,image/webp"
                multiple style="display: none;" onchange="handleFotoSelect(this)">
@@ -924,7 +797,7 @@
 
     <!-- Dokumen Kegiatan -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen Kegiatan <span style="color: #666D80; font-weight: 400; font-size: 13px;">(opsional, maks 10 dokumen)</span></div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen Kegiatan <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks 2 dokumen)</span></div>
 
         @if($existingDokumen->count() > 0)
             <div class="existing-file-label">Dokumen yang sudah diupload</div>
@@ -940,8 +813,8 @@
                         <div class="doc-name">{{ $doc->nama_file }}</div>
                         <div class="doc-size">{{ strtoupper($ext) }}</div>
                     </div>
-                    <a href="{{ $doc->url }}" target="_blank" class="btn-remove-doc" style="background: #dbeafe; color: #2563eb;" title="Download"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>
-                    <button type="button" class="btn-remove-doc" onclick="markFileForDeletion({{ $doc->id }})" title="Hapus"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                    <a href="{{ $doc->url }}" target="_blank" class="mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" title="Unduh dokumen" aria-label="Unduh dokumen {{ $doc->nama_file }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>
+                    <button type="button" class="btn-remove-doc mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="markFileForDeletion({{ $doc->id }})" title="Hapus dokumen" aria-label="Hapus dokumen {{ $doc->nama_file }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                 </div>
             @endforeach
             <div style="margin-bottom: 16px;"></div>
@@ -950,7 +823,7 @@
         <div class="file-upload-area" id="dokumenUploadArea" onclick="document.getElementById('dokumenInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></div>
             <p>Klik atau drag & drop dokumen baru ke sini</p>
-            <small>Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX • Maks: 10MB per file</small>
+            <small>Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX • Maks: 5MB per file</small>
         </div>
         <input type="file" name="dokumen_kegiatan[]" id="dokumenInput"
                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
@@ -963,8 +836,8 @@
 
     <!-- Action Buttons -->
     <div class="d-flex gap-3 justify-content-end mt-2">
-        <a href="{{ route('manajemenmahasiswa.kegiatan.show', $kegiatan->id) }}" class="btn-cancel">Batal</a>
-        <button type="submit" class="btn-submit">
+        <a href="{{ route('manajemenmahasiswa.kegiatan.show', $kegiatan->id) }}" class="mk-btn mk-btn--secondary">Batal</a>
+        <button type="submit" class="mk-btn mk-btn--primary">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Simpan Perubahan
         </button>
     </div>
@@ -979,6 +852,22 @@
 </div>
 
 <script>
+// ── Char counter (judul & deskripsi) ──
+function updateCharCount(inputId, countId, max) {
+    const el  = document.getElementById(inputId);
+    const cnt = document.getElementById(countId);
+    if (!el || !cnt) return;
+    const len = el.value.length;
+    cnt.textContent = len;
+    cnt.style.color = len >= max ? 'var(--c-error)' : (len > max * 0.9 ? 'var(--c-warning)' : 'var(--c-fg-muted)');
+}
+document.addEventListener('DOMContentLoaded', () => {
+    ['judulInput','deskripsiInput'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.dispatchEvent(new Event('input'));
+    });
+});
+
 // ── Banner Preview ──
 function previewBanner(input) {
     const preview = document.getElementById('bannerPreview');
@@ -1010,42 +899,6 @@ function closeLightbox(e) {
     modal.classList.remove('active');
     document.body.style.overflow = 'auto';
 }
-
-// ── Searchable Dropdown ──
-function showDropdown(dropdownId) {
-    document.getElementById(dropdownId).classList.add('show');
-}
-
-function filterOptions(inputId, dropdownId) {
-    const query = document.getElementById(inputId).value.toLowerCase();
-    const dropdown = document.getElementById(dropdownId);
-    const options = dropdown.querySelectorAll('.search-select-option');
-    let hasVisible = false;
-
-    options.forEach(opt => {
-        const name = opt.getAttribute('data-name') || '';
-        const secondary = opt.getAttribute('data-nim') || opt.getAttribute('data-nip') || '';
-        const match = name.includes(query) || secondary.includes(query);
-        opt.style.display = match ? 'block' : 'none';
-        if (match) hasVisible = true;
-    });
-
-    dropdown.classList.toggle('show', hasVisible);
-}
-
-function selectOption(hiddenId, value, inputId, label, dropdownId) {
-    document.getElementById(hiddenId).value = value;
-    document.getElementById(inputId).value = label;
-    document.getElementById(dropdownId).classList.remove('show');
-}
-
-document.addEventListener('click', function(e) {
-    document.querySelectorAll('.search-select-dropdown').forEach(d => {
-        if (!d.parentElement.contains(e.target)) {
-            d.classList.remove('show');
-        }
-    });
-});
 
 // ── File Deletion (existing files) ──
 function markFileForDeletion(fileId) {
@@ -1090,7 +943,7 @@ function renderFotoPreviews() {
         const reader = new FileReader();
         reader.onload = function(e) {
             item.innerHTML = `
-                <button type="button" class="btn-remove-file" onclick="removeFoto(${i})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                <button type="button" class="btn-remove-file mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="removeFoto(${i})" title="Hapus foto" aria-label="Hapus foto ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                 <img src="${e.target.result}" alt="${file.name}" style="cursor: pointer;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
                 <div class="file-info">${file.name}<br><span class="file-size">${formatFileSize(file.size)}</span></div>
             `;
@@ -1112,7 +965,7 @@ let dokumenFiles = [];
 function handleDokumenSelect(input) {
     const newFiles = Array.from(input.files);
     newFiles.forEach(file => {
-        if (dokumenFiles.length >= 10) return;
+        if (dokumenFiles.length >= 2) return;
         dokumenFiles.push(file);
     });
     renderDokumenPreviews();
@@ -1140,7 +993,7 @@ function renderDokumenPreviews() {
                 <div class="doc-name">${file.name}</div>
                 <div class="doc-size">${formatFileSize(file.size)} • ${ext.toUpperCase()}</div>
             </div>
-            <button type="button" class="btn-remove-doc" onclick="removeDokumen(${i})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button type="button" class="btn-remove-doc mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="removeDokumen(${i})" title="Hapus dokumen" aria-label="Hapus dokumen ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         `;
         list.appendChild(item);
     });
@@ -1176,149 +1029,11 @@ function formatFileSize(bytes) {
             renderFotoPreviews();
             syncFotoInput();
         } else {
-            Array.from(files).forEach(f => { if (dokumenFiles.length < 10) dokumenFiles.push(f); });
+            Array.from(files).forEach(f => { if (dokumenFiles.length < 2) dokumenFiles.push(f); });
             renderDokumenPreviews();
             syncDokumenInput();
         }
     });
-});
-
-// ── Panitia Multi-Select ──
-let selectedPanitia = {}; // { id: name }
-let initialRoles = {}; // { id: role }
-
-// Pre-populate dari data yang ada di database
-@foreach($existingPanitia as $pan)
-selectedPanitia['{{ $pan->id }}'] = '{{ addslashes($pan->user->name ?? '') }}';
-initialRoles['{{ $pan->id }}'] = '{{ addslashes($pan->pivot->peran ?? '') }}';
-@endforeach
-
-function focusPanitiaSearch() {
-    document.getElementById('panitiaSearchInput').focus();
-}
-
-function showPanitiaDropdown() {
-    const dropdown = document.getElementById('panitiaDropdown');
-    dropdown.classList.add('show');
-    filterPanitiaOptions(document.getElementById('panitiaSearchInput').value);
-}
-
-function filterPanitiaOptions(query) {
-    const q = query.toLowerCase().trim();
-    const options = document.querySelectorAll('#panitiaDropdown .panitia-option');
-    const empty = document.getElementById('panitiaEmpty');
-    let visibleCount = 0;
-
-    options.forEach(opt => {
-        const name = opt.getAttribute('data-name-lower') || '';
-        const nim  = opt.getAttribute('data-nim') || '';
-        const match = !q || name.includes(q) || nim.includes(q);
-        opt.style.display = match ? 'flex' : 'none';
-        if (match) visibleCount++;
-    });
-
-    empty.style.display = visibleCount === 0 ? 'block' : 'none';
-    document.getElementById('panitiaDropdown').classList.add('show');
-}
-
-function togglePanitia(optEl) {
-    const id   = optEl.getAttribute('data-id');
-    const name = optEl.getAttribute('data-name');
-
-    if (selectedPanitia[id]) {
-        removePanitia(id);
-    } else {
-        selectedPanitia[id] = name;
-        optEl.classList.add('selected');
-        renderPanitiaChips();
-        updatePanitiaHiddenInputs();
-    }
-
-    document.getElementById('panitiaSearchInput').value = '';
-    filterPanitiaOptions('');
-    document.getElementById('panitiaSearchInput').focus();
-}
-
-function removePanitia(id) {
-    delete selectedPanitia[id];
-    const opt = document.querySelector(`#panitiaDropdown .panitia-option[data-id="${id}"]`);
-    if (opt) opt.classList.remove('selected');
-    renderPanitiaChips();
-    updatePanitiaHiddenInputs();
-}
-
-function renderPanitiaChips() {
-    const container = document.getElementById('panitiaChipsContainer');
-    const searchInput = document.getElementById('panitiaSearchInput');
-
-    container.querySelectorAll('.panitia-chip').forEach(c => c.remove());
-
-    Object.entries(selectedPanitia).forEach(([id, name]) => {
-        const chip = document.createElement('span');
-        chip.className = 'panitia-chip';
-        chip.innerHTML = `
-            ${name}
-            <button type="button" class="panitia-chip-remove" onclick="removePanitia('${id}')" title="Hapus">×</button>
-        `;
-        container.insertBefore(chip, searchInput);
-    });
-
-    const count = Object.keys(selectedPanitia).length;
-    const badge = document.getElementById('panitiaCountBadge');
-    if (count > 0) {
-        badge.textContent = count + ' dipilih';
-        badge.style.display = 'inline';
-        document.getElementById('panitiaSearchInput').placeholder = 'Tambah lebih banyak...';
-    } else {
-        badge.style.display = 'none';
-        document.getElementById('panitiaSearchInput').placeholder = 'Cari dan tambah panitia...';
-    }
-}
-
-function updatePanitiaHiddenInputs() {
-    const container = document.getElementById('panitiaHiddenInputs');
-    const rolesContainer = document.getElementById('panitiaRolesContainer');
-    
-    container.innerHTML = '';
-    
-    // Simpan nilai peran yang sudah diinput sebelum me-render ulang
-    const existingRoles = {};
-    rolesContainer.querySelectorAll('input[type="text"]').forEach(input => {
-        existingRoles[input.dataset.id] = input.value;
-    });
-    
-    rolesContainer.innerHTML = '';
-
-    Object.keys(selectedPanitia).forEach(id => {
-        const input = document.createElement('input');
-        input.type  = 'hidden';
-        input.name  = 'panitia_ids[]';
-        input.value = id;
-        container.appendChild(input);
-        
-        // Input untuk Jabatan/Peran
-        const name = selectedPanitia[id];
-        // Jika user belum pernah ngetik di UI, ambil dari initialRoles
-        const currentRole = existingRoles[id] !== undefined ? existingRoles[id] : (initialRoles[id] || '');
-        
-        const roleDiv = document.createElement('div');
-        roleDiv.className = 'd-flex align-items-center gap-3 p-2 border rounded bg-light';
-        roleDiv.innerHTML = `
-            <div style="flex: 1; font-size: 13px; font-weight: 600; color: #374151;">${name}</div>
-            <div style="flex: 2;">
-                <input type="text" name="panitia_peran[${id}]" data-id="${id}" class="form-control form-control-sm" placeholder="Masukkan Jabatan (misal: Sekretaris, Bendahara, dll)" value="${currentRole}">
-            </div>
-        `;
-        rolesContainer.appendChild(roleDiv);
-    });
-}
-
-// Tutup dropdown panitia saat klik di luar
-document.addEventListener('click', function(e) {
-    const wrapper = document.getElementById('panitiaSelectWrapper');
-    if (wrapper && !wrapper.contains(e.target)) {
-        document.getElementById('panitiaDropdown').classList.remove('show');
-    }
 });
 
 // ── Toggle Bidang Field based on Kategori (checkbox version) ──
@@ -1358,7 +1073,9 @@ function handleKategoriChange() {
 function toggleBidangField() {
     const checked = document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked');
     const bidangRequired = document.getElementById('bidangRequired');
+    const bidangWrapper = document.getElementById('bidangFieldWrapper');
 
+    // "Hanya Prodi" = ada kategori terpilih DAN semuanya prodi (tidak ada Himpunan)
     let allProdi = checked.length > 0;
     checked.forEach(cb => {
         if (cb.getAttribute('data-is-prodi') !== '1') {
@@ -1367,8 +1084,18 @@ function toggleBidangField() {
     });
 
     if (allProdi && checked.length > 0) {
+        // Hanya Kegiatan Prodi → sembunyikan kolom Bidang & kosongkan pilihannya
+        if (bidangWrapper) bidangWrapper.style.display = 'none';
         if (bidangRequired) bidangRequired.style.display = 'none';
+        document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(cb => {
+            if (cb.checked) {
+                cb.checked = false;
+                cb.dispatchEvent(new Event('change'));
+            }
+        });
     } else {
+        // Ada Kegiatan Himpunan (atau belum memilih) → tampilkan kolom Bidang
+        if (bidangWrapper) bidangWrapper.style.display = '';
         if (bidangRequired) bidangRequired.style.display = '';
     }
 }
@@ -1390,15 +1117,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     handleKategoriChange();
-
-    // Pre-populate panitia chips dan hidden inputs dari data existing
-    // Tandai options yang sudah dipilih di dropdown
-    Object.keys(selectedPanitia).forEach(id => {
-        const opt = document.querySelector(`#panitiaDropdown .panitia-option[data-id="${id}"]`);
-        if (opt) opt.classList.add('selected');
-    });
-    renderPanitiaChips();
-    updatePanitiaHiddenInputs();
 });
 </script>
 

@@ -59,22 +59,22 @@ foreach($options as $key => $opt) {
             <span x-text="selectedLabel" class="truncate pr-2" :class="!selected && !options.find(o => o.value == selected) ? 'text-[#94A3B8]' : ''"></span>
             <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0 mr-2.5" 
                  :class="{'rotate-180': open, 'text-[#0B266E]': open, 'text-[#666D80]': !open}" 
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                 viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
         </button>
         
-        <div x-show="open" style="display:none;"
+        <div x-show="open" style="display:none;padding:0;border-radius:8px;box-shadow:0 4px 12px rgba(13,13,18,.12);overflow:hidden"
              x-transition:enter="transition ease-out duration-100"
              x-transition:enter-start="opacity-0 scale-95"
              x-transition:enter-end="opacity-100 scale-100"
              x-transition:leave="transition ease-in duration-75"
              x-transition:leave-start="opacity-100 scale-100"
              x-transition:leave-end="opacity-0 scale-95"
-             class="absolute z-50 w-full mt-1.5 bg-white border border-[#DFE1E7] rounded-[10px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1.5 flex flex-col">
+             class="absolute z-50 w-full mt-1.5 bg-white border border-[#DFE1E7] rounded-[8px] shadow-[0_4px_12px_rgba(13,13,18,0.12)] overflow-hidden flex flex-col">
             
             @if($searchable)
-            <div class="mb-1.5 flex-shrink-0">
+            <div class="p-2 border-b border-[#DFE1E7] flex-shrink-0">
                 <input type="text" x-model="search" placeholder="{{ $searchPlaceholder }}" 
                        class="w-full text-[13px] px-2.5 py-1.5 border border-[#DFE1E7] rounded-[6px] focus:outline-none focus:border-[#0B266E] transition-colors bg-[#FAFAFA]"
                        @click.stop @keydown.enter.prevent>
@@ -83,14 +83,11 @@ foreach($options as $key => $opt) {
 
             <div class="overflow-y-auto min-h-0 flex flex-col" style="max-height: 190px;">
                 <template x-for="option in filteredOptions" :key="option.value">
-                    <label class="flex items-center justify-between px-3 py-2.5 rounded-[6px] cursor-pointer text-[13px] transition-colors mb-0.5 last:mb-0"
-                           :class="selected == option.value ? 'bg-[#F6F8FA] text-[#0B266E] font-medium' : 'text-[#353849] hover:bg-[#F6F8FA]'">
+                    <label style="padding:7px 14px;border-radius:0;font-size:12px;line-height:20px" :style="selected == option.value ? 'background:#EEF1F8;color:#0B266E;font-weight:700' : 'background:transparent;color:#666D80;font-weight:500'" class="flex items-center justify-between px-3.5 py-2 cursor-pointer text-[12px] leading-5 transition-colors"
+                           :class="selected == option.value ? 'bg-[#EEF1F8] text-[#0B266E] font-bold' : 'text-[#666D80] hover:bg-[#F6F8FA] font-medium'">
                         <input type="radio" :name="'{{ $name }}'" :value="option.value" x-model="selected" 
                                @change="open = false; {{ $onChange ?? '' }}" class="hidden">
                         <span x-text="option.label" class="truncate"></span>
-                        <svg x-show="selected == option.value" class="w-4 h-4 flex-shrink-0 text-[#0B266E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
                     </label>
                 </template>
                 <div x-show="filteredOptions.length === 0" class="px-3 py-4 text-center text-[#94A3B8] text-[12px]">

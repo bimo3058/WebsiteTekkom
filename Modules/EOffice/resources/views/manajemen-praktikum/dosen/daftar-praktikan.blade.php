@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Daftar Praktikan">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Daftar Praktikan">
 
 {{-- Page Header --}}
 <div class="mp-page-header">
@@ -61,31 +61,9 @@
     <span class="mp-badge neutral sm">{{ $praktikans->total() }} praktikan</span>
 </div>
 
-{{-- Search --}}
-<div class="mp-card flex-shrink-0">
-    <div style="padding:14px 18px;">
-        <form method="GET" class="flex gap-2 flex-wrap">
-            <input type="hidden" name="praktikum_id" value="{{ $praktikum->id }}">
-            <input type="text" name="search" value="{{ $search }}" placeholder="Cari nama atau email..."
-                   class="mp-input" style="flex:1;min-width:240px;">
-            <button type="submit" class="mp-btn primary sm">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                Cari
-            </button>
-            @if($search)
-            <a href="{{ route('eoffice.manprak.dosen.daftar-praktikan.index', ['praktikum_id' => $praktikum->id]) }}"
-               class="mp-btn secondary sm" style="text-decoration:none;">Hapus Filter</a>
-            @endif
-        </form>
-    </div>
-</div>
-
-{{-- Tabel --}}
-<div class="mp-card flex-1 min-h-0" style="display:flex;flex-direction:column;">
-    <div class="mp-card-header" style="flex-shrink:0;">
-        <span class="mp-card-title">Daftar Praktikan</span>
-    </div>
-        @php
+<div class="mp-card" style="overflow:visible">
+    <x-eoffice::manajemen-praktikum.ui.participants-header :search="$search ?? ''" :praktikum="$praktikum" />
+    @php
             $shiftRowspan = [];
             $kelompokRowspan = [];
             
@@ -142,13 +120,13 @@
             <table class="mp-table" style="min-width:700px; margin:0;">
             <thead>
                 <tr style="background:#F9FAFB;">
-                    <th class="mp-th text-left" style="padding:10px 20px;width:40px;">#</th>
-                    <th class="mp-th text-left" style="padding:10px 16px;">Mahasiswa</th>
+<th class="mp-th text-left" style="padding:10px 20px;width:40px;">NO</th>
+<th class="mp-th text-left" style="padding:10px 16px;">NAMA MAHASISWA</th>
                     <th class="mp-th text-left" style="padding:10px 16px;width:140px;">NIM</th>
-                    <th class="mp-th text-center" style="padding:10px 16px;width:120px;border-left:1px solid #DFE1E7;border-right:1px solid #DFE1E7;">Kelompok</th>
-                    <th class="mp-th text-center" style="padding:10px 16px;width:120px;border-right:1px solid #DFE1E7;">Shift</th>
-                    <th class="mp-th text-left" style="padding:10px 16px;width:100px;">Status</th>
-                    <th class="mp-th text-left" style="padding:10px 16px;width:130px;">Tanggal Masuk</th>
+<th class="mp-th text-center" style="padding:10px 16px;width:120px;border-left:1px solid #DFE1E7;border-right:1px solid #DFE1E7;">KELOMPOK</th>
+<th class="mp-th text-center" style="padding:10px 16px;width:120px;border-right:1px solid #DFE1E7;">SHIFT</th>
+<th class="mp-th text-left" style="padding:10px 16px;width:100px;">STATUS</th>
+<th class="mp-th text-left" style="padding:10px 16px;width:130px;">TANGGAL MASUK</th>
                 </tr>
             </thead>
             <tbody>
@@ -224,8 +202,8 @@
             </tbody>
         </table>
         </div>
-    @if($praktikans->hasPages())
-    <div style="padding:12px 16px;border-top:1px solid #DFE1E7;flex-shrink:0;">{{ $praktikans->links() }}</div>
+    @if(isset($praktikans) && $praktikans instanceof \Illuminate\Pagination\LengthAwarePaginator)
+        <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$praktikans" />
     @endif
 </div>
 

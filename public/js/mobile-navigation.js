@@ -9,8 +9,8 @@
         const button = nav.querySelector('[data-mobile-menu]');
         const backdrop = document.querySelector('.mobile-navigation-backdrop');
         const sidebar = document.querySelector('[data-mobile-sidebar]');
-        const menu = sidebar || document.getElementById('mobile-account-menu');
-        const account = !sidebar;
+        const menu = document.getElementById('mobile-account-menu');
+        const moduleLinks = menu.querySelector('[data-mobile-module-links]');
         const body = document.body;
         body.dataset.mobileShell = '';
         if (!menu.id) menu.id = 'mobile-module-menu';
@@ -33,27 +33,65 @@
         // Focus target when the menu opens: the close button, or the menu itself when hidden (Capstone).
         const closeFocusTarget = closeButton || menu;
 
-        // Use the original rendered sidebar: permission gates and disabled links are never copied or replaced.
-        function states() {
-            if (!sidebar || !window.Alpine) return [];
-            const result = [];
-            for (let el = sidebar; el; el = el.parentElement) {
-                for (const state of el._x_dataStack || []) {
-                    if (result.some(item => item.state === state)) continue;
-                    const values = {};
-                    for (const key of ['sidebarOpen', 'mobileSidebar', 'collapsed', 'sidebarCollapsed']) {
-                        if (Object.prototype.hasOwnProperty.call(state, key) && typeof state[key] === 'boolean') values[key] = state[key];
-                    }
-                    if (el.classList.contains('sitkom-shell') && typeof state.open === 'boolean') values.open = state.open;
-                    if (Object.keys(values).length) result.push({state, values});
+        function buildModuleMenu() {
+            moduleLinks.replaceChildren();
+            if (!sidebar) return;
+            const seen = new Set();
+            const accountUrls = new Set([...menu.querySelectorAll('a[href]')].map(link => link.href));
+            // The server-rendered navigation is the role authority. Never infer access
+            // from a role name or manufacture module URLs in the browser.
+            sidebar.querySelectorAll('a').forEach(source => {
+                if (source.querySelector('img') && !source.closest('nav')) return;
+                const href = source.getAttribute('href');
+                const disabled = source.matches('[aria-disabled="true"],.is-disabled,.pointer-events-none')
+                    || !!source.closest('[aria-disabled="true"],.is-disabled,.pointer-events-none')
+                    || getComputedStyle(source).pointerEvents === 'none';
+                if (!disabled && (!href || href === '#' || !['http:', 'https:'].includes(source.protocol))) return;
+                if (source.closest('form') || (!disabled && accountUrls.has(source.href))) return;
+                const labelNode = source.querySelector('.sb-item-label,.nav-text,.nav-label')
+                    || [...source.querySelectorAll('span:not([aria-hidden]):not([x-text])')].find(el => el.textContent.trim());
+                const label = (labelNode?.textContent || source.textContent || source.getAttribute('aria-label') || source.title).trim().replace(/\s+/g, ' ');
+                const pathRole = href ? new URL(source.href).pathname.match(/\/capstone\/(admin|dosen|mahasiswa)\//)?.[1] : null;
+                const roleSection = source.closest('section[aria-label]')?.getAttribute('aria-label')
+                    || (pathRole && menu.querySelectorAll('.mobile-menu-roles > span').length > 1 ? pathRole[0].toUpperCase() + pathRole.slice(1) : '');
+                const key = `${href}|${label}|${roleSection}`;
+                if (!label || seen.has(key)) return;
+                seen.add(key);
+                const link = document.createElement('a');
+                if (disabled) {
+                    link.setAttribute('aria-disabled', 'true');
+                    link.setAttribute('role', 'link');
+                    if (source.title) link.title = source.title;
+                } else {
+                    link.href = source.href;
+                    if (source.target) link.target = source.target;
+                    if (source.rel) link.rel = source.rel;
+                    if (source.hasAttribute('download')) link.setAttribute('download', source.getAttribute('download'));
+                    if (source.getAttribute('aria-current') === 'page' || source.matches('.is-active,.active,.bg-sidebar-accent') || source.href === location.href) link.setAttribute('aria-current', 'page');
                 }
-            }
-            return result;
-        }
-        function expand(value) {
-            for (const {state, values} of states()) {
-                for (const key of Object.keys(values)) state[key] = key === 'collapsed' || key === 'sidebarCollapsed' ? false : value;
-            }
+                const icon = source.querySelector('svg');
+                if (icon) {
+                    const copy = icon.cloneNode(true);
+                    // Icons must not carry Alpine bindings, IDs, or desktop-only styling.
+                    [copy, ...copy.querySelectorAll('*')].forEach(el => {
+                        [...el.attributes].forEach(attr => {
+                            if (/^(x-|:|@|on)/.test(attr.name) || ['id', 'class', 'style'].includes(attr.name)) el.removeAttribute(attr.name);
+                        });
+                    });
+                    copy.setAttribute('aria-hidden', 'true');
+                    link.append(copy);
+                }
+                const text = document.createElement('span');
+                text.textContent = label;
+                if (roleSection) {
+                    const role = document.createElement('small');
+                    role.textContent = roleSection.replace(/^Menu\s+/, '');
+                    text.append(role);
+                }
+                link.append(text);
+                moduleLinks.append(link);
+            });
+            menu.querySelector('[data-mobile-module-section]').hidden = !moduleLinks.children.length;
         }
         function focusable() {
             return [...menu.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex="0"]')]
@@ -61,16 +99,18 @@
         }
         function openMenu(trigger = button) {
             if (!mobile.matches) return;
+            if (opened) return;
+            buildModuleMenu();
             returnFocus = trigger;
             opened = true;
-            expand(true);
-            if (account) menu.hidden = false;
+            menu.hidden = false;
             menu.inert = false;
-            menu.classList.add('mobile-navigation-open');
-            menu.setAttribute('role', 'dialog');
-            menu.setAttribute('aria-modal', 'true');
-            if (!menu.hasAttribute('aria-label')) menu.setAttribute('aria-label', 'Menu aplikasi');
-            menu.setAttribute('tabindex', '-1');
+            menu.querySelector('.mobile-menu-scroll').scrollTop = 0;
+            // Make the background unavailable to keyboard and assistive technology.
+            [...body.children].filter(el => el !== menu && el !== backdrop).forEach(el => {
+                backgroundStates.set(el, el.inert);
+                el.inert = true;
+            });
             button.setAttribute('aria-expanded', 'true');
             backdrop.hidden = false;
             body.classList.add('mobile-navigation-is-open');
@@ -80,13 +120,10 @@
         }
         function closeMenu(restoreFocus = true) {
             opened = false;
-            if (mobile.matches) expand(false);
             menu.classList.remove('mobile-navigation-open');
-            if (account) menu.hidden = true;
-            menu.inert = mobile.matches && !account ? true : originalInert;
-            if (originalRole === null) menu.removeAttribute('role'); else menu.setAttribute('role', originalRole);
-            menu.removeAttribute('aria-modal');
-            if (originalTabindex === null) menu.removeAttribute('tabindex'); else menu.setAttribute('tabindex', originalTabindex);
+            menu.hidden = true;
+            for (const [el, inert] of backgroundStates) el.inert = inert;
+            backgroundStates.clear();
             button.setAttribute('aria-expanded', 'false');
             backdrop.hidden = true;
             body.classList.remove('mobile-navigation-is-open');
@@ -103,6 +140,12 @@
             if (/^(sidebarOpen|mobileSidebar)$/.test(el.getAttribute('x-show')?.trim()) && el.classList.contains('fixed') && !el.hasAttribute('data-mobile-sidebar')) el.dataset.mobileLegacyBackdrop = '';
         });
         document.querySelectorAll('.mp-sidebar-backdrop,.eo-sidebar-backdrop').forEach(el => el.dataset.mobileLegacyBackdrop = '');
+        document.querySelectorAll('button').forEach(trigger => {
+            if (trigger.closest('#mobile-navigation,#mobile-account-menu')) return;
+            const action = trigger.getAttribute('@click') || trigger.getAttribute('x-on:click') || '';
+            if (/^(?:sidebarOpen\s*=|mobileSidebar\s*=|sidebarCollapsed\s*=|toggleSidebar\b)/.test(action.trim())
+                || trigger.matches('.mp-mobile-menu,.mp-sidebar-toggle,.eo-mobile-menu,.eo-sidebar-toggle,.sidebar-toggle')) trigger.dataset.mobileSidebarTrigger = '';
+        });
 
         function prepareContent(root = document) {
             root.querySelectorAll('table').forEach(table => {
@@ -130,24 +173,10 @@
             });
         }
         prepareContent();
-        let enteredMobile = false;
         function viewportChanged() {
-            if (mobile.matches && !enteredMobile) {
-                snapshots = states();
-                enteredMobile = true;
-                closeMenu(false);
-            } else if (!mobile.matches && enteredMobile) {
-                closeMenu(false);
-                enteredMobile = false;
-                for (const {state, values} of snapshots) Object.assign(state, values);
-                menu.inert = originalInert;
-            }
+            if (!mobile.matches && opened) closeMenu(false);
         }
-        // Alpine may be deferred independently by a module.
         viewportChanged();
-        document.addEventListener('alpine:initialized', () => {
-            if (mobile.matches) { snapshots = states(); expand(false); }
-        }, {once:true});
         mobile.addEventListener('change', viewportChanged);
         button.addEventListener('click', () => opened ? closeMenu() : openMenu());
         backdrop.addEventListener('click', () => closeMenu());
@@ -170,7 +199,7 @@
         document.addEventListener('click', event => {
             if (!mobile.matches || !sidebar) return;
             const trigger = event.target.closest('button');
-            if (!trigger || trigger.closest('#mobile-navigation') || trigger.hasAttribute('data-mobile-close')) return;
+            if (!trigger || trigger.closest('#mobile-navigation,#mobile-account-menu') || trigger.hasAttribute('data-mobile-close')) return;
             const action = trigger.getAttribute('@click') || trigger.getAttribute('x-on:click') || '';
             if (/^(?:sidebarOpen\s*=\s*(?:!sidebarOpen|true|false)|mobileSidebar\s*=\s*!mobileSidebar|sidebarCollapsed\s*=\s*!sidebarCollapsed|toggleSidebar|open\s*=\s*!open)\s*;?$/.test(action.trim())
                 || trigger.matches('.mp-mobile-menu,.mp-sidebar-toggle,.eo-mobile-menu,.eo-sidebar-toggle,.sidebar-toggle')) {

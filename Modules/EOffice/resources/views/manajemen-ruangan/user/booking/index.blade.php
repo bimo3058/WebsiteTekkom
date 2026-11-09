@@ -1,15 +1,15 @@
 <x-eoffice::manajemen-ruangan.layout pageTitle="Katalog Ruangan">
 
     {{-- =================== PAGE HEADER =================== --}}
-    <div class="mp-page-header">
-        <div class="flex flex-col md:flex-row md:items-center justify-between w-full gap-4">
-            <div>
-                <h1 class="mp-page-title">Katalog Ruangan</h1>
-                <p class="mp-page-sub max-w-lg">Temukan ruangan yang sesuai kebutuhanmu. Klik "Detail" untuk info lengkap
+    <div class="mb-6">
+        <div class="flex flex-col xl:flex-row xl:items-center justify-between w-full gap-4">
+            <div class="min-w-0">
+                <h1 class="text-[20px] md:text-[22px] font-bold text-gray-900 tracking-tight">Katalog Ruangan</h1>
+                <p class="text-[13px] text-gray-500 mt-1 max-w-2xl leading-relaxed">Temukan ruangan yang sesuai kebutuhanmu. Klik "Detail" untuk info lengkap
                     atau "Jadwal" untuk langsung booking.</p>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="relative">
+            <div class="flex items-center gap-2.5 sm:gap-3 flex-wrap sm:flex-nowrap flex-shrink-0">
+                <div class="relative w-full sm:w-64">
                     <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none"
                         stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -17,11 +17,11 @@
                     </svg>
                     <input type="text" id="searchInput" onkeyup="filterRooms()"
                         placeholder="Cari nama ruangan..."
-                        class="pl-9 pr-4 py-2 text-[13px] w-56 rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#0B266E] focus:border-[#0B266E] transition-all">
+                        class="pl-9 pr-4 py-2 text-[13px] w-full rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#0B266E] focus:border-[#0B266E] transition-all bg-white">
                 </div>
                 <a href="{{ route('eoffice.peminjaman.user.kalender') }}"
-                    class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#0B266E] hover:bg-[#071946] text-white text-[13px] font-semibold shadow-sm transition-colors whitespace-nowrap">
-                    Lihat Kalender
+                   class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#0B266E] border border-[#0B266E] rounded-lg text-[12px] font-semibold text-white hover:bg-[#071946] hover:border-[#071946] transition-all whitespace-nowrap shadow-[0_2px_6px_rgba(11,38,110,0.3)] hover:shadow-[0_4px_12px_rgba(11,38,110,0.4)] flex-shrink-0">
+                    <span>Lihat Kalender</span>
                 </a>
             </div>
         </div>
@@ -31,7 +31,7 @@
 
     {{-- =================== ROOM CARDS GRID =================== --}}
     @if ($ruangans->count() > 0)
-        <div id="roomGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div id="roomGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             @foreach ($ruangans as $room)
                 @php
                     $fasilitas = is_array($room->fasilitas)
@@ -62,7 +62,7 @@
                                 <span class="text-[11px] font-semibold text-blue-400 tracking-wide uppercase">Foto segera hadir</span>
                             </div>
                         @endif
-                        <span class="absolute top-3 right-3 bg-white text-[11px] font-bold text-[#0B266E] border border-gray-200 rounded-full px-2.5 py-0.5 shadow-sm">
+                        <span class="absolute top-3 right-3 bg-white text-[12px] font-bold text-[#0B266E] border border-gray-200 rounded-full px-3 py-[3px] shadow-sm">
                             {{ $room->kapasitas }} orang
                         </span>
                     </a>

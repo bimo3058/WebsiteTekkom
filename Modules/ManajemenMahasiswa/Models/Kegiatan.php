@@ -32,7 +32,6 @@ class Kegiatan extends Model
         'anggaran',
         'penanggung_jawab',
         'ketua_pelaksana_id',
-        'dosen_pendamping_id',
         'target_peserta',
         'status',
         // Kolom realisasi (Subbab 2 — disimpan terpisah dari rencana)
@@ -89,6 +88,9 @@ class Kegiatan extends Model
     const STATUS_AKAN_DATANG = 'akan_datang';
     /** @deprecated Tidak digunakan dalam alur bisnis aktif */
     const STATUS_BERLANGSUNG = 'berlangsung';
+
+    /** Nilai dropdown filter tahun untuk kegiatan yang belum punya tanggal sama sekali. */
+    const FILTER_TANPA_TAHUN = 'tanpa-tahun';
 
     const STATUS_LIST = [
         self::STATUS_DRAFT,
@@ -160,9 +162,13 @@ class Kegiatan extends Model
         return $this->belongsTo(\App\Models\Student::class, 'ketua_pelaksana_id');
     }
 
-    public function dosenPendamping(): BelongsTo
+    /**
+     * Many-to-many: Kegiatan dapat didampingi lebih dari satu dosen.
+     */
+    public function dosenPendampings(): BelongsToMany
     {
-        return $this->belongsTo(\App\Models\Lecturer::class, 'dosen_pendamping_id');
+        return $this->belongsToMany(\App\Models\Lecturer::class, 'mk_kegiatan_dosen_pendamping', 'kegiatan_id', 'lecturer_id')
+                    ->withTimestamps();
     }
 
     /**
@@ -172,6 +178,21 @@ class Kegiatan extends Model
     {
         return $this->belongsToMany(\App\Models\Student::class, 'mk_kegiatan_panitia', 'kegiatan_id', 'student_id')
                     ->withPivot('peran')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Many-to-many: pengurus yang ditunjuk pemilik untuk ikut mengelola kegiatan ini.
+     *
+     * Semua pengelola boleh mengedit; yang boleh ikut menghapus ditentukan role-nya
+     * (KegiatanPolicy::PENGELOLA_BOLEH_HAPUS), bukan pilihan per orang. Kolom
+     * `boleh_hapus` hanya mencatat hak yang berlaku saat daftar ini disimpan —
+     * penentunya tetap KegiatanPolicy::delete.
+     */
+    public function pengelola(): BelongsToMany
+    {
+        return $this->belongsToMany(\App\Models\User::class, 'mk_kegiatan_pengelola', 'kegiatan_id', 'user_id')
+                    ->withPivot('boleh_hapus')
                     ->withTimestamps();
     }
 
@@ -202,6 +223,90 @@ class Kegiatan extends Model
     public function scopeByBidang($query, int $bidangId)
     {
         return $query->whereHas('bidangs', fn($q) => $q->where('mk_bidang.id', $bidangId));
+    }
+
+    /**
+     * Apakah SEMUA kategori yang dipilih merupakan kategori Prodi?
+     *
+     * Hanya untuk kondisi itulah Bidang boleh dikosongkan. Definisinya ditaruh di
+     * model supaya Rencana Proker & Pelaksanaan memakai aturan yang sama persis:
+     * sebelumnya Subbab 2 menerima `bidang_id` apa adanya (nullable), sehingga
+     * kegiatan berkategori "Kegiatan Himpunan" bisa disimpan tanpa bidang lalu
+     * ditampilkan berlabel "Prodi" — padahal aksi yang sama ditolak di Subbab 1.
+     *
+     * Sengaja memakai "semua yang dipilih berkategori Prodi", identik dengan
+     * toggleBidangField() di form (partials/kegiatan-form/_scripts.blade.php),
+     * supaya kolom Bidang tidak pernah disembunyikan JS tapi tetap diwajibkan server.
+     *
+     * @param array<int, mixed> $kategoriIds
+     */
+    public static function hanyaKategoriProdi(array $kategoriIds): bool
+    {
+        $kategoriIds = array_filter($kategoriIds, fn($id) => $id !== null && $id !== '');
+
+        if (empty($kategoriIds)) {
+            return false;
+        }
+
+        return !KategoriKegiatan::whereIn('id', $kategoriIds)
+            ->where('nama_kategori', 'not like', '%Prodi%')
+            ->exists();
+    }
+
+    /**
+     * Filter tahun yang tahan terhadap kolom `tahun` yang belum terisi.
+     *
+     * Sebagian kegiatan tersimpan dengan `tahun` NULL walau `tanggal_mulai`-nya
+     * jelas ada — kolom `tahun` dulu tidak ikut diisi oleh alur Proker →
+     * Pelaksanaan. Kalau difilter dengan where('tahun', ...) saja, kegiatan itu
+     * lenyap dari daftar begitu user memilih tahun mana pun, padahal tanggalnya
+     * terpampang di kartunya. Karena itu `tanggal_mulai` dipakai sebagai cadangan.
+     */
+    public function scopeFilterTahun($query, $tahun)
+    {
+        return $query->where(function ($q) use ($tahun) {
+            $q->where('tahun', $tahun)
+              ->orWhere(fn($sub) => $sub->whereNull('tahun')->whereYear('tanggal_mulai', $tahun));
+        });
+    }
+
+    /**
+     * Kegiatan yang tidak punya penanda waktu sama sekali.
+     *
+     * Sebagian kegiatan lama tersimpan tanpa `tahun` MAUPUN `tanggal_mulai`,
+     * jadi tahunnya memang tidak diketahui dan tidak boleh ditebak. Tanpa filter
+     * khusus, kegiatan seperti ini cuma bisa dilihat lewat "Semua Tahun" dan
+     * praktis tidak pernah ketemu — padahal justru itu yang perlu dilengkapi.
+     */
+    public function scopeTanpaTahun($query)
+    {
+        return $query->whereNull('tahun')->whereNull('tanggal_mulai');
+    }
+
+    /**
+     * Daftar tahun untuk dropdown filter.
+     *
+     * Memakai `tanggal_mulai` sebagai cadangan dengan alasan yang sama seperti
+     * scopeFilterTahun(): tanpa itu, tahun milik kegiatan ber-`tahun` NULL tidak
+     * pernah muncul sebagai pilihan sehingga kegiatannya mustahil ditemukan.
+     *
+     * @return array<int, int> tahun terbaru lebih dulu; minimal berisi tahun berjalan
+     */
+    public static function daftarTahun(string $status): array
+    {
+        $daftar = static::query()
+            ->where('status', $status)
+            ->where(fn($q) => $q->whereNotNull('tahun')->orWhereNotNull('tanggal_mulai'))
+            ->get(['tahun', 'tanggal_mulai'])
+            ->map(fn($kegiatan) => $kegiatan->tahun ?? $kegiatan->tanggal_mulai?->year)
+            ->filter()
+            ->map(fn($tahun) => (int) $tahun)
+            ->unique()
+            ->sortDesc()
+            ->values()
+            ->all();
+
+        return $daftar ?: [(int) date('Y')];
     }
 
     public function scopeByKategori($query, int $kategoriId)

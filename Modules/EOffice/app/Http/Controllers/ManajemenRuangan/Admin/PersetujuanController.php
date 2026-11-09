@@ -5,13 +5,16 @@ namespace Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\EOffice\Models\Peminjaman;
+use Modules\EOffice\Models\Ruangan;
+use Modules\EOffice\Models\MrJadwalInternal;
+use Modules\EOffice\Exports\PeminjamanExport;
 
 class PersetujuanController extends Controller
 {
     public function index(Request $request)
     {
         // System Event: Auto-kill expired dangling pending requests
-        \Modules\EOffice\Models\Peminjaman::autoExpirePending();
+        Peminjaman::autoExpirePending();
 
         $now = now();
         $date = $now->format('Y-m-d');
@@ -28,6 +31,16 @@ class PersetujuanController extends Controller
 
         if ($request->filled('ruangan_id')) {
             $query->where('ruangan_id', $request->ruangan_id);
+        }
+
+        if ($request->filled('source')) {
+            if ($request->source === 'umum') {
+                $query->whereNull('source');
+            } elseif ($request->source === 'kp') {
+                $query->whereIn('source', ['kp', 'kerja_praktik']);
+            } else {
+                $query->where('source', $request->source);
+            }
         }
 
         if ($request->filled('search')) {
@@ -53,7 +66,7 @@ class PersetujuanController extends Controller
             ->orderBy('jam_mulai', 'asc')
             ->paginate((int) $request->input('per_page', 10))->withQueryString();
 
-        $ruangans = \Modules\EOffice\Models\Ruangan::orderBy('nama', 'asc')->get();
+        $ruangans = Ruangan::orderBy('nama', 'asc')->get();
 
         return view('eoffice::manajemen-ruangan.admin.persetujuan.index', compact('peminjamans', 'ruangans'));
     }
@@ -61,18 +74,8 @@ class PersetujuanController extends Controller
     public function riwayat(Request $request)
     {
         // System Event: Auto-kill expired dangling pending requests
-        \Modules\EOffice\Models\Peminjaman::autoExpirePending();
+        Peminjaman::autoExpirePending();
 
-        $peminjamans = $this->getRiwayatQuery($request)
-            ->paginate((int) $request->input('per_page', 10))->withQueryString();
-
-        $ruangans = \Modules\EOffice\Models\Ruangan::orderBy('nama', 'asc')->get();
-
-        return view('eoffice::manajemen-ruangan.admin.persetujuan.riwayat', compact('peminjamans', 'ruangans'));
-    }
-
-    private function getExportQuery(Request $request)
-    {
         $now = now();
         $date = $now->format('Y-m-d');
         $time = $now->format('H:i:s');
@@ -89,6 +92,14 @@ class PersetujuanController extends Controller
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        if ($request->filled('source')) {
+            if ($request->source === 'umum') {
+                $query->whereNull('source');
+            } else {
+                $query->where('source', $request->source);
+            }
         }
 
         if ($request->filled('ruangan_id')) {
@@ -116,7 +127,81 @@ class PersetujuanController extends Controller
             });
         }
 
-        return $query->orderBy('waktu_approval', 'desc')->orderBy('created_at', 'desc')->get();
+        $sort = $request->input('sort', 'tanggal_desc');
+        if ($sort === 'updated_desc') {
+            $query->orderBy('updated_at', 'desc');
+        } elseif ($sort === 'tanggal_asc') {
+            $query->orderBy('tanggal_pinjam', 'asc')->orderBy('jam_mulai', 'asc');
+        } else {
+            // Default: tanggal_desc
+            $query->orderBy('tanggal_pinjam', 'desc')->orderBy('jam_mulai', 'desc');
+        }
+
+        $peminjamans = $query->paginate((int) $request->input('per_page', 10))->withQueryString();
+
+        $ruangans = Ruangan::orderBy('nama', 'asc')->get();
+
+        return view('eoffice::manajemen-ruangan.admin.persetujuan.riwayat', compact('peminjamans', 'ruangans'));
+    }
+
+    private function getExportQuery(Request $request)
+    {
+        Peminjaman::autoExpirePending();
+
+        $now = now();
+        $date = $now->format('Y-m-d');
+        $time = $now->format('H:i:s');
+
+        $query = Peminjaman::with(['user.student', 'user.lecturer', 'user.roles', 'ruangan'])
+            ->where('status', '!=', 'menunggu')
+            ->where(function ($q) use ($date, $time) {
+                $q->where('status', '!=', 'disetujui')
+                    ->orWhere(function ($q2) use ($date, $time) {
+                        $q2->where('status', 'disetujui')
+                            ->whereRaw("(tanggal_pinjam < ? OR (tanggal_pinjam = ? AND jam_selesai <= ?))", [$date, $date, $time]);
+                    });
+            });
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('source')) {
+            if ($request->source === 'umum') {
+                $query->whereNull('source');
+            } else {
+                $query->where('source', $request->source);
+            }
+        }
+
+        if ($request->filled('ruangan_id')) {
+            $query->where('ruangan_id', $request->ruangan_id);
+        }
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('tanggal_pinjam', [$request->start_date, $request->end_date]);
+        } elseif ($request->filled('start_date')) {
+            $query->where('tanggal_pinjam', '>=', $request->start_date);
+        } elseif ($request->filled('end_date')) {
+            $query->where('tanggal_pinjam', '<=', $request->end_date);
+        }
+
+        if ($request->filled('search')) {
+            $search = strtolower($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($sq) use ($search) {
+                    $sq->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(external_id) LIKE ?', ["%{$search}%"]);
+                })->orWhereHas('ruangan', function ($sq) use ($search) {
+                    $sq->whereRaw('LOWER(nama) LIKE ?', ["%{$search}%"]);
+                })->orWhereRaw('LOWER(tujuan) LIKE ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(nomor_telepon) LIKE ?', ["%{$search}%"]);
+            });
+        }
+
+        return $query->orderBy('tanggal_pinjam', 'desc')
+            ->orderBy('jam_mulai', 'desc')
+            ->get();
     }
 
     public function exportExcel(Request $request)
@@ -125,7 +210,7 @@ class PersetujuanController extends Controller
         $fileName = 'Arsip_Peminjaman_' . now()->format('Ymd_His') . '.xlsx';
         
         return \Maatwebsite\Excel\Facades\Excel::download(
-            new \Modules\EOffice\Exports\PeminjamanExport($peminjamans),
+            new PeminjamanExport($peminjamans),
             $fileName
         );
     }
@@ -170,7 +255,7 @@ class PersetujuanController extends Controller
 
             // Re-check Collision - Jadwal Internal (Guard against Excel Imports while pending)
             $dayOfWeek = \Carbon\Carbon::parse($peminjaman->tanggal_pinjam)->format('N');
-            $isInternalConflict = \Modules\EOffice\Models\MrJadwalInternal::where('ruangan_id', $peminjaman->ruangan_id)
+            $isInternalConflict = MrJadwalInternal::where('ruangan_id', $peminjaman->ruangan_id)
                 ->where(function ($query) use ($peminjaman, $dayOfWeek) {
                     $query->where(function ($q) use ($dayOfWeek, $peminjaman) {
                         $q->where('tipe_jadwal', 'rutin')
@@ -198,13 +283,49 @@ class PersetujuanController extends Controller
             }
         }
 
+        $originalStatus = $peminjaman->status;
+        $statusToSave = $request->status;
+        $alasanPenolakan = null;
+
+        if ($request->status == 'ditolak') {
+            if ($originalStatus == 'disetujui') {
+                $statusToSave = 'dibatalkan';
+                $alasanPenolakan = 'Dibatalkan oleh Admin: ' . $request->alasan_penolakan;
+            } else {
+                $statusToSave = 'ditolak';
+                $alasanPenolakan = $request->alasan_penolakan;
+            }
+        }
+
         $peminjaman->update([
-            'status' => $request->status,
-            'alasan_penolakan' => $request->status == 'ditolak' ? $request->alasan_penolakan : null,
+            'status' => $statusToSave,
+            'alasan_penolakan' => $alasanPenolakan,
             'waktu_approval' => now(),
         ]);
 
-        $msg = $request->status == 'disetujui' ? 'berhasil disetujui' : 'telah ditolak';
+        if ($peminjaman->user) {
+            // Hapus notifikasi lama untuk peminjaman ini agar user tidak bingung melihat 2 status ganda di lonceng
+            // Menggunakan PHP filter karena kolom 'data' di tabel notifications bertipe text (bukan jsonb) di PostgreSQL
+            $oldNotifs = $peminjaman->user->notifications()
+                ->where('type', \Modules\EOffice\Notifications\PeminjamanStatusUpdated::class)
+                ->get();
+
+            foreach ($oldNotifs as $notif) {
+                if (isset($notif->data['peminjaman_id']) && $notif->data['peminjaman_id'] == $peminjaman->id) {
+                    $notif->delete();
+                }
+            }
+
+            // Check if this was a cancellation of an already approved booking
+            $isCancelByAdmin = ($request->status == 'ditolak' && $originalStatus == 'disetujui');
+            $peminjaman->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($peminjaman, $isCancelByAdmin));
+        }
+
+        if ($statusToSave == 'dibatalkan') {
+            $msg = 'berhasil dibatalkan (hak dicabut)';
+        } else {
+            $msg = $request->status == 'disetujui' ? 'berhasil disetujui' : 'telah ditolak';
+        }
         return redirect()->back()->with('success', "Pengajuan peminjaman {$msg}.");
     }
     public function updateOverride(Request $request, $id)
@@ -242,7 +363,7 @@ class PersetujuanController extends Controller
 
         // Re-check Collision - Jadwal Internal (Akademik)
         $dayOfWeek = \Carbon\Carbon::parse($request->override_tanggal_pinjam)->format('N');
-        $isInternalConflict = \Modules\EOffice\Models\MrJadwalInternal::where('ruangan_id', $request->override_ruangan_id)
+        $isInternalConflict = MrJadwalInternal::where('ruangan_id', $request->override_ruangan_id)
             ->where(function ($query) use ($request, $dayOfWeek) {
                 $query->where(function ($q) use ($dayOfWeek, $request) {
                     $q->where('tipe_jadwal', 'rutin')
@@ -283,7 +404,7 @@ class PersetujuanController extends Controller
 
     /**
      * Mengecek bentrok secara asynchronous via AJAX/Fetch
-     * Mencegah hit lemot ke database dengan memberikan API endpoint spesifik
+     * Mengumpulkan seluruh jadwal yang beririsan (Akademik, Pemeliharaan, maupun Peminjaman lain)
      */
     public function checkCollision(Request $request)
     {
@@ -294,32 +415,14 @@ class PersetujuanController extends Controller
         $excludeId = $request->exclude_id; // ID Peminjaman yang sedang diedit (biar tidak bentrok dengan diri sendiri)
 
         if (!$ruanganId || !$tanggal || !$jamMulai || !$jamSelesai) {
-            return response()->json(['conflict' => false]);
+            return response()->json(['conflict' => false, 'conflicts_list' => []]);
         }
 
-        // 1. Cek bentrok peminjaman lain
-        $isConflict = Peminjaman::where('ruangan_id', $ruanganId)
-            ->where('tanggal_pinjam', $tanggal)
-            ->where('status', 'disetujui')
-            ->when($excludeId, function ($query, $excludeId) {
-                return $query->where('id', '!=', $excludeId);
-            })
-            ->where(function ($query) use ($jamMulai, $jamSelesai) {
-                $query->where('jam_mulai', '<', $jamSelesai)
-                    ->where('jam_selesai', '>', $jamMulai);
-            })->first();
+        $conflictsList = [];
 
-        if ($isConflict) {
-            $range = \Carbon\Carbon::parse($isConflict->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($isConflict->jam_selesai)->format('H:i');
-            return response()->json([
-                'conflict' => true,
-                'message' => "Ruangan terisi pihak lain pada jam {$range}."
-            ]);
-        }
-
-        // 2. Cek Jadwal Internal Akademik
+        // 1. Cek bentrok dengan Jadwal Internal (Akademik & Pemeliharaan / Blokir)
         $dayOfWeek = \Carbon\Carbon::parse($tanggal)->format('N');
-        $isInternalConflict = \Modules\EOffice\Models\MrJadwalInternal::where('ruangan_id', $ruanganId)
+        $internalConflicts = MrJadwalInternal::where('ruangan_id', $ruanganId)
             ->where(function ($query) use ($tanggal, $dayOfWeek) {
                 $query->where(function ($q) use ($dayOfWeek, $tanggal) {
                     $q->where('tipe_jadwal', 'rutin')
@@ -340,106 +443,86 @@ class PersetujuanController extends Controller
                 $query->where('jam_mulai', '<', $jamSelesai)
                     ->where('jam_selesai', '>', $jamMulai);
             })
-            ->first();
+            ->orderBy('jam_mulai', 'asc')
+            ->get();
 
-        if ($isInternalConflict) {
-            $range = \Carbon\Carbon::parse($isInternalConflict->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($isInternalConflict->jam_selesai)->format('H:i');
+        foreach ($internalConflicts as $c) {
+            $range = \Carbon\Carbon::parse($c->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($c->jam_selesai)->format('H:i') . ' WIB';
+            $isAkademik = ($c->kategori === 'Jadwal Akademik (Kuliah)' || !empty($c->mata_kuliah));
+            $tipe = $isAkademik ? 'Akademik' : 'Pemeliharaan';
+
+            if ($isAkademik) {
+                $nama = $c->mata_kuliah ? ($c->mata_kuliah . ($c->kelas ? ' - Kelas ' . $c->kelas : '')) : ($c->keterangan ?: 'Jadwal Perkuliahan');
+            } else {
+                $nama = $c->keterangan ?: 'Pemeliharaan / Blokir Ruangan';
+            }
+
+            $conflictsList[] = [
+                'tipe' => $tipe,
+                'nama' => $nama,
+                'waktu' => $range,
+            ];
+        }
+
+        // 2. Cek bentrok dengan Peminjaman lain yang telah disetujui
+        $peminjamanConflicts = Peminjaman::with('user')
+            ->where('ruangan_id', $ruanganId)
+            ->where('tanggal_pinjam', $tanggal)
+            ->where('status', 'disetujui')
+            ->when($excludeId, function ($query, $excludeId) {
+                return $query->where('id', '!=', $excludeId);
+            })
+            ->where(function ($query) use ($jamMulai, $jamSelesai) {
+                $query->where('jam_mulai', '<', $jamSelesai)
+                    ->where('jam_selesai', '>', $jamMulai);
+            })
+            ->orderBy('jam_mulai', 'asc')
+            ->get();
+
+        foreach ($peminjamanConflicts as $p) {
+            $userPart = $p->user ? " (Oleh: {$p->user->name})" : "";
+            $range = \Carbon\Carbon::parse($p->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($p->jam_selesai)->format('H:i') . ' WIB';
+            $conflictsList[] = [
+                'tipe' => 'Peminjaman',
+                'nama' => ($p->tujuan ?: 'Peminjaman Ruangan') . $userPart,
+                'waktu' => $range,
+            ];
+        }
+
+        if (count($conflictsList) > 0) {
             return response()->json([
                 'conflict' => true,
-                'message' => "Menabrak Jadwal Akademik: {$isInternalConflict->keterangan} (Jam {$range})."
+                'message' => 'Terdapat jadwal beririsan di ruangan dan waktu yang dipilih.',
+                'conflicts_list' => $conflictsList,
             ]);
         }
 
-        return response()->json(['conflict' => false]);
+        return response()->json(['conflict' => false, 'conflicts_list' => []]);
     }
-
     /**
      * Soft delete arsip peminjaman (hanya superadmin)
      */
     public function destroy($id)
     {
+        abort_unless(auth()->user()->hasRole('superadmin'), 403, 'Aksi ini hanya dapat dilakukan oleh Superadmin.');
+
         $peminjaman = Peminjaman::findOrFail($id);
 
-        $peminjaman->delete();
+        if ($peminjaman->berkas_pendukung) {
+            app(\App\Services\SupabaseStorage::class)->delete($peminjaman->berkas_pendukung, 'eoffice');
+        }
 
-        return redirect()->back()->with('success', 'Data arsip peminjaman berhasil dihapus.');
+        $peminjaman->forceDelete();
+
+        return redirect()->back()->with('success', 'Data arsip peminjaman berhasil dihapus secara permanen.');
     }
 
     /**
-     * Export riwayat peminjaman ke PDF
+     * Get pending approval count via API (AJAX)
      */
-    public function exportPdf(Request $request)
+    public function getPendingCount()
     {
-        $peminjamans = $this->getRiwayatQuery($request)->get();
-        $ruangans = \Modules\EOffice\Models\Ruangan::orderBy('nama', 'asc')->get();
-
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('eoffice::manajemen-ruangan.admin.persetujuan.riwayat-pdf', compact('peminjamans', 'ruangans', 'request'));
-        $pdf->setPaper('a4', 'landscape');
-
-        return $pdf->download('Riwayat_Peminjaman_Ruangan_' . now()->format('Y-m-d_His') . '.pdf');
-    }
-
-    /**
-     * Export riwayat peminjaman ke Excel
-     */
-    public function exportExcel(Request $request)
-    {
-        $peminjamans = $this->getRiwayatQuery($request)->get();
-
-        return \Maatwebsite\Excel\Facades\Excel::download(
-            new \Modules\EOffice\Exports\RiwayatPeminjamanExport($peminjamans),
-            'Riwayat_Peminjaman_Ruangan_' . now()->format('Y-m-d_His') . '.xlsx'
-        );
-    }
-
-    /**
-     * Query builder untuk riwayat peminjaman (dipakai di riwayat(), exportPdf(), exportExcel())
-     */
-    protected function getRiwayatQuery(Request $request)
-    {
-        $now = now();
-        $date = $now->format('Y-m-d');
-        $time = $now->format('H:i:s');
-
-        $query = Peminjaman::with(['user.student', 'user.lecturer', 'user.roles', 'ruangan'])
-            ->where('status', '!=', 'menunggu')
-            ->where(function ($q) use ($date, $time) {
-                $q->where('status', '!=', 'disetujui')
-                    ->orWhere(function ($q2) use ($date, $time) {
-                        $q2->where('status', 'disetujui')
-                            ->whereRaw("(tanggal_pinjam < ? OR (tanggal_pinjam = ? AND jam_selesai <= ?))", [$date, $date, $time]);
-                    });
-            });
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('ruangan_id')) {
-            $query->where('ruangan_id', $request->ruangan_id);
-        }
-
-        if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('tanggal_pinjam', [$request->start_date, $request->end_date]);
-        } elseif ($request->filled('start_date')) {
-            $query->where('tanggal_pinjam', '>=', $request->start_date);
-        } elseif ($request->filled('end_date')) {
-            $query->where('tanggal_pinjam', '<=', $request->end_date);
-        }
-
-        if ($request->filled('search')) {
-            $search = strtolower($request->search);
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('user', function ($sq) use ($search) {
-                    $sq->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
-                        ->orWhereRaw('LOWER(external_id) LIKE ?', ["%{$search}%"]);
-                })->orWhereHas('ruangan', function ($sq) use ($search) {
-                    $sq->whereRaw('LOWER(nama) LIKE ?', ["%{$search}%"]);
-                })->orWhereRaw('LOWER(tujuan) LIKE ?', ["%{$search}%"])
-                    ->orWhereRaw('LOWER(nomor_telepon) LIKE ?', ["%{$search}%"]);
-            });
-        }
-
-        return $query->orderBy('waktu_approval', 'desc')->orderBy('created_at', 'desc');
+        $count = Peminjaman::where('status', 'menunggu')->count();
+        return response()->json(['count' => $count]);
     }
 }

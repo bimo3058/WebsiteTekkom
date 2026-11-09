@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Dashboard Asisten">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Dashboard Asisten">
 
     @php
         /** @var \Modules\EOffice\Models\AsistenPraktikum $asprak */
@@ -179,10 +179,10 @@
 
                         {{-- Optional: Modul Title --}}
                         <div style="padding:12px 16px; border-bottom:1px solid #DFE1E7;">
-                            <div style="font-weight:700; font-size:14px; color:#0D0D12; margin-bottom: 2px;">
+                            <div style="font-weight:700; font-size:16px; color:#0D0D12; margin-bottom: 2px;">
                                 {{ $m->nama ?? 'Modul' }}
                             </div>
-                            <div style="font-size:13px; color:#353849;">
+                            <div style="font-size:12px; color:#374151;">
                                 Asisten:
                                 {{ $m->asprak && $m->asprak->count() ? $m->asprak->map(fn($a) => $a->user->name ?? '—')->implode(', ') : (auth()->user()->name ?? '—') }}
                             </div>

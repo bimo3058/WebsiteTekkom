@@ -1,3 +1,5 @@
+@props(['kontrolBanksoal' => false, 'rpsPreview' => false])
+@php $managementPage = $kontrolBanksoal || $rpsPreview; @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -22,19 +24,24 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     @stack('styles')
+    @if($managementPage)
+        <link href="{{ asset('modules/banksoal/css/dosen-bank-soal.css') }}" rel="stylesheet">
+        @if($kontrolBanksoal)<link href="{{ asset('modules/banksoal/css/admin-kontrol-banksoal.css') }}?v={{ filemtime(public_path('modules/banksoal/css/admin-kontrol-banksoal.css')) }}" rel="stylesheet">@endif
+    @endif
+    @if($rpsPreview)<link href="{{ asset('modules/banksoal/css/rps-preview.css') }}?v={{ filemtime(public_path('modules/banksoal/css/rps-preview.css')) }}" rel="stylesheet">@endif
     <x-mobile-navigation-assets />
 </head>
-<body class="font-sans antialiased text-slate-900 bg-slate-50 selection:bg-primary selection:text-white">
+<body class="{{ $managementPage ? 'banksoal-management' : '' }} {{ $kontrolBanksoal ? 'bs-admin-control' : '' }} {{ $rpsPreview ? 'bs-rps-preview' : '' }} font-sans antialiased text-slate-900 bg-slate-50 selection:bg-primary selection:text-white">
     <div x-data="{ sidebarOpen: true }" class="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
         
         <!-- Sidebar Component -->
         <x-banksoal::ui.sidebar-admin />
 
         <!-- Main Content Wrapper -->
-        <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        <div class="{{ $managementPage ? 'bs-workspace' : '' }} flex-1 flex flex-col h-screen overflow-hidden relative">
             
             <!-- Topbar -->
-            <header class="bg-white border-b border-slate-200 h-16 shrink-0 flex items-center justify-between px-6 z-10">
+            <header class="{{ $managementPage ? 'bs-topbar' : '' }} bg-white border-b border-slate-200 h-16 shrink-0 flex items-center justify-between px-6 z-10">
                 <div class="flex items-center text-sm font-medium text-slate-600">
                     <span class="mr-2">SIBASO</span> 
                     @hasSection('breadcrumbs')
@@ -59,8 +66,8 @@
             </header>
 
             <!-- Main Content Area -->
-            <main class="w-full flex-1 overflow-y-auto bg-slate-50">
-                <div id="banksoal-main-content" class="p-4 md:p-6 w-full max-w-screen-2xl mx-auto">
+            <main class="{{ $managementPage ? 'bs-main' : '' }} w-full flex-1 overflow-y-auto bg-slate-50">
+                <div id="banksoal-main-content" class="{{ $managementPage ? 'bs-content' : '' }} p-4 md:p-6 w-full max-w-screen-2xl mx-auto">
                     {{ $slot }}
                 </div>
             </main>

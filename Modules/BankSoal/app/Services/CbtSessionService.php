@@ -3,6 +3,7 @@
 namespace Modules\BankSoal\Services;
 
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Enums\KompreSessionStatus;
 use Modules\BankSoal\Jobs\AutoFinishExamJob;
@@ -26,40 +27,83 @@ class CbtSessionService
     /**
      * Mulai sesi ujian baru untuk mahasiswa.
      *
-     * Membuat record KompreSession dan menghasilkan soal secara acak
-     * dalam satu database transaction.
+     * Bersifat idempoten: jika mahasiswa sudah punya sesi ongoing, sesi itu
+     * yang dikembalikan (tidak pernah ada dua sesi ongoing untuk satu user).
+     *
+     * Perlindungan race condition berlapis:
+     * 1. Advisory lock per user (PostgreSQL) — menyerialkan request paralel
+     *    meskipun belum ada baris sesi untuk di-lock.
+     * 2. Pengecekan ongoing di dalam transaksi.
+     * 3. Unique partial index `uniq_kompre_session_ongoing_user` sebagai
+     *    jaring pengaman terakhir; pelanggarannya ditangkap dan sesi
+     *    pemenang yang dipakai.
      */
     public function startSession(JadwalUjian $jadwal, int $userId): KompreSession
     {
-        return DB::transaction(function () use ($jadwal, $userId) {
-            $session = KompreSession::create([
-                'user_id'    => $userId,
-                'jadwal_id'  => $jadwal->id,
-                'title'      => 'Ujian Komprehensif ' . $jadwal->nama_sesi,
-                'started_at' => now(),
-                'status'     => KompreSessionStatus::Ongoing,
-            ]);
+        try {
+            return DB::transaction(function () use ($jadwal, $userId) {
+                if (DB::connection()->getDriverName() === 'pgsql') {
+                    DB::select('SELECT pg_advisory_xact_lock(?)', [$userId]);
+                }
 
-            $this->generateSoal($session);
+                $existing = KompreSession::where('user_id', $userId)
+                    ->where('status', KompreSessionStatus::Ongoing)
+                    ->first();
 
-            // ✅ Ketat: end_time = min(started_at + 100 menit, waktu_selesai jadwal)
-            // Mahasiswa yang terlambat masuk mendapat sisa waktu gate, bukan penuh 100 menit.
-            $gateClose = Carbon::parse(
-                $jadwal->tanggal_ujian->format('Y-m-d') . ' ' . $jadwal->waktu_selesai
-            );
-            $endByDuration = $session->started_at->copy()->addMinutes(self::EXAM_DURATION_MINUTES);
-            $endTime       = $endByDuration->lt($gateClose) ? $endByDuration : $gateClose;
+                if ($existing) {
+                    return $existing;
+                }
 
-            // Dispatch auto-finish job dari server sebagai perlindungan
-            // terhadap manipulasi timer client-side.
-            // Hanya aktif jika queue driver bukan 'sync'.
-            if (config('queue.default') !== 'sync') {
-                AutoFinishExamJob::dispatch($session->id)
-                    ->delay($endTime->copy()->addSeconds(30)); // 30 detik buffer
+                $session = KompreSession::create([
+                    'user_id'    => $userId,
+                    'jadwal_id'  => $jadwal->id,
+                    'title'      => 'Ujian Komprehensif ' . $jadwal->nama_sesi,
+                    'started_at' => now(),
+                    'status'     => KompreSessionStatus::Ongoing,
+                ]);
+
+                $this->generateSoal($session);
+
+                // ✅ Ketat: end_time = min(started_at + 100 menit, waktu_selesai jadwal)
+                // Mahasiswa yang terlambat masuk mendapat sisa waktu gate, bukan penuh 100 menit.
+                $gateClose = Carbon::parse(
+                    $jadwal->tanggal_ujian->format('Y-m-d') . ' ' . $jadwal->waktu_selesai
+                );
+                $endByDuration = $session->started_at->copy()->addMinutes(self::EXAM_DURATION_MINUTES);
+                $endTime       = $endByDuration->lt($gateClose) ? $endByDuration : $gateClose;
+
+                // Dispatch auto-finish job dari server sebagai perlindungan
+                // terhadap manipulasi timer client-side.
+                // Hanya aktif jika queue driver bukan 'sync'.
+                if (config('queue.default') !== 'sync') {
+                    AutoFinishExamJob::dispatch($session->id)
+                        ->delay($endTime->copy()->addSeconds(30)); // 30 detik buffer
+                }
+
+                return $session;
+            });
+        } catch (QueryException $exception) {
+            // Balapan request paralel: request lain menang membuat sesi lebih dulu.
+            if ($this->isUniqueViolation($exception)) {
+                $winner = KompreSession::where('user_id', $userId)
+                    ->where('status', KompreSessionStatus::Ongoing)
+                    ->first();
+
+                if ($winner) {
+                    return $winner;
+                }
             }
 
-            return $session;
-        });
+            throw $exception;
+        }
+    }
+
+    /**
+     * Cek apakah QueryException merupakan pelanggaran unique constraint (SQLSTATE 23505).
+     */
+    private function isUniqueViolation(QueryException $exception): bool
+    {
+        return ($exception->errorInfo[0] ?? $exception->getCode()) === '23505';
     }
 
     /**
@@ -69,7 +113,8 @@ class CbtSessionService
      * 1. Analisis kelemahan CPL dari sesi terakhir yang gagal (jika ada)
      * 2. Tentukan distribusi target (easy/intermediate/advanced) per CPL
      * 3. Balance pool soal jika distribusi di bank soal timpang
-     * 4. Pilih soal sesuai distribusi, acak urutan, bulk insert
+     * 4. Pilih soal sesuai distribusi, acak di dalam tiap CPL, gabung berurutan
+     *    CPL 1 → CPL 10 (no. 1-10 = CPL 1, 11-20 = CPL 2, dst.), bulk insert
      *
      * Jika mahasiswa belum pernah ujian → distribusi default (3/4/3).
      * Jika pernah gagal → CPL lemah mendapat soal lebih mudah,
@@ -80,8 +125,8 @@ class CbtSessionService
         // ── Step 1: Analisis CPL weakness dari riwayat ujian sebelumnya ──
         $cplWeakness = $this->analyzeCplWeakness($session->user_id);
 
-        // ── Step 2: Ambil semua 10 CPL (tetap) dan semua soal disetujui ──
-        $cplIds = Cpl::pluck('id');
+        // ── Step 2: Ambil 10 CPL berurutan by kode (CPL-001..CPL-010) dan semua soal disetujui ──
+        $cplIds = Cpl::orderBy('kode')->limit(self::TOTAL_CPL)->pluck('id');
 
         $allPertanyaans = Pertanyaan::whereIn('cpl_id', $cplIds)
             ->where('status', Pertanyaan::STATUS_DISETUJUI)
@@ -118,11 +163,12 @@ class CbtSessionService
                 );
             }
 
-            $soals = $soals->merge($picked->take(self::SOAL_PER_CPL));
+            // Acak urutan soal DI DALAM CPL ini saja — gabungan antar-CPL tetap
+            // berurutan (CPL 1 → CPL 10) karena loop berjalan sesuai urutan kode CPL.
+            $soals = $soals->merge($picked->take(self::SOAL_PER_CPL)->shuffle()->values());
         }
 
-        // ── Step 4: Acak urutan final semua soal ──
-        $soals = $soals->shuffle()->values();
+        // ── Step 4: (sengaja tidak ada shuffle global — urutan per CPL dipertahankan) ──
 
         // ── Step 5: Validasi minimum soal ──
         $required = self::SOAL_PER_CPL * self::TOTAL_CPL;

@@ -17,6 +17,51 @@ class Praktikum extends Model
 
     protected $table = 'eo_praktikum';
 
+    public function laporanLabel(): string
+    {
+        return Str::contains(Str::lower($this->nama ?? ''), 'multimedia') ? 'Lembar Analisis' : 'Laporan';
+    }
+
+    public function moduleTaskTypes(): array
+    {
+        $types = ['tugas_pendahuluan'=>'Tugas Pendahuluan', 'laporan'=>$this->laporanLabel(), 'responsi'=>'Responsi', 'tugas_pengganti'=>'Tugas Pengganti'];
+        foreach ($this->komponen_modul ?? [] as $component) $types[$component['id']] = $component['nama'];
+        return $types;
+    }
+
+    public function moduleWeights(): array
+    {
+        $weights = ['tugas_pendahuluan'=>(int)($this->bobot_tp ?? 10), 'tugas_pengganti'=>(int)($this->bobot_praktikum ?? 30), 'laporan'=>(int)($this->bobot_laporan ?? 30), 'responsi'=>(int)($this->bobot_responsi ?? 30)];
+        foreach ($this->komponen_modul ?? [] as $component) $weights[$component['id']] = $component['bobot'];
+        return $weights;
+    }
+
+    public function moduleWeightsValid(): bool
+    {
+        return array_sum($this->moduleWeights()) === 100 && collect($this->moduleWeights())->every(fn ($weight) => $weight !== null && is_numeric($weight) && (float)$weight === (float)(int)$weight && $weight >= 0 && $weight <= 100);
+    }
+
+    public function moduleAverage(array $scores): ?float
+    {
+        if (!$this->moduleWeightsValid()) return null;
+        return collect($this->moduleWeights())->map(fn ($weight,$key) => (float)($scores[$key] ?? 0) * $weight / 100)->sum();
+    }
+
+    public function moduleComponentsLocked(): bool
+    {
+        if ($this->komponen_modul_locked_at) return true;
+        $ids = Modul::where('praktikum_id',$this->id)->pluck('id');
+        return Tugas::whereIn('modul_id',$ids)->where('is_published',true)->exists()
+            || NilaiJenisTugas::whereIn('modul_id',$ids)->whereNotNull('nilai')->exists()
+            || PengumpulanTugas::whereHas('tugas',fn ($q) => $q->whereIn('modul_id',$ids))->exists();
+    }
+
+    public function moduleWeightsLocked(): bool
+    {
+        return Nilai::whereIn('daftar_praktikan_id',DaftarPraktikan::where('praktikum_id',$this->id)->select('id'))
+            ->where(fn ($q)=>$q->where('disetujui_koor',true)->orWhere('disetujui_dosen',true)->orWhere('dipublikasikan',true))->exists();
+    }
+
     protected $fillable = [
         'nama',
         'kode',
@@ -27,12 +72,24 @@ class Praktikum extends Model
         'tahun_ajaran',
         'semester',
         'status',
+        'status_pelaksanaan',
+        'started_at',
         'jumlah_kelompok',
         'jumlah_shift',
+        'metode_pembagian',
+        'draft_pembagian',
         'bobot_tp',
         'bobot_praktikum',
         'bobot_laporan',
         'bobot_responsi',
+        'bobot_gabungan_modul',
+        'bobot_gabungan_ta',
+        'bobot_gabungan_version',
+        'final_grade_batch_id',
+        'final_components',
+        'komponen_modul',
+        'komponen_modul_locked_at',
+        'komponen_modul_version',
         'is_active',
     ];
 
@@ -41,6 +98,12 @@ class Praktikum extends Model
         return [
             'deleted_at'   => 'datetime',
             'is_active'    => 'boolean',
+            'draft_pembagian' => 'array',
+            'started_at' => 'datetime',
+            'komponen_modul' => 'array',
+            'final_components' => 'array',
+            'komponen_modul_locked_at' => 'datetime',
+            'komponen_modul_version' => 'integer',
         ];
     }
 
@@ -114,6 +177,11 @@ class Praktikum extends Model
     public function modul()
     {
         return $this->hasMany(Modul::class, 'praktikum_id');
+    }
+
+    public function pengajuanModul()
+    {
+        return $this->hasMany(PengajuanModul::class, 'praktikum_id');
     }
 
     public function periodePendaftaran()

@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Periode Pendaftaran Praktikan">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Periode Pendaftaran Praktikan">
 
 <div class="mp-page-header">
     <div>

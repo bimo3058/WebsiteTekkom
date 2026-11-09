@@ -1,7 +1,8 @@
 {{-- resources/views/superadmin/users/_pagination.blade.php --}}
 @php
     $perPageOptions = [10, 25, 50, 100];
-    $currentPerPage = request('per_page', 10);
+    $currentPerPage = $users->perPage();
+    $paginationRoute = $paginationRoute ?? 'superadmin.users.index';
     $from = $users->firstItem() ?? 0;
     $to   = $users->lastItem()  ?? 0;
     $total = $users->total();
@@ -41,7 +42,7 @@
                      class="absolute bottom-[calc(100%+5px)] left-0 bg-white border rounded-lg shadow-lg min-w-[80px] z-50 overflow-hidden"
                      style="border-color:var(--c-border); display:none;">
                     @foreach($perPageOptions as $opt)
-                    <a href="{{ route('superadmin.users.index', array_merge(request()->except(['per_page','page']), ['per_page' => $opt])) }}"
+                    <a href="{{ route($paginationRoute, array_merge(request()->except(['per_page','page']), ['per_page' => $opt])) }}"
                        style="display:block; padding:7px 14px; font-size:12px; font-weight:{{ $currentPerPage == $opt ? '700' : '500' }}; color:{{ $currentPerPage == $opt ? 'var(--c-primary)' : 'var(--c-fg-sec)' }}; text-decoration:none; background:{{ $currentPerPage == $opt ? 'rgba(94,83,244,0.06)' : 'transparent' }}; transition:background .12s;"
                        onmouseover="if({{ $currentPerPage }} !== {{ $opt }}) this.style.background='var(--c-bg)'" onmouseout="if({{ $currentPerPage }} !== {{ $opt }}) this.style.background='transparent'">
                         {{ $opt }}

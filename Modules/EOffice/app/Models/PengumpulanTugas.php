@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
  * Pengumpulan tugas oleh mahasiswa.
  *
  * Tabel: pengumpulan_tugas
- * status_pengumpulan: belum_dicek | revisi | acc
+ * status_pengumpulan: draft | belum_dicek | revisi | acc
  */
 class PengumpulanTugas extends Model
 {
@@ -33,6 +33,7 @@ class PengumpulanTugas extends Model
 
     // Status constants
     const STATUS_BELUM_DICEK = 'belum_dicek';
+    const STATUS_DRAFT        = 'draft';
     const STATUS_REVISI      = 'revisi';
     const STATUS_ACC         = 'acc';
 

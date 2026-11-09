@@ -2,82 +2,7 @@
 <x-app-layout>
 <x-sidebar :user="auth()->user()">
 
-    <style>
-        /* Hilangkan padding default agar wrap bisa full 100vh */
-        .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
-
-        /* Container luar */
-        .mod-wrap {
-            display: flex; flex-direction: column; height: calc(100vh - 60px);
-            padding: 20px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif;
-        }
-
-        /* Kotak utama (Box) */
-        .mod-box {
-            display: flex; flex-direction: column; flex: 1; min-height: 0;
-            background: #fff; border: 1px solid var(--c-border);
-            border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            overflow: hidden;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        /* Area Header Box (Fixed di atas kotak) */
-        .mod-box-header {
-            background: #fff;
-            border-bottom: 1px solid var(--c-border);
-            flex-shrink: 0;
-            width: 100%;
-            box-sizing: border-box;
-            padding: 16px 24px;
-        }
-
-        /* Area Konten Box (Scrollable) */
-        .mod-box-body {
-            flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;
-            background: var(--c-bg);
-        }
-
-        /* Responsive grid */
-        .mod-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-        @media (min-width: 768px)  { .mod-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (min-width: 1280px) { .mod-grid { grid-template-columns: repeat(4, 1fr); } }
-
-        /* ── Mobile: scroll natively ── */
-        @media (max-width: 767px) {
-            .sitkom-content {
-                padding: 8px 8px 80px !important;
-                display: block !important;
-                overflow: visible !important;
-            }
-            .mod-wrap {
-                height: auto !important;
-                min-height: 0 !important;
-                padding: 8px;
-            }
-            .mod-box {
-                flex: none !important;
-                min-height: 0 !important;
-                overflow: visible !important;
-                border-radius: 10px;
-            }
-            .mod-box-header {
-                padding: 12px 14px;
-                position: sticky;
-                top: 52px;
-                z-index: 10;
-            }
-            .mod-box-body {
-                overflow-y: visible !important;
-                flex: none !important;
-                padding: 12px 14px;
-            }
-        }
-    </style>
+    @include('superadmin.modules._style')
 
     <div class="mod-wrap">
         <div class="mod-box">
@@ -90,7 +15,7 @@
                     <div>
                         <h1 style="font-size:16px; font-weight:700; color:var(--c-fg); letter-spacing:-0.01em; line-height:1.2; margin:0;">System Modules</h1>
                         <p style="font-size:12px; color:var(--c-fg-muted); margin-top:3px;">
-                            Total <span style="color:var(--c-primary); font-weight:600;">{{ $modules->count() }}</span> modul terintegrasi dalam ekosistem
+                            Kelola status dan konfigurasi modul sistem.
                         </p>
                     </div>
                     <a href="{{ route('superadmin.dashboard') }}"
@@ -104,10 +29,13 @@
 
             {{-- Body (scrollable) --}}
             <div class="mod-box-body">
+                @if(session('success'))<div class="mod-alert" role="status">{{ session('success') }}</div>@endif
+                @if(session('error'))<div class="mod-alert mod-alert-error" role="alert">{{ session('error') }}</div>@endif
+                @if($errors->any())<div class="mod-alert mod-alert-error" role="alert"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
                 <div class="mod-grid">
-                    @foreach($modules as $module)
+                    @forelse($modules as $module)
                         @include('superadmin.modules._card', ['module' => $module])
-                    @endforeach
+                    @empty<div class="mod-empty">Belum ada modul terdaftar.</div>@endforelse
                 </div>
             </div>
 

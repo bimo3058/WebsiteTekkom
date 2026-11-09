@@ -2,77 +2,97 @@
 
     @push('styles')
         <style>
+            /* Token desain global SITKOM — disamakan dengan dashboard Super Admin
+               (resources/views/components/sidebar.blade.php). Layout modul ini tidak
+               mendefinisikan token tersebut, jadi harus dideklarasikan ulang di sini. */
+            :root {
+                --c-primary: #0B266E;
+                --c-primary-hover: #091958;
+                --c-primary-subtle: rgba(11, 38, 110, 0.08);
+                --c-primary-border: #5C78B8;
+                --c-bg: #F6F8FA;
+                --c-fg: #0D0D12;
+                --c-fg-sec: #353849;
+                --c-fg-muted: #666D80;
+                --c-fg-placeholder: #808897;
+                --c-border: #DFE1E7;
+                --c-border-strong: #C1C7CF;
+                --c-success: #287F6E;
+                --c-success-subtle: #DDF2EE;
+                --c-error: #DF1C41;
+                --c-error-subtle: #FADAE1;
+                --c-warning: #956321;
+                --c-warning-subtle: #F9ECCB;
+                --shadow-card: 0px 1px 2px 0px rgba(228, 229, 231, 0.5);
+            }
+
+            /* Halaman ini menggambar kotak kontennya sendiri (.dash-wrap/.dash-box),
+               jadi kotak bawaan .main-wrapper dari layout dimatikan. */
             .main-wrapper {
                 background: transparent !important;
+                border: none !important;
                 box-shadow: none !important;
+                margin: 0 !important;
                 padding: 0 !important;
+                overflow: visible !important;
             }
 
-            /* ── Page Header ────────────────────────────────────────────── */
-            .create-header {
-                margin-bottom: 28px;
+            /* ── Shell kotak: mengikuti dashboard Super Admin ───────────── */
+            .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+            .dash-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif; }
+            .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border, #DFE1E7); border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); overflow: hidden; width: 100%; box-sizing: border-box; }
+            .dash-box-header { background: #fff; border-bottom: 1px solid var(--c-border, #DFE1E7); flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
+            .dash-box-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+            .dash-box-body::-webkit-scrollbar { width: 6px; }
+            .dash-box-body::-webkit-scrollbar-thumb { background: var(--c-border-strong, #C1C7CF); border-radius: 10px; }
+            @media (max-width: 767px) {
+                .sitkom-content { padding: 8px 8px 80px !important; display: block !important; overflow: visible !important; }
+                .dash-wrap { height: auto !important; min-height: 0 !important; padding: 0; }
+                .dash-box { flex: none !important; min-height: 0 !important; overflow: visible !important; border-radius: 10px; }
+                .dash-box-header { padding: 12px 14px; position: sticky; top: 52px; z-index: 10; }
+                .dash-box-body { overflow-y: visible !important; flex: none !important; padding: 14px; }
             }
 
-            .create-header h4 {
-                font-size: 1.5rem;
-                font-weight: 700;
-                color: #1e1b4b;
-                margin-bottom: 4px;
-            }
-
-            .create-header p {
-                font-size: 0.95rem;
-                color: #6b7280;
-                margin-bottom: 0;
-            }
-
-            /* ── Form Card ──────────────────────────────────────────────── */
-            .form-card {
+            /* ── Kartu section: pola table-card / chart-card Super Admin ── */
+            .fc-card {
                 background: #fff;
-                border-radius: 16px;
-                border: 1px solid #e5e7eb;
-                padding: 32px;
+                border: 1px solid var(--c-border, #DFE1E7);
+                border-radius: 14px;
+                box-shadow: var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5));
+                margin-bottom: 10px;
+                overflow: hidden;
             }
+            .fc-card-header {
+                display: flex; align-items: center; justify-content: space-between; gap: 10px;
+                padding: 13px 18px;
+                border-bottom: 1px solid var(--c-border, #DFE1E7);
+                font-size: 13px; font-weight: 700; color: var(--c-fg, #0D0D12);
+            }
+            .fc-card-body { padding: 18px; }
 
-            .form-section-title {
-                font-size: 0.95rem;
-                font-weight: 700;
-                color: #1e1b4b;
-                margin-bottom: 20px;
-                padding-bottom: 12px;
-                border-bottom: 1px solid #f3f4f6;
-            }
-
-            /* ── Form Controls ──────────────────────────────────────────── */
-            .form-group {
-                margin-bottom: 22px;
-            }
+            /* ── Form controls ──────────────────────────────────────────── */
+            .form-group { margin-bottom: 10px; }
+            .form-group:last-child { margin-bottom: 0; }
 
             .form-group label {
                 display: block;
-                font-size: 0.88rem;
-                font-weight: 600;
-                color: #374151;
-                margin-bottom: 8px;
+                font-size: 12px; font-weight: 600; color: var(--c-fg-sec, #353849);
+                margin-bottom: 6px;
             }
-
-            .form-group label .required {
-                color: #ef4444;
-                margin-left: 2px;
-            }
+            .form-group label .required { color: var(--c-error, #DF1C41); margin-left: 2px; }
 
             .form-input,
             .form-select-custom,
             .form-textarea {
                 width: 100%;
                 box-sizing: border-box;
-                padding: 12px 16px;
-                border: 1px solid #e5e7eb;
-                border-radius: 12px;
-                font-size: 0.9rem;
-                color: #374151;
-                background: #fafafa;
-                transition: all 0.25s ease;
+                padding: 9px 12px;
+                border: 1px solid var(--c-border, #DFE1E7);
+                border-radius: 8px;
+                font-size: 13px;
+                color: var(--c-fg-sec, #353849);
+                background: #fff;
+                transition: border-color .15s, box-shadow .15s;
                 outline: none;
                 font-family: inherit;
             }
@@ -80,654 +100,592 @@
             .form-input:focus,
             .form-select-custom:focus,
             .form-textarea:focus {
-                border-color: #6B4FF4;
-                background: #fff;
-                box-shadow: 0 0 0 3px rgba(107, 79, 244, 0.12);
+                border-color: var(--c-primary, #0B266E);
+                box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
             }
 
             .form-input::placeholder,
-            .form-textarea::placeholder {
-                color: #9ca3af;
-            }
+            .form-textarea::placeholder { color: var(--c-fg-placeholder, #808897); }
 
-            .form-textarea {
-                min-height: 200px;
-                resize: vertical;
-                line-height: 1.6;
-            }
+            .form-textarea { min-height: 200px; resize: vertical; line-height: 1.6; }
 
             .form-select-custom {
                 appearance: none;
-                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23808897' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
                 background-repeat: no-repeat;
-                background-position: right 14px center;
-                padding-right: 40px;
+                background-position: right 12px center;
+                padding-right: 36px;
                 cursor: pointer;
             }
 
-            /* ── Two Column Row ─────────────────────────────────────────── */
-            .form-row {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 20px;
-            }
+            .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+            @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } }
 
-            @media (max-width: 768px) {
-                .form-row {
-                    grid-template-columns: 1fr;
-                }
-            }
-
-            /* ── File Upload ────────────────────────────────────────────── */
+            /* ── File upload ────────────────────────────────────────────── */
             .file-upload-zone {
-                border: 2px dashed #d1d5db;
-                border-radius: 14px;
-                padding: 32px;
+                border: 1px dashed var(--c-border-strong, #C1C7CF);
+                border-radius: 12px;
+                padding: 20px;
                 text-align: center;
-                background: #fafafa;
-                transition: all 0.25s ease;
+                background: var(--c-bg, #F6F8FA);
+                transition: border-color .15s, background .15s;
                 cursor: pointer;
                 position: relative;
             }
-
             .file-upload-zone:hover,
             .file-upload-zone.drag-over {
-                border-color: #6B4FF4;
-                background: #F5F3FF;
+                border-color: var(--c-primary, #0B266E);
+                background: var(--c-primary-subtle, #EEF1F8);
             }
-
             .file-upload-zone .upload-icon {
-                width: 56px;
-                height: 56px;
-                background: #F5F3FF;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin: 0 auto 14px;
-                color: #6B4FF4;
+                width: 44px; height: 44px; border-radius: 10px;
+                background: var(--c-primary-subtle, #EEF1F8);
+                color: var(--c-primary, #0B266E);
+                display: flex; align-items: center; justify-content: center;
+                margin: 0 auto 12px;
             }
+            .file-upload-zone h6 { font-size: 13px; font-weight: 700; color: var(--c-fg, #0D0D12); margin-bottom: 3px; }
+            .file-upload-zone p  { font-size: 11px; color: var(--c-fg-muted, #666D80); margin-bottom: 0; }
+            .file-upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
-            .file-upload-zone h6 {
-                font-size: 0.95rem;
-                font-weight: 600;
-                color: #374151;
-                margin-bottom: 4px;
-            }
-
-            .file-upload-zone p {
-                font-size: 0.82rem;
-                color: #9ca3af;
-                margin-bottom: 0;
-            }
-
-            .file-upload-zone input[type="file"] {
-                position: absolute;
-                inset: 0;
-                opacity: 0;
-                cursor: pointer;
-            }
-
-            .file-list {
-                margin-top: 14px;
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-            }
-
+            .file-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
             .file-item {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 10px 14px;
-                background: #f9fafb;
-                border: 1px solid #e5e7eb;
-                border-radius: 10px;
-                font-size: 0.85rem;
-                color: #374151;
+                display: flex; align-items: center; justify-content: space-between;
+                padding: 9px 12px;
+                background: #fff;
+                border: 1px solid var(--c-border, #DFE1E7);
+                border-radius: 8px;
+                font-size: 12px; color: var(--c-fg-sec, #353849);
             }
-
-            .file-item .file-name {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-weight: 500;
-            }
-
+            .file-item .file-name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
             .file-item .file-remove {
-                color: #ef4444;
-                cursor: pointer;
-                background: none;
-                border: none;
-                padding: 2px 6px;
-                border-radius: 6px;
-                transition: background 0.15s;
+                color: var(--c-error, #DF1C41); cursor: pointer; background: none; border: none;
+                padding: 2px 6px; border-radius: 6px; transition: background .15s;
             }
+            .file-item .file-remove:hover { background: var(--c-error-subtle, #FADAE1); }
 
-            .file-item .file-remove:hover {
-                background: #fee2e2;
+            /* ── Grid gambar pengumuman (cover) ─────────────────────────── */
+            .cover-grid {
+                display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+                gap: 10px; margin-top: 10px;
             }
-
-            /* ── Poster Preview ─────────────────────────────────────────── */
-            .poster-preview {
-                margin-top: 12px;
-                max-width: 300px;
-                border-radius: 12px;
-                overflow: hidden;
-                border: 1px solid #e5e7eb;
+            .cover-item {
+                position: relative; aspect-ratio: 1;
+                border: 1px solid var(--c-border, #DFE1E7); border-radius: 10px;
+                overflow: hidden; background: var(--c-bg, #F6F8FA);
+                transition: border-color .15s, box-shadow .15s, opacity .15s;
             }
+            .cover-item img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
 
-            .poster-preview img {
-                width: 100%;
-                display: block;
+            /* Kartu yang bisa diseret untuk mengatur urutan */
+            .cover-item[draggable="true"] { cursor: grab; }
+            .cover-item[draggable="true"]:hover { border-color: var(--c-primary-border, #5C78B8); }
+            .cover-item.dragging { opacity: .35; cursor: grabbing; }
+            .cover-item.drag-target {
+                border-color: var(--c-primary, #0B266E);
+                box-shadow: 0 0 0 3px var(--c-primary-subtle, #EEF1F8);
             }
+            .cover-item.is-saved { border-color: var(--c-success, #287F6E); }
 
-            /* ── Buttons ────────────────────────────────────────────────── */
+            .cover-badge {
+                position: absolute; top: 6px; left: 6px;
+                padding: 2px 7px; border-radius: 6px;
+                font-size: 10px; font-weight: 700; letter-spacing: .02em;
+                background: var(--c-primary, #0B266E); color: #fff;
+            }
+            .cover-order {
+                position: absolute; bottom: 6px; left: 6px;
+                width: 19px; height: 19px; border-radius: 50%;
+                background: rgba(13,13,18,.6); color: #fff;
+                font-size: 10px; font-weight: 700;
+                display: flex; align-items: center; justify-content: center;
+            }
+            .cover-remove {
+                position: absolute; top: 6px; right: 6px;
+                width: 22px; height: 22px; border-radius: 6px;
+                border: none; background: rgba(13,13,18,.55); color: #fff;
+                display: flex; align-items: center; justify-content: center;
+                cursor: pointer; transition: background .15s; padding: 0;
+            }
+            .cover-remove:hover { background: var(--c-error, #DF1C41); }
+
+            .cover-hint { font-size: 11px; color: var(--c-fg-muted, #666D80); margin: 10px 0 0; }
+            .cover-hint strong { color: var(--c-primary, #0B266E); }
+
+            /* Penanda file yang sudah tersimpan di draf */
+            .saved-note {
+                display: flex; align-items: center; gap: 6px;
+                margin-top: 10px; padding: 7px 11px;
+                background: var(--c-success-subtle, #DDF2EE);
+                color: var(--c-success, #287F6E);
+                border: 1px solid var(--c-success, #287F6E);
+                border-radius: 8px;
+                font-size: 11px; font-weight: 600;
+            }
+            .file-item.is-saved {
+                background: var(--c-success-subtle, #DDF2EE);
+                border-color: var(--c-success, #287F6E);
+                color: var(--c-success, #287F6E);
+            }
+            .file-item .file-meta { font-size: 11px; color: var(--c-fg-placeholder, #808897); }
+            .file-item.is-saved .file-meta { color: var(--c-success, #287F6E); }
+
+            /* ── Actions ────────────────────────────────────────────────── */
             .form-actions {
-                display: flex;
-                justify-content: flex-end;
-                gap: 12px;
-                margin-top: 30px;
-                padding-top: 20px;
-                border-top: 1px solid #f3f4f6;
+                display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+                margin-top: 16px; padding-top: 16px;
+                border-top: 1px solid var(--c-border, #DFE1E7);
             }
+            .fa-spacer { flex: 1; }
 
-            .btn-cancel {
-                padding: 12px 28px;
-                border: 1px solid #e5e7eb;
-                border-radius: 12px;
-                background: #fff;
-                color: #374151;
-                font-size: 0.9rem;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s ease;
-                text-decoration: none;
-                display: inline-flex;
-                align-items: center;
-            }
-
-            .btn-cancel:hover {
-                border-color: #9ca3af;
-                background: #f9fafb;
-                color: #374151;
-            }
-
+            .btn-cancel,
             .btn-draft {
-                padding: 12px 28px;
-                border: 1px solid #e5e7eb;
-                border-radius: 12px;
+                display: inline-flex; align-items: center; gap: 6px;
+                padding: 8px 14px;
+                border: 1px solid var(--c-border, #DFE1E7);
+                border-radius: 8px;
                 background: #fff;
-                color: #6B4FF4;
-                font-size: 0.9rem;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s ease;
+                font-size: 12px; font-weight: 600;
+                cursor: pointer; text-decoration: none;
+                transition: all .15s;
+                box-shadow: 0 1px 2px rgba(0,0,0,.04);
+                font-family: inherit;
             }
-
+            .btn-cancel { color: var(--c-fg-sec, #353849); }
+            .btn-cancel:hover {
+                background: var(--c-bg, #F6F8FA);
+                border-color: var(--c-border-strong, #C1C7CF);
+                color: var(--c-fg-sec, #353849);
+            }
+            .btn-draft { color: var(--c-primary, #0B266E); }
             .btn-draft:hover {
-                background: #F5F3FF;
-                border-color: #6B4FF4;
+                background: var(--c-primary-subtle, #EEF1F8);
+                border-color: var(--c-primary-border, #5C78B8);
             }
 
             .btn-publish {
-                padding: 12px 28px;
-                border: none;
-                border-radius: 12px;
-                background: #6B4FF4;
+                display: inline-flex; align-items: center; gap: 6px;
+                padding: 8px 16px;
+                border: 1px solid var(--c-primary, #0B266E);
+                border-radius: 8px;
+                background: var(--c-primary, #0B266E);
                 color: #fff;
-                font-size: 0.9rem;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s ease;
+                font-size: 12px; font-weight: 600;
+                cursor: pointer; transition: all .15s;
+                box-shadow: 0 2px 6px rgba(11, 38, 110, 0.3);
+                font-family: inherit;
             }
-
             .btn-publish:hover {
-                background: #8266F5;
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(107, 79, 244, 0.3);
+                background: var(--c-primary-hover, #091958);
+                box-shadow: 0 4px 12px rgba(11, 38, 110, 0.4);
             }
 
-            /* ── Rich Text Editor ──────────────────────────────────────── */
+            .draft-status { font-size: 12px; color: var(--c-fg-muted, #666D80); font-style: italic; }
+
+            /* ── Rich text editor ───────────────────────────────────────── */
             .rich-editor-wrapper {
-                border: 1px solid #e5e7eb;
-                border-radius: 12px;
+                border: 1px solid var(--c-border, #DFE1E7);
+                border-radius: 8px;
                 overflow: hidden;
-                background: #fafafa;
-                transition: all 0.25s ease;
-            }
-
-            .rich-editor-wrapper:focus-within {
-                border-color: #6B4FF4;
                 background: #fff;
-                box-shadow: 0 0 0 3px rgba(107, 79, 244, 0.12);
+                transition: border-color .15s, box-shadow .15s;
+            }
+            .rich-editor-wrapper:focus-within {
+                border-color: var(--c-primary, #0B266E);
+                box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
             }
 
             .editor-toolbar {
-                display: flex;
-                align-items: center;
-                gap: 2px;
-                padding: 10px 14px;
-                background: #f3f4f6;
-                border-bottom: 1px solid #e5e7eb;
-                flex-wrap: wrap;
-                row-gap: 6px;
+                display: flex; align-items: center; gap: 2px;
+                padding: 8px 12px;
+                background: var(--c-bg, #F6F8FA);
+                border-bottom: 1px solid var(--c-border, #DFE1E7);
+                flex-wrap: wrap; row-gap: 6px;
             }
-
-            .toolbar-group {
-                display: flex;
-                align-items: center;
-                gap: 2px;
-            }
-
+            .toolbar-group { display: flex; align-items: center; gap: 2px; }
             .toolbar-divider {
-                width: 1px;
-                height: 22px;
-                background: #d1d5db;
-                margin: 0 6px;
-                flex-shrink: 0;
+                width: 1px; height: 20px;
+                background: var(--c-border, #DFE1E7);
+                margin: 0 6px; flex-shrink: 0;
             }
-
             .toolbar-btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
+                display: inline-flex; align-items: center; gap: 4px;
                 padding: 5px 9px;
-                border: 1px solid transparent;
-                border-radius: 6px;
+                border: 1px solid transparent; border-radius: 6px;
                 background: transparent;
-                color: #374151;
-                font-size: 0.82rem;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.15s ease;
-                white-space: nowrap;
-                font-family: inherit;
-                line-height: 1.4;
-                user-select: none;
+                color: var(--c-fg-sec, #353849);
+                font-size: 12px; font-weight: 600;
+                cursor: pointer; transition: all .15s;
+                white-space: nowrap; font-family: inherit;
+                line-height: 1.4; user-select: none;
             }
-
             .toolbar-btn:hover {
                 background: #fff;
-                border-color: #d1d5db;
-                color: #1e1b4b;
+                border-color: var(--c-border, #DFE1E7);
+                color: var(--c-fg, #0D0D12);
             }
-
             .toolbar-btn.active {
-                background: #F5F3FF;
-                border-color: #6B4FF4;
-                color: #6B4FF4;
+                background: var(--c-primary-subtle, #EEF1F8);
+                border-color: var(--c-primary-border, #5C78B8);
+                color: var(--c-primary, #0B266E);
             }
-
-            .toolbar-btn-bold { font-weight: 900; }
+            .toolbar-btn-bold { font-weight: 800; }
             .toolbar-btn-italic { font-style: italic; }
             .toolbar-btn-underline { text-decoration: underline; }
-            .toolbar-btn-h1 { font-size: 0.78rem; letter-spacing: -0.3px; }
-            .toolbar-btn-h2 { font-size: 0.78rem; letter-spacing: -0.3px; }
 
             .editor-content {
                 min-height: 220px;
-                padding: 16px 18px;
-                font-size: 0.9rem;
-                color: #374151;
+                padding: 12px 14px;
+                font-size: 13px;
+                color: var(--c-fg-sec, #353849);
                 line-height: 1.7;
                 outline: none;
                 background: transparent;
             }
-
             .editor-content:empty::before {
                 content: 'Tulis isi pengumuman di sini...';
-                color: #9ca3af;
-                pointer-events: none;
-                display: block;
+                color: var(--c-fg-placeholder, #808897);
+                pointer-events: none; display: block;
             }
-
-            .editor-content h1 {
-                font-size: 1.4rem;
-                font-weight: 700;
-                color: #1e1b4b;
-                margin: 14px 0 8px;
-            }
-
-            .editor-content h2 {
-                font-size: 1.15rem;
-                font-weight: 700;
-                color: #1e1b4b;
-                margin: 12px 0 6px;
-            }
-
+            .editor-content h1 { font-size: 18px; font-weight: 700; color: var(--c-fg, #0D0D12); margin: 14px 0 8px; }
+            .editor-content h2 { font-size: 16px; font-weight: 700; color: var(--c-fg, #0D0D12); margin: 12px 0 6px; }
             .editor-content ul,
-            .editor-content ol {
-                padding-left: 24px;
-                margin: 8px 0;
-            }
-
+            .editor-content ol { padding-left: 24px; margin: 8px 0; }
             .editor-content li { margin-bottom: 4px; }
-
-            .editor-content a {
-                color: #6B4FF4;
-                text-decoration: underline;
-            }
-
-            .editor-content hr {
-                border: none;
-                border-top: 2px solid #e5e7eb;
-                margin: 16px 0;
-            }
-
-            .editor-content table {
-                width: 100%;
-                border-collapse: collapse;
-                margin: 12px 0;
-                font-size: 0.88rem;
-            }
-
+            .editor-content a { color: var(--c-primary, #0B266E); text-decoration: underline; }
+            .editor-content hr { border: none; border-top: 1px solid var(--c-border, #DFE1E7); margin: 16px 0; }
+            .editor-content table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; }
             .editor-content table td,
             .editor-content table th {
-                border: 1px solid #d1d5db;
-                padding: 8px 12px;
-                text-align: left;
+                border: 1px solid var(--c-border, #DFE1E7);
+                padding: 8px 12px; text-align: left;
             }
-
             .editor-content table th {
-                background: #f3f4f6;
-                font-weight: 600;
-                color: #1e1b4b;
+                background: #FBFBFC; font-weight: 600; color: var(--c-fg, #0D0D12);
             }
+            .editor-content img { max-width: 100%; border-radius: 8px; margin: 8px 0; display: block; }
 
-            .editor-content img {
-                max-width: 100%;
-                border-radius: 8px;
-                margin: 8px 0;
-                display: block;
-            }
+            /* ── Alerts & errors ────────────────────────────────────────── */
+            .form-error { font-size: 11px; color: var(--c-error, #DF1C41); margin-top: 5px; display: block; }
 
-            /* ── Error Messages ─────────────────────────────────────────── */
-            .form-error {
-                font-size: 0.82rem;
-                color: #ef4444;
-                margin-top: 6px;
-            }
-
-            .alert-success {
-                background: #d1fae5;
-                color: #065f46;
-                border: 1px solid #a7f3d0;
-                border-radius: 12px;
-                padding: 14px 18px;
-                font-size: 0.9rem;
-                font-weight: 500;
-                margin-bottom: 20px;
-            }
-
+            .alert-success,
             .alert-danger {
-                background: #fee2e2;
-                color: #991b1b;
-                border: 1px solid #fca5a5;
-                border-radius: 12px;
-                padding: 14px 18px;
-                font-size: 0.9rem;
-                font-weight: 500;
-                margin-bottom: 20px;
+                border-radius: 10px; padding: 12px 16px;
+                font-size: 12px; font-weight: 500; margin-bottom: 10px;
+            }
+            .alert-success {
+                background: var(--c-success-subtle, #DDF2EE);
+                color: var(--c-success, #287F6E);
+                border: 1px solid var(--c-success, #287F6E);
+            }
+            .alert-danger {
+                background: var(--c-error-subtle, #FADAE1);
+                color: var(--c-error, #DF1C41);
+                border: 1px solid var(--c-error, #DF1C41);
+            }
+
+            /* ── Drafts modal ───────────────────────────────────────────── */
+            .draft-item {
+                display: flex; align-items: center; justify-content: space-between; gap: 10px;
+                padding: 12px 14px;
+                border: 1px solid var(--c-border, #DFE1E7);
+                border-radius: 10px; margin-bottom: 8px;
+                cursor: pointer; transition: border-color .15s, background .15s;
+            }
+            .draft-item:hover { border-color: var(--c-primary-border, #5C78B8); background: var(--c-bg, #F6F8FA); }
+            .draft-item-title { font-size: 13px; font-weight: 700; color: var(--c-fg, #0D0D12); margin-bottom: 3px; }
+            .draft-item-excerpt {
+                font-size: 12px; color: var(--c-fg-muted, #666D80); margin-bottom: 3px;
+                display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+            }
+            .draft-item-meta { font-size: 11px; color: var(--c-fg-placeholder, #808897); }
+            .draft-delete-btn {
+                width: 30px; height: 30px; border-radius: 8px;
+                display: flex; align-items: center; justify-content: center;
+                border: 1px solid var(--c-border, #DFE1E7); background: #fff;
+                color: var(--c-fg-muted, #666D80); cursor: pointer; transition: all .15s;
+            }
+            .draft-delete-btn:hover {
+                border-color: var(--c-error, #DF1C41);
+                color: var(--c-error, #DF1C41);
+                background: var(--c-error-subtle, #FADAE1);
             }
         </style>
     @endpush
 
-    <!-- Header -->
-    <div class="create-header">
-        <h4>Buat Pengumuman Baru</h4>
-        <p>Buat dan publikasikan pengumuman untuk mahasiswa dan alumni</p>
-    </div>
+    <div class="dash-wrap">
+        <div class="dash-box">
 
-    <!-- Flash Messages -->
-    @if(session('success'))
-        <div class="alert-success">{{ session('success') }}</div>
-    @endif
+            {{-- ── Header ─────────────────────────────────── --}}
+            <div class="dash-box-header">
+                <x-manajemenmahasiswa::ui.page-header
+                    title="Buat Pengumuman Baru"
+                    badge="Modul Mahasiswa"
+                    subtitle="Buat dan publikasikan pengumuman untuk mahasiswa dan alumni">
+                    <x-slot:actions>
+                        @if(isset($drafts) && $drafts->count() > 0)
+                            <button type="button" class="mk-btn mk-btn--secondary" data-bs-toggle="modal" data-bs-target="#draftsModal">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                                </svg>
+                                <span>Load Draft ({{ $drafts->count() }})</span>
+                            </button>
+                        @endif
+                    </x-slot:actions>
+                </x-manajemenmahasiswa::ui.page-header>
+            </div>
 
-    @if($errors->any())
-        <div class="alert-danger">
-            <strong>Terdapat kesalahan pada input:</strong>
-            <ul style="margin: 6px 0 0; padding-left: 18px;">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+            <div class="dash-box-body">
 
-    <!-- Form -->
-    <form action="{{ route('manajemenmahasiswa.pengumuman.store') }}" method="POST" enctype="multipart/form-data"
-        id="createForm">
-        @csrf
-        <input type="hidden" name="draft_id" id="draft_id" value="">
-
-        <div class="form-card">
-            <div class="d-flex justify-content-between align-items-center form-section-title">
-                <span>Informasi Pengumuman</span>
-                @if(isset($drafts) && $drafts->count() > 0)
-                    <button type="button" class="btn btn-sm rounded-pill fw-bold px-4 text-white shadow-sm"
-                        style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); border: none; transition: transform 0.2s ease, box-shadow 0.2s ease;"
-                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(234, 88, 12, 0.3)';"
-                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)';"
-                        data-bs-toggle="modal" data-bs-target="#draftsModal">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 4px;">
-                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                        </svg>
-                        Load Draft ({{ $drafts->count() }})
-                    </button>
+                {{-- Flash Messages --}}
+                @if(session('success'))
+                    <div class="alert-success">{{ session('success') }}</div>
                 @endif
-            </div>
 
-            <!-- Judul -->
-            <div class="form-group">
-                <label>Judul Pengumuman <span class="required">*</span></label>
-                <input type="text" name="judul" class="form-input" placeholder="Masukkan judul pengumuman"
-                    value="{{ old('judul') }}" required>
-                @error('judul') <span class="form-error">{{ $message }}</span> @enderror
-            </div>
+                @if($errors->any())
+                    <div class="alert-danger">
+                        <strong>Terdapat kesalahan pada input:</strong>
+                        <ul style="margin: 6px 0 0; padding-left: 18px;">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
-            <!-- Kategori & Target Audience -->
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Kategori</label>
-                    <select name="kategori" class="form-select-custom">
-                        <option value="">Pilih Kategori</option>
-                        <option value="akademik" {{ old('kategori') === 'akademik' ? 'selected' : '' }}>Akademik</option>
-                        <option value="himpunan" {{ old('kategori') === 'himpunan' ? 'selected' : '' }}>Himpunan</option>
-                        <option value="lowongan" {{ old('kategori') === 'lowongan' ? 'selected' : '' }}>Lowongan</option>
-                        <option value="event_prodi" {{ old('kategori') === 'event_prodi' ? 'selected' : '' }}>Event Prodi
-                        </option>
-                    </select>
-                    @error('kategori') <span class="form-error">{{ $message }}</span> @enderror
-                </div>
+                <form action="{{ route('manajemenmahasiswa.pengumuman.store') }}" method="POST" enctype="multipart/form-data"
+                    id="createForm">
+                    @csrf
+                    <input type="hidden" name="draft_id" id="draft_id" value="">
 
-                <div class="form-group">
-                    <label>Target Audiens <span class="required">*</span></label>
-                    <select name="target_audience" class="form-select-custom" required>
-                        <option value="all" {{ old('target_audience') === 'all' ? 'selected' : '' }}>Semua</option>
-                        <option value="mahasiswa" {{ old('target_audience') === 'mahasiswa' ? 'selected' : '' }}>Mahasiswa
-                        </option>
-                        <option value="alumni" {{ old('target_audience') === 'alumni' ? 'selected' : '' }}>Alumni</option>
-                    </select>
-                    @error('target_audience') <span class="form-error">{{ $message }}</span> @enderror
-                </div>
-            </div>
+                    {{-- ── Informasi Pengumuman ──────────────────── --}}
+                    <div class="fc-card">
+                        <div class="fc-card-header">Informasi Pengumuman</div>
+                        <div class="fc-card-body">
 
-            <!-- Konten -->
-            <div class="form-group">
-                <label>Konten Pengumuman <span class="required">*</span></label>
-                <div class="rich-editor-wrapper" id="editorWrapper">
-                    <!-- Toolbar -->
-                    <div class="editor-toolbar">
-                        <div class="toolbar-group">
-                            <button type="button" class="toolbar-btn toolbar-btn-bold" data-cmd="bold"
-                                onclick="execCmd('bold')" title="Bold">B</button>
-                            <button type="button" class="toolbar-btn toolbar-btn-italic" data-cmd="italic"
-                                onclick="execCmd('italic')" title="Italic">I</button>
-                            <button type="button" class="toolbar-btn toolbar-btn-underline" data-cmd="underline"
-                                onclick="execCmd('underline')" title="Underline">U</button>
-                            <button type="button" class="toolbar-btn toolbar-btn-h1"
-                                onclick="execFormatBlock('H1')" title="Heading 1">H1</button>
-                            <button type="button" class="toolbar-btn toolbar-btn-h2"
-                                onclick="execFormatBlock('H2')" title="Heading 2">H2</button>
-                            <button type="button" class="toolbar-btn" data-cmd="insertUnorderedList"
-                                onclick="execCmd('insertUnorderedList')" title="Bullet List">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor"/><circle cx="4" cy="12" r="1.5" fill="currentColor"/><circle cx="4" cy="18" r="1.5" fill="currentColor"/></svg>
-                                List
-                            </button>
-                            <button type="button" class="toolbar-btn" data-cmd="insertOrderedList"
-                                onclick="execCmd('insertOrderedList')" title="Numbered List">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><text x="2" y="9" font-size="8" fill="currentColor" stroke="none" font-weight="bold">1.</text></svg>
-                                List
-                            </button>
+                            <div class="form-group">
+                                <label>Judul Pengumuman <span class="required">*</span></label>
+                                <input type="text" name="judul" class="form-input" placeholder="Masukkan judul pengumuman"
+                                    value="{{ old('judul') }}" required>
+                                @error('judul') <span class="form-error">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Kategori</label>
+                                    <x-manajemenmahasiswa::ui.select name="kategori" size="md">
+                                        <option value="">Pilih Kategori</option>
+                                        <option value="akademik" {{ old('kategori') === 'akademik' ? 'selected' : '' }}>Akademik</option>
+                                        <option value="himpunan" {{ old('kategori') === 'himpunan' ? 'selected' : '' }}>Himpunan</option>
+                                        <option value="lowongan" {{ old('kategori') === 'lowongan' ? 'selected' : '' }}>Lowongan</option>
+                                        <option value="event_prodi" {{ old('kategori') === 'event_prodi' ? 'selected' : '' }}>Event Prodi
+                                        </option>
+                                    </x-manajemenmahasiswa::ui.select>
+                                    @error('kategori') <span class="form-error">{{ $message }}</span> @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Target Audiens <span class="required">*</span></label>
+                                    <x-manajemenmahasiswa::ui.select name="target_audience" size="md" required>
+                                        <option value="all" {{ old('target_audience') === 'all' ? 'selected' : '' }}>Semua</option>
+                                        <option value="mahasiswa" {{ old('target_audience') === 'mahasiswa' ? 'selected' : '' }}>Mahasiswa
+                                        </option>
+                                        <option value="alumni" {{ old('target_audience') === 'alumni' ? 'selected' : '' }}>Alumni</option>
+                                    </x-manajemenmahasiswa::ui.select>
+                                    @error('target_audience') <span class="form-error">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Konten Pengumuman <span class="required">*</span></label>
+                                <div class="rich-editor-wrapper" id="editorWrapper">
+                                    <div class="editor-toolbar">
+                                        <div class="toolbar-group">
+                                            <button type="button" class="toolbar-btn toolbar-btn-bold" data-cmd="bold"
+                                                onclick="execCmd('bold')" title="Bold">B</button>
+                                            <button type="button" class="toolbar-btn toolbar-btn-italic" data-cmd="italic"
+                                                onclick="execCmd('italic')" title="Italic">I</button>
+                                            <button type="button" class="toolbar-btn toolbar-btn-underline" data-cmd="underline"
+                                                onclick="execCmd('underline')" title="Underline">U</button>
+                                            <button type="button" class="toolbar-btn"
+                                                onclick="execFormatBlock('H1')" title="Heading 1">H1</button>
+                                            <button type="button" class="toolbar-btn"
+                                                onclick="execFormatBlock('H2')" title="Heading 2">H2</button>
+                                            <button type="button" class="toolbar-btn" data-cmd="insertUnorderedList"
+                                                onclick="execCmd('insertUnorderedList')" title="Bullet List">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor"/><circle cx="4" cy="12" r="1.5" fill="currentColor"/><circle cx="4" cy="18" r="1.5" fill="currentColor"/></svg>
+                                                List
+                                            </button>
+                                            <button type="button" class="toolbar-btn" data-cmd="insertOrderedList"
+                                                onclick="execCmd('insertOrderedList')" title="Numbered List">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><text x="2" y="9" font-size="8" fill="currentColor" stroke="none" font-weight="bold">1.</text></svg>
+                                                List
+                                            </button>
+                                        </div>
+                                        <div class="toolbar-divider"></div>
+                                        <div class="toolbar-group">
+                                            <button type="button" class="toolbar-btn" onclick="insertLink()" title="Hyperlink">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                                                Link
+                                            </button>
+                                            <button type="button" class="toolbar-btn" onclick="triggerImageInsert()" title="Sisipkan Gambar">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                                                Gambar
+                                            </button>
+                                            <button type="button" class="toolbar-btn" onclick="insertTable()" title="Sisipkan Tabel">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                                                Tabel
+                                            </button>
+                                            <button type="button" class="toolbar-btn" onclick="insertSeparator()" title="Garis Pemisah">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/></svg>
+                                                Separator
+                                            </button>
+                                        </div>
+                                        <input type="file" id="inlineImageInput" accept="image/jpeg,image/png,image/gif,image/webp"
+                                            style="display:none;">
+                                    </div>
+                                    <div class="editor-content" id="editorContent" contenteditable="true">{!! old('konten') !!}</div>
+                                </div>
+                                <textarea name="konten" id="kontenHidden" style="display:none;">{{ old('konten') }}</textarea>
+                                @error('konten') <span class="form-error">{{ $message }}</span> @enderror
+                            </div>
+
                         </div>
-                        <div class="toolbar-divider"></div>
-                        <div class="toolbar-group">
-                            <button type="button" class="toolbar-btn" onclick="insertLink()" title="Hyperlink">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                                Link
-                            </button>
-                            <button type="button" class="toolbar-btn" onclick="triggerImageInsert()" title="Sisipkan Gambar">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                                Gambar
-                            </button>
-                            <button type="button" class="toolbar-btn" onclick="insertTable()" title="Sisipkan Tabel">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
-                                Tabel
-                            </button>
-                            <button type="button" class="toolbar-btn" onclick="insertSeparator()" title="Garis Pemisah">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/></svg>
-                                Separator
-                            </button>
+                    </div>
+
+                    {{-- ── Poster & Lampiran ─────────────────────── --}}
+                    <div class="fc-card">
+                        <div class="fc-card-header">Poster &amp; Lampiran</div>
+                        <div class="fc-card-body">
+
+                            <div class="form-group">
+                                <label>Gambar Pengumuman <span style="color:var(--c-fg-placeholder, #808897); font-weight:400;">(opsional, maks. 5)</span></label>
+                                <div class="file-upload-zone" id="posterZone">
+                                    <div class="upload-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                                            <circle cx="9" cy="9" r="2" />
+                                            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                                        </svg>
+                                    </div>
+                                    <h6>Klik atau seret gambar ke sini</h6>
+                                    <p>JPG, PNG — Maks. 5 gambar, {{ $maxUkuranMb }}MB per gambar</p>
+                                    <input type="file" name="poster[]" accept="image/jpeg,image/png" id="posterInput" multiple>
+                                </div>
+
+                                {{-- Gambar yang baru dipilih: bisa diseret untuk menentukan cover --}}
+                                <p class="cover-hint" id="coverHint" style="display: none;">
+                                    Seret gambar untuk mengubah urutan — gambar paling depan dipakai sebagai <strong>cover</strong>.
+                                </p>
+                                <div class="cover-grid" id="posterPreview"></div>
+
+                                {{-- Gambar yang sudah tersimpan di draf (hanya tampilan) --}}
+                                <div class="saved-note" id="posterSavedNote" style="display: none;">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 6 9 17l-5-5"/>
+                                    </svg>
+                                    <span id="posterSavedName">Gambar tersimpan di draf</span>
+                                </div>
+                                <div class="cover-grid" id="posterSavedList"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Lampiran / Dokumen (opsional)</label>
+                                <div class="file-upload-zone" id="lampiranZone">
+                                    <div class="upload-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                                            <polyline points="14 2 14 8 20 8" />
+                                            <line x1="16" x2="8" y1="13" y2="13" />
+                                            <line x1="16" x2="8" y1="17" y2="17" />
+                                            <line x1="10" x2="8" y1="9" y2="9" />
+                                        </svg>
+                                    </div>
+                                    <h6>Klik atau seret dokumen ke sini</h6>
+                                    <p>PDF, DOCX, XLSX — Maks. {{ $maxUkuranMb }}MB per file</p>
+                                    <input type="file" name="lampiran[]" accept=".pdf,.docx,.xlsx" multiple id="lampiranInput">
+                                </div>
+                                <div class="file-list" id="lampiranSavedList"></div>
+                                <div class="file-list" id="lampiranList"></div>
+                            </div>
+
                         </div>
-                        <input type="file" id="inlineImageInput" accept="image/jpeg,image/png,image/gif,image/webp"
-                            style="display:none;">
                     </div>
-                    <!-- Editor Area -->
-                    <div class="editor-content" id="editorContent" contenteditable="true">{!! old('konten') !!}</div>
-                </div>
-                <!-- Hidden textarea untuk form submission -->
-                <textarea name="konten" id="kontenHidden" style="display:none;">{{ old('konten') }}</textarea>
-                @error('konten') <span class="form-error">{{ $message }}</span> @enderror
-            </div>
 
-            <div class="form-section-title" style="margin-top: 10px;">Poster & Lampiran</div>
+                    <input type="hidden" name="status_publish" id="statusPublish" value="published">
 
-            <!-- Poster -->
-            <div class="form-group">
-                <label>Poster / Gambar (opsional)</label>
-                <div class="file-upload-zone" id="posterZone">
-                    <div class="upload-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-                            <circle cx="9" cy="9" r="2" />
-                            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-                        </svg>
+                    {{-- ── Actions ───────────────────────────────── --}}
+                    <div class="form-actions">
+                        <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="mk-btn mk-btn--secondary">Batal</a>
+
+                        <div class="fa-spacer"></div>
+
+                        <span id="draftStatus" class="draft-status" style="display: none;">Menyimpan draf...</span>
+
+                        <button type="button" class="mk-btn mk-btn--secondary" onclick="saveDraftManual()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                                <polyline points="17 21 17 13 7 13 7 21" />
+                                <polyline points="7 3 7 8 15 8" />
+                            </svg>
+                            <span>Simpan Draft</span>
+                        </button>
+
+                        <button type="submit" class="mk-btn mk-btn--primary">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" x2="11" y1="2" y2="13" />
+                                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                            </svg>
+                            <span>Publikasikan</span>
+                        </button>
                     </div>
-                    <h6>Klik atau seret gambar ke sini</h6>
-                    <p>JPG, PNG — Maks. 10MB</p>
-                    <input type="file" name="poster" accept="image/jpeg,image/png" id="posterInput">
-                </div>
-                <div class="poster-preview" id="posterPreview" style="display: none;">
-                    <img id="posterImg" src="" alt="Preview Poster">
-                </div>
-            </div>
 
-            <!-- Lampiran -->
-            <div class="form-group">
-                <label>Lampiran / Dokumen (opsional)</label>
-                <div class="file-upload-zone" id="lampiranZone">
-                    <div class="upload-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                            <polyline points="14 2 14 8 20 8" />
-                            <line x1="16" x2="8" y1="13" y2="13" />
-                            <line x1="16" x2="8" y1="17" y2="17" />
-                            <line x1="10" x2="8" y1="9" y2="9" />
-                        </svg>
-                    </div>
-                    <h6>Klik atau seret dokumen ke sini</h6>
-                    <p>PDF, DOCX, XLSX — Maks. 10MB per file</p>
-                    <input type="file" name="lampiran[]" accept=".pdf,.docx,.xlsx" multiple id="lampiranInput">
-                </div>
-                <div class="file-list" id="lampiranList"></div>
-            </div>
+                </form>
 
-            <!-- Hidden status field -->
-            <input type="hidden" name="status_publish" id="statusPublish" value="published">
-
-            <!-- Actions -->
-            <div class="form-actions">
-
-                <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="btn-cancel">Batal</a>
-                <div class="d-flex align-items-center gap-3">
-                    <span id="draftStatus" class="text-muted" style="font-size: 13px; font-style: italic; display: none;">Menyimpan draf...</span>
-                    <button type="button" class="btn-draft" onclick="saveDraftManual()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;">
-                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                            <polyline points="17 21 17 13 7 13 7 21" />
-                            <polyline points="7 3 7 8 15 8" />
-                        </svg>
-                        Simpan Draft
-                    </button>
-                </div>
-                <button type="submit" class="btn-publish">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;">
-                        <line x1="22" x2="11" y1="2" y2="13" />
-                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                    </svg>
-                    Publikasikan
-                </button>
-            </div>
-        </div>
-    </form>
+            </div> <!-- end dash-box-body -->
+        </div> <!-- end dash-box -->
+    </div> <!-- end dash-wrap -->
 
     {{-- Modal Drafts --}}
     @if(isset($drafts) && $drafts->count() > 0)
         <div class="modal fade" id="draftsModal" tabindex="-1" aria-labelledby="draftsModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                <div class="modal-content border-0 shadow" style="border-radius: 16px;">
-                    <div class="modal-header border-0 pb-0">
-                        <h5 class="modal-title fw-bold" id="draftsModalLabel">Draf Anda</h5>
+                <div class="modal-content border-0" style="border-radius: 14px; box-shadow: 0 24px 60px rgba(0,0,0,.18);">
+                    <div class="modal-header" style="border-bottom: 1px solid var(--c-border, #DFE1E7); padding: 14px 18px;">
+                        <h5 class="modal-title" id="draftsModalLabel"
+                            style="font-size: 14px; font-weight: 700; color: var(--c-fg, #0D0D12); margin: 0;">Draf Anda</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
-                        <div class="list-group list-group-flush">
-                            @foreach($drafts as $draft)
-                                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3"
-                                    style="border-radius: 12px; margin-bottom: 8px; border: 1px solid #e5e7eb; cursor: pointer;">
-                                    <div class="flex-grow-1 pe-3"
-                                        onclick="loadDraft({{ $draft->id }}, {{ json_encode($draft->judul) }}, {{ json_encode($draft->kategori) }}, {{ json_encode($draft->target_audience) }}, {{ json_encode($draft->konten) }})">
-                                        <h6 class="mb-1 fw-bold text-dark" style="font-size: 15px;">
-                                            {{ $draft->judul ?: '(Tanpa Judul)' }}</h6>
-                                        <p class="mb-1 text-muted"
-                                            style="font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                            {{ strip_tags($draft->konten) ?: '(Tidak ada konten teks)' }}
-                                        </p>
-                                        <small class="text-muted" style="font-size: 11px;">
-                                            Diperbarui: {{ $draft->updated_at->diffForHumans() }}
-                                        </small>
+                    <div class="modal-body" style="padding: 14px 18px;">
+                        @foreach($drafts as $draft)
+                            <div class="draft-item">
+                                <div style="flex: 1; min-width: 0;"
+                                    onclick="loadDraft({{ $draft->id }}, {{ json_encode($draft->judul) }}, {{ json_encode($draft->kategori) }}, {{ json_encode($draft->target_audience) }}, {{ json_encode($draft->konten) }})">
+                                    <div class="draft-item-title">{{ $draft->judul ?: '(Tanpa Judul)' }}</div>
+                                    <div class="draft-item-excerpt">
+                                        {{ strip_tags($draft->konten) ?: '(Tidak ada konten teks)' }}
                                     </div>
-                                    <div class="ms-1">
-                                        <form action="{{ route('manajemenmahasiswa.pengumuman.drafts.destroy', $draft->id) }}"
-                                            method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                class="btn btn-sm btn-light text-danger rounded-circle shadow-sm border border-danger-subtle"
-                                                style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
-                                                title="Hapus draf ini">
-                                                ✕
-                                            </button>
-                                        </form>
+                                    <div class="draft-item-meta">
+                                        Diperbarui: {{ $draft->updated_at->diffForHumans() }}
                                     </div>
                                 </div>
-                            @endforeach
-                        </div>
+                                <form action="{{ route('manajemenmahasiswa.pengumuman.drafts.destroy', $draft->id) }}"
+                                    method="POST" style="margin: 0;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="draft-delete-btn" title="Hapus draf ini">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round">
+                                            <path d="M18 6L6 18M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
@@ -736,23 +694,154 @@
 
     @push('scripts')
         <script>
-            // Poster preview
-            document.getElementById('posterInput').addEventListener('change', function (e) {
-                const file = e.target.files[0];
-                const preview = document.getElementById('posterPreview');
-                const img = document.getElementById('posterImg');
+            // Poster & lampiran yang sudah diupload per draf, dikirim dari controller.
+            const DRAFT_ATTACHMENTS = @json($draftAttachments ?? []);
 
-                if (file && file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function (ev) {
-                        img.src = ev.target.result;
-                        preview.style.display = 'block';
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    preview.style.display = 'none';
-                    img.src = '';
+            function escHtml(str) {
+                return String(str).replace(/[&<>"']/g, c => (
+                    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+                ));
+            }
+
+            /**
+             * Tampilkan file yang sudah tersimpan di draf (gambar + lampiran).
+             * Dipanggil saat draf di-load dan setelah draf berhasil disimpan.
+             */
+            function renderDraftAttachments(payload) {
+                const savedNote = document.getElementById('posterSavedNote');
+                const savedName = document.getElementById('posterSavedName');
+                const savedGrid = document.getElementById('posterSavedList');
+                const savedList = document.getElementById('lampiranSavedList');
+
+                const gambar = payload?.gambar ?? [];
+                savedNote.style.display = gambar.length ? 'flex' : 'none';
+                savedName.textContent = gambar.length + ' gambar tersimpan di draf'
+                    + (gambar.length > 1 ? ' — yang pertama menjadi cover' : '');
+
+                savedGrid.innerHTML = gambar.map((f, i) => `
+                    <div class="cover-item is-saved" title="${escHtml(f.nama)}">
+                        <img src="${escHtml(f.url)}" alt="${escHtml(f.nama)}">
+                        ${i === 0
+                            ? '<span class="cover-badge">Cover</span>'
+                            : `<span class="cover-order">${i + 1}</span>`}
+                    </div>
+                `).join('');
+
+                const lampiran = payload?.lampiran ?? [];
+                savedList.innerHTML = lampiran.map(f => `
+                    <div class="file-item is-saved">
+                        <span class="file-name">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 6 9 17l-5-5"/>
+                            </svg>
+                            <a href="${escHtml(f.url)}" target="_blank" rel="noopener"
+                               style="color:inherit;text-decoration:underline;">${escHtml(f.nama)}</a>
+                        </span>
+                        <span class="file-meta">Tersimpan di draf</span>
+                    </div>
+                `).join('');
+            }
+
+            // ── Gambar pengumuman: pilih maks. 5, urutkan dengan drag ──────────
+            const MAX_GAMBAR = 5;
+            const posterInput = document.getElementById('posterInput');
+            let gambarTerpilih = [];   // File[] — indeks 0 dipakai sebagai cover
+            let dragDari = null;
+
+            /** Tulis ulang FileList input sesuai urutan kartu supaya ikut terkirim. */
+            function syncInputGambar() {
+                const dt = new DataTransfer();
+                gambarTerpilih.forEach(f => dt.items.add(f));
+                posterInput.files = dt.files;
+            }
+
+            function renderGambarTerpilih() {
+                const grid = document.getElementById('posterPreview');
+                const hint = document.getElementById('coverHint');
+
+                // Bebaskan object URL kartu lama sebelum digambar ulang
+                grid.querySelectorAll('img').forEach(img => URL.revokeObjectURL(img.src));
+                grid.innerHTML = '';
+                hint.style.display = gambarTerpilih.length > 1 ? 'block' : 'none';
+
+                gambarTerpilih.forEach((file, i) => {
+                    const card = document.createElement('div');
+                    card.className = 'cover-item';
+                    card.draggable = true;
+                    card.title = file.name;
+                    card.innerHTML = `
+                        <img src="${URL.createObjectURL(file)}" alt="">
+                        ${i === 0
+                            ? '<span class="cover-badge">Cover</span>'
+                            : `<span class="cover-order">${i + 1}</span>`}
+                        <button type="button" class="cover-remove" title="Hapus gambar">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round">
+                                <path d="M18 6L6 18M6 6l12 12"/>
+                            </svg>
+                        </button>`;
+
+                    card.querySelector('.cover-remove').addEventListener('click', () => {
+                        gambarTerpilih.splice(i, 1);
+                        syncInputGambar();
+                        renderGambarTerpilih();
+                    });
+
+                    card.addEventListener('dragstart', () => {
+                        dragDari = i;
+                        card.classList.add('dragging');
+                    });
+                    card.addEventListener('dragend', () => {
+                        dragDari = null;
+                        grid.querySelectorAll('.cover-item').forEach(c => {
+                            c.classList.remove('dragging', 'drag-target');
+                        });
+                    });
+                    card.addEventListener('dragover', e => {
+                        e.preventDefault();
+                        if (dragDari !== null && dragDari !== i) card.classList.add('drag-target');
+                    });
+                    card.addEventListener('dragleave', () => card.classList.remove('drag-target'));
+                    card.addEventListener('drop', e => {
+                        e.preventDefault();
+                        if (dragDari === null || dragDari === i) return;
+                        const [dipindah] = gambarTerpilih.splice(dragDari, 1);
+                        gambarTerpilih.splice(i, 0, dipindah);
+                        syncInputGambar();
+                        renderGambarTerpilih();
+                    });
+
+                    grid.appendChild(card);
+                });
+            }
+
+            posterInput.addEventListener('change', function (e) {
+                // Input di-reset tiap render, jadi file baru ditambahkan ke daftar
+                // (bukan menggantikan) dengan penjagaan duplikat.
+                const kunci = new Set(gambarTerpilih.map(f => f.name + f.size + f.lastModified));
+                let ditolak = 0;
+
+                Array.from(e.target.files).forEach(f => {
+                    const k = f.name + f.size + f.lastModified;
+                    if (kunci.has(k)) return;
+                    if (gambarTerpilih.length >= MAX_GAMBAR) { ditolak++; return; }
+                    gambarTerpilih.push(f);
+                    kunci.add(k);
+                });
+
+                if (ditolak > 0) {
+                    mkNotify({ title: 'Batas Gambar Tercapai', message: 'Maksimal ' + MAX_GAMBAR + ' gambar. ' + ditolak + ' gambar terakhir tidak ditambahkan.', variant: 'warning' });
                 }
+
+                // Gambar baru akan menggantikan gambar yang tersimpan di draf.
+                if (gambarTerpilih.length) {
+                    document.getElementById('posterSavedNote').style.display = 'none';
+                    document.getElementById('posterSavedList').innerHTML = '';
+                }
+
+                syncInputGambar();
+                renderGambarTerpilih();
             });
 
             // Lampiran file list
@@ -764,14 +853,14 @@
                     item.className = 'file-item';
                     item.innerHTML = `
                         <span class="file-name">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#666D80"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
                                 <polyline points="14 2 14 8 20 8"/>
                             </svg>
                             ${file.name}
                         </span>
-                        <span style="color: #9ca3af; font-size: 0.8rem;">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                        <span style="color: #808897; font-size: 11px;">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
                     `;
                     list.appendChild(item);
                 });
@@ -790,7 +879,7 @@
             const DRAFT_DELAY = 60000; // 1 menit
 
             const formInputs = document.querySelectorAll('input[name="judul"], select[name="kategori"], select[name="target_audience"]');
-            
+
             formInputs.forEach(input => {
                 input.addEventListener('input', () => {
                     clearTimeout(draftTimer);
@@ -833,15 +922,26 @@
                 .then(data => {
                     if (data.success) {
                         document.getElementById('draft_id').value = data.draft_id;
+                        DRAFT_ATTACHMENTS[data.draft_id] = data.attachments;
+                        renderDraftAttachments(data.attachments);
+
+                        // File sudah tersimpan di server — kosongkan input supaya
+                        // auto-save berikutnya tidak mengupload ulang file yang sama.
+                        gambarTerpilih = [];
+                        posterInput.value = '';
+                        renderGambarTerpilih();
+                        document.getElementById('lampiranInput').value = '';
+                        document.getElementById('lampiranList').innerHTML = '';
+
                         draftStatus.textContent = 'Draf tersimpan.';
                         setTimeout(() => { draftStatus.style.display = 'none'; }, 3000);
                         if (isManual) {
-                            alert('Draf berhasil disimpan!');
+                            mkNotify({ title: 'Draf Tersimpan', message: 'Draf berhasil disimpan!', variant: 'success' });
                         }
                     } else {
                         draftStatus.textContent = 'Gagal menyimpan draf.';
                         if (isManual) {
-                            alert('Terjadi kesalahan saat menyimpan draf: ' + (data.message || 'Data tidak valid.'));
+                            mkNotify({ title: 'Gagal Menyimpan Draf', message: data.message || 'Data tidak valid.', variant: 'danger' });
                         }
                     }
                 })
@@ -849,7 +949,7 @@
                     console.error('Error saving draft:', error);
                     draftStatus.textContent = 'Gagal menyimpan draf.';
                     if (isManual) {
-                        alert('Terjadi kesalahan saat menyimpan draf.');
+                        mkNotify({ title: 'Gagal Menyimpan Draf', message: 'Terjadi kesalahan saat menyimpan draf.', variant: 'danger' });
                     }
                 });
             }
@@ -857,7 +957,7 @@
             function loadDraft(id, judul, kategori, target_audience, konten) {
                 document.getElementById('draft_id').value = id;
                 document.querySelector('input[name="judul"]').value = judul || '';
-                
+
                 const selectKategori = document.querySelector('select[name="kategori"]');
                 if (kategori) {
                     selectKategori.value = kategori;
@@ -874,6 +974,14 @@
 
                 document.getElementById('editorContent').innerHTML = konten || '';
                 syncEditorContent();
+
+                // Gambar & lampiran yang ikut tersimpan di draf ini
+                gambarTerpilih = [];
+                posterInput.value = '';
+                renderGambarTerpilih();
+                document.getElementById('lampiranInput').value = '';
+                document.getElementById('lampiranList').innerHTML = '';
+                renderDraftAttachments(DRAFT_ATTACHMENTS[id] ?? null);
 
                 // Hide modal via Bootstrap API if available
                 if (typeof bootstrap !== 'undefined') {
@@ -950,7 +1058,7 @@
                 const placeholderId = 'img-uploading-' + Date.now();
                 editor.focus();
                 document.execCommand('insertHTML', false,
-                    `<span id="${placeholderId}" style="color:#6b7280;font-style:italic;font-size:0.9em;">[Mengupload gambar...]</span>`);
+                    `<span id="${placeholderId}" style="color:#666D80;font-style:italic;font-size:0.9em;">[Mengupload gambar...]</span>`);
                 syncEditorContent();
 
                 const formData = new FormData();
@@ -973,12 +1081,12 @@
                             `<img src="${data.url}" alt="${file.name}" style="max-width:100%;border-radius:8px;margin:8px 0;">`);
                         syncEditorContent();
                     } else {
-                        alert('Gagal mengupload gambar. Silakan coba lagi.');
+                        mkNotify({ title: 'Gagal Mengunggah', message: 'Gagal mengupload gambar. Silakan coba lagi.', variant: 'danger' });
                     }
                 } catch (err) {
                     const placeholder = document.getElementById(placeholderId);
                     if (placeholder) placeholder.remove();
-                    alert('Gagal mengupload gambar. Periksa koneksi internet Anda.');
+                    mkNotify({ title: 'Gagal Mengunggah', message: 'Gagal mengupload gambar. Periksa koneksi internet Anda.', variant: 'danger' });
                 }
 
                 this.value = '';
@@ -1020,8 +1128,8 @@
                 if (content.length < 10) {
                     e.preventDefault();
                     editor.focus();
-                    document.getElementById('editorWrapper').style.borderColor = '#ef4444';
-                    document.getElementById('editorWrapper').style.boxShadow = '0 0 0 3px rgba(239,68,68,0.12)';
+                    document.getElementById('editorWrapper').style.borderColor = '#DF1C41';
+                    document.getElementById('editorWrapper').style.boxShadow = '0 0 0 3px rgba(223,28,65,0.12)';
                     return;
                 }
                 document.getElementById('editorWrapper').style.borderColor = '';
