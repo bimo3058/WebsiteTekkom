@@ -313,7 +313,7 @@ class Peminjaman extends Model
 
         foreach ($allExpired as $pinjam) {
             $prevStatus = $pinjam->status;
-            $alasan = 'Dibatalkan Sistem: Melewati batas waktu persetujuan Admin Ruang';
+            $alasan = 'Ditolak Sistem: Melewati batas waktu persetujuan Admin';
 
             $pinjam->update([
                 'status' => 'ditolak',

@@ -15,8 +15,6 @@ class UserPeminjamanController extends Controller
     // Feature 2 & 3: Catalog & Interactive Calendar Booking
     public function booking(Request $request)
     {
-        Peminjaman::autoExpirePending();
-
         $ruangans = Ruangan::where('is_active', true)
             ->where('kategori', '!=', Ruangan::KATEGORI_SIDANG)
             ->with([
@@ -270,8 +268,6 @@ class UserPeminjamanController extends Controller
 
     public function kalender(Request $request)
     {
-        Peminjaman::autoExpirePending();
-
         $today = \Carbon\Carbon::today();
 
         // --- Week Mode ---
@@ -373,8 +369,6 @@ class UserPeminjamanController extends Controller
     // Feature 4: Peminjaman Saya
     public function saya()
     {
-        Peminjaman::autoExpirePending();
-
         $now = \Carbon\Carbon::now();
         $dateToday = $now->copy()->format('Y-m-d');
         $timeNow = $now->copy()->format('H:i:s');
@@ -487,8 +481,6 @@ class UserPeminjamanController extends Controller
     // Feature 5: Riwayat Peminjaman (Finished/Rejected/Canceled)
     public function riwayat()
     {
-        Peminjaman::autoExpirePending();
-
         $now = \Carbon\Carbon::now();
         $dateToday = $now->copy()->format('Y-m-d');
         $timeNow = $now->copy()->format('H:i:s');
