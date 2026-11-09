@@ -211,8 +211,8 @@
                                             selectedVal: '{{ request('source') }}', 
                                             get selectedName() {
                                                 const map = {
-                                                    'kp': 'Seminar KP',
-                                                    'capstone': 'Sidang Capstone',
+                                                    'kp': 'KP',
+                                                    'capstone': 'CATA',
                                                     'praktikum': 'Praktikum',
                                                     'umum': 'Peminjaman Langsung'
                                                 };
@@ -238,8 +238,8 @@
                                             class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] max-h-36 overflow-y-auto" style="display: none;">
                                             <div class="py-2 px-1">
                                                 <button type="button" @click="selectItem('')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != ''}">Semua Asal</button>
-                                                <button type="button" @click="selectItem('kp')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'kp', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'kp'}">Seminar KP</button>
-                                                <button type="button" @click="selectItem('capstone')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'capstone', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'capstone'}">Sidang Capstone</button>
+                                                <button type="button" @click="selectItem('kp')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'kp', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'kp'}">KP</button>
+                                                <button type="button" @click="selectItem('capstone')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'capstone', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'capstone'}">CATA</button>
                                                 <button type="button" @click="selectItem('praktikum')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'praktikum', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'praktikum'}">Praktikum</button>
                                                 <button type="button" @click="selectItem('umum')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'umum', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'umum'}">Peminjaman Langsung</button>
                                             </div>
@@ -379,9 +379,9 @@
                                     </div>
                                     <div class="mt-1">
                                         @if(in_array(strtolower(trim((string)$pinjam->source)), ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik']) || str_contains((string)$pinjam->tujuan, 'Seminar KP') || str_contains((string)$pinjam->tujuan, 'Kerja Praktik'))
-                                            <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Seminar KP</span>
+                                            <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">KP</span>
                                         @elseif(strtolower((string)$pinjam->source) === 'capstone' || str_contains((string)$pinjam->tujuan, '[CAPSTONE'))
-                                            <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">Sidang Capstone</span>
+                                            <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">CATA</span>
                                         @elseif(strtolower((string)$pinjam->source) === 'praktikum')
                                             <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Praktikum</span>
                                         @else
