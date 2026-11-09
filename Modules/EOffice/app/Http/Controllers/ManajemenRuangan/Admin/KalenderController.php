@@ -17,7 +17,6 @@ class KalenderController extends Controller
      */
     public function index(Request $request)
     {
-        Peminjaman::autoExpirePending();
         $allRuangansDaftar = Ruangan::where('is_active', true)->orderBy('nama', 'asc')->get();
         $selectedRoomId = $request->get('ruangan_id');
         $selectedKategori = $request->get('kategori');

@@ -129,9 +129,6 @@ class PersetujuanController extends Controller
 
     public function riwayat(Request $request)
     {
-        // System Event: Auto-kill expired dangling pending requests
-        Peminjaman::autoExpirePending();
-
         $now = now();
         $date = $now->format('Y-m-d');
         $time = $now->format('H:i:s');
@@ -215,8 +212,6 @@ class PersetujuanController extends Controller
 
     private function getExportQuery(Request $request)
     {
-        Peminjaman::autoExpirePending();
-
         $now = now();
         $date = $now->format('Y-m-d');
         $time = $now->format('H:i:s');

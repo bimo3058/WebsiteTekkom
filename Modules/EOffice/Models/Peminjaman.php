@@ -53,11 +53,11 @@ class Peminjaman extends Model
     {
         $src = strtolower(trim((string) $this->source));
         if ($src === 'capstone' || str_contains((string) $this->tujuan, '[CAPSTONE')) {
-            return 'Sidang Capstone';
+            return 'CATA';
         }
 
         if (in_array($src, ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik']) || str_contains((string) $this->tujuan, 'Seminar KP') || str_contains((string) $this->tujuan, 'Kerja Praktik')) {
-            return 'Seminar KP';
+            return 'KP';
         }
 
         if ($src === 'praktikum' || str_contains((string) $this->tujuan, 'Praktikum')) {
@@ -245,6 +245,10 @@ class Peminjaman extends Model
             return $this->nomor_telepon;
         }
 
+        if (!$this->relationLoaded('user')) {
+            $this->load('user');
+        }
+
         return $this->user?->whatsapp ?? null;
     }
 
@@ -252,6 +256,10 @@ class Peminjaman extends Model
     {
         if (!$this->created_by || $this->created_by === $this->user_id) {
             return null;
+        }
+
+        if (!$this->relationLoaded('creator')) {
+            $this->load('creator');
         }
 
         return $this->creator?->whatsapp ?? null;
@@ -305,7 +313,7 @@ class Peminjaman extends Model
 
         foreach ($allExpired as $pinjam) {
             $prevStatus = $pinjam->status;
-            $alasan = 'Dibatalkan Sistem: Melewati batas waktu persetujuan Admin Ruang';
+            $alasan = 'Ditolak Sistem: Melewati batas waktu persetujuan Admin';
 
             $pinjam->update([
                 'status' => 'ditolak',

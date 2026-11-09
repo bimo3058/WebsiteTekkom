@@ -11,7 +11,6 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        Peminjaman::autoExpirePending();
 
         $user = auth()->user();
         $isAdmin = $user && ($user->hasRole('superadmin') || $user->hasRole('admin_eoffice'));
