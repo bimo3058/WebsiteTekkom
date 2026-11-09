@@ -573,23 +573,55 @@ class RoomBookingService
         return DB::transaction(function () use ($normalizedSource, $sourceId, $payload) {
             $sourceQuery = ($normalizedSource === 'kp') ? ['kp', 'kerja_praktik', 'kerja praktik'] : [$normalizedSource];
 
-            // 1. Cari peminjaman asli yang disetujui untuk di-reschedule (utamakan status 'disetujui' dan yang merupakan root booking)
-            $oldBooking = Peminjaman::whereIn('source', $sourceQuery)
+            // 1. Cari peminjaman asli yang sah untuk di-reschedule
+            // Prioritaskan mencari peminjaman yang sudah DISETUJUI (untuk Two-Phase Swap)
+            $approvedBooking = Peminjaman::whereIn('source', $sourceQuery)
                 ->where('source_id', (string) $sourceId)
-                ->whereIn('status', ['menunggu', 'disetujui'])
-                ->orderByRaw("CASE WHEN status = 'disetujui' THEN 1 ELSE 2 END")
-                ->orderBy('id', 'asc')
+                ->where('status', 'disetujui')
+                ->orderBy('id', 'desc')
                 ->lockForUpdate()
                 ->first();
 
-            if (!$oldBooking) {
-                throw new \Exception("Reschedule gagal: Data peminjaman aktif untuk modul {$normalizedSource} dengan ID {$sourceId} tidak ditemukan.");
-            }
+            $pendingBooking = null;
+            $isPendingInPlaceUpdate = false;
 
-            // Dapatkan ID peminjaman asal yang sah (jadwal disetujui yang sedang digantikan)
-            $rootBookingId = ($oldBooking->status === 'disetujui')
-                ? $oldBooking->id
-                : ($oldBooking->replaces_peminjaman_id ?: $oldBooking->id);
+            if ($approvedBooking) {
+                $oldBooking = $approvedBooking;
+                $rootBookingId = $approvedBooking->id;
+
+                // Validasi: Jadwal lama yang sudah lewat pelaksanaannya tidak boleh di-reschedule lagi (Past Event Guard)
+                $now = now();
+                $oldDateStr = $oldBooking->tanggal_pinjam instanceof \Carbon\CarbonInterface
+                    ? $oldBooking->tanggal_pinjam->format('Y-m-d')
+                    : substr((string) $oldBooking->tanggal_pinjam, 0, 10);
+                $oldEndTimeStr = substr((string) $oldBooking->jam_selesai, 0, 8);
+                if (strlen($oldEndTimeStr) === 5) {
+                    $oldEndTimeStr .= ':00';
+                }
+
+                $isPastBooking = ($oldDateStr < $now->format('Y-m-d')) ||
+                    ($oldDateStr === $now->format('Y-m-d') && $oldEndTimeStr <= $now->format('H:i:s'));
+
+                if ($isPastBooking) {
+                    throw new \Exception("Reschedule gagal: Jadwal peminjaman lama ({$oldDateStr} {$oldBooking->jam_mulai}-{$oldBooking->jam_selesai}) sudah selesai terlaksana dan tidak dapat dijadwalkan ulang.");
+                }
+            } else {
+                // Jika tidak ada yang 'disetujui', periksa apakah ada permohonan yang masih 'menunggu' (Cara B: Smart In-Place Update)
+                $pendingBooking = Peminjaman::whereIn('source', $sourceQuery)
+                    ->where('source_id', (string) $sourceId)
+                    ->where('status', 'menunggu')
+                    ->latest('id')
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($pendingBooking) {
+                    $oldBooking = $pendingBooking;
+                    $rootBookingId = $pendingBooking->replaces_peminjaman_id ?: $pendingBooking->id;
+                    $isPendingInPlaceUpdate = true;
+                } else {
+                    throw new \Exception("Reschedule gagal: Data peminjaman aktif untuk modul {$normalizedSource} dengan ID {$sourceId} tidak ditemukan.");
+                }
+            }
 
             // 2. Siapkan parameter baru (ambil dari payload baru, atau fallback ke data lama jika tidak diubah)
             $newRuanganId = $payload['ruangan_id'] ?? $oldBooking->ruangan_id;
@@ -696,17 +728,19 @@ class RoomBookingService
                 throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan pada jam tersebut karena terisi: {$namaBentrok}.");
             }
 
-            // 8. IDEMPOTENSI: Batalkan draf pengajuan reschedule sebelumnya yang masih 'menunggu' untuk jadwal lama ini
-            Peminjaman::where(function ($q) use ($rootBookingId, $oldBooking) {
-                    $q->where('replaces_peminjaman_id', $rootBookingId)
-                        ->orWhere('replaces_peminjaman_id', $oldBooking->id);
-                })
-                ->where('status', 'menunggu')
-                ->update([
-                    'status' => 'dibatalkan',
-                    'alasan_penolakan' => 'Dibatalkan sistem: Digantikan oleh pengajuan reschedule terbaru',
-                    'waktu_approval' => now(),
-                ]);
+            // 8. IDEMPOTENSI: Jika Two-Phase Swap, batalkan draf pengajuan reschedule sebelumnya yang masih 'menunggu'
+            if (!$isPendingInPlaceUpdate) {
+                Peminjaman::where(function ($q) use ($rootBookingId, $oldBooking) {
+                        $q->where('replaces_peminjaman_id', $rootBookingId)
+                            ->orWhere('replaces_peminjaman_id', $oldBooking->id);
+                    })
+                    ->where('status', 'menunggu')
+                    ->update([
+                        'status' => 'dibatalkan',
+                        'alasan_penolakan' => 'Dibatalkan sistem: Digantikan oleh pengajuan reschedule terbaru',
+                        'waktu_approval' => now(),
+                    ]);
+            }
 
             // 9a. Cek Bentrok dengan Peminjaman Resmi yang sudah Disetujui (Hard Lock)
             // (KECUALIKAN diri sendiri: id != $oldBooking->id dan draf penggantinya)
@@ -767,7 +801,36 @@ class RoomBookingService
                 // pengajuan reschedule akademik berprioritas tinggi ini diizinkan masuk berdampingan ke meja Admin Ruang.
             }
 
-            // 10. TWO-PHASE SWAP: Buat record peminjaman baru berstatus 'menunggu' dengan relasi replaces_peminjaman_id
+            // 10. SIMPAN PERUBAHAN JADWAL:
+            // A. Cara B (Smart In-Place Update): Jika peminjaman masih 'menunggu', langsung perbarui data di tempat
+            if ($isPendingInPlaceUpdate && $pendingBooking) {
+                $pendingBooking->update([
+                    'ruangan_id' => $newRuanganId,
+                    'nomor_telepon' => $nomorTelepon,
+                    'tujuan' => $tujuan,
+                    'tanggal_pinjam' => $formattedTanggal,
+                    'jam_mulai' => $newJamMulai,
+                    'jam_selesai' => $newJamSelesai,
+                    'berkas_pendukung' => $payload['berkas_pendukung'] ?? $pendingBooking->berkas_pendukung,
+                ]);
+
+                $pendingBooking->load(['user', 'ruangan']);
+                if ($pendingBooking->user) {
+                    $pendingBooking->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($pendingBooking, false));
+                }
+
+                // Dispatch event bahwa permohonan antrean diperbarui
+                event(new \Modules\EOffice\Events\RoomBookingStatusChanged(
+                    $pendingBooking,
+                    'menunggu',
+                    'menunggu',
+                    'Pengajuan jadwal diperbarui oleh ' . strtoupper($normalizedSource)
+                ));
+
+                return $pendingBooking;
+            }
+
+            // B. Jika peminjaman lama sudah 'disetujui', terapkan TWO-PHASE SWAP
             // Peminjaman lama ($oldBooking) TETAP berstatus 'disetujui' agar slot lama tidak hilang jika pengajuan baru ditolak.
             // Peminjaman lama baru akan otomatis dibatalkan saat Admin Ruang menyetujui pengajuan baru ini.
             $newBooking = Peminjaman::create([
