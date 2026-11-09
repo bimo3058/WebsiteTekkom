@@ -1,57 +1,5 @@
 <x-eoffice::manajemen-ruangan.layout pageTitle="Dashboard Peminjaman">
 
-    @php
-        $user = auth()->user();
-        $now = \Carbon\Carbon::now();
-        $dateToday = $now->copy()->format('Y-m-d');
-        $timeNow = $now->copy()->format('H:i:s');
-
-        // Statistik
-        $pendingCount = \Modules\EOffice\Models\Peminjaman::where('user_id', $user->id)
-            ->where('is_hidden_by_user', false)
-            ->where('status', 'menunggu')->count();
-
-        $approvedCount = \Modules\EOffice\Models\Peminjaman::where('user_id', $user->id)
-            ->where('is_hidden_by_user', false)
-            ->where('status', 'disetujui')
-            ->where(function ($q) use ($dateToday, $timeNow) {
-                $q->where('tanggal_pinjam', '>', $dateToday)
-                    ->orWhere(function ($sq) use ($dateToday, $timeNow) {
-                        $sq->where('tanggal_pinjam', '=', $dateToday)
-                            ->where('jam_selesai', '>', $timeNow);
-                    });
-            })->count();
-
-        $rejectedCount = \Modules\EOffice\Models\Peminjaman::where('user_id', $user->id)
-            ->where('is_hidden_by_user', false)
-            ->where('status', 'ditolak')->count();
-
-        // Jadwal Terdekat
-        $upcomingBookings = \Modules\EOffice\Models\Peminjaman::with('ruangan')
-            ->where('user_id', $user->id)
-            ->where('is_hidden_by_user', false)
-            ->where('status', 'disetujui')
-            ->where(function ($q) use ($dateToday, $timeNow) {
-                $q->where('tanggal_pinjam', '>', $dateToday)
-                    ->orWhere(function ($sq) use ($dateToday, $timeNow) {
-                        $sq->where('tanggal_pinjam', '=', $dateToday)
-                            ->where('jam_selesai', '>', $timeNow);
-                    });
-            })
-            ->orderBy('tanggal_pinjam', 'asc')
-            ->orderBy('jam_mulai', 'asc')
-            ->take(3)
-            ->get();
-
-        // Pengajuan Terakhir
-        $recentBookings = \Modules\EOffice\Models\Peminjaman::with('ruangan')
-            ->where('user_id', $user->id)
-            ->where('is_hidden_by_user', false)
-            ->latest()
-            ->take(5)
-            ->get();
-    @endphp
-
     <div>
         <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-5">
             <div class="min-w-0">
@@ -233,14 +181,10 @@
                                             $st = ['bg' => '#F3F4F6', 'color' => '#374151', 'border' => '#E5E7EB'];
                                             if (strtolower($booking->status) === 'disetujui')
                                                 $st = ['bg' => '#ECFDF5', 'color' => '#047857', 'border' => '#A7F3D0'];
-                                            elseif (strtolower($booking->status) === 'ditolak')
+                                            elseif (strtolower($booking->status) === 'ditolak' || strtolower($booking->status) === 'dibatalkan')
                                                 $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
                                             elseif (strtolower($booking->status) === 'menunggu')
                                                 $st = ['bg' => '#FFF9E6', 'color' => '#B45309', 'border' => '#FFEBB3'];
-                                            elseif (strtolower($booking->status) === 'selesai')
-                                                $st = ['bg' => '#F1E9FF', 'color' => '#5E53F4', 'border' => '#D1BFFF'];
-                                            elseif (strtolower($booking->status) === 'dibatalkan')
-                                                $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
                                         @endphp
                                         <span
                                             style="font-size:10px; font-weight:700; color:{{ $st['color'] }}; background:{{ $st['bg'] }}; border:1px solid {{ $st['border'] }}; padding:3px 10px; border-radius:9999px; white-space:nowrap; letter-spacing:0.02em; text-transform:uppercase; display:inline-block;">

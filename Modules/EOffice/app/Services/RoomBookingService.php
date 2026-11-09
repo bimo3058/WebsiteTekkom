@@ -13,6 +13,11 @@ use Modules\EOffice\Models\Pengaturan;
 
 class RoomBookingService
 {
+    // Konstanta sumber modul eksternal
+    public const SOURCE_KP = Peminjaman::SOURCE_KP;
+    public const SOURCE_CAPSTONE = Peminjaman::SOURCE_CAPSTONE;
+    public const SOURCE_PRAKTIKUM = Peminjaman::SOURCE_PRAKTIKUM;
+
     /**
      * Memeriksa ketersediaan seluruh ruangan pada tanggal dan rentang jam tertentu.
      * Mengembalikan daftar ruangan lengkap dengan status tersedia dan alasannya jika terisi.
@@ -21,8 +26,9 @@ class RoomBookingService
      * @param string $jamMulai Format: H:i (e.g. '08:00')
      * @param string $jamSelesai Format: H:i (e.g. '10:00')
      * @param int|null $kapasitasMin Filter minimal kapasitas ruangan
-     * @param string|null $kategori Filter kategori ruangan (misal: 'Laboratorium', 'Ruang Sidang', dll)
+     * @param string|null $kategori Filter kategori ruangan ('Kelas', 'Laboratorium', 'Sidang')
      * @param bool $bypassHMin Lewati batasan H-min (default true untuk pemesanan agenda resmi/modul eksternal)
+     * @param string|null $source Sumber modul pemanggil ('kp', 'capstone', 'praktikum')
      * @return array
      */
     public function getAvailableRooms(
@@ -31,7 +37,8 @@ class RoomBookingService
         string $jamSelesai,
         ?int $kapasitasMin = null,
         ?string $kategori = null,
-        bool $bypassHMin = true
+        bool $bypassHMin = true,
+        ?string $source = null
     ): array {
         $parsedDate = Carbon::parse($tanggal);
         $formattedDate = $parsedDate->format('Y-m-d');
@@ -40,8 +47,30 @@ class RoomBookingService
         $jamMulaiNorm = substr($jamMulai, 0, 5);
         $jamSelesaiNorm = substr($jamSelesai, 0, 5);
 
+        // Normalisasi kategori: jika pemanggil mengirim 'Ruang Sidang', petakan ke 'Sidang'
+        if ($kategori) {
+            $catLower = strtolower(trim($kategori));
+            if ($catLower === 'ruang sidang' || $catLower === 'sidang') {
+                $kategori = Ruangan::KATEGORI_SIDANG;
+            } elseif ($catLower === 'kelas' || $catLower === 'ruang kelas') {
+                $kategori = Ruangan::KATEGORI_KELAS;
+            } elseif ($catLower === 'laboratorium' || $catLower === 'lab') {
+                $kategori = Ruangan::KATEGORI_LAB;
+            }
+        }
+
         // Ambil master ruangan yang aktif
         $ruanganQuery = Ruangan::where('is_active', true)->orderBy('nama', 'asc');
+
+        // Aturan Pembatasan Modul Eksternal:
+        // Modul KP dan Praktikum DILARANG meminjam Ruang Sidang (khusus Capstone & Admin)
+        $normalizedSource = $source ? strtolower(trim((string) $source)) : null;
+        if (in_array($normalizedSource, ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik'])) {
+            $normalizedSource = 'kp';
+        }
+        if (in_array($normalizedSource, ['kp', 'praktikum'])) {
+            $ruanganQuery->where('kategori', '!=', Ruangan::KATEGORI_SIDANG);
+        }
 
         if ($kapasitasMin && $kapasitasMin > 0) {
             $ruanganQuery->where('kapasitas', '>=', $kapasitasMin);
@@ -160,12 +189,25 @@ class RoomBookingService
                 $conflictType = 'peminjaman_sah';
                 $conflictReason = 'Terpakai: ' . ($firstPeminjaman->source_label ?: 'Peminjaman') . ' - ' . ($firstPeminjaman->tujuan ?: 'Kegiatan Kampus');
             } elseif ($peminjamanPendingConflicts->has($room->id)) {
-                $firstPending = $peminjamanPendingConflicts->get($room->id)->first();
-                $isAvailable = false;
-                $conflictType = 'menunggu';
-                $conflictReason = 'Sedang Dalam Pengajuan: ' . ($firstPending->source_label ?: 'Peminjaman') . ' (' . ($firstPending->tujuan ?: 'Menunggu Persetujuan') . ')';
-                $hasPendingWarning = true;
-                $pendingReason = $conflictReason;
+                $roomPendings = $peminjamanPendingConflicts->get($room->id);
+                $callerPriority = Peminjaman::getPriorityLevel($source);
+
+                $blockingPending = $roomPendings->first(function ($p) use ($callerPriority) {
+                    return $p->priority >= $callerPriority;
+                });
+
+                if ($blockingPending) {
+                    $isAvailable = false;
+                    $conflictType = 'menunggu';
+                    $conflictReason = 'Sedang Dalam Pengajuan: ' . ($blockingPending->source_label ?: 'Peminjaman') . ' (' . ($blockingPending->tujuan ?: 'Menunggu Persetujuan') . ')';
+                    $hasPendingWarning = true;
+                    $pendingReason = $conflictReason;
+                } else {
+                    $firstLower = $roomPendings->first();
+                    $isAvailable = true;
+                    $hasPendingWarning = true;
+                    $pendingReason = 'Terdapat antrean peminjaman (' . ($firstLower->source_label ?: 'Peminjaman') . ') yang masih menunggu persetujuan. Agenda resmi Anda akan masuk sebagai prioritas akademik di meja Admin Ruang.';
+                }
             }
 
             $results[] = [
@@ -205,8 +247,8 @@ class RoomBookingService
             $tanggal = $parsedDate->format('Y-m-d');
             $jamMulai = substr($payload['jam_mulai'], 0, 5);
             $jamSelesai = substr($payload['jam_selesai'], 0, 5);
-            $source = isset($payload['source']) ? strtolower((string) $payload['source']) : null;
-            if ($source === 'kerja_praktik') {
+            $source = isset($payload['source']) ? strtolower(trim((string) $payload['source'])) : null;
+            if (in_array($source, ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik'])) {
                 $source = 'kp';
             }
             if ($source && !in_array($source, ['kp', 'capstone', 'praktikum'])) {
@@ -276,6 +318,18 @@ class RoomBookingService
                 throw new \Exception('Ruangan yang dipilih tidak ditemukan atau sedang tidak aktif.');
             }
 
+            // 8. Validasi Pembatasan Kategori Ruangan per Modul:
+            // Ruangan berkategori 'Sidang' hanya boleh dipesan oleh modul Capstone (Sidang TA/Capstone).
+            // Modul KP, Praktikum, atau modul lain DITOLAK meminjam Ruang Sidang.
+            if ($ruangan->kategori === Ruangan::KATEGORI_SIDANG && $source !== 'capstone') {
+                $sourceLabel = match ($source) {
+                    'kp' => 'Kerja Praktik (Seminar KP)',
+                    'praktikum' => 'Praktikum',
+                    default => 'Modul ' . ($source ?: 'Umum'),
+                };
+                throw new \Exception("Pemesanan gagal: {$sourceLabel} tidak diizinkan meminjam Ruangan berkategori 'Sidang' ({$ruangan->nama}). Ruang Sidang khusus diperuntukkan bagi agenda Sidang Capstone/Tugas Akhir.");
+            }
+
             $dayOfWeekIso = (int) $parsedDate->format('N');
 
             // 1. Cek bentrok dengan Jadwal Kuliah / Blokir Internal
@@ -308,21 +362,44 @@ class RoomBookingService
                 throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan karena terisi: {$namaBentrok}.");
             }
 
-            // 2. Cek bentrok dengan Peminjaman (yang sudah Disetujui atau Sedang Dalam Pengajuan)
-            $bentrokPeminjaman = Peminjaman::where('ruangan_id', $ruanganId)
+            // 2. Cek bentrok dengan Peminjaman Resmi yang sudah Disetujui (Hard Lock)
+            $bentrokApproved = Peminjaman::where('ruangan_id', $ruanganId)
                 ->where('tanggal_pinjam', $tanggal)
-                ->whereIn('status', ['menunggu', 'disetujui'])
+                ->where('status', 'disetujui')
                 ->where(function ($q) use ($jamMulai, $jamSelesai) {
                     $q->where('jam_mulai', '<', $jamSelesai)
                         ->where('jam_selesai', '>', $jamMulai);
                 })->first();
 
-            if ($bentrokPeminjaman) {
-                $label = $bentrokPeminjaman->source_label ?: 'Peminjaman Lain';
-                $statusText = $bentrokPeminjaman->status === 'menunggu'
-                    ? 'sedang dalam proses pengajuan persetujuan'
-                    : 'sudah dipesan resmi';
-                throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan karena {$statusText} ({$label}: {$bentrokPeminjaman->tujuan}).");
+            if ($bentrokApproved) {
+                $label = $bentrokApproved->source_label ?: 'Peminjaman Lain';
+                throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan karena sudah dipesan dan disetujui resmi ({$label}: {$bentrokApproved->tujuan}). Silakan pilih jadwal/ruangan lain atau hubungi Admin Ruang untuk koordinasi.");
+            }
+
+            // 3. Cek bentrok dengan Peminjaman yang masih Menunggu Persetujuan (Soft Lock dengan Hierarki Prioritas)
+            $incomingPriority = Peminjaman::getPriorityLevel($source, $tujuan);
+
+            $bentrokMenunggu = Peminjaman::where('ruangan_id', $ruanganId)
+                ->where('tanggal_pinjam', $tanggal)
+                ->where('status', 'menunggu')
+                ->where(function ($q) use ($jamMulai, $jamSelesai) {
+                    $q->where('jam_mulai', '<', $jamSelesai)
+                        ->where('jam_selesai', '>', $jamMulai);
+                })->get();
+
+            if ($bentrokMenunggu->isNotEmpty()) {
+                // Cari apakah ada antrean menunggu yang memiliki prioritas sama atau lebih tinggi
+                $blockingPending = $bentrokMenunggu->first(function ($item) use ($incomingPriority) {
+                    return $item->priority >= $incomingPriority;
+                });
+
+                if ($blockingPending) {
+                    $label = $blockingPending->source_label ?: 'Peminjaman Lain';
+                    throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan karena sedang dalam proses pengajuan persetujuan ({$label}: {$blockingPending->tujuan}).");
+                }
+
+                // Jika seluruh antrean menunggu memiliki prioritas lebih rendah daripada $incomingPriority,
+                // pemesanan akademik prioritas ini diizinkan masuk berdampingan ke meja Admin Ruang.
             }
 
             // 3. Status Peminjaman dari Modul (Selalu 'menunggu' untuk diverifikasi & disetujui Admin Ruangan)
@@ -365,29 +442,53 @@ class RoomBookingService
             return false;
         }
 
-        $normalizedSource = strtolower((string) $source);
-        if ($normalizedSource === 'kerja_praktik') {
+        $normalizedSource = strtolower(trim((string) $source));
+        if (in_array($normalizedSource, ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik'])) {
             $normalizedSource = 'kp';
         }
 
-        $peminjaman = Peminjaman::where('source', $normalizedSource)
-            ->where('source_id', $sourceId)
-            ->whereIn('status', ['menunggu', 'disetujui'])
-            ->first();
+        $sourceQuery = ($normalizedSource === 'kp') ? ['kp', 'kerja_praktik', 'kerja praktik'] : [$normalizedSource];
 
-        if (!$peminjaman) {
+        $now = now();
+        $date = $now->format('Y-m-d');
+        $time = $now->format('H:i:s');
+
+        $bookings = Peminjaman::with(['user', 'ruangan'])
+            ->whereIn('source', $sourceQuery)
+            ->where('source_id', (string) $sourceId)
+            ->whereIn('status', ['menunggu', 'disetujui'])
+            ->where(function ($q) use ($date, $time) {
+                // Hanya membatalkan jadwal mendatang / yang belum selesai terlaksana
+                $q->where('tanggal_pinjam', '>', $date)
+                    ->orWhere(function ($sub) use ($date, $time) {
+                        $sub->where('tanggal_pinjam', '=', $date)
+                            ->where('jam_selesai', '>', $time);
+                    });
+            })
+            ->get();
+
+        if ($bookings->isEmpty()) {
             return false;
         }
 
-        $peminjaman->update([
-            'status' => 'dibatalkan',
-            'alasan_penolakan' => $alasan ?: 'Dibatalkan oleh sistem ' . strtoupper($normalizedSource),
-            'waktu_approval' => now(),
-        ]);
+        $alasanTeks = $alasan ?: 'Dibatalkan oleh sistem ' . strtoupper($normalizedSource);
 
-        if ($peminjaman->user) {
-            $peminjaman->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($peminjaman, true));
-        }
+        DB::transaction(function () use ($bookings, $alasanTeks) {
+            foreach ($bookings as $peminjaman) {
+                $prevStatus = $peminjaman->status;
+                $peminjaman->update([
+                    'status' => 'dibatalkan',
+                    'alasan_penolakan' => $alasanTeks,
+                    'waktu_approval' => now(),
+                ]);
+
+                if ($peminjaman->user) {
+                    $peminjaman->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($peminjaman, true));
+                }
+
+                event(new \Modules\EOffice\Events\RoomBookingStatusChanged($peminjaman, 'dibatalkan', $prevStatus, $alasanTeks));
+            }
+        });
 
         return true;
     }
@@ -408,22 +509,31 @@ class RoomBookingService
             throw new \Exception('Reschedule gagal: Parameter source_id tidak boleh kosong.');
         }
 
-        $normalizedSource = strtolower((string) $source);
-        if ($normalizedSource === 'kerja_praktik') {
+        $normalizedSource = strtolower(trim((string) $source));
+        if (in_array($normalizedSource, ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik'])) {
             $normalizedSource = 'kp';
         }
 
         return DB::transaction(function () use ($normalizedSource, $sourceId, $payload) {
-            // 1. Cari peminjaman aktif yang akan di-reschedule
-            $oldBooking = Peminjaman::where('source', $normalizedSource)
-                ->where('source_id', $sourceId)
+            $sourceQuery = ($normalizedSource === 'kp') ? ['kp', 'kerja_praktik', 'kerja praktik'] : [$normalizedSource];
+
+            // 1. Cari peminjaman asli yang disetujui untuk di-reschedule (utamakan status 'disetujui' dan yang merupakan root booking)
+            $oldBooking = Peminjaman::whereIn('source', $sourceQuery)
+                ->where('source_id', (string) $sourceId)
                 ->whereIn('status', ['menunggu', 'disetujui'])
+                ->orderByRaw("CASE WHEN status = 'disetujui' THEN 1 ELSE 2 END")
+                ->orderBy('id', 'asc')
                 ->lockForUpdate()
                 ->first();
 
             if (!$oldBooking) {
                 throw new \Exception("Reschedule gagal: Data peminjaman aktif untuk modul {$normalizedSource} dengan ID {$sourceId} tidak ditemukan.");
             }
+
+            // Dapatkan ID peminjaman asal yang sah (jadwal disetujui yang sedang digantikan)
+            $rootBookingId = ($oldBooking->status === 'disetujui')
+                ? $oldBooking->id
+                : ($oldBooking->replaces_peminjaman_id ?: $oldBooking->id);
 
             // 2. Siapkan parameter baru (ambil dari payload baru, atau fallback ke data lama jika tidak diubah)
             $newRuanganId = $payload['ruangan_id'] ?? $oldBooking->ruangan_id;
@@ -518,10 +628,30 @@ class RoomBookingService
                 throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan pada jam tersebut karena terisi: {$namaBentrok}.");
             }
 
-            // 8. Cek Bentrok dengan Peminjaman Lain (KECUALIKAN diri sendiri: id != $oldBooking->id)
+            // 8. IDEMPOTENSI: Batalkan draf pengajuan reschedule sebelumnya yang masih 'menunggu' untuk jadwal lama ini
+            Peminjaman::where(function ($q) use ($rootBookingId, $oldBooking) {
+                    $q->where('replaces_peminjaman_id', $rootBookingId)
+                        ->orWhere('replaces_peminjaman_id', $oldBooking->id);
+                })
+                ->where('status', 'menunggu')
+                ->update([
+                    'status' => 'dibatalkan',
+                    'alasan_penolakan' => 'Dibatalkan sistem: Digantikan oleh pengajuan reschedule terbaru',
+                    'waktu_approval' => now(),
+                ]);
+
+            // 9. Cek Bentrok dengan Peminjaman Lain (KECUALIKAN diri sendiri: id != $oldBooking->id dan draf penggantinya)
             $bentrokPeminjaman = Peminjaman::where('ruangan_id', $newRuanganId)
                 ->where('tanggal_pinjam', $formattedTanggal)
                 ->where('id', '!=', $oldBooking->id)
+                ->where('id', '!=', $rootBookingId)
+                ->where(function ($q) use ($oldBooking, $rootBookingId) {
+                    $q->whereNull('replaces_peminjaman_id')
+                        ->orWhere(function ($sub) use ($oldBooking, $rootBookingId) {
+                            $sub->where('replaces_peminjaman_id', '!=', $oldBooking->id)
+                                ->where('replaces_peminjaman_id', '!=', $rootBookingId);
+                        });
+                })
                 ->whereIn('status', ['menunggu', 'disetujui'])
                 ->where(function ($q) use ($newJamMulai, $newJamSelesai) {
                     $q->where('jam_mulai', '<', $newJamSelesai)
@@ -536,17 +666,9 @@ class RoomBookingService
                 throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan karena {$statusText} ({$label}: {$bentrokPeminjaman->tujuan}).");
             }
 
-            // 9. AUDIT TRAIL: Tandai data lama sebagai DIBATALKAN karena Reschedule
-            $infoWaktuLama = "{$oldBooking->tanggal_pinjam} ({$oldBooking->jam_mulai}-{$oldBooking->jam_selesai} WIB)";
-            $infoWaktuBaru = "{$formattedTanggal} ({$newJamMulai}-{$newJamSelesai} WIB)";
-
-            $oldBooking->update([
-                'status' => 'dibatalkan',
-                'alasan_penolakan' => "Dijadwalkan ulang (Reschedule) ke {$infoWaktuBaru}",
-                'waktu_approval' => now(),
-            ]);
-
-            // 10. Buat record peminjaman baru yang berstatus 'menunggu'
+            // 10. TWO-PHASE SWAP: Buat record peminjaman baru berstatus 'menunggu' dengan relasi replaces_peminjaman_id
+            // Peminjaman lama ($oldBooking) TETAP berstatus 'disetujui' agar slot lama tidak hilang jika pengajuan baru ditolak.
+            // Peminjaman lama baru akan otomatis dibatalkan saat Admin Ruang menyetujui pengajuan baru ini.
             $newBooking = Peminjaman::create([
                 'user_id' => $userId,
                 'ruangan_id' => $newRuanganId,
@@ -558,17 +680,50 @@ class RoomBookingService
                 'status' => 'menunggu',
                 'waktu_approval' => null,
                 'source' => $normalizedSource,
-                'source_id' => $sourceId,
+                'source_id' => (string) $sourceId,
+                'replaces_peminjaman_id' => $rootBookingId,
                 'berkas_pendukung' => $payload['berkas_pendukung'] ?? $oldBooking->berkas_pendukung,
                 'created_by' => auth()->id() ?? $userId,
             ]);
 
             // Kirim notifikasi update ke user
+            $newBooking->load(['user', 'ruangan']);
+            $newBooking->load('user');
             if ($newBooking->user) {
                 $newBooking->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($newBooking, false));
             }
 
+            // Dispatch event bahwa permohonan reschedule diajukan
+            event(new \Modules\EOffice\Events\RoomBookingStatusChanged($newBooking, 'menunggu', null, 'Pengajuan reschedule diajukan'));
+
             return $newBooking;
         });
+    }
+
+    /**
+     * Mengambil data peminjaman aktif berdasarkan source dan source_id.
+     */
+    public function getBooking(string $source, $sourceId): ?Peminjaman
+    {
+        $normalizedSource = strtolower(trim((string) $source));
+        if (in_array($normalizedSource, ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik'])) {
+            $normalizedSource = 'kp';
+        }
+
+        $sourceQuery = ($normalizedSource === 'kp') ? ['kp', 'kerja_praktik', 'kerja praktik'] : [$normalizedSource];
+
+        return Peminjaman::whereIn('source', $sourceQuery)
+            ->where('source_id', (string) $sourceId)
+            ->whereIn('status', ['menunggu', 'disetujui'])
+            ->latest('id')
+            ->first();
+    }
+
+    /**
+     * Mengambil status peminjaman terkini ('menunggu', 'disetujui', null) untuk modul luar.
+     */
+    public function getBookingStatus(string $source, $sourceId): ?string
+    {
+        return $this->getBooking($source, $sourceId)?->status;
     }
 }
