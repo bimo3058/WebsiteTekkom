@@ -323,11 +323,11 @@ class RoomBookingService
             // Modul KP, Praktikum, atau modul lain DITOLAK meminjam Ruang Sidang.
             if ($ruangan->kategori === Ruangan::KATEGORI_SIDANG && $source !== 'capstone') {
                 $sourceLabel = match ($source) {
-                    'kp' => 'Kerja Praktik (Seminar KP)',
+                    'kp' => 'KP',
                     'praktikum' => 'Praktikum',
                     default => 'Modul ' . ($source ?: 'Umum'),
                 };
-                throw new \Exception("Pemesanan gagal: {$sourceLabel} tidak diizinkan meminjam Ruangan berkategori 'Sidang' ({$ruangan->nama}). Ruang Sidang khusus diperuntukkan bagi agenda Sidang Capstone/Tugas Akhir.");
+                throw new \Exception("Pemesanan gagal: {$sourceLabel} tidak diizinkan meminjam Ruangan berkategori 'Sidang' ({$ruangan->nama}). Ruang Sidang khusus diperuntukkan bagi agenda CATA.");
             }
 
             $dayOfWeekIso = (int) $parsedDate->format('N');
