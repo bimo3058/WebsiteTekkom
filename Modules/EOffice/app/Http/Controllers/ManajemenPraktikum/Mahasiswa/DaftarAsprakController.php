@@ -94,7 +94,7 @@ class DaftarAsprakController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
+            'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
             'ipk'          => 'required|numeric|min:0|max:4',
             'motivasi'     => 'nullable|string|max:1000',
             'transkrip'    => 'required|file|max:5120|mimes:pdf',
@@ -154,7 +154,7 @@ class DaftarAsprakController extends Controller
     public function daftarKoor(Request $request)
     {
         $request->validate([
-            'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
+            'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
             'ipk'          => 'required|numeric|min:0|max:4',
             'transkrip'    => 'required|file|max:5120|mimes:pdf',
             'berkas_cerc'  => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png,xlsx,csv',

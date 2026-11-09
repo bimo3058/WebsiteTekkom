@@ -18,6 +18,7 @@ use Tests\TestCase;
 
 class TugasAkhirTest extends TestCase
 {
+    use \Tests\Support\RunsLegacyPracticumMigrations;
     private const PRAK = '0199f101-0000-7000-8000-000000000001';
     private const STUDENT = '0199f101-0000-7000-8000-000000000002';
     private const STAGE = '0199f101-0000-7000-8000-000000000003';
@@ -30,19 +31,19 @@ class TugasAkhirTest extends TestCase
         DB::setDefaultConnection('ta_test');
         Schema::create('users', function (Blueprint $t) { $t->id(); $t->string('name'); $t->softDeletes(); });
         Schema::create('students', function (Blueprint $t) { $t->id(); $t->unsignedBigInteger('user_id'); $t->string('student_number')->nullable(); });
-        Schema::create('eo_praktikum', function (Blueprint $t) { $t->uuid('id')->primary(); $t->string('nama'); $t->unsignedBigInteger('koor_id'); $t->boolean('is_active')->default(true); $t->softDeletes(); });
-        Schema::create('daftar_praktikan', function (Blueprint $t) { $t->uuid('id')->primary(); $t->uuid('praktikum_id'); $t->unsignedBigInteger('user_id'); });
-        Schema::create('asprak_praktikum', function (Blueprint $t) { $t->id(); $t->uuid('praktikum_id'); $t->unsignedBigInteger('user_id'); $t->string('role'); $t->softDeletes(); });
-        Schema::create('eo_praktikum_dosen', function (Blueprint $t) { $t->uuid('praktikum_id'); $t->unsignedBigInteger('dosen_id'); });
-        Schema::create('nilai_praktikum',function(Blueprint $t){$t->id();$t->uuid('daftar_praktikan_id');$t->boolean('disetujui_koor')->default(false);$t->boolean('disetujui_dosen')->default(false);$t->boolean('dipublikasikan')->default(false);$t->timestamps();});
-        (require base_path('Modules/EOffice/database/migrations/2026_10_07_000001_create_tugas_akhir_tables.php'))->up();
-        (require base_path('Modules/EOffice/database/migrations/2026_10_07_000002_create_ta_absensi_table.php'))->up();
-        (require base_path('Modules/EOffice/database/migrations/2026_10_07_000003_add_tipe_to_tugas_akhir.php'))->up();
+        Schema::create('eo_prak_praktikum', function (Blueprint $t) { $t->uuid('id')->primary(); $t->string('nama'); $t->unsignedBigInteger('koor_id'); $t->boolean('is_active')->default(true); $t->softDeletes(); });
+        Schema::create('eo_prak_daftar_praktikan', function (Blueprint $t) { $t->uuid('id')->primary(); $t->uuid('praktikum_id'); $t->unsignedBigInteger('user_id'); });
+        Schema::create('eo_prak_asprak_praktikum', function (Blueprint $t) { $t->id(); $t->uuid('praktikum_id'); $t->unsignedBigInteger('user_id'); $t->string('role'); $t->softDeletes(); });
+        Schema::create('eo_prak_praktikum_dosen', function (Blueprint $t) { $t->uuid('praktikum_id'); $t->unsignedBigInteger('dosen_id'); });
+        Schema::create('eo_prak_nilai_praktikum',function(Blueprint $t){$t->id();$t->uuid('daftar_praktikan_id');$t->boolean('disetujui_koor')->default(false);$t->boolean('disetujui_dosen')->default(false);$t->boolean('dipublikasikan')->default(false);$t->timestamps();});
+        $this->runLegacyPracticumMigration(base_path('Modules/EOffice/database/migrations/2026_10_07_000001_create_tugas_akhir_tables.php'));
+        $this->runLegacyPracticumMigration(base_path('Modules/EOffice/database/migrations/2026_10_07_000002_create_ta_absensi_table.php'));
+        $this->runLegacyPracticumMigration(base_path('Modules/EOffice/database/migrations/2026_10_07_000003_add_tipe_to_tugas_akhir.php'));
         DB::table('users')->insert([['id' => 1, 'name' => 'Koor'], ['id' => 2, 'name' => 'Mahasiswa'], ['id' => 3, 'name' => 'Asisten'], ['id' => 4, 'name' => 'Dosen'], ['id' => 5, 'name' => 'Orang lain']]);
-        DB::table('eo_praktikum')->insert(['id' => self::PRAK, 'nama' => 'Praktikum Test', 'koor_id' => 1]);
-        DB::table('daftar_praktikan')->insert(['id' => self::STUDENT, 'praktikum_id' => self::PRAK, 'user_id' => 2]);
-        DB::table('asprak_praktikum')->insert(['praktikum_id' => self::PRAK, 'user_id' => 3, 'role' => 'asprak']);
-        DB::table('eo_praktikum_dosen')->insert(['praktikum_id' => self::PRAK, 'dosen_id' => 4]);
+        DB::table('eo_prak_praktikum')->insert(['id' => self::PRAK, 'nama' => 'Praktikum Test', 'koor_id' => 1]);
+        DB::table('eo_prak_daftar_praktikan')->insert(['id' => self::STUDENT, 'praktikum_id' => self::PRAK, 'user_id' => 2]);
+        DB::table('eo_prak_asprak_praktikum')->insert(['praktikum_id' => self::PRAK, 'user_id' => 3, 'role' => 'asprak']);
+        DB::table('eo_prak_praktikum_dosen')->insert(['praktikum_id' => self::PRAK, 'dosen_id' => 4]);
         $this->mock(NotifikasiService::class, function ($mock) { $mock->shouldReceive('kirimBulk')->zeroOrMoreTimes(); $mock->shouldReceive('kirim')->zeroOrMoreTimes(); });
         Storage::fake('local');
     }
@@ -123,7 +124,7 @@ class TugasAkhirTest extends TestCase
     {
         $ta=$this->task();
         $other='0199f101-0000-7000-8000-000000000006';
-        DB::table('daftar_praktikan')->insert(['id'=>$other,'praktikum_id'=>self::PRAK,'user_id'=>5]);
+        DB::table('eo_prak_daftar_praktikan')->insert(['id'=>$other,'praktikum_id'=>self::PRAK,'user_id'=>5]);
         $students=[self::STUDENT=>['version'=>0,'skor'=>[self::COMPONENT=>80]],$other=>['version'=>0,'skor'=>[self::COMPONENT=>90]]];
         $controller=new TugasAkhirController;
         $controller->gradeBatch($this->request('asprak',3,['tahap_id'=>self::STAGE,'students'=>$students]));
@@ -143,7 +144,7 @@ class TugasAkhirTest extends TestCase
     {
         $this->task();
         Schema::table('users',fn(Blueprint $t)=>$t->string('email')->nullable());
-        Schema::table('daftar_praktikan',function(Blueprint $t){$t->string('kelompok')->default('1');$t->string('shift')->default('1');});
+        Schema::table('eo_prak_daftar_praktikan',function(Blueprint $t){$t->string('kelompok')->default('1');$t->string('shift')->default('1');});
         DB::table('users')->where('id',2)->update(['email'=>'student@example.test']);
         DB::table('students')->insert(['user_id'=>2,'student_number'=>'21120123140136']);
         $request=$this->request('asprak',3);$request->setMethod('GET');$request->query->set('tahap_id',self::STAGE);$request->route()->setParameter('taSection','tugas');
@@ -223,9 +224,9 @@ class TugasAkhirTest extends TestCase
             ['jenis'=>'pengumpulan','waktu'=>now()->subDay()->toIso8601String(),'files'=>[]],['jenis'=>'pengumpulan','waktu'=>now()->toIso8601String(),'files'=>[]],
         ]]);
         Schema::table('users',fn(Blueprint $t)=>$t->string('email')->nullable());
-        Schema::table('daftar_praktikan',function(Blueprint $t){$t->string('kelompok')->default('1');$t->string('shift')->default('1');});
+        Schema::table('eo_prak_daftar_praktikan',function(Blueprint $t){$t->string('kelompok')->default('1');$t->string('shift')->default('1');});
         $request=$this->request('asprak',3);$request->setMethod('GET');
-        DB::table('daftar_praktikan')->insert(['id'=>'0199f101-0000-7000-8000-000000000006','praktikum_id'=>self::PRAK,'user_id'=>5]);
+        DB::table('eo_prak_daftar_praktikan')->insert(['id'=>'0199f101-0000-7000-8000-000000000006','praktikum_id'=>self::PRAK,'user_id'=>5]);
         $data=(new TugasAkhirController)->index($request)->getData();
         $data['base']='eoffice.manprak.asprak.tugas-akhir.';$data['routeArgs']=['praktikum'=>self::PRAK];
         $html=view('eoffice::manajemen-praktikum.tugas-akhir.rekap-asprak',$data)->render();
@@ -894,7 +895,7 @@ class TugasAkhirTest extends TestCase
     public function test_student_cannot_download_other_students_files(): void
     {
         $ta = $this->task(); $otherId = '0199f101-0000-7000-8000-000000000099';
-        DB::table('daftar_praktikan')->insert(['id' => $otherId, 'praktikum_id' => self::PRAK, 'user_id' => 5]);
+        DB::table('eo_prak_daftar_praktikan')->insert(['id' => $otherId, 'praktikum_id' => self::PRAK, 'user_id' => 5]);
         Storage::disk('local')->put('private-other.bin', 'private');
         TaPengumpulan::create(['tugas_akhir_id' => $ta->id, 'praktikan_id' => $otherId, 'tahap_id' => self::STAGE, 'riwayat' => [['files' => [['path' => 'private-other.bin', 'nama' => 'private.zip']]]]]);
         $request = $this->request('mahasiswa', 2); $request->query->set('path', 'private-other.bin');
@@ -991,14 +992,14 @@ class TugasAkhirTest extends TestCase
     public function test_module_csv_includes_additional_components_and_weighted_average(): void
     {
         $this->prepareCsvSchema();
-        Schema::table('eo_praktikum',fn(Blueprint $t)=>$t->timestamps());
-        (require base_path('Modules/EOffice/database/migrations/2026_10_09_230000_add_module_assessment_components.php'))->up();
-        Schema::table('nilai_jenis_tugas',function(Blueprint $t){$t->string('jenis_tugas');$t->float('nilai')->nullable();});
+        Schema::table('eo_prak_praktikum',fn(Blueprint $t)=>$t->timestamps());
+        $this->runLegacyPracticumMigration(base_path('Modules/EOffice/database/migrations/2026_10_09_230000_add_module_assessment_components.php'));
+        Schema::table('eo_prak_nilai_jenis_tugas',function(Blueprint $t){$t->string('jenis_tugas');$t->float('nilai')->nullable();});
         $module=(string)\Illuminate\Support\Str::uuid();
-        DB::table('modul_praktikum')->insert(['id'=>$module,'praktikum_id'=>self::PRAK,'nama'=>'Modul 1','urutan'=>1]);
+        DB::table('eo_prak_modul_praktikum')->insert(['id'=>$module,'praktikum_id'=>self::PRAK,'nama'=>'Modul 1','urutan'=>1]);
         $praktikum=\Modules\EOffice\Models\Praktikum::firstOrFail();
         $praktikum->update(['bobot_tp'=>10,'bobot_praktikum'=>30,'bobot_laporan'=>30,'bobot_responsi'=>20,'komponen_modul'=>[['id'=>'tambahan_1','nama'=>'Form Data','bobot'=>10]]]);
-        DB::table('nilai_jenis_tugas')->insert(['modul_id'=>$module,'daftar_praktikan_id'=>self::STUDENT,'jenis_tugas'=>'tambahan_1','nilai'=>100]);
+        DB::table('eo_prak_nilai_jenis_tugas')->insert(['modul_id'=>$module,'daftar_praktikan_id'=>self::STUDENT,'jenis_tugas'=>'tambahan_1','nilai'=>100]);
         $response=app(\Modules\EOffice\Services\ManajemenPraktikum\NilaiCsvExport::class)->download($this->request('koor',1,['cards'=>[$module]]),$praktikum);
         ob_start();$response->sendContent();$csv=ob_get_clean();
         $lines=explode("\n",trim($csv));$header=str_getcsv($lines[0]);$row=str_getcsv($lines[1]);
@@ -1017,7 +1018,7 @@ class TugasAkhirTest extends TestCase
     {
         $this->prepareCsvSchema();$this->task();
         $id=(string) \Illuminate\Support\Str::uuid();
-        DB::table('modul_praktikum')->insert(['id'=>$id,'praktikum_id'=>self::PRAK,'nama'=>'Modul 1','urutan'=>1]);
+        DB::table('eo_prak_modul_praktikum')->insert(['id'=>$id,'praktikum_id'=>self::PRAK,'nama'=>'Modul 1','urutan'=>1]);
         $response=(new \Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\NilaiController)->exportCsv($this->request('dosen',4,['cards'=>[$id,'tugas_akhir']]),self::PRAK);
         ob_start();$response->sendContent();$contents=ob_get_clean();
         $path=tempnam(sys_get_temp_dir(),'test_nilai_zip_');
@@ -1033,12 +1034,12 @@ class TugasAkhirTest extends TestCase
 
     private function createCsvTables(): void
     {
-        Schema::table('eo_praktikum',function(Blueprint $t){foreach(['bobot_tp','bobot_praktikum','bobot_laporan','bobot_responsi'] as $name)$t->integer($name)->default(25);});
+        Schema::table('eo_prak_praktikum',function(Blueprint $t){foreach(['bobot_tp','bobot_praktikum','bobot_laporan','bobot_responsi'] as $name)$t->integer($name)->default(25);});
         Schema::table('users',function(Blueprint $t){$t->string('email')->nullable();});
-        Schema::create('modul_praktikum',function(Blueprint $t){$t->uuid('id')->primary();$t->uuid('praktikum_id');$t->string('nama');$t->integer('urutan');$t->softDeletes();});
-        Schema::create('nilai_jenis_tugas',function(Blueprint $t){$t->id();$t->uuid('modul_id');$t->uuid('daftar_praktikan_id');});
-        Schema::create('absensi_praktikum',function(Blueprint $t){$t->id();$t->uuid('daftar_praktikan_id');});
-        Schema::table('daftar_praktikan',function(Blueprint $t){$t->string('shift')->nullable();$t->string('kelompok')->nullable();$t->timestamps();});
+        Schema::create('eo_prak_modul_praktikum',function(Blueprint $t){$t->uuid('id')->primary();$t->uuid('praktikum_id');$t->string('nama');$t->integer('urutan');$t->softDeletes();});
+        Schema::create('eo_prak_nilai_jenis_tugas',function(Blueprint $t){$t->id();$t->uuid('modul_id');$t->uuid('daftar_praktikan_id');});
+        Schema::create('eo_prak_absensi_praktikum',function(Blueprint $t){$t->id();$t->uuid('daftar_praktikan_id');});
+        Schema::table('eo_prak_daftar_praktikan',function(Blueprint $t){$t->string('shift')->nullable();$t->string('kelompok')->nullable();$t->timestamps();});
     }
 
     public function test_final_task_export_calculates_weighted_average_and_preserves_zero_and_missing_scores(): void
@@ -1230,8 +1231,8 @@ class TugasAkhirTest extends TestCase
     private function preparePublication(): \Modules\EOffice\Models\Praktikum
     {
         $this->prepareCsvSchema();
-        DB::table('modul_praktikum')->insert(['id'=>(string)\Illuminate\Support\Str::uuid(),'praktikum_id'=>self::PRAK,'nama'=>'Modul','urutan'=>1]);
-        DB::table('nilai_praktikum')->insert(['daftar_praktikan_id'=>self::STUDENT]);
+        DB::table('eo_prak_modul_praktikum')->insert(['id'=>(string)\Illuminate\Support\Str::uuid(),'praktikum_id'=>self::PRAK,'nama'=>'Modul','urutan'=>1]);
+        DB::table('eo_prak_nilai_praktikum')->insert(['daftar_praktikan_id'=>self::STUDENT]);
         $this->task();(new TugasAkhirController)->grade($this->request('asprak',3,['praktikan_id'=>self::STUDENT,'version'=>0,'skor'=>[self::COMPONENT=>80]]));
         return \Modules\EOffice\Models\Praktikum::first();
     }
@@ -1242,10 +1243,10 @@ class TugasAkhirTest extends TestCase
         try{$service->approve($this->request('dosen',4,['ta_versions'=>[$grade->id=>$grade->version]]),$praktikum,'dosen');$this->fail('Lecturer bypassed coordinator.');}catch(ValidationException $e){$this->assertNotEmpty($e->errors());}
         $service->approve($this->request('koor',1,['ta_versions'=>[$grade->id=>$grade->version]]),$praktikum,'koor');
         $this->assertTrue(TaNilai::first()->disetujui_koor);$this->assertFalse(TaNilai::first()->disetujui_dosen);
-        $this->assertEquals(0,DB::table('nilai_praktikum')->value('dipublikasikan'));
+        $this->assertEquals(0,DB::table('eo_prak_nilai_praktikum')->value('dipublikasikan'));
         $service->approve($this->request('dosen',4,['ta_versions'=>[$grade->id=>$grade->version]]),$praktikum,'dosen');
-        $this->assertTrue(TaNilai::first()->disetujui_dosen);$this->assertEquals(1,DB::table('nilai_praktikum')->value('dipublikasikan'));
-        $service->cancel($praktikum);$this->assertFalse(TaNilai::first()->disetujui_koor);$this->assertFalse(TaNilai::first()->disetujui_dosen);$this->assertEquals(0,DB::table('nilai_praktikum')->value('dipublikasikan'));
+        $this->assertTrue(TaNilai::first()->disetujui_dosen);$this->assertEquals(1,DB::table('eo_prak_nilai_praktikum')->value('dipublikasikan'));
+        $service->cancel($praktikum);$this->assertFalse(TaNilai::first()->disetujui_koor);$this->assertFalse(TaNilai::first()->disetujui_dosen);$this->assertEquals(0,DB::table('eo_prak_nilai_praktikum')->value('dipublikasikan'));
         $this->assertFalse(\Illuminate\Support\Facades\Route::has('eoffice.manprak.koor.tugas-akhir.approve'));
         $this->assertFalse(\Illuminate\Support\Facades\Route::has('eoffice.manprak.dosen.tugas-akhir.approve'));
     }
@@ -1254,10 +1255,10 @@ class TugasAkhirTest extends TestCase
     {
         $praktikum=$this->preparePublication();$service=app(\Modules\EOffice\Services\ManajemenPraktikum\GradePublication::class);$grade=TaNilai::first();
         $service->approve($this->request('koor',1,['ta_versions'=>[$grade->id=>$grade->version]]),$praktikum,'koor');
-        DB::unprepared("CREATE TRIGGER reject_module_publication BEFORE UPDATE ON nilai_praktikum WHEN NEW.dipublikasikan=1 BEGIN SELECT RAISE(ABORT,'test rollback'); END");
+        DB::unprepared("CREATE TRIGGER reject_module_publication BEFORE UPDATE ON eo_prak_nilai_praktikum WHEN NEW.dipublikasikan=1 BEGIN SELECT RAISE(ABORT,'test rollback'); END");
         try{$service->approve($this->request('dosen',4,['ta_versions'=>[$grade->id=>$grade->version]]),$praktikum,'dosen');$this->fail('Expected module write failure.');}catch(\Illuminate\Database\QueryException $e){$this->assertStringContainsString('test rollback',$e->getMessage());}
         $this->assertTrue(TaNilai::first()->disetujui_koor);$this->assertFalse(TaNilai::first()->disetujui_dosen);
-        $this->assertEquals(0,DB::table('nilai_praktikum')->value('dipublikasikan'));
+        $this->assertEquals(0,DB::table('eo_prak_nilai_praktikum')->value('dipublikasikan'));
     }
 
     public function test_final_task_grade_change_withdraws_entire_publication_for_review(): void
@@ -1267,14 +1268,14 @@ class TugasAkhirTest extends TestCase
         $service->approve($this->request('dosen',4,['ta_versions'=>[$grade->id=>$grade->version]]),$praktikum,'dosen');
         (new TugasAkhirController)->grade($this->request('asprak',3,['praktikan_id'=>self::STUDENT,'version'=>$grade->version,'skor'=>[self::COMPONENT=>90]]));
         $this->assertFalse(TaNilai::first()->disetujui_koor);$this->assertFalse(TaNilai::first()->disetujui_dosen);
-        $this->assertEquals(0,DB::table('nilai_praktikum')->value('dipublikasikan'));
-        $this->assertEquals(0,DB::table('nilai_praktikum')->value('disetujui_koor'));
-        $this->assertEquals(0,DB::table('nilai_praktikum')->value('disetujui_dosen'));
+        $this->assertEquals(0,DB::table('eo_prak_nilai_praktikum')->value('dipublikasikan'));
+        $this->assertEquals(0,DB::table('eo_prak_nilai_praktikum')->value('disetujui_koor'));
+        $this->assertEquals(0,DB::table('eo_prak_nilai_praktikum')->value('disetujui_dosen'));
     }
 
     public function test_archived_practicum_cannot_be_modified(): void
     {
-        $this->task(); DB::table('eo_praktikum')->update(['is_active' => false]);
+        $this->task(); DB::table('eo_prak_praktikum')->update(['is_active' => false]);
         $this->expectException(ValidationException::class);
         (new TugasAkhirController)->submit($this->request('mahasiswa', 2, ['tahap_id' => self::STAGE, 'link' => 'https://example.com']));
     }

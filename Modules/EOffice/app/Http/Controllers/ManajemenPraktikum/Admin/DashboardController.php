@@ -71,11 +71,11 @@ class DashboardController extends Controller
         $dosenQuery = Lecturer::query()
             ->with('user')
             ->addSelect([
-                'jumlah_praktikum' => DB::table('eo_praktikum_dosen')
-                    ->join('eo_praktikum', 'eo_praktikum.id', '=', 'eo_praktikum_dosen.praktikum_id')
+                'jumlah_praktikum' => DB::table('eo_prak_praktikum_dosen')
+                    ->join('eo_prak_praktikum', 'eo_prak_praktikum.id', '=', 'eo_prak_praktikum_dosen.praktikum_id')
                     ->selectRaw('COUNT(*)')
-                    ->whereColumn('eo_praktikum_dosen.dosen_id', 'lecturers.user_id')
-                    ->whereNull('eo_praktikum.deleted_at'),
+                    ->whereColumn('eo_prak_praktikum_dosen.dosen_id', 'lecturers.user_id')
+                    ->whereNull('eo_prak_praktikum.deleted_at'),
             ]);
 
         if ($searchDosen !== '') {

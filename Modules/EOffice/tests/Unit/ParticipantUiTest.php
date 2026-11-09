@@ -17,11 +17,11 @@ class ParticipantUiTest extends TestCase
         DB::setDefaultConnection('participant_test');
         Schema::create('users',function(Blueprint $t){$t->id();$t->string('name');$t->string('email');$t->softDeletes();});
         Schema::create('students',function(Blueprint $t){$t->id();$t->integer('user_id');$t->string('student_number');});
-        Schema::create('daftar_praktikan',function(Blueprint $t){$t->id();$t->string('praktikum_id');$t->integer('user_id');$t->string('kelompok');$t->string('shift');});
+        Schema::create('eo_prak_daftar_praktikan',function(Blueprint $t){$t->id();$t->string('praktikum_id');$t->integer('user_id');$t->string('kelompok');$t->string('shift');});
         foreach(range(1,25) as $i){
             DB::table('users')->insert(['id'=>$i,'name'=>'Mahasiswa '.$i,'email'=>'student'.$i.'@test.local']);
             DB::table('students')->insert(['user_id'=>$i,'student_number'=>'21120123'.str_pad((string)$i,6,'0',STR_PAD_LEFT)]);
-            DB::table('daftar_praktikan')->insert(['praktikum_id'=>$i===25?'other':'active','user_id'=>$i,'kelompok'=>$i>20?'12':'1','shift'=>$i>20?'3':'1']);
+            DB::table('eo_prak_daftar_praktikan')->insert(['praktikum_id'=>$i===25?'other':'active','user_id'=>$i,'kelompok'=>$i>20?'12':'1','shift'=>$i>20?'3':'1']);
         }
         $query=fn($params)=>ParticipantListFilters::apply(DaftarPraktikan::where('praktikum_id','active'),Request::create('/praktikan','GET',$params));
         $page=$query(['kelompok'=>'12','shift'=>'3'])->paginate(2);

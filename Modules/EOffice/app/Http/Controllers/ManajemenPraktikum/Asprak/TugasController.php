@@ -79,7 +79,7 @@ class TugasController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'modul_id' => 'required|exists:modul_praktikum,id',
+            'modul_id' => 'required|exists:eo_prak_modul_praktikum,id',
             'jenis_tugas' => 'required|in:tugas_pendahuluan,laporan,responsi,tugas_pengganti,tambahan_1,tambahan_2',
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
@@ -127,7 +127,7 @@ class TugasController extends Controller
             'file_path' => $filePath,
         ]);
 
-        // Auto-create pengumpulan_tugas if there are already scores in nilai_jenis_tugas
+        // Auto-create eo_prak_pengumpulan_tugas if there are already scores in eo_prak_nilai_jenis_tugas
         $this->syncExistingNilaiJenisToPengumpulan($tugas);
 
         return redirect()->route('eoffice.manprak.asprak.tugas.index')->with('success', 'Tugas berhasil dibuat.');
@@ -238,7 +238,7 @@ class TugasController extends Controller
             }
         }
 
-        // Auto-create/update pengumpulan_tugas if jenis_tugas changed or scores exist in nilai_jenis_tugas
+        // Auto-create/update eo_prak_pengumpulan_tugas if jenis_tugas changed or scores exist in eo_prak_nilai_jenis_tugas
         $this->syncExistingNilaiJenisToPengumpulan($tugas);
 
         return redirect()->route('eoffice.manprak.asprak.tugas.index')->with('success', 'Tugas berhasil diperbarui.');
@@ -293,7 +293,7 @@ class TugasController extends Controller
             ->get()
             ->keyBy('daftar_praktikan_id');
 
-        // Ambil nilai jenis tugas sesuai jenis_tugas tugas ini (dari tabel nilai_jenis_tugas)
+        // Ambil nilai jenis tugas sesuai jenis_tugas tugas ini (dari tabel eo_prak_nilai_jenis_tugas)
         $nilaiJenis = NilaiJenisTugas::where('modul_id', $tugas->modul_id)
             ->where('jenis_tugas', $tugas->jenis_tugas)
             ->get()
@@ -307,7 +307,7 @@ class TugasController extends Controller
 
     /**
      * Beri nilai sekaligus set status ACC.
-     * Nilai tugas langsung masuk ke tabel nilai_praktikum (auto-sync).
+     * Nilai tugas langsung masuk ke tabel eo_prak_nilai_praktikum (auto-sync).
      */
     public function beriNilai(Request $request, int $id)
     {
@@ -327,7 +327,7 @@ class TugasController extends Controller
             'is_revision' => false,
         ]);
 
-        // Sync nilai ke tabel nilai_jenis_tugas (two-way sync)
+        // Sync nilai ke tabel eo_prak_nilai_jenis_tugas (two-way sync)
         $tugas = $pengumpulan->tugas;
         if ($tugas && $tugas->jenis_tugas) {
             NilaiJenisTugas::updateOrCreate(
@@ -340,7 +340,7 @@ class TugasController extends Controller
             );
         }
 
-        // Auto-sync nilai ke tabel nilai_praktikum
+        // Auto-sync nilai ke tabel eo_prak_nilai_praktikum
         $this->syncNilaiTugas($pengumpulan);
 
         return back()->with('success', 'Nilai berhasil disimpan dan status diubah ke ACC.');
@@ -406,7 +406,7 @@ class TugasController extends Controller
 
     /**
      * Update nilai jenis tugas dari halaman Lihat Pengumpulan (two-way sync).
-     * Menyimpan ke nilai_jenis_tugas — sumber kebenaran tunggal.
+     * Menyimpan ke eo_prak_nilai_jenis_tugas — sumber kebenaran tunggal.
      */
     public function updateNilaiJenis(Request $request, int $id)
     {
@@ -441,7 +441,7 @@ class TugasController extends Controller
                 ['nilai' => $nilaiValue]
             );
 
-            // Sync ke pengumpulan_tugas
+            // Sync ke eo_prak_pengumpulan_tugas
             $pengumpulan = PengumpulanTugas::firstOrCreate([
                 'tugas_id' => $tugas->id,
                 'daftar_praktikan_id' => $daftarPraktikanId,
@@ -467,8 +467,8 @@ class TugasController extends Controller
     }
 
     /**
-     * Helper: Jika form tugas baru dibuat, ambil semua nilai di nilai_jenis_tugas yang sudah ada
-     * dan buatkan form pengumpulan_tugas otomatis dengan nilai tersebut.
+     * Helper: Jika form tugas baru dibuat, ambil semua nilai di eo_prak_nilai_jenis_tugas yang sudah ada
+     * dan buatkan form eo_prak_pengumpulan_tugas otomatis dengan nilai tersebut.
      */
     private function syncExistingNilaiJenisToPengumpulan(Tugas $tugas): void
     {
@@ -486,7 +486,7 @@ class TugasController extends Controller
                 'daftar_praktikan_id' => $nj->daftar_praktikan_id,
             ]);
 
-            // Jika belum ada nilainya di pengumpulan_tugas, update
+            // Jika belum ada nilainya di eo_prak_pengumpulan_tugas, update
             if ($pengumpulan->nilai === null) {
                 $pengumpulan->update([
                     'nilai' => $nj->nilai,
@@ -499,7 +499,7 @@ class TugasController extends Controller
     }
 
     /**
-     * Sync nilai tugas rata-rata ke tabel nilai_praktikum.
+     * Sync nilai tugas rata-rata ke tabel eo_prak_nilai_praktikum.
      * Nilai akhir dihitung dari rata-rata nilai semua tugas pada praktikum.
      */
     private function syncNilaiTugas(PengumpulanTugas $pengumpulan): void

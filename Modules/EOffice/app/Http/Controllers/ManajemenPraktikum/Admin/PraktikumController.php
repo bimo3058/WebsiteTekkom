@@ -296,7 +296,7 @@ class PraktikumController extends Controller
     {
         $request->validate([
             'praktikum_ids' => 'required|array',
-            'praktikum_ids.*' => 'exists:eo_praktikum,id',
+            'praktikum_ids.*' => 'exists:eo_prak_praktikum,id',
             'action' => 'required|in:activate,deactivate',
         ]);
 
