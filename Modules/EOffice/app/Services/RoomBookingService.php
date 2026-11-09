@@ -494,6 +494,62 @@ class RoomBookingService
     }
 
     /**
+     * Membatalkan HANYA draf permohonan reschedule yang masih berstatus 'menunggu',
+     * sehingga peminjaman awal yang sudah 'disetujui' tetap aman dan aktif.
+     * Digunakan jika modul eksternal (CERC/Praktikum/KP) menarik kembali niat pindah jadwal sebelum disetujui Admin.
+     *
+     * @param string $source
+     * @param int|string $sourceId
+     * @param string|null $alasan
+     * @return bool
+     */
+    public function cancelRescheduleRequest(string $source, $sourceId, ?string $alasan = null): bool
+    {
+        if (empty($sourceId)) {
+            return false;
+        }
+
+        $normalizedSource = strtolower(trim((string) $source));
+        if (in_array($normalizedSource, ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik'])) {
+            $normalizedSource = 'kp';
+        }
+
+        $sourceQuery = ($normalizedSource === 'kp') ? ['kp', 'kerja_praktik', 'kerja praktik'] : [$normalizedSource];
+
+        // Cari draf reschedule yang berstatus 'menunggu' dan merupakan pengganti (memiliki replaces_peminjaman_id)
+        $rescheduleDraft = Peminjaman::with(['user', 'ruangan'])
+            ->whereIn('source', $sourceQuery)
+            ->where('source_id', (string) $sourceId)
+            ->where('status', 'menunggu')
+            ->whereNotNull('replaces_peminjaman_id')
+            ->latest('id')
+            ->first();
+
+        if (!$rescheduleDraft) {
+            return false;
+        }
+
+        $alasanTeks = $alasan ?: 'Pengajuan reschedule ditarik kembali oleh pemohon (' . strtoupper($normalizedSource) . ')';
+
+        DB::transaction(function () use ($rescheduleDraft, $alasanTeks) {
+            $prevStatus = $rescheduleDraft->status;
+            $rescheduleDraft->update([
+                'status' => 'dibatalkan',
+                'alasan_penolakan' => $alasanTeks,
+                'waktu_approval' => now(),
+            ]);
+
+            if ($rescheduleDraft->user) {
+                $rescheduleDraft->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($rescheduleDraft, true));
+            }
+
+            event(new \Modules\EOffice\Events\RoomBookingStatusChanged($rescheduleDraft, 'dibatalkan', $prevStatus, $alasanTeks));
+        });
+
+        return true;
+    }
+
+    /**
      * Menjadwalkan ulang (Reschedule) peminjaman ruangan dari modul eksternal (KP, Capstone, Praktikum).
      * Menerapkan audit trail lengkap: Jadwal lama dibatalkan secara tertib, jadwal baru dibuat berstatus 'menunggu'.
      *
@@ -596,6 +652,18 @@ class RoomBookingService
                 throw new \Exception('Ruangan baru yang dipilih tidak ditemukan atau sedang tidak aktif.');
             }
 
+            // Validasi Pembatasan Kategori Ruangan per Modul:
+            // Ruangan berkategori 'Sidang' hanya boleh dipesan oleh modul Capstone (Sidang TA/Capstone).
+            // Modul KP, Praktikum, atau modul lain DITOLAK meminjam Ruang Sidang.
+            if ($ruangan->kategori === Ruangan::KATEGORI_SIDANG && $normalizedSource !== 'capstone') {
+                $sourceLabel = match ($normalizedSource) {
+                    'kp' => 'KP',
+                    'praktikum' => 'Praktikum',
+                    default => 'Modul ' . ($normalizedSource ?: 'Umum'),
+                };
+                throw new \Exception("Reschedule gagal: {$sourceLabel} tidak diizinkan meminjam Ruangan berkategori 'Sidang' ({$ruangan->nama}). Ruang Sidang khusus diperuntukkan bagi agenda CATA.");
+            }
+
             $dayOfWeekIso = (int) $parsedDate->format('N');
 
             // 7. Cek Bentrok dengan Jadwal Internal (Kuliah Rutin / Blokir)
@@ -640,9 +708,11 @@ class RoomBookingService
                     'waktu_approval' => now(),
                 ]);
 
-            // 9. Cek Bentrok dengan Peminjaman Lain (KECUALIKAN diri sendiri: id != $oldBooking->id dan draf penggantinya)
-            $bentrokPeminjaman = Peminjaman::where('ruangan_id', $newRuanganId)
+            // 9a. Cek Bentrok dengan Peminjaman Resmi yang sudah Disetujui (Hard Lock)
+            // (KECUALIKAN diri sendiri: id != $oldBooking->id dan draf penggantinya)
+            $bentrokApproved = Peminjaman::where('ruangan_id', $newRuanganId)
                 ->where('tanggal_pinjam', $formattedTanggal)
+                ->where('status', 'disetujui')
                 ->where('id', '!=', $oldBooking->id)
                 ->where('id', '!=', $rootBookingId)
                 ->where(function ($q) use ($oldBooking, $rootBookingId) {
@@ -652,18 +722,49 @@ class RoomBookingService
                                 ->where('replaces_peminjaman_id', '!=', $rootBookingId);
                         });
                 })
-                ->whereIn('status', ['menunggu', 'disetujui'])
                 ->where(function ($q) use ($newJamMulai, $newJamSelesai) {
                     $q->where('jam_mulai', '<', $newJamSelesai)
                         ->where('jam_selesai', '>', $newJamMulai);
                 })->first();
 
-            if ($bentrokPeminjaman) {
-                $label = $bentrokPeminjaman->source_label ?: 'Peminjaman Lain';
-                $statusText = $bentrokPeminjaman->status === 'menunggu'
-                    ? 'sedang dalam proses pengajuan persetujuan'
-                    : 'sudah dipesan resmi';
-                throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan karena {$statusText} ({$label}: {$bentrokPeminjaman->tujuan}).");
+            if ($bentrokApproved) {
+                $label = $bentrokApproved->source_label ?: 'Peminjaman Lain';
+                throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan karena sudah dipesan dan disetujui resmi ({$label}: {$bentrokApproved->tujuan}). Silakan pilih jadwal/ruangan lain atau hubungi Admin Ruang untuk koordinasi.");
+            }
+
+            // 9b. Cek Bentrok dengan Peminjaman yang masih Menunggu Persetujuan (Soft Lock dengan Hierarki Prioritas)
+            $incomingPriority = Peminjaman::getPriorityLevel($normalizedSource, $tujuan);
+
+            $bentrokMenunggu = Peminjaman::where('ruangan_id', $newRuanganId)
+                ->where('tanggal_pinjam', $formattedTanggal)
+                ->where('status', 'menunggu')
+                ->where('id', '!=', $oldBooking->id)
+                ->where('id', '!=', $rootBookingId)
+                ->where(function ($q) use ($oldBooking, $rootBookingId) {
+                    $q->whereNull('replaces_peminjaman_id')
+                        ->orWhere(function ($sub) use ($oldBooking, $rootBookingId) {
+                            $sub->where('replaces_peminjaman_id', '!=', $oldBooking->id)
+                                ->where('replaces_peminjaman_id', '!=', $rootBookingId);
+                        });
+                })
+                ->where(function ($q) use ($newJamMulai, $newJamSelesai) {
+                    $q->where('jam_mulai', '<', $newJamSelesai)
+                        ->where('jam_selesai', '>', $newJamMulai);
+                })->get();
+
+            if ($bentrokMenunggu->isNotEmpty()) {
+                // Cari apakah ada antrean menunggu yang memiliki prioritas sama atau lebih tinggi
+                $blockingPending = $bentrokMenunggu->first(function ($item) use ($incomingPriority) {
+                    return $item->priority >= $incomingPriority;
+                });
+
+                if ($blockingPending) {
+                    $label = $blockingPending->source_label ?: 'Peminjaman Lain';
+                    throw new \Exception("Ruangan {$ruangan->nama} tidak dapat dipesan karena sedang dalam proses pengajuan persetujuan ({$label}: {$blockingPending->tujuan}).");
+                }
+
+                // Jika seluruh antrean menunggu memiliki prioritas lebih rendah daripada $incomingPriority,
+                // pengajuan reschedule akademik berprioritas tinggi ini diizinkan masuk berdampingan ke meja Admin Ruang.
             }
 
             // 10. TWO-PHASE SWAP: Buat record peminjaman baru berstatus 'menunggu' dengan relasi replaces_peminjaman_id
@@ -725,5 +826,58 @@ class RoomBookingService
     public function getBookingStatus(string $source, $sourceId): ?string
     {
         return $this->getBooking($source, $sourceId)?->status;
+    }
+
+    /**
+     * Mengambil data peminjaman terkini TANPA batasan status (mencakup 'disetujui', 'menunggu', 'ditolak', 'dibatalkan').
+     * Digunakan untuk pemulihan sinkronisasi jika event listener modul luar gagal memproses event.
+     *
+     * @param string $source
+     * @param int|string $sourceId
+     * @return Peminjaman|null
+     */
+    public function getLatestBooking(string $source, $sourceId): ?Peminjaman
+    {
+        $normalizedSource = strtolower(trim((string) $source));
+        if (in_array($normalizedSource, ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik'])) {
+            $normalizedSource = 'kp';
+        }
+
+        $sourceQuery = ($normalizedSource === 'kp') ? ['kp', 'kerja_praktik', 'kerja praktik'] : [$normalizedSource];
+
+        return Peminjaman::with(['ruangan', 'user'])
+            ->whereIn('source', $sourceQuery)
+            ->where('source_id', (string) $sourceId)
+            ->latest('id')
+            ->first();
+    }
+
+    /**
+     * Mengambil status peminjaman paling mutakhir untuk pemulihan status modul luar.
+     * Mengembalikan status aktual ('disetujui', 'menunggu', 'ditolak', 'dibatalkan') atau null jika tidak pernah ada.
+     *
+     * @param string $source
+     * @param int|string $sourceId
+     * @return string|null
+     */
+    public function getLatestBookingStatus(string $source, $sourceId): ?string
+    {
+        return $this->getLatestBooking($source, $sourceId)?->status;
+    }
+
+    /**
+     * Mencari data peminjaman langsung berdasarkan ID primer EOffice (eo_mr_peminjamans.id).
+     * Mencakup seluruh status peminjaman beserta alasan penolakannya.
+     *
+     * @param int|string $id
+     * @return Peminjaman|null
+     */
+    public function findBookingById($id): ?Peminjaman
+    {
+        if (empty($id)) {
+            return null;
+        }
+
+        return Peminjaman::with(['ruangan', 'user', 'replacesPeminjaman'])->find($id);
     }
 }
