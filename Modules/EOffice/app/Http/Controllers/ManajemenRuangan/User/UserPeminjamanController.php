@@ -5,6 +5,7 @@ namespace Modules\EOffice\Http\Controllers\ManajemenRuangan\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 use Modules\EOffice\Models\Ruangan;
 use Modules\EOffice\Models\Peminjaman;
 use Modules\EOffice\Models\Pengaturan;
@@ -195,75 +196,81 @@ class UserPeminjamanController extends Controller
                 ->withErrors(['Jam Terlewat' => 'Waktu mulai peminjaman tidak boleh menggunakan jam yang telah berlalu hari ini.']);
         }
 
-        // Pengecekan Bentrok Jadwal Peminjaman (Global Checks)
-        $isConflict = Peminjaman::where('ruangan_id', $request->ruangan_id)
-            ->where('tanggal_pinjam', $request->tanggal_pinjam)
-            ->whereIn('status', ['menunggu', 'disetujui'])
-            ->where(function ($query) use ($request) {
-                // Logika Overlap: Waktu yang diajukan bertabrakan dengan rentang jam sistem
-                $query->where(function ($q) use ($request) {
-                    $q->where('jam_mulai', '<', $request->jam_selesai)
-                        ->where('jam_selesai', '>', $request->jam_mulai);
-                });
-            })
-            ->exists();
+        try {
+            DB::transaction(function () use ($request, $nomorTelepon, $filePath, $dayOfWeek) {
+                // 1. Pessimistic Lock: Gembok baris ruangan agar submit bersamaan di milidetik yang sama mengantre tertib
+                $ruangan = Ruangan::where('id', $request->ruangan_id)->lockForUpdate()->first();
+                if (!$ruangan || !$ruangan->is_active) {
+                    throw new \Exception('Ruangan yang dipilih tidak ditemukan atau sedang tidak aktif.');
+                }
 
-        // Pengecekan Bentrok: Jadwal Internal (Akademik, Kuliah, Rapat)
-        $isInternalConflict = \Modules\EOffice\Models\MrJadwalInternal::where('ruangan_id', $request->ruangan_id)
-            ->where(function ($query) use ($request, $dayOfWeek) {
-                $query->where(function ($q) use ($dayOfWeek, $request) {
-                    $q->where('tipe_jadwal', 'rutin')
-                        ->where('hari', $dayOfWeek)
-                        ->where(function ($tq) use ($request) {
-                            $tq->whereNull('tgl_mulai_efektif')
-                                ->orWhere('tgl_mulai_efektif', '<=', $request->tanggal_pinjam);
-                        })
-                        ->where(function ($tq) use ($request) {
-                            $tq->whereNull('tgl_selesai_efektif')
-                                ->orWhere('tgl_selesai_efektif', '>=', $request->tanggal_pinjam);
+                // 2. Pengecekan Bentrok Jadwal Peminjaman (Global Checks) di dalam transaksi terkunci
+                $isConflict = Peminjaman::where('ruangan_id', $request->ruangan_id)
+                    ->where('tanggal_pinjam', $request->tanggal_pinjam)
+                    ->whereIn('status', ['menunggu', 'disetujui'])
+                    ->where(function ($query) use ($request) {
+                        $query->where('jam_mulai', '<', $request->jam_selesai)
+                            ->where('jam_selesai', '>', $request->jam_mulai);
+                    })
+                    ->exists();
+
+                if ($isConflict) {
+                    throw new \Exception('Mohon maaf, Ruangan tersebut telah lebih dulu dipesan atau sedang dalam proses antrean (menunggu persetujuan) pada rentang jam tersebut.');
+                }
+
+                // 3. Pengecekan Bentrok Jadwal Internal (Akademik, Kuliah, Rapat)
+                $isInternalConflict = \Modules\EOffice\Models\MrJadwalInternal::where('ruangan_id', $request->ruangan_id)
+                    ->where(function ($query) use ($request, $dayOfWeek) {
+                        $query->where(function ($q) use ($dayOfWeek, $request) {
+                            $q->where('tipe_jadwal', 'rutin')
+                                ->where('hari', $dayOfWeek)
+                                ->where(function ($tq) use ($request) {
+                                    $tq->whereNull('tgl_mulai_efektif')
+                                        ->orWhere('tgl_mulai_efektif', '<=', $request->tanggal_pinjam);
+                                })
+                                ->where(function ($tq) use ($request) {
+                                    $tq->whereNull('tgl_selesai_efektif')
+                                        ->orWhere('tgl_selesai_efektif', '>=', $request->tanggal_pinjam);
+                                });
+                        })->orWhere(function ($q) use ($request) {
+                            $q->where('tipe_jadwal', 'spesifik')->where('tanggal_spesifik', $request->tanggal_pinjam);
                         });
-                })->orWhere(function ($q) use ($request) {
-                    $q->where('tipe_jadwal', 'spesifik')->where('tanggal_spesifik', $request->tanggal_pinjam);
-                });
-            })
-            ->where(function ($query) use ($request) {
-                $query->where('jam_mulai', '<', $request->jam_selesai)
-                    ->where('jam_selesai', '>', $request->jam_mulai);
-            })
-            ->first();
+                    })
+                    ->where(function ($query) use ($request) {
+                        $query->where('jam_mulai', '<', $request->jam_selesai)
+                            ->where('jam_selesai', '>', $request->jam_mulai);
+                    })
+                    ->first();
 
-        // Kebijakan Baru: SELURUH Role (Dosen & Mahasiswa) MUTLAK ditolak jika menabrak jadwal yang sudah ada!
-        if ($isConflict) {
+                if ($isInternalConflict) {
+                    throw new \Exception('Mohon maaf, ruangan terblokir secara otomatis karena terbentrok dengan Agenda Internal Kampus (Kategori: ' . $isInternalConflict->kategori . ').');
+                }
+
+                // 4. Simpan Pengajuan Peminjaman
+                Peminjaman::create([
+                    'user_id' => auth()->id(),
+                    'ruangan_id' => $request->ruangan_id,
+                    'nomor_telepon' => $nomorTelepon,
+                    'tujuan' => $request->tujuan,
+                    'tanggal_pinjam' => $request->tanggal_pinjam,
+                    'jam_mulai' => $request->jam_mulai,
+                    'jam_selesai' => $request->jam_selesai,
+                    'berkas_pendukung' => $filePath,
+                    'status' => 'menunggu',
+                    'created_by' => auth()->id()
+                ]);
+            });
+
+            $feedbackMsg = 'Form Booking Ruangan berhasil diajukan dan masuk ke daftar tunggu persetujuan Admin.';
+
+            return redirect()->route('eoffice.peminjaman.user.saya')
+                ->with('success', $feedbackMsg);
+
+        } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['Bentrok' => 'Mohon maaf, Ruangan tersebut telah lebih dulu dipesan atau sedang dalam proses antrean (menunggu persetujuan) pada rentang jam tersebut.']);
+                ->withErrors(['Bentrok' => $e->getMessage()]);
         }
-        if ($isInternalConflict) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['Sistem Internal' => 'Mohon maaf, ruangan terblokir secara otomatis karena terbentrok dengan Agenda Internal Kampus (Kategori: ' . $isInternalConflict->kategori . ').']);
-        }
-
-        // Arsitektur Status Logika Akhir
-        $statusAkhir = 'menunggu';
-
-        Peminjaman::create([
-            'user_id' => auth()->id(),
-            'ruangan_id' => $request->ruangan_id,
-            'nomor_telepon' => $nomorTelepon,
-            'tujuan' => $request->tujuan,
-            'tanggal_pinjam' => $request->tanggal_pinjam,
-            'jam_mulai' => $request->jam_mulai,
-            'jam_selesai' => $request->jam_selesai,
-            'berkas_pendukung' => $filePath,
-            'status' => $statusAkhir,
-            'created_by' => auth()->id()
-        ]);
-
-        $feedbackMsg = 'Form Booking Ruangan berhasil diajukan dan masuk ke daftar tunggu persetujuan Admin.';
-
-        return redirect()->route('eoffice.peminjaman.user.saya')
-            ->with('success', $feedbackMsg);
     }
 
     public function kalender(Request $request)
@@ -397,43 +404,63 @@ class UserPeminjamanController extends Controller
 
     public function batalkanBooking($id)
     {
-        $peminjaman = Peminjaman::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->firstOrFail();
+        $userId = auth()->id();
 
-        // Validasi Otorisasi: Peminjaman dari modul atau yang didaftarkan oleh Admin/TU tidak boleh dibatalkan mandiri oleh mahasiswa
-        $isSelfSubmitted = empty($peminjaman->source) && (!$peminjaman->created_by || (int)$peminjaman->created_by === (int)auth()->id());
-        if (!$isSelfSubmitted) {
-            $penjelasan = !empty($peminjaman->source)
-                ? "Jadwal ini merupakan agenda resmi dari modul {$peminjaman->source_label}."
-                : "Jadwal ini dialokasikan resmi oleh Admin Ruang/TU.";
-            return redirect()->back()->withErrors("{$penjelasan} Pembatalan tidak dapat dilakukan secara mandiri oleh mahasiswa. Silakan hubungi Admin Ruang atau koordinator modul terkait.");
-        }
+        try {
+            $redirectError = null;
 
-        // Validasi apakah waktu mulai peminjaman sudah berlalu atau sedang berlangsung
-        $tglPinjam = is_string($peminjaman->tanggal_pinjam)
-            ? $peminjaman->tanggal_pinjam
-            : $peminjaman->tanggal_pinjam->format('Y-m-d');
-        $waktuMulai = \Carbon\Carbon::parse("{$tglPinjam} {$peminjaman->jam_mulai}");
+            DB::transaction(function () use ($id, $userId, &$redirectError) {
+                $peminjaman = Peminjaman::where('id', $id)
+                    ->where('user_id', $userId)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-        if (now()->gte($waktuMulai)) {
-            return redirect()->back()->withErrors('Peminjaman yang sedang berlangsung atau sudah lampau tidak dapat dibatalkan. Silakan hubungi Admin jika perlu penyesuaian jadwal.');
-        }
+                // Validasi Otorisasi: Peminjaman dari modul atau yang didaftarkan oleh Admin/TU tidak boleh dibatalkan mandiri oleh mahasiswa
+                $isSelfSubmitted = empty($peminjaman->source) && (!$peminjaman->created_by || (int) $peminjaman->created_by === (int) $userId);
+                if (!$isSelfSubmitted) {
+                    $penjelasan = !empty($peminjaman->source)
+                        ? "Jadwal ini merupakan agenda resmi dari modul {$peminjaman->source_label}."
+                        : "Jadwal ini dialokasikan resmi oleh Admin Ruang/TU.";
+                    $redirectError = "{$penjelasan} Pembatalan tidak dapat dilakukan secara mandiri oleh mahasiswa. Silakan hubungi Admin Ruang atau koordinator modul terkait.";
+                    return;
+                }
 
-        if ($peminjaman->status == 'menunggu' || $peminjaman->status == 'disetujui') {
-            $prevStatus = $peminjaman->status;
-            $peminjaman->update([
-                'status' => 'dibatalkan',
-                'waktu_approval' => now()
-            ]);
+                // Validasi apakah waktu mulai peminjaman sudah berlalu atau sedang berlangsung
+                $tglPinjam = is_string($peminjaman->tanggal_pinjam)
+                    ? $peminjaman->tanggal_pinjam
+                    : $peminjaman->tanggal_pinjam->format('Y-m-d');
+                $waktuMulai = \Carbon\Carbon::parse("{$tglPinjam} {$peminjaman->jam_mulai}");
 
-            // Dispatch event agar kalender dan modul listener otomatis tersinkronisasi
-            event(new \Modules\EOffice\Events\RoomBookingStatusChanged($peminjaman, 'dibatalkan', $prevStatus, 'Dibatalkan mandiri oleh pemohon'));
+                if (now()->gte($waktuMulai)) {
+                    $redirectError = 'Peminjaman yang sedang berlangsung atau sudah lampau tidak dapat dibatalkan. Silakan hubungi Admin jika perlu penyesuaian jadwal.';
+                    return;
+                }
+
+                if ($peminjaman->status == 'menunggu' || $peminjaman->status == 'disetujui') {
+                    $prevStatus = $peminjaman->status;
+                    $peminjaman->update([
+                        'status' => 'dibatalkan',
+                        'waktu_approval' => now()
+                    ]);
+
+                    // Dispatch event agar kalender dan modul listener otomatis tersinkronisasi
+                    event(new \Modules\EOffice\Events\RoomBookingStatusChanged($peminjaman, 'dibatalkan', $prevStatus, 'Dibatalkan mandiri oleh pemohon'));
+                    return;
+                }
+
+                $redirectError = 'Aksi tidak diijinkan atau status sudah tidak bisa dibatalkan.';
+            });
+
+            if ($redirectError !== null) {
+                return redirect()->back()->withErrors($redirectError);
+            }
 
             return redirect()->back()->with('success', 'Peminjaman berhasil dibatalkan secara mandiri.');
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            return redirect()->back()->withErrors('Terjadi kendala saat membatalkan peminjaman. Silakan coba lagi.');
         }
-
-        return redirect()->back()->withErrors('Aksi tidak diijinkan atau status sudah tidak bisa dibatalkan.');
     }
 
     /**

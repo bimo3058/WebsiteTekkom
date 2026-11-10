@@ -242,18 +242,39 @@ class JadwalController extends Controller
                                     ->where('jam_selesai', '>', $request->jam_mulai);
                             })->get();
 
+                        $kategori = $request->kategori ?: 'Pemeliharaan / Penutupan';
                         foreach ($peminjamans as $p) {
-                            $newStatus = $p->status === 'disetujui' ? 'dibatalkan' : 'ditolak';
+                            $prevStatus = $p->status;
+                            $isApprovedBefore = ($prevStatus === 'disetujui');
+                            $newStatus = $isApprovedBefore ? 'dibatalkan' : 'ditolak';
+
+                            $ruanganNama = $p->ruangan ? $p->ruangan->nama : 'Ruangan';
+                            $tglFormatted = \Carbon\Carbon::parse($p->tanggal_pinjam)->translatedFormat('d M Y');
+                            $jamMulai = substr($p->jam_mulai, 0, 5);
+                            $jamSelesai = $p->jam_selesai ? substr($p->jam_selesai, 0, 5) : null;
+                            $waktuFormatted = $jamSelesai ? "{$jamMulai} - {$jamSelesai} WIB" : "{$jamMulai} WIB";
+
+                            if ($isApprovedBefore) {
+                                $alasan = "Dibatalkan oleh Admin: Terjadi perubahan alokasi ruangan mendesak untuk {$kategori}. Hak penggunaan ruangan pada jadwal ini dicabut. Silakan mengajukan jadwal pengganti atau hubungi Admin.";
+                                $notifMsg = "Izin peminjaman {$ruanganNama} pada {$tglFormatted} pukul {$waktuFormatted} yang sebelumnya telah disetujui, terpaksa dibatalkan oleh Admin karena {$kategori}.";
+                            } else {
+                                $alasan = "Ditolak oleh Admin: Ruangan dialokasikan untuk {$kategori}. Silakan mengajukan permohonan di ruangan atau waktu lain.";
+                                $notifMsg = "Pengajuan peminjaman {$ruanganNama} pada {$tglFormatted} pukul {$waktuFormatted} telah ditolak oleh Admin karena {$kategori}.";
+                            }
+
                             $p->update([
                                 'status' => $newStatus,
-                                'alasan_penolakan' => "Dibatalkan sepihak oleh sistem karena ruangan diblokir untuk {$request->kategori}.",
+                                'alasan_penolakan' => $alasan,
                                 'waktu_approval' => now()
                             ]);
 
                             // Kirim notifikasi resmi kepada peminjam
                             if ($p->user) {
-                                $p->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($p, true));
+                                $p->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($p, $isApprovedBefore, $notifMsg));
                             }
+
+                            // Dispatch Event perubahan status peminjaman untuk modul luar (Praktikum, KP, Capstone)
+                            event(new \Modules\EOffice\Events\RoomBookingStatusChanged($p, $newStatus, $prevStatus, $alasan));
                         }
                     }
                 }
@@ -353,18 +374,39 @@ class JadwalController extends Controller
                             ->where('jam_selesai', '>', $request->jam_mulai);
                     })->get();
 
+                $kategori = $request->kategori ?: 'Pemeliharaan / Penutupan';
                 foreach ($peminjamans as $p) {
-                    $newStatus = $p->status === 'disetujui' ? 'dibatalkan' : 'ditolak';
+                    $prevStatus = $p->status;
+                    $isApprovedBefore = ($prevStatus === 'disetujui');
+                    $newStatus = $isApprovedBefore ? 'dibatalkan' : 'ditolak';
+
+                    $ruanganNama = $p->ruangan ? $p->ruangan->nama : 'Ruangan';
+                    $tglFormatted = \Carbon\Carbon::parse($p->tanggal_pinjam)->translatedFormat('d M Y');
+                    $jamMulai = substr($p->jam_mulai, 0, 5);
+                    $jamSelesai = $p->jam_selesai ? substr($p->jam_selesai, 0, 5) : null;
+                    $waktuFormatted = $jamSelesai ? "{$jamMulai} - {$jamSelesai} WIB" : "{$jamMulai} WIB";
+
+                    if ($isApprovedBefore) {
+                        $alasan = "Dibatalkan oleh Admin: Terjadi perubahan alokasi ruangan mendesak untuk {$kategori}. Hak penggunaan ruangan pada jadwal ini dicabut. Silakan mengajukan jadwal pengganti atau hubungi Admin.";
+                        $notifMsg = "Izin peminjaman {$ruanganNama} pada {$tglFormatted} pukul {$waktuFormatted} yang sebelumnya telah disetujui, terpaksa dibatalkan oleh Admin karena {$kategori}.";
+                    } else {
+                        $alasan = "Ditolak oleh Admin: Ruangan dialokasikan untuk {$kategori}. Silakan mengajukan permohonan di ruangan atau waktu lain.";
+                        $notifMsg = "Pengajuan peminjaman {$ruanganNama} pada {$tglFormatted} pukul {$waktuFormatted} telah ditolak oleh Admin karena {$kategori}.";
+                    }
+
                     $p->update([
                         'status' => $newStatus,
-                        'alasan_penolakan' => "Dibatalkan sepihak oleh sistem karena ruangan diblokir untuk {$request->kategori}.",
+                        'alasan_penolakan' => $alasan,
                         'waktu_approval' => now()
                     ]);
 
                     // Kirim notifikasi resmi kepada peminjam
                     if ($p->user) {
-                        $p->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($p, true));
+                        $p->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($p, $isApprovedBefore, $notifMsg));
                     }
+
+                    // Dispatch Event perubahan status peminjaman untuk modul luar (Praktikum, KP, Capstone)
+                    event(new \Modules\EOffice\Events\RoomBookingStatusChanged($p, $newStatus, $prevStatus, $alasan));
                 }
             }
 
@@ -705,29 +747,50 @@ class JadwalController extends Controller
                     }
 
                     if ($isConflict) {
+                        $kategori = 'Jadwal Perkuliahan Akademik';
+                        $ruanganNama = $p->ruangan ? $p->ruangan->nama : 'Ruangan';
+                        $tglFormatted = \Carbon\Carbon::parse($p->tanggal_pinjam)->translatedFormat('d M Y');
+                        $jamMulai = substr($p->jam_mulai, 0, 5);
+                        $jamSelesai = $p->jam_selesai ? substr($p->jam_selesai, 0, 5) : null;
+                        $waktuFormatted = $jamSelesai ? "{$jamMulai} - {$jamSelesai} WIB" : "{$jamMulai} WIB";
+
                         if ($p->status === 'menunggu') {
+                            $alasan = "Ditolak oleh Admin: Ruangan dialokasikan untuk {$kategori}. Silakan mengajukan permohonan di ruangan atau waktu lain.";
+                            $notifMsg = "Pengajuan peminjaman {$ruanganNama} pada {$tglFormatted} pukul {$waktuFormatted} telah ditolak oleh Admin karena {$kategori}.";
                             $p->update([
                                 'status' => 'ditolak',
-                                'alasan_penolakan' => 'Ditolak otomatis karena bentrok dengan Jadwal Perkuliahan baru',
+                                'alasan_penolakan' => $alasan,
                                 'waktu_approval' => now()
                             ]);
                             $ditolakCount++;
                             try {
-                                $p->user?->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($p, false));
+                                $p->user?->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($p, false, $notifMsg));
                             } catch (\Throwable $e) {
                                 // Notification failure is non-blocking
                             }
+                            try {
+                                event(new \Modules\EOffice\Events\RoomBookingStatusChanged($p, 'ditolak', 'menunggu', $alasan));
+                            } catch (\Throwable $e) {
+                                // Event failure is non-blocking
+                            }
                         } elseif ($p->status === 'disetujui') {
+                            $alasan = "Dibatalkan oleh Admin: Terjadi perubahan alokasi ruangan mendesak untuk {$kategori}. Hak penggunaan ruangan pada jadwal ini dicabut. Silakan mengajukan jadwal pengganti atau hubungi Admin.";
+                            $notifMsg = "Izin peminjaman {$ruanganNama} pada {$tglFormatted} pukul {$waktuFormatted} yang sebelumnya telah disetujui, terpaksa dibatalkan oleh Admin karena {$kategori}.";
                             $p->update([
                                 'status' => 'dibatalkan',
-                                'alasan_penolakan' => 'Dibatalkan sepihak oleh sistem. Ruangan dialihfungsikan secara mendadak untuk keperluan Perkuliahan Akademik',
+                                'alasan_penolakan' => $alasan,
                                 'waktu_approval' => now()
                             ]);
                             $dibatalkanCount++;
                             try {
-                                $p->user?->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($p, true));
+                                $p->user?->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($p, true, $notifMsg));
                             } catch (\Throwable $e) {
                                 // Notification failure is non-blocking
+                            }
+                            try {
+                                event(new \Modules\EOffice\Events\RoomBookingStatusChanged($p, 'dibatalkan', 'disetujui', $alasan));
+                            } catch (\Throwable $e) {
+                                // Event failure is non-blocking
                             }
                         }
                     }
@@ -885,8 +948,10 @@ class JadwalController extends Controller
                         $waktuRange = substr($p->jam_mulai, 0, 5) . ' - ' . substr($p->jam_selesai, 0, 5) . ' WIB';
                         $tglIndo = \Carbon\Carbon::parse($dateOrHari)->locale('id')->translatedFormat('l, d F Y');
 
+                        $statusBadge = $p->status === 'menunggu' ? ' (Menunggu)' : ' (Disetujui)';
                         $conflictsList[] = [
-                            'tipe' => 'Peminjaman Mahasiswa',
+                            'tipe' => 'Peminjaman Mahasiswa' . $statusBadge,
+                            'status' => $p->status,
                             'nama' => $nama,
                             'waktu' => $waktuRange,
                             'tanggal' => $tglIndo,

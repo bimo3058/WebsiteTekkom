@@ -15,17 +15,20 @@ class PeminjamanStatusUpdated extends Notification
     protected $peminjaman;
     protected $statusMessage;
     protected $isCancelByAdmin;
+    protected $customMessage;
 
     /**
      * Create a new notification instance.
      *
      * @param Peminjaman $peminjaman
      * @param bool $isCancelByAdmin 
+     * @param string|null $customMessage
      */
-    public function __construct(Peminjaman $peminjaman, $isCancelByAdmin = false)
+    public function __construct(Peminjaman $peminjaman, $isCancelByAdmin = false, ?string $customMessage = null)
     {
         $this->peminjaman = $peminjaman;
         $this->isCancelByAdmin = $isCancelByAdmin;
+        $this->customMessage = $customMessage;
 
         if ($this->isCancelByAdmin) {
             $this->statusMessage = 'yang sebelumnya disetujui, kini terpaksa dibatalkan oleh admin';
@@ -57,14 +60,18 @@ class PeminjamanStatusUpdated extends Notification
      */
     public function toDatabase($notifiable)
     {
+        if (!$this->peminjaman->relationLoaded('ruangan')) {
+            $this->peminjaman->loadMissing('ruangan');
+        }
+
         $ruanganNama = $this->peminjaman->ruangan ? $this->peminjaman->ruangan->nama : 'Ruangan';
-        $tanggal = \Carbon\Carbon::parse($this->peminjaman->tanggal_pinjam)->format('d M Y');
+        $tanggal = \Carbon\Carbon::parse($this->peminjaman->tanggal_pinjam)->translatedFormat('d M Y');
         $jamMulai = \Carbon\Carbon::parse($this->peminjaman->jam_mulai)->format('H:i');
         $jamSelesai = $this->peminjaman->jam_selesai ? \Carbon\Carbon::parse($this->peminjaman->jam_selesai)->format('H:i') : null;
-        $waktu = $jamSelesai ? "{$jamMulai} - {$jamSelesai}" : $jamMulai;
+        $waktu = $jamSelesai ? "{$jamMulai} - {$jamSelesai} WIB" : "{$jamMulai} WIB";
 
         $title = "Peminjaman Ruangan";
-        $message = "Pengajuan peminjaman {$ruanganNama} pada pukul {$waktu} tanggal {$tanggal} {$this->statusMessage}.";
+        $message = $this->customMessage ?: "Pengajuan peminjaman {$ruanganNama} pada pukul {$waktu} tanggal {$tanggal} {$this->statusMessage}.";
 
         return [
             'peminjaman_id' => $this->peminjaman->id,
