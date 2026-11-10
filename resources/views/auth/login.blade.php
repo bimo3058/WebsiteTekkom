@@ -233,7 +233,8 @@
         padding: 20px 40px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
+        text-align: center;
         z-index: 1;
     }
     .sk-footer span {
@@ -291,6 +292,22 @@
             <div class="sk-alert sk-alert-warning">{{ session('status') }}</div>
         @endif
 
+        @if (session('error'))
+            <div class="sk-alert sk-alert-error" role="alert">{{ session('error') }}</div>
+        @endif
+
+        @php
+            $ssoErrorMessages = [
+                'no_access' => 'Anda tidak memiliki akses ke sistem, silahkan hubungi admin.',
+                'suspended' => 'Akun Anda telah ditangguhkan. Silakan hubungi admin.',
+            ];
+            $ssoAccessError = session('sso_access_error')
+                ?: ($ssoErrorMessages[request()->query('sso_error')] ?? null);
+        @endphp
+        @if ($ssoAccessError)
+            <div class="sk-alert sk-alert-error" role="alert">{{ $ssoAccessError }}</div>
+        @endif
+
         @if ($errors->any())
             <div class="sk-alert sk-alert-error">{{ $errors->first() }}</div>
         @endif
@@ -330,7 +347,7 @@
                             <label class="sk-label" for="password" style="margin-bottom:0;">Password <span>*</span></label>
                             <a href="{{ route('password.request') }}" style="font-size:12px;font-weight:500;color:var(--c-primary);text-decoration:none;opacity:0.8;transition:opacity 0.15s;"
                                onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                                Forgot Password?
+                                Ubah Password
                             </a>
                         </div>
                         <input
@@ -353,11 +370,6 @@
     {{-- Footer --}}
     <div class="sk-footer">
         <span>© {{ date('Y') }} Departemen Teknik Komputer &bull; Universitas Diponegoro</span>
-        <div class="sk-footer-links">
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-            <a href="#">Bantuan</a>
-        </div>
     </div>
 </div>
 

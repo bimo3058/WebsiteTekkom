@@ -8,7 +8,7 @@ use App\Models\Lecturer;
 use App\Models\Role;
 use App\Models\ImportStatus;
 use App\Services\SupabaseStorage;
-use App\Services\PermissionAssigner;
+use App\Services\BulkUserImportExcel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -16,9 +16,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use App\Models\Permission;
+use App\Models\AuditLog;
 
 class ProcessBulkImport implements ShouldQueue
 {
@@ -31,12 +30,14 @@ class ProcessBulkImport implements ShouldQueue
     protected $filePath;
     protected $bucket;
     protected $importStatusId;
+    protected array $ssoAccessByRow = [];
 
-    public function __construct($filePath, $bucket = 'data_user', $importStatusId)
+    public function __construct($filePath, $bucket = 'data_user', $importStatusId = null, array $ssoAccessByRow = [])
     {
         $this->filePath       = $filePath;
         $this->bucket         = $bucket;
         $this->importStatusId = $importStatusId;
+        $this->ssoAccessByRow = $ssoAccessByRow;
     }
 
     public function handle()
@@ -45,6 +46,10 @@ class ProcessBulkImport implements ShouldQueue
         if (!$importStatus) {
             Log::error("Import status not found", ['id' => $this->importStatusId]);
             return;
+        }
+
+        if ($this->ssoAccessByRow === []) {
+            $this->ssoAccessByRow = (array) data_get($importStatus->result_summary, 'sso_access_by_row', []);
         }
 
         $importStatus->update(['status' => 'processing']);
@@ -65,24 +70,49 @@ class ProcessBulkImport implements ShouldQueue
         fwrite($tempFile, $fileContent);
         fseek($tempFile, 0);
 
-        $header = fgetcsv($tempFile);
+        $excelReader = app(BulkUserImportExcel::class);
+        try {
+            $parsed = $excelReader->readFile(stream_get_meta_data($tempFile)['uri']);
+        } catch (\Throwable $e) {
+            fclose($tempFile);
+            $importStatus->update(['status' => 'failed', 'error_message' => 'File Excel tidak dapat dibaca.']);
+            return;
+        }
+        $header = $parsed['header'];
 
-        if (!$header || count($header) < 8) {
+        if (!$header) {
             fclose($tempFile);
             $importStatus->update([
                 'status'        => 'failed',
-                'error_message' => 'Struktur CSV tidak valid (minimal 8 kolom: name, email, password, role, external_id, student_number, cohort_year, permissions)',
+                'error_message' => 'Header Excel tidak ditemukan.',
             ]);
             return;
         }
 
-        Log::info("CSV Header", ['header' => $header]);
+        $normalizedHeader = $excelReader->normalizeHeader($header);
+        $requiredColumns = [
+            $excelReader->index($normalizedHeader, ['email']),
+            $excelReader->index($normalizedHeader, ['name', 'nama']),
+            $excelReader->index($normalizedHeader, ['nim/nip', 'nimnip', 'nomorinduk', 'nim', 'nip']),
+        ];
+        if (in_array(false, $requiredColumns, true)) {
+            fclose($tempFile);
+            $importStatus->update([
+                'status' => 'failed',
+                'error_message' => 'Excel wajib memiliki kolom NIM/NIP, Nama, dan Email.',
+            ]);
+            return;
+        }
+
+        Log::info("Excel Header", ['header' => $header]);
 
         $processedCount = 0;
         $failedCount    = 0;
 
         try {
-            while (($row = fgetcsv($tempFile)) !== false) {
+            $dataRowIndex = 0;
+            foreach ($parsed['rows'] as $row) {
+                $rowIndex = $dataRowIndex++;
 
                 // ── Cek cancel SETIAP ROW ─────────────────────────────
                 $importStatus->refresh();
@@ -98,9 +128,10 @@ class ProcessBulkImport implements ShouldQueue
                 }
                 // ─────────────────────────────────────────────────────
 
-                if (empty($row) || count($row) < 8 || empty($row[1])) {
+                $row = $excelReader->mapRow($normalizedHeader, $row);
+                if (trim($row[0]) === '' || trim($row[1]) === '' || trim($row[4]) === '') {
                     $failedCount++;
-                    Log::warning("Invalid row", ['row' => $row, 'row_count' => count($row)]);
+                    Log::warning('Invalid bulk import row: identity, name, or email missing', ['row_index' => $rowIndex]);
                     continue;
                 }
 
@@ -111,37 +142,53 @@ class ProcessBulkImport implements ShouldQueue
                 }
 
                 try {
-                    DB::transaction(function () use ($row, &$processedCount) {
+                    DB::transaction(function () use ($row, $rowIndex, &$processedCount, $excelReader, $importStatus) {
                         $email      = strtolower(trim($row[1]));
-                        $inputRoles = array_map('trim', explode(',', strtolower(trim($row[3]))));
+                        $emailRole = $excelReader->emailRole($email);
+                        $inputRoles = $emailRole ? [$emailRole] : [];
 
-                        $csvPermissionsRaw = !empty($row[7]) ? trim($row[7]) : '';
-                        $csvPermissions    = !empty($csvPermissionsRaw)
-                            ? array_map('trim', explode(',', $csvPermissionsRaw))
-                            : [];
+                        if ($inputRoles === []) {
+                            throw new \Exception('Role tidak dapat ditentukan dari domain email.');
+                        }
+
+                        if (in_array('mahasiswa', $inputRoles, true) && trim((string) ($row[5] ?? '')) === '') {
+                            throw new \Exception('NIM wajib diisi untuk user dengan role mahasiswa.');
+                        }
+                        if (in_array('dosen', $inputRoles, true) && trim((string) ($row[4] ?? '')) === '') {
+                            throw new \Exception('NIP/external_id wajib diisi untuk user dengan role dosen.');
+                        }
 
                         Log::info("=== PROCESSING ROW ===", [
                             'email'                  => $email,
                             'roles'                  => $inputRoles,
-                            'csv_permissions_raw'    => $csvPermissionsRaw,
-                            'csv_permissions_count'  => count($csvPermissions),
                             'name'                   => trim($row[0]),
                         ]);
 
                         $roleIds = Role::whereIn('name', $inputRoles)->pluck('id');
 
                         if ($roleIds->isEmpty()) {
-                            throw new \Exception("Role '{$row[3]}' tidak ditemukan. Available roles: " . implode(', ', Role::pluck('name')->toArray()));
+                            throw new \Exception("Role hasil deteksi email tidak ditemukan: ".implode(', ', $inputRoles));
                         }
 
-                        $user = User::updateOrCreate(
-                            ['email' => $email],
-                            [
-                                'name'        => trim($row[0]),
-                                'password'    => Hash::make($row[2]),
-                                'external_id' => trim($row[4]),
-                            ]
-                        );
+                        $existingUser = User::query()
+                            ->where('email', $email)
+                            ->orWhere('external_id', trim($row[4]))
+                            ->lockForUpdate()
+                            ->first();
+                        if ($existingUser) {
+                            throw new \RuntimeException('Email atau NIM/NIP sudah terdaftar.');
+                        }
+
+                        $ssoEnabled = $this->ssoAccessByRow[$rowIndex] ?? true;
+                        $user = User::create([
+                            'name' => trim($row[0]),
+                            'email' => $email,
+                            'password' => null,
+                            'external_id' => trim($row[4]),
+                            'sso_enabled' => $ssoEnabled,
+                            'sso_enabled_at' => $ssoEnabled ? now() : null,
+                            'sso_enabled_by' => $importStatus->user_id,
+                        ]);
 
                         Log::info("User created/found", [
                             'user_id' => $user->id,
@@ -150,6 +197,22 @@ class ProcessBulkImport implements ShouldQueue
                         ]);
 
                         $user->roles()->sync($roleIds);
+                        $user->syncPermissionsFromRoles();
+
+                        AuditLog::create([
+                            'user_id' => $importStatus->user_id,
+                            'module' => 'user_management',
+                            'action' => $ssoEnabled ? 'SSO_ACCESS_ENABLED' : 'SSO_ACCESS_DISABLED',
+                            'subject_type' => User::class,
+                            'subject_id' => $user->id,
+                            'description' => sprintf(
+                                'Impor bulk mengatur akses SSO untuk %s (%s): nonaktif → %s.',
+                                $user->name,
+                                $user->email,
+                                $ssoEnabled ? 'aktif' : 'nonaktif',
+                            ),
+                            'created_at' => now(),
+                        ]);
 
                         if (in_array('mahasiswa', $inputRoles)) {
                             Student::updateOrCreate(
@@ -168,30 +231,6 @@ class ProcessBulkImport implements ShouldQueue
                             );
                         }
 
-                        if (!empty($csvPermissions)) {
-                            $permissionIds = [];
-                            foreach ($csvPermissions as $permName) {
-                                $permName   = trim($permName);
-                                $permission = Permission::where('name', $permName)->first();
-                                if ($permission) {
-                                    $permissionIds[] = $permission->id;
-                                } else {
-                                    Log::warning("Permission NOT found in database", [
-                                        'name'    => $permName,
-                                        'user_id' => $user->id,
-                                    ]);
-                                }
-                            }
-
-                            if (!empty($permissionIds)) {
-                                $user->permissions()->sync($permissionIds);
-                                Log::info("Permissions assigned from CSV", [
-                                    'user_id' => $user->id,
-                                    'count'   => count($permissionIds),
-                                ]);
-                            }
-                        }
-
                         $user->clearUserCache();
                         Log::info("=== ROW PROCESSING COMPLETE ===", ['user_id' => $user->id]);
                     });
@@ -206,7 +245,8 @@ class ProcessBulkImport implements ShouldQueue
                     $failedCount++;
                     Log::error("Failed to import row", [
                         'error'    => $e->getMessage(),
-                        'row_data' => $row,
+                        'row_index' => $rowIndex,
+                        'email' => $row[1] ?? null,
                     ]);
                     continue;
                 }
@@ -267,6 +307,7 @@ class ProcessBulkImport implements ShouldQueue
     // ── Bust stats cache ─────────────────────────────────────────
     private function bustCache(): void
     {
+        Cache::put('sa:users:version', (int) Cache::get('sa:users:version', 0) + 1, now()->addDays(30));
         foreach ([
             'sa:total_users', 'sa:total_superadmins', 'sa:total_lecturers',
             'sa:total_students', 'sa:total_gpm', 'sa:total_admin_modul',

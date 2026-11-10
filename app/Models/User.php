@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\PermissionAssigner;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -19,6 +20,8 @@ use Throwable;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
+
+    public const ONLINE_TIMEOUT_MINUTES = 5;
 
     public const AUTH_CACHE_HAS_REMEMBER_TOKEN = '__auth_has_remember_token';
 
@@ -39,6 +42,9 @@ class User extends Authenticatable
         'personal_email',
         'avatar_url',
         'avatar_url_format',
+        'sso_enabled',
+        'sso_enabled_at',
+        'sso_enabled_by',
     ];
 
     protected $hidden = [
@@ -51,8 +57,11 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'sso_data' => 'json',
             'last_login' => 'datetime',
+            'last_seen_at' => 'datetime',
             'last_synced_from_sso' => 'datetime',
             'suspended_at' => 'datetime',
+            'sso_enabled' => 'boolean',
+            'sso_enabled_at' => 'datetime',
             'is_online' => 'boolean',
             'notification_preferences' => 'array',
         ];
@@ -99,6 +108,29 @@ class User extends Authenticatable
         );
     }
 
+    protected function isOnline(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value, array $attributes): bool {
+                $lastSeenAt = $attributes['last_seen_at'] ?? null;
+                $isFlaggedOnline = in_array($value, [true, 1, '1', 't', 'true'], true);
+
+                return $isFlaggedOnline
+                    && $lastSeenAt !== null
+                    && \Illuminate\Support\Carbon::parse($lastSeenAt)
+                        ->greaterThanOrEqualTo(now()->subMinutes(self::ONLINE_TIMEOUT_MINUTES));
+            },
+        );
+    }
+
+    public function scopeOnline(Builder $query): Builder
+    {
+        return $query
+            ->where('is_online', true)
+            ->whereNotNull('last_seen_at')
+            ->where('last_seen_at', '>=', now()->subMinutes(self::ONLINE_TIMEOUT_MINUTES));
+    }
+
     protected function avatarUrl(): Attribute
     {
         return Attribute::make(
@@ -134,6 +166,11 @@ class User extends Authenticatable
     public function lecturer()
     {
         return $this->hasOne(Lecturer::class);
+    }
+
+    public function ssoIdentity()
+    {
+        return $this->hasOne(UserSsoIdentity::class);
     }
 
     /*
@@ -320,11 +357,13 @@ class User extends Authenticatable
 
         static::where('id', $this->id)->update([
             'last_login' => $loggedInAt,
+            'last_seen_at' => $loggedInAt,
             'is_online' => DB::raw('true'),
         ]);
 
         $this->forceFill([
             'last_login' => $loggedInAt,
+            'last_seen_at' => $loggedInAt,
             'is_online' => true,
         ]);
     }

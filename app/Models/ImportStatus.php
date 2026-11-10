@@ -29,6 +29,8 @@ class ImportStatus extends Model
         'processed_rows',
         'status',
         'error_message',
+        'kind',
+        'result_summary',
     ];
 
     /**
@@ -37,6 +39,7 @@ class ImportStatus extends Model
     protected $casts = [
         'total_rows' => 'integer',
         'processed_rows' => 'integer',
+        'result_summary' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -47,6 +50,11 @@ class ImportStatus extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function rows()
+    {
+        return $this->hasMany(ImportStatusRow::class);
     }
 
     /**

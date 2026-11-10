@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\ImportStatus;
 use App\Models\Lecturer;
 use App\Models\Role;
 use App\Models\Student;
@@ -40,6 +41,16 @@ class SuperAdminController extends Controller
         ];
         sort($parts);
         return 'sa:users:' . implode(':', $parts);
+    }
+
+    private function bustUserListCache(): void
+    {
+        Cache::put('sa:users:version', (int) Cache::get('sa:users:version', 0) + 1, now()->addDays(30));
+        try {
+            Cache::tags(['sa_users'])->flush();
+        } catch (\BadMethodCallException) {
+            // Versioned keys invalidate the list cache for stores without tags.
+        }
     }
  
 
@@ -179,6 +190,10 @@ class SuperAdminController extends Controller
     {
         $search  = (string) $request->input('search', '');
         $role    = (string) $request->input('role', 'all');
+        $ssoStatus = (string) $request->input('sso_status', 'all');
+        if (! in_array($ssoStatus, ['all', 'enabled', 'disabled'], true)) {
+            $ssoStatus = 'all';
+        }
         $page    = (int)    $request->input('page', 1);
 
         $perPageInput = $request->input('per_page', $request->session()->get('um_per_page', 10));
@@ -196,12 +211,16 @@ class SuperAdminController extends Controller
         $sortDir = in_array($request->input('sort_dir'), $allowedSortDir) ? $request->input('sort_dir') : 'desc';
 
         $roles    = Cache::remember('sa:roles_list', self::TTL_ROLES, fn() => Role::orderBy('name')->get());
-        $cacheKey = $this->userListCacheKey($search, $role, $page, $perPage, $sortBy, $sortDir);
+        $cacheKey = $this->userListCacheKey($search, $role.'|sso:'.$ssoStatus, $page, $perPage, $sortBy, $sortDir);
 
         // EAGER LOADING: 'permissions' = direct permissions via Spatie model_has_permissions
         $query = User::with(['roles', 'permissions'])
             ->whereNull('deleted_at')
-            ->select('id', 'name', 'email', 'avatar_url', 'created_at', 'last_login', 'deleted_at', 'suspended_at', 'suspension_reason', 'is_online');
+            ->select('id', 'name', 'email', 'avatar_url', 'created_at', 'last_login', 'last_seen_at', 'deleted_at', 'suspended_at', 'suspension_reason', 'is_online', 'sso_enabled');
+
+        if (in_array($ssoStatus, ['enabled', 'disabled'], true)) {
+            $query->where('sso_enabled', $ssoStatus === 'enabled');
+        }
 
         // Filter Role menggunakan whereExists agar performa lebih cepat pada PostgreSQL
         if ($role !== 'all') {
@@ -262,7 +281,53 @@ class SuperAdminController extends Controller
             ]);
         }
 
-        return view('superadmin.users.index', compact('users', 'roles', 'paginator'));
+        return view('superadmin.users.index', compact('users', 'roles', 'paginator', 'ssoStatus'));
+    }
+
+    public function updateSsoAccess(Request $request, User $user)
+    {
+        $validated = $request->validate(['enabled' => ['required', 'boolean']]);
+        $enabled = (bool) $validated['enabled'];
+        $before = (bool) $user->sso_enabled;
+
+        if ($before === $enabled) {
+            return back()->with('success', 'Status akses SSO tidak berubah.');
+        }
+
+        DB::transaction(function () use ($user, $enabled, $before) {
+            $user->forceFill([
+                'sso_enabled' => $enabled,
+                'sso_enabled_at' => $enabled ? now() : null,
+                'sso_enabled_by' => auth()->id(),
+            ])->save();
+
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'module' => 'user_management',
+                'action' => $enabled ? 'SSO_ACCESS_ENABLED' : 'SSO_ACCESS_DISABLED',
+                'subject_type' => User::class,
+                'subject_id' => $user->id,
+                'description' => sprintf(
+                    'Akses SSO %s untuk %s (%s): %s → %s',
+                    $enabled ? 'diaktifkan' : 'dinonaktifkan',
+                    $user->name,
+                    $user->email,
+                    $before ? 'aktif' : 'nonaktif',
+                    $enabled ? 'aktif' : 'nonaktif'
+                ),
+                'created_at' => now(),
+            ]);
+
+            if (! $enabled) {
+                $user->forceLogout();
+            } else {
+                $user->clearUserCache();
+            }
+        });
+
+        $this->bustUserListCache();
+
+        return back()->with('success', 'Akses SSO berhasil '.($enabled ? 'diaktifkan.' : 'dinonaktifkan.'));
     }
 
     // User Status (Online / Suspended)
@@ -278,9 +343,17 @@ class SuperAdminController extends Controller
         // 2. Ambil daftar role untuk dropdown
         $roles = \Illuminate\Support\Facades\Cache::remember('sa:roles_list', 3600, fn() => Role::orderBy('name')->get());
 
+        $staleThreshold = now()->subMinutes(User::ONLINE_TIMEOUT_MINUTES);
+        DB::table('users')
+            ->where('is_online', true)
+            ->where(function ($query) use ($staleThreshold) {
+                $query->whereNull('last_seen_at')->orWhere('last_seen_at', '<', $staleThreshold);
+            })
+            ->update(['is_online' => false]);
+
         $query = \App\Models\User::with(['roles', 'permissions'])
             ->whereNull('deleted_at')
-            ->where('is_online', \Illuminate\Support\Facades\DB::raw('true'));
+            ->online();
 
         // 3. Logic Filter Role
         if ($role !== 'all') {
@@ -1127,75 +1200,100 @@ class SuperAdminController extends Controller
     // ── Users — Bulk Import ─────────────────────────────────────────────────
     public function downloadImportTemplate()
     {
-        $roles = [
-            'superadmin', 'admin', 'dosen', 'mahasiswa', 'gpm', 'alumni',
-            'admin_banksoal', 'admin_capstone', 'admin_eoffice', 'admin_kemahasiswaan',
-            'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
-            'staff_himpunan', 'dpm', 'ketua_departemen', 'bendahara',
-        ];
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Data User');
+        $sheet->fromArray([
+            ['NIM/NIP', 'Nama', 'Email'],
+            ['23060122140001', 'Budi Santoso', 'budi.santoso@students.undip.ac.id'],
+            ['NIP-198501012010011001', 'Dr. Siti Rahayu', 'siti.rahayu@lecturer.undip.ac.id'],
+        ]);
+        $sheet->getStyle('A1:C1')->getFont()->setBold(true);
+        $sheet->getColumnDimension('A')->setWidth(28);
+        $sheet->getColumnDimension('B')->setWidth(30);
+        $sheet->getColumnDimension('C')->setWidth(42);
+        $sheet->getStyle('A2:A1000')->getNumberFormat()->setFormatCode('@');
+        $sheet->freezePane('A2');
+        $sheet->setAutoFilter('A1:C3');
 
-        $permissions = [
-            'banksoal.view', 'banksoal.edit', 'banksoal.delete',
-            'kemahasiswaan.view', 'kemahasiswaan.edit', 'kemahasiswaan.delete',
-            'capstone.view', 'capstone.edit', 'capstone.delete',
-            'eoffice.view', 'eoffice.edit', 'eoffice.delete',
-        ];
-
-        $divider = '# ' . str_repeat('=', 131);
-
-        $lines = [];
-
-        // ── Header Block ──────────────────────────────────────────────────────
-        $lines[] = $divider;
-        $lines[] = '# TEMPLATE BULK IMPORT USER — Sistem Informasi Akademik';
-        $lines[] = $divider;
-        $lines[] = '#';
-        $lines[] = '# PETUNJUK : Hapus semua baris berawalan "#" sebelum diupload | Gunakan pemisah koma (,) | Satu baris = satu user';
-        $lines[] = '#';
-
-        // ── Legend Kolom ──────────────────────────────────────────────────────
-        $lines[] = '# KOLOM    : name              | email                        | password        | role            | external_id      | student_number   | cohort_year | permissions';
-        $lines[] = '# KETERANGAN name=Nama lengkap | email=Harus unik di sistem   | password=Min 8  | role=Lihat list | external_id=SSO  | NIM (mahasiswa)  | Thn angktn  | Permission tambahan (opsional)';
-        $lines[] = '#';
-
-        // ── Legend Role (horizontal) ──────────────────────────────────────────
-        $lines[] = '# ROLE     : ' . implode(' | ', $roles);
-        $lines[] = '# Multi-role: pisahkan dengan koma dan bungkus tanda kutip, contoh: "dosen,gpm"';
-        $lines[] = '#';
-
-        // ── Legend Permission (horizontal) ────────────────────────────────────
-        $lines[] = '# PERMISSION: ' . implode(' | ', $permissions);
-        $lines[] = '# Multi-permission: pisahkan dengan koma dan bungkus tanda kutip, contoh: "banksoal.view,capstone.view,eoffice.edit"';
-        $lines[] = '# Catatan: student_number & cohort_year WAJIB diisi jika role=mahasiswa, kosongkan jika bukan mahasiswa';
-        $lines[] = '#';
-        $lines[] = $divider;
-
-        // ── Header CSV ────────────────────────────────────────────────────────
-        $lines[] = 'name,email,password,role,external_id,student_number,cohort_year,permissions';
-
-        // ── Contoh Data (multi-value dibungkus quote) ─────────────────────────
-        $lines[] = 'Budi Santoso,budi.santoso@student.undip.ac.id,password123,mahasiswa,SSO-M1001,23060122140001,2023,"banksoal.view,capstone.view"';
-        $lines[] = 'Dr. Siti Rahayu,siti.rahayu@undip.ac.id,password123,dosen,NIP-198501012010011001,,,';
-        $lines[] = 'Ahmad Fauzi,ahmad.fauzi@undip.ac.id,password123,dosen,NIP-199001012015011002,,,"banksoal.view,banksoal.edit"';
-        $lines[] = 'Rina Wati,rina.wati@student.undip.ac.id,password123,mahasiswa,SSO-M1002,22060122140002,2022,';
-        $lines[] = 'Koordinator GPM,koordinator.gpm@undip.ac.id,password123,"dosen,gpm",NIP-197501012000011001,,,"banksoal.view,banksoal.edit,banksoal.delete"';
-
-        $csvContent = implode("\n", $lines) . "\n";
-
-        return response($csvContent, 200, [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="template_bulk_import_user.csv"',
-            'Cache-Control'       => 'no-cache, no-store, must-revalidate',
+        return response()->streamDownload(function () use ($spreadsheet) {
+            (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet))->save('php://output');
+            $spreadsheet->disconnectWorksheets();
+        }, 'template_bulk_import_user.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
         ]);
     }
-    
+
+    public function previewBulkImport(Request $request)
+    {
+        $request->validate(['file' => 'required|file|mimes:xlsx|max:10240']);
+        $file = $request->file('file');
+        $excelReader = app(\App\Services\BulkUserImportExcel::class);
+
+        try {
+            $parsed = $excelReader->readFile($file->getRealPath());
+        } catch (\Throwable $e) {
+            return response()->json(['status' => 'error', 'message' => 'File Excel tidak dapat dibaca. Pastikan file berformat .xlsx yang valid.'], 422);
+        }
+
+        $header = $excelReader->normalizeHeader($parsed['header']);
+        $emailCol = $excelReader->index($header, ['email']);
+        $nameCol = $excelReader->index($header, ['name', 'nama']);
+        $identityCol = $excelReader->index($header, ['nim/nip', 'nimnip', 'nomorinduk', 'nim', 'nip']);
+        if ($emailCol === false || $nameCol === false || $identityCol === false) {
+            return response()->json(['status' => 'error', 'message' => 'File Excel harus memiliki kolom NIM/NIP, Nama, dan Email.'], 422);
+        }
+
+        $previewRows = [];
+        foreach ($parsed['rows'] as $rowIndex => $row) {
+            $mapped = $excelReader->mapRow($header, $row);
+            $email = strtolower(trim($mapped[1]));
+            $role = $excelReader->emailRole($email);
+            if ($email !== '' && ! $role) {
+                return response()->json(['status' => 'error', 'message' => "Role otomatis tidak dapat ditentukan dari email {$email}. Gunakan domain students.undip.ac.id atau lecturer.undip.ac.id."], 422);
+            }
+            $previewRows[] = [
+                'index' => $rowIndex,
+                'identity' => $mapped[4],
+                'name' => $mapped[0],
+                'email' => $email,
+                'role' => $role,
+            ];
+        }
+
+        if ($previewRows === []) {
+            return response()->json(['status' => 'error', 'message' => 'Tidak ada data user dalam file Excel.'], 422);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'rows' => $previewRows,
+            'hash' => hash_file('sha256', $file->getRealPath()),
+        ]);
+    }
+
     public function bulkImport(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:csv,txt|max:10240'
+            'file' => 'required|file|mimes:xlsx|max:10240',
+            'preview_confirmed' => ['required', 'in:1'],
+            'preview_file_hash' => ['required', 'regex:/\A[a-f0-9]{64}\z/'],
+            'sso_access' => ['required', 'array', 'min:1'],
         ]);
 
+        $ssoAccessByRow = [];
+        foreach ((array) $request->input('sso_access', []) as $rowIndex => $enabled) {
+            if (! ctype_digit((string) $rowIndex) || ! in_array((string) $enabled, ['0', '1'], true)) {
+                return response()->json(['status' => 'error', 'message' => 'Pilihan akses SSO pada preview tidak valid.'], 422);
+            }
+            $ssoAccessByRow[(int) $rowIndex] = (string) $enabled === '1';
+        }
+
         $file = $request->file('file');
+        if (! hash_equals($request->string('preview_file_hash')->toString(), hash_file('sha256', $file->getRealPath()))) {
+            return response()->json(['status' => 'error', 'message' => 'File berubah setelah preview. Silakan pratinjau ulang.'], 422);
+        }
 
         // ==========================================
         // ✅ 1. CEK SIDIK JARI FILE (HASHING)
@@ -1209,67 +1307,74 @@ class SuperAdminController extends Controller
                             ->first();
 
         // ==========================================
-        // ✅ 2. VALIDASI STRUKTUR CSV
+        // Validate Excel structure
         // ==========================================
-        $handle = fopen($file->getRealPath(), 'r');
-        $header = fgetcsv($handle);
-
-        if (!$header || count($header) < 8) {
-            fclose($handle);
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Struktur CSV tidak valid (minimal 8 kolom: name, email, password, role, external_id, student_number, cohort_year, permissions)'
-            ], 422);
+        $excelReader = app(\App\Services\BulkUserImportExcel::class);
+        try {
+            $parsed = $excelReader->readFile($file->getRealPath());
+        } catch (\Throwable $e) {
+            return response()->json(['status' => 'error', 'message' => 'File Excel tidak dapat dibaca. Pastikan file berformat .xlsx yang valid.'], 422);
         }
 
-        // Normalize header
-        $header = array_map('trim', array_map('strtolower', $header));
+        $header = $excelReader->normalizeHeader($parsed['header']);
+        $emailCol = $excelReader->index($header, ['email']);
+        $nameCol = $excelReader->index($header, ['name', 'nama']);
+        $identityCol = $excelReader->index($header, ['nim/nip', 'nimnip', 'nomorinduk', 'nim', 'nip']);
 
-        $emailCol      = array_search('email', $header);
-        $nameCol       = array_search('name', $header);
-        $externalIdCol = array_search('external_id', $header);
-
-        if ($emailCol === false) {
-            fclose($handle);
+        if ($emailCol === false || $nameCol === false || $identityCol === false) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Kolom "email" tidak ditemukan di CSV.'
+                'message' => 'File Excel harus memiliki kolom NIM/NIP, Nama, dan Email.',
             ], 422);
         }
 
         // ==========================================
-        // ✅ 3. BACA SEMUA EMAIL DARI CSV
+        // Collect imported emails and external IDs
         // ==========================================
-        $csvRows       = [];
         $csvEmails     = [];
         $csvExternalIds = [];
         $totalRows     = 0;
         $validRowFound = false;
+        $unsupportedRoleEmails = [];
+        $dataRowIndex = 0;
 
-        while (($row = fgetcsv($handle)) !== false) {
+        foreach ($parsed['rows'] as $row) {
+            $rowIndex = $dataRowIndex++;
             $totalRows++;
-            $email = isset($row[$emailCol]) ? trim($row[$emailCol]) : null;
+            $mapped = $excelReader->mapRow($header, $row);
+            $email = $mapped[1] !== '' ? $mapped[1] : null;
 
             if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $validRowFound    = true;
                 $csvEmails[]      = strtolower($email);
-                $csvRows[]        = [
-                    'name'        => isset($row[$nameCol]) ? trim($row[$nameCol]) : $email,
-                    'email'       => $email,
-                    'external_id' => ($externalIdCol !== false && isset($row[$externalIdCol]))
-                                        ? trim($row[$externalIdCol]) : null,
-                ];
-                if ($externalIdCol !== false && isset($row[$externalIdCol]) && trim($row[$externalIdCol]) !== '') {
-                    $csvExternalIds[] = trim($row[$externalIdCol]);
+                if (! $excelReader->emailRole($email)) {
+                    $unsupportedRoleEmails[] = $email;
+                }
+                foreach ([$mapped[4], $mapped[5]] as $externalId) {
+                    if ($externalId !== '') {
+                        $csvExternalIds[] = $externalId;
+                    }
                 }
             }
         }
-        fclose($handle);
+        $expectedRowIndexes = $dataRowIndex > 0 ? range(0, $dataRowIndex - 1) : [];
+        $submittedRowIndexes = array_keys($ssoAccessByRow);
+        sort($submittedRowIndexes);
+        if ($submittedRowIndexes !== $expectedRowIndexes) {
+            return response()->json(['status' => 'error', 'message' => 'Pilihan akses SSO tidak cocok dengan data preview. Silakan pratinjau ulang.'], 422);
+        }
 
         if (!$validRowFound) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Tidak ada data valid dalam file.'
+            ], 422);
+        }
+
+        if ($unsupportedRoleEmails !== []) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Role otomatis hanya tersedia untuk email @students.undip.ac.id dan @lecturer.undip.ac.id. Periksa: '.implode(', ', array_slice(array_unique($unsupportedRoleEmails), 0, 5)),
             ], 422);
         }
 
@@ -1350,13 +1455,15 @@ class SuperAdminController extends Controller
             'path'           => $path,
             'total_rows'     => $totalRows,
             'processed_rows' => 0,
-            'status'         => 'pending'
+            'status'         => 'pending',
+            'kind'           => 'bulk_user',
+            'result_summary' => ['sso_access_by_row' => $ssoAccessByRow],
         ]);
 
         \App\Jobs\ProcessBulkImport::dispatch(
             $path,
             'data_user',
-            $import->id
+            $import->id,
         )->delay(now()->addSeconds(2));
 
         return response()->json([
@@ -1399,7 +1506,13 @@ class SuperAdminController extends Controller
                 'total' => $import->total_rows,
                 'filename' => $import->filename,
                 'error_message' => $import->error_message,
-                'percentage' => $import->percentage
+                'percentage' => $import->percentage,
+                'kind' => $import->kind,
+                'summary' => $import->kind === 'sso_access' ? $import->result_summary : null,
+                'row_errors' => $import->kind === 'sso_access'
+                    ? $import->rows()->whereIn('status', ['failed', 'skipped'])->orderBy('row_number')->limit(200)
+                        ->get(['row_number', 'email', 'status', 'message'])
+                    : []
             ]);
             
         } catch (\Exception $e) {
@@ -1645,7 +1758,7 @@ class SuperAdminController extends Controller
         $ids = array_diff($ids, [auth()->id()]);
     
         $users = \App\Models\User::whereIn('id', $ids)
-            ->where('is_online', true)
+            ->online()
             ->get();
     
         if ($users->isEmpty()) {
