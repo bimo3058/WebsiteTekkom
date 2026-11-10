@@ -4,6 +4,7 @@ namespace Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\EOffice\Models\Peminjaman;
 use Modules\EOffice\Models\Ruangan;
 use Modules\EOffice\Models\MrJadwalInternal;
@@ -20,17 +21,76 @@ class PersetujuanController extends Controller
         $date = $now->format('Y-m-d');
         $time = $now->format('H:i:s');
 
-        $query = Peminjaman::with(['user.student', 'user.lecturer', 'user.roles', 'ruangan'])
-            ->where(function ($q) use ($date, $time) {
+        $query = Peminjaman::with(['user.student', 'user.lecturer', 'user.roles', 'creator.roles', 'ruangan', 'replacesPeminjaman.ruangan']);
+
+        // 1. Filter Status Pengajuan
+        if ($request->filled('status')) {
+            $reqStatus = strtolower(trim((string) $request->status));
+            if ($reqStatus === 'menunggu') {
+                $query->where('status', 'menunggu');
+            } elseif ($reqStatus === 'disetujui') {
+                $query->where('status', 'disetujui')
+                    ->whereRaw("(tanggal_pinjam > ? OR (tanggal_pinjam = ? AND jam_selesai > ?))", [$date, $date, $time]);
+            } else {
+                $query->where('status', $reqStatus);
+            }
+        } else {
+            // Default: Gabungan antrean 'menunggu' + jadwal 'disetujui' aktif (belum kedaluwarsa)
+            $query->where(function ($q) use ($date, $time) {
                 $q->where('status', 'menunggu')
                     ->orWhere(function ($q2) use ($date, $time) {
                         $q2->where('status', 'disetujui')
                             ->whereRaw("(tanggal_pinjam > ? OR (tanggal_pinjam = ? AND jam_selesai > ?))", [$date, $date, $time]);
                     });
             });
+        }
+
+        // 2. Filter Rentang Tanggal
+        if ($request->filled('start_date')) {
+            $query->where('tanggal_pinjam', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->where('tanggal_pinjam', '<=', $request->end_date);
+        }
+
+        // 3. Filter Khusus Bentrok (Only Conflict)
+        if ($request->boolean('only_conflict')) {
+            $query->where('status', 'menunggu')
+                ->whereExists(function ($sub) {
+                    $sub->select(\Illuminate\Support\Facades\DB::raw(1))
+                        ->from('eo_mr_peminjamans as p2')
+                        ->whereColumn('p2.ruangan_id', 'eo_mr_peminjamans.ruangan_id')
+                        ->whereColumn('p2.tanggal_pinjam', 'eo_mr_peminjamans.tanggal_pinjam')
+                        ->where('p2.status', 'menunggu')
+                        ->whereColumn('p2.id', '!=', 'eo_mr_peminjamans.id')
+                        ->whereNull('p2.deleted_at')
+                        ->whereRaw('p2.jam_mulai < eo_mr_peminjamans.jam_selesai')
+                        ->whereRaw('p2.jam_selesai > eo_mr_peminjamans.jam_mulai');
+                });
+        }
 
         if ($request->filled('ruangan_id')) {
             $query->where('ruangan_id', $request->ruangan_id);
+        }
+
+        if ($request->filled('source')) {
+            $reqSource = strtolower(trim((string) $request->source));
+            if ($reqSource === 'umum') {
+                $query->whereNull('source');
+            } elseif (in_array($reqSource, ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik'])) {
+                $query->where(function ($sq) {
+                    $sq->whereIn('source', ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik'])
+                        ->orWhere('tujuan', 'like', '%Seminar KP%')
+                        ->orWhere('tujuan', 'like', '%Kerja Praktik%');
+                });
+            } elseif ($reqSource === 'capstone') {
+                $query->where(function ($sq) {
+                    $sq->where('source', 'capstone')
+                        ->orWhere('tujuan', 'like', '[CAPSTONE%');
+                });
+            } else {
+                $query->where('source', $request->source);
+            }
         }
 
         if ($request->filled('search')) {
@@ -53,7 +113,13 @@ class PersetujuanController extends Controller
 
         $peminjamans = $query->orderByRaw("CASE WHEN status = 'menunggu' THEN 0 ELSE 1 END")
             ->orderBy('tanggal_pinjam', 'asc')
+            ->orderBy('ruangan_id', 'asc')
             ->orderBy('jam_mulai', 'asc')
+            ->orderByRaw("CASE 
+                WHEN source IN ('capstone', 'praktikum') OR tujuan LIKE '[CAPSTONE%' OR tujuan LIKE '%Praktikum%' THEN 1
+                WHEN source IN ('kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik') OR tujuan LIKE '%Seminar KP%' OR tujuan LIKE '%Kerja Praktik%' THEN 2
+                ELSE 3
+            END ASC")
             ->paginate((int) $request->input('per_page', 10))->withQueryString();
 
         $ruangans = Ruangan::orderBy('nama', 'asc')->get();
@@ -63,14 +129,12 @@ class PersetujuanController extends Controller
 
     public function riwayat(Request $request)
     {
-        // System Event: Auto-kill expired dangling pending requests
-        Peminjaman::autoExpirePending();
-
         $now = now();
         $date = $now->format('Y-m-d');
         $time = $now->format('H:i:s');
 
-        $query = Peminjaman::with(['user.student', 'user.lecturer', 'user.roles', 'ruangan'])
+        $query = Peminjaman::withTrashed()
+            ->with(['user.student', 'user.lecturer', 'user.roles', 'creator.roles', 'ruangan', 'replacesPeminjaman.ruangan'])
             ->where('status', '!=', 'menunggu')
             ->where(function ($q) use ($date, $time) {
                 $q->where('status', '!=', 'disetujui')
@@ -82,6 +146,26 @@ class PersetujuanController extends Controller
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        if ($request->filled('source')) {
+            $reqSource = strtolower(trim((string) $request->source));
+            if ($reqSource === 'umum') {
+                $query->whereNull('source');
+            } elseif (in_array($reqSource, ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik'])) {
+                $query->where(function ($sq) {
+                    $sq->whereIn('source', ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik'])
+                        ->orWhere('tujuan', 'like', '%Seminar KP%')
+                        ->orWhere('tujuan', 'like', '%Kerja Praktik%');
+                });
+            } elseif ($reqSource === 'capstone') {
+                $query->where(function ($sq) {
+                    $sq->where('source', 'capstone')
+                        ->orWhere('tujuan', 'like', '[CAPSTONE%');
+                });
+            } else {
+                $query->where('source', $request->source);
+            }
         }
 
         if ($request->filled('ruangan_id')) {
@@ -132,7 +216,8 @@ class PersetujuanController extends Controller
         $date = $now->format('Y-m-d');
         $time = $now->format('H:i:s');
 
-        $query = Peminjaman::with(['user.student', 'user.lecturer', 'user.roles', 'ruangan'])
+        $query = Peminjaman::withTrashed()
+            ->with(['user.student', 'user.lecturer', 'user.roles', 'creator.roles', 'ruangan', 'replacesPeminjaman.ruangan'])
             ->where('status', '!=', 'menunggu')
             ->where(function ($q) use ($date, $time) {
                 $q->where('status', '!=', 'disetujui')
@@ -144,6 +229,26 @@ class PersetujuanController extends Controller
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        if ($request->filled('source')) {
+            $reqSource = strtolower(trim((string) $request->source));
+            if ($reqSource === 'umum') {
+                $query->whereNull('source');
+            } elseif (in_array($reqSource, ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik'])) {
+                $query->where(function ($sq) {
+                    $sq->whereIn('source', ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik'])
+                        ->orWhere('tujuan', 'like', '%Seminar KP%')
+                        ->orWhere('tujuan', 'like', '%Kerja Praktik%');
+                });
+            } elseif ($reqSource === 'capstone') {
+                $query->where(function ($sq) {
+                    $sq->where('source', 'capstone')
+                        ->orWhere('tujuan', 'like', '[CAPSTONE%');
+                });
+            } else {
+                $query->where('source', $request->source);
+            }
         }
 
         if ($request->filled('ruangan_id')) {
@@ -207,7 +312,7 @@ class PersetujuanController extends Controller
             'alasan_penolakan' => 'nullable|string'
         ]);
 
-        $peminjaman = Peminjaman::findOrFail($id);
+        $peminjaman = Peminjaman::with(['user', 'ruangan', 'replacesPeminjaman'])->findOrFail($id);
 
         if ($request->status == 'disetujui') {
             // Re-check Collision - Peminjaman (Race Condition Guard)
@@ -215,6 +320,9 @@ class PersetujuanController extends Controller
                 ->where('tanggal_pinjam', $peminjaman->tanggal_pinjam)
                 ->where('status', 'disetujui')
                 ->where('id', '!=', $peminjaman->id)
+                ->when($peminjaman->replaces_peminjaman_id, function ($q, $repId) {
+                    $q->where('id', '!=', $repId);
+                })
                 ->where(function ($q) use ($peminjaman) {
                     $q->where('jam_mulai', '<', $peminjaman->jam_selesai)
                         ->where('jam_selesai', '>', $peminjaman->jam_mulai);
@@ -262,22 +370,77 @@ class PersetujuanController extends Controller
         if ($request->status == 'ditolak') {
             if ($originalStatus == 'disetujui') {
                 $statusToSave = 'dibatalkan';
-                $alasanPenolakan = 'Dibatalkan oleh Admin: ' . $request->alasan_penolakan;
+                $alasanPenolakan = 'Dibatalkan oleh Admin Ruang: ' . ($request->alasan_penolakan ?: 'Hak peminjaman dicabut');
             } else {
                 $statusToSave = 'ditolak';
-                $alasanPenolakan = $request->alasan_penolakan;
+                $alasanPenolakan = 'Ditolak oleh Admin Ruang: ' . ($request->alasan_penolakan ?: 'Pengajuan tidak disetujui');
             }
         }
 
-        $peminjaman->update([
-            'status' => $statusToSave,
-            'alasan_penolakan' => $alasanPenolakan,
-            'waktu_approval' => now(),
-        ]);
+        DB::transaction(function () use ($peminjaman, $statusToSave, $alasanPenolakan, $originalStatus, $request) {
+            $peminjaman->update([
+                'status' => $statusToSave,
+                'alasan_penolakan' => $alasanPenolakan,
+                'waktu_approval' => now(),
+            ]);
+
+            // TWO-PHASE SWAP: Jika peminjaman ini disetujui dan merupakan jadwal pengganti (reschedule)
+            if ($request->status == 'disetujui' && $peminjaman->replaces_peminjaman_id) {
+                $oldBooking = Peminjaman::find($peminjaman->replaces_peminjaman_id);
+                if ($oldBooking && in_array($oldBooking->status, ['disetujui', 'menunggu'])) {
+                    $tglBaru = \Carbon\Carbon::parse($peminjaman->tanggal_pinjam)->translatedFormat('d M Y');
+                    $jamBaru = substr($peminjaman->jam_mulai, 0, 5) . '-' . substr($peminjaman->jam_selesai, 0, 5) . ' WIB';
+                    $alasanBatal = "Dijadwalkan ulang oleh Admin Ruang ke tanggal {$tglBaru} ({$jamBaru}) - Pengajuan #{$peminjaman->id}";
+
+                    $oldPrevStatus = $oldBooking->status;
+                    $oldBooking->update([
+                        'status' => 'dibatalkan',
+                        'alasan_penolakan' => $alasanBatal,
+                        'waktu_approval' => now(),
+                    ]);
+
+                    event(new \Modules\EOffice\Events\RoomBookingStatusChanged($oldBooking, 'dibatalkan', $oldPrevStatus, $alasanBatal));
+                }
+            }
+
+            // AUTO-REJECT CASCADE: Jika peminjaman ini disetujui, tolak otomatis antrean 'menunggu' lain yang bertabrakan di ruangan & jam yang sama
+            if ($request->status == 'disetujui') {
+                $collidingPendings = Peminjaman::with(['user', 'ruangan'])->where('ruangan_id', $peminjaman->ruangan_id)
+                    ->where('tanggal_pinjam', $peminjaman->tanggal_pinjam)
+                    ->where('status', 'menunggu')
+                    ->where('id', '!=', $peminjaman->id)
+                    ->when($peminjaman->replaces_peminjaman_id, function ($q, $repId) {
+                        $q->where('id', '!=', $repId);
+                    })
+                    ->where(function ($q) use ($peminjaman) {
+                        $q->where('jam_mulai', '<', $peminjaman->jam_selesai)
+                            ->where('jam_selesai', '>', $peminjaman->jam_mulai);
+                    })->get();
+
+                foreach ($collidingPendings as $cp) {
+                    $autoReason = "Ditolak otomatis oleh sistem: Ruangan dialokasikan untuk peminjaman #{$peminjaman->id} ({$peminjaman->source_label}: {$peminjaman->tujuan}) yang telah disetujui Admin Ruang.";
+                    $cp->update([
+                        'status' => 'ditolak',
+                        'alasan_penolakan' => $autoReason,
+                        'waktu_approval' => now(),
+                    ]);
+
+                    // Dispatch Event perubahan status peminjaman untuk modul luar (Praktikum, KP, Capstone)
+                    event(new \Modules\EOffice\Events\RoomBookingStatusChanged($cp, 'ditolak', 'menunggu', $autoReason));
+
+                    // Notifikasi ke user pemohon yang ditolak otomatis
+                    if ($cp->user) {
+                        $cp->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($cp, false));
+                    }
+                }
+            }
+
+            // Dispatch Event perubahan status peminjaman untuk modul luar (Praktikum, KP, Capstone)
+            event(new \Modules\EOffice\Events\RoomBookingStatusChanged($peminjaman, $statusToSave, $originalStatus, $alasanPenolakan));
+        });
 
         if ($peminjaman->user) {
             // Hapus notifikasi lama untuk peminjaman ini agar user tidak bingung melihat 2 status ganda di lonceng
-            // Menggunakan PHP filter karena kolom 'data' di tabel notifications bertipe text (bukan jsonb) di PostgreSQL
             $oldNotifs = $peminjaman->user->notifications()
                 ->where('type', \Modules\EOffice\Notifications\PeminjamanStatusUpdated::class)
                 ->get();
@@ -294,7 +457,7 @@ class PersetujuanController extends Controller
         }
 
         if ($statusToSave == 'dibatalkan') {
-            $msg = 'berhasil dibatalkan (hak dicabut)';
+            $msg = 'berhasil dibatalkan (hak dicabut oleh Admin Ruang)';
         } else {
             $msg = $request->status == 'disetujui' ? 'berhasil disetujui' : 'telah ditolak';
         }
@@ -310,7 +473,7 @@ class PersetujuanController extends Controller
             'override_tujuan' => 'required|string|max:255',
         ]);
 
-        $peminjaman = Peminjaman::findOrFail($id);
+        $peminjaman = Peminjaman::with(['user', 'ruangan', 'replacesPeminjaman'])->findOrFail($id);
 
         if ($peminjaman->status !== 'disetujui') {
             return redirect()->back()->withErrors(['Status Error' => 'Hanya peminjaman berstatus disetujui yang dapat di-override.']);
@@ -371,12 +534,18 @@ class PersetujuanController extends Controller
             'tujuan' => $request->override_tujuan,
         ]);
 
-        return redirect()->back()->with('success', 'Override sukses! Waktu dan Ruangan peminjaman tersebut berhasil diubah.');
+        if ($peminjaman->user) {
+            $peminjaman->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($peminjaman, false));
+        }
+
+        event(new \Modules\EOffice\Events\RoomBookingStatusChanged($peminjaman, 'disetujui', 'disetujui', 'Waktu dan Ruangan diubah oleh Admin Ruang (Override)'));
+
+        return redirect()->back()->with('success', 'Override sukses! Waktu dan Ruangan peminjaman tersebut berhasil diubah oleh Admin Ruang.');
     }
 
     /**
      * Mengecek bentrok secara asynchronous via AJAX/Fetch
-     * Mencegah hit lemot ke database dengan memberikan API endpoint spesifik
+     * Mengumpulkan seluruh jadwal yang beririsan (Akademik, Pemeliharaan, maupun Peminjaman lain)
      */
     public function checkCollision(Request $request)
     {
@@ -387,32 +556,14 @@ class PersetujuanController extends Controller
         $excludeId = $request->exclude_id; // ID Peminjaman yang sedang diedit (biar tidak bentrok dengan diri sendiri)
 
         if (!$ruanganId || !$tanggal || !$jamMulai || !$jamSelesai) {
-            return response()->json(['conflict' => false]);
+            return response()->json(['conflict' => false, 'conflicts_list' => []]);
         }
 
-        // 1. Cek bentrok peminjaman lain
-        $isConflict = Peminjaman::where('ruangan_id', $ruanganId)
-            ->where('tanggal_pinjam', $tanggal)
-            ->where('status', 'disetujui')
-            ->when($excludeId, function ($query, $excludeId) {
-                return $query->where('id', '!=', $excludeId);
-            })
-            ->where(function ($query) use ($jamMulai, $jamSelesai) {
-                $query->where('jam_mulai', '<', $jamSelesai)
-                    ->where('jam_selesai', '>', $jamMulai);
-            })->first();
+        $conflictsList = [];
 
-        if ($isConflict) {
-            $range = \Carbon\Carbon::parse($isConflict->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($isConflict->jam_selesai)->format('H:i');
-            return response()->json([
-                'conflict' => true,
-                'message' => "Ruangan terisi pihak lain pada jam {$range}."
-            ]);
-        }
-
-        // 2. Cek Jadwal Internal Akademik
+        // 1. Cek bentrok dengan Jadwal Internal (Akademik & Pemeliharaan / Blokir)
         $dayOfWeek = \Carbon\Carbon::parse($tanggal)->format('N');
-        $isInternalConflict = MrJadwalInternal::where('ruangan_id', $ruanganId)
+        $internalConflicts = MrJadwalInternal::where('ruangan_id', $ruanganId)
             ->where(function ($query) use ($tanggal, $dayOfWeek) {
                 $query->where(function ($q) use ($dayOfWeek, $tanggal) {
                     $q->where('tipe_jadwal', 'rutin')
@@ -433,27 +584,73 @@ class PersetujuanController extends Controller
                 $query->where('jam_mulai', '<', $jamSelesai)
                     ->where('jam_selesai', '>', $jamMulai);
             })
-            ->first();
+            ->orderBy('jam_mulai', 'asc')
+            ->get();
 
-        if ($isInternalConflict) {
-            $range = \Carbon\Carbon::parse($isInternalConflict->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($isInternalConflict->jam_selesai)->format('H:i');
+        foreach ($internalConflicts as $c) {
+            $range = \Carbon\Carbon::parse($c->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($c->jam_selesai)->format('H:i') . ' WIB';
+            $isAkademik = ($c->kategori === 'Jadwal Akademik (Kuliah)' || !empty($c->mata_kuliah));
+            $tipe = $isAkademik ? 'Akademik' : 'Pemeliharaan';
+
+            if ($isAkademik) {
+                $nama = $c->mata_kuliah ? ($c->mata_kuliah . ($c->kelas ? ' - Kelas ' . $c->kelas : '')) : ($c->keterangan ?: 'Jadwal Perkuliahan');
+            } else {
+                $nama = $c->keterangan ?: 'Pemeliharaan / Blokir Ruangan';
+            }
+
+            $conflictsList[] = [
+                'tipe' => $tipe,
+                'nama' => $nama,
+                'waktu' => $range,
+            ];
+        }
+
+        // 2. Cek bentrok dengan Peminjaman lain yang telah disetujui
+        $peminjamanConflicts = Peminjaman::with('user')
+            ->where('ruangan_id', $ruanganId)
+            ->where('tanggal_pinjam', $tanggal)
+            ->where('status', 'disetujui')
+            ->when($excludeId, function ($query, $excludeId) {
+                return $query->where('id', '!=', $excludeId);
+            })
+            ->where(function ($query) use ($jamMulai, $jamSelesai) {
+                $query->where('jam_mulai', '<', $jamSelesai)
+                    ->where('jam_selesai', '>', $jamMulai);
+            })
+            ->orderBy('jam_mulai', 'asc')
+            ->get();
+
+        foreach ($peminjamanConflicts as $p) {
+            $userPart = $p->user ? " (Oleh: {$p->user->name})" : "";
+            $range = \Carbon\Carbon::parse($p->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($p->jam_selesai)->format('H:i') . ' WIB';
+            $conflictsList[] = [
+                'tipe' => 'Peminjaman',
+                'nama' => ($p->tujuan ?: 'Peminjaman Ruangan') . $userPart,
+                'waktu' => $range,
+            ];
+        }
+
+        if (count($conflictsList) > 0) {
             return response()->json([
                 'conflict' => true,
-                'message' => "Menabrak Jadwal Akademik: {$isInternalConflict->keterangan} (Jam {$range})."
+                'message' => 'Terdapat jadwal beririsan di ruangan dan waktu yang dipilih.',
+                'conflicts_list' => $conflictsList,
             ]);
         }
 
-        return response()->json(['conflict' => false]);
+        return response()->json(['conflict' => false, 'conflicts_list' => []]);
     }
     /**
      * Soft delete arsip peminjaman (hanya superadmin)
      */
     public function destroy($id)
     {
-        $peminjaman = Peminjaman::findOrFail($id);
+        abort_unless(auth()->user()->hasRole('superadmin'), 403, 'Aksi ini hanya dapat dilakukan oleh Superadmin.');
+
+        $peminjaman = Peminjaman::with(['user', 'ruangan', 'replacesPeminjaman'])->findOrFail($id);
 
         if ($peminjaman->berkas_pendukung) {
-            app(\App\Services\SupabaseStorage::class)->delete($peminjaman->berkas_pendukung);
+            app(\App\Services\SupabaseStorage::class)->delete($peminjaman->berkas_pendukung, 'eoffice');
         }
 
         $peminjaman->forceDelete();

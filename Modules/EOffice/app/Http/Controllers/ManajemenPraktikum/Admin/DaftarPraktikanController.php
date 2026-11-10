@@ -31,7 +31,7 @@ class DaftarPraktikanController extends Controller
                 ->orWhere('email', 'like', "%{$search}%"));
         }
 
-        $praktikans = $query->paginate(20)->withQueryString();
+        $praktikans = $query->paginate(max(1, min(100, request()->integer('per_page', 20))))->withQueryString();
 
         return view('eoffice::manajemen-praktikum.admin.daftar-praktikan', compact(
             'praktikumList',
@@ -47,7 +47,7 @@ class DaftarPraktikanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
+            'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
             'file'         => 'nullable|file|mimes:csv,xlsx,xls|max:5120',
             'user_ids'     => 'nullable|array',
             'user_ids.*'   => 'exists:users,id',

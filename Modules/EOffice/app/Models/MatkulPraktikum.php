@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\Model;
  * Mata kuliah yang memiliki komponen praktikum.
  * Data sesuai Kurikulum 2024 S1 Teknik Komputer UNDIP.
  *
- * Tabel: eo_matkul_praktikum
+ * Tabel: eo_prak_matkul_praktikum
  */
 class MatkulPraktikum extends Model
 {
-    protected $table = 'eo_matkul_praktikum';
+    protected $table = 'eo_prak_matkul_praktikum';
 
     protected $fillable = [
         'kode',

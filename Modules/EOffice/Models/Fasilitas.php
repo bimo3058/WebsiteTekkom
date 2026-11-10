@@ -13,3 +13,4 @@ class Fasilitas extends Model
     ];
 
 }
+

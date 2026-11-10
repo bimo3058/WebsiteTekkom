@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Dashboard Koordinator">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Dashboard Koordinator">
     @php
         /** @var \Modules\EOffice\Models\Praktikum|null $praktikum */
         /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\Pengumuman[] $pengumumanTerbaru */
@@ -155,7 +155,7 @@
                             </div>
                             <div>
                                 @if($pend->cv_path)
-                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($pend->cv_path, 'eoffice') }}" target="_blank"
+                                    <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($pend->cv_path, 'eoffice') }}" target="_blank"
                                         style="font-size:11px;font-weight:600;color:#0B266E;text-decoration:none;display:inline-block;" class="hover:underline">Lihat Berkas</a>
                                 @else
                                     <span style="font-size:11px;color:#808897;">—</span>

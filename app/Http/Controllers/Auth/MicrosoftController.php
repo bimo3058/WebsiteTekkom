@@ -219,12 +219,12 @@ class MicrosoftController extends Controller
 
         } catch (\Exception $e) {
             app(MicrosoftSsoSession::class)->clear(request());
-            Log::error('Microsoft SSO Error', [
-                'exception' => get_class($e),
-            ]);
+            $reference = (string) \Illuminate\Support\Str::uuid();
+            $diagnostics = app(\App\Services\SsoFailureDiagnostics::class);
+            Log::error('Microsoft SSO Error', ['reference' => $reference] + $diagnostics->context($e));
 
             return redirect()->route('login')
-                ->with('error', 'Authentication gagal. Silakan coba lagi.');
+                ->with('error', $diagnostics->message($e, $reference));
         }
     }
 

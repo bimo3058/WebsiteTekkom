@@ -1,20 +1,9 @@
 @php
     $pageTitle = ($praktikum->nama ?? 'Praktikum') . ' / Modul';
 @endphp
-<x-eoffice::manajemen-praktikum.layout :pageTitle="$pageTitle">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" :pageTitle="$pageTitle">
     <style>
-        .modul-accordion-content {
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            transition: max-height 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.1s ease;
-        }
-        .modul-accordion-content.is-open {
-            max-height: 2500px;
-            opacity: 1;
-            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
-        }
-    </style>
+</style>
     <div x-data="modulManager()">
 
         {{-- Flash Messages --}}
@@ -62,7 +51,7 @@
                                 <div style="font-size:16px; font-weight:700; color:#111827; margin:0 0 4px 0;">
                                     {{ $modul->nama }}
                                 </div>
-                                <div style="font-size:12px; color:#374151; font-weight:400; margin-bottom:4px;">
+                                <div style="font-size:13px; color:#666D80; font-weight:400; margin-bottom:4px;">
                                     Asisten:
                                     @forelse($modul->modulAsprak as $ma)
                                         <span>{{ $ma->asprak?->user?->name ?? '—' }}</span>@if(!$loop->last), @endif
@@ -94,19 +83,18 @@
                                     <button type="button" data-modul-id="{{ $modul->id }}" data-modul-nama="{{ $modul->nama }}"
                                         data-modul-deskripsi="{{ $modul->deskripsi ?? '' }}"
                                         @click.stop="openEditModal($el.dataset.modulId, $el.dataset.modulNama, $el.dataset.modulDeskripsi, {{ json_encode($modul->materi->map(function ($m) {
-                                return ['id' => $m->id, 'name' => $m->judul ?? basename($m->file_path ?? 'File'), 'url' => app(\App\Services\SupabaseStorage::class)->publicUrl($m->file_path, 'eoffice')]; })) }})"
+                                return ['id' => $m->id, 'name' => $m->judul ?? basename($m->file_path ?? 'File'), 'url' => app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($m->file_path, 'eoffice', $m->judul ?? basename($m->file_path))]; })) }})"
                                         title="Edit Modul"
-                                        style="background:#EEF2FF; border:none; padding:10px; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s; flex-shrink:0; margin-left:12px; width:40px; height:40px;"
-                                        onmouseover="this.style.background='#E0E7FF'" onmouseout="this.style.background='#EEF2FF'">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#293C79" stroke-width="2"
+                                        style="background:transparent; border:none; padding:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:opacity 0.2s; flex-shrink:0; margin-left:12px; outline:none;"
+                                        onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#293C79" stroke-width="1.5"
                                             stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                                         </svg>
                                     </button>
                                 @endif
                                 <div style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; color: #666D80;">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="modulOpen ? 'transform: rotate(180deg); transition: transform 0.2s;' : 'transform: rotate(0deg); transition: transform 0.2s;'">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="modulOpen ? 'transform: rotate(180deg); transition: transform 0.2s;' : 'transform: rotate(0deg); transition: transform 0.2s;'">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
                                 </div>
@@ -114,7 +102,7 @@
                         </div>
 
                         {{-- Expanded Content --}}
-                        <div class="modul-accordion-content" :class="{ 'is-open': modulOpen }">
+                        <x-eoffice::manajemen-praktikum.ui.grade-accordion state="modulOpen">
                             <div style="padding: 20px 24px 24px 24px; background: #fff; border-top: 1px solid var(--c-border);">
                                 @if($modul->materi->isEmpty())
                                     <div style="font-size: 14px; color: #6B7280; font-style: italic;">Modul belum diunggah</div>
@@ -126,7 +114,7 @@
 
                                     <div style="display:flex; gap:16px; flex-wrap:wrap;">
                                         @foreach($modul->materi as $materi)
-                                            <a href="{{ $materi->file_path ? app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice') : '#' }}"
+                                            <a rel="noopener noreferrer" href="{{ $materi->file_path ? app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($materi->file_path, 'eoffice', ($materi->judul ?? basename($materi->file_path))) : '#' }}"
                                                 target="_blank"
                                                 style="display:flex; flex-direction:column; width:140px; height:140px; border:1px solid #DFE1E7; border-radius:8px; overflow:hidden; text-decoration:none; background:#fff; transition:transform 0.15s, box-shadow 0.15s;"
                                                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"
@@ -142,7 +130,7 @@
                                                 </div>
 
                                                 {{-- Bottom Name Area --}}
-                                                <div style="background:#293C79; padding:12px 14px; display:flex; align-items:center;">
+                                                <div style="background:#0B266E; padding:12px 14px; display:flex; align-items:center;">
                                                     <span style="color:#FFF; font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;"
                                                         title="{{ $materi->judul ?? basename($materi->file_path ?? 'File') }}">
                                                         {{ $materi->judul ?? basename($materi->file_path ?? 'File') }}
@@ -153,20 +141,13 @@
                                     </div>
                                 @endif
                             </div>
-                        </div>
+                        </x-eoffice::manajemen-praktikum.ui.grade-accordion>
                     </div>
                 @empty
                     <div
                         style="min-height:180px;display:flex;align-items:center;justify-content:center;border:1px dashed #DFE1E7;border-radius:12px;">
                         <div style="padding:36px;text-align:center;">
-                            <div
-                                style="width:48px;height:48px;border-radius:12px;background:#FAFAFA;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;border:1px solid #DFE1E7;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5"
-                                    stroke-linecap="round">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                                    <path d="M3 9h18M9 21V9" />
-                                </svg>
-                            </div>
+                            <x-eoffice::manajemen-praktikum.ui.empty-icon name="book" />
                             <div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:4px;">Belum Ada Modul</div>
                             <div style="font-size:12px;color:#6B7280;">Belum ada modul yang di-assign ke Anda.</div>
                         </div>
@@ -180,7 +161,7 @@
             {{-- Modal: Edit Modul --}}
             {{-- ══════════════════════════════════════════════════════════════ --}}
             <div x-show="editModal.open" style="display:none;"
-                class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-all duration-300"
                 x-cloak>
 
                 <div class="relative bg-white rounded-xl shadow-2xl w-[600px] max-w-[90%] max-h-[90vh] overflow-y-auto"
@@ -195,14 +176,6 @@
                     <div
                         style="padding:20px 24px; border-bottom:1px solid #E5E7EB; display:flex; justify-content:space-between; align-items:center;">
                         <h2 style="font-size:18px; font-weight:700; color:#111827; margin:0;">Edit Modul</h2>
-                        <button type="button" @click="editModal.open = false"
-                            style="background:none; border:none; cursor:pointer; color:#6B7280;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round">
-                                <line x1="18" y1="6" x2="6" y2="18" />
-                                <line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
-                        </button>
                     </div>
 
                     <div style="padding:24px;">
@@ -345,11 +318,9 @@
                                 </template>
                             </div>
 
-                            <div style="display:flex;justify-content:flex-end; gap:12px; margin-top:8px;">
-                                <button type="submit"
-                                    style="padding:10px 20px; font-size:14px; font-weight:600; color:white; background:#293C79; border:none; border-radius:8px; cursor:pointer;"
-                                    onmouseover="this.style.background='#1F2D59'"
-                                    onmouseout="this.style.background='#293C79'">Simpan</button>
+                            <div class="mp-modal-footer mp-modal-footer-bleed" style="display:flex;justify-content:flex-end; gap:12px; margin-top:8px;">
+                                <button type="button" @click="editModal.open = false" class="mp-btn secondary md" style="color:#353849;">Batal</button>
+                                <button type="submit" class="mp-btn primary md" style="background:#0B266E;color:#FFFFFF;">Simpan</button>
                             </div>
                         </form>
                     </div>
@@ -383,6 +354,12 @@
 
                 addFiles(e, type) {
                     let selectedFiles = Array.from(e.target.files);
+                    const oversizedFile = selectedFiles.find(file => file.size > 5 * 1024 * 1024);
+                    if (oversizedFile) {
+                        alert('File ' + oversizedFile.name + ' melebihi batas 5MB.');
+                        e.target.value = '';
+                        return;
+                    }
                     let currentFiles = type === 'edit' ? this.editFiles : this.createFiles;
                     let existingFileCount = type === 'edit' ? this.editModal.existingFiles.filter(f => !f.deleted).length : 0;
                     let totalFiles = currentFiles.length + selectedFiles.length + existingFileCount;
@@ -427,4 +404,5 @@
             };
         }
     </script>
+    <x-eoffice::manajemen-praktikum.ui.tugas-akhir-card :praktikum="$praktikum ?? null" role="asprak" section="modul" />
 </x-eoffice::manajemen-praktikum.layout>

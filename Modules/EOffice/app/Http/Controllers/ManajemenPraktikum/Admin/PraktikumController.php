@@ -2,6 +2,7 @@
 
 namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin;
 
+use App\Models\Lecturer;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ class PraktikumController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('kode', 'like', "%{$search}%");
+                    ->orWhere('kode', 'like', "%{$search}%");
             });
         }
 
@@ -53,12 +54,12 @@ class PraktikumController extends Controller
 
         // Dosen list untuk dropdown di modal create
         // Filter: hanya tampilkan dosen dengan domain @undip.ac.id (bukan akun seeder @sicata.com)
-        $dosenList = \App\Models\Lecturer::with('user')
+        $dosenList = Lecturer::with('user')
             ->get()
-            ->filter(fn($l) => $l->user && !str_contains($l->user->email ?? '', 'sicata.com'))
-            ->map(fn($l) => (object)[
-                'id'    => $l->user_id,
-                'name'  => ($l->user->name ?? '—') . ' · ' . ($l->user->email ?? ''),
+            ->filter(fn ($l) => $l->user && ! str_contains($l->user->email ?? '', 'sicata.com'))
+            ->map(fn ($l) => (object) [
+                'id' => $l->user_id,
+                'name' => ($l->user->name ?? '—').' · '.($l->user->email ?? ''),
             ])
             ->values();
 
@@ -78,7 +79,7 @@ class PraktikumController extends Controller
 
         // Validasi dosen-dosen (skip jika tidak ada yang sesuai role)
         $validDosenIds = [];
-        if (!empty($data['dosen_ids'])) {
+        if (! empty($data['dosen_ids'])) {
             foreach ($data['dosen_ids'] as $dosenId) {
                 if ($dosenId) {
                     $dosen = User::find($dosenId);
@@ -99,7 +100,7 @@ class PraktikumController extends Controller
         $praktikum = Praktikum::create($data);
 
         // Sync dosen
-        if (!empty($validDosenIds)) {
+        if (! empty($validDosenIds)) {
             $praktikum->dosens()->sync($validDosenIds);
         }
 
@@ -115,7 +116,7 @@ class PraktikumController extends Controller
     {
         $praktikum = Praktikum::with(['dosens', 'koordinator'])->find($id);
 
-        if (!$praktikum) {
+        if (! $praktikum) {
             return response()->json([
                 'success' => false,
                 'message' => 'Praktikum tidak ditemukan.',
@@ -124,7 +125,7 @@ class PraktikumController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => new PraktikumResource($praktikum),
+            'data' => new PraktikumResource($praktikum),
         ]);
     }
 
@@ -133,21 +134,23 @@ class PraktikumController extends Controller
      */
     public function update(UpdatePraktikumRequest $request, string $id)
     {
+        /** @var Praktikum|null $praktikum */
         $praktikum = Praktikum::find($id);
 
-        if (!$praktikum) {
+        if (! $praktikum) {
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Praktikum tidak ditemukan.',
                 ], 404);
             }
+
             return redirect()->route('eoffice.manprak.admin.praktikum.index')->with('error', 'Praktikum tidak ditemukan.');
         }
 
         $data = $request->validated();
 
-        if (array_key_exists('dosen_ids', $data) && !empty($data['dosen_ids'])) {
+        if (array_key_exists('dosen_ids', $data) && ! empty($data['dosen_ids'])) {
             $validDosenIds = [];
             foreach ($data['dosen_ids'] as $dosenId) {
                 if ($dosenId) {
@@ -164,21 +167,23 @@ class PraktikumController extends Controller
                         'message' => 'User yang dipilih untuk dosen tidak valid atau tidak memiliki role dosen.',
                     ], 422);
                 }
+
                 return back()->withInput()->with('error', 'User yang dipilih untuk dosen tidak valid atau tidak memiliki role dosen.');
             }
             // Sync dosen
             $praktikum->dosens()->sync($validDosenIds);
         }
 
-        if (array_key_exists('koor_id', $data) && !empty($data['koor_id'])) {
+        if (array_key_exists('koor_id', $data) && ! empty($data['koor_id'])) {
             $koor = User::find($data['koor_id']);
-            if (!$koor || !$koor->hasRole('koor_prak')) {
+            if (! $koor || ! $koor->hasRole('koor_prak')) {
                 if ($request->wantsJson() || $request->ajax()) {
                     return response()->json([
                         'success' => false,
                         'message' => 'User yang dipilih untuk koordinator tidak valid atau tidak memiliki role koor_prak.',
                     ], 422);
                 }
+
                 return back()->withInput()->with('error', 'User yang dipilih untuk koordinator tidak valid atau tidak memiliki role koor_prak.');
             }
         }
@@ -193,7 +198,7 @@ class PraktikumController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Praktikum berhasil diperbarui.',
-                'data'    => new PraktikumResource($praktikum->load(['dosens', 'koordinator'])),
+                'data' => new PraktikumResource($praktikum->load(['dosens', 'koordinator'])),
             ]);
         }
 
@@ -202,22 +207,22 @@ class PraktikumController extends Controller
             ->with('success', 'Praktikum berhasil diperbarui.');
     }
 
-
-
     /**
      * DELETE /api/eoffice/manprak/admin/praktikum/{id}
      */
     public function destroy(Request $request, string $id)
     {
+        /** @var Praktikum|null $praktikum */
         $praktikum = Praktikum::find($id);
 
-        if (!$praktikum) {
+        if (! $praktikum) {
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Praktikum tidak ditemukan.',
                 ], 404);
             }
+
             return redirect()->route('eoffice.manprak.admin.praktikum.index')->with('error', 'Praktikum tidak ditemukan.');
         }
 
@@ -240,9 +245,10 @@ class PraktikumController extends Controller
      */
     public function assignKoor(AssignKoorRequest $request, string $id): JsonResponse
     {
+        /** @var Praktikum|null $praktikum */
         $praktikum = Praktikum::find($id);
 
-        if (!$praktikum) {
+        if (! $praktikum) {
             return response()->json([
                 'success' => false,
                 'message' => 'Praktikum tidak ditemukan.',
@@ -250,9 +256,9 @@ class PraktikumController extends Controller
         }
 
         $userId = $request->validated()['user_id'];
-        $user   = User::find($userId);
+        $user = User::find($userId);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => 'User tidak ditemukan.',
@@ -264,7 +270,7 @@ class PraktikumController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Koordinator berhasil diassign ke Praktikum dan otomatis aktif sebagai asprak.',
-            'data'    => new PraktikumResource($praktikum->load(['dosens', 'koordinator'])),
+            'data' => new PraktikumResource($praktikum->load(['dosens', 'koordinator'])),
         ]);
     }
 
@@ -274,11 +280,12 @@ class PraktikumController extends Controller
     public function toggleActive(string $id)
     {
         $praktikum = Praktikum::findOrFail($id);
-        $praktikum->is_active = !$praktikum->is_active;
+        $praktikum->is_active = ! $praktikum->is_active;
         $praktikum->status = $praktikum->is_active ? 'aktif' : 'nonaktif';
         $praktikum->save();
 
         $statusText = $praktikum->is_active ? 'diaktifkan' : 'ditutup (diarsipkan)';
+
         return back()->with('success', "Praktikum {$praktikum->nama} berhasil {$statusText}.");
     }
 
@@ -289,20 +296,20 @@ class PraktikumController extends Controller
     {
         $request->validate([
             'praktikum_ids' => 'required|array',
-            'praktikum_ids.*' => 'exists:eo_praktikum,id',
-            'action' => 'required|in:activate,deactivate'
+            'praktikum_ids.*' => 'exists:eo_prak_praktikum,id',
+            'action' => 'required|in:activate,deactivate',
         ]);
 
         $isActive = $request->action === 'activate' ? true : false;
         $status = $isActive ? 'aktif' : 'nonaktif';
-        
+
         Praktikum::whereIn('id', $request->praktikum_ids)->update([
             'is_active' => $isActive,
-            'status' => $status
+            'status' => $status,
         ]);
 
         $statusText = $isActive ? 'diaktifkan kembali' : 'ditutup (diarsipkan)';
-        return back()->with('success', "Berhasil! " . count($request->praktikum_ids) . " praktikum telah {$statusText}.");
-    }
 
+        return back()->with('success', 'Berhasil! '.count($request->praktikum_ids)." praktikum telah {$statusText}.");
+    }
 }

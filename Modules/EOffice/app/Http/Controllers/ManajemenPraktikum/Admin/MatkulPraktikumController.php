@@ -23,7 +23,7 @@ class MatkulPraktikumController extends Controller
             $query->where('semester', $semester);
         }
 
-        $matkulList = $query->paginate(50)->withQueryString();
+        $matkulList = $query->paginate(max(1, min(100, request()->integer('per_page', 50))))->withQueryString();
 
         return view('eoffice::manajemen-praktikum.admin.matkul-praktikum', compact('matkulList'));
     }
@@ -31,7 +31,7 @@ class MatkulPraktikumController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'kode'     => 'required|string|max:20|unique:eo_matkul_praktikum,kode',
+            'kode'     => 'required|string|max:20|unique:eo_prak_matkul_praktikum,kode',
             'nama'     => 'required|string|max:255',
             'sks'      => 'required|integer|min:1|max:6',
             'semester' => 'required|integer|min:1|max:8',
@@ -47,7 +47,7 @@ class MatkulPraktikumController extends Controller
         $mk = MatkulPraktikum::findOrFail($id);
 
         $request->validate([
-            'kode'     => "required|string|max:20|unique:eo_matkul_praktikum,kode,{$id}",
+            'kode'     => "required|string|max:20|unique:eo_prak_matkul_praktikum,kode,{$id}",
             'nama'     => 'required|string|max:255',
             'sks'      => 'required|integer|min:1|max:6',
             'semester' => 'required|integer|min:1|max:8',

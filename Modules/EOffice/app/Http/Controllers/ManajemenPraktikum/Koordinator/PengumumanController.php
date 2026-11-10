@@ -23,7 +23,7 @@ class PengumumanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'praktikum_id' => 'required|exists:eo_praktikum,id',
+            'praktikum_id' => 'required|exists:eo_prak_praktikum,id',
             'judul'        => 'required|string|max:255',
             'konten'       => 'required|string',
             'is_published' => 'boolean',

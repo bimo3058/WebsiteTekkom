@@ -66,7 +66,6 @@ class PendaftaranKoorController extends Controller
         if ($praktikumId) {
             $periode = \Modules\EOffice\Models\PeriodePendaftaran::where('praktikum_id', $praktikumId)
                 ->where('jenis', 'koor')
-                ->where('is_aktif', true)
                 ->orderByDesc('created_at')
                 ->first();
         }

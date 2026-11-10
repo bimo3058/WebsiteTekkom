@@ -35,6 +35,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\PendaftaranKoorCon
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\PengumumanController as DosenPengumumanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\TugasController as DosenTugasController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\PeriodePendaftaranController as DosenPeriodePendaftaranController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\PengajuanModulController as DosenPengajuanModulController;
 
 // ── ManajemenPraktikum Koordinator ───────────────────────────────────────────
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\BagiModulController;
@@ -45,6 +46,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PendaftaranA
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PendaftaranPraktikanController as KoorPendaftaranPraktikanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PengumumanController as KoorPengumumanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PeriodePendaftaranController as KoorPeriodePendaftaranController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PengajuanModulController as KoorPengajuanModulController;
 
 // ── ManajemenPraktikum Asprak ────────────────────────────────────────────────
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak\AbsensiController;
@@ -80,6 +82,32 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
     // MANAJEMEN PRAKTIKUM
     // ════════════════════════════════════════════════════════════════════════
     Route::prefix('eoffice/manprak')->name('eoffice.manprak.')->group(function () {
+        Route::get('/lampiran',\Modules\EOffice\Http\Controllers\ManajemenPraktikum\AttachmentController::class)->middleware('signed')->name('attachment');
+        foreach(['koor'=>'koor_prak','dosen'=>'dosen'] as $finalRole=>$finalPermission){
+            Route::post($finalRole.'/praktikum/{praktikum}/nilai-keseluruhan',[\Modules\EOffice\Http\Controllers\ManajemenPraktikum\FinalAssessmentController::class,'save'])->middleware('role:'.$finalPermission)->defaults('finalRole',$finalRole)->name($finalRole.'.final.save');
+        }
+
+        foreach (['koor' => 'koor_prak', 'dosen' => 'dosen', 'asprak' => 'asprak|koor_prak', 'mahasiswa' => 'mahasiswa|praktikan|asprak|koor_prak'] as $taRole => $taRoles) {
+            Route::middleware('role:'.$taRoles)->prefix($taRole.'/praktikum/{praktikum}/tugas-akhir')->name($taRole.'.tugas-akhir.')->group(function () use ($taRole) {
+                $controller = \Modules\EOffice\Http\Controllers\ManajemenPraktikum\TugasAkhirController::class;
+                Route::get('/', [$controller, 'index'])->defaults('taRole', $taRole)->name('index');
+                if ($taRole !== 'koor') Route::get('/tugas', [$controller, 'index'])->defaults('taRole', $taRole)->defaults('taSection', 'tugas')->name('tugas');
+                Route::get('/absensi-nilai', [$controller, 'index'])->defaults('taRole', $taRole)->defaults('taSection', 'nilai')->name('nilai');
+                if ($taRole === 'koor') Route::post('/', [$controller, 'save'])->defaults('taRole', $taRole)->name('save');
+                if ($taRole === 'koor') Route::post('/bobot', [$controller, 'weights'])->defaults('taRole', $taRole)->name('weights');
+                if ($taRole === 'koor') Route::delete('/', [$controller, 'destroy'])->defaults('taRole', $taRole)->name('destroy');
+                if ($taRole === 'mahasiswa') Route::post('/pengumpulan', [$controller, 'submit'])->defaults('taRole', $taRole)->name('submit');
+                if ($taRole === 'mahasiswa') Route::post('/pengumpulan/batalkan', [$controller, 'unsubmit'])->defaults('taRole', $taRole)->name('unsubmit');
+                if ($taRole === 'asprak') {
+                    Route::post('/absensi', [$controller, 'attendance'])->defaults('taRole', $taRole)->name('attendance');
+                    Route::post('/perbaikan', [$controller, 'review'])->defaults('taRole', $taRole)->name('review');
+                    Route::post('/nilai', [$controller, 'grade'])->defaults('taRole', $taRole)->name('grade');
+                    Route::post('/nilai-tahap', [$controller, 'gradeBatch'])->defaults('taRole', $taRole)->name('grade-batch');
+                    Route::post('/rekap', [$controller, 'saveRecap'])->defaults('taRole', $taRole)->name('save-recap');
+                }
+                Route::get('/unduh', [$controller, 'download'])->defaults('taRole', $taRole)->name('download');
+            });
+        }
 
         // ── ADMIN ────────────────────────────────────────────────────────────
         Route::middleware(['role:superadmin|admin_eoffice'])
@@ -88,6 +116,9 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
                 Route::get('/dashboard', [AdminManprakDashboard::class, 'index'])
                     ->name('dashboard');
+                Route::get('skema-predikat',[\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\GradePolicyController::class,'index'])->name('grade-policies.index');
+                Route::post('skema-predikat',[\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\GradePolicyController::class,'store'])->name('grade-policies.store');
+                Route::post('skema-predikat/angkatan/{student}',[\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\GradePolicyController::class,'verify'])->name('grade-policies.verify');
                 Route::get('pendaftaran-praktikan', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\RegistrationReviewController::class, 'index'])->name('pendaftaran-praktikan.index');
                 Route::get('pendaftaran/{type}/{id}', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\RegistrationReviewController::class, 'show'])->whereIn('type', ['koor', 'asprak', 'praktikan'])->whereNumber('id')->name('pendaftaran.show');
                 Route::get('pendaftaran/{type}/{id}/dokumen/{document}', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\RegistrationReviewController::class, 'document'])->whereIn('type', ['koor', 'asprak', 'praktikan'])->whereNumber('id')->name('pendaftaran.document');
@@ -171,6 +202,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('kelola-role.index');
                 Route::post('kelola-role/assign', [KelolRoleController::class, 'assignRole'])
                     ->name('kelola-role.assign');
+                Route::put('kelola-role/{praktikumId}/dosen', [KelolRoleController::class, 'updateDosen'])
+                    ->name('kelola-role.dosen.update');
                 Route::delete('kelola-role/{id}', [KelolRoleController::class, 'revokeRole'])
                     ->name('kelola-role.revoke');
                 Route::post('kelola-role/revoke-all/{praktikumId}', [KelolRoleController::class, 'revokeAll'])
@@ -205,6 +238,12 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 // Kelola modul (read-only)
                 Route::get('modul/{praktikumId}', [DosenModulController::class, 'index'])
                     ->name('modul.index');
+                Route::post('pengajuan-modul/{pengajuan}/setujui', [DosenPengajuanModulController::class, 'approve'])
+                    ->name('pengajuan-modul.approve');
+                Route::post('pengajuan-modul/{pengajuan}/revisi', [DosenPengajuanModulController::class, 'revision'])
+                    ->name('pengajuan-modul.revision');
+                Route::post('pengajuan-modul/{pengajuan}/tolak', [DosenPengajuanModulController::class, 'reject'])
+                    ->name('pengajuan-modul.reject');
 
                 // Asisten Praktikum (lihat per praktikum)
                 Route::get('asprak', [DosenAsprakController::class, 'index'])
@@ -292,6 +331,10 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('praktikan.settings');
                 Route::post('praktikan/auto-plot', [KoorManprakDashboard::class, 'autoPlot'])
                     ->name('praktikan.auto-plot');
+                Route::post('praktikan/apply-plot', [KoorManprakDashboard::class, 'applyPlot'])
+                    ->name('praktikan.apply-plot');
+                Route::post('praktikan/discard-draft', [KoorManprakDashboard::class, 'discardPlotDraft'])
+                    ->name('praktikan.discard-draft');
                 Route::post('praktikan/reset-plot', [KoorManprakDashboard::class, 'resetPlot'])
                     ->name('praktikan.reset-plot');
                 Route::post('praktikan/update-plot', [KoorManprakDashboard::class, 'updatePlot'])
@@ -302,14 +345,22 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 // Modul (CRUD + generate kode + detail)
                 Route::get('modul', [KoorModulController::class, 'index'])
                     ->name('modul.index');
-                Route::post('modul', [KoorModulController::class, 'store'])
-                    ->name('modul.store');
                 Route::get('modul/{id}', [KoorModulController::class, 'show'])
                     ->name('modul.show');
-                Route::put('modul/{id}', [KoorModulController::class, 'update'])
-                    ->name('modul.update');
-                Route::delete('modul/{id}', [KoorModulController::class, 'destroy'])
-                    ->name('modul.destroy');
+                Route::post('pengajuan-modul', [KoorPengajuanModulController::class, 'create'])
+                    ->name('pengajuan-modul.create');
+                Route::post('pengajuan-modul/{pengajuan}/item', [KoorPengajuanModulController::class, 'storeItem'])
+                    ->name('pengajuan-modul.item.store');
+                Route::put('pengajuan-modul-item/{item}', [KoorPengajuanModulController::class, 'updateItem'])
+                    ->name('pengajuan-modul.item.update');
+                Route::delete('pengajuan-modul-item/{item}', [KoorPengajuanModulController::class, 'destroyItem'])
+                    ->name('pengajuan-modul.item.destroy');
+                Route::post('pengajuan-modul-item/{item}/pulihkan', [KoorPengajuanModulController::class, 'restoreItem'])
+                    ->name('pengajuan-modul.item.restore');
+                Route::post('pengajuan-modul/{pengajuan}/ajukan', [KoorPengajuanModulController::class, 'submit'])
+                    ->name('pengajuan-modul.submit');
+                Route::post('pengajuan-modul/{pengajuan}/batalkan', [KoorPengajuanModulController::class, 'cancel'])
+                    ->name('pengajuan-modul.cancel');
 
                 // Bagi Modul ke Asprak
                 Route::get('bagi-modul', [BagiModulController::class, 'index'])
@@ -358,14 +409,17 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('pengumuman.destroy');
 
                 // Nilai (approve koor → kirim ke dosen untuk publikasi)
+                Route::post('komponen-modul', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\KomponenModulController::class, 'update'])->name('komponen-modul.update');
                 Route::get('nilai', [KoorNilaiController::class, 'index'])
                     ->name('nilai.index');
                 Route::post('nilai/approve', [KoorNilaiController::class, 'approve'])
                     ->name('nilai.approve');
+                Route::delete('nilai/approve', [KoorNilaiController::class, 'unapprove'])->name('nilai.unapprove');
                 Route::get('nilai/export-csv', [KoorNilaiController::class, 'exportCsv'])
                     ->name('nilai.export-csv');
                 Route::post('nilai/bobot/{id}', [KoorNilaiController::class, 'updateBobot'])
                     ->name('nilai.bobot.update');
+                Route::post('nilai/bobot-gabungan',[\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\FinalGradeController::class,'weights'])->name('nilai.final-weights');
             });
 
         // ── KOORDINATOR — Periode Pendaftaran ────────────────────────────────
@@ -435,23 +489,21 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::post('tugas/{id}/revisi', [AsprakTugasController::class, 'beriRevisi'])
                     ->name('tugas.revisi');
 
-                // Modul (CRUD — asprak bisa membuat modul baru)
+                // Asisten melihat modul dan mengelola konten modul yang diampu.
                 Route::get('modul', [AsprakModulController::class, 'index'])
                     ->name('modul.index');
-                Route::post('modul', [AsprakModulController::class, 'store'])
-                    ->name('modul.store');
                 Route::get('modul/{id}', [AsprakModulController::class, 'show'])
                     ->name('modul.show');
                 Route::put('modul/{id}', [AsprakModulController::class, 'update'])
                     ->name('modul.update');
-                Route::delete('modul/{id}', [AsprakModulController::class, 'destroy'])
-                    ->name('modul.destroy');
 
                 // Materi Modul (upload/hapus)
                 Route::get('materi', [MateriController::class, 'index'])
                     ->name('materi.index');
                 Route::post('materi', [MateriController::class, 'store'])
                     ->name('materi.store');
+                Route::post('materi/gunakan-sebelumnya', [MateriController::class, 'reuse'])
+                    ->name('materi.reuse');
                 Route::delete('materi/{id}', [MateriController::class, 'destroy'])
                     ->name('materi.destroy');
 
@@ -497,10 +549,14 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('tugas.kumpul');
                 Route::post('tugas/{id}/kirim-ulang', [MhsTugasController::class, 'kirimUlang'])
                     ->name('tugas.kirim-ulang');
+                Route::patch('tugas/{id}/batalkan', [MhsTugasController::class, 'batalkan'])
+                    ->name('tugas.batalkan');
                 Route::delete('tugas/{id}/hapus', [MhsTugasController::class, 'hapus'])
                     ->name('tugas.hapus');
 
                 // Nilai (lihat jika sudah dipublikasikan)
+                Route::get('nilai/export-csv', [MhsNilaiController::class, 'exportCsv'])
+                    ->name('nilai.export-csv');
                 Route::get('nilai', [MhsNilaiController::class, 'index'])
                     ->name('nilai.index');
 
@@ -674,6 +730,12 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
     Route::prefix('eoffice/peminjaman')->name('eoffice.peminjaman.')->group(function () use ($MRAdminRuanganController, $MRAdminPengaturanController) {
         Route::get('/dashboard', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\DashboardController::class, 'index'])->name('dashboard');
 
+        // ── INTEGRASI ANTAR-MODUL (API INTERNAL) ──────────────────────────────
+        $MRRoomIntegrationController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\Api\RoomIntegrationController::class;
+        Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () use ($MRRoomIntegrationController) {
+            Route::get('ketersediaan-ruangan', [$MRRoomIntegrationController, 'checkAvailability'])->name('ketersediaan-ruangan');
+        });
+
         // ── ADMIN ────────────────────────────────────────────────────────────
         Route::middleware(['role:superadmin|admin_eoffice'])
             ->prefix('admin')->name('admin.')
@@ -693,7 +755,9 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::post('/persetujuan/{id}/override', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateOverride'])->name('persetujuan.override');
                 Route::get('/persetujuan/api/check-collision', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'checkCollision'])->name('persetujuan.check-collision');
                 Route::get('/persetujuan/api/pending-count', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'getPendingCount'])->name('persetujuan.pending-count');
-                Route::delete('/riwayat/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'destroy'])->name('riwayat.destroy');
+                Route::delete('/riwayat/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'destroy'])
+                    ->name('riwayat.destroy')
+                    ->middleware('role:superadmin');
 
                 // Jadwal Akademik (Filter dari tabel Internal)
                 Route::get('jadwal-akademik', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'index'])->name('jadwal-akademik.index');
@@ -710,6 +774,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::get('kalender-global', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'index'])->name('kalender-global.index');
                 Route::post('kalender-global/express', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'expressBooking'])->name('kalender-global.express');
                 Route::get('kalender-global/search-users', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'searchUsers'])->name('kalender-global.search-users');
+                Route::get('kalender-global/check-collision', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'checkCollision'])->name('kalender-global.check-collision');
 
 
                 // Settings
@@ -737,6 +802,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 // Transaksi
                 Route::get('/saya', [$MRUserPeminjamanController, 'saya'])->name('saya');
                 Route::post('/saya/batal/{id}', [$MRUserPeminjamanController, 'batalkanBooking'])->name('saya.batal');
+                Route::get('/saya/berkas/{id}', [$MRUserPeminjamanController, 'lihatBerkas'])->name('saya.berkas')->middleware('signed');
                 Route::get('/riwayat', [$MRUserPeminjamanController, 'riwayat'])->name('riwayat');
                 Route::post('/riwayat/{id}/hide', [$MRUserPeminjamanController, 'hideRiwayat'])->name('riwayat.hide');
 

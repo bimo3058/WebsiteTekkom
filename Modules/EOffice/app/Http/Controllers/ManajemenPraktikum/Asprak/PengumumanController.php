@@ -8,6 +8,7 @@ use Modules\EOffice\Models\AsistenPraktikum;
 use Modules\EOffice\Models\Pengumuman;
 use Modules\EOffice\Models\Praktikum;
 use App\Services\SupabaseStorage;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Asprak: Pengumuman (semua asprak bisa upload/hapus).
@@ -65,12 +66,12 @@ class PengumumanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
+            'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
             'judul' => 'required|string|max:255',
             'konten' => 'required|string',
             'is_published' => 'boolean',
             'lampiran' => 'nullable|array|max:3',
-            'lampiran.*' => 'file|mimes:pdf|max:5120',
+            'lampiran.*' => 'file|max:5120',
         ]);
 
         $user = auth()->user();
@@ -87,6 +88,7 @@ class PengumumanController extends Controller
         $lampiranPaths = [];
         if ($request->hasFile('lampiran')) {
             $storage = app(SupabaseStorage::class);
+            $uploadFailed = false;
             foreach ($request->file('lampiran') as $file) {
                 $path = $storage->upload($file, 'pengumuman', 'eoffice');
                 if ($path) {
@@ -94,7 +96,17 @@ class PengumumanController extends Controller
                         'name' => $file->getClientOriginalName(),
                         'path' => $path,
                     ];
+                } else {
+                    $uploadFailed = true;
                 }
+            }
+            if ($uploadFailed) {
+                foreach ($lampiranPaths as $lampiran) {
+                    $storage->delete($lampiran['path'], 'eoffice');
+                }
+                throw ValidationException::withMessages([
+                    'lampiran' => 'Lampiran gagal diunggah. Pengumuman belum disimpan.',
+                ]);
             }
         }
 
@@ -118,7 +130,7 @@ class PengumumanController extends Controller
             'judul' => 'required|string|max:255',
             'konten' => 'required|string',
             'lampiran' => 'nullable|array|max:3',
-            'lampiran.*' => 'file|mimes:pdf|max:5120',
+            'lampiran.*' => 'file|max:5120',
         ]);
 
         $user = auth()->user();
@@ -130,7 +142,10 @@ class PengumumanController extends Controller
 
         $lampiranPaths = $pengumuman->lampiran ?? [];
         if ($request->hasFile('lampiran')) {
+            // Lampiran baru menggantikan kumpulan lama agar batas tetap maksimal 3 file.
+            $lampiranPaths = [];
             $storage = app(SupabaseStorage::class);
+            $uploadFailed = false;
             foreach ($request->file('lampiran') as $file) {
                 $path = $storage->upload($file, 'pengumuman', 'eoffice');
                 if ($path) {
@@ -138,7 +153,17 @@ class PengumumanController extends Controller
                         'name' => $file->getClientOriginalName(),
                         'path' => $path,
                     ];
+                } else {
+                    $uploadFailed = true;
                 }
+            }
+            if ($uploadFailed) {
+                foreach ($lampiranPaths as $lampiran) {
+                    $storage->delete($lampiran['path'], 'eoffice');
+                }
+                throw ValidationException::withMessages([
+                    'lampiran' => 'Lampiran gagal diunggah. Perubahan pengumuman belum disimpan.',
+                ]);
             }
         }
 
@@ -167,5 +192,3 @@ class PengumumanController extends Controller
         ])->with('success', 'Pengumuman berhasil dihapus.');
     }
 }
-
-

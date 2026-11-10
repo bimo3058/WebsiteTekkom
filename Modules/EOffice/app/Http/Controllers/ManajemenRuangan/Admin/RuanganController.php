@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Modules\EOffice\Models\Ruangan;
 use Modules\EOffice\Models\RuanganFoto;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class RuanganController extends Controller
 {
@@ -70,7 +71,7 @@ class RuanganController extends Controller
             'lokasi' => 'required|string|max:255',
             'lantai' => 'nullable|integer',
             'kapasitas' => 'required|integer|min:0',
-            'kategori' => 'required|in:Kelas,Laboratorium,Sidang',
+            'kategori' => ['required', Rule::in(Ruangan::ALL_KATEGORI)],
             'fasilitas' => 'nullable|array',
             'fasilitas.*' => 'string',
             'fotos' => 'nullable|array|max:10',
@@ -115,15 +116,12 @@ class RuanganController extends Controller
 
     public function update(Request $request, Ruangan $ruangan)
     {
-        // TEMPORARY DEBUG - hapus setelah konfirmasi
-        \Illuminate\Support\Facades\Log::info('=== UPDATE REACHED ===', ['id' => $ruangan->id]);
-        \Session::flash('success', 'DEBUG: Update method reached! ID=' . $ruangan->id);
         $request->validate([
             'nama' => 'required|string|max:255',
             'lokasi' => 'required|string|max:255',
             'lantai' => 'nullable|integer',
             'kapasitas' => 'required|integer|min:0',
-            'kategori' => 'required|in:Kelas,Laboratorium,Sidang',
+            'kategori' => ['required', Rule::in(Ruangan::ALL_KATEGORI)],
             'fasilitas' => 'nullable|array',
             'fasilitas.*' => 'string',
             'fotos' => 'nullable|array|max:10',
@@ -176,6 +174,13 @@ class RuanganController extends Controller
 
     public function destroy(Ruangan $ruangan)
     {
+        $storage = app(\App\Services\SupabaseStorage::class);
+        foreach ($ruangan->fotos as $foto) {
+            if (!empty($foto->path_foto)) {
+                $storage->delete($foto->path_foto, 'eoffice');
+            }
+        }
+
         $ruangan->delete();
 
         return redirect()->route('eoffice.peminjaman.admin.ruangan.index')->with('success', 'Ruangan berhasil dihapus.');

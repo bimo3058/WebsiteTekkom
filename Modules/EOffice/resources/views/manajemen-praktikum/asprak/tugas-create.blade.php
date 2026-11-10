@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Buat Tugas">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Buat Tugas">
 
 {{-- Header --}}
 <div class="mp-page-header">
@@ -52,7 +52,7 @@
                 Jenis Tugas <span style="color:#DF1C41;">*</span>
             </label>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
-                @foreach(['tugas_pendahuluan' => 'Tugas Pendahuluan', 'laporan' => 'Laporan', 'responsi' => 'Responsi', 'tugas_pengganti' => 'Tugas Pengganti'] as $val => $label)
+                @foreach(($moduls->first()?->praktikum?->moduleTaskTypes() ?? \Modules\EOffice\Models\Tugas::JENIS) as $val => $label)
                 <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid {{ old('jenis_tugas', request('jenis_tugas')) === $val ? '#6366F1' : '#DFE1E7' }};border-radius:10px;cursor:pointer;background:{{ old('jenis_tugas', request('jenis_tugas')) === $val ? '#F0F1FE' : '#FAFBFC' }};transition:border-color .15s,background .15s;"
                        x-data
                        :style="$refs.jenis_{{ $val }}.checked ? 'border-color:#5D6DA2;background:#F0F1FE;' : 'border-color:#DFE1E7;background:#FAFBFC;'">
@@ -165,11 +165,11 @@
             @enderror
         </div>
 
-        {{-- Deadline & Publikasi --}}
+        {{-- Tenggat & Publikasi --}}
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px;">
             <div>
                 <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">
-                    Deadline AC <span style="color:#999;">(Tenggat Pengumpulan Awal)</span>
+                    Tenggat AC <span style="color:#999;">(Tenggat Pengumpulan Awal)</span>
                 </label>
                 <input type="datetime-local" name="deadline" class="mp-input" style="min-height:44px;" value="{{ old('deadline') }}">
                 @error('deadline')
@@ -179,7 +179,7 @@
 
             <div>
                 <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">
-                    Deadline ACC <span style="color:#999;">(Tenggat Revisi / Batas Akhir)</span>
+                    Tenggat ACC <span style="color:#999;">(Tenggat Revisi / Batas Akhir)</span>
                 </label>
                 <input type="datetime-local" name="deadline_acc" class="mp-input" style="min-height:44px;" value="{{ old('deadline_acc') }}">
                 @error('deadline_acc')

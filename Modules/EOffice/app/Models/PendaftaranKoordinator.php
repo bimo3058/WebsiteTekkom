@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Pendaftaran calon Koordinator Praktikum oleh mahasiswa.
- * Tabel: pendaftaran_koordinator
+ * Tabel: eo_prak_pendaftaran_koordinator
  *
  * Flow: Mahasiswa submit → Dosen review (status_dosen) → Admin final approve (status)
  * status_dosen: menunggu | disetujui | ditolak
@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class PendaftaranKoordinator extends Model
 {
-    protected $table = 'pendaftaran_koordinator';
+    protected $table = 'eo_prak_pendaftaran_koordinator';
 
     protected $fillable = [
         'user_id',

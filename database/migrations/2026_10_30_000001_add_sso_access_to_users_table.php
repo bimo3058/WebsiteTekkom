@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -27,6 +28,13 @@ return new class extends Migration
             $table->unique(['user_id', 'provider', 'tenant_id'], 'user_sso_identity_user_provider_unique');
             $table->index('email');
         });
+
+        // Preserve access for existing accounts during the SSO cutover.
+        // New accounts still require an explicit grant (the default remains false).
+        DB::table('users')->update([
+            'sso_enabled' => true,
+            'sso_enabled_at' => now(),
+        ]);
     }
 
     public function down(): void

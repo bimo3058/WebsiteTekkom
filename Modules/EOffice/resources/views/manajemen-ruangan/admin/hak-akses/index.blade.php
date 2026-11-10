@@ -85,8 +85,7 @@
                 <input type="hidden" name="scope_user" value="1">
                 <div class="mp-card-body" style="padding: 24px;">
                     <p style="font-size: 12px; color: #64748B; margin-bottom: 20px;">
-                        Pilih menu apa saja yang dapat dilihat dan diakses oleh pengguna biasa di modul Peminjaman
-                        Ruangan. (Sebagai Admin, menu Mahasiswa ini akan *selalu* terlihat di akun Anda).
+                        Pilih menu apa saja yang dapat dilihat dan diakses oleh pengguna (mahasiswa/dosen) pada modul Manajemen Ruangan.
                     </p>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">

@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="{{ $praktikum ? $praktikum->nama : 'Belum Ada Praktikum' }} / Pengumuman">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="{{ $praktikum ? $praktikum->nama : 'Belum Ada Praktikum' }} / Pengumuman">
     @if(isset($praktikum) && $praktikum)
         <x-eoffice::manajemen-praktikum.koor-header :praktikum="$praktikum" />
     @endif
@@ -67,8 +67,6 @@
     <div class="bg-white rounded-[16px] shadow-xl w-full max-w-lg mx-4 overflow-hidden">
         <div class="flex items-center justify-between px-6 py-4 border-b border-[#DFE1E7]">
             <div class="font-bold text-[16px] text-[#0D0D12]">Buat Pengumuman Baru</div>
-            <button onclick="document.getElementById('modalCreate').classList.add('hidden')"
-                    class="text-[#666D80] text-xl bg-transparent border-none cursor-pointer hover:text-[#0D0D12]" aria-label="Tutup dialog pengumuman" title="Tutup"><x-eoffice::manajemen-praktikum.ui.icon name="close" /></button>
         </div>
         <form method="POST" action="{{ route('eoffice.manprak.koor.pengumuman.store') }}" class="p-6">
             @csrf
@@ -87,7 +85,7 @@
                     <span style="font-size:12px;font-weight:600;color:#353849;">Publikasikan langsung</span>
                 </label>
             </div>
-            <div class="flex gap-2 mt-5">
+            <div class="mp-modal-footer mp-modal-footer-bleed flex gap-2 mt-5" style="--mp-modal-footer-radius:16px;">
                 <button type="button" onclick="document.getElementById('modalCreate').classList.add('hidden')"
                         class="mp-btn secondary md flex-1">Batal</button>
                 <button type="submit" class="mp-btn primary md flex-1">Simpan</button>

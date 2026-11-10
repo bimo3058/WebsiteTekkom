@@ -284,6 +284,10 @@
         </div>
 
         {{-- Alerts --}}
+        @if (session('error'))
+            <div class="sk-alert sk-alert-error" role="alert">{{ session('error') }}</div>
+        @endif
+
         @if (session('status'))
             <div class="sk-alert sk-alert-warning">{{ session('status') }}</div>
         @endif

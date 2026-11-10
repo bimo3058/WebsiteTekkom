@@ -24,7 +24,8 @@
                 'pengguna' => $b->user->name ?? 'Mahasiswa',
                 'user_id' => $b->user_id,
                 'jam_mulai' => substr($b->jam_mulai, 0, 5),
-                'jam_selesai' => substr($b->jam_selesai, 0, 5)
+                'jam_selesai' => substr($b->jam_selesai, 0, 5),
+                'source' => $b->source ?? null,
             ];
         }
 
@@ -50,6 +51,7 @@
                             $tgl = $day->format('Y-m-d');
                             if (!empty($j->tgl_mulai_efektif) && $tgl < $j->tgl_mulai_efektif) continue;
                             if (!empty($j->tgl_selesai_efektif) && $tgl > $j->tgl_selesai_efektif) continue;
+                            if (isset($holidays[$tgl])) continue; // Libur Nasional: perkuliahan rutin ditiadakan
                             $eventsMap[$tgl][$j->ruangan_id][] = [
                                 'id' => 'it_' . $j->id,
                                 'status' => 'internal',
@@ -87,166 +89,202 @@
             }
         }
         
-// Month grid
-        $calendarDays = [];
-        $firstDayOfWeek = (int) $monthStart->format('N'); // 1=Mon ... 7=Sun
-        for ($i = 1; $i < $firstDayOfWeek; $i++)
-            $calendarDays[] = null; // Pad empty cells
-        $curDate = $monthStart->copy();
-        while ($curDate->lte($monthEnd)) {
-            $calendarDays[] = $curDate->copy();
-            $curDate->addDay();
-        }
-
         $prevWeek = $weekStart->copy()->subWeek()->format('Y-m-d');
         $nextWeek = $weekStart->copy()->addWeek()->format('Y-m-d');
-        $prevMonth = $monthDate->copy()->subMonth()->format('Y-m');
-        $nextMonth = $monthDate->copy()->addMonth()->format('Y-m');
 
         // Time travel restrictions
         $now = \Carbon\Carbon::now();
         $currentWeekStart = $now->copy()->startOfWeek(\Carbon\Carbon::MONDAY)->format('Y-m-d');
-        $currentMonthStart = $now->copy()->startOfMonth()->format('Y-m');
-
         $canGoBackWeek = $weekStart->format('Y-m-d') > $currentWeekStart;
-        $canGoBackMonth = $monthDate->format('Y-m') > $currentMonthStart;
     @endphp
 
     {{-- =================== PAGE HEADER =================== --}}
     <div class="mp-page-header">
-        <div class="flex flex-col md:flex-row md:items-center justify-between w-full gap-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between w-full gap-3 lg:gap-4">
             <div>
                 <h1 class="mp-page-title">Kalender Ruangan</h1>
                 <p class="mp-page-sub">Lihat ketersediaan seluruh ruangan dan langsung booking slot yang kosong.</p>
             </div>
 
-            <div class="flex flex-wrap items-center gap-3">
+            <div class="w-full lg:w-auto flex justify-start lg:justify-end">
                 {{-- Room Filter --}}
                 <form id="roomFilterForm" method="GET" action="{{ route('eoffice.peminjaman.user.kalender') }}"
-                    class="flex items-center">
-                    <input type="hidden" name="mode" value="{{ $mode }}">
-                    @if($mode === 'week') <input type="hidden" name="week_start"
-                    value="{{ $weekStart->format('Y-m-d') }}"> @endif
-                    @if($mode === 'month') <input type="hidden" name="month" value="{{ $monthDate->format('Y-m') }}">
-                    @endif
+                    class="w-full sm:w-auto">
+                    <input type="hidden" name="week_start" value="{{ $weekStart->format('Y-m-d') }}">
 
                     <div x-data="{
                             open: false,
+                            search: '',
+                            activeTab: 'Semua',
                             selectedCat: '{{ $selectedKategori }}',
                             selectedRoomId: '{{ $selectedRoomId }}',
-                            selectedRoomName: '{{ $selectedRoomId ? addslashes($allRuangansDaftar->firstWhere('id', $selectedRoomId)->nama ?? 'Semua ' . $selectedKategori) : 'Semua ' . $selectedKategori }}',
+                            selectedRoomName: @js($selectedRoomId ? ($allRuangansDaftar->firstWhere('id', $selectedRoomId)->nama ?? 'Semua Ruangan') : 'Semua Ruangan'),
                             rooms: {{ $allRuangansDaftar->map(fn($r) => ['id' => $r->id, 'nama' => $r->nama, 'kategori' => $r->kategori])->toJson() }},
                             categories: {{ $kategoriList->toJson() }},
+                            get displayLabel() {
+                                if (this.selectedRoomId && this.selectedRoomName && this.selectedRoomName !== 'Semua Ruangan') {
+                                    return this.selectedRoomName;
+                                }
+                                if (this.selectedCat && this.selectedCat !== 'Semua Kategori' && this.selectedCat !== 'Semua') {
+                                    return 'Kategori: ' + this.selectedCat;
+                                }
+                                return 'Semua Ruangan';
+                            },
+                            get filteredRooms() {
+                                let list = this.rooms;
+                                if (this.activeTab !== 'Semua') {
+                                    list = list.filter(r => r.kategori === this.activeTab);
+                                }
+                                if (this.search.trim() !== '') {
+                                    const q = this.search.toLowerCase().trim();
+                                    list = list.filter(r => r.nama.toLowerCase().includes(q) || (r.kategori && r.kategori.toLowerCase().includes(q)));
+                                }
+                                return list;
+                            },
                             selectCat(cat) {
                                 this.selectedCat = cat;
                                 this.selectedRoomId = '';
-                                this.selectedRoomName = 'Semua ' + cat;
+                                this.selectedRoomName = (cat === 'Semua' || cat === 'Semua Kategori') ? 'Semua Ruangan' : 'Semua ' + cat;
                                 $refs.ruanganInput.value = '';
-                                $refs.kategoriInput.value = cat;
+                                $refs.kategoriInput.value = (cat === 'Semua' ? 'Semua Kategori' : cat);
+                                this.open = false;
                                 document.getElementById('roomFilterForm').submit();
                             },
                             selectRoom(id, name, cat) {
-                                this.selectedCat = cat;
                                 this.selectedRoomId = id;
                                 this.selectedRoomName = name;
+                                this.selectedCat = cat || this.selectedCat;
                                 $refs.ruanganInput.value = id;
-                                $refs.kategoriInput.value = cat;
+                                $refs.kategoriInput.value = this.selectedCat;
+                                this.open = false;
                                 document.getElementById('roomFilterForm').submit();
+                            },
+                            init() {
+                                if (this.selectedRoomId !== '') {
+                                    let currentRoom = this.rooms.find(r => r.id == this.selectedRoomId);
+                                    if (currentRoom && currentRoom.kategori) {
+                                        this.selectedCat = currentRoom.kategori;
+                                        this.activeTab = currentRoom.kategori;
+                                        $refs.kategoriInput.value = currentRoom.kategori;
+                                    }
+                                } else if (this.selectedCat && this.selectedCat !== 'Semua Kategori' && this.selectedCat !== 'Semua') {
+                                    this.activeTab = this.selectedCat;
+                                }
                             }
-                        }" class="relative w-56 sm:w-64" @click.away="open = false">
+                        }" 
+                        class="relative w-full sm:w-auto" 
+                        @click.away="open = false"
+                        @keydown.escape.window="open = false">
 
                         <input type="hidden" name="ruangan_id" x-ref="ruanganInput" :value="selectedRoomId">
                         <input type="hidden" name="kategori" x-ref="kategoriInput" :value="selectedCat">
 
-                        <button type="button" @click="open = !open"
-                            class="w-full flex items-center justify-between py-1.5 px-3 text-[13px] font-medium bg-white border border-gray-300 rounded-lg shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0B266E]/20 transition-all cursor-pointer">
-                            <span x-text="selectedRoomId ? selectedRoomName : 'Kategori: ' + selectedCat"
-                                class="truncate pr-2 text-gray-800"></span>
-                            <svg class="w-4 h-4 text-gray-500 transition-transform duration-200 shrink-0"
+                        <!-- Trigger Button -->
+                        <button type="button" 
+                            @click="open = !open; if(open && window.innerWidth >= 768 && window.matchMedia('(pointer: fine)').matches) { $nextTick(() => $refs.searchInput && $refs.searchInput.focus()); }"
+                            class="w-full sm:w-64 md:w-72 flex items-center justify-between gap-2.5 px-3 py-1.5 text-[13px] text-slate-800 font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0B266E]/20 shadow-sm transition-all cursor-pointer">
+                            <span x-text="displayLabel" class="truncate font-semibold"></span>
+                            <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0"
                                 :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
 
-                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
-                            x-transition:enter-start="transform opacity-0 scale-95"
-                            x-transition:enter-end="transform opacity-100 scale-100"
-                            x-transition:leave="transition ease-in duration-75"
-                            x-transition:leave-start="transform opacity-100 scale-100"
-                            x-transition:leave-end="transform opacity-0 scale-95"
-                            class="absolute right-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 max-h-60 overflow-y-auto"
+                        <!-- Combobox Popover -->
+                        <div x-show="open" x-cloak 
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="opacity-0 scale-95" 
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75" 
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            class="absolute left-0 top-full mt-1.5 w-full bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-2.5 text-left"
                             style="display: none;">
-                            <div class="p-1.5">
+                            
+                            <!-- Search Input (Formal, No Icons) -->
+                            <div class="relative mb-2">
+                                <input type="text"
+                                    x-ref="searchInput"
+                                    x-model="search"
+                                    placeholder="Cari nama ruangan..."
+                                    class="w-full pl-3 pr-7 py-1.5 text-[12px] bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0B266E] focus:border-[#0B266E] text-slate-800 placeholder-slate-400 transition-all">
+                                <button x-show="search.length > 0" 
+                                    @click="search = ''; $refs.searchInput.focus()" 
+                                    type="button" 
+                                    class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
+                                    &#x2715;
+                                </button>
+                            </div>
+
+                            <!-- Category Filter Tabs / Pills -->
+                            <div class="flex items-center gap-1 overflow-x-auto pb-1.5 mb-1.5 border-b border-slate-100 text-[11px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                                <button type="button" 
+                                    @click="activeTab = 'Semua'"
+                                    class="px-2.5 py-1 rounded-md transition-colors cursor-pointer shrink-0"
+                                    :class="activeTab === 'Semua' ? 'bg-[#0B266E] text-white font-semibold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'">
+                                    Semua
+                                </button>
                                 <template x-for="cat in categories" :key="cat">
-                                    <div class="mb-1">
-                                        <!-- Category Header -->
-                                        <button type="button" @click="selectCat(cat)"
-                                            class="w-full text-left px-2 py-1.5 rounded-md text-[13px] font-bold transition-colors cursor-pointer flex items-center gap-2"
-                                            :class="{'bg-[#EFF6FF] text-[#0B266E]': selectedCat === cat && !selectedRoomId, 'text-gray-800 hover:bg-gray-50': !(selectedCat === cat && !selectedRoomId)}">
-                                            <span x-text="getIcon(cat)"></span>
-                                            <span x-text="'Kategori: ' + cat"></span>
-                                        </button>
-                                        <!-- Rooms in Category -->
-                                        <div class="pl-6 border-l border-gray-100 ml-3 my-0.5 space-y-0.5">
-                                            <template x-for="r in rooms.filter(room => room.kategori === cat)"
-                                                :key="r.id">
-                                                <button type="button" @click="selectRoom(r.id, r.nama, cat)"
-                                                    class="w-full text-left px-2 py-1.5 rounded-md text-[12px] font-medium transition-colors cursor-pointer"
-                                                    :class="{'bg-[#0B266E] text-white': selectedRoomId == r.id, 'text-gray-600 hover:bg-gray-50': selectedRoomId != r.id}">
-                                                    - <span x-text="r.nama"></span>
-                                                </button>
-                                            </template>
-                                        </div>
-                                    </div>
+                                    <button type="button" 
+                                        @click="activeTab = cat"
+                                        class="px-2.5 py-1 rounded-md transition-colors cursor-pointer shrink-0"
+                                        :class="activeTab === cat ? 'bg-[#0B266E] text-white font-semibold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                        x-text="cat">
+                                    </button>
                                 </template>
+                            </div>
+
+                            <!-- Macro View: Tampilkan Semua Kategori Ini -->
+                            <div class="mb-1">
+                                <button type="button" 
+                                    @click="selectCat(activeTab)"
+                                    class="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md text-[12px] font-semibold text-left transition-colors cursor-pointer"
+                                    :class="(activeTab === 'Semua' ? (selectedCat === 'Semua Kategori' && !selectedRoomId) : (selectedCat === activeTab && !selectedRoomId))
+                                        ? 'bg-blue-50 text-[#0B266E]' 
+                                        : 'text-slate-700 hover:bg-slate-50'">
+                                    <span class="text-left" x-text="activeTab === 'Semua' ? 'Tampilkan Semua' : 'Tampilkan Semua ' + activeTab"></span>
+                                    <template x-if="activeTab === 'Semua' ? (selectedCat === 'Semua Kategori' && !selectedRoomId) : (selectedCat === activeTab && !selectedRoomId)">
+                                        <svg class="w-4 h-4 text-[#0B266E] shrink-0 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </template>
+                                </button>
+                            </div>
+
+                            <div class="h-px bg-slate-100 my-1"></div>
+
+                            <!-- List of Rooms with Checkmark and Badges -->
+                            <div class="max-h-52 overflow-y-auto space-y-0.5">
+                                <template x-for="r in filteredRooms" :key="r.id">
+                                    <button type="button" 
+                                        @click="selectRoom(r.id, r.nama, r.kategori)"
+                                        class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[12px] transition-colors cursor-pointer group"
+                                        :class="selectedRoomId == r.id ? 'bg-blue-50 text-[#0B266E] font-semibold' : 'text-slate-700 hover:bg-slate-50'">
+                                        
+                                        <span x-text="r.nama" class="truncate"></span>
+
+                                        <template x-if="selectedRoomId == r.id">
+                                            <svg class="w-4 h-4 text-[#0B266E] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </template>
+                                    </button>
+                                </template>
+
+                                <div x-show="filteredRooms.length === 0" class="py-4 text-center text-xs text-slate-400">
+                                    Ruangan tidak ditemukan
+                                </div>
                             </div>
                         </div>
                     </div>
                 </form>
-
-                {{-- Navigation Actions --}}
-                <div class="flex items-center gap-2">
-                    {{-- Hari Ini Button --}}
-                    @php
-                        if ($mode === 'week') {
-                            $todayDate = \Carbon\Carbon::now()->format('Y-m-d');
-                            $isTodayView = $todayDate === $weekStart->format('Y-m-d');
-                            $todayUrl = request()->fullUrlWithQuery(['week_start' => $todayDate]);
-                        } else {
-                            $todayMonth = \Carbon\Carbon::now()->format('Y-m');
-                            $isTodayView = $todayMonth === $monthDate->format('Y-m');
-                            $todayUrl = request()->fullUrlWithQuery(['month' => $todayMonth]);
-                        }
-                    @endphp
-                    <a href="{{ $todayUrl }}"
-                        class="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all border {{ $isTodayView ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-default' : 'bg-white text-[#0B266E] border-gray-200 hover:bg-[#EFF6FF] hover:border-[#0B266E]/30 shadow-sm' }}"
-                        {{ $isTodayView ? 'onclick="return false;"' : '' }} title="Kembali ke Hari Ini">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        Hari Ini
-                    </a>
-
-                    {{-- Mode Toggle --}}
-                    <div class="flex bg-gray-100 rounded-lg p-1 gap-1">
-                        <a href="{{ request()->fullUrlWithQuery(['mode' => 'week', 'week_start' => $weekStart->format('Y-m-d')]) }}"
-                            class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'week' ? 'bg-white text-[#0B266E] shadow-sm' : 'text-gray-500 hover:text-[#0B266E]' }}">
-                            Mingguan
-                        </a>
-                        <a href="{{ request()->fullUrlWithQuery(['mode' => 'month', 'month' => $monthDate->format('Y-m')]) }}"
-                            class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'month' ? 'bg-white text-[#0B266E] shadow-sm' : 'text-gray-500 hover:text-[#0B266E]' }}">
-                            Bulanan
-                        </a>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
     {{-- Alpine Wrapper Start --}}
-    <div x-data="bookingKalender()" @mouseup.window="stopDrag()">
+    <div x-data="bookingKalender()" @mouseup.window="stopDragAbsolute()">
 
         {{-- =================== LEGEND =================== --}}
         <div class="flex flex-wrap items-center gap-4 mt-3 mb-5 text-[12px] font-medium text-gray-600">
@@ -267,29 +305,47 @@
             </div>
         </div>
 
-        {{-- =================== WEEKLY MODE =================== --}}
-        @if($mode === 'week')
+        {{-- =================== JADWAL KALENDER =================== --}}
             {{-- Week Nav --}}
-            <div class="flex items-center justify-between mb-4 mt-2">
-                @if($canGoBackWeek)
-                    <a href="{{ request()->fullUrlWithQuery(['week_start' => $prevWeek]) }}"
-                        class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-3 md:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[36px] md:min-w-[130px]">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                        </svg>
-                        <span class="hidden md:inline">Minggu Lalu</span>
+            <div class="flex items-center justify-between mb-4 mt-2 gap-1.5 sm:gap-3">
+                <div class="flex items-center gap-1 sm:gap-2">
+                    @if($canGoBackWeek)
+                        <a href="{{ request()->fullUrlWithQuery(['week_start' => $prevWeek]) }}"
+                            class="inline-flex items-center justify-center gap-1.5 text-[12px] sm:text-[13px] font-semibold px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[34px] sm:min-w-[40px] lg:min-w-[120px]"
+                            title="Minggu Lalu">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                            <span class="hidden lg:inline">Minggu Lalu</span>
+                        </a>
+                    @else
+                        <div class="w-8 sm:w-auto"></div>
+                    @endif
+
+                    {{-- Hari Ini Button --}}
+                    @php
+                        $todayDate = \Carbon\Carbon::now()->format('Y-m-d');
+                        $isTodayView = $todayDate === $weekStart->format('Y-m-d');
+                        $todayUrl = request()->fullUrlWithQuery(['week_start' => $todayDate]);
+                    @endphp
+                    <a href="{{ $todayUrl }}"
+                        class="inline-flex items-center justify-center px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-[12px] font-bold transition-all border {{ $isTodayView ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-default pointer-events-none' : 'bg-white text-[#0B266E] border-gray-200 hover:bg-[#EFF6FF] hover:border-[#0B266E]/30 shadow-sm' }}"
+                        {{ $isTodayView ? 'onclick="return false;"' : '' }} title="Kembali ke Hari Ini">
+                        Hari Ini
                     </a>
-                @else
-                    <div class="min-w-[36px] md:min-w-[130px]"></div>
-                @endif
+                </div>
 
                 {{-- Date Picker Dropdown (Weekly) --}}
-                <div x-data="{ open: false }" class="relative flex-1 flex justify-center">
+                <div x-data="{ open: false }" class="relative flex-1 flex justify-center min-w-0">
                     <button @click="open = !open" type="button"
-                        class="flex items-center gap-1 md:gap-2 text-[12px] md:text-[15px] font-bold text-[#0B266E] hover:bg-[#EFF6FF] px-1 md:px-4 py-1.5 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-[#0B266E]/20 text-center">
-                        {{ $weekStart->translatedFormat('d M') }} — {{ $weekEnd->translatedFormat('d M Y') }}
-                        <svg class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#0B266E] transition-transform duration-200 shrink-0"
-                            :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[12px] sm:text-[13px] md:text-[14px] font-bold text-[#0B266E] bg-slate-50 hover:bg-white border border-slate-200 hover:border-slate-300 shadow-sm rounded-lg sm:rounded-xl transition-all cursor-pointer truncate max-w-full group focus:outline-none focus:ring-2 focus:ring-[#0B266E]/15">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0B266E] shrink-0 opacity-80 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span class="truncate">{{ $weekStart->translatedFormat('d M') }} — {{ $weekEnd->translatedFormat('d M Y') }}</span>
+                        <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 group-hover:text-[#0B266E]" :class="{'rotate-180': open}"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
@@ -303,9 +359,11 @@
                         <p class="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2 text-center">Pindah ke
                             Tanggal</p>
                         <form method="GET" action="{{ url()->current() }}" class="flex flex-col gap-2">
-                            <input type="hidden" name="mode" value="week">
                             @if(request('ruangan_id'))
                                 <input type="hidden" name="ruangan_id" value="{{ request('ruangan_id') }}">
+                            @endif
+                            @if(request('kategori'))
+                                <input type="hidden" name="kategori" value="{{ request('kategori') }}">
                             @endif
                             <input type="date" name="week_start" value="{{ $weekStart->format('Y-m-d') }}"
                                 class="w-full text-[13px] border-gray-300 rounded-md shadow-sm focus:ring-[#0B266E] focus:border-[#0B266E] cursor-pointer">
@@ -315,9 +373,11 @@
                     </div>
                 </div>
 
+                {{-- Right: Next Week --}}
                 <a href="{{ request()->fullUrlWithQuery(['week_start' => $nextWeek]) }}"
-                    class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-3 md:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[36px] md:min-w-[130px]">
-                    <span class="hidden md:inline">Minggu Depan</span>
+                    class="inline-flex items-center justify-center gap-1.5 text-[12px] sm:text-[13px] font-semibold px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[34px] sm:min-w-[40px] lg:min-w-[120px]"
+                    title="Minggu Depan">
+                    <span class="hidden lg:inline">Minggu Depan</span>
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
@@ -339,9 +399,11 @@
                             <tr style="background: #F1F3F9;">
                                 <th style="width: 64px; min-width:64px; border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; background:#F8F9FB; color: #4B5563; font-weight: 700; position: sticky; left: 0; z-index: 30; border-right: 2px solid #D1D5DB;">Jam</th>
                                 @foreach($weekDays as $day)
-                                    <th colspan="{{ $ruangans->count() }}" style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; font-weight: 700; color: #0B266E; {{ $day->isToday() ? 'background: #EFF6FF;' : 'background: #F8F9FB;' }}">
-                                        <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
-                                        <div style="font-size:11px; font-weight:500; color: #0B266E; margin-top:2px;">{{ $day->format('d/m') }}</div>
+                                    <th colspan="{{ $ruangans->count() }}" style="border: 1px solid #E5E7EB; padding: 8px 6px; text-align:center; font-weight: 700; color: #0B266E; {{ $day->isToday() ? 'background: #EFF6FF;' : 'background: #F8F9FB;' }}">
+                                        <div style="position: sticky; left: 74px; width: fit-content; margin: 0 auto; display: inline-flex; flex-direction: column; align-items: center; justify-content: center;">
+                                            <div style="font-size:13px; font-weight: 700;">{{ $day->translatedFormat('D') }}</div>
+                                            <div style="font-size:11px; font-weight:600; color: #0B266E; margin-top:1px;">{{ $day->format('d/m') }}</div>
+                                        </div>
                                     </th>
                                 @endforeach
                             </tr>
@@ -399,9 +461,12 @@
                                             @endphp
                                             <td style="border: 1px solid #E5E7EB; padding: 0; position: relative; height: {{ $gridHeight }}px; vertical-align: top; background: {{ $bgCell }}; min-width: 72px;"
                                                 @if(!$isClosedAllDay)
-                                                    @mousedown.prevent="startDragAbsolute($event, '{{ $ruang->id }}', '{{ addslashes($ruang->nama) }}', '{{ $dateStr }}', {{ $bukaInt }}, {{ $totalHours }}, {{ $eventBoundsJson }})"
+                                                    @mousedown.prevent="startDragAbsolute($event, '{{ $ruang->id }}', @js($ruang->nama), '{{ $dateStr }}', {{ $bukaInt }}, {{ $totalHours }}, {{ $eventBoundsJson }})"
                                                 @mousemove.prevent="doDragAbsolute($event)"
                                                 @mouseup.prevent="stopDragAbsolute()"
+                                                @touchstart.passive="handleTouchStart($event)"
+                                                @touchmove.passive="handleTouchMove($event)"
+                                                @touchend="handleTouchEnd($event, '{{ $ruang->id }}', @js($ruang->nama), '{{ $dateStr }}', {{ $bukaInt }}, {{ $totalHours }}, {{ $eventBoundsJson }})"
                                                 @mouseenter="hoverCol = '{{ $dateStr }}_{{ $ruang->id }}'"
                                                 @mouseleave="hoverCol = null; if(isDragging) stopDragAbsolute()"
                                                 :style="hoverCol === '{{ $dateStr }}_{{ $ruang->id }}' && !isDragging ? 'background: #F8FAFC;' : ''"
@@ -435,38 +500,118 @@
 
                                                     $status = $ev['status'];
                                                     $type = $ev['type'] ?? '';
+                                                    $source = $ev['source'] ?? null;
+                                                    $isPraktikum = strtolower((string)$source) === 'praktikum';
                                                     $isOwn = ($ev['user_id'] ?? null) === auth()->id();
                                                     $tujuan = $ev['tujuan'];
                                                     
+                                                    $modalData = null;
                                                     if ($status === 'disetujui') {
-                                                        $bg = 'rgba(237, 233, 254, 0.9)'; $border = '#C4B5FD'; $label = 'Terpakai'; $tColor = '#5B21B6';
-                                                        $onClick = "openDetailModal('Terpakai', '-', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'terpakai', '')";
-                                                    } elseif ($status === 'internal') {
-                                                        if ($type === 'Jadwal Akademik (Kuliah)' || $type === 'Pindah Kelas' || $type === 'Pindah / Pengganti Kelas') {
-                                                            $bg = 'rgba(219, 234, 254, 0.9)'; $border = '#60A5FA'; $tColor = '#1E40AF';
-                                                        } elseif ($type === 'Ujian / Evaluasi (UTS/UAS)' || $type === 'Lainnya...') {
-                                                            $bg = 'rgba(237, 233, 254, 0.9)'; $border = '#C4B5FD'; $tColor = '#5B21B6';
+                                                        if ($isPraktikum) {
+                                                            $bg = 'rgba(219, 234, 254, 0.95)'; $border = '#60A5FA'; $tColor = '#1E40AF';
+                                                            $label = $tujuan ?: 'Praktikum';
+                                                            $modalData = [
+                                                                'kegiatan' => $label,
+                                                                'kelas' => '-',
+                                                                'ruangan' => $ruang->nama,
+                                                                'tanggal' => $day->translatedFormat('l, d M Y'),
+                                                                'waktu' => "{$ev['jam_mulai']} - {$ev['jam_selesai']}",
+                                                                'status' => 'praktikum',
+                                                                'tujuan' => '',
+                                                            ];
                                                         } else {
+                                                            $bg = 'rgba(237, 233, 254, 0.9)'; $border = '#C4B5FD'; $label = 'Terpakai'; $tColor = '#5B21B6';
+                                                            $modalData = [
+                                                                'kegiatan' => 'Terpakai',
+                                                                'kelas' => '-',
+                                                                'ruangan' => $ruang->nama,
+                                                                'tanggal' => $day->translatedFormat('l, d M Y'),
+                                                                'waktu' => "{$ev['jam_mulai']} - {$ev['jam_selesai']}",
+                                                                'status' => 'terpakai',
+                                                                'tujuan' => '',
+                                                            ];
+                                                        }
+                                                    } elseif ($status === 'internal') {
+                                                        $isKuliah = in_array($type, ['Jadwal Akademik (Kuliah)', 'Kuliah Pengganti', 'Pindah Kelas', 'Pindah / Pengganti Kelas']);
+                                                        $isMaintenance = in_array($type, ['Pemeliharaan / Penutupan', 'Pemeliharaan/Penutupan', 'Maintenance / Perbaikan', 'Sterilisasi Ruangan', 'Penutupan Khusus']);
+                                                        $isLainnya = in_array($type, ['Lainnya', 'Lainnya...', 'Event / Kegiatan', 'Rapat Internal']);
+                                                        $isUjian = in_array($type, ['Ujian & Evaluasi', 'Ujian / Evaluasi', 'Ujian / Evaluasi (UTS/UAS)']);
+
+                                                        if ($isKuliah) {
+                                                            $bg = 'rgba(219, 234, 254, 0.9)'; $border = '#60A5FA'; $tColor = '#1E40AF';
+                                                        } elseif ($isMaintenance) {
                                                             $bg = 'rgba(254, 226, 226, 0.9)'; $border = '#F87171'; $tColor = '#991B1B';
+                                                        } else {
+                                                            // Ujian & Evaluasi dan Lainnya -> UNGU
+                                                            $bg = 'rgba(237, 233, 254, 0.9)'; $border = '#C4B5FD'; $tColor = '#5B21B6';
                                                         }
-                                                        $cleanTujuan = trim(str_ireplace(['digunakan untuk', ' - Kelas ', ' (Kelas ', ')'], ['', '-', '-', ''], $tujuan));
-                                                        $label = $cleanTujuan ?: 'Jadwal Kuliah';
-                                                        $matkul = $label; $kelas = '-';
-                                                        if (strpos($label, '-') !== false) {
-                                                            $parts = explode('-', $label);
-                                                            $kelas = trim(array_pop($parts));
-                                                            $matkul = trim(implode('-', $parts));
+
+                                                        if ($isLainnya) {
+                                                            $label = 'Terpakai';
+                                                            $modalData = [
+                                                                'kegiatan' => 'Terpakai',
+                                                                'kelas' => '-',
+                                                                'ruangan' => $ruang->nama,
+                                                                'tanggal' => $day->translatedFormat('l, d M Y'),
+                                                                'waktu' => "{$ev['jam_mulai']} - {$ev['jam_selesai']}",
+                                                                'status' => 'terpakai',
+                                                                'tujuan' => '',
+                                                            ];
+                                                        } else {
+                                                            $cleanTujuan = trim(str_ireplace(['digunakan untuk', ' - Kelas ', ' (Kelas ', ')'], ['', '-', '-', ''], $tujuan));
+                                                            $label = $cleanTujuan ?: ($type ?: 'Kegiatan');
+                                                            $matkul = $label; $kelas = '-';
+                                                            if ($isKuliah && strpos($label, '-') !== false) {
+                                                                $parts = explode('-', $label);
+                                                                $kelas = trim(array_pop($parts));
+                                                                $matkul = trim(implode('-', $parts));
+                                                            }
+                                                            $modalData = [
+                                                                'kegiatan' => $matkul,
+                                                                'kelas' => $kelas,
+                                                                'ruangan' => $ruang->nama,
+                                                                'tanggal' => $day->translatedFormat('l, d M Y'),
+                                                                'waktu' => "{$ev['jam_mulai']} - {$ev['jam_selesai']}",
+                                                                'status' => 'internal',
+                                                                'tujuan' => '',
+                                                            ];
                                                         }
-                                                        $onClick = "openDetailModal('".addslashes($matkul)."', '".addslashes($kelas)."', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'internal', '')";
+                                                    } elseif ($status === 'menunggu' && $isPraktikum) {
+                                                        $bg = 'rgba(219, 234, 254, 0.9)'; $border = '#60A5FA'; $label = 'Agenda Akademik'; $tColor = '#1E40AF';
+                                                        $modalData = [
+                                                            'kegiatan' => 'Agenda Akademik',
+                                                            'kelas' => '-',
+                                                            'ruangan' => $ruang->nama,
+                                                            'tanggal' => $day->translatedFormat('l, d M Y'),
+                                                            'waktu' => "{$ev['jam_mulai']} - {$ev['jam_selesai']}",
+                                                            'status' => 'agenda_akademik',
+                                                            'tujuan' => '',
+                                                        ];
                                                     } elseif ($status === 'menunggu' && $isOwn) {
                                                         $bg = 'rgba(254, 249, 195, 0.9)'; $border = '#FBBF24'; $label = 'Menunggu'; $tColor = '#B45309';
-                                                        $onClick = "openDetailModal('Menunggu Konfirmasi', '-', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'menunggu', '".addslashes($tujuan)."')";
+                                                        $modalData = [
+                                                            'kegiatan' => 'Menunggu Konfirmasi',
+                                                            'kelas' => '-',
+                                                            'ruangan' => $ruang->nama,
+                                                            'tanggal' => $day->translatedFormat('l, d M Y'),
+                                                            'waktu' => "{$ev['jam_mulai']} - {$ev['jam_selesai']}",
+                                                            'status' => 'menunggu',
+                                                            'tujuan' => $tujuan,
+                                                        ];
                                                     } elseif ($status === 'menunggu') {
                                                         $bg = 'rgba(237, 233, 254, 0.9)'; $border = '#C4B5FD'; $label = 'Terpakai'; $tColor = '#5B21B6';
-                                                        $onClick = "openDetailModal('Terpakai', '-', '".addslashes($ruang->nama)."', '".$day->translatedFormat('l, d M Y')."', '{$ev['jam_mulai']} - {$ev['jam_selesai']}', 'terpakai', '')";
+                                                        $modalData = [
+                                                            'kegiatan' => 'Terpakai',
+                                                            'kelas' => '-',
+                                                            'ruangan' => $ruang->nama,
+                                                            'tanggal' => $day->translatedFormat('l, d M Y'),
+                                                            'waktu' => "{$ev['jam_mulai']} - {$ev['jam_selesai']}",
+                                                            'status' => 'terpakai',
+                                                            'tujuan' => '',
+                                                        ];
                                                     }
                                                 @endphp
-                                                <div @mousedown.stop @click.stop="{!! $onClick !!}"
+                                                <div @mousedown.stop @click.stop="openDetailModal(@js($modalData))"
                                                     class="absolute left-0.5 right-0.5 rounded shadow-sm overflow-hidden flex flex-col justify-center items-center px-1 py-0.5 cursor-pointer hover:shadow-md transition-all z-10"
                                                     style="top: {{ $top }}px; height: {{ $height }}px; background: {{ $bg }}; border: 1px solid {{ $border }}; backdrop-filter: blur(2px);"
                                                     @mouseover="$el.style.transform='translateY(-2px)'" @mouseout="$el.style.transform='translateY(0)'">
@@ -507,215 +652,8 @@
             </div>
 
 
-<<<<<<< HEAD
-            <div class="mt-4 text-[12px] text-gray-500 font-medium">
-                💡 <strong>Tips:</strong> Klik kotak <span class="text-emerald-600 font-bold">hijau</span> untuk langsung
-                booking slot tersebut. Tanggal & jam otomatis terisi!
-            </div>
-=======
->>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
 
-            {{-- =================== MONTHLY MODE =================== --}}
-        @else
-            {{-- Month Nav --}}
-            <div class="flex items-center justify-between mb-4 gap-2">
-                @if($canGoBackMonth)
-                    <a href="{{ request()->fullUrlWithQuery(['month' => $prevMonth]) }}"
-                        class="inline-flex items-center justify-center text-[13px] font-semibold px-3 md:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all md:min-w-[130px]">
-                        <svg class="w-4 h-4 shrink-0 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                        </svg>
-                        <span class="hidden md:inline">← Bulan Lalu</span>
-                    </a>
-                @else
-                    <div class="px-3 md:px-4 py-2 md:min-w-[130px] invisible flex items-center justify-center">
-                        <svg class="w-4 h-4 shrink-0 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </div>
-                @endif
 
-                {{-- Month/Year Picker Dropdown (Monthly) --}}
-                <div x-data="{ open: false, selectedYear: {{ $monthDate->format('Y') }} }" class="relative">
-                    <button @click="open = !open" type="button"
-                        class="flex items-center gap-2 text-[15px] font-bold text-[#0B266E] hover:bg-[#EFF6FF] px-4 py-1.5 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-[#0B266E]/20">
-                        {{ $monthDate->translatedFormat('F Y') }}
-                        <svg class="w-4 h-4 text-[#0B266E] transition-transform duration-200" :class="{'rotate-180': open}"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-
-                    <div x-show="open" @click.away="open = false" x-cloak
-                        x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95"
-                        x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75"
-                        x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                        class="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[280px] bg-white border border-gray-200 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 p-4"
-                        style="display: none;">
-
-                        <!-- Year selector -->
-                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
-                            <button type="button" @click="selectedYear--"
-                                class="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-[#0B266E] transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 19l-7-7 7-7" />
-                                </svg>
-                            </button>
-                            <span class="font-bold text-[16px] text-[#0B266E]" x-text="selectedYear"></span>
-                            <button type="button" @click="selectedYear++"
-                                class="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-[#0B266E] transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        <!-- Months grid -->
-                        <div class="grid grid-cols-3 gap-2">
-                            @php
-                                $months = [
-                                    '01' => 'Jan',
-                                    '02' => 'Feb',
-                                    '03' => 'Mar',
-                                    '04' => 'Apr',
-                                    '05' => 'Mei',
-                                    '06' => 'Jun',
-                                    '07' => 'Jul',
-                                    '08' => 'Agu',
-                                    '09' => 'Sep',
-                                    '10' => 'Okt',
-                                    '11' => 'Nov',
-                                    '12' => 'Des'
-                                ];
-                                $currentMonthNum = $monthDate->format('m');
-                                $currentYearNum = $monthDate->format('Y');
-                            @endphp
-
-                            @foreach($months as $num => $name)
-                                <button type="button" @click="
-                                                                                    let url = new URL(window.location.href);
-                                                                                    url.searchParams.set('mode', 'month');
-                                                                                    url.searchParams.set('month', selectedYear + '-{{ $num }}');
-                                                                                    window.location.href = url.href;
-                                                                                "
-                                    class="py-2 text-center text-[13px] rounded-lg transition-colors cursor-pointer" :class="{
-                                                                                    'bg-[#0B266E] text-white font-bold shadow-md': selectedYear == {{ $currentYearNum }} && '{{ $num }}' == '{{ $currentMonthNum }}',
-                                                                                    'text-gray-600 hover:bg-[#EFF6FF] hover:text-[#0B266E] hover:font-bold': !(selectedYear == {{ $currentYearNum }} && '{{ $num }}' == '{{ $currentMonthNum }}')
-                                                                                }">
-                                    {{ $name }}
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-
-                <a href="{{ request()->fullUrlWithQuery(['month' => $nextMonth]) }}"
-                    class="inline-flex items-center justify-center text-[13px] font-semibold px-3 md:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all md:min-w-[130px]">
-                    <svg class="w-4 h-4 shrink-0 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                    <span class="hidden md:inline">Bulan Depan →</span>
-                </a>
-            </div>
-
-            <div class="mp-card overflow-hidden w-full">
-                <div class="mp-card-body p-3 md:p-5">
-                    <p class="text-[11px] md:text-[12px] text-gray-500 mb-4 leading-snug"><strong>Heatmap Aktivitas:</strong> Semakin gelap warnanya,
-                        semakin banyak peminjaman di tanggal tersebut.</p>
-
-                    <div class="overflow-x-auto w-full pb-2">
-                        <div class="min-w-[280px]">
-                            {{-- Day-of-week header --}}
-                            <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap: 2px md:gap-4; margin-bottom: 4px;">
-                                @foreach(['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] as $dayLabel)
-                                    <div style="text-align:center; font-size:11px; font-weight:700; color:#6B7280; padding: 4px 0;">
-                                        {{ $dayLabel }}
-                                    </div>
-                                @endforeach
-                            </div>
-
-                            {{-- Calendar Cells --}}
-                            <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap: 2px md:gap-4;">
-                        @foreach($calendarDays as $cell)
-                            @if($cell === null)
-                                <div></div>
-                            @else
-                                @php
-                                    $dateKey = $cell->format('Y-m-d');
-                                    $count = $monthBookings[$dateKey] ?? 0;
-                                    $isToday = $cell->isToday();
-                                    $isPast = $cell->isPast() && !$isToday;
-
-                                    $isHoliday = isset($holidays[$dateKey]);
-                                    $isClosedWeekend = !$bukaAkhirPekan && $cell->isWeekend();
-                                    $isClosed = $isHoliday || $isClosedWeekend;
-
-                                    // Heatmap color by booking density
-                                    if ($isClosed) {
-                                        $cellBg = '#F3F4F6'; // Gray out
-                                        $countClr = '#9CA3AF';
-                                    } elseif ($count == 0) {
-                                        $cellBg = '#F9FAFB';
-                                        $countClr = '#9CA3AF';
-                                    } elseif ($count <= 2) {
-                                        $cellBg = '#D1FAE5';
-                                        $countClr = '#059669';
-                                    } elseif ($count <= 5) {
-                                        $cellBg = '#FEF9C3';
-                                        $countClr = '#B45309';
-                                    } else {
-                                        $cellBg = '#FEE2E2';
-                                        $countClr = '#DC2626';
-                                    }
-
-                                    $weekLink = request()->fullUrlWithQuery(['mode' => 'week', 'week_start' => $cell->copy()->startOfWeek(\Carbon\Carbon::MONDAY)->format('Y-m-d')]);
-                                @endphp
-                                <a href="{{ $weekLink }}"
-                                    title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
-<<<<<<< HEAD
-                                    style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                          background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
-                                                                                                                                                                                                                                                                                                                                                                                                                                                          transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
-=======
-                                    class="block text-center py-1.5 px-1 md:py-2 md:px-1.5 rounded-md md:rounded-lg no-underline transition-all"
-                                    style="background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
-                                           {{ $isPast ? 'opacity:0.55;' : '' }}"
->>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
-                                    onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
-                                    onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
-                                    <div
-                                        style="font-size:13px; font-weight:700; color: {{ $isToday ? '#0B266E' : ($isClosed ? '#9CA3AF' : '#111827') }};">
-                                        {{ $cell->format('d') }}
-                                    </div>
-                                    @if($isHoliday)
-                                        <div style="font-size:10px; font-weight:600; color:#DC2626; margin-top:3px;">
-                                            Libur
-                                        </div>
-                                    @elseif($isClosedWeekend)
-                                        <div style="font-size:10px; font-weight:600; color:#9CA3AF; margin-top:3px;">
-                                            Tutup
-                                        </div>
-                                    @elseif($count > 0)
-                                        <div style="font-size:10px; font-weight:600; color:{{ $countClr }}; margin-top:3px;">
-                                            {{ $count }} booking
-                                        </div>
-                                    @endif
-                                </a>
-                            @endif
-                        @endforeach
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-4 text-[12px] text-gray-500 font-medium">
-                💡 <strong>Tips:</strong> Klik tanggal manapun untuk beralih ke tampilan <span
-                    class="text-[#0B266E] font-bold">Mingguan</span> di minggu tersebut secara detail.
-            </div>
-        @endif
 
         {{-- =================== DETAIL MODAL =================== --}}
         <div x-show="showDetailModal" x-cloak style="display: none;"
@@ -775,6 +713,14 @@
                             <p class="text-[11px] text-amber-600 font-medium text-center">Peminjaman Anda sedang
                                 menunggu konfirmasi dari admin.</p>
                         </div>
+                        {{-- Pesan untuk Agenda Akademik (Praktikum Menunggu) --}}
+                        <div x-show="detailData.status === 'agenda_akademik'" class="mt-2 pt-2 border-t border-blue-100">
+                            <p class="text-[11px] text-blue-700 font-medium text-center">Kegiatan akademik terjadwal sedang dalam tahap konfirmasi dan reservasi ruangan.</p>
+                        </div>
+                        {{-- Pesan untuk Praktikum Terjadwal --}}
+                        <div x-show="detailData.status === 'praktikum'" class="mt-2 pt-2 border-t border-blue-100">
+                            <p class="text-[11px] text-blue-700 font-medium text-center">Kegiatan Praktikum Laboratorium Terjadwal.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -828,38 +774,16 @@
                         </button>
                     </div>
 
-<<<<<<< HEAD
-                {{-- Scrollable Body --}}
-                <div class="px-6 pt-2 pb-3 overflow-y-auto flex-1 bg-white">
-=======
->>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                     <form id="bookingForm" method="POST" action="{{ route('eoffice.peminjaman.user.booking.store') }}"
+                        @submit="if(isSubmitDisabled) { $event.preventDefault(); return false; }"
                         enctype="multipart/form-data" class="flex flex-col flex-1 min-h-0" autocomplete="off">
                         @csrf
                         <input type="hidden" name="ruangan_id" :value="selectedRoomId">
                         <input type="hidden" name="tanggal_pinjam" :value="selectedDate">
-<<<<<<< HEAD
-                        <div class="grid grid-cols-2 gap-4 mt-0">
-                                <div>
-                                    <label class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Jam Mulai</label>
-                                    <input type="time" name="jam_mulai" x-model="bookingData.jamMulai" required class="mp-input text-[13px] font-bold w-full">
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Jam Selesai</label>
-                                    <input type="time" name="jam_selesai" x-model="bookingData.jamSelesai" required class="mp-input text-[13px] font-bold w-full">
-                                </div>
-                            </div>
-                            <div class="text-[10px] text-gray-500 mt-1 italic">
-                                * Anda bebas menyesuaikan menit secara presisi jika diperlukan.
-                            </div>
-
-                        <div class="space-y-3 mt-4">
-=======
 
                         {{-- Scrollable Body --}}
                         <div class="space-y-4 overflow-y-auto overflow-x-hidden flex-1 bg-white whitespace-normal -mx-4 sm:-mx-6 px-4 sm:px-6 pb-2">
                             {{-- Waktu Peminjaman --}}
->>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jam Mulai <span class="text-red-500">*</span></label>
@@ -873,17 +797,16 @@
                                 </div>
                             </div>
 
-<<<<<<< HEAD
-                            <div>
-                                <label
-                                    class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">No.
-                                    Telepon / WhatsApp <span class="text-red-500">*</span></label>
-                                <input type="text" name="nomor_telepon" class="mp-input w-full cursor-text"
-                                    value="{{ $phone ?? '' }}" required placeholder="Contoh: 08123456789">
+                            <div x-show="isInvalidTimeRange" x-cloak
+                                class="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl font-medium">
+                                Jam selesai tidak boleh mendahului atau sama dengan jam mulai.
                             </div>
 
+                            <div x-show="!isInvalidTimeRange && isPastTimeToday" x-cloak
+                                class="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl font-medium">
+                                Waktu mulai tidak boleh menggunakan jam yang telah berlalu hari ini.
+                            </div>
 
-=======
                             {{-- Identitas Peminjam --}}
                             <div class="space-y-3">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -899,12 +822,43 @@
                                     </div>
                                 </div>
                                 <div class="space-y-1.5">
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">No. Telepon / WhatsApp <span class="text-red-500">*</span></label>
-                                    <input type="text" name="nomor_telepon" value="{{ $phone ?? '' }}" required maxlength="20" placeholder="Contoh: 08123456789"
-                                        class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
+                                    <div class="flex items-center justify-between ml-1">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                            No. Telepon / WhatsApp <span class="text-red-500">*</span>
+                                        </label>
+                                        @if(!empty($phone))
+                                            <a href="{{ route('profile.edit') }}" target="_blank" rel="noopener noreferrer"
+                                                class="text-[10px] font-bold text-[#0B266E] hover:text-blue-700 hover:underline inline-flex items-center gap-1 transition-colors group"
+                                                title="Ubah nomor kontak di profil akun Anda">
+                                                <span>Ubah di Profil</span>
+                                                <svg class="w-3 h-3 text-[#0B266E] group-hover:text-blue-700 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                            </a>
+                                        @endif
+                                    </div>
+
+                                    @if(!empty($phone))
+                                        <input type="text" name="nomor_telepon" value="{{ $phone }}" readonly required
+                                            class="w-full bg-slate-100/80 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium text-gray-600 cursor-not-allowed outline-none select-all"
+                                            title="Nomor kontak tersambung dengan profil akun Anda">
+                                    @else
+                                        <input type="tel" name="nomor_telepon" value="{{ old('nomor_telepon') }}" required
+                                            maxlength="15" minlength="10" inputmode="numeric" autocomplete="tel"
+                                            placeholder="Contoh: 08123456789"
+                                            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                            class="w-full bg-white border @error('nomor_telepon') border-red-400 focus:ring-red-100 focus:border-red-500 @else border-slate-200 focus:ring-blue-100 focus:border-blue-400 @enderror rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 outline-none transition-all text-gray-800">
+                                        <p class="text-[11px] text-slate-500 ml-1 flex items-center gap-1.5 leading-snug">
+                                            <svg class="w-3.5 h-3.5 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <span>Nomor ini akan otomatis disimpan sebagai kontak profil akun Anda.</span>
+                                        </p>
+                                    @endif
+                                    @error('nomor_telepon')
+                                        <p class="text-[11px] text-rose-600 ml-1 font-semibold flex items-center gap-1.5 mt-1">
+                                            <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <span>{{ $message }}</span>
+                                        </p>
+                                    @enderror
                                 </div>
                             </div>
->>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
 
                             {{-- Detail Kegiatan --}}
                             <div class="space-y-1.5">
@@ -913,35 +867,9 @@
                                     class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
                             </div>
 
-<<<<<<< HEAD
-                            <div class="bg-blue-50/30 border border-gray-200 p-4 rounded-lg">
-                                <label
-                                    class="block text-[11px] uppercase tracking-wider font-bold text-[#0B266E] mb-1.5 flex items-center gap-1.5">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                    </svg>
-                                    File Berkas Proposal <span class="text-gray-500 font-normal">(Opsional)</span>
-                                </label>
-                                <input type="file" name="file_berkas" accept=".pdf" class="block w-full text-sm text-gray-500
-                                file:mr-4 file:py-2 file:px-4
-                                file:rounded-md file:border-0
-                                file:text-sm file:font-semibold
-                                file:bg-[#415086] file:text-white
-                                hover:file:bg-[#2e3b66]
-                                cursor-pointer transition-colors">
-                                <p class="text-[10px] text-gray-500 mt-2">Format PDF maksimal 2MB. Hanya
-                                    diperlukan untuk acara formal.</p>
-                                @error('file_berkas')
-                                    <p class="text-[11px] text-[#DF1C41] mt-1.5 font-bold flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-=======
                             {{-- Berkas Pendukung (Opsional) --}}
                             <div class="space-y-1.5">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">File Berkas Proposal <span class="text-slate-400 font-normal lowercase tracking-normal">(opsional)</span></label>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">File Berkas <span class="text-slate-400 font-normal lowercase tracking-normal">(opsional)</span></label>
                                 <div class="relative bg-white border border-slate-200 rounded-xl p-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all">
                                     <input type="file" name="file_berkas" accept=".pdf"
                                         class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-[#0B266E]/10 file:text-[#0B266E] hover:file:bg-[#0B266E]/20 cursor-pointer transition-all outline-none">
@@ -950,38 +878,18 @@
                                 @error('file_berkas')
                                     <p class="text-[11px] text-rose-600 mt-2 font-bold flex items-center gap-1.5 bg-rose-50 p-2.5 rounded-xl border border-rose-100">
                                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
->>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                                         Ukuran maksimal 2MB dan wajib berformat PDF.
                                     </p>
                                 @enderror
                             </div>
 
-<<<<<<< HEAD
-                            {{-- Persetujuan S&K --}}
-                            <div class="pt-2 border-t border-gray-100 pb-0">
-=======
                             {{-- Card 5: Persetujuan S&K --}}
                             <div class="space-y-3 p-4 bg-blue-50/50 border border-blue-100 rounded-2xl">
->>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                                 <label class="flex items-start gap-3 cursor-pointer group">
                                     <div class="flex items-center h-5 mt-0.5 shrink-0">
                                         <input type="checkbox" name="syarat_ketentuan" required
-<<<<<<< HEAD
-                                            class="w-4 h-4 border border-gray-300 rounded bg-white text-[#0B266E] focus:ring-[#0B266E] focus:ring-2 transition-all cursor-pointer shadow-sm"
-                                            style="scroll-margin-bottom: 80px; scroll-margin-top: 120px;">
-                                    </div>
-                                    <div class="flex flex-col">
-                                        <span class="text-[12px] text-gray-500 leading-relaxed block">
-                                            Saya bersedia <strong class="text-gray-700">merapikan kembali
-                                                ruangan</strong> setelah digunakan dan siap <strong
-                                                class="text-gray-700">bertanggung jawab penuh mengganti
-                                                kerusakan</strong> barang atau fasilitas akibat kelalaian selama masa
-                                            peminjaman.
-                                        </span>
-=======
                                             class="w-4 h-4 border border-blue-300 rounded bg-white text-[#0B266E] focus:ring-[#0B266E] focus:ring-2 transition-all cursor-pointer shadow-sm"
                                             style="scroll-margin-bottom: 80px; scroll-margin-top: 120px;">
->>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                                     </div>
                                     <span class="text-[11px] text-gray-600 leading-relaxed block">
                                         Saya setuju dan bersedia <strong class="text-gray-900 font-bold">merapikan kembali ruangan</strong> setelah digunakan serta siap <strong class="text-gray-900 font-bold">bertanggung jawab penuh mengganti kerusakan</strong> barang atau fasilitas akibat kelalaian selama peminjaman.
@@ -996,7 +904,9 @@
                                     Batal
                                 </button>
                                 <button type="submit"
-                                    class="px-6 py-2.5 text-sm font-semibold text-white bg-[#0B266E] rounded-xl hover:bg-[#091F5E] focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 shadow-lg shadow-[#0B266E]/20 transition-all text-center flex items-center justify-center cursor-pointer">
+                                    :disabled="isSubmitDisabled"
+                                    :class="isSubmitDisabled ? 'opacity-50 cursor-not-allowed bg-slate-400 shadow-none' : 'bg-[#0B266E] hover:bg-[#091F5E] shadow-lg shadow-[#0B266E]/20 cursor-pointer'"
+                                    class="px-6 py-2.5 text-sm font-semibold text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 transition-all text-center flex items-center justify-center">
                                     Kirim Pengajuan
                                 </button>
                             </div>
@@ -1010,7 +920,9 @@
                             Batal
                         </button>
                         <button type="submit" form="bookingForm"
-                            class="px-6 py-2.5 text-sm font-semibold text-white bg-[#0B266E] rounded-xl hover:bg-[#091F5E] focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 shadow-lg shadow-[#0B266E]/20 transition-all text-center flex items-center justify-center cursor-pointer">
+                            :disabled="isSubmitDisabled"
+                            :class="isSubmitDisabled ? 'opacity-50 cursor-not-allowed bg-slate-400 shadow-none' : 'bg-[#0B266E] hover:bg-[#091F5E] shadow-lg shadow-[#0B266E]/20 cursor-pointer'"
+                            class="px-6 py-2.5 text-sm font-semibold text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 transition-all text-center flex items-center justify-center">
                             Kirim Pengajuan
                         </button>
                     </div>
@@ -1020,16 +932,17 @@
 
     </div> <!-- Close Alpine Wrapper -->
 
-    <script src="//unpkg.com/alpinejs" defer></script>
     <script>
         // AJAX Polling setiap 30 detik untuk update Real-time
         document.addEventListener('DOMContentLoaded', () => {
             setInterval(() => {
                 const kalenderDiv = document.querySelector('[x-data="bookingKalender()"]');
-                if (kalenderDiv && kalenderDiv.__x) {
-                    const data = Alpine.$data(kalenderDiv);
-                    // Jangan update UI jika user sedang berinteraksi dengan modal atau dragging
-                    if (data && (data.showModal || data.showDetailModal || data.isDragging)) return;
+                if (window.Alpine && kalenderDiv) {
+                    try {
+                        const data = Alpine.$data(kalenderDiv);
+                        // Jangan update UI jika user sedang berinteraksi dengan modal atau dragging
+                        if (data && (data.showModal || data.showDetailModal || data.isDragging)) return;
+                    } catch (e) {}
                 }
 
                 fetch(window.location.href, {
@@ -1044,9 +957,19 @@
                         const currentContainer = document.getElementById('calendar-grid-wrapper');
 
                         if (newContainer && currentContainer) {
+                            // Cek apakah konten grid berubah, jika sama persis abaikan
+                            if (newContainer.innerHTML.trim() === currentContainer.innerHTML.trim()) {
+                                return;
+                            }
+
                             // Simpan posisi scroll sebelum replace
                             let scrollWrapper = currentContainer.querySelector('#table-scroll-container');
                             let currentScroll = scrollWrapper ? scrollWrapper.scrollLeft : 0;
+
+                            if (window.Alpine && typeof window.Alpine.destroyTree === 'function') {
+                                window.Alpine.destroyTree(currentContainer);
+                            }
+                            delete currentContainer._x_marker;
 
                             currentContainer.innerHTML = newContainer.innerHTML;
 
@@ -1054,6 +977,11 @@
                             let newScrollWrapper = currentContainer.querySelector('#table-scroll-container');
                             if (newScrollWrapper) {
                                 newScrollWrapper.scrollLeft = currentScroll;
+                            }
+
+                            // Inisialisasi ulang Alpine agar tombol dan event handler tetap aktif
+                            if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+                                window.Alpine.initTree(currentContainer);
                             }
                         }
                     })
@@ -1103,6 +1031,24 @@
                     return `${String(sH).padStart(2,'0')}:${String(sM).padStart(2,'0')} - ${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}`;
                 },
                 
+                get isPastTimeToday() {
+                    if (!this.selectedDate || !this.bookingData.jamMulai) return false;
+                    let today = new Date();
+                    let todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+                    if (this.selectedDate !== todayStr) return false;
+                    let currentHM = String(today.getHours()).padStart(2, '0') + ':' + String(today.getMinutes()).padStart(2, '0');
+                    return this.bookingData.jamMulai <= currentHM;
+                },
+
+                get isInvalidTimeRange() {
+                    if (!this.bookingData.jamMulai || !this.bookingData.jamSelesai) return false;
+                    return this.bookingData.jamSelesai <= this.bookingData.jamMulai;
+                },
+
+                get isSubmitDisabled() {
+                    return this.isPastTimeToday || this.isInvalidTimeRange;
+                },
+
                 bookingData: {
                     roomName: '',
                     waktu: '',
@@ -1114,14 +1060,128 @@
                 detailData: { kegiatan: '', kelas: '', ruangan: '', tanggal: '', waktu: '', status: '', tujuan: '' },
 
                 openDetailModal(kegiatan, kelas, ruangan, tanggal, waktu, status = '', tujuan = '') {
-                    this.detailData = { kegiatan, kelas, ruangan, tanggal, waktu, status, tujuan };
+                    if (typeof kegiatan === 'object' && kegiatan !== null) {
+                        this.detailData = { ...kegiatan };
+                    } else {
+                        this.detailData = { kegiatan, kelas, ruangan, tanggal, waktu, status, tujuan };
+                    }
                     this.showDetailModal = true;
                 },
                 closeDetailModal() { this.showDetailModal = false; },
 
+                // Touchscreen Tap Properties & Methods
+                touchStartX: 0,
+                touchStartY: 0,
+                touchMoved: false,
+
+                handleTouchStart(e) {
+                    if (e.touches && e.touches.length === 1) {
+                        this.touchStartX = e.touches[0].clientX;
+                        this.touchStartY = e.touches[0].clientY;
+                        this.touchMoved = false;
+                    }
+                },
+
+                handleTouchMove(e) {
+                    if (e.touches && e.touches.length === 1) {
+                        let dx = Math.abs(e.touches[0].clientX - this.touchStartX);
+                        let dy = Math.abs(e.touches[0].clientY - this.touchStartY);
+                        if (dx > 8 || dy > 8) {
+                            this.touchMoved = true;
+                        }
+                    }
+                },
+
+                handleTouchEnd(e, roomId, roomName, date, bukaInt, totalHours, eventBounds = []) {
+                    // Jika layar sedang di-scroll (horizontal/vertikal), abaikan
+                    if (this.touchMoved) return;
+
+                    // Jika menyentuh kotak event yang sudah ada, biarkan event box yang membuka modal detail
+                    if (e.target && e.target.closest && e.target.closest('.cursor-pointer') && e.target !== e.currentTarget) {
+                        return;
+                    }
+
+                    if (e.cancelable) {
+                        e.preventDefault();
+                    }
+
+                    let rect = e.currentTarget.getBoundingClientRect();
+                    let y = this.touchStartY - rect.top;
+
+                    this.selectSingleTap(roomId, roomName, date, bukaInt, totalHours, y, eventBounds);
+                },
+
+                selectSingleTap(roomId, roomName, date, bukaInt, totalHours, y, eventBounds = []) {
+                    let snapMin = Math.floor(y / 15) * 15;
+                    if (snapMin < 0) snapMin = 0;
+                    if (snapMin >= totalHours * 60) snapMin = (totalHours * 60) - 15;
+
+                    // Cek batas waktu lampau hari ini
+                    let today = new Date();
+                    let todayYmd = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+                    let minAllowedY = 0;
+                    if (date === todayYmd) {
+                        minAllowedY = (today.getHours() * 60 + today.getMinutes()) - (bukaInt * 60);
+                    }
+                    if (snapMin < minAllowedY) {
+                        if (typeof showCustomToast === 'function') {
+                            showCustomToast('Slot waktu telah berlalu hari ini.');
+                        }
+                        return;
+                    }
+
+                    // Cek apakah klik berada di dalam event yang sudah ada
+                    for (let bound of eventBounds) {
+                        if (snapMin >= bound[0] && snapMin < bound[1]) {
+                            return;
+                        }
+                    }
+
+                    // Tentukan durasi default 1 jam (60 menit)
+                    let startMin = snapMin;
+                    let endMin = startMin + 60;
+
+                    // Batasi jika menabrak event lain di bawahnya atau jam tutup
+                    let maxAllowedY = totalHours * 60;
+                    for (let bound of eventBounds) {
+                        if (bound[0] >= startMin && bound[0] < maxAllowedY) {
+                            maxAllowedY = bound[0];
+                        }
+                    }
+                    if (endMin > maxAllowedY) {
+                        endMin = maxAllowedY;
+                    }
+                    if (endMin <= startMin) {
+                        return;
+                    }
+
+                    let sH = Math.floor(startMin / 60) + bukaInt;
+                    let sM = Math.floor(startMin % 60);
+                    let eH = Math.floor(endMin / 60) + bukaInt;
+                    let eM = Math.floor(endMin % 60);
+
+                    let startHStr = String(sH).padStart(2, '0') + ':' + String(sM).padStart(2, '0');
+                    let endHStr = String(eH).padStart(2, '0') + ':' + String(eM).padStart(2, '0');
+
+                    this.selectedRoomId = roomId;
+                    this.selectedDate = date;
+                    this.bookingData.roomName = roomName;
+
+                    let d = new Date(date);
+                    let dateStr = d.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                    this.bookingData.waktu = dateStr;
+                    this.bookingData.jamMulai = startHStr;
+                    this.bookingData.jamSelesai = endHStr;
+
+                    this.showModal = true;
+                    document.body.style.overflow = 'hidden';
+                },
+
                 // Absolute Drag Methods
                 startDragAbsolute(e, roomId, roomName, date, bukaInt, totalHours, eventBounds = []) {
                     if (e.button !== 0) return; // Hanya klik kiri
+                    if (this.showModal || this.showDetailModal) return;
                     
                     let rect = e.currentTarget.getBoundingClientRect();
                     let y = e.clientY - rect.top;
@@ -1237,11 +1297,7 @@
                         let d = new Date(this.dragDate);
                         let dateStr = d.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                         
-<<<<<<< HEAD
-                        this.bookingData.waktu = dateStr + ' Pukul ' + startHStr + ' - ' + endHStr;
-=======
                         this.bookingData.waktu = dateStr;
->>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                         this.bookingData.jamMulai = startHStr;
                         this.bookingData.jamSelesai = endHStr;
                         
@@ -1283,14 +1339,6 @@
 
             toast.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 8px;">
-<<<<<<< HEAD
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="8" x2="12" y2="12" />
-                        <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
-=======
->>>>>>> f59539cd691ed4fa45c00b1f71ba4cb6219125f7
                     <span>${message}</span>
                 </div>
                 <button onclick="this.parentElement.style.opacity='0'; setTimeout(()=>this.parentElement.remove(), 300)" style="background:transparent; border:none; cursor:pointer; color:inherit; padding:0; display:flex; align-items:center; opacity:0.7;">

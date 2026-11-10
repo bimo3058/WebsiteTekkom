@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * Pengumuman per praktikum (dibuat oleh asprak/koor, atau otomatis oleh sistem).
  *
- * Tabel: pengumuman_praktikum
+ * Tabel: eo_prak_pengumuman_praktikum
  *
  * tipe_sistem:
  *   null  = dibuat manual oleh koor/asprak
@@ -23,7 +23,7 @@ class Pengumuman extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'pengumuman_praktikum';
+    protected $table = 'eo_prak_pengumuman_praktikum';
 
     protected $fillable = [
         'praktikum_id',

@@ -195,7 +195,7 @@
                                                     ruanganId: '',
                                                     rooms: [
                                                         @foreach($ruangans as $r)
-                                                            {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }}'},
+                                                            {id: '{{ $r->id }}', name: @js($r->nama)},
                                                         @endforeach
                                                     ],
                                                     get filteredRooms() {
@@ -306,7 +306,7 @@
                 </div>
 
                 <script>
-                    let rawPayload = {!! json_encode($payloadArray) !!};
+                    let rawPayload = @js($payloadArray);
 
                     function updateRuangan(index, newRuanganId) {
                         if (rawPayload[index]) {
@@ -472,7 +472,7 @@
                                     search: '',
                                     rooms: [
                                         @foreach($ruangans as $r)
-                                            {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }} - Lt. {{ $r->lantai }}'},
+                                            {id: '{{ $r->id }}', name: @js("{$r->nama} - Lt. {$r->lantai}")},
                                         @endforeach
                                     ],
                                     get filteredRooms() {
@@ -650,7 +650,7 @@
                 editData: { hari: 1, ruangan_id: '', jam_mulai: '', jam_selesai: '', mata_kuliah: '', kelas: '' },
                 ruanganMap: {
                     @foreach($ruangans as $r)
-                           "{{ $r->id }}": '{{ addslashes($r->nama) }}',
+                           "{{ $r->id }}": @js($r->nama),
                     @endforeach
                 },
 
@@ -694,14 +694,27 @@
 
             // Kolom Matkul (cells[3])
             let msgBox = tr.cells[3].querySelector('div[id^="msg-container"]');
-            tr.cells[3].innerHTML = '<div style="font-size:13px; font-weight:700; color:#0D0D12;">' + row.mata_kuliah + '</div>';
+            let divMatkul = document.createElement('div');
+            divMatkul.style.cssText = 'font-size:13px; font-weight:700; color:#0D0D12;';
+            divMatkul.textContent = row.mata_kuliah;
+            tr.cells[3].replaceChildren(divMatkul);
             if (msgBox) tr.cells[3].appendChild(msgBox); // kembalikan conflict message box
 
             // Kolom Kelas (cells[4])
-            tr.cells[4].innerHTML = '<div style="font-size:13px; font-weight:700; color:#3730A3; display:inline-block; padding:2px 8px; background:#EBEDF6; border-radius:6px; border:1px solid #C7D2FE;">' + (row.kelas || '-') + '</div>';
+            let divKelas = document.createElement('div');
+            divKelas.style.cssText = 'font-size:13px; font-weight:700; color:#3730A3; display:inline-block; padding:2px 8px; background:#EBEDF6; border-radius:6px; border:1px solid #C7D2FE;';
+            divKelas.textContent = row.kelas || '-';
+            tr.cells[4].replaceChildren(divKelas);
 
-            let rNama = this.ruanganMap[row.ruangan_id] || '<div style="font-weight:700; color:#B45309; font-size:11px;">Tidak Dikenal</div>';
-            tr.cells[5].innerHTML = '<div style="font-weight:700; color:#0D0D12;">' + rNama + '</div>';
+            // Kolom Ruangan (cells[5])
+            let divRuangan = document.createElement('div');
+            divRuangan.style.cssText = 'font-weight:700; color:#0D0D12;';
+            if (this.ruanganMap[row.ruangan_id]) {
+                divRuangan.textContent = this.ruanganMap[row.ruangan_id];
+                tr.cells[5].replaceChildren(divRuangan);
+            } else {
+                tr.cells[5].innerHTML = '<div style="font-weight:700; color:#B45309; font-size:11px;">Tidak Dikenal</div>';
+            }
         }
 
         this.editModalOpen = false;
