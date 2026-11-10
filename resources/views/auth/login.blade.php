@@ -288,6 +288,22 @@
             <div class="sk-alert sk-alert-warning">{{ session('status') }}</div>
         @endif
 
+        @if (session('error'))
+            <div class="sk-alert sk-alert-error" role="alert">{{ session('error') }}</div>
+        @endif
+
+        @php
+            $ssoErrorMessages = [
+                'no_access' => 'Anda tidak memiliki akses ke sistem, silahkan hubungi admin.',
+                'suspended' => 'Akun Anda telah ditangguhkan. Silakan hubungi admin.',
+            ];
+            $ssoAccessError = session('sso_access_error')
+                ?: ($ssoErrorMessages[request()->query('sso_error')] ?? null);
+        @endphp
+        @if ($ssoAccessError)
+            <div class="sk-alert sk-alert-error" role="alert">{{ $ssoAccessError }}</div>
+        @endif
+
         @if ($errors->any())
             <div class="sk-alert sk-alert-error">{{ $errors->first() }}</div>
         @endif
