@@ -9,16 +9,14 @@ use Modules\BankSoal\Enums\PendaftaranStatus;
 use Modules\BankSoal\Models\Komprehensif\KompreSession;
 use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
 use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
-use Modules\BankSoal\Models\RPS\RpsReview;
 use Modules\BankSoal\Models\RPS\Rps;
+use Modules\BankSoal\Models\RPS\RpsReview;
 
 class DashboardAnnouncementService
 {
     /**
      * Generate role-specific announcements for the main dashboard.
      *
-     * @param  int  $userId
-     * @param  array  $userRoles
      * @return array<int, array{title: string, body: string, date: string, module: string, pinned: bool, url: string|null, _ts: int, badge: string}>
      */
     public function getForDashboard(int $userId, array $userRoles = []): array
@@ -58,6 +56,15 @@ class DashboardAnnouncementService
 
     private function getMahasiswaNotifications(Collection &$items, int $userId): void
     {
+        $sudahLulus = KompreSession::where('user_id', $userId)
+            ->where('status', KompreSessionStatus::Finished)
+            ->where('lulus', true)
+            ->exists();
+
+        if ($sudahLulus) {
+            return;
+        }
+
         // 1. Periode pendaftaran ujian komprehensif
         $activePeriodes = PeriodeUjian::currentlyActive()->get();
         $periodeIds = $activePeriodes->pluck('id');
@@ -80,11 +87,12 @@ class DashboardAnnouncementService
         foreach ($activePeriodes as $periode) {
             $pendaftar = $userRegistrations->get($periode->id);
 
-            if (!$pendaftar) {
+            if (! $pendaftar) {
                 // Periode dibuka — mahasiswa belum mendaftar
                 if ($periode->pendaftaran_terbuka) {
                     $this->notifPeriodeDibuka($items, $periode);
                 }
+
                 continue;
             }
 
@@ -92,14 +100,14 @@ class DashboardAnnouncementService
 
             if ($status === PendaftaranStatus::Approved) {
                 if ($pendaftar->jadwal) {
-                    $jadwal       = $pendaftar->jadwal;
-                    $waktuSelesai = Carbon::parse($jadwal->tanggal_ujian->format('Y-m-d') . ' ' . $jadwal->waktu_selesai);
+                    $jadwal = $pendaftar->jadwal;
+                    $waktuSelesai = Carbon::parse($jadwal->tanggal_ujian->format('Y-m-d').' '.$jadwal->waktu_selesai);
 
                     // Pengumuman jadwal disembunyikan jika ujian sudah selesai dikerjakan
                     // atau jendela ujian sudah lewat tanpa sesi (no-show).
                     $ujianSudahBerakhir = $finishedSessions->has($jadwal->id) || now()->gt($waktuSelesai);
 
-                    if (!$ujianSudahBerakhir) {
+                    if (! $ujianSudahBerakhir) {
                         // Jadwal dikonfirmasi
                         $this->notifJadwalDikonfirmasi($items, $pendaftar, $periode);
                     }
@@ -122,10 +130,10 @@ class DashboardAnnouncementService
     {
         // 1. RPS yang sudah direvisi/ditinjau oleh GPM
         $rpsReviewed = RpsReview::whereHas('rps', function ($q) use ($userId) {
-                $q->whereHas('dosen', function ($dq) use ($userId) {
-                    $dq->where('user_id', $userId);
-                });
-            })
+            $q->whereHas('dosen', function ($dq) use ($userId) {
+                $dq->where('user_id', $userId);
+            });
+        })
             ->where('status', 'reviewed')
             ->where('created_at', '>=', now()->subDays(7))
             ->with('rps')
@@ -138,7 +146,7 @@ class DashboardAnnouncementService
             $matkulNama = $rps && $rps->mata_kuliah ? $rps->mata_kuliah->nama : 'RPS';
             $items->push([
                 'title' => "📝 RPS Telah Ditinjau GPM — {$matkulNama}",
-                'body' => "RPS Anda telah ditinjau oleh GPM. Silakan periksa catatan review dan lakukan revisi jika diperlukan.",
+                'body' => 'RPS Anda telah ditinjau oleh GPM. Silakan periksa catatan review dan lakukan revisi jika diperlukan.',
                 'date' => $review->created_at->diffForHumans(),
                 'module' => 'bank_soal',
                 'pinned' => true,
@@ -150,8 +158,8 @@ class DashboardAnnouncementService
 
         // 2. RPS yang dikembalikan untuk revisi
         $rpsRevision = Rps::whereHas('dosen', function ($q) use ($userId) {
-                $q->where('user_id', $userId);
-            })
+            $q->where('user_id', $userId);
+        })
             ->where('status', 'needs_revision')
             ->where('updated_at', '>=', now()->subDays(7))
             ->orderByDesc('updated_at')
@@ -162,7 +170,7 @@ class DashboardAnnouncementService
             $matkulNama = $rps && $rps->mata_kuliah ? $rps->mata_kuliah->nama : 'RPS';
             $items->push([
                 'title' => "🔄 RPS Perlu Direvisi — {$matkulNama}",
-                'body' => "RPS Anda memerlukan revisi. Silakan periksa catatan dari GPM dan lakukan perbaikan.",
+                'body' => 'RPS Anda memerlukan revisi. Silakan periksa catatan dari GPM dan lakukan perbaikan.',
                 'date' => $rps->updated_at->diffForHumans(),
                 'module' => 'bank_soal',
                 'pinned' => false,
@@ -257,7 +265,7 @@ class DashboardAnnouncementService
     {
         $items->push([
             'title' => "✅ Pendaftaran Disetujui — {$periode->nama_periode}",
-            'body' => "Pendaftaran Anda telah disetujui. Jadwal ujian akan segera dialokasikan oleh admin — pantau halaman ini secara berkala.",
+            'body' => 'Pendaftaran Anda telah disetujui. Jadwal ujian akan segera dialokasikan oleh admin — pantau halaman ini secara berkala.',
             'date' => ($pendaftar->updated_at ?? now())->diffForHumans(),
             'module' => 'bank_soal',
             'pinned' => true,
@@ -274,7 +282,7 @@ class DashboardAnnouncementService
     {
         $items->push([
             'title' => "❌ Pendaftaran Ditolak — {$periode->nama_periode}",
-            'body' => "Pendaftaran Anda tidak memenuhi persyaratan. Anda dapat mendaftar kembali pada periode ujian komprehensif berikutnya.",
+            'body' => 'Pendaftaran Anda tidak memenuhi persyaratan. Anda dapat mendaftar kembali pada periode ujian komprehensif berikutnya.',
             'date' => ($pendaftar->updated_at ?? now())->diffForHumans(),
             'module' => 'bank_soal',
             'pinned' => false,

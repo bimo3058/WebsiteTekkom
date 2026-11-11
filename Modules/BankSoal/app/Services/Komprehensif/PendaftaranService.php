@@ -30,6 +30,17 @@ class PendaftaranService
     }
 
     /**
+     * Apakah mahasiswa sudah dinyatakan lulus ujian komprehensif?
+     */
+    public function hasPassed(int $userId): bool
+    {
+        return KompreSession::where('user_id', $userId)
+            ->where('status', KompreSessionStatus::Finished)
+            ->where('lulus', true)
+            ->exists();
+    }
+
+    /**
      * Cek apakah kuota pendaftaran pada periode sudah penuh.
      */
     public function isKuotaPenuh(PeriodeUjian $periode): bool
@@ -51,6 +62,10 @@ class PendaftaranService
     public function daftar(PeriodeUjian $periode, int $mahasiswaId, array $data): PendaftarUjian
     {
         return DB::transaction(function () use ($periode, $mahasiswaId, $data): PendaftarUjian {
+            if ($this->hasPassed($mahasiswaId)) {
+                throw new \RuntimeException('Anda sudah dinyatakan lulus ujian komprehensif.');
+            }
+
             // Lock baris periode agar concurrent request antre satu per satu
             $lockedPeriode = PeriodeUjian::lockForUpdate()->findOrFail($periode->id);
 

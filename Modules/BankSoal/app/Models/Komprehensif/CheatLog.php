@@ -47,7 +47,10 @@ class CheatLog extends Model
     public static function detailsFrom(Collection $logs): array
     {
         return $logs
-            ->sortBy(fn (CheatLog $log) => $log->created_at?->timestamp ?? 0)
+            ->sortBy(fn (CheatLog $log) => [
+                $log->created_at?->timestamp ?? 0,
+                $log->id ?? 0,
+            ])
             ->map(fn (CheatLog $log) => [
                 'time' => $log->created_at?->format('H:i:s') ?? '-',
                 'label' => self::labelFor($log->event_type),
@@ -55,5 +58,12 @@ class CheatLog extends Model
             ])
             ->values()
             ->all();
+    }
+
+    public static function latestFrom(Collection $logs): ?array
+    {
+        $details = self::detailsFrom($logs);
+
+        return $details === [] ? null : $details[array_key_last($details)];
     }
 }

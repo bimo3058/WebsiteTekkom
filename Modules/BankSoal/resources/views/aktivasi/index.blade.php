@@ -5,6 +5,60 @@
         <span class="text-gray-900 font-semibold">Monitoring Ujian</span>
     @endsection
 
+    @push('scripts')
+        <script>
+            (() => {
+                const init = () => {
+                    const root = document.querySelector('[data-violation-status-url]');
+                    if (!root) return;
+
+                    const statusUrl = root.dataset.violationStatusUrl;
+                    let latestId = Number(root.dataset.latestViolationId || 0);
+                    let isPolling = false;
+                    let isReloading = false;
+
+                    const poll = async () => {
+                        if (isPolling || isReloading || document.hidden) return;
+
+                        isPolling = true;
+                        try {
+                            const response = await fetch(statusUrl, {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                                credentials: 'same-origin',
+                                cache: 'no-store',
+                            });
+
+                            if (!response.ok) return;
+
+                            const data = await response.json();
+                            if (Number(data.latest_id || 0) > latestId) {
+                                isReloading = true;
+                                window.location.reload();
+                            }
+                        } catch (error) {
+                        } finally {
+                            isPolling = false;
+                        }
+                    };
+
+                    setInterval(poll, 5000);
+                    document.addEventListener('visibilitychange', () => {
+                        if (!document.hidden) poll();
+                    });
+                };
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', init);
+                } else {
+                    init();
+                }
+            })();
+        </script>
+    @endpush
+
     {{-- Style Box Wrap khas SITKOM (Mengadopsi Manajemen Jadwal & Sesi) --}}
     <style>
         .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
@@ -320,12 +374,21 @@
 
         .live-warning-btn {
             display: inline-flex;
-            align-items: center;
-            gap: 4px;
+            align-items: flex-start;
+            gap: 6px;
+            max-width: 100%;
             border: 0;
             padding: 0;
             background: transparent;
+            text-align: left;
             cursor: pointer;
+        }
+
+        .live-warning-label {
+            display: block;
+            min-width: 0;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
         }
 
         .live-warning-btn:hover {
@@ -385,7 +448,9 @@
             submitForce() { if (!this.targetSession || this.isSubmitting) return; this.isSubmitting = true; const f = document.getElementById('form-force-submit'); f.action = '{{ route('banksoal.admin.cbt.force-submit', 'REPLACE_ID') }}'.replace('REPLACE_ID', this.targetSession.id); f.submit(); },
             openViolation(s) { this.violationTarget = s; this.violationModal = true; document.body.style.overflow = 'hidden'; },
             closeViolation() { this.violationModal = false; document.body.style.overflow = ''; setTimeout(() => { this.violationTarget = null; }, 300); }
-         }" @keydown.escape.window="if (violationModal) closeViolation()" class="dash-wrap">
+         }" @keydown.escape.window="if (violationModal) closeViolation()" class="dash-wrap"
+         data-latest-violation-id="{{ (int) ($latestViolationId ?? 0) }}"
+         data-violation-status-url="{{ route('banksoal.aktivasi.violation-status') }}">
 
         <div class="dash-box">
 
@@ -634,10 +699,10 @@
                         <table class="live-table">
                             <colgroup>
                                 <col style="width:20%">
+                                <col style="width:13%">
                                 <col style="width:14%">
                                 <col style="width:17%">
-                                <col style="width:19%">
-                                <col style="width:19%">
+                                <col style="width:25%">
                                 <col style="width:11%">
                             </colgroup>
                             <thead>
@@ -664,6 +729,7 @@
 
                                             $namaPeserta = $session->user?->name ?? 'Peserta';
                                             $nimPeserta  = $session->user?->student?->student_number ?? 'NIM tidak tersedia';
+                                            $latestViolation = $latestViolations[$session->id] ?? null;
                                         @endphp
                                         <tr>
                                             <td>
@@ -695,10 +761,11 @@
                                             </td>
 
                                             <td>
-                                                @if($session->cheat_logs_count > 0)
+                                                @if($latestViolation)
                                                     <button type="button"
                                                         class="live-warning live-warning-btn"
                                                         title="Lihat rincian pelanggaran"
+                                                        aria-haspopup="dialog"
                                                         @click="openViolation({
                                                             name: @js($namaPeserta),
                                                             nim: @js($nimPeserta),
@@ -708,7 +775,7 @@
                                                         <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                             <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                                                         </svg>
-                                                        <span>{{ $session->cheat_logs_count }} catatan</span>
+                                                        <span class="live-warning-label">{{ $latestViolation['label'] }}</span>
                                                     </button>
                                                 @else
                                                     <span class="text-[13px] text-[#A4ABB8]">Tidak ada</span>

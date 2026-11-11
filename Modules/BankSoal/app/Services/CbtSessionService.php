@@ -14,6 +14,7 @@ use Modules\BankSoal\Models\Komprehensif\KompreSession;
 use Modules\BankSoal\Models\Pertanyaan;
 use Modules\BankSoal\Models\Shared\Cpl;
 use Modules\BankSoal\Services\Komprehensif\KompreResultService;
+use Modules\BankSoal\Services\Komprehensif\KompreSettingService;
 
 class CbtSessionService
 {
@@ -42,6 +43,13 @@ class CbtSessionService
      */
     public function startSession(JadwalUjian $jadwal, int $userId): KompreSession
     {
+        if (KompreSession::where('user_id', $userId)
+            ->where('status', KompreSessionStatus::Finished)
+            ->where('lulus', true)
+            ->exists()) {
+            throw new \RuntimeException('Anda sudah dinyatakan lulus ujian komprehensif.');
+        }
+
         try {
             return DB::transaction(function () use ($jadwal, $userId) {
                 if (DB::connection()->getDriverName() === 'pgsql') {
@@ -62,6 +70,9 @@ class CbtSessionService
                     'title' => 'Ujian Komprehensif '.$jadwal->nama_sesi,
                     'started_at' => now(),
                     'status' => KompreSessionStatus::Ongoing,
+                    // Snapshot aturan kelulusan saat ujian dimulai agar
+                    // perubahan setting tidak memengaruhi sesi berjalan.
+                    'passing_rule' => app(KompreSettingService::class)->passingRule(),
                 ]);
 
                 $this->generateSoal($session);
@@ -241,9 +252,10 @@ class CbtSessionService
         $session->update([
             'status' => KompreSessionStatus::Finished,
             'finished_at' => now(),
-            'score' => $this->calculateScore($session),
+            'score' => $result['score'],
             'lulus' => $result['lulus'],
             'cpl_scores' => $result['cpl_scores'],
+            'passing_rule' => $result['passing_rule'],
         ]);
     }
 
@@ -293,6 +305,7 @@ class CbtSessionService
     {
         $lastFailedSession = KompreSession::where('user_id', $userId)
             ->where('status', KompreSessionStatus::Finished)
+            ->where('source', 'cbt')
             ->where('lulus', false)
             ->orderByDesc('finished_at')
             ->first();

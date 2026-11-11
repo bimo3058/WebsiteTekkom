@@ -77,7 +77,13 @@
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
                 <div class="p-6 border-b border-slate-100">
                     <h3 class="text-base font-semibold text-slate-800">Tingkat Kelulusan</h3>
-                    <p class="text-xs text-slate-500 mt-1">Lulus jika setiap CPL memiliki nilai minimal 6.0/10.</p>
+                    <p class="text-xs text-slate-500 mt-1">
+                        @if($passingRule === 'total_min')
+                            Lulus jika nilai total minimal {{ (int) $totalMinScore }}.
+                        @else
+                            Lulus jika setiap CPL memiliki nilai minimal {{ rtrim(rtrim(number_format($cplMinScore, 2, '.', ''), '0'), '.') }}/10.
+                        @endif
+                    </p>
                 </div>
                 <div class="p-6 flex-1 flex flex-col justify-center">
                     @if($totalPeserta > 0)
@@ -118,9 +124,9 @@
                             </div>
                         </div>
 
-                        @if(($gagalCpl ?? 0) > 0)
+                        @if($passingRule === 'cpl_all_min' && ($gagalCpl ?? 0) > 0)
                             <p class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
-                                {{ $gagalCpl }} mahasiswa gagal karena ada CPL di bawah 6.0 meskipun nilai totalnya &ge; 60.
+                                {{ $gagalCpl }} mahasiswa gagal karena ada CPL di bawah {{ rtrim(rtrim(number_format($cplMinScore, 2, '.', ''), '0'), '.') }} meskipun nilai totalnya &ge; {{ (int) $totalMinScore }}.
                             </p>
                         @endif
                     @else

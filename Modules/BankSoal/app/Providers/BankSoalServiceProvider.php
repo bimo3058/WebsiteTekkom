@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Modules\BankSoal\Console\Commands\AutoApproveBlindReview;
 use Modules\BankSoal\Console\Commands\BackfillKompreResults;
+use Modules\BankSoal\Console\Commands\GenerateKompreFilledTemplates;
+use Modules\BankSoal\Console\Commands\SetLegacyPassword;
 use Modules\BankSoal\Models\Komprehensif\KompreSession;
 use Modules\BankSoal\Policies\KompreSessionPolicy;
 use Nwidart\Modules\Traits\PathNamespace;
@@ -72,6 +74,8 @@ class BankSoalServiceProvider extends ServiceProvider
         $this->commands([
             AutoApproveBlindReview::class,
             BackfillKompreResults::class,
+            GenerateKompreFilledTemplates::class,
+            SetLegacyPassword::class,
         ]);
     }
 

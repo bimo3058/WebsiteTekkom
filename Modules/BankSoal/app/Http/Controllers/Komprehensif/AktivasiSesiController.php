@@ -63,9 +63,32 @@ class AktivasiSesiController extends Controller
             $session->id => CheatLog::detailsFrom($session->cheatLogs),
         ]);
 
+        $latestViolations = $sessions->mapWithKeys(fn ($session) => [
+            $session->id => CheatLog::latestFrom($session->cheatLogs),
+        ]);
+
+        $latestViolationId = $this->latestOngoingViolationId();
+
         return view('banksoal::aktivasi.index', compact(
-            'periodes', 'selectedPeriode', 'selectedPeriodeId', 'jadwals', 'sessions', 'violationDetails'
+            'periodes', 'selectedPeriode', 'selectedPeriodeId', 'jadwals', 'sessions', 'violationDetails',
+            'latestViolations', 'latestViolationId'
         ));
+    }
+
+    public function violationStatus()
+    {
+        $this->authorize('viewAny', KompreSession::class);
+
+        return response()->json([
+            'latest_id' => $this->latestOngoingViolationId(),
+        ]);
+    }
+
+    private function latestOngoingViolationId(): int
+    {
+        return (int) (CheatLog::query()
+            ->whereIn('kompre_session_id', KompreSession::where('status', 'ongoing')->select('id'))
+            ->max('id') ?? 0);
     }
 
     /**

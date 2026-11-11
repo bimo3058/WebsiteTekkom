@@ -330,7 +330,7 @@
                         class="flex-1 px-4 py-2.5 text-[13px] font-bold text-white bg-primary hover:bg-primary/90 shadow-sm rounded-xl focus:outline-none transition-colors flex items-center justify-center gap-2"
                         :class="isFinishing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'">
                         <span x-show="!isFinishing" class="material-symbols-outlined" style="font-size:18px">done_all</span>
-                        <span x-text="isFinishing ? 'Menyimpan...' : 'Ya, Selesaikan'"></span>
+                        <span x-text="isFinishing ? 'Menghitung hasil...' : 'Ya, Selesaikan'"></span>
                     </button>
                 </div>
             </div>

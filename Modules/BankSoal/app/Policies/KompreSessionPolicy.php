@@ -51,4 +51,13 @@ class KompreSessionPolicy
     {
         return $user->hasRole('admin_banksoal');
     }
+
+    /**
+     * Ubah syarat kelulusan ujian komprehensif — hanya admin_banksoal
+     * (super admin modul), selaras dengan kebijakan resetAll.
+     */
+    public function manageSettings(User $user): bool
+    {
+        return $user->hasRole('admin_banksoal');
+    }
 }

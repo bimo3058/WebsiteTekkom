@@ -419,6 +419,9 @@ class CbtEngineController extends Controller
                 ->get()
                 ->keyBy('id');
 
+            $changesByJawaban = [];
+            $now = now();
+
             foreach ($validated['answers'] as $item) {
                 $jawaban = $jawabans->get($item['jawaban_id']);
 
@@ -439,8 +442,25 @@ class CbtEngineController extends Controller
                 }
 
                 if ($changes) {
-                    $jawaban->update($changes);
+                    $changesByJawaban[$jawaban->id] = [
+                        'id' => $jawaban->id,
+                        'kompre_session_id' => $jawaban->kompre_session_id,
+                        'pertanyaan_id' => $jawaban->pertanyaan_id,
+                        'urutan_soal' => $jawaban->urutan_soal,
+                        'jawaban_dipilih' => $changes['jawaban_dipilih'] ?? $jawaban->jawaban_dipilih,
+                        'is_ragu' => $changes['is_ragu'] ?? $jawaban->is_ragu,
+                        'created_at' => $jawaban->created_at,
+                        'updated_at' => $now,
+                    ];
                 }
+            }
+
+            if ($changesByJawaban !== []) {
+                DB::table('bs_kompre_jawaban')->upsert(
+                    array_values($changesByJawaban),
+                    ['id'],
+                    ['jawaban_dipilih', 'is_ragu', 'updated_at']
+                );
             }
 
             $this->cbtService->finishSession($session);

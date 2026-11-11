@@ -268,7 +268,15 @@
                     style="min-width: 0; background:#fff; border:1px solid var(--c-border); border-radius:14px; box-shadow:var(--shadow-card); overflow:hidden;">
                     <div style="padding:16px 20px 14px; border-bottom:1px solid var(--c-border);">
                         <h3 style="font-size:13px; font-weight:700; color:var(--c-fg); margin-bottom:0;">Nilai per CPL</h3>
-                        <p style="font-size:11px; color:var(--c-fg-muted); margin-top:2px;">Ambang lulus per CPL: 6.0/10</p>
+                        <p style="font-size:11px; color:var(--c-fg-muted); margin-top:2px;">
+                            @if($isImport)
+                                Data historis — ambang CPL 6.0/10 hanya informasi.
+                            @elseif($passingRule === 'total_min')
+                                Lulus jika nilai total minimal {{ (int) $totalMinScore }} — nilai CPL hanya informasi.
+                            @else
+                                Ambang lulus per CPL: {{ rtrim(rtrim(number_format($cplMinScore, 2, '.', ''), '0'), '.') }}/10
+                            @endif
+                        </p>
                     </div>
                     <div style="overflow-x:auto;">
                         <table style="width:100%; min-width:680px; text-align:left; border-collapse:collapse;">
@@ -310,11 +318,16 @@
                                             style="padding:12px 20px; font-size:12px; color:var(--c-fg-muted); white-space:nowrap;">
                                             {{ $waktuSelesaiLabel }}</td>
                                         <td
-                                            style="padding:12px 20px; font-size:12px; font-weight:700; color:{{ $stat['lulus'] ? 'var(--c-fg)' : '#DF1C41' }};">
+                                            style="padding:12px 20px; font-size:12px; font-weight:700; color:{{ ($isImport ?? false) || $stat['lulus'] ? 'var(--c-fg)' : '#DF1C41' }};">
                                             {{ number_format($stat['nilai'], 2) }}</td>
                                         <td
-                                            style="padding:12px 20px; font-size:11px; font-weight:600; color:{{ $stat['lulus'] ? '#287F6E' : '#DF1C41' }}; white-space:nowrap;">
-                                            {{ $stat['lulus'] ? 'Lulus' : 'Tidak Lulus' }}</td>
+                                            style="padding:12px 20px; font-size:11px; font-weight:600; color:{{ ($isImport ?? false) || $stat['lulus'] ? '#287F6E' : '#DF1C41' }}; white-space:nowrap;">
+                                            @if($isImport ?? false)
+                                                -
+                                            @else
+                                                {{ $stat['lulus'] ? 'Lulus' : 'Tidak Lulus' }}
+                                            @endif
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>

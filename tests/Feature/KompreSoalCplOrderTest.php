@@ -6,11 +6,11 @@ use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Modules\BankSoal\Models\Jawaban;
-use Modules\BankSoal\Models\Pertanyaan;
-use Modules\BankSoal\Models\Shared\Cpl;
 use Modules\BankSoal\Models\Komprehensif\JadwalUjian;
 use Modules\BankSoal\Models\Komprehensif\KompreJawaban;
 use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
+use Modules\BankSoal\Models\Pertanyaan;
+use Modules\BankSoal\Models\Shared\Cpl;
 use Modules\BankSoal\Services\CbtSessionService;
 use Tests\TestCase;
 
@@ -41,6 +41,8 @@ class KompreSoalCplOrderTest extends TestCase
         $this->runMigration('Modules/BankSoal/database/migrations/2026_03_27_102724_add_tanggal_ujian_to_bs_jadwal_ujians_table.php');
         $this->runMigration('Modules/BankSoal/database/migrations/2026_02_24_032833_create_bs_kompre_session_table.php');
         $this->runMigration('Modules/BankSoal/database/migrations/2026_04_23_225401_add_jadwal_id_to_bs_kompre_session_table.php');
+        $this->runMigration('Modules/BankSoal/database/migrations/2026_11_10_000001_add_result_columns_to_bs_kompre_session_table.php');
+        $this->runMigration('Modules/BankSoal/database/migrations/2026_11_11_000004_add_passing_rule_to_bs_kompre_session_table.php');
 
         // Skema final bs_kompre_jawaban (setara hasil alter migration produksi).
         Schema::create('bs_kompre_jawaban', function (Blueprint $table) {
@@ -63,7 +65,7 @@ class KompreSoalCplOrderTest extends TestCase
         $jadwal = $this->buatJadwal();
         $user = User::factory()->create();
 
-        $session = (new CbtSessionService())->startSession($jadwal, $user->id);
+        $session = (new CbtSessionService)->startSession($jadwal, $user->id);
 
         $jawabans = KompreJawaban::where('kompre_session_id', $session->id)
             ->with(['pertanyaan.cpl', 'pertanyaan.jawaban'])
@@ -115,7 +117,7 @@ class KompreSoalCplOrderTest extends TestCase
         $urutan = [];
         for ($i = 0; $i < 3; $i++) {
             $user = User::factory()->create();
-            $session = (new CbtSessionService())->startSession($jadwal, $user->id);
+            $session = (new CbtSessionService)->startSession($jadwal, $user->id);
             $urutan[] = KompreJawaban::where('kompre_session_id', $session->id)
                 ->orderBy('urutan_soal')
                 ->pluck('pertanyaan_id')

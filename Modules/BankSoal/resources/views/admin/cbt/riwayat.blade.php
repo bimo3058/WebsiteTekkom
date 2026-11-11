@@ -77,7 +77,15 @@
         }
     </style>
 
-    <div class="dash-wrap">
+    @push('scripts')
+        <script src="{{ asset('modules/banksoal/js/Banksoal/admin/kompre-import.js') }}"></script>
+    @endpush
+
+    <div class="dash-wrap" x-data="kompreImport({
+        previewUrl: @js(route('banksoal.admin.cbt.import.preview')),
+        executeUrl: @js(route('banksoal.admin.cbt.import.execute', '__TOKEN__')),
+        csrf: @js(csrf_token())
+    })">
         <div class="dash-box">
 
         <!-- Box Header -->
@@ -86,6 +94,112 @@
             <div>
                 <h1 class="text-[22px] font-bold text-gray-900 tracking-tight">Riwayat Ujian Komprehensif</h1>
                 <p class="text-[13px] text-gray-500 mt-0.5">Rekapitulasi nilai akhir mahasiswa yang telah menyelesaikan ujian.</p>
+                <p class="text-[12px] text-gray-400 mt-1 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Aturan kelulusan aktif:
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/5 text-primary font-semibold text-[11px]">
+                        @if($passingSettings['passing_rule'] === 'total_min')
+                            Nilai total &ge; {{ (int) $passingSettings['total_min_score'] }}
+                        @else
+                            Semua CPL &ge; {{ (int) $passingSettings['cpl_min_score'] }}
+                        @endif
+                    </span>
+                </p>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+                @can('manageSettings', \Modules\BankSoal\Models\Komprehensif\KompreSession::class)
+                    <div x-data="{ showPassingModal: {{ $errors->has('passing_rule') ? 'true' : 'false' }} }" class="relative">
+                        <button type="button" @click="showPassingModal = true"
+                            class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-white border border-gray-200 px-4 py-2 text-[13px] font-semibold text-gray-700 shadow-sm transition-colors hover:border-primary hover:text-primary cursor-pointer">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Syarat Kelulusan
+                        </button>
+
+                        {{-- Modal Syarat Kelulusan --}}
+                        <div x-show="showPassingModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                            <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" @click="showPassingModal = false"></div>
+                            <div x-show="showPassingModal"
+                                x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                                class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+
+                                <div class="px-6 py-5 border-b border-gray-100 flex items-start justify-between gap-4">
+                                    <div>
+                                        <h3 class="text-[16px] font-bold text-gray-900">Syarat Lulus Ujian</h3>
+                                    </div>
+                                    <button type="button" @click="showPassingModal = false" class="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+
+                                <form action="{{ route('banksoal.admin.cbt.passing-rule.update') }}" method="POST" class="p-6 space-y-4">
+                                    @csrf
+
+                                    @if($errors->has('passing_rule'))
+                                        <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-[13px] text-red-700 font-medium flex items-center gap-2">
+                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                            </svg>
+                                            {{ $errors->first('passing_rule') }}
+                                        </div>
+                                    @endif
+
+                                    <label class="block cursor-pointer rounded-xl border p-4 transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                                        <div class="flex items-start gap-3">
+                                            <input type="radio" name="passing_rule" value="cpl_all_min"
+                                                class="mt-1 h-4 w-4 text-primary focus:ring-primary/30 cursor-pointer"
+                                                @checked(old('passing_rule', $passingSettings['passing_rule']) === 'cpl_all_min')>
+                                            <div>
+                                                <p class="text-[14px] font-semibold text-gray-900">Semua CPL minimal 6</p>
+                                                <p class="text-[12px] text-gray-500 mt-0.5">Lulus jika setiap CPL &ge; 6.</p>
+                                            </div>
+                                        </div>
+                                    </label>
+
+                                    <label class="block cursor-pointer rounded-xl border p-4 transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                                        <div class="flex items-start gap-3">
+                                            <input type="radio" name="passing_rule" value="total_min"
+                                                class="mt-1 h-4 w-4 text-primary focus:ring-primary/30 cursor-pointer"
+                                                @checked(old('passing_rule', $passingSettings['passing_rule']) === 'total_min')>
+                                            <div>
+                                                <p class="text-[14px] font-semibold text-gray-900">Nilai total minimal 60</p>
+                                                <p class="text-[12px] text-gray-500 mt-0.5">Lulus jika nilai total &ge; 60.</p>
+                                            </div>
+                                        </div>
+                                    </label>
+
+                                    <div class="bg-gray-50 border border-gray-100 rounded-xl p-3 text-[12px] text-gray-600">
+                                        Hanya berlaku untuk ujian berikutnya. Hasil yang sudah ada tidak diubah.
+                                    </div>
+
+                                    <div class="flex gap-3 pt-1">
+                                        <button type="button" @click="showPassingModal = false"
+                                            class="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors text-[13px] cursor-pointer">
+                                            Batal
+                                        </button>
+                                        <button type="submit"
+                                            class="flex-1 px-4 py-2.5 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition-colors text-[13px] shadow-sm cursor-pointer">
+                                            Simpan
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                @endcan
+
+                <button type="button" @click="openImport()"
+                    class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-primary/90">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Import Data
+                </button>
             </div>
             </div>
         </div>
@@ -295,12 +409,12 @@
                                 <td class="px-6 py-4 text-center">
                                     @if($poin !== null)
                                         @if($lulus)
-                                            <span title="{{ $failedCpls ? 'CPL di bawah 6.0: '.$failedCpls : '' }}" style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px 3px 6px; border-radius:9999px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; background:#ECFDF5; color:#059669;">
+                                            <span title="{{ $failedCpls ? 'CPL di bawah '.number_format($passingSettings['cpl_min_score'], 1, '.', '').': '.$failedCpls : '' }}" style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px 3px 6px; border-radius:9999px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; background:#ECFDF5; color:#059669;">
                                                 <span style="width:6px; height:6px; border-radius:50%; background:#059669;"></span>
                                                 LULUS
                                             </span>
                                         @else
-                                            <span title="{{ $failedCpls ? 'CPL di bawah 6.0: '.$failedCpls : '' }}" style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px 3px 6px; border-radius:9999px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; background:#FEF2F2; color:#DC2626;">
+                                            <span title="{{ $failedCpls ? 'CPL di bawah '.number_format($passingSettings['cpl_min_score'], 1, '.', '').': '.$failedCpls : '' }}" style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px 3px 6px; border-radius:9999px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; background:#FEF2F2; color:#DC2626;">
                                                 <span style="width:6px; height:6px; border-radius:50%; background:#DC2626;"></span>
                                                 TIDAK LULUS
                                             </span>
@@ -379,8 +493,106 @@
 
     </div>
 
+        {{-- Disembunyikan sementara (2026-11-11): zona Reset Semua Data Ujian. Hapus guard @if(false) untuk menampilkan kembali. --}}
+        @if(false)
+        {{-- ============================================== --}}
+        {{-- ZONA BERBAHAYA: Reset Data Ujian              --}}
+        {{-- ============================================== --}}
+        {{-- Hanya yang berhak reset (policy resetAll: admin_banksoal / superadmin) yang melihat zona ini. --}}
+        @can('resetAll', \Modules\BankSoal\Models\Komprehensif\KompreSession::class)
+        <div id="reset-section" x-data="{ showResetModal: false }" class="mt-4 mb-8">
+            <div class="border border-rose-200 bg-rose-50 rounded-2xl p-6 shadow-sm">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 bg-white border border-rose-100 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
+                            <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-[15px] font-bold text-rose-800">Reset Semua Data Ujian</h3>
+                            <p class="text-[13px] text-rose-600 mt-1">Menghapus <strong>seluruh</strong> data periode, jadwal, pendaftar, sesi ujian, jawaban, dan log pelanggaran secara permanen. Aksi ini <strong>tidak dapat dibatalkan</strong>.</p>
+                        </div>
+                    </div>
+                    <button @click="showResetModal = true" type="button"
+                        class="flex-shrink-0 inline-flex items-center gap-2 px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[13px] font-semibold rounded-lg transition-colors shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16"/>
+                        </svg>
+                        Reset Semua Data
+                    </button>
+                </div>
+
+                @if($errors->has('konfirmasi_password'))
+                    <div class="mt-4 p-3 bg-white border border-rose-200 rounded-xl text-[13px] text-rose-700 font-medium flex items-center gap-2 shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        {{ $errors->first('konfirmasi_password') }}
+                    </div>
+                @endif
+            </div>
+
+            {{-- Modal Konfirmasi Password --}}
+            <div x-show="showResetModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" @click="showResetModal = false"></div>
+                <div x-show="showResetModal"
+                    x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                    class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+
+                    <div class="bg-rose-600 px-6 py-5 flex items-center gap-3">
+                        <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-[15px] font-bold text-white">Konfirmasi Reset Data</h3>
+                            <p class="text-rose-200 text-[12px] mt-0.5">Aksi ini permanen dan tidak dapat dibatalkan</p>
+                        </div>
+                    </div>
+
+                    <form action="{{ route('banksoal.admin.cbt.reset-semua') }}" method="POST" class="p-6 space-y-5">
+                        @csrf
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-[13px] text-amber-800">
+                            <p class="font-bold mb-2">Data yang akan dihapus permanen:</p>
+                            <ul class="list-disc list-inside space-y-1 text-amber-700">
+                                <li>Semua Periode Ujian</li>
+                                <li>Semua Jadwal &amp; Token Sesi</li>
+                                <li>Semua Data Pendaftar</li>
+                                <li>Semua Sesi &amp; Jawaban Ujian Mahasiswa</li>
+                                <li>Semua Log Pelanggaran (Cheat Logs)</li>
+                                <li>Semua Riwayat Import Data</li>
+                            </ul>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-[13px] font-semibold text-gray-700">Masukkan password akun Anda untuk konfirmasi:</label>
+                            <input type="password" name="konfirmasi_password" required
+                                placeholder="Password Anda"
+                                class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder-gray-400">
+                        </div>
+                        <div class="flex gap-3 pt-2">
+                            <button type="button" @click="showResetModal = false"
+                                class="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors text-[13px]">
+                                Batal
+                            </button>
+                            <button type="submit"
+                                class="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl transition-colors text-[13px] shadow-sm">
+                                Ya, Reset Sekarang
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        @endcan
+        @endif
+
         </div> {{-- end .dash-box-body --}}
         </div> {{-- end .dash-box --}}
+
+        @include('banksoal::admin.cbt.import.modal')
 
 </div>{{-- /end Alpine x-data wrapper --}}
 

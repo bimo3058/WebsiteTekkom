@@ -153,12 +153,6 @@
                     {{-- Kartu hasil full-width --}}
                         @if($lulus)
                         <div class="bg-[#DDF2EE]/60 border border-[#40C4AA]/40 rounded-[12px] p-5 sm:p-6 flex flex-col w-full">
-                            <div class="flex items-center gap-3 mb-3">
-                                <span class="w-8 h-8 rounded-full bg-[#40C4AA]/20 flex items-center justify-center shrink-0" aria-hidden="true">
-                                    <svg class="w-4 h-4 text-[#287F6E]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                                </span>
-                                <h2 class="text-[18px] font-semibold text-[#174E43] tracking-tight">Lulus</h2>
-                            </div>
                             <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                             <div class="flex items-start gap-10 sm:gap-16">
                                 <div>
@@ -402,8 +396,8 @@
 
                                         <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex items-center gap-3">
                                             <button type="button" @click="confirmModal = false" class="flex-1 px-4 py-2.5 text-[13px] font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm rounded-xl focus:outline-none transition-colors cursor-pointer">Batal</button>
-                                            <button type="button" :disabled="starting" @click="starting = true; $refs.examForm.submit()" class="flex-1 w-full px-4 py-2.5 text-[13px] font-semibold text-white bg-primary hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm rounded-xl focus:outline-none transition-all">
-                                                Ya, Mulai
+                                            <button type="button" :disabled="starting" @click="starting = true; $refs.examForm.submit()" class="flex-1 w-full px-4 py-2.5 text-[13px] font-semibold text-white bg-primary hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm rounded-xl focus:outline-none transition-all cursor-pointer">
+                                                Mulai
                                             </button>
                                         </div>
                                     </div>
@@ -420,7 +414,11 @@
                                 <li>Peserta wajib hadir 15 menit sebelum ujian dimulai. Peserta yang terlambat hadir tidak diperkenankan mengikuti ujian.</li>
                                 <li>Peserta dimohon membawa Kartu Tanda Mahasiswa (KTM). Peserta yang tidak dapat membuktikan identitasnya tidak diperbolehkan mengikuti ujian.</li>
                                 <li>Ujian bersifat buku tertutup dengan format 100 soal pilihan ganda.</li>
-                                <li>Peserta dinyatakan lulus jika setiap CPL memperoleh nilai minimal 6.</li>
+                                @if($passingSettings['passing_rule'] === 'total_min')
+                                    <li>Peserta dinyatakan lulus jika nilai total minimal {{ (int) $passingSettings['total_min_score'] }}.</li>
+                                @else
+                                    <li>Peserta dinyatakan lulus jika setiap CPL memperoleh nilai minimal {{ (int) $passingSettings['cpl_min_score'] }}.</li>
+                                @endif
                                 <li>Ketentuan lain mengikuti aturan Tata Tertib Ujian Departemen Teknik Komputer.</li>
                             </ol>
                         </div>

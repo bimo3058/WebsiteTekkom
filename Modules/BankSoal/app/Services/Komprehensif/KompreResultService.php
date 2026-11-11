@@ -2,6 +2,7 @@
 
 namespace Modules\BankSoal\Services\Komprehensif;
 
+use Illuminate\Support\Collection;
 use Modules\BankSoal\Models\Cpl;
 use Modules\BankSoal\Models\Komprehensif\KompreJawaban;
 use Modules\BankSoal\Models\Komprehensif\KompreSession;
@@ -9,9 +10,12 @@ use Modules\BankSoal\Models\Komprehensif\KompreSession;
 /**
  * Sumber tunggal aturan kelulusan ujian komprehensif.
  *
- * Mahasiswa dinyatakan lulus jika seluruh CPL yang dinilai memiliki
- * nilai minimal 6.0 (skala 0-10). Nilai total tidak lagi menjadi syarat
- * karena total adalah rata-rata tertimbang dari seluruh CPL.
+ * Ada dua mode syarat kelulusan yang dikonfigurasi admin:
+ * 1. cpl_all_min — lulus jika setiap CPL memperoleh nilai minimal 6.0.
+ * 2. total_min   — lulus jika nilai total minimal 60.
+ *
+ * Aturan yang dipakai disimpan (snapshot) pada sesi saat ujian dimulai,
+ * sehingga perubahan setting hanya berlaku untuk ujian berikutnya.
  */
 class KompreResultService
 {
@@ -21,8 +25,13 @@ class KompreResultService
     /** Jumlah soal per CPL pada sesi yang dihasilkan sistem. */
     public const QUESTIONS_PER_CPL = 10;
 
-    /** Nilai minimum per CPL (skala 0-10). */
+    /** Nilai minimum per CPL default (skala 0-10). */
     public const CPL_MIN_SCORE = 6.0;
+
+    public function __construct(private ?KompreSettingService $settings = null)
+    {
+        $this->settings ??= new KompreSettingService;
+    }
 
     /**
      * Hitung nilai setiap CPL untuk satu sesi.
@@ -34,14 +43,26 @@ class KompreResultService
      */
     public function calculateCplScores(KompreSession $session): array
     {
-        $jawabans = KompreJawaban::where('kompre_session_id', $session->id)
+        return $this->calculateCplScoresFrom($this->loadJawabans($session));
+    }
+
+    private function loadJawabans(KompreSession $session): Collection
+    {
+        return KompreJawaban::where('kompre_session_id', $session->id)
             ->with([
                 'pertanyaan:id,cpl_id',
                 'pertanyaan.cpl:id,kode,deskripsi',
                 'opsiTerpilih:id,is_benar',
             ])
             ->get();
+    }
 
+    /**
+     * @param  Collection<int, KompreJawaban>  $jawabans
+     * @return array<int, array{cpl_id: int, kode: string, deskripsi: ?string, total: int, benar: int, nilai: float, lulus: bool}>
+     */
+    private function calculateCplScoresFrom(Collection $jawabans): array
+    {
         $grouped = $jawabans->groupBy(fn (KompreJawaban $jawaban) => (int) $jawaban->pertanyaan?->cpl_id);
 
         $expectedCpls = Cpl::orderBy('kode')
@@ -75,7 +96,7 @@ class KompreResultService
                 'total' => $total,
                 'benar' => $benar,
                 'nilai' => $nilai,
-                'lulus' => $total > 0 && $nilai >= self::CPL_MIN_SCORE,
+                'lulus' => $total > 0 && $nilai >= $this->settings->cplMinScore(),
             ];
         }
 
@@ -83,18 +104,42 @@ class KompreResultService
     }
 
     /**
-     * Evaluasi kelulusan berdasarkan nilai per CPL.
+     * @param  Collection<int, KompreJawaban>  $jawabans
+     */
+    private function calculateScoreFrom(Collection $jawabans): float
+    {
+        $total = $jawabans->count();
+
+        if ($total === 0) {
+            return 0.0;
+        }
+
+        $benar = $jawabans->filter(
+            fn (KompreJawaban $jawaban) => (bool) $jawaban->opsiTerpilih?->is_benar
+        )->count();
+
+        return round(($benar / $total) * 100, 2);
+    }
+
+    /**
+     * Evaluasi kelulusan berdasarkan aturan yang berlaku.
      *
      * @param  array<int, array<string, mixed>>  $cplScores
      */
-    public function isPassed(array $cplScores): bool
+    public function isPassed(array $cplScores, ?float $score = null, ?string $rule = null): bool
     {
+        $rule ??= $this->settings->passingRule();
+
+        if ($rule === KompreSettingService::RULE_TOTAL) {
+            return $score !== null && $score >= $this->settings->totalMinScore();
+        }
+
         if (count($cplScores) === 0) {
             return false;
         }
 
         foreach ($cplScores as $cpl) {
-            if ((float) ($cpl['nilai'] ?? 0) < self::CPL_MIN_SCORE) {
+            if ((float) ($cpl['nilai'] ?? 0) < $this->settings->cplMinScore()) {
                 return false;
             }
         }
@@ -103,35 +148,42 @@ class KompreResultService
     }
 
     /**
-     * @return array{lulus: bool, cpl_scores: array<int, array<string, mixed>>, failed_cpls: array<int, array<string, mixed>>}
+     * @return array{score: float, lulus: bool, cpl_scores: array<int, array<string, mixed>>, failed_cpls: array<int, array<string, mixed>>, passing_rule: string}
      */
     public function evaluate(KompreSession $session): array
     {
-        $cplScores = $this->calculateCplScores($session);
+        $jawabans = $this->loadJawabans($session);
+        $cplScores = $this->calculateCplScoresFrom($jawabans);
+        $score = $this->calculateScoreFrom($jawabans);
+        $passingRule = $session->passing_rule ?: $this->settings->passingRule();
         $failedCpls = array_values(array_filter(
             $cplScores,
             fn (array $cpl) => ! $cpl['lulus']
         ));
 
         return [
-            'lulus' => $this->isPassed($cplScores),
+            'score' => $score,
+            'lulus' => $this->isPassed($cplScores, $score, $passingRule),
             'cpl_scores' => $cplScores,
             'failed_cpls' => $failedCpls,
+            'passing_rule' => $passingRule,
         ];
     }
 
     /**
      * Hitung dan simpan status kelulusan ke sesi.
      *
-     * @return array{lulus: bool, cpl_scores: array<int, array<string, mixed>>, failed_cpls: array<int, array<string, mixed>>}
+     * @return array{score: float, lulus: bool, cpl_scores: array<int, array<string, mixed>>, failed_cpls: array<int, array<string, mixed>>}
      */
     public function persist(KompreSession $session): array
     {
         $result = $this->evaluate($session);
 
         $session->update([
+            'score' => $result['score'],
             'lulus' => $result['lulus'],
             'cpl_scores' => $result['cpl_scores'],
+            'passing_rule' => $result['passing_rule'],
         ]);
 
         return $result;

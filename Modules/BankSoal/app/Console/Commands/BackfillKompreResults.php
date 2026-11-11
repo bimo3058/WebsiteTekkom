@@ -29,6 +29,7 @@ class BackfillKompreResults extends Command
             : 'Menghitung ulang hasil ujian komprehensif...');
 
         KompreSession::where('status', KompreSessionStatus::Finished)
+            ->where('source', 'cbt')
             ->chunkById($chunk, function ($sessions) use ($resultService, $dryRun, &$processed, &$lulus, &$tidakLulus) {
                 foreach ($sessions as $session) {
                     $result = $resultService->evaluate($session);

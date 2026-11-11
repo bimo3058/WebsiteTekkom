@@ -50,12 +50,44 @@ class CheatLogLabelTest extends TestCase
         $this->assertSame([], CheatLog::detailsFrom(collect()));
     }
 
-    private function makeLog(string $eventType, string $description, string $createdAt): CheatLog
+    public function test_latest_from_mengambil_log_terbaru(): void
+    {
+        $logs = collect([
+            $this->makeLog('window_blur', 'Jendela kehilangan fokus.', '2026-11-09 22:08:23', 1),
+            $this->makeLog('tab_switch', 'Peserta berpindah tab.', '2026-11-09 22:08:24', 2),
+        ]);
+
+        $this->assertSame([
+            'time' => '22:08:24',
+            'label' => 'Pindah tab / minimize',
+            'description' => 'Peserta berpindah tab.',
+        ], CheatLog::latestFrom($logs));
+    }
+
+    public function test_latest_from_memakai_id_saat_waktu_sama(): void
+    {
+        $logs = collect([
+            $this->makeLog('tab_switch', 'Log pertama.', '2026-11-09 22:08:24', 10),
+            $this->makeLog('window_blur', 'Log kedua.', '2026-11-09 22:08:24', 11),
+        ]);
+
+        $this->assertSame('Berpindah aplikasi/jendela', CheatLog::latestFrom($logs)['label']);
+    }
+
+    public function test_latest_from_kosong_menghasilkan_null(): void
+    {
+        $this->assertNull(CheatLog::latestFrom(collect()));
+    }
+
+    private function makeLog(string $eventType, string $description, string $createdAt, ?int $id = null): CheatLog
     {
         $log = new CheatLog([
             'event_type' => $eventType,
             'description' => $description,
         ]);
+        if ($id !== null) {
+            $log->id = $id;
+        }
         $log->created_at = Carbon::parse($createdAt);
 
         return $log;

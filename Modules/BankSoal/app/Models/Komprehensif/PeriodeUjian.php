@@ -28,12 +28,12 @@ class PeriodeUjian extends Model
     ];
 
     protected $casts = [
-        'tanggal_mulai'             => 'date',
-        'tanggal_selesai'           => 'date',
-        'tanggal_mulai_ujian'       => 'date',
-        'tanggal_selesai_ujian'     => 'date',
+        'tanggal_mulai' => 'date',
+        'tanggal_selesai' => 'date',
+        'tanggal_mulai_ujian' => 'date',
+        'tanggal_selesai_ujian' => 'date',
         'pendaftaran_ditutup_paksa' => 'boolean',
-        'target_wisuda_options'     => 'array',
+        'target_wisuda_options' => 'array',
     ];
 
     /**
@@ -43,8 +43,8 @@ class PeriodeUjian extends Model
     public function scopeCurrentlyActive(Builder $query): Builder
     {
         return $query->where('tanggal_mulai', '<=', now())
-                     ->where('tanggal_selesai', '>=', now())
-                     ->where('status', '!=', 'selesai');
+            ->where('tanggal_selesai', '>=', now())
+            ->where('status', '!=', 'selesai');
     }
 
     /**
@@ -59,5 +59,15 @@ class PeriodeUjian extends Model
                 Carbon::parse($this->tanggal_mulai)->startOfDay(),
                 Carbon::parse($this->tanggal_selesai)->endOfDay()
             );
+    }
+
+    public function pendaftars()
+    {
+        return $this->hasMany(PendaftarUjian::class, 'periode_ujian_id');
+    }
+
+    public function jadwals()
+    {
+        return $this->hasMany(JadwalUjian::class, 'periode_ujian_id');
     }
 }
