@@ -48,7 +48,7 @@ class RegistrationReviewController extends Controller
             unset($documents['cv_path']);
         }
         $additionalDocumentRequired = false;
-        if (in_array($type, ['koor', 'asprak'], true) && Schema::hasTable('manprak_periode_pendaftaran')) {
+        if (in_array($type, ['koor', 'asprak'], true) && Schema::hasTable('eo_prak_periode_pendaftaran')) {
             $additionalDocumentName = PeriodePendaftaran::where('praktikum_id', $registration->praktikum_id)
                 ->where('jenis', $type)
                 ->latest('created_at')

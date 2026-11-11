@@ -26,7 +26,8 @@
         background: #fff;
         font-family: 'Inter Tight', system-ui, -apple-system, sans-serif;
         -webkit-font-smoothing: antialiased;
-        overflow: hidden;
+        overflow-y: auto;
+        padding: 32px 16px;
     }
     .sk-bg-dots {
         position: absolute; inset: 0;
@@ -41,7 +42,8 @@
     }
     .sk-card {
         position: relative; z-index: 1;
-        width: 440px; background: #fff;
+        width: 440px; max-width: 100%; background: #fff;
+        flex-shrink: 0; margin: auto 0;
         border-radius: 16px; padding: 36px;
         box-shadow: 0 4px 24px rgba(13,13,18,0.08);
         border: 1px solid var(--c-border);
@@ -102,9 +104,9 @@
     }
     .sk-back-link a:hover { opacity: 1; }
     .sk-footer {
-        position: absolute; bottom: 0; left: 0; right: 0;
-        padding: 20px 40px;
-        display: flex; align-items: center; justify-content: space-between; z-index: 1;
+        position: relative; flex-shrink: 0;
+        padding: 24px 0 0;
+        display: flex; align-items: center; justify-content: center; z-index: 1;
     }
     .sk-footer span { font-size: 12px; color: var(--c-fg-placeholder); }
     .sk-footer-links { display: flex; gap: 20px; }
@@ -114,7 +116,7 @@
     }
     .sk-footer-links a:hover { color: var(--c-fg-muted); }
     @media (max-width: 520px) {
-        .sk-card { width: 100%; margin: 0 16px; padding: 28px 20px; }
+        .sk-card { width: 100%; padding: 28px 20px; }
         .sk-footer { padding: 16px 20px; flex-direction: column; gap: 8px; text-align: center; }
         .sk-footer-links { justify-content: center; }
     }
@@ -136,15 +138,15 @@
                 </svg>
             </div>
             <div>
-                <div class="sk-card-title">Lupa Password?</div>
-                <div class="sk-card-sub">Masukkan email kamu dan kami akan mengirimkan link untuk reset password.</div>
+                <div class="sk-card-title">Ubah Password</div>
+                <div class="sk-card-sub">Khusus admin/superadmin. Masukkan email dan password lama untuk mengganti password langsung.</div>
             </div>
         </div>
 
         {{-- Alerts --}}
         @if (session('status'))
             <div class="sk-alert sk-alert-success">
-                <strong style="display:block;margin-bottom:2px;">Email terkirim!</strong>
+                <strong style="display:block;margin-bottom:2px;">Password berhasil diubah!</strong>
                 {{ session('status') }}
             </div>
         @endif
@@ -153,7 +155,7 @@
         @endif
 
         {{-- Form --}}
-        <form method="POST" action="{{ route('password.email') }}">
+        <form method="POST" action="{{ route('password.change') }}">
             @csrf
             <div style="display:flex;flex-direction:column;gap:16px;">
                 <div class="sk-field">
@@ -162,22 +164,32 @@
                            value="{{ old('email') }}" placeholder="nama@undip.ac.id"
                            required autofocus autocomplete="username"/>
                 </div>
-                <button type="submit" class="sk-btn-submit">Kirim Link Reset Password</button>
+                <div class="sk-field">
+                    <label class="sk-label" for="current_password">Password Lama <span>*</span></label>
+                    <input id="current_password" class="sk-input" type="password" name="current_password"
+                           placeholder="Masukkan password lama" required autocomplete="current-password"/>
+                </div>
+                <div class="sk-field">
+                    <label class="sk-label" for="password">Password Baru <span>*</span></label>
+                    <input id="password" class="sk-input" type="password" name="password"
+                           placeholder="Minimal 8 karakter" required minlength="8" autocomplete="new-password"/>
+                </div>
+                <div class="sk-field">
+                    <label class="sk-label" for="password_confirmation">Konfirmasi Password Baru <span>*</span></label>
+                    <input id="password_confirmation" class="sk-input" type="password" name="password_confirmation"
+                           placeholder="Ulangi password baru" required minlength="8" autocomplete="new-password"/>
+                </div>
+                <button type="submit" class="sk-btn-submit">Simpan Password Baru</button>
             </div>
         </form>
 
         <div class="sk-back-link">
-            Ingat password kamu? <a href="{{ route('login') }}">Kembali ke login</a>
+            <a href="{{ route('login') }}">Kembali ke login</a>
         </div>
     </div>
 
     <div class="sk-footer">
-        <span>© {{ date('Y') }} Departemen Teknik Komunikasi &bull; Universitas Diponegoro</span>
-        <div class="sk-footer-links">
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-            <a href="#">Bantuan</a>
-        </div>
+        <span>© {{ date('Y') }} Departemen Teknik Komputer &bull; Universitas Diponegoro</span>
     </div>
 </div>
 </x-guest-layout>

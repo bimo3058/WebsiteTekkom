@@ -44,7 +44,7 @@ class MateriController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'modul_id'  => 'required|exists:modul_praktikum,id',
+            'modul_id'  => 'required|exists:eo_prak_modul_praktikum,id',
             'judul'     => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'file'      => 'nullable|array|max:10',
@@ -98,8 +98,8 @@ class MateriController extends Controller
     public function reuse(Request $request)
     {
         $data = $request->validate([
-            'modul_id' => 'required|exists:modul_praktikum,id',
-            'materi_sumber_id' => 'required|exists:materi_modul,id',
+            'modul_id' => 'required|exists:eo_prak_modul_praktikum,id',
+            'materi_sumber_id' => 'required|exists:eo_prak_materi_modul,id',
         ]);
 
         $allowed = ModulAsprak::whereHas('asprak', fn ($query) => $query

@@ -71,3 +71,28 @@ test('view action finds submitted documents without opening the upload form',asy
     await page.init();
     assert.equal(page.search,'C100');
 });
+
+test('feedback dialog opens with full text and closes cleanly',()=>{
+    const page=factories.capstoneDocuments();
+    assert.equal(page.feedbackDoc,null);
+    let shown=0,closed=0;
+    const stub=globalThis.document.getElementById;
+    globalThis.document.getElementById=(id)=>{
+        assert.equal(id,'document-feedback');
+        return {showModal:()=>{shown++;},close:()=>{closed++;}};
+    };
+    try{
+        const doc={id:7,document_type:'Draft TA',version:2,status:'REJECTED',feedback:'Very long reviewer note'};
+        page.openFeedback(doc);
+        assert.equal(shown,1);
+        assert.equal(page.feedbackDoc,doc);
+        page.closeFeedback();
+        assert.equal(closed,1);
+        assert.equal(page.feedbackDoc,null);
+        page.openFeedback({id:8,feedback:''});
+        assert.equal(shown,1);
+        assert.equal(page.feedbackDoc,null);
+    }finally{
+        globalThis.document.getElementById=stub;
+    }
+});

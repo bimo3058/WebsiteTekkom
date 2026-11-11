@@ -201,7 +201,7 @@ class FinalGradeBook
                 'final_value' => $row['final'], 'letter' => $row['letter'], 'points' => $row['points'], 'calculation' => json_encode($row['calculation']),
             ]);
         }
-        DB::table('eo_praktikum')->where('id', $praktikum->id)->update(['final_grade_batch_id' => $id]);
+        DB::table('eo_prak_praktikum')->where('id', $praktikum->id)->update(['final_grade_batch_id' => $id]);
     }
 
     public function publish(Praktikum $praktikum): void

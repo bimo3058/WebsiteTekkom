@@ -3,7 +3,7 @@
     <div class="mp-page-header flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h1 class="mp-page-title">Arsip & Rekap</h1>
-            <p class="mp-page-sub">Gudang arsip seluruh data histori pengajuan ruangan yang telah berstatus Selesai, Ditolak, atau Dibatalkan.</p>
+            <p class="mp-page-sub">Gudang arsip seluruh data histori pengajuan ruangan yang telah terlaksana (Disetujui), Ditolak, atau Dibatalkan.</p>
         </div>
 
         {{-- Quick Export Dropdown --}}
@@ -291,8 +291,8 @@
                                             selectedVal: '{{ request('source') }}', 
                                             get selectedName() {
                                                 const map = {
-                                                    'kp': 'Seminar KP',
-                                                    'capstone': 'Sidang Capstone',
+                                                    'kp': 'KP',
+                                                    'capstone': 'CATA',
                                                     'praktikum': 'Praktikum',
                                                     'umum': 'Peminjaman Langsung'
                                                 };
@@ -318,8 +318,8 @@
                                             class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] max-h-36 overflow-y-auto" style="display: none;">
                                             <div class="py-2 px-1">
                                                 <button type="button" @click="selectItem('')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != ''}">Semua Asal</button>
-                                                <button type="button" @click="selectItem('kp')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'kp', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'kp'}">Seminar KP</button>
-                                                <button type="button" @click="selectItem('capstone')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'capstone', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'capstone'}">Sidang Capstone</button>
+                                                <button type="button" @click="selectItem('kp')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'kp', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'kp'}">KP</button>
+                                                <button type="button" @click="selectItem('capstone')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'capstone', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'capstone'}">CATA</button>
                                                 <button type="button" @click="selectItem('praktikum')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'praktikum', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'praktikum'}">Praktikum</button>
                                                 <button type="button" @click="selectItem('umum')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'umum', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'umum'}">Peminjaman Langsung</button>
                                             </div>
@@ -445,8 +445,24 @@
                                         {{ $displayName }}
                                     </div>
                                 @endif
+                                @php
+                                    $phoneContact = $pinjam->telepon;
+                                @endphp
                                 <div class="text-[11px] text-gray-500 mt-0.5">
-                                    {{ $identityNumber }} • {{ $pinjam->nomor_telepon ?: '-' }}
+                                    {{ $identityNumber }} •
+                                    @if($phoneContact)
+                                        @php
+                                            $waDigits = preg_replace('/[^0-9]/', '', (string)$phoneContact);
+                                            $waNumber = str_starts_with($waDigits, '0')
+                                                ? '62' . substr($waDigits, 1)
+                                                : (str_starts_with($waDigits, '62') ? $waDigits : '62' . $waDigits);
+                                        @endphp
+                                        <a href="https://wa.me/{{ $waNumber }}" target="_blank" title="Hubungi via WhatsApp" class="text-[#25D366] hover:text-[#1da851] hover:underline font-semibold transition-colors">
+                                            {{ $phoneContact }}
+                                        </a>
+                                    @else
+                                        <span>-</span>
+                                    @endif
                                 </div>
                             </td>
                             <td class="max-w-[140px]">
@@ -454,14 +470,31 @@
                                     {{ $pinjam->ruangan->nama ?? 'Dihapus' }}
                                 </div>
                                 <div class="mt-1">
-                                    @if(in_array(strtolower((string)$pinjam->source), ['kp', 'kerja_praktik']))
-                                        <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Seminar KP</span>
-                                    @elseif(strtolower((string)$pinjam->source) === 'capstone')
-                                        <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">Sidang Capstone</span>
+                                    @if(in_array(strtolower(trim((string)$pinjam->source)), ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik']) || str_contains((string)$pinjam->tujuan, 'Seminar KP') || str_contains((string)$pinjam->tujuan, 'Kerja Praktik'))
+                                        <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">KP</span>
+                                    @elseif(strtolower((string)$pinjam->source) === 'capstone' || str_contains((string)$pinjam->tujuan, '[CAPSTONE'))
+                                        <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">CATA</span>
                                     @elseif(strtolower((string)$pinjam->source) === 'praktikum')
                                         <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Praktikum</span>
                                     @else
                                         <span class="inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200">Langsung</span>
+                                    @endif
+
+                                    @if($pinjam->replaces_peminjaman_id && $pinjam->replacesPeminjaman)
+                                        @php
+                                            $oldTgl = \Carbon\Carbon::parse($pinjam->replacesPeminjaman->tanggal_pinjam)->translatedFormat('d M Y');
+                                            $oldJam = \Carbon\Carbon::parse($pinjam->replacesPeminjaman->jam_mulai)->format('H:i') . '-' . \Carbon\Carbon::parse($pinjam->replacesPeminjaman->jam_selesai)->format('H:i');
+                                            $oldRuang = $pinjam->replacesPeminjaman->ruangan->nama ?? 'Ruangan Lama';
+                                        @endphp
+                                        <div class="mt-1">
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200"
+                                                title="Menggantikan peminjaman #{{ $pinjam->replaces_peminjaman_id }}: {{ $oldRuang }} ({{ $oldTgl }}, {{ $oldJam }} WIB)">
+                                                <svg class="w-2.5 h-2.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                </svg>
+                                                <span>Ganti Jadwal (#{{ $pinjam->replaces_peminjaman_id }})</span>
+                                            </span>
+                                        </div>
                                     @endif
                                 </div>
                             </td>
@@ -480,16 +513,18 @@
                             </td>
                             <td>
                                 @php
+                                    $displayStatus = $pinjam->display_status;
+
                                     $st = ['bg' => '#F3F4F6', 'color' => '#374151', 'border' => '#E5E7EB'];
-                                    if (strtolower($pinjam->status) === 'disetujui' || strtolower($pinjam->status) === 'selesai')
+                                    if (strtolower($displayStatus) === 'disetujui')
                                         $st = ['bg' => '#ECFDF5', 'color' => '#047857', 'border' => '#A7F3D0'];
-                                    elseif (strtolower($pinjam->status) === 'ditolak' || strtolower($pinjam->status) === 'dibatalkan')
+                                    elseif (strtolower($displayStatus) === 'ditolak' || strtolower($displayStatus) === 'dibatalkan')
                                         $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
-                                    elseif (strtolower($pinjam->status) === 'menunggu')
+                                    elseif (strtolower($displayStatus) === 'menunggu')
                                         $st = ['bg' => '#FFF9E6', 'color' => '#B45309', 'border' => '#FFEBB3'];
                                 @endphp
                                 <span style="font-size:11px; font-weight:700; color:{{ $st['color'] }}; background:{{ $st['bg'] }}; border:1px solid {{ $st['border'] }}; padding:3px 10px; border-radius:9999px; white-space:nowrap; text-transform:uppercase; display:inline-block;">
-                                    {{ $pinjam->status }}
+                                    {{ $displayStatus }}
                                 </span>
                             </td>
                             <td class="text-center">
@@ -533,10 +568,47 @@
                                         @scroll.window.capture="checkScroll()"
                                         @close-action-dropdowns.window="checkScroll()">
 
+                                        @php
+                                            $isSelf = !$pinjam->created_by || $pinjam->created_by === $pinjam->user_id;
+                                            $isModule = in_array(strtolower(trim((string)$pinjam->source)), ['praktikum', 'capstone', 'kp']);
+
+                                            if ($isModule) {
+                                                $creatorName = $pinjam->creator->name ?? $pinjam->user->name ?? 'Sistem';
+                                                $creatorRole = $pinjam->creator_role_label;
+                                                $roleSuffix = $creatorRole ? " ({$creatorRole})" : '';
+                                                $pendaftarTeks = "{$creatorName}{$roleSuffix} - Terintegrasi dari Modul {$pinjam->source_label}";
+                                            } elseif ($isSelf) {
+                                                $pendaftarTeks = 'Diajukan Mandiri oleh Pemohon';
+                                            } else {
+                                                $creatorName = $pinjam->creator->name ?? 'Admin';
+                                                $creatorRole = $pinjam->creator_role_label;
+                                                $roleSuffix = $creatorRole ? " ({$creatorRole})" : '';
+                                                $pendaftarTeks = "{$creatorName}{$roleSuffix}";
+                                            }
+
+                                            if ($pinjam->waktu_approval) {
+                                                $waktuStr = \Carbon\Carbon::parse($pinjam->waktu_approval)->translatedFormat('d M Y, H:i') . ' WIB';
+                                                if ($pinjam->alasan_penolakan && str_contains(strtolower($pinjam->alasan_penolakan), 'otomatis')) {
+                                                    $waktuDiprosesFormatted = "{$waktuStr} (Otomatis Sistem)";
+                                                } else {
+                                                    $waktuDiprosesFormatted = $waktuStr;
+                                                }
+                                            } else {
+                                                if (strtolower($pinjam->status) === 'dibatalkan') {
+                                                    $waktuDiprosesFormatted = 'Dibatalkan oleh pemohon sebelum diproses';
+                                                } elseif (strtolower($pinjam->status) === 'ditolak') {
+                                                    $waktuDiprosesFormatted = 'Ditolak otomatis oleh sistem';
+                                                } elseif (strtolower($pinjam->status) === 'menunggu') {
+                                                    $waktuDiprosesFormatted = 'Menunggu verifikasi Admin Ruang';
+                                                } else {
+                                                    $waktuDiprosesFormatted = '-';
+                                                }
+                                            }
+                                        @endphp
                                         <button type="button" @click="showDropdown = false; openDetail({{ json_encode([
                                             'nama' => $fullName,
                                             'nim_nip' => $identityNumber,
-                                            'telepon' => $pinjam->nomor_telepon ?: '-',
+                                            'telepon' => $phoneContact ?: '-',
                                             'role' => $roleName,
                                             'ruangan' => $pinjam->ruangan->nama ?? '-',
                                             'tanggal' => \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->translatedFormat('l, d F Y'),
@@ -544,11 +616,13 @@
                                             'durasi' => \Carbon\Carbon::parse($pinjam->jam_mulai)->diffInHours(\Carbon\Carbon::parse($pinjam->jam_selesai)) . ' Jam',
                                             'kegiatan' => $pinjam->tujuan,
                                             'berkas' => $pinjam->berkas_pendukung ? \Illuminate\Support\Facades\URL::signedRoute('eoffice.peminjaman.user.saya.berkas', ['id' => $pinjam->id]) : null,
-                                            'waktu_pengajuan' => \Carbon\Carbon::parse($pinjam->created_at)->translatedFormat('d M Y, H:i'),
-                                            'waktu_diproses' => $pinjam->waktu_approval ? \Carbon\Carbon::parse($pinjam->waktu_approval)->translatedFormat('d M Y, H:i') : '-',
-                                            'diproses_oleh' => '-',
+                                            'waktu_pengajuan' => \Carbon\Carbon::parse($pinjam->created_at)->translatedFormat('d M Y, H:i') . ' WIB',
+                                            'waktu_diproses' => $waktuDiprosesFormatted,
+                                            'pendaftar_teks' => $pendaftarTeks,
+                                            'is_self_submitted' => $isSelf,
+                                            'creator_telp' => $pinjam->creator_telepon,
                                             'alasan_penolakan' => $pinjam->alasan_penolakan,
-                                            'status' => $pinjam->status,
+                                            'status' => $displayStatus,
                                             'asal_modul' => $pinjam->source_label
                                         ]) }})"
                                             class="w-full text-left px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-gray-100 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors cursor-pointer">
@@ -851,8 +925,7 @@
                                     :class="{
                                         'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]': detailData.status === 'disetujui',
                                         'bg-[#FFF1F2] text-[#9D174D] border-[#FECDD3]': detailData.status === 'ditolak' || detailData.status === 'dibatalkan',
-                                        'bg-[#FFF9E6] text-[#B45309] border-[#FFEBB3]': detailData.status === 'menunggu',
-                                        'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]': detailData.status === 'selesai'
+                                        'bg-[#FFF9E6] text-[#B45309] border-[#FFEBB3]': detailData.status === 'menunggu'
                                     }"
                                     x-text="detailData.status">
                                 </span>
@@ -866,11 +939,30 @@
                                 </div>
                             </template>
 
+                            <div class="text-slate-500 font-medium">Pendaftar</div>
+                            <div class="text-slate-800 font-medium leading-snug">
+                                <div x-text="detailData.pendaftar_teks || 'Diajukan Mandiri oleh Pemohon'"></div>
+                                <template x-if="!detailData.is_self_submitted && detailData.creator_telp && detailData.creator_telp !== '-'">
+                                    <div class="mt-1 flex items-center gap-1.5 text-[12px]">
+                                        <span class="text-slate-500">No. Telp / WA:</span>
+                                        <a :href="'https://wa.me/' + (detailData.creator_telp.toString().replace(/[^0-9]/g, '').startsWith('0') ? '62' + detailData.creator_telp.toString().replace(/[^0-9]/g, '').substring(1) : (detailData.creator_telp.toString().replace(/[^0-9]/g, '').startsWith('62') ? detailData.creator_telp.toString().replace(/[^0-9]/g, '') : '62' + detailData.creator_telp.toString().replace(/[^0-9]/g, '')))" 
+                                            target="_blank" 
+                                            class="inline-flex items-center gap-1 text-[#25D366] hover:text-[#1da851] hover:underline font-semibold"
+                                            title="Hubungi Pendaftar via WhatsApp">
+                                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+                                            </svg>
+                                            <span x-text="detailData.creator_telp"></span>
+                                        </a>
+                                    </div>
+                                </template>
+                            </div>
+
                             <div class="text-slate-500 font-medium">Diajukan</div>
                             <div class="text-slate-800 font-medium" x-text="detailData.waktu_pengajuan"></div>
 
-                            <div class="text-slate-500 font-medium">Diproses</div>
-                            <div class="text-slate-800 font-medium" x-text="detailData.waktu_diproses"></div>
+                            <div class="text-slate-500 font-medium">Waktu Proses</div>
+                            <div class="text-slate-800 font-medium leading-snug" x-text="detailData.waktu_diproses"></div>
                         </div>
 
                     </div>

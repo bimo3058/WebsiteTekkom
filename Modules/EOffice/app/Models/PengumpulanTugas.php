@@ -7,12 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Pengumpulan tugas oleh mahasiswa.
  *
- * Tabel: pengumpulan_tugas
+ * Tabel: eo_prak_pengumpulan_tugas
  * status_pengumpulan: draft | belum_dicek | revisi | acc
  */
 class PengumpulanTugas extends Model
 {
-    protected $table = 'pengumpulan_tugas';
+    protected $table = 'eo_prak_pengumpulan_tugas';
 
     protected $fillable = [
         'tugas_id',

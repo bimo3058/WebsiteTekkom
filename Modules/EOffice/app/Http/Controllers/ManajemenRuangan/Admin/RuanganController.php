@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Modules\EOffice\Models\Ruangan;
 use Modules\EOffice\Models\RuanganFoto;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class RuanganController extends Controller
 {
@@ -70,7 +71,7 @@ class RuanganController extends Controller
             'lokasi' => 'required|string|max:255',
             'lantai' => 'nullable|integer',
             'kapasitas' => 'required|integer|min:0',
-            'kategori' => 'required|in:Kelas,Laboratorium,Sidang',
+            'kategori' => ['required', Rule::in(Ruangan::ALL_KATEGORI)],
             'fasilitas' => 'nullable|array',
             'fasilitas.*' => 'string',
             'fotos' => 'nullable|array|max:10',
@@ -120,7 +121,7 @@ class RuanganController extends Controller
             'lokasi' => 'required|string|max:255',
             'lantai' => 'nullable|integer',
             'kapasitas' => 'required|integer|min:0',
-            'kategori' => 'required|in:Kelas,Laboratorium,Sidang',
+            'kategori' => ['required', Rule::in(Ruangan::ALL_KATEGORI)],
             'fasilitas' => 'nullable|array',
             'fasilitas.*' => 'string',
             'fotos' => 'nullable|array|max:10',

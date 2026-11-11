@@ -1,19 +1,20 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\PeerReview;
 use Modules\Capstone\Models\PeerReviewIndicator;
 use Modules\Capstone\Models\PeriodPeerReviewIndicator;
-use Modules\Capstone\Models\GroupMember;
-use Modules\Capstone\Models\Supervision;
-use Modules\Capstone\Support\CapstoneActor;
-use Modules\Capstone\Support\BladeFeatureAccess;
-use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\StudentPeerReviewStatus;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
+use Modules\Capstone\Models\Supervision;
+use Modules\Capstone\Services\GroupLifecycleService;
+use Modules\Capstone\Support\BladeFeatureAccess;
+use Modules\Capstone\Support\CapstoneActor;
 
 class PeerReviewController extends Controller
 {
@@ -31,7 +32,7 @@ class PeerReviewController extends Controller
         $studentId = CapstoneActor::student($user)->id;
         $member = GroupMember::where('student_id', $studentId)->first();
 
-        if (!$member) {
+        if (! $member) {
             return response()->json(['message' => 'You are not in any group'], 404);
         }
 
@@ -50,10 +51,12 @@ class PeerReviewController extends Controller
         $periodIndicators = $this->periodIndicators($group->period_id);
         $legacySubmitted = $existingReviews->contains(fn ($review) => $review->is_final_submission && $review->indicator_id !== null);
         $indicatorKey = $periodIndicators->isNotEmpty() && ! $legacySubmitted ? 'period_indicator_id' : 'indicator_id';
-        if ($indicatorKey === 'period_indicator_id') $indicators = $periodIndicators->map->full_indicator;
+        if ($indicatorKey === 'period_indicator_id') {
+            $indicators = $periodIndicators->map->full_indicator;
+        }
 
         // Check if locked
-        $isLocked = BladeFeatureAccess::reason('/mahasiswa/peer-review', ['registered'=>true, 'group_status'=>$group->status]) !== null;
+        $isLocked = BladeFeatureAccess::reason('/mahasiswa/peer-review', ['registered' => true, 'group_status' => $group->status]) !== null;
 
         return response()->json([
             'group' => $group,
@@ -75,7 +78,7 @@ class PeerReviewController extends Controller
         $user = $request->user();
         $member = GroupMember::where('student_id', CapstoneActor::student($user)->id)->with('group')->first();
 
-        if (!$member || !$member->group) {
+        if (! $member || ! $member->group) {
             return response()->json(['active' => false]);
         }
 
@@ -101,46 +104,66 @@ class PeerReviewController extends Controller
         $studentId = CapstoneActor::student($request->user())->id;
         $member = GroupMember::where('student_id', $studentId)->firstOrFail();
 
-        return DB::transaction(function () use ($member, $studentId, $data) {
+        $response = DB::transaction(function () use ($member, $studentId, $data) {
             // Serialize submissions for the same group, including requests from
             // another tab. Final reviews are immutable through every endpoint.
             $group = Group::whereKey($member->group_id)->lockForUpdate()->firstOrFail();
-            $reason = BladeFeatureAccess::reason('/mahasiswa/peer-review', ['registered'=>true, 'group_status'=>$group->status]);
-            if ($reason) return response()->json(['message'=>$reason], 403);
+            $reason = BladeFeatureAccess::reason('/mahasiswa/peer-review', ['registered' => true, 'group_status' => $group->status]);
+            if ($reason) {
+                return response()->json(['message' => $reason], 403);
+            }
             if (PeerReview::where('group_id', $group->id)->where('reviewer_id', $studentId)->where('is_final_submission', true)->exists()) {
-                return response()->json(['message'=>'You have already submitted your peer reviews.'], 403);
+                return response()->json(['message' => 'You have already submitted your peer reviews.'], 403);
             }
             $memberIds = GroupMember::where('group_id', $group->id)->where('student_id', '!=', $studentId)->pluck('student_id');
             $periodIndicators = $this->periodIndicators($group->period_id);
             $indicatorKey = $periodIndicators->isNotEmpty() ? 'period_indicator_id' : 'indicator_id';
             $indicatorIds = $periodIndicators->isNotEmpty() ? $periodIndicators->pluck('id') : PeerReviewIndicator::where('period_id', $group->period_id)->pluck('id');
             $expected = [];
-            foreach ($memberIds as $revieweeId) foreach ($indicatorIds as $indicatorId) $expected[] = $revieweeId.':'.$indicatorId;
+            foreach ($memberIds as $revieweeId) {
+                foreach ($indicatorIds as $indicatorId) {
+                    $expected[] = $revieweeId.':'.$indicatorId;
+                }
+            }
             $actual = array_map(fn ($r) => $r['reviewee_id'].':'.($r[$indicatorKey] ?? ''), $data['reviews']);
-            sort($expected); sort($actual);
+            sort($expected);
+            sort($actual);
             // Validate the entire matrix before writing its first row.
             if (empty($expected) || $actual !== $expected) {
-                return response()->json(['message'=>'Review every other group member using the indicators for your period.'], 422);
+                return response()->json(['message' => 'Review every other group member using the indicators for your period.'], 422);
             }
             if ($indicatorKey === 'period_indicator_id' && collect($data['reviews'])->contains(fn ($review) => ! in_array((float) $review['score'], [1.0, 2.0, 3.0, 4.0], true))) {
-                return response()->json(['message'=>'Period peer review scores must be integers from 1 to 4.'], 422);
+                return response()->json(['message' => 'Period peer review scores must be integers from 1 to 4.'], 422);
             }
             foreach ($data['reviews'] as $review) {
                 $rawScore = $indicatorKey === 'period_indicator_id' ? $review['score'] : $review['score'] / 25;
                 PeerReview::updateOrCreate([
-                    'group_id'=>$group->id, 'reviewer_id'=>$studentId,
-                    'reviewee_id'=>$review['reviewee_id'], $indicatorKey=>$review[$indicatorKey],
+                    'group_id' => $group->id, 'reviewer_id' => $studentId,
+                    'reviewee_id' => $review['reviewee_id'], $indicatorKey => $review[$indicatorKey],
                 ], [
-                    'score'=>$rawScore * 25, 'raw_score'=>$rawScore,
-                    'comment'=>$review['comment'] ?? null, 'is_final_submission'=>true, 'submitted_at'=>now(),
+                    'score' => $rawScore * 25, 'raw_score' => $rawScore,
+                    'comment' => $review['comment'] ?? null, 'is_final_submission' => true, 'submitted_at' => now(),
                 ]);
             }
-            $status = StudentPeerReviewStatus::firstOrNew(['student_id'=>$studentId, 'group_id'=>$group->id, 'period_id'=>$group->period_id]);
+            $status = StudentPeerReviewStatus::firstOrNew(['student_id' => $studentId, 'group_id' => $group->id, 'period_id' => $group->period_id]);
             $status->has_completed_peer_review = true;
-            if (! $status->exists) $status->ta_status = 'TA_BLOCKED';
+            if (! $status->exists) {
+                $status->ta_status = 'TA_BLOCKED';
+            }
             $status->save();
-            return response()->json(['message'=>'Peer review submitted', 'count'=>count($actual)], 201);
+
+            return response()->json(['message' => 'Peer review submitted', 'count' => count($actual)], 201);
         });
+
+        // Peer review is the last piece of final TA readiness, so offer
+        // the lifecycle a chance to advance EXPO_DONE → PDC2_COMPLETED.
+        // Only on successful submits; never throws (advanceIfComplete
+        // degrades to null when nothing applies).
+        if ($response->getStatusCode() === 201) {
+            app(GroupLifecycleService::class)->advanceIfComplete(Group::find($member->group_id));
+        }
+
+        return $response;
     }
 
     /**

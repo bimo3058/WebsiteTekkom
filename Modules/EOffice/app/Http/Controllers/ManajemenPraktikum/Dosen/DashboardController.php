@@ -73,7 +73,7 @@ class DashboardController extends Controller
     public function tunjukKoor(Request $request)
     {
         $request->validate([
-            'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
+            'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
             'nim' => 'required|string',
         ]);
 

@@ -112,7 +112,7 @@ class KelolRoleController extends Controller
     {
         $request->validate([
             'user_id' => 'required|exists:users,id|exists:students,user_id',
-            'praktikum_id' => 'required|exists:eo_praktikum,id',
+            'praktikum_id' => 'required|exists:eo_prak_praktikum,id',
             'role' => 'required|in:asprak,koor',
         ], [
             'user_id.required' => 'Pilih mahasiswa yang akan diberi role.',
@@ -172,10 +172,10 @@ class KelolRoleController extends Controller
         $role = $record->role;
         $userId = $record->user_id;
 
-        // 1. Soft delete record asprak_praktikum ini
+        // 1. Soft delete record eo_prak_asprak_praktikum ini
         $record->delete();
 
-        // 2. Jika role = koor, kosongkan koor_id di eo_praktikum
+        // 2. Jika role = koor, kosongkan koor_id di eo_prak_praktikum
         if ($role === 'koor') {
             Praktikum::where('id', $record->praktikum_id)
                 ->where('koor_id', $userId)
@@ -286,7 +286,7 @@ class KelolRoleController extends Controller
         // 1. Restore the soft-deleted record
         $record->restore();
 
-        // 2. Jika role = koor, update koor_id di eo_praktikum
+        // 2. Jika role = koor, update koor_id di eo_prak_praktikum
         if ($role === 'koor') {
             Praktikum::where('id', $record->praktikum_id)
                 ->update(['koor_id' => $record->user_id]);

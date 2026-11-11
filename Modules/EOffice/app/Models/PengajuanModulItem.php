@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PengajuanModulItem extends Model
 {
-    protected $table = 'pengajuan_modul_item';
+    protected $table = 'eo_prak_pengajuan_modul_item';
 
     protected $fillable = [
         'pengajuan_modul_id',

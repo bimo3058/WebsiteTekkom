@@ -7,12 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Absensi per modul per praktikan.
  *
- * Tabel: absensi_praktikum
+ * Tabel: eo_prak_absensi_praktikum
  * status: hadir | izin | tidak_hadir
  */
 class Absensi extends Model
 {
-    protected $table = 'absensi_praktikum';
+    protected $table = 'eo_prak_absensi_praktikum';
 
     protected $fillable = [
         'modul_id',

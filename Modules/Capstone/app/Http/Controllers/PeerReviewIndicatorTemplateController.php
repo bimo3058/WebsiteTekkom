@@ -2,8 +2,8 @@
 
 namespace Modules\Capstone\Http\Controllers;
 
-use Modules\Capstone\Models\PeerReviewIndicatorTemplate;
 use Illuminate\Http\Request;
+use Modules\Capstone\Models\PeerReviewIndicatorTemplate;
 
 class PeerReviewIndicatorTemplateController extends Controller
 {
@@ -27,6 +27,7 @@ class PeerReviewIndicatorTemplateController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
+            'code' => 'required|string|max:50|unique:capstone_peer_review_indicator_templates',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'weight' => 'required|numeric|min:0|max:100',
@@ -48,6 +49,7 @@ class PeerReviewIndicatorTemplateController extends Controller
         $template = PeerReviewIndicatorTemplate::findOrFail($id);
 
         $data = $request->validate([
+            'code' => 'sometimes|string|max:50|unique:capstone_peer_review_indicator_templates,code,'.$id,
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
             'weight' => 'sometimes|numeric|min:0|max:100',

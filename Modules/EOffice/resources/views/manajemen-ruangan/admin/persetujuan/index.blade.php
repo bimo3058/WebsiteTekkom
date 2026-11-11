@@ -42,7 +42,7 @@
                         </button>
                     </div>
 
-                    {{-- Filter Popover (Ruangan & Asal Pengajuan) --}}
+                    {{-- Filter Popover (Status, Tanggal, Ruangan, Asal, Hanya Bentrok) --}}
                     <div class="static sm:relative w-full sm:w-auto shrink-0" x-data="{ open: false }" @click.outside="open = false">
                         <button type="button" @click="open = !open" 
                             class="flex items-center justify-center w-full sm:w-auto relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer whitespace-nowrap"
@@ -51,7 +51,7 @@
                                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                             </svg>
                             Filter
-                            @if(request()->hasAny(['ruangan_id', 'source']) && array_filter(request()->only(['ruangan_id', 'source'])))
+                            @if(request()->hasAny(['ruangan_id', 'source', 'status', 'start_date', 'end_date', 'only_conflict']) && array_filter(request()->only(['ruangan_id', 'source', 'status', 'start_date', 'end_date', 'only_conflict'])))
                                 <span class="absolute -top-1 -right-1 flex h-3 w-3">
                                     <span class="relative inline-flex rounded-full h-3 w-3 bg-[#0B266E] border-2 border-white"></span>
                                 </span>
@@ -65,9 +65,64 @@
                             x-transition:leave="transition ease-in duration-75" 
                             x-transition:leave-start="opacity-100 scale-100" 
                             x-transition:leave-end="opacity-0 scale-95"
-                            class="absolute left-0 right-0 sm:right-0 sm:left-auto top-full mt-2 origin-top sm:origin-top-right bg-white rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-gray-100 z-50 w-full sm:w-80 overflow-visible">
+                            class="absolute left-0 right-0 sm:right-0 sm:left-auto top-full mt-2 origin-top sm:origin-top-right bg-white rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-gray-100 z-50 w-full sm:w-[360px] overflow-visible">
                             <div class="p-4 space-y-3.5">
-                                {{-- 1. Ruangan --}}
+                                {{-- 1. Status Pengajuan --}}
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1.5 relative z-10 w-full bg-white">Status Pengajuan</label>
+                                    <div x-data="{ 
+                                            open: false, 
+                                            selectedVal: '{{ request('status') }}', 
+                                            get selectedName() {
+                                                const map = {
+                                                    'menunggu': 'Menunggu Persetujuan',
+                                                    'disetujui': 'Telah Disetujui'
+                                                };
+                                                return map[this.selectedVal] || 'Semua Status';
+                                            },
+                                            selectItem(val) { 
+                                                this.selectedVal = val; 
+                                                this.open = false; 
+                                            } 
+                                        }" class="relative w-full" @click.away="open = false">
+                                        
+                                        <input type="hidden" name="status" :value="selectedVal">
+
+                                        <button type="button" @click="open = !open" 
+                                            class="w-full flex items-center justify-between text-[13px] border border-gray-200 rounded-lg p-2 bg-white hover:border-[#0B266E] focus:outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] transition-colors cursor-pointer">
+                                            <span x-text="selectedName" class="truncate text-gray-700"></span>
+                                            <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            </svg>
+                                        </button>
+                                        
+                                        <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] max-h-36 overflow-y-auto" style="display: none;">
+                                            <div class="py-2 px-1">
+                                                <button type="button" @click="selectItem('')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != ''}">Semua Status</button>
+                                                <button type="button" @click="selectItem('menunggu')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'menunggu', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'menunggu'}">Menunggu Persetujuan</button>
+                                                <button type="button" @click="selectItem('disetujui')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'disetujui', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'disetujui'}">Telah Disetujui</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- 2. Rentang Tanggal --}}
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Rentang Tanggal</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <input type="date" name="start_date" value="{{ request('start_date') }}"
+                                                class="w-full text-xs border border-gray-200 rounded-lg p-2 bg-white hover:border-[#0B266E] focus:outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] transition-colors text-gray-700">
+                                        </div>
+                                        <div>
+                                            <input type="date" name="end_date" value="{{ request('end_date') }}"
+                                                class="w-full text-xs border border-gray-200 rounded-lg p-2 bg-white hover:border-[#0B266E] focus:outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] transition-colors text-gray-700">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- 3. Ruangan --}}
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-700 mb-1.5 relative z-10 w-full bg-white">Ruangan</label>
                                     <div x-data="roomFilterSelect('{{ request('ruangan_id') }}', @js(request('ruangan_id') ? ($ruangans->firstWhere('id', request('ruangan_id'))->nama ?? 'Semua Ruangan') : 'Semua Ruangan'))" class="relative w-full" @click.away="handleClose()">
@@ -156,8 +211,8 @@
                                             selectedVal: '{{ request('source') }}', 
                                             get selectedName() {
                                                 const map = {
-                                                    'kp': 'Seminar KP',
-                                                    'capstone': 'Sidang Capstone',
+                                                    'kp': 'KP',
+                                                    'capstone': 'CATA',
                                                     'praktikum': 'Praktikum',
                                                     'umum': 'Peminjaman Langsung'
                                                 };
@@ -183,13 +238,22 @@
                                             class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] max-h-36 overflow-y-auto" style="display: none;">
                                             <div class="py-2 px-1">
                                                 <button type="button" @click="selectItem('')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != ''}">Semua Asal</button>
-                                                <button type="button" @click="selectItem('kp')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'kp', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'kp'}">Seminar KP</button>
-                                                <button type="button" @click="selectItem('capstone')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'capstone', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'capstone'}">Sidang Capstone</button>
+                                                <button type="button" @click="selectItem('kp')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'kp', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'kp'}">KP</button>
+                                                <button type="button" @click="selectItem('capstone')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'capstone', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'capstone'}">CATA</button>
                                                 <button type="button" @click="selectItem('praktikum')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'praktikum', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'praktikum'}">Praktikum</button>
                                                 <button type="button" @click="selectItem('umum')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'umum', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'umum'}">Peminjaman Langsung</button>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+
+                                {{-- 5. Toggle Antrean Bentrok --}}
+                                <div class="pt-2 border-t border-gray-100">
+                                    <label class="flex items-center gap-2.5 cursor-pointer py-1 group">
+                                        <input type="checkbox" name="only_conflict" value="1" {{ request('only_conflict') ? 'checked' : '' }}
+                                            class="w-4 h-4 rounded border-gray-300 text-[#0B266E] focus:ring-[#0B266E] cursor-pointer">
+                                        <span class="text-xs font-semibold text-gray-700 group-hover:text-[#0B266E] transition-colors">Hanya Antrean Bentrok (Rebutan Slot)</span>
+                                    </label>
                                 </div>
 
                                 {{-- Footer: Reset & Terapkan Filter --}}
@@ -239,8 +303,11 @@
                         @forelse($peminjamans as $pinjam)
                             @php
                                 $berkasUrl = $pinjam->berkas_pendukung ? \Illuminate\Support\Facades\URL::signedRoute('eoffice.peminjaman.user.saya.berkas', ['id' => $pinjam->id]) : '';
+                                $conflictingPendings = ($pinjam->status === 'menunggu') ? $pinjam->conflicting_pendings : collect();
+                                $isConflictRow = ($pinjam->status === 'menunggu' && $conflictingPendings->isNotEmpty());
+                                $conflictGroupInfo = $isConflictRow ? $pinjam->getConflictGroupInfo() : null;
                             @endphp
-                            <tr class="mp-tr">
+                            <tr class="mp-tr {{ $isConflictRow ? 'border-l-4 border-l-amber-500 bg-amber-50/20' : '' }}">
                                 {{-- Kolom 1: Peminjam --}}
                                 <td>
                                     <div class="text-[13px] font-medium text-[#111827] flex items-center gap-2">
@@ -265,9 +332,15 @@
                                             <div title="{{ $fullName }}">{{ $displayName }}</div>
                                         @endif
                                         @if($pinjam->created_by && $pinjam->created_by !== $pinjam->user_id)
-                                            <span
-                                                class="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider flex-shrink-0"
-                                                title="Didaftarkan oleh Sistem/Admin">By Admin</span>
+                                            @php
+                                                $isIntegratedModule = in_array(strtolower(trim((string)$pinjam->source)), ['praktikum', 'capstone', 'kp']);
+                                                $creatorLabel = $pinjam->creator_role_label ?: 'Admin';
+                                            @endphp
+                                            @if(!$isIntegratedModule)
+                                                <span
+                                                    class="bg-slate-100 text-slate-600 border border-slate-200 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider flex-shrink-0"
+                                                    title="Didaftarkan oleh: {{ $pinjam->creator->name ?? 'Admin' }} ({{ $creatorLabel }})">By {{ $creatorLabel }}</span>
+                                            @endif
                                         @endif
                                     </div>
                                     <div class="text-[11px] text-gray-500 mt-0.5">
@@ -280,13 +353,18 @@
                                         @if($identityNumber)
                                             <span class="mr-1">({{ $identityNumber }})</span>
                                         @endif
-                                        @if($pinjam->nomor_telepon)
+                                        @php
+                                            $phoneContact = $pinjam->telepon;
+                                        @endphp
+                                        @if($phoneContact)
                                             @php
-                                                $waDigits = preg_replace('/[^0-9]/', '', (string)$pinjam->nomor_telepon);
-                                                $waNumber = str_starts_with($waDigits, '0') ? '62' . substr($waDigits, 1) : $waDigits;
+                                                $waDigits = preg_replace('/[^0-9]/', '', (string)$phoneContact);
+                                                $waNumber = str_starts_with($waDigits, '0')
+                                                    ? '62' . substr($waDigits, 1)
+                                                    : (str_starts_with($waDigits, '62') ? $waDigits : '62' . $waDigits);
                                             @endphp
                                             <a href="https://wa.me/{{ $waNumber }}" target="_blank" title="Hubungi via WhatsApp" class="text-[#25D366] hover:text-[#1da851] hover:underline font-semibold transition-colors">
-                                                {{ $pinjam->nomor_telepon }}
+                                                {{ $phoneContact }}
                                             </a>
                                         @else
                                             <span>-</span>
@@ -300,14 +378,31 @@
                                         {{ $pinjam->ruangan->nama ?? 'Dihapus' }}
                                     </div>
                                     <div class="mt-1">
-                                        @if(in_array(strtolower((string)$pinjam->source), ['kp', 'kerja_praktik']))
-                                            <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Seminar KP</span>
-                                        @elseif(strtolower((string)$pinjam->source) === 'capstone')
-                                            <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">Sidang Capstone</span>
+                                        @if(in_array(strtolower(trim((string)$pinjam->source)), ['kp', 'kerja_praktik', 'kerja praktik', 'kerjapraktik']) || str_contains((string)$pinjam->tujuan, 'Seminar KP') || str_contains((string)$pinjam->tujuan, 'Kerja Praktik'))
+                                            <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">KP</span>
+                                        @elseif(strtolower((string)$pinjam->source) === 'capstone' || str_contains((string)$pinjam->tujuan, '[CAPSTONE'))
+                                            <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">CATA</span>
                                         @elseif(strtolower((string)$pinjam->source) === 'praktikum')
                                             <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Praktikum</span>
                                         @else
                                             <span class="inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200">Langsung</span>
+                                        @endif
+
+                                        @if($pinjam->replaces_peminjaman_id && $pinjam->replacesPeminjaman)
+                                            @php
+                                                $oldTgl = \Carbon\Carbon::parse($pinjam->replacesPeminjaman->tanggal_pinjam)->translatedFormat('d M Y');
+                                                $oldJam = \Carbon\Carbon::parse($pinjam->replacesPeminjaman->jam_mulai)->format('H:i') . '-' . \Carbon\Carbon::parse($pinjam->replacesPeminjaman->jam_selesai)->format('H:i');
+                                                $oldRuang = $pinjam->replacesPeminjaman->ruangan->nama ?? 'Ruangan Lama';
+                                            @endphp
+                                            <div class="mt-1">
+                                                <span class="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200"
+                                                    title="Menggantikan peminjaman #{{ $pinjam->replaces_peminjaman_id }}: {{ $oldRuang }} ({{ $oldTgl }}, {{ $oldJam }} WIB)">
+                                                    <svg class="w-2.5 h-2.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                    </svg>
+                                                    <span>Ganti Jadwal (#{{ $pinjam->replaces_peminjaman_id }})</span>
+                                                </span>
+                                            </div>
                                         @endif
                                     </div>
                                 </td>
@@ -354,20 +449,66 @@
                                             $st = ['bg' => '#FFF9E6', 'color' => '#B45309', 'border' => '#FFEBB3'];
                                         elseif ($pinjam->status === 'ditolak' || $pinjam->status === 'dibatalkan')
                                             $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
+
+                                        $conflictingPendings = ($pinjam->status === 'menunggu') ? $pinjam->conflicting_pendings : collect();
                                     @endphp
                                     <span style="font-size:11px; font-weight:700; color:{{ $st['color'] }}; background:{{ $st['bg'] }}; border:1px solid {{ $st['border'] }}; padding:3px 12px; border-radius:9999px; white-space:nowrap; letter-spacing:0.02em; text-transform:uppercase; display:inline-block;">
                                         {{ $pinjam->status }}
                                     </span>
+                                    @if($isConflictRow)
+                                        <div class="mt-1">
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full" title="Terdapat {{ $conflictingPendings->count() }} pengajuan lain yang menunggu di slot waktu yang sama">
+                                                <span>Bentrok Slot</span>
+                                            </span>
+                                        </div>
+                                    @endif
                                 </td>
 
                                 {{-- Kolom 6: Aksi --}}
                                 <td style="text-align: center;">
                                     @php
+                                        $isSelf = !$pinjam->created_by || $pinjam->created_by === $pinjam->user_id;
+                                        $isModule = in_array(strtolower(trim((string)$pinjam->source)), ['praktikum', 'capstone', 'kp']);
+
+                                        if ($isModule) {
+                                            $creatorName = $pinjam->creator->name ?? $pinjam->user->name ?? 'Sistem';
+                                            $creatorRole = $pinjam->creator_role_label;
+                                            $roleSuffix = $creatorRole ? " ({$creatorRole})" : '';
+                                            $pendaftarTeks = "{$creatorName}{$roleSuffix} - Terintegrasi dari Modul {$pinjam->source_label}";
+                                        } elseif ($isSelf) {
+                                            $pendaftarTeks = 'Diajukan Mandiri oleh Pemohon';
+                                        } else {
+                                            $creatorName = $pinjam->creator->name ?? 'Admin';
+                                            $creatorRole = $pinjam->creator_role_label;
+                                            $roleSuffix = $creatorRole ? " ({$creatorRole})" : '';
+                                            $pendaftarTeks = "{$creatorName}{$roleSuffix}";
+                                        }
+
+                                        if ($pinjam->waktu_approval) {
+                                            $waktuStr = \Carbon\Carbon::parse($pinjam->waktu_approval)->translatedFormat('d M Y, H:i') . ' WIB';
+                                            if ($pinjam->alasan_penolakan && str_contains(strtolower($pinjam->alasan_penolakan), 'otomatis')) {
+                                                $waktuDiprosesFormatted = "{$waktuStr} (Otomatis Sistem)";
+                                            } else {
+                                                $waktuDiprosesFormatted = $waktuStr;
+                                            }
+                                        } else {
+                                            if (strtolower($pinjam->status) === 'dibatalkan') {
+                                                $waktuDiprosesFormatted = 'Dibatalkan oleh pemohon sebelum diproses';
+                                            } elseif (strtolower($pinjam->status) === 'ditolak') {
+                                                $waktuDiprosesFormatted = 'Ditolak otomatis oleh sistem';
+                                            } elseif (strtolower($pinjam->status) === 'menunggu') {
+                                                $waktuDiprosesFormatted = 'Menunggu verifikasi Admin Ruang';
+                                            } else {
+                                                $waktuDiprosesFormatted = '-';
+                                            }
+                                        }
+
                                         $actionData = [
                                             'id' => $pinjam->id,
                                             'name' => $pinjam->user->name ?? 'User',
                                             'nim' => $pinjam->user->student->student_number ?? $pinjam->user->external_id ?? '-',
-                                            'telp' => $pinjam->nomor_telepon ?? $pinjam->user->whatsapp ?? '-',
+                                            'telp' => $pinjam->telepon ?: '-',
+                                            'creatorTelp' => $pinjam->creator_telepon,
                                             'status' => $pinjam->status,
                                             'ruanganId' => $pinjam->ruangan_id,
                                             'tanggal' => $pinjam->tanggal_pinjam,
@@ -378,6 +519,16 @@
                                             'formatTanggal' => \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->locale('id')->translatedFormat('l, d F Y'),
                                             'berkasUrl' => $berkasUrl,
                                             'sourceLabel' => $pinjam->source_label,
+                                            'isReschedule' => (bool)$pinjam->replaces_peminjaman_id,
+                                            'oldScheduleInfo' => $pinjam->replacesPeminjaman ? (($pinjam->replacesPeminjaman->ruangan->nama ?? 'Ruangan Lama') . ' pada ' . \Carbon\Carbon::parse($pinjam->replacesPeminjaman->tanggal_pinjam)->translatedFormat('d M Y') . ' (' . substr($pinjam->replacesPeminjaman->jam_mulai, 0, 5) . '-' . substr($pinjam->replacesPeminjaman->jam_selesai, 0, 5) . ' WIB)') : '',
+                                            'hasCollision' => $isConflictRow,
+                                            'collisionCount' => $conflictingPendings->count(),
+                                            'collisionNames' => $conflictingPendings->map(fn($c) => "[{$c->source_label}] {$c->tujuan} (" . ($c->user->name ?? 'User') . ")")->values()->all(),
+                                            'conflictInfo' => $conflictGroupInfo,
+                                            'isSelfSubmitted' => $isSelf,
+                                            'pendaftarTeks' => $pendaftarTeks,
+                                            'waktuPengajuan' => \Carbon\Carbon::parse($pinjam->created_at)->locale('id')->translatedFormat('d M Y, H:i') . ' WIB',
+                                            'waktuDiproses' => $waktuDiprosesFormatted,
                                         ];
                                     @endphp
                                     <button
@@ -639,9 +790,78 @@
                                             </a>
                                         </template>
                                         <template x-if="!selectedBerkasUrl">
-                                            <span class="text-gray-400 italic text-[12px]">Tidak dilampirkan</span>
+                                            <span class="text-gray-400 italic text-[12px]" x-text="selectedSourceLabel && selectedSourceLabel !== 'Peminjaman Langsung' ? 'Agenda Resmi ' + selectedSourceLabel + ' (Tanpa berkas tambahan)' : 'Tidak dilampirkan'"></span>
                                         </template>
                                     </div>
+
+                                    <template x-if="isReschedule">
+                                        <div class="col-span-2 mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-xs">
+                                            <div class="font-bold flex items-center gap-1.5 text-amber-800">
+                                                <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                </svg>
+                                                <span>Pemberitahuan Admin Ruang: Jadwal Pengganti (Reschedule)</span>
+                                            </div>
+                                            <p class="mt-1 text-slate-700 leading-relaxed">
+                                                Pengajuan ini menggantikan jadwal peminjaman: <strong class="text-slate-900" x-text="oldScheduleInfo"></strong>.
+                                                Jika Anda klik <strong>Setujui</strong>, jadwal lama tersebut akan otomatis dibatalkan oleh sistem.
+                                            </p>
+                                        </div>
+                                    </template>
+
+                                    <template x-if="conflictInfo && conflictInfo.total > 1">
+                                        <div class="col-span-2 mt-2 p-3.5 bg-amber-50/90 border border-amber-200 rounded-lg text-amber-950 text-xs leading-relaxed">
+                                            <div class="font-bold text-amber-900 tracking-wide mb-2" x-text="conflictInfo.header"></div>
+                                            <div class="space-y-1 mb-2.5">
+                                                <template x-for="(cItem, cIdx) in conflictInfo.items" :key="cIdx">
+                                                    <div :class="cItem.is_current ? 'font-bold text-[#0B266E]' : 'text-slate-800'" x-text="cItem.text"></div>
+                                                </template>
+                                            </div>
+                                            <div class="text-slate-600 text-[11px] leading-normal pt-1.5 border-t border-amber-200/60" x-text="conflictInfo.footer"></div>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <h4
+                                    class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2 mt-4 pt-1">
+                                    Status & Riwayat Pengajuan</h4>
+                                <div class="grid grid-cols-[80px_1fr] gap-x-2 gap-y-2 text-[13px]">
+                                    <div class="text-slate-500 font-medium flex items-center">Status</div>
+                                    <div class="flex items-center">
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border inline-block"
+                                            :class="{
+                                                'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]': selectedStatus === 'disetujui',
+                                                'bg-[#FFF9E6] text-[#B45309] border-[#FFEBB3]': selectedStatus === 'menunggu',
+                                                'bg-[#FFF1F2] text-[#9D174D] border-[#FECDD3]': selectedStatus === 'ditolak' || selectedStatus === 'dibatalkan'
+                                            }"
+                                            x-text="selectedStatus">
+                                        </span>
+                                    </div>
+
+                                    <div class="text-slate-500 font-medium">Pendaftar</div>
+                                    <div class="text-slate-800 font-medium leading-snug">
+                                        <div x-text="pendaftarTeks || 'Diajukan Mandiri oleh Pemohon'"></div>
+                                        <template x-if="!isSelfSubmitted && creatorTelp && creatorTelp !== '-'">
+                                            <div class="mt-1 flex items-center gap-1.5 text-[12px]">
+                                                <span class="text-slate-500">No. Telp / WA:</span>
+                                                <a :href="'https://wa.me/' + (creatorTelp.toString().replace(/[^0-9]/g, '').startsWith('0') ? '62' + creatorTelp.toString().replace(/[^0-9]/g, '').substring(1) : (creatorTelp.toString().replace(/[^0-9]/g, '').startsWith('62') ? creatorTelp.toString().replace(/[^0-9]/g, '') : '62' + creatorTelp.toString().replace(/[^0-9]/g, '')))" 
+                                                    target="_blank" 
+                                                    class="inline-flex items-center gap-1 text-[#25D366] hover:text-[#1da851] hover:underline font-semibold"
+                                                    title="Hubungi Pendaftar via WhatsApp">
+                                                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+                                                    </svg>
+                                                    <span x-text="creatorTelp"></span>
+                                                </a>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <div class="text-slate-500 font-medium">Diajukan</div>
+                                    <div class="text-slate-800 font-medium" x-text="waktuPengajuan"></div>
+
+                                    <div class="text-slate-500 font-medium">Waktu Proses</div>
+                                    <div class="text-slate-800 font-medium leading-snug" x-text="waktuDiproses"></div>
                                 </div>
                             </div>
 
@@ -939,6 +1159,14 @@
                 selectedJamMulai: '',
                 selectedJamSelesai: '',
                 selectedBerkasUrl: '',
+                isReschedule: false,
+                oldScheduleInfo: '',
+                conflictInfo: null,
+                isSelfSubmitted: true,
+                pendaftarTeks: 'Diajukan Mandiri oleh Pemohon',
+                creatorTelp: null,
+                waktuPengajuan: '-',
+                waktuDiproses: '-',
 
                 currentRoom: '',
                 currentDate: '',
@@ -1022,6 +1250,29 @@
                         formatTanggal = d.formatTanggal;
                         berkasUrl = d.berkasUrl;
                         sourceLabel = d.sourceLabel || 'Peminjaman Langsung';
+                        this.isReschedule = Boolean(d.isReschedule);
+                        this.oldScheduleInfo = d.oldScheduleInfo || '';
+                        this.hasCollision = Boolean(d.hasCollision);
+                        this.collisionCount = d.collisionCount || 0;
+                        this.collisionNames = d.collisionNames || [];
+                        this.conflictInfo = d.conflictInfo || null;
+                        this.isSelfSubmitted = Boolean(d.isSelfSubmitted);
+                        this.pendaftarTeks = d.pendaftarTeks || 'Diajukan Mandiri oleh Pemohon';
+                        this.creatorTelp = d.creatorTelp || null;
+                        this.waktuPengajuan = d.waktuPengajuan || '-';
+                        this.waktuDiproses = d.waktuDiproses || '-';
+                    } else {
+                        this.isReschedule = false;
+                        this.oldScheduleInfo = '';
+                        this.hasCollision = false;
+                        this.collisionCount = 0;
+                        this.collisionNames = [];
+                        this.conflictInfo = null;
+                        this.isSelfSubmitted = true;
+                        this.pendaftarTeks = 'Diajukan Mandiri oleh Pemohon';
+                        this.creatorTelp = null;
+                        this.waktuPengajuan = '-';
+                        this.waktuDiproses = '-';
                     }
                     this.selectedId = id;
                     this.selectedName = name;

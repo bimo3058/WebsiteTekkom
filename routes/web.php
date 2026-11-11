@@ -103,7 +103,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{user}/unsuspend', [SuperAdminController::class, 'unsuspend'])
             ->name('users.unsuspend');
         // Tambah user baru
+        Route::post('/users/bulk-import/preview', [SuperAdminController::class, 'previewBulkImport'])->name('users.bulkImport.preview');
         Route::post('/users/bulk-import', [SuperAdminController::class, 'bulkImport'])->name('users.bulkImport');
+        Route::patch('/users/{user}/sso-access', [SuperAdminController::class, 'updateSsoAccess'])->name('users.sso-access.update');
         Route::post('/import-status/{id}/cancel', [SuperAdminController::class, 'cancelImport'])->name('import.cancel');
         Route::post('/clear-import-session', function () {
             session()->forget('import_id');
