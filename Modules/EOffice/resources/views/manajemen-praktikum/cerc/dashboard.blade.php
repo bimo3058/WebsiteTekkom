@@ -1,0 +1,41 @@
+<x-eoffice::manajemen-praktikum.layout pageTitle="Dashboard Koordinator CERC">
+    <x-eoffice::manajemen-praktikum.ui.staffing-styles />
+    <x-slot name="header">
+        <div class="mp-cerc-heading"><div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px"><h1 style="margin:0">Dashboard Koordinator CERC</h1><span class="mp-badge primary sm">Koordinator CERC</span></div><p>Halo, <strong>{{ preg_split('/\s+/u', trim(auth()->user()->name))[0] }}</strong> · {{ now()->locale('id')->translatedFormat('l, d F Y') }}</p></div></div>
+    </x-slot>
+    <style>
+        .mp-cerc-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.mp-cerc-heading h1{font-size:22px;line-height:28px;font-weight:700;color:#353849;margin:0 0 4px}.mp-cerc-heading p{font-size:12px;line-height:18px;color:#666D80;margin:0}.mp-cerc-heading strong{font-weight:600;color:#353849}.mp-cerc-dashboard{display:contents}.mp-cerc-dashboard a.mp-stat{border:1px solid var(--c-border,#DFE1E7);border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.04);text-decoration:none;color:#353849;transition:background .15s}.mp-cerc-dashboard a.mp-stat:hover{background:#F8F9FB}.mp-cerc-dashboard a.mp-stat:focus-visible{outline:2px solid #0B266E;outline-offset:3px}.mp-cerc-stat-heading{display:flex;align-items:center;gap:12px;margin-bottom:12px}.mp-cerc-dashboard .mp-stat-label{font-size:14px;color:#353849;margin:0}.mp-cerc-dashboard .mp-stat-value{font-size:32px}.mp-cerc-dashboard .mp-stat-sub{font-size:12px;line-height:18px;color:#666D80}.mp-cerc-dashboard .mp-settings-name{font-size:13px;font-weight:600;line-height:20px;color:#353849;white-space:normal;overflow-wrap:anywhere}.mp-cerc-dashboard .mp-settings-email{font-size:12px;line-height:18px;color:#666D80;margin-top:4px}.mp-cerc-practicum-table{min-width:850px;table-layout:fixed}.mp-cerc-practicum-table th:nth-child(2){width:30%}.mp-cerc-practicum-table th:nth-child(3){width:30%}.mp-cerc-practicum-table th:last-child{width:140px}.mp-cerc-dashboard .mp-settings-table td{color:#353849}.mp-cerc-dashboard .mp-cerc-center{text-align:center}.mp-cerc-dashboard .mp-alert{font-size:13px;line-height:20px}.mp-cerc-dashboard .mp-alert a{color:#0B266E;font-weight:600;margin-left:8px}.mp-cerc-dashboard .mp-settings-table td{overflow-wrap:anywhere}
+    </style>
+    @php
+        $home=route('eoffice.manprak.cerc.dashboard');
+        $cards=[
+            ['label'=>'Praktikum Aktif','value'=>$stats['practicums'],'sub'=>'praktikum dalam pengelolaan','icon'=>'book','color'=>'navy','href'=>$home.'#praktikum-aktif'],
+            ['label'=>'Belum Ada Koordinator','value'=>$stats['without_coordinator'],'sub'=>'praktikum perlu penunjukan','icon'=>'alert-circle','color'=>'yellow','href'=>route('eoffice.manprak.cerc.dashboard',['filter'=>'without_coordinator']).'#praktikum-aktif'],
+            ['label'=>'Asisten','value'=>$stats['assistants'],'sub'=>'orang pada praktikum aktif','icon'=>'users','color'=>'sky','href'=>route('eoffice.manprak.cerc.dashboard',['filter'=>'with_assistants']).'#praktikum-aktif'],
+            ['label'=>'Pengajuan Menunggu','value'=>$stats['pending'],'sub'=>'booking pertemuan belum diputuskan','icon'=>'clock','color'=>'green','href'=>route('eoffice.manprak.cerc.scheduling.index',['tab'=>'requests','status'=>'pending'])],
+        ];
+    @endphp
+    <div class="mp-cerc-dashboard">
+        <div class="mp-stats-grid cols-4">
+            @foreach($cards as $card)<a class="mp-stat" href="{{ $card['href'] }}"><div class="mp-cerc-stat-heading"><div class="mp-stat-icon {{ $card['color'] }}"><x-eoffice::manajemen-praktikum.ui.icon :name="$card['icon']" size="20" /></div><div class="mp-stat-label">{{ $card['label'] }}</div></div><div class="mp-stat-value">{{ $card['value'] }}</div><div class="mp-stat-sub">{{ $card['sub'] }}</div></a>@endforeach
+        </div>
+        <section id="jadwal-terdekat" class="mp-card mp-settings-card">
+            <div class="mp-card-header"><div><h2 class="mp-card-title">Jadwal Praktikum Terdekat</h2><p class="mp-settings-description">Jadwal disetujui, {{ $from->locale('id')->translatedFormat('d M Y') }}–{{ $until->locale('id')->translatedFormat('d M Y') }}.</p></div><a class="mp-btn secondary sm" href="{{ route('eoffice.manprak.cerc.scheduling.index',['tab'=>'schedules']) }}">Lihat Semua Jadwal</a></div>
+            <div class="mp-data-scroll"><table class="mp-table mp-settings-table" style="min-width:950px"><thead><tr><th class="mp-th mp-settings-no">NO</th><th class="mp-th">HARI/TANGGAL</th><th class="mp-th">PRAKTIKUM</th><th class="mp-th">MODUL</th><th class="mp-th mp-cerc-center">SHIFT</th><th class="mp-th">WAKTU</th><th class="mp-th">RUANG</th></tr></thead><tbody>
+                @forelse($schedules as $schedule)<tr class="mp-tr"><td class="mp-settings-no">{{ $schedules->firstItem()+$loop->index }}</td><td>{{ $schedule->date->locale('id')->translatedFormat('l, d M Y') }}</td><td><div class="mp-settings-name">{{ $schedule->praktikum->nama }}</div></td><td>{{ $schedule->module_name }}</td><td class="mp-cerc-center">{{ $schedule->shift }}</td><td style="white-space:nowrap">{{ substr($schedule->starts_at,0,5) }}–{{ substr($schedule->ends_at,0,5) }} WIB</td><td>{{ $schedule->room?->nama??'Ruang tidak tersedia' }}</td></tr>
+                @empty<tr><td colspan="7" class="mp-settings-empty">Belum ada jadwal disetujui untuk tujuh hari ke depan.</td></tr>@endforelse
+            </tbody></table></div>
+            <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$schedules" :options="[5,10,15]" perPageName="schedule_per_page" fragment="jadwal-terdekat" />
+        </section>
+        <section id="praktikum-aktif" class="mp-card mp-settings-card">
+            <div class="mp-card-header"><div><h2 class="mp-card-title">Daftar Praktikum Aktif</h2><p class="mp-settings-description">Kelola penugasan koordinator dan asisten praktikum.</p>@if(request('filter'))<p class="mp-settings-description">{{ request('filter')==='without_coordinator'?'Tanpa koordinator':'Memiliki asisten' }} · <a href="{{ $home }}#praktikum-aktif">Tampilkan Semua</a></p>@endif</div>
+                <form method="GET" role="search" class="mp-staffing-list-search">@if(request('filter'))<input type="hidden" name="filter" value="{{ request('filter') }}">@endif<x-eoffice::manajemen-praktikum.ui.icon name="search" /><label class="sr-only" for="cerc-practicum-search">Cari nama praktikum</label><input type="search" class="mp-input" id="cerc-practicum-search" name="q" value="{{ request('q') }}" maxlength="100" placeholder="Cari nama praktikum..."><button type="submit" class="sr-only">Cari</button></form>
+            </div>
+            <div class="mp-data-scroll"><table class="mp-table mp-settings-table mp-cerc-practicum-table"><thead><tr><th class="mp-th mp-settings-no">NO</th><th class="mp-th">NAMA PRAKTIKUM</th><th class="mp-th">KOORDINATOR</th><th class="mp-th mp-cerc-center">ASISTEN</th><th class="mp-th mp-cerc-center">AKSI</th></tr></thead><tbody>
+                @forelse($praktikums as $praktikum)<tr class="mp-tr"><td class="mp-settings-no">{{ $praktikums->firstItem()+$loop->index }}</td><td><div class="mp-settings-name">{{ $praktikum->nama }}</div><div class="mp-settings-email">{{ $praktikum->getRawOriginal('tahun_ajaran') }} / Semester {{ $praktikum->semester }}</div></td><td>@if($praktikum->koordinator)<x-eoffice::manajemen-praktikum.ui.staff-person :user="$praktikum->koordinator" :wrap="true" />@else<span class="mp-badge warning sm">Belum Ditunjuk</span>@endif</td><td class="mp-cerc-center">{{ $praktikum->assistants_count }} orang</td><td class="mp-cerc-center"><a class="mp-btn secondary sm" href="{{ route('eoffice.manprak.cerc.kelola-role.index',['praktikum_id'=>$praktikum->id]) }}">Kelola Role</a></td></tr>
+                @empty<tr><td colspan="5" class="mp-settings-empty">{{ request()->filled('q')||request()->filled('filter')?'Data tidak ditemukan.':'Belum ada praktikum aktif.' }}</td></tr>@endforelse
+            </tbody></table></div>
+            <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$praktikums" :options="[5,10,15]" fragment="praktikum-aktif" />
+        </section>
+    </div>
+</x-eoffice::manajemen-praktikum.layout>

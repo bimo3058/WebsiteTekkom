@@ -22,9 +22,10 @@ class RegistrationReviewController extends Controller
 
     private function definition(Request $request, string $type): array
     {
-        abort_unless($request->user()?->hasAnyRole(['superadmin', 'admin_eoffice']), 403);
+        abort_unless($request->user()?->hasAnyRole(['superadmin', 'admin_praktikum', 'koordinator_cerc']), 403);
         abort_unless(isset(self::TYPES[$type]), 404);
 
+        if ($request->user()->hasRole('koordinator_cerc') && !$request->user()->hasAnyRole(['superadmin','admin_praktikum'])) abort_if($type==='praktikan',403);
         return self::TYPES[$type];
     }
 
@@ -44,6 +45,7 @@ class RegistrationReviewController extends Controller
     {
         [$model, $label, $documents] = $this->definition($request, $type);
         $registration = $model::with(['user.student', 'praktikum', 'direviewOleh'])->findOrFail($id);
+        if ($request->routeIs('eoffice.manprak.cerc.*')) abort_unless($registration->praktikum?->is_active,404);
         if ($type === 'asprak') {
             unset($documents['cv_path']);
         }
@@ -75,6 +77,7 @@ class RegistrationReviewController extends Controller
         [$model, , $documents] = $this->definition($request, $type);
         abort_unless(isset($documents[$document]), 404);
         $registration = $model::findOrFail($id);
+        if ($request->routeIs('eoffice.manprak.cerc.*')) abort_unless($registration->praktikum?->is_active,404);
         $path = $registration->getAttribute($document);
         abort_unless(is_string($path) && $path !== '' && ! preg_match('~(^/|\\\\|://|(?:^|/)\.\.(?:/|$))~', $path), 404);
         $file = $storage->download($path, 'eoffice');
@@ -85,6 +88,8 @@ class RegistrationReviewController extends Controller
         };
         $filename = $type.'-'.$id.'-'.str_replace('_path', '', $document).'.'.preg_replace('/[^a-z0-9]/i', '', $extension);
 
-        return \Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::response($file['content'], $filename, false, '');
+        $download = ! in_array($mime, ['application/pdf', 'image/png', 'image/jpeg'], true);
+
+        return \Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::response($file['content'], $filename, $download, '');
     }
 }

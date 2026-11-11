@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Distribusi Asisten Praktikum ke Modul.
  *
- * Tabel: eo_prak_modul_asprak
+ * Tabel: modul_asprak
  */
 class ModulAsprak extends Model
 {
@@ -27,6 +27,6 @@ class ModulAsprak extends Model
 
     public function asprak()
     {
-        return $this->belongsTo(AsistenPraktikum::class, 'asprak_id');
+        return $this->belongsTo(AsistenPraktikum::class, 'asprak_id')->withTrashed();
     }
 }

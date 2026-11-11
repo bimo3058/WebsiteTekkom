@@ -1,7 +1,7 @@
 @php
     $jenisTugasMap = [
         'tugas_pendahuluan' => 'Tugas Pendahuluan',
-        'laporan' => 'Laporan',
+        'laporan' => $tugas->modul?->praktikum?->laporanLabel() ?? 'Laporan',
         'responsi' => 'Responsi',
         'tugas_pengganti' => 'Tugas Pengganti'
     ];

@@ -1,6 +1,7 @@
 <x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Kelola Role — Manajemen Praktikum">
 <div x-data="{ roleModalOpen: @js($errors->any()) }" style="display:contents;">
 
+
 {{-- ════════════════════════
      PAGE HEADER
 ════════════════════════ --}}
@@ -118,7 +119,7 @@
                     Tambah Role
                 </button>
                 @if($asprakCount > 0 || $koorCount > 0)
-                <form method="POST" action="{{ route('eoffice.manprak.admin.kelola-role.revokeAll', $praktikum->id) }}" onsubmit="return confirm('PENTING: Anda akan mencabut SELURUH role Asisten Praktikum dan Koordinator pada praktikum ini.\n\nPraktikum ini akan otomatis dinonaktifkan (mode read-only) setelah proses selesai.\nLanjutkan?')">
+                <form method="POST" action="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.kelola-role.revokeAll', $praktikum->id) }}" onsubmit="return confirm('PENTING: Anda akan mencabut SELURUH role Asisten Praktikum dan Koordinator pada praktikum ini.\n\nStatus praktikum tidak berubah.\nLanjutkan?')">
                     @csrf
                     <button type="submit" class="mp-btn destructive md" style="height:30px;font-size:12px;padding:0 12px;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right:4px;"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
@@ -177,7 +178,7 @@
                             <td style="padding:13px 16px;text-align:center;">
                                 @if($a->trashed())
                                 <form method="POST"
-                                      action="{{ route('eoffice.manprak.admin.kelola-role.restore', $a->id) }}"
+                                      action="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.kelola-role.restore', $a->id) }}"
                                       onsubmit="return confirm('Kembalikan role {{ $a->role }} untuk {{ addslashes($a->user?->name ?? '') }}?')"
                                       style="display:inline;">
                                     @csrf
@@ -191,7 +192,7 @@
                                 </form>
                                 @else
                                 <form method="POST"
-                                      action="{{ route('eoffice.manprak.admin.kelola-role.revoke', $a->id) }}"
+                                      action="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.kelola-role.revoke', $a->id) }}"
                                       onsubmit="return confirm('Cabut role {{ $a->role }} dari {{ addslashes($a->user?->name ?? '') }}?\n\nJika user tidak terdaftar di praktikum lain, role Spatie akan ikut dicabut.')"
                                       style="display:inline;">
                                     @csrf @method('DELETE')
@@ -250,9 +251,10 @@
                 </div>
             @endif
 
+            @unless(request()->routeIs('eoffice.manprak.cerc.*'))
             <section>
                 <div class="sec-head" style="margin-bottom:12px;"><span class="sec-bar"></span><h3 class="sec-title">Dosen Pengampu</h3><span class="sec-rule"></span></div>
-                <form method="POST" action="{{ route('eoffice.manprak.admin.kelola-role.dosen.update', $praktikum->id) }}"
+                <form method="POST" action="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.kelola-role.dosen.update', $praktikum->id) }}"
                       x-data="{ dosens: @js($praktikum->dosens->pluck('id')->map(fn ($id) => (string) $id)->values()) }">
                     @csrf
                     @method('PUT')
@@ -265,9 +267,7 @@
                                 @endforeach
                             </select>
                             <button type="button" x-show="dosens.length > 1" @click="dosens.splice(index, 1)"
-                                    class="mp-icon-button" style="width:40px;height:38px;border-color:#FADAE1;background:#FFF5F5;color:#DF1C41;" title="Hapus dosen">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M19 6l-1 14H6L5 6m3 0V4h8v2" /></svg>
-                            </button>
+                                    class="mp-delete-button mp-icon-button" style="width:40px;height:38px;border-color:#FADAE1;background:#FFF5F5;color:#DF1C41;" title="Hapus dosen" aria-label="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                         </div>
                     </template>
                     <button type="button" x-show="dosens.length < 3" @click="dosens.push('')"
@@ -283,6 +283,7 @@
                     </div>
                 </form>
             </section>
+            @endunless
 
             <section style="border-top:1px solid #DFE1E7;padding-top:18px;">
                 <div class="sec-head" style="margin-bottom:12px;"><span class="sec-bar"></span><h3 class="sec-title">Koordinator</h3><span class="sec-rule"></span></div>
@@ -292,7 +293,7 @@
                         <div><div style="font-size:13px;font-weight:600;">{{ $praktikum->koordinator->name }}</div><div style="font-size:11px;color:#666D80;">{{ $praktikum->koordinator->email }}</div></div>
                     </div>
                 @else
-                    <form method="POST" action="{{ route('eoffice.manprak.admin.kelola-role.assign') }}" style="display:block;">
+                    <form method="POST" action="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.kelola-role.assign') }}" style="display:block;">
                         @csrf
                         <input type="hidden" name="praktikum_id" value="{{ $praktikum->id }}">
                         <input type="hidden" name="role" value="koor">
@@ -319,7 +320,7 @@
                     </div>
                 @endif
                 @if($asistenOptions->isNotEmpty())
-                    <form method="POST" action="{{ route('eoffice.manprak.admin.kelola-role.assign') }}" style="display:block;">
+                    <form method="POST" action="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.kelola-role.assign') }}" style="display:block;">
                         @csrf
                         <input type="hidden" name="praktikum_id" value="{{ $praktikum->id }}">
                         <input type="hidden" name="role" value="asprak">

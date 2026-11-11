@@ -1,7 +1,7 @@
 <div x-data="{open:false}" style="margin-top:12px">
     <button type="button" class="mp-btn secondary sm" @click="open=true">Batalkan Pengumpulan</button>
     <template x-teleport="body">
-        <div x-show="open" x-cloak x-transition.opacity.duration.200ms @keydown.escape.window="open=false" @click.self="open=false" style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px">
+        <div class="mp-confirm-special" x-show="open" x-cloak x-transition.opacity.duration.200ms @keydown.escape.window="open=false" @click.self="open=false" style="display:none;">
             <form method="POST" action="{{ route($base.'unsubmit',$routeArgs) }}" role="dialog" aria-modal="true" aria-label="Batalkan Pengumpulan" style="width:480px;max-width:100%;background:white;border-radius:14px;overflow:hidden;margin:0">
                 @csrf
                 <input type="hidden" name="tahap_id" value="{{ $stage['id'] }}"><input type="hidden" name="submission_token" value="{{ $submission->token() }}">

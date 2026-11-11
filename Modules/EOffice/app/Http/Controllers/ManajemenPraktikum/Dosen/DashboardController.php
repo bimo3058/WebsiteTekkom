@@ -84,7 +84,7 @@ class DashboardController extends Controller
             ->firstOrFail();
 
         // Cari user berdasarkan NIM (student_number di tabel students)
-        $targetUser = User::whereHas('student', fn($q) => $q->where('student_number', $request->nim))
+        $targetUser = \Modules\EOffice\Services\ManajemenPraktikum\ActiveStudent::apply(User::query())->whereHas('student', fn($q) => $q->where('student_number', $request->nim))
             ->first();
 
         if (!$targetUser) {
@@ -113,7 +113,7 @@ class DashboardController extends Controller
             return response()->json([]);
 
         // Mencari semua mahasiswa di sistem (User yang punya relasi student)
-        $praktikan = \App\Models\User::with(['student'])
+        $praktikan = \Modules\EOffice\Services\ManajemenPraktikum\ActiveStudent::apply(\App\Models\User::with(['student']))
             ->whereHas('student') // Pastikan dia adalah mahasiswa
             ->where(function ($query) use ($q) {
                 $query->where('name', 'ilike', "%{$q}%")

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Mahasiswa yang terdaftar di praktikum.
  *
- * Tabel: eo_prak_daftar_praktikan
+ * Tabel: daftar_praktikan
  */
 class DaftarPraktikan extends Model
 {

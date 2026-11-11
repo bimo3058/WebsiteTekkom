@@ -12,7 +12,6 @@
         .mp-review-data { grid-column:1;grid-row:1; }
         .mp-review-result { grid-column:2;grid-row:1; }
         .mp-review-documents { grid-column:1 / -1;grid-row:2; }
-        .mp-review-decision { grid-column:1 / -1;grid-row:3; }
         .mp-review-pad { padding:20px;display:grid;gap:16px;min-width:0; }
         .mp-review-facts { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px; }
         .mp-review-facts dt,.mp-review-label { display:block;font-size:12px;color:var(--c-fg-sec);margin-bottom:5px; }
@@ -27,7 +26,7 @@
             <h1 class="mp-page-title">Pendaftaran {{ $label }}</h1>
             <p class="mp-page-sub">Periksa data, berkas, dan hasil seleksi mahasiswa.</p>
         </div>
-        <a class="mp-btn secondary md" href="{{ route('eoffice.manprak.admin.pendaftaran-'.$type.'.index') }}">
+        <a class="mp-btn secondary md" href="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.pendaftaran-'.$type.'.index') }}">
             <x-eoffice::manajemen-praktikum.ui.icon name="arrow-left" /> Kembali ke daftar
         </a>
     </div>
@@ -60,7 +59,7 @@
                             </span>
                             @if($registration->getAttributes()[$field] ?? null)
                                 <a class="mp-btn secondary sm" target="_blank" rel="noopener" aria-label="Buka {{ $documentLabel }} di tab baru"
-                                   href="{{ route('eoffice.manprak.admin.pendaftaran.document', ['type' => $type, 'id' => $registration->id, 'document' => $field]) }}">
+                                   href="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.pendaftaran.document', ['type' => $type, 'id' => $registration->id, 'document' => $field]) }}">
                                     Lihat dokumen <x-eoffice::manajemen-praktikum.ui.icon name="arrow-right" />
                                 </a>
                             @elseif($field === 'berkas_tambahan_path' && !($additionalDocumentRequired ?? false))
@@ -97,40 +96,9 @@
                         </div>
                     @endif
                 </div>
-            </section>
-            @if($reviewStatus !== 'menunggu' && ($canOverride || $canApprove || ($type !== 'praktikan' && $registration->status === 'pending')))
-                <section class="mp-card mp-review-decision">
-                    <div class="mp-card-header"><h2 class="mp-card-title">Keputusan admin</h2></div>
-                    <div class="mp-review-pad">
-                        @if($canOverride)
-                            <div class="mp-alert warning">Admin dapat menyetujui pendaftaran meskipun dosen belum menyetujui atau sudah menolak. Keputusan dosen tetap tercatat.</div>
-                            <form method="POST" action="{{ route('eoffice.manprak.admin.pendaftaran-koor.approve', $registration->id) }}" style="display:grid;gap:12px;">
-                                @csrf
-                                <input type="hidden" name="override_dosen" value="1">
-                                <div>
-                                    <label class="mp-review-label" for="override_reason">Alasan override <span aria-hidden="true">*</span></label>
-                                    <textarea class="mp-input" id="override_reason" name="override_reason" rows="4" required minlength="10" maxlength="1000" aria-describedby="override-help">{{ old('override_reason') }}</textarea>
-                                    <p id="override-help" class="mp-page-sub">Minimal 10 karakter. Alasan dan akun admin dicatat di riwayat audit.</p>
-                                </div>
-                                <button class="mp-btn primary md" type="submit"><x-eoffice::manajemen-praktikum.ui.icon name="check" /> Override &amp; Setujui</button>
-                            </form>
-                        @elseif($canApprove)
-                            <form method="POST" action="{{ route('eoffice.manprak.admin.pendaftaran-'.$type.'.approve', $registration->id) }}">
-                                @csrf
-                                <button class="mp-btn primary md" type="submit"><x-eoffice::manajemen-praktikum.ui.icon name="check" /> Setujui pendaftaran</button>
-                            </form>
-                        @else
-                            <p class="mp-page-sub">Menunggu persetujuan koordinator sebelum persetujuan akhir admin.</p>
-                        @endif
-                        @if($registration->status === 'pending')
-                            <form method="POST" action="{{ route('eoffice.manprak.admin.pendaftaran-'.$type.'.reject', $registration->id) }}" style="display:grid;gap:12px;border-top:1px solid var(--c-border);padding-top:16px;">
-                                @csrf
-                                <div><label class="mp-review-label" for="alasan_penolakan">Alasan penolakan</label><textarea class="mp-input" id="alasan_penolakan" name="alasan_penolakan" required maxlength="1000" rows="2">{{ old('alasan_penolakan') }}</textarea></div>
-                                <button class="mp-btn secondary md" type="submit"><x-eoffice::manajemen-praktikum.ui.icon name="close" /> Tolak pendaftaran</button>
-                            </form>
-                        @endif
-                    </div>
-                </section>
+            @if(auth()->user()->hasAnyRole(['superadmin','admin_praktikum']) && $reviewStatus !== 'menunggu' && ($canOverride || $canApprove || ($type !== 'praktikan' && $registration->status === 'pending')))
+                <x-eoffice::manajemen-praktikum.ui.registration-decision :registration="$registration" :type="$type" :can-override="$canOverride" :can-approve="$canApprove" />
             @endif
+            </section>
     </div>
 </x-eoffice::manajemen-praktikum.layout>

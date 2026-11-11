@@ -54,8 +54,9 @@
                         <div style="margin:10px 0 0 0;">
                             <h3 style="font-size:15px; font-weight:700; color:#111827; margin:0 0 4px 0; line-height:1.4; padding:0;">
                                 {{ $pg->judul }}
+                                <x-eoffice::manajemen-praktikum.ui.announcement-pin-badge :announcement="$pg" />
                             </h3>
-                            <p style="font-size:13px; color:#374151; margin:0; padding:0; line-height:1.6; white-space:pre-line;">{{ $pg->konten }}</p>
+                            <p class="mp-announcement-copy" style="font-size:13px; color:#374151; margin:0; padding:0; line-height:1.6; white-space:pre-line;">{{ $pg->konten }}</p>
                         </div>
 
                         {{-- Lampiran --}}

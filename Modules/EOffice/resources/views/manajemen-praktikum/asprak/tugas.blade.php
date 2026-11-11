@@ -67,7 +67,8 @@
                                         style="display: flex; align-items: center; gap: 12px; flex: 1;">
                                         <div style="font-size: 14px; font-weight: 600; color: #0D0D12;">{{ $label }}</div>
                                         @if($t)
-                                            @if($lewat) <span class="mp-badge neutral sm" style="font-size: 10px;">Berakhir</span>
+                                            @if(!$t->is_published) <span class="mp-badge neutral sm" style="font-size:10px;">Tidak dipublikasikan</span>
+                                            @elseif($lewat) <span class="mp-badge neutral sm" style="font-size: 10px;">Berakhir</span>
                                             @else <span class="mp-badge success sm" style="font-size: 10px;"><span
                                                 class="dot"></span>Aktif</span>
                                             @endif
@@ -329,13 +330,7 @@
                                                                     </div>
                                                                     <button type="button" @click="deletedOldFileIndices.push({{ $fIdx }})"
                                                                         style="background: none; border: none; cursor: pointer; color: #DF1C41; outline: none; padding: 0; display: flex; align-items: center; flex-shrink: 0; margin-left: 12px;"
-                                                                        title="Hapus berkas lama ini">
-                                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                                                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                                        </svg>
-                                                                    </button>
+                                                                        title="Hapus berkas lama ini" class="mp-delete-button" aria-label="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                                                 </div>
                                                             </div>
                                                         @endforeach

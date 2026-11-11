@@ -213,10 +213,18 @@ class MicrosoftController extends Controller
                 'admin_capstone' => 'capstone.dashboard',
                 'admin_eoffice' => 'eoffice.dashboard',
                 'admin_kemahasiswaan' => 'manajemenmahasiswa.mahasiswa.dashboard',
+                'admin_praktikum' => 'eoffice.manprak.admin.dashboard',
             ];
 
             foreach ($adminRedirects as $role => $routeName) {
                 if ($roleNames->contains($role)) {
+                    if ($role === 'admin_praktikum' && $roleNames->intersect(['mahasiswa', 'dosen', 'gpm', 'pengurus_himpunan', 'alumni', 'dosen_koor'])->isNotEmpty()) {
+                        continue;
+                    }
+                    if ($role === 'admin_praktikum' && $roleNames->count() === 1) {
+                        $request->session()->forget('url.intended');
+                        return redirect()->route($routeName);
+                    }
                     return redirect()->intended(route($routeName));
                 }
             }

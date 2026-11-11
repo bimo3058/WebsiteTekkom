@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Pendaftaran calon Asisten Praktikum oleh mahasiswa.
- * Tabel: eo_prak_pendaftaran_asprak
+ * Tabel: pendaftaran_asprak
  *
  * Flow: Mahasiswa submit → Koor review → auto assign role asprak (jika approve)
  * status: pending | approved | rejected

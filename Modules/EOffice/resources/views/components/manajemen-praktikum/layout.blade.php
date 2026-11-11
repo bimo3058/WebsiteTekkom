@@ -6,12 +6,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="preload" as="script" href="{{ asset('js/practicum-feedback.js') }}?v={{ filemtime(public_path('js/practicum-feedback.js')) }}">
     <title>{{ $pageTitle ?? 'Manajemen Praktikum' }} — SIPERKOM</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css" />
     @include('eoffice::manajemen-praktikum.partials._styles')
     @include('eoffice::manajemen-praktikum.partials._shell-styles')
     <x-mobile-navigation-assets />
+    <script>document.documentElement.classList.add('mp-feedback-enabled');</script>
+    <style>
+        .mp-feedback-enabled .mp-box-body .mp-flash-success,
+        .mp-feedback-enabled .mp-box-body .mp-flash-error,
+        .mp-feedback-enabled .mp-box-body .mp-alert.success:not(form *):not([role=dialog] *),
+        .mp-feedback-enabled .mp-box-body .mp-alert.error:not(form *):not([role=dialog] *){display:none!important}
+        [data-feedback-pending]{visibility:hidden}
+        [data-feedback-pending] .mp-floating-feedback{animation:none!important}
+    </style>
+    <noscript><style>[data-feedback-pending]{visibility:visible}</style></noscript>
 </head>
 
 <body class="mp-app h-full overflow-hidden bg-[#F6F8FA] text-[#0D0D12] antialiased"
@@ -27,7 +38,7 @@
         $currentRoute = request()->route()?->getName() ?? '';
 
         // Cek semua role yang dimiliki user — multi-role support
-        $isAdmin = $user->hasRole('superadmin') || $user->hasRole('admin_eoffice');
+        $isAdmin = $user->hasAnyRole(['superadmin','admin_praktikum']);
         $isDosen = $user->hasRole('dosen');
         $isKoor = $user->hasRole('koor_prak');
         $isAsprak = $user->hasRole('asprak');
@@ -53,7 +64,7 @@
 
         if ($isAdmin) {
             $sections[] = [
-                'label' => 'Admin',
+                'label' => 'Admin Praktikum',
                 'color' => '#293C79',
                 'bg' => 'var(--c-primary-50)',
                 'match' => 'manprak.admin',
@@ -65,12 +76,22 @@
                         ['href' => route('eoffice.manprak.admin.praktikum.index'), 'label' => 'Daftar Praktikum', 'match' => 'admin.praktikum', 'icon' => $iBook],
                         ['href' => route('eoffice.manprak.admin.matkul-praktikum.index'), 'label' => 'Mata Kuliah Praktikum', 'match' => 'matkul-praktikum', 'icon' => $iList],
                         ['href' => route('eoffice.manprak.admin.grade-policies.index'), 'label' => 'Skema Predikat', 'match' => 'grade-policies', 'icon' => $iList],
+                        ['href' => route('eoffice.manprak.admin.schedule-periods.index'), 'label' => 'Periode Pelaksanaan', 'match' => 'schedule-periods', 'icon' => $iCal],
                         ['href' => route('eoffice.manprak.admin.dosen.index'), 'label' => 'Daftar Dosen', 'match' => 'admin.dosen', 'icon' => $iUsers],
                         ['href' => route('eoffice.manprak.admin.pendaftaran-koor.index'), 'label' => 'Pendaftaran', 'match' => 'pendaftaran', 'icon' => $iClipboard],
-                        ['href' => route('eoffice.manprak.admin.kelola-role.index'), 'label' => 'Kelola Role', 'match' => 'kelola-role', 'icon' => $iShield],
+                        ['href' => route('eoffice.manprak.admin.cerc.index'), 'label' => 'Koordinator CERC', 'match' => 'admin.cerc', 'icon' => $iShield],
                     ],
                 ],
             ];
+        }
+
+        if ($user->hasAnyRole(['superadmin','koordinator_cerc'])) {
+            $sections[]=['label'=>'Koordinator CERC','color'=>'#0B266E','bg'=>'var(--c-primary-50)','match'=>'manprak.cerc','groups'=>['Utama'=>[
+                ['href'=>route('eoffice.manprak.cerc.dashboard'),'label'=>'Dashboard','match'=>'cerc.dashboard','icon'=>$iHome],
+            ],'Kelola'=>[
+                ['href'=>route('eoffice.manprak.cerc.kelola-role.index'),'label'=>'Koordinator & Asisten','match'=>['cerc.kelola-role'],'icon'=>$iUsers],
+                ['href'=>route('eoffice.manprak.cerc.scheduling.index'),'label'=>'Peminjaman Ruang','match'=>'cerc.scheduling','icon'=>$iCal],
+            ]]];
         }
 
         if ($isDosen) {
@@ -144,11 +165,12 @@
 
         $multiRole = count($sections) > 1;
         $manprakActive = str_contains($currentRoute, 'manprak');
-        $notifCount = \Modules\EOffice\Models\Notifikasi::where('user_id', $user->id)->where('is_read', false)->count();
+        $notificationRole = explode('.', str_replace('eoffice.manprak.', '', $currentRoute))[0];
+        $notifCount = \Modules\EOffice\Services\PracticumNotificationAudience::query($user->id, $notificationRole)->where('is_read', false)->count();
         $activeSection = collect($sections)->first(fn($section) => str_contains($currentRoute, $section['match']));
         $activeRoleLabel = $activeSection['label'] ?? ($sections[0]['label'] ?? 'Pengguna');
-        if ($activeRoleLabel === 'Admin')
-            $activeRoleLabel = $user->hasRole('superadmin') ? 'Superadmin' : 'Admin E-Office';
+        if ($activeRoleLabel === 'Admin Praktikum')
+            $activeRoleLabel = $user->hasRole('superadmin') ? 'Superadmin' : 'Admin Praktikum';
     @endphp
 
     <div class="mp-shell" x-data="{ sidebarOpen: false, isMobile: window.innerWidth < 768 }"
@@ -182,30 +204,6 @@
                     @endif
                     <div class="mp-box-body {{ $breadcrumbPraktikum ? 'mp-praktikum-content' : '' }}" role="region" aria-label="Konten {{ $pageTitle ?? 'praktikum' }}"
                         tabindex="0">
-                        {{-- Flash alerts --}}
-                        @if($errors->any())
-                            <div class="mp-flash mp-flash-error mb-4" role="alert" style="border-radius:12px;">{{ $errors->first() }}</div>
-                        @endif
-                        @if(session('success'))
-                            <div class="mp-flash mp-flash-success mb-4" style="border-radius:12px;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.2" stroke-linecap="round">
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                {{ session('success') }}
-                            </div>
-                        @endif
-                        @if(session('error'))
-                            <div class="mp-flash mp-flash-error mb-4" style="border-radius:12px;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <line x1="12" y1="8" x2="12" y2="12" />
-                                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                                </svg>
-                                {{ session('error') }}
-                            </div>
-                        @endif
                         @if(isset($praktikum) && $praktikum && !$praktikum->is_active && !str_contains(request()->route()?->getName() ?? '', 'manprak.admin'))
                             <div class="mp-flash mb-4 flex items-start gap-2"
                                 style="border-radius:12px; background-color:#FFFBEB; border:1px solid #FDE68A; color:#92400E; padding:12px 16px;">
@@ -276,6 +274,9 @@
         });
     </script>
     <x-mobile-navigation />
+    <x-eoffice::manajemen-praktikum.ui.action-feedback />
+    <x-eoffice::manajemen-praktikum.ui.flash-messages />
+    <script defer src="{{ asset('js/practicum-calendar-drag.js') }}?v={{ filemtime(public_path('js/practicum-calendar-drag.js')) }}"></script>
     @stack('scripts')
     <script>
         document.addEventListener('alpine:init', () => {

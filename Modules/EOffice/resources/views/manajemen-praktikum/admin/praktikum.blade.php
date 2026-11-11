@@ -1,6 +1,27 @@
 <x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Daftar Praktikum">
+    <x-eoffice::manajemen-praktikum.ui.practicum-list-frame />
+    <div class="mp-practicum-list-frame" x-data="{
+        selecting: false, selected: [], editData: {status: 'aktif'}, confirmOpen: false, confirmed: false, submitting: false,
+        changeStatus(status) { this.editData.status=status; this.confirmOpen=true; }
+    }">
+    @include('eoffice::manajemen-praktikum.admin.partials.status-confirmation')
 
     <style>
+        .praktikum-toolbar-actions > .mp-btn {
+            width:190px;
+            height:38px;
+            justify-content:center;
+            white-space:nowrap;
+            flex-shrink:0;
+        }
+        @media (max-width:639px) {
+            .praktikum-toolbar-actions > .mp-btn { width:100%; }
+        }
+        .praktikum-bulk-bar { background:#EEF2FA; border-bottom:1px solid #CDD7EF; padding:16px 20px; }
+        .praktikum-bulk-check { width:18px; height:18px; accent-color:#0B266E; cursor:pointer; flex-shrink:0; }
+        .praktikum-row-selected { background:#EEF2FA !important; box-shadow:inset 3px 0 #0B266E; }
+        .praktikum-bulk-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-left:auto; }
+        @media (max-width:639px) { .praktikum-bulk-actions { margin-left:0; width:100%; } }
         .praktikum-filter-search {
             flex: 1 1 320px;
             min-width: 260px;
@@ -56,6 +77,23 @@
             line-height: 1.45;
         }
 
+        @media (min-width:1280px) {
+            .praktikum-toolbar { flex-wrap:nowrap; align-items:center; }
+            #filter_praktikum_form {
+                display:grid;
+                grid-template-columns:minmax(120px,1fr) 120px 135px 170px;
+                gap:10px;
+            }
+            #filter_praktikum_form:has(> a) {
+                grid-template-columns:minmax(120px,1fr) 120px 135px 170px auto;
+            }
+            #filter_praktikum_form > .praktikum-filter-search,
+            #filter_praktikum_form > .praktikum-filter-status,
+            #filter_praktikum_form > .praktikum-filter-semester,
+            #filter_praktikum_form > .praktikum-filter-year { width:100%; min-width:0; }
+            .praktikum-toolbar-actions > .mp-btn { width:180px; padding-left:10px; padding-right:10px; }
+        }
+
         @media (max-width: 1279px) {
             .praktikum-filter-search {
                 flex: 1 1 260px;
@@ -92,9 +130,9 @@
     <div id="daftar-praktikum" class="mp-card mt-2">
         {{-- Area Filter & Aksi Utama di dalam Card --}}
         <div
-            class="p-4 border-b border-[#DFE1E7] bg-white flex flex-col gap-4 xl:flex-row xl:flex-nowrap xl:justify-between xl:items-center">
+            class="praktikum-toolbar p-4 border-b border-[#DFE1E7] bg-white flex flex-col gap-4 xl:flex-row xl:justify-between xl:items-center">
             <form id="filter_praktikum_form" method="GET" action="{{ url()->current() }}#daftar-praktikum"
-                class="flex flex-wrap gap-3 items-center flex-1 min-w-0 xl:flex-nowrap">
+                class="flex flex-wrap gap-3 items-center flex-1 min-w-0">
                 <div class="praktikum-filter-search relative">
                     <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24"
                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -130,7 +168,7 @@
                 </div>
 
                 <input type="text" name="tahun_ajaran" value="{{ request('tahun_ajaran') }}"
-                    placeholder="Tahun Ajaran (Contoh: 2025/2026)"
+                    placeholder="Tahun ajaran" aria-label="Tahun ajaran" title="Tahun ajaran, contoh: 2025/2026"
                     class="praktikum-filter-year h-[38px] px-3 text-[13px] border border-[#DFE1E7] rounded-[8px] focus:outline-none focus:border-[#0B266E]"
                     onchange="this.form.submit()">
 
@@ -142,8 +180,12 @@
 
             <div
                 class="praktikum-toolbar-actions w-full flex flex-wrap gap-2 pt-4 border-t border-[#DFE1E7] xl:w-auto xl:flex-nowrap xl:flex-shrink-0 xl:pt-0 xl:border-t-0 xl:border-l">
-                <button onclick="window.dispatchEvent(new CustomEvent('open-create-modal'))" class="mp-btn primary md"
-                    style="height:35px;">
+                <button type="button" class="mp-btn secondary md" :aria-pressed="selecting"
+                    @click="selecting=!selecting; selected=[]" :disabled="submitting">
+                    <x-eoffice::manajemen-praktikum.ui.icon name="file-check" :size="16" />
+                    <span x-text="selecting ? 'Batal Pilih' : 'Ubah Status Praktikum'">Ubah Status Praktikum</span>
+                </button>
+                <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-create-modal'))" class="mp-btn primary md">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                         stroke-linecap="round">
                         <line x1="12" y1="5" x2="12" y2="19" />
@@ -153,6 +195,33 @@
                 </button>
             </div>
         </div>
+
+        <form x-ref="statusForm" method="POST" action="{{ route('eoffice.manprak.admin.praktikum.bulk-toggle-active') }}"
+            x-show="selecting" x-cloak x-transition.opacity.duration.200ms
+            @submit="submitting=true" class="praktikum-bulk-bar flex flex-wrap items-center gap-4">
+            @csrf
+            <input type="hidden" name="action" :value="editData.status === 'aktif' ? 'activate' : 'deactivate'">
+            <input type="hidden" name="status_confirmed" :value="confirmed ? '1' : '0'">
+            @foreach($praktikums as $item)
+                <input type="hidden" name="previous_statuses[{{ $item->id }}]" value="{{ $item->status }}">
+            @endforeach
+            <template x-for="id in selected" :key="id"><input type="hidden" name="praktikum_ids[]" :value="id"></template>
+            <label class="flex items-center gap-2 text-[13px] text-[#353849]">
+                <input type="checkbox" class="praktikum-bulk-check" aria-label="Pilih semua praktikum pada halaman ini"
+                    :indeterminate.prop="selected.length > 0 && selected.length < {{ $praktikums->count() }}"
+                    :checked="selected.length > 0 && selected.length === {{ $praktikums->count() }}"
+                    @change="selected=$event.target.checked ? @js($praktikums->pluck('id')->values()) : []">
+                Pilih halaman ini
+            </label>
+            <div class="min-w-0">
+                <div class="text-[13px] font-semibold text-[#0B266E]" aria-live="polite" x-text="selected.length ? selected.length + ' praktikum dipilih' : 'Pilih praktikum yang ingin diubah'"></div>
+                <div class="text-[12px] text-[#666D80] mt-1">Pilihan hanya berlaku pada halaman ini.</div>
+            </div>
+            <div class="praktikum-bulk-actions">
+                <button type="button" class="mp-btn secondary md" :disabled="!selected.length || submitting" @click="changeStatus('nonaktif')">Nonaktifkan</button>
+                <button type="button" class="mp-btn primary md" :disabled="!selected.length || submitting" @click="changeStatus('aktif')">Aktifkan</button>
+            </div>
+        </form>
 
         <div class="mp-card-body p-0 overflow-x-auto">
             <div style="min-width: 1200px;">
@@ -177,12 +246,18 @@
                 <div class="flex flex-col">
                     @forelse($praktikums ?? [] as $p)
                         <div class="grid gap-4 px-5 py-4 border-b border-[#F6F8FA] hover:bg-[#FAFAFA] transition-colors items-center cursor-pointer"
+                            :class="selected.includes(@js($p->id)) ? 'praktikum-row-selected' : ''"
                             style="grid-template-columns: minmax(220px, 1.5fr) minmax(320px, 2fr) minmax(250px, 1.5fr) 90px 100px 90px;"
-                            onclick="window.location='{{ route('eoffice.manprak.admin.praktikum.detail', $p->id) }}'">
-                            <div class="min-w-0">
+                            @click="if(selecting){const id=@js($p->id);selected=selected.includes(id)?selected.filter(value=>value!==id):[...selected,id]}else{window.location=@js(route('eoffice.manprak.admin.praktikum.detail', $p->id))}">
+                            <div class="min-w-0 flex items-center gap-3">
+                                <label x-show="selecting" x-cloak class="flex items-center p-1" @click.stop>
+                                    <input type="checkbox" class="praktikum-bulk-check" value="{{ $p->id }}" x-model="selected" aria-label="Pilih {{ $p->nama }}">
+                                </label>
+                                <div class="min-w-0">
                                 <div class="praktikum-name text-[13px] font-semibold text-[#0D0D12]">{{ $p->nama }}</div>
                                 <div class="text-[11px] text-[#666D80] mt-1">{{ $p->tahun_ajaran }} / Semester
                                     {{ $p->semester }}</div>
+                                </div>
                             </div>
                             <div class="flex flex-col gap-1.5 w-full items-start">
                                 @forelse($p->dosens as $dosen)
@@ -206,7 +281,7 @@
                                             title="{{ $dosen->name }}">{{ $dosen->name }}</div>
                                     </div>
                                 @empty
-                                    <div class="text-[13px] text-[#A4ABB8] italic">Belum ada dosen</div>
+                                    <span class="mp-badge error sm">Belum ditunjuk</span>
                                 @endforelse
                             </div>
                             <div class="w-full flex flex-col items-start">
@@ -270,19 +345,12 @@
                                         <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                                     </svg>
                                 </button>
+                                <x-eoffice::manajemen-praktikum.ui.practicum-status-action :praktikum="$p" />
                                 <form method="POST" action="{{ route('eoffice.manprak.admin.praktikum.destroy', $p->id) }}"
                                     onsubmit="return confirm('Hapus praktikum {{ $p->nama }}?')">
                                     @csrf @method('DELETE')
                                     <button type="submit"
-                                        class="flex items-center justify-center w-8 h-8 rounded-lg border border-[#FADAE1] bg-[#FFF5F5] text-[#DF1C41] hover:bg-[#FEE2E2] transition-colors">
-                                        <span>Hapus Praktikum</span>
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round">
-                                            <polyline points="3 6 5 6 21 6" />
-                                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                                            <path d="M10 11v6M14 11v6" />
-                                        </svg>
-                                    </button>
+                                        class="mp-delete-button flex items-center justify-center w-8 h-8 rounded-lg border border-[#FADAE1] bg-[#FFF5F5] text-[#DF1C41] hover:bg-[#FEE2E2] transition-colors" aria-label="Hapus Praktikum" title="Hapus Praktikum"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                 </form>
                                 </x-eoffice::manajemen-praktikum.ui.action-menu>
                             </div>
@@ -302,13 +370,14 @@
             </div>
         </div>
 
-        {{-- Pagination Custom Fungsional --}}
+    {{-- Pagination Custom Fungsional --}}
         @if(isset($praktikums) && $praktikums instanceof \Illuminate\Pagination\LengthAwarePaginator)
             <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$praktikums" :options="[5, 10, 20]" fragment="daftar-praktikum" />
         @endif
     </div>
 
 
+    </div>
     {{-- Modal Create --}}
     <div x-data="{ open: {{ $errors->any() ? 'true' : 'false' }} }" @open-create-modal.window="open = true"
         id="modalCreate"
@@ -558,15 +627,8 @@
 
                                     {{-- Tombol Hapus (Tampil jika > 1) --}}
                                     <button type="button" x-show="dosens.length > 1" @click="dosens.splice(index, 1)"
-                                        class="flex-shrink-0 w-[38px] h-[38px] flex items-center justify-center rounded-[8px] border border-[#FADAE1] bg-[#FFF5F5] text-[#DF1C41] hover:bg-[#FEE2E2] transition-colors"
-                                        title="Hapus Dosen">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                            <polyline points="3 6 5 6 21 6" />
-                                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                                            <path d="M10 11v6M14 11v6" />
-                                        </svg>
-                                    </button>
+                                        class="mp-delete-button flex-shrink-0 w-[38px] h-[38px] flex items-center justify-center rounded-[8px] border border-[#FADAE1] bg-[#FFF5F5] text-[#DF1C41] hover:bg-[#FEE2E2] transition-colors"
+                                        title="Hapus Dosen" aria-label="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                 </div>
                             </template>
                             <button type="button" x-show="dosens.length < 3" @click="dosens.push('')"
@@ -641,9 +703,11 @@
     <div x-data="{ 
     open: false, 
     editData: { id: '', nama: '', matkul_id: '', tahun_ajaran: '', semester: 'Ganjil', status: 'aktif', dosens: [''] },
-    updateActionUrl: '' 
+    updateActionUrl: '', originalStatus: '', confirmOpen: false, confirmed: false, submitting: false,
+    get statusMessage() { return this.editData.status === 'nonaktif' ? 'Mahasiswa hanya dapat membaca arsip. Penugasan dosen, koordinator, dan asisten pada praktikum ini akan dicabut. Data kegiatan dan berkas tetap disimpan.' : 'Praktikum dapat digunakan kembali. Penugasan dosen, koordinator, dan asisten perlu ditetapkan ulang.'; }
 }" @open-edit-modal.window="
     editData = $event.detail; 
+    originalStatus = editData.status; confirmed = false; confirmOpen = false; submitting = false;
     updateActionUrl = '{{ route('eoffice.manprak.admin.praktikum.index') }}/' + editData.id;
     open = true;
 " id="modalEdit"
@@ -660,9 +724,12 @@
                 <div class="font-bold text-[16px] text-[#0D0D12]">Edit Praktikum</div>
             </div>
             <div class="overflow-y-auto flex-1">
-                <form method="POST" :action="updateActionUrl" class="p-6 overflow-visible">
+                <form method="POST" :action="updateActionUrl" class="p-6 overflow-visible" x-ref="statusForm"
+                    @submit="if(editData.status !== originalStatus && !confirmed){$event.preventDefault();confirmOpen=true;}else{submitting=true;}">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" name="previous_status" :value="originalStatus">
+                    <input type="hidden" name="status_confirmed" :value="confirmed ? '1' : '0'">
                     <div class="flex flex-col gap-4">
                         <div>
                             <label class="block text-[12px] font-semibold text-[#353849] mb-1">Nama Praktikum <span
@@ -812,7 +879,7 @@
                             <label class="block text-[12px] font-semibold text-[#353849] mb-1">Dosen Pengampu <span
                                     class="text-red-500">*</span></label>
                             <template x-for="(dosen, index) in editData.dosens" :key="index">
-                                <div class="flex gap-2 mb-2">
+                                <div class="flex gap-2 mb-2" style="display:flex;min-width:0;width:100%;gap:8px;">
                                     <div x-data="{ 
                                 dropdownOpen: false,
                                 search: '',
@@ -820,13 +887,14 @@
                                     if (!this.search) return dosenOptions;
                                     return dosenOptions.filter(o => o.label.toLowerCase().includes(this.search.toLowerCase()));
                                 }
-                            }" class="relative w-full">
+                            }" class="relative w-full" style="flex:1 1 0%;min-width:0;width:0;">
                                         <input type="hidden" :name="'dosen_ids[' + index + ']'"
                                             x-model="editData.dosens[index]" required>
                                         <button type="button" @click="dropdownOpen = !dropdownOpen"
+                                            style="width:100%;min-width:0;display:flex;align-items:center;overflow:hidden;"
                                             class="w-full py-2 pl-3 pr-3 text-left text-[13px] border focus:outline-none font-medium flex items-center justify-between transition-colors rounded-[8px]"
                                             :class="dropdownOpen ? 'border-[#0B266E] bg-[#EEF1FA] text-[#0B266E]' : 'border-[#DFE1E7] bg-white text-[#353849] hover:bg-[#F6F8FA]'">
-                                            <span
+                                            <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;padding-right:8px;"
                                                 x-text="editData.dosens[index] ? dosenOptions.find(o => o.value == editData.dosens[index])?.label : '— Pilih Dosen —'"
                                                 class="truncate pr-2"
                                                 :class="editData.dosens[index] ? 'text-[#0D0D12]' : 'text-[#94A3B8]'"></span>
@@ -876,15 +944,8 @@
                                     </div>
                                     <button type="button" x-show="editData.dosens.length > 1"
                                         @click="editData.dosens.splice(index, 1)"
-                                        class="flex-shrink-0 w-[38px] h-[38px] flex items-center justify-center rounded-[8px] border border-[#FADAE1] bg-[#FFF5F5] text-[#DF1C41] hover:bg-[#FEE2E2] transition-colors"
-                                        title="Hapus Dosen">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                            <polyline points="3 6 5 6 21 6" />
-                                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                                            <path d="M10 11v6M14 11v6" />
-                                        </svg>
-                                    </button>
+                                        class="mp-delete-button flex-shrink-0 w-[38px] h-[38px] flex items-center justify-center rounded-[8px] border border-[#FADAE1] bg-[#FFF5F5] text-[#DF1C41] hover:bg-[#FEE2E2] transition-colors"
+                                        title="Hapus Dosen" aria-label="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                 </div>
                             </template>
                             <button type="button" x-show="editData.dosens.length < 3" @click="editData.dosens.push('')"
@@ -946,14 +1007,15 @@
                     </div>
                     <div class="mp-modal-footer mp-modal-footer-bleed flex gap-3 justify-end mt-6 pt-5 border-t border-[#DFE1E7]" style="--mp-modal-footer-radius:16px;">
                         <button type="button" @click="open = false" class="mp-btn secondary md px-5">Batal</button>
-                        <button type="submit" class="mp-btn primary md px-5">Simpan Perubahan</button>
+                        <button type="submit" class="mp-btn primary md px-5" :disabled="submitting">Simpan Perubahan</button>
                     </div>
                 </form>
             </div>
         </div>
+        @include('eoffice::manajemen-praktikum.admin.partials.status-confirmation')
     </div>
 
-    @if($errors->any())
+    @if($errors->any() && !old('_method'))
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 window.dispatchEvent(new CustomEvent('open-create-modal'));

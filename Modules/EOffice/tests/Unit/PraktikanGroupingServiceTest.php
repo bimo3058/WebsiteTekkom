@@ -8,6 +8,41 @@ use PHPUnit\Framework\TestCase;
 
 class PraktikanGroupingServiceTest extends TestCase
 {
+    public function test_hybrid_preserves_manual_members_and_balances_only_the_remainder(): void
+    {
+        $service = new PraktikanGroupingService;
+        foreach (['urutan_sistem', 'acak'] as $method) {
+            $draft = $service->manual(3, 2);
+            $draft['assignments'] = ['p1' => '1', 'p2' => '1', 'p3' => '1'];
+            $ids = collect(['p1', 'p2', 'p3', 'p4', 'p5', 'p6']);
+            $result = $service->fillRemaining($draft, $ids, $method);
+            foreach (['p1', 'p2', 'p3'] as $id) {
+                $this->assertSame('1', $result['assignments'][$id]);
+            }
+            $this->assertCount(6, $result['assignments']);
+            $this->assertSame($draft['groups'], $result['groups']);
+            $this->assertSame([], $service->validationErrors($result, $ids));
+        }
+    }
+
+    public function test_hybrid_rejects_members_from_another_practicum(): void
+    {
+        $service = new PraktikanGroupingService;
+        $draft = $service->manual(1, 1);
+        $draft['assignments'] = ['foreign' => '1'];
+        $this->expectException(\InvalidArgumentException::class);
+        $service->fillRemaining($draft, collect(['p1']), 'acak');
+    }
+
+    public function test_hybrid_rejects_repeated_distribution_when_everyone_is_assigned(): void
+    {
+        $service = new PraktikanGroupingService;
+        $draft = $service->manual(1, 1);
+        $draft['assignments'] = ['p1' => '1'];
+        $this->expectException(\InvalidArgumentException::class);
+        $service->fillRemaining($draft, collect(['p1']), 'urutan_sistem');
+    }
+
     public function test_it_builds_balanced_sequential_groups_and_shifts(): void
     {
         $service = new PraktikanGroupingService;

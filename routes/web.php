@@ -50,6 +50,8 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/auth/microsoft/redirect', [MicrosoftController::class, 'redirect'])
         ->name('microsoft.redirect');
+    Route::get('/admin-praktikum/login',[\App\Http\Controllers\Auth\PracticumAdminLoginController::class,'create'])->name('practicum-admin.login');
+    Route::post('/admin-praktikum/login',[\App\Http\Controllers\Auth\PracticumAdminLoginController::class,'store'])->middleware('throttle:10,1')->name('practicum-admin.login.store');
 
     Route::get('/auth/microsoft/callback', [MicrosoftController::class, 'callback'])
         ->name('microsoft.callback');

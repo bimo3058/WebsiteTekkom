@@ -20,7 +20,7 @@ class TugasController extends Controller
 
         $semuaPraktikan = DaftarPraktikan::with('praktikum')
             ->where('user_id', $user->id)
-            ->whereHas('praktikum', fn($q) => $q->where('status', 'aktif'))
+            ->whereHas('praktikum', fn($q) => $q->whereIn('status', ['aktif','nonaktif']))
             ->get();
 
         // Sinkronisasi dengan session

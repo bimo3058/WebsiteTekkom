@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 /**
  * Modul / pertemuan dalam satu Praktikum.
  *
- * Tabel: eo_prak_modul_praktikum
+ * Tabel: modul_praktikum
  */
 class Modul extends Model
 {

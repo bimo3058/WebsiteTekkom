@@ -14,14 +14,14 @@ use Symfony\Component\HttpFoundation\Response;
  * MASALAH YANG DISELESAIKAN
  * ─────────────────────────
  * Asprak hanya boleh mengelola MODUL yang di-assign kepadanya via tabel
- * `eo_prak_modul_asprak` (asprak_id → eo_prak_asprak_praktikum.id). Tanpa middleware ini,
+ * `modul_asprak` (asprak_id → asprak_praktikum.id). Tanpa middleware ini,
  * asprak bisa mengakses modul praktikum lain cukup dengan mengganti ID di URL.
  *
  * CARA KERJA
  * ──────────
  * 1. Resolve `AsistenPraktikum` yang aktif untuk user ini.
  * 2. Jika request menyertakan `modulId` / `modul_id` di route, cek bahwa
- *    modul tersebut ada di `eo_prak_modul_asprak` untuk asprak ini.
+ *    modul tersebut ada di `modul_asprak` untuk asprak ini.
  * 3. Inject `$asprak` (dan `$modul` jika ada) ke request attributes.
  *
  * PENGGUNAAN DI ROUTE
@@ -47,7 +47,7 @@ class EnsureAsprakOwnership
 
         // Jika tidak punya role asprak tapi admin/koor, izinkan bypass (read-only view)
         if ($allAsprak->isEmpty()) {
-            if ($user?->hasAnyRole(['superadmin', 'admin_eoffice', 'koor_prak'])) {
+            if ($user?->hasAnyRole(['superadmin', 'koor_prak'])) {
                 return $next($request);
             }
             abort(403, 'Anda belum terdaftar sebagai Asisten Praktikum aktif.');

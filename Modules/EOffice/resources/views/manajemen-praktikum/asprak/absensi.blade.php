@@ -619,7 +619,7 @@ assessmentOptions() {
                                                     @mouseenter="updateBulkSelection(r, 'laporan')"
                                                     style="position:relative;padding-right:32px!important;padding:12px 16px; text-align:center; background:#FEFCE8; transition: background 0.2s;">
                                                     <x-eoffice::manajemen-praktikum.ui.grade-score-input :integer="true" model="r.laporan" label="Nilai laporan" :disabled="!$praktikum->is_active" />
-                                                <x-eoffice::manajemen-praktikum.ui.module-score-history :module-id="$modul->id" client-student="r.dp_id" score-key="laporan" score-label="Laporan" /></td>
+                                                <x-eoffice::manajemen-praktikum.ui.module-score-history :module-id="$modul->id" client-student="r.dp_id" score-key="laporan" :score-label="$praktikum->laporanLabel()" /></td>
                                                 <td class="mp-grade-history-cell col-resp mp-bulk-grade-cell" :class="{ 'is-selected': isCellSelected(r, 'responsi') }"
                                                     @mousedown="startBulkSelection(r, 'responsi')"
                                                     @mouseenter="updateBulkSelection(r, 'responsi')"
@@ -732,14 +732,7 @@ sum += Object.entries(extraWeights).reduce((sum,[key,w])=>sum+Number(r[key]||0)*
                                                                     </div>
                                                                 </div>
                                                                 <button type="button" @click="removeAssessmentField(fieldIndex)" aria-label="Hapus kolom penilaian"
-                                                                    style="appearance:none; width:46px; height:46px; flex:0 0 46px; display:flex; align-items:center; justify-content:center; border:1px solid #FECDD3; border-radius:9px; background:#FFF1F2; color:#E11D48; cursor:pointer;">
-                                                                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                                                        <path d="M19 6l-1 14H6L5 6m3 0V4h8v2"></path>
-                                                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                                                    </svg>
-                                                                </button>
+                                                                    style="appearance:none; width:46px; height:46px; flex:0 0 46px; display:flex; align-items:center; justify-content:center; border:1px solid #FECDD3; border-radius:9px; background:#FFF1F2; color:#E11D48; cursor:pointer;" class="mp-delete-button" title="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                                             </div>
                                                         </template>
                                                     </div>

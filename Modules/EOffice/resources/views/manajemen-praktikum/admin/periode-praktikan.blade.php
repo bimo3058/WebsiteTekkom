@@ -170,7 +170,7 @@
                         @else
                         <form method="POST" action="{{ route('eoffice.manprak.admin.periode-praktikan.destroy', $periode->id) }}" onsubmit="return confirm('Hapus riwayat periode ini?')">
                             @csrf @method('DELETE')
-                            <button type="submit" class="mp-btn neutral xs">Hapus</button>
+                            <button type="submit" class="mp-delete-button mp-btn neutral xs" aria-label="Hapus" title="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                         </form>
                         @endif
                     </td>

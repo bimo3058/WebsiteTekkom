@@ -79,6 +79,8 @@
 
 
 
+    <x-eoffice::manajemen-praktikum.ui.practicum-schedule role="mahasiswa" :dashboard="true" />
+
     <div class="flex flex-col lg:flex-row mb-4 items-stretch" style="gap: 15px;">
         
         {{-- Pengumuman Praktikum Terdaftar --}}
@@ -88,20 +90,9 @@
             </div>
             <div class="overflow-y-auto" style="flex:1; min-height:0;">
                 @forelse($pengumumanPraktikum ?? [] as $p)
-                    <div style="padding:16px 20px;border-bottom:1px solid #ECEFF3;">
-                        <div style="font-size:11px;font-weight:600;color:#1E3A8A;text-transform:uppercase;margin-bottom:6px;letter-spacing:0.04em;">
-                            {{ $p->praktikum?->nama ?? 'Praktikum' }}
-                        </div>
-                        <div style="font-size:14px;font-weight:700;color:#0D0D12;margin-bottom:6px;line-height:1.4;">{{ $p->judul }}</div>
-                        <div style="font-size:13px;color:#4B5563;line-height:1.6;" class="line-clamp-3">{{ $p->konten }}</div>
-                        <div style="font-size:11px;color:#808897;margin-top:8px;">Dipublikasikan {{ $p->created_at->diffForHumans() }}
-                            @if($p->user)
-                                · oleh <span style="font-weight:600;color:#4B5563;">{{ $p->user->name }}</span>
-                            @endif
-                        </div>
-                    </div>
+                    <x-eoffice::manajemen-praktikum.ui.announcement-preview :announcement="$p" />
                 @empty
-                    <div style="padding:48px 20px;text-align:center;">
+                    <div style="height:100%;box-sizing:border-box;padding:24px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;">
                             <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" />
                         </svg>
@@ -109,7 +100,7 @@
                             <div style="font-size:14px;font-weight:500;color:#353849;">Anda belum terdaftar di praktikum manapun.</div>
                             <div style="font-size:12px;color:#808897;margin-top:4px;">Silakan hubungi Admin atau Koordinator untuk informasi lebih lanjut.</div>
                         @else
-                            <div style="font-size:14px;font-weight:500;color:#353849;">Belum ada pengumuman</div>
+                            <div style="font-size:14px;font-weight:500;color:#353849;">Belum ada pengumuman terbaru.</div>
                             <div style="font-size:12px;color:#808897;margin-top:4px;">Pembaruan praktikum akan muncul di sini.</div>
                         @endif
                     </div>
@@ -132,23 +123,22 @@
                         $isLate = now()->gt($dl);
                         $urgent = $sisa <= 2 && !$isLate;
                     @endphp
-                    <div style="padding:16px 20px;border-bottom:1px solid #ECEFF3;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                    <a href="{{ route('eoffice.manprak.mahasiswa.tugas.index', ['praktikum_id'=>$t->modul->praktikum_id, 'tugas_id'=>$t->id]) }}#tugas-{{ $t->id }}" class="mp-dashboard-announcement" style="display:block;padding:16px 20px;border-bottom:1px solid #ECEFF3;text-decoration:none;color:inherit;">
                         <div class="min-w-0">
                             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                                <span style="font-size:11px;font-weight:600;color:#6366F1;text-transform:uppercase;">{{ $t->modul->praktikum->nama ?? '-' }} - {{ $t->modul->judul ?? '-' }}</span>
+                                <span style="font-size:11px;font-weight:600;color:#1E3A8A;text-transform:uppercase;letter-spacing:.04em;">{{ $t->modul->praktikum->nama ?? 'Praktikum' }}</span>
                                 @if($isLate)
                                     <span class="mp-badge error sm" style="font-size:10px;padding:2px 6px;">Terlambat</span>
                                 @endif
                             </div>
-                            <div style="font-size:14px;font-weight:600;color:#0D0D12;" class="truncate">{{ $t->judul }}</div>
+                            <div style="font-size:14px;font-weight:700;color:#353849;" class="truncate">{{ $t->judul }}</div>
                             <div style="font-size:12px;margin-top:4px;color:{{ $isLate ? '#DF1C41' : ($urgent ? '#D39C3D' : '#666D80') }};font-weight:{{ ($isLate || $urgent) ? '600' : '400' }};">
                                 Berakhir: {{ $dl->locale('id')->isoFormat('D MMM YYYY, HH:mm') }}
                             </div>
                         </div>
-                        <a href="{{ route('eoffice.manprak.mahasiswa.tugas.index') }}" class="mp-btn {{ $isLate ? 'secondary' : 'primary' }} sm flex-shrink-0" style="text-decoration:none;">{{ $isLate ? 'Detail' : 'Kerjakan' }}</a>
-                    </div>
+                    </a>
                 @empty
-                    <div style="padding:48px 20px;text-align:center;">
+                    <div style="height:100%;box-sizing:border-box;padding:24px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;">
                             <path d="M9 11l3 3L22 4" />
                             <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />

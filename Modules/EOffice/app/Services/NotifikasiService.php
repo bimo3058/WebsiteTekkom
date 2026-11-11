@@ -10,21 +10,29 @@ class NotifikasiService
     /**
      * Kirim notifikasi ke satu user.
      */
-    public function kirim(int $userId, string $judul, string $pesan, ?int $peminjamanId = null): Notifikasi
+    public function kirim(int $userId, string $judul, string $pesan, ?int $peminjamanId = null, ?string $practicumRole = null, ?array $target = null): Notifikasi
     {
-        return Notifikasi::create([
+        $data = [
             'user_id' => $userId,
             'judul' => $judul,
             'pesan' => $pesan,
             'peminjaman_id' => $peminjamanId,
             'is_read' => false,
-        ]);
+        ];
+        if (\Illuminate\Support\Facades\Schema::hasColumn('eo_notifikasi', 'practicum_role')) {
+            $data['practicum_role'] = $practicumRole;
+            if ($practicumRole === null && request()->routeIs('eoffice.manprak.*')) {
+                $data['practicum_role'] = PracticumNotificationAudience::roleForTitle($judul);
+            }
+        }
+        if ($target && \Illuminate\Support\Facades\Schema::hasColumn('eo_notifikasi','practicum_target')) $data['practicum_target']=$target;
+        return Notifikasi::create($data);
     }
 
     /**
      * Kirim notifikasi ke banyak user sekaligus (bulk insert).
      */
-    public function kirimBulk(iterable $userIds, string $judul, string $pesan): void
+    public function kirimBulk(iterable $userIds, string $judul, string $pesan, ?string $practicumRole = null, ?array $target = null): void
     {
         $now = now();
         $rows = [];
@@ -38,6 +46,15 @@ class NotifikasiService
             ];
         }
         if (!empty($rows)) {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('eo_notifikasi', 'practicum_role')) {
+                $role = $practicumRole ?? (request()->routeIs('eoffice.manprak.*') ? PracticumNotificationAudience::roleForTitle($judul) : null);
+                foreach ($rows as &$row) $row['practicum_role'] = $role;
+                unset($row);
+            }
+            if ($target && \Illuminate\Support\Facades\Schema::hasColumn('eo_notifikasi','practicum_target')) {
+                foreach ($rows as &$row) $row['practicum_target']=json_encode($target);
+                unset($row);
+            }
             Notifikasi::insert($rows);
         }
     }
