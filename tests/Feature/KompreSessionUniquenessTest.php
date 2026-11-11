@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Mockery;
+use Mockery\MockInterface;
 use Modules\BankSoal\Enums\KompreSessionStatus;
 use Modules\BankSoal\Models\Komprehensif\JadwalUjian;
 use Modules\BankSoal\Models\Komprehensif\KompreSession;
@@ -55,6 +56,7 @@ class KompreSessionUniquenessTest extends TestCase
             'waktu_selesai' => '12:00',
         ]);
 
+        /** @var CbtSessionService&MockInterface $service */
         $service = Mockery::mock(CbtSessionService::class)->makePartial();
         $service->shouldReceive('generateSoal')->once()->andReturnNull();
 
@@ -80,6 +82,7 @@ class KompreSessionUniquenessTest extends TestCase
         $jadwal = new JadwalUjian(['nama_sesi' => 'Sesi Baru']);
         $jadwal->id = 999;
 
+        /** @var CbtSessionService&MockInterface $service */
         $service = Mockery::mock(CbtSessionService::class)->makePartial();
         $service->shouldNotReceive('generateSoal');
 

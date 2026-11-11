@@ -71,16 +71,16 @@ class PendaftaranService
             }
 
             return PendaftarUjian::create([
-                'periode_ujian_id'      => $lockedPeriode->id,
-                'mahasiswa_id'          => $mahasiswaId,
-                'nim'                   => $data['nim'],
-                'nama_lengkap'          => $data['nama'],
-                'kontak_wa'             => $data['kontak_wa'],
-                'semester_aktif'        => $data['semester'],
-                'target_wisuda'         => $data['target_wisuda'],
+                'periode_ujian_id' => $lockedPeriode->id,
+                'mahasiswa_id' => $mahasiswaId,
+                'nim' => $data['nim'],
+                'nama_lengkap' => $data['nama'],
+                'kontak_wa' => $data['kontak_wa'],
+                'semester_aktif' => $data['semester'],
+                'target_wisuda' => $data['target_wisuda'],
                 'dosen_pembimbing_1_id' => $data['dosen_pembimbing_1_id'],
                 'dosen_pembimbing_2_id' => $data['dosen_pembimbing_2_id'] ?? null,
-                'status_pendaftaran'    => PendaftaranStatus::Pending->value,
+                'status_pendaftaran' => PendaftaranStatus::Pending->value,
             ]);
         });
     }
@@ -92,12 +92,12 @@ class PendaftaranService
      */
     public function autoGradeNoShow(JadwalUjian $jadwal, int $userId): ?KompreSession
     {
-        if (!$jadwal->tanggal_ujian || !$jadwal->waktu_selesai) {
+        if (! $jadwal->tanggal_ujian || ! $jadwal->waktu_selesai) {
             return null;
         }
 
         $waktuSelesai = Carbon::parse(
-            $jadwal->tanggal_ujian->format('Y-m-d') . ' ' . $jadwal->waktu_selesai
+            $jadwal->tanggal_ujian->format('Y-m-d').' '.$jadwal->waktu_selesai
         );
 
         // Belum lewat waktu ujian
@@ -115,16 +115,18 @@ class PendaftaranService
         }
 
         $waktuMulai = Carbon::parse(
-            $jadwal->tanggal_ujian->format('Y-m-d') . ' ' . $jadwal->waktu_mulai
+            $jadwal->tanggal_ujian->format('Y-m-d').' '.$jadwal->waktu_mulai
         );
 
         return KompreSession::create([
-            'user_id'     => $userId,
-            'jadwal_id'   => $jadwal->id,
-            'title'       => 'Tidak Mengerjakan',
-            'status'      => KompreSessionStatus::Finished,
-            'score'       => 0,
-            'started_at'  => $waktuMulai,
+            'user_id' => $userId,
+            'jadwal_id' => $jadwal->id,
+            'title' => 'Tidak Mengerjakan',
+            'status' => KompreSessionStatus::Finished,
+            'score' => 0,
+            'lulus' => false,
+            'cpl_scores' => [],
+            'started_at' => $waktuMulai,
             'finished_at' => $waktuSelesai,
         ]);
     }

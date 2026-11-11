@@ -368,7 +368,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
         });
     });
 
-    # Manajemen Ujian (Live Proctoring & Riwayat)
+    # Manajemen Ujian (Riwayat, Analitik; live-proctoring dialihkan ke Monitoring Ujian)
     Route::prefix('admin/cbt')->name('banksoal.admin.cbt.')->group(function () {
         Route::middleware('role:admin_banksoal|admin|superadmin')->group(function () {
             Route::get('/live-proctoring', [AdminCbtController::class, 'liveProctoring'])->name('live-proctoring');
@@ -419,5 +419,6 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
         Route::post('/engine/toggle-ragu', [CbtEngineController::class, 'toggleRagu'])->name('engine.toggle-ragu');
         Route::post('/engine/log-violation', [CbtEngineController::class, 'logViolation'])->name('engine.log-violation');
         Route::get('/engine/finish', [CbtEngineController::class, 'finish'])->name('engine.finish');
+        Route::post('/engine/finish', [CbtEngineController::class, 'finishBulk'])->name('engine.finish-bulk');
     });
 

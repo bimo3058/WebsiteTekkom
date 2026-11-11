@@ -17,7 +17,7 @@
     {{-- Right: action buttons --}}
     <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         @if($sesiOngoing > 0)
-            <a href="{{ route('banksoal.admin.cbt.live-proctoring') }}"
+            <a href="{{ route('banksoal.aktivasi.index') }}"
                style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:var(--c-success); border:1px solid var(--c-success); border-radius:8px; font-size:12px; font-weight:600; color:#fff; text-decoration:none; transition:all .15s; white-space:nowrap; box-shadow:0 2px 6px rgba(16,185,129,0.3);"
                onmouseover="this.style.background='#059669'; this.style.boxShadow='0 4px 12px rgba(16,185,129,0.4)'"
                onmouseout="this.style.background='var(--c-success)'; this.style.boxShadow='0 2px 6px rgba(16,185,129,0.3)'">

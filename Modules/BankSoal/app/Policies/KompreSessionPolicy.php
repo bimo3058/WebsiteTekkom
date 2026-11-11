@@ -21,7 +21,7 @@ class KompreSessionPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['admin_banksoal', 'admin']);
+        return $user->hasAnyRole(['admin_banksoal', 'admin', 'superadmin']);
     }
 
     /**
@@ -29,7 +29,7 @@ class KompreSessionPolicy
      */
     public function view(User $user, KompreSession $session): bool
     {
-        return $user->hasAnyRole(['admin_banksoal', 'admin']);
+        return $user->hasAnyRole(['admin_banksoal', 'admin', 'superadmin']);
     }
 
     /**
@@ -39,7 +39,7 @@ class KompreSessionPolicy
      */
     public function forceSubmit(User $user, KompreSession $session): bool
     {
-        return $user->hasAnyRole(['admin_banksoal', 'admin'])
+        return $user->hasAnyRole(['admin_banksoal', 'admin', 'superadmin'])
             && $session->status === KompreSessionStatus::Ongoing;
     }
 

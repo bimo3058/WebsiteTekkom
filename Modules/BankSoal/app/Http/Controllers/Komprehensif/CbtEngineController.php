@@ -5,6 +5,8 @@ namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Enums\KompreSessionStatus;
 use Modules\BankSoal\Enums\PendaftaranStatus;
 use Modules\BankSoal\Http\Requests\Komprehensif\LogViolationRequest;
@@ -43,9 +45,9 @@ class CbtEngineController extends Controller
         $jadwal = JadwalUjian::where('status', 'aktif')
             ->where('token', $token)
             ->whereHas('pendaftars', function ($q) {
-                $q->where('mahasiswa_id', auth()->id())
-                  ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
-                  ->whereNull('deleted_at');
+                $q->where('mahasiswa_id', Auth::id())
+                    ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
+                    ->whereNull('deleted_at');
             })
             ->first();
 
@@ -57,8 +59,8 @@ class CbtEngineController extends Controller
             return back()->with('error', 'Ujian tidak dijadwalkan pada hari ini.');
         }
 
-        $tanggal      = $jadwal->tanggal_ujian->format('Y-m-d');
-        $waktuSelesai = Carbon::parse($tanggal . ' ' . $jadwal->waktu_selesai);
+        $tanggal = $jadwal->tanggal_ujian->format('Y-m-d');
+        $waktuSelesai = Carbon::parse($tanggal.' '.$jadwal->waktu_selesai);
 
         if (now()->gte($waktuSelesai)) {
             return back()->with('error', 'Sesi ujian telah berakhir. Anda tidak dapat masuk lagi.');
@@ -68,9 +70,9 @@ class CbtEngineController extends Controller
         // Jika sesi ongoing sudah ada (mis. token diinput ulang / dobel klik),
         // service mengembalikan sesi yang sama, bukan membuat sesi baru.
         try {
-            $this->cbtService->startSession($jadwal, auth()->id());
+            $this->cbtService->startSession($jadwal, (int) Auth::id());
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal membangkitkan soal ujian: ' . $e->getMessage());
+            return back()->with('error', 'Gagal membangkitkan soal ujian: '.$e->getMessage());
         }
 
         return redirect()->route('komprehensif.mahasiswa.engine.run');
@@ -89,9 +91,9 @@ class CbtEngineController extends Controller
         $jadwal = JadwalUjian::where('status', 'aktif')
             ->where('token', $token)
             ->whereHas('pendaftars', function ($q) {
-                $q->where('mahasiswa_id', auth()->id())
-                  ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
-                  ->whereNull('deleted_at');
+                $q->where('mahasiswa_id', Auth::id())
+                    ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
+                    ->whereNull('deleted_at');
             })
             ->first();
 
@@ -103,8 +105,8 @@ class CbtEngineController extends Controller
             return response()->json(['valid' => false, 'message' => 'Ujian tidak dijadwalkan pada hari ini.']);
         }
 
-        $tanggal      = $jadwal->tanggal_ujian->format('Y-m-d');
-        $waktuSelesai = Carbon::parse($tanggal . ' ' . $jadwal->waktu_selesai);
+        $tanggal = $jadwal->tanggal_ujian->format('Y-m-d');
+        $waktuSelesai = Carbon::parse($tanggal.' '.$jadwal->waktu_selesai);
 
         if (now()->gte($waktuSelesai)) {
             return response()->json(['valid' => false, 'message' => 'Sesi ujian telah berakhir. Anda tidak dapat masuk lagi.']);
@@ -124,7 +126,7 @@ class CbtEngineController extends Controller
         }
 
         // Jika ujian sudah berjalan, langsung lempar ke soal
-        $ongoingSession = KompreSession::where('user_id', auth()->id())
+        $ongoingSession = KompreSession::where('user_id', Auth::id())
             ->where('status', 'ongoing')
             ->first();
 
@@ -132,13 +134,13 @@ class CbtEngineController extends Controller
             return redirect()->route('komprehensif.mahasiswa.engine.run');
         }
 
-        $pendaftar  = PendaftarUjian::where('mahasiswa_id', auth()->id())
+        $pendaftar = PendaftarUjian::where('mahasiswa_id', Auth::id())
             ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
             ->first();
 
-        $jadwal     = JadwalUjian::find(session(self::SESSION_JADWAL_KEY));
-        $waktuMulai = Carbon::parse($jadwal->tanggal_ujian->format('Y-m-d') . ' ' . $jadwal->waktu_mulai);
-        $canStart   = now()->gte($waktuMulai);
+        $jadwal = JadwalUjian::find(session(self::SESSION_JADWAL_KEY));
+        $waktuMulai = Carbon::parse($jadwal->tanggal_ujian->format('Y-m-d').' '.$jadwal->waktu_mulai);
+        $canStart = now()->gte($waktuMulai);
 
         return view('banksoal::mahasiswa.cbt.waiting-room', compact('pendaftar', 'jadwal', 'waktuMulai', 'canStart'));
     }
@@ -153,10 +155,10 @@ class CbtEngineController extends Controller
                 ->with('error', 'Sesi tidak valid.');
         }
 
-        $jadwal      = JadwalUjian::findOrFail(session(self::SESSION_JADWAL_KEY));
-        $tanggal     = $jadwal->tanggal_ujian->format('Y-m-d');
-        $waktuMulai  = Carbon::parse($tanggal . ' ' . $jadwal->waktu_mulai);
-        $waktuSelesai = Carbon::parse($tanggal . ' ' . $jadwal->waktu_selesai);
+        $jadwal = JadwalUjian::findOrFail(session(self::SESSION_JADWAL_KEY));
+        $tanggal = $jadwal->tanggal_ujian->format('Y-m-d');
+        $waktuMulai = Carbon::parse($tanggal.' '.$jadwal->waktu_mulai);
+        $waktuSelesai = Carbon::parse($tanggal.' '.$jadwal->waktu_selesai);
 
         if (now()->lt($waktuMulai)) {
             return back()->with('error', 'Waktu ujian belum dimulai.');
@@ -168,7 +170,7 @@ class CbtEngineController extends Controller
         }
 
         // Jika sesi sudah ada (misal refresh), lanjutkan
-        $existingSession = KompreSession::where('user_id', auth()->id())
+        $existingSession = KompreSession::where('user_id', Auth::id())
             ->where('status', 'ongoing')
             ->first();
 
@@ -177,10 +179,11 @@ class CbtEngineController extends Controller
         }
 
         try {
-            $this->cbtService->startSession($jadwal, auth()->id());
+            $this->cbtService->startSession($jadwal, (int) Auth::id());
+
             return redirect()->route('komprehensif.mahasiswa.engine.run');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal membangkitkan soal ujian: ' . $e->getMessage());
+            return back()->with('error', 'Gagal membangkitkan soal ujian: '.$e->getMessage());
         }
     }
 
@@ -189,7 +192,7 @@ class CbtEngineController extends Controller
      */
     public function run()
     {
-        $session = KompreSession::where('user_id', auth()->id())
+        $session = KompreSession::where('user_id', Auth::id())
             ->where('status', 'ongoing')
             ->with('jadwal')  // diperlukan oleh getEndTime() untuk strict gate enforcement
             ->first();
@@ -203,34 +206,35 @@ class CbtEngineController extends Controller
 
         if (now()->gt($endTime)) {
             $this->cbtService->finishSession($session);
+
             return redirect()->route('komprehensif.mahasiswa.dashboard')
                 ->with('info', 'Waktu ujian telah habis.');
         }
 
-        $jadwal   = $session->jadwal;
+        $jadwal = $session->jadwal;
         $jawabans = KompreJawaban::where('kompre_session_id', $session->id)
             ->orderBy('urutan_soal')
             ->with(['pertanyaan', 'pertanyaan.jawaban', 'pertanyaan.cpl'])
             ->get()
             ->map(function ($j) {
-                $opsiMap    = collect($j->pertanyaan->jawaban)->keyBy('id');
+                $opsiMap = collect($j->pertanyaan->jawaban)->keyBy('id');
                 $opsiSorted = collect($j->urutan_opsi)
-                    ->map(fn($oId) => $opsiMap->get($oId))
+                    ->map(fn ($oId) => $opsiMap->get($oId))
                     ->filter()
                     ->values();
 
                 return [
-                    'id'               => $j->id,
-                    'urutan'           => $j->urutan_soal,
-                    'soal'             => $j->pertanyaan->soal,
-                    'opsi'             => $opsiSorted->map(fn($o, $idx) => [
-                        'id'    => $o->id,
-                        'teks'  => $o->deskripsi,
+                    'id' => $j->id,
+                    'urutan' => $j->urutan_soal,
+                    'soal' => $j->pertanyaan->soal,
+                    'opsi' => $opsiSorted->map(fn ($o, $idx) => [
+                        'id' => $o->id,
+                        'teks' => $o->deskripsi,
                         'label' => chr(65 + $idx), // A, B, C, D, E
                     ]),
                     'jawaban_terpilih' => $j->jawaban_dipilih,
-                    'ragu_ragu'        => (bool) $j->is_ragu,
-                    'cpl_kode'         => $j->pertanyaan->cpl->kode ?? 'CPL',
+                    'ragu_ragu' => (bool) $j->is_ragu,
+                    'cpl_kode' => $j->pertanyaan->cpl->kode ?? 'CPL',
                 ];
             });
 
@@ -243,25 +247,27 @@ class CbtEngineController extends Controller
     public function saveAnswer(SaveAnswerRequest $request)
     {
         $jawaban = KompreJawaban::where('id', $request->jawaban_id)
-            ->whereHas('session', fn($q) => $q->where('user_id', auth()->id())->where('status', KompreSessionStatus::Ongoing))
+            ->whereHas('session', fn ($q) => $q->where('user_id', Auth::id())->where('status', KompreSessionStatus::Ongoing))
             ->with('session.jadwal')  // eager-load jadwal untuk strict gate time check
             ->first();
 
         if (! $jawaban) {
             // Cek apakah sesi sudah di-force submit admin → return expired agar frontend redirect
-            $finished = KompreSession::where('user_id', auth()->id())
+            $finished = KompreSession::where('user_id', Auth::id())
                 ->where('status', KompreSessionStatus::Finished)
                 ->latest('finished_at')
                 ->first();
             if ($finished) {
                 return response()->json(['success' => false, 'expired' => true, 'message' => 'Sesi ujian telah diakhiri oleh pengawas.'], 403);
             }
+
             return response()->json(['success' => false, 'message' => 'Sesi tidak valid.'], 403);
         }
 
         // ✅ Server-side timer validation — tidak bisa dimanipulasi dari client
         if (now()->gt($this->cbtService->getEndTime($jawaban->session))) {
             $this->cbtService->finishSession($jawaban->session);
+
             return response()->json(['success' => false, 'expired' => true], 403);
         }
 
@@ -283,24 +289,26 @@ class CbtEngineController extends Controller
     public function toggleRagu(ToggleRaguRequest $request)
     {
         $jawaban = KompreJawaban::where('id', $request->jawaban_id)
-            ->whereHas('session', fn($q) => $q->where('user_id', auth()->id())->where('status', KompreSessionStatus::Ongoing))
+            ->whereHas('session', fn ($q) => $q->where('user_id', Auth::id())->where('status', KompreSessionStatus::Ongoing))
             ->with('session.jadwal')  // eager-load jadwal untuk strict gate time check
             ->first();
 
         if (! $jawaban) {
-            $finished = KompreSession::where('user_id', auth()->id())
+            $finished = KompreSession::where('user_id', Auth::id())
                 ->where('status', KompreSessionStatus::Finished)
                 ->latest('finished_at')
                 ->first();
             if ($finished) {
                 return response()->json(['success' => false, 'expired' => true, 'message' => 'Sesi ujian telah diakhiri oleh pengawas.'], 403);
             }
+
             return response()->json(['success' => false, 'message' => 'Sesi tidak valid.'], 403);
         }
 
         // ✅ Server-side timer validation
         if (now()->gt($this->cbtService->getEndTime($jawaban->session))) {
             $this->cbtService->finishSession($jawaban->session);
+
             return response()->json(['success' => false, 'expired' => true], 403);
         }
 
@@ -314,7 +322,7 @@ class CbtEngineController extends Controller
      */
     public function logViolation(LogViolationRequest $request)
     {
-        $session = KompreSession::where('user_id', auth()->id())
+        $session = KompreSession::where('user_id', Auth::id())
             ->where('status', 'ongoing')
             ->first();
 
@@ -324,10 +332,10 @@ class CbtEngineController extends Controller
 
         CheatLog::create([
             'kompre_session_id' => $session->id,
-            'event_type'        => $request->event_type,
-            'description'       => $request->description,
-            'metadata'          => [
-                'ip'         => $request->ip(),
+            'event_type' => $request->event_type,
+            'description' => $request->description,
+            'metadata' => [
+                'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ],
         ]);
@@ -340,12 +348,12 @@ class CbtEngineController extends Controller
      */
     public function status()
     {
-        $session = KompreSession::where('user_id', auth()->id())
+        $session = KompreSession::where('user_id', Auth::id())
             ->where('status', KompreSessionStatus::Ongoing)
             ->first();
 
         if (! $session) {
-            $finished = KompreSession::where('user_id', auth()->id())
+            $finished = KompreSession::where('user_id', Auth::id())
                 ->where('status', KompreSessionStatus::Finished)
                 ->latest('finished_at')
                 ->first();
@@ -372,7 +380,7 @@ class CbtEngineController extends Controller
      */
     public function finish()
     {
-        $session = KompreSession::where('user_id', auth()->id())
+        $session = KompreSession::where('user_id', Auth::id())
             ->where('status', 'ongoing')
             ->first();
 
@@ -382,5 +390,64 @@ class CbtEngineController extends Controller
 
         return redirect()->route('komprehensif.mahasiswa.dashboard')
             ->with('success', 'Ujian telah selesai. Terima kasih.');
+    }
+
+    /**
+     * Selesaikan ujian sekaligus bulk-save seluruh jawaban peserta dalam satu transaksi.
+     * Menjamin pilihan terakhir di UI tersimpan sebelum sesi ditandai selesai (anti-race).
+     */
+    public function finishBulk(Request $request)
+    {
+        $validated = $request->validate([
+            'answers' => ['required', 'array', 'max:150'],
+            'answers.*.jawaban_id' => ['required', 'integer'],
+            'answers.*.opsi_terpilih' => ['nullable'],
+            'answers.*.is_ragu' => ['required', 'boolean'],
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            $session = KompreSession::where('user_id', Auth::id())
+                ->where('status', KompreSessionStatus::Ongoing)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $session) {
+                return;
+            }
+
+            $jawabans = KompreJawaban::where('kompre_session_id', $session->id)
+                ->get()
+                ->keyBy('id');
+
+            foreach ($validated['answers'] as $item) {
+                $jawaban = $jawabans->get($item['jawaban_id']);
+
+                if (! $jawaban) {
+                    continue;
+                }
+
+                $changes = [];
+
+                if (! empty($item['opsi_terpilih'])
+                    && (int) $item['opsi_terpilih'] !== (int) ($jawaban->jawaban_dipilih ?? 0)
+                    && in_array((int) $item['opsi_terpilih'], $jawaban->urutan_opsi ?? [])) {
+                    $changes['jawaban_dipilih'] = (int) $item['opsi_terpilih'];
+                }
+
+                if ((bool) $item['is_ragu'] !== (bool) $jawaban->is_ragu) {
+                    $changes['is_ragu'] = (bool) $item['is_ragu'];
+                }
+
+                if ($changes) {
+                    $jawaban->update($changes);
+                }
+            }
+
+            $this->cbtService->finishSession($session);
+        });
+
+        return response()->json([
+            'redirect' => route('komprehensif.mahasiswa.dashboard'),
+        ]);
     }
 }

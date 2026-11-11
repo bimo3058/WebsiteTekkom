@@ -326,10 +326,11 @@
                         class="flex-1 px-4 py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm rounded-xl focus:outline-none transition-colors cursor-pointer">
                         Kembali
                     </button>
-                    <button @click="confirmSubmit()"
-                        class="flex-1 px-4 py-2.5 text-[13px] font-bold text-white bg-primary hover:bg-primary/90 shadow-sm rounded-xl focus:outline-none transition-colors flex items-center justify-center gap-2 cursor-pointer">
-                        <span class="material-symbols-outlined" style="font-size:18px">done_all</span>
-                        Ya, Selesaikan
+                    <button @click="confirmSubmit()" :disabled="isFinishing"
+                        class="flex-1 px-4 py-2.5 text-[13px] font-bold text-white bg-primary hover:bg-primary/90 shadow-sm rounded-xl focus:outline-none transition-colors flex items-center justify-center gap-2"
+                        :class="isFinishing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'">
+                        <span x-show="!isFinishing" class="material-symbols-outlined" style="font-size:18px">done_all</span>
+                        <span x-text="isFinishing ? 'Menyimpan...' : 'Ya, Selesaikan'"></span>
                     </button>
                 </div>
             </div>
@@ -347,7 +348,7 @@
                     <p class="text-sm text-slate-600 leading-relaxed" x-text="alertMessage"></p>
                 </div>
                 <button @click="closeAlert()"
-                    class="w-full bg-black text-slate-800 border-2 border-black px-4 py-3 text-sm font-black uppercase tracking-tight hover:bg-zinc-800 active:translate-y-0.5 transition-none">
+                    class="w-full bg-[#2A3A7C] text-white border border-[#2A3A7C] px-4 py-3 text-[13px] font-semibold tracking-tight rounded-lg hover:bg-[#232F63] active:translate-y-0.5 transition-colors cursor-pointer">
                     OK
                 </button>
             </div>
@@ -610,6 +611,7 @@
                 // Penanda navigasi submit/timeout oleh mahasiswa sendiri
                 // (cegah race: polling melihat sesi finished lalu salah menampilkan popup force-submit)
                 selfSubmitting: false,
+                isFinishing: false,
 
                 get currentSoal() {
                     return this.soals[this.currentIndex] || null;
@@ -868,14 +870,15 @@
                         });
                         const data = await response.json();
 
-                        // ✅ Server menyatakan waktu habis — paksa finish
                         if (data.expired) {
+                            if (this.selfSubmitting) return;
+
                             window.onbeforeunload = null;
                             clearInterval(this.timerInterval);
                             this.showAlert(
-                                'Waktu Ujian Habis',
-                                'Waktu ujian telah habis. Jawaban Anda akan disubmit otomatis oleh server.',
-                                '⏰',
+                                data.message ? 'Ujian Diakhiri' : 'Waktu Ujian Habis',
+                                data.message || 'Waktu ujian telah habis. Jawaban Anda akan disubmit otomatis oleh server.',
+                                data.message ? '🚪' : '⏰',
                                 () => {
                                     this.selfSubmitting = true;
                                     clearInterval(this.statusInterval);
@@ -907,6 +910,8 @@
                     const kompreJawabanId = this.currentSoal.id;
                     const statusRagu = !this.isRagu;
 
+                    this.isRagu = statusRagu;
+
                     try {
                         const response = await fetch("{{ route('komprehensif.mahasiswa.engine.toggle-ragu') }}", {
                             method: 'POST',
@@ -922,14 +927,15 @@
                         });
                         const data = await response.json();
 
-                        // ✅ Server menyatakan waktu habis — paksa finish
                         if (data.expired) {
+                            if (this.selfSubmitting) return;
+
                             window.onbeforeunload = null;
                             clearInterval(this.timerInterval);
                             this.showAlert(
-                                'Waktu Ujian Habis',
-                                'Waktu ujian telah habis. Jawaban Anda akan disubmit otomatis oleh server.',
-                                '⏰',
+                                data.message ? 'Ujian Diakhiri' : 'Waktu Ujian Habis',
+                                data.message || 'Waktu ujian telah habis. Jawaban Anda akan disubmit otomatis oleh server.',
+                                data.message ? '🚪' : '⏰',
                                 () => {
                                     this.selfSubmitting = true;
                                     clearInterval(this.statusInterval);
@@ -940,11 +946,14 @@
                             return;
                         }
 
-                        if (response.ok) {
-                            this.isRagu = statusRagu;
+                        if (!response.ok) {
+                            this.isRagu = !statusRagu;
+                            this.showAlert('Gagal Menyimpan', 'Gagal menyimpan status ragu-ragu. Periksa koneksi internet Anda!', '❌');
                         }
                     } catch (error) {
+                        this.isRagu = !statusRagu;
                         console.error('Save error:', error);
+                        this.showAlert('Koneksi Bermasalah', 'Status ragu-ragu gagal tersimpan karena koneksi terputus. Periksa internet Anda!', '❌');
                     } finally {
                         setTimeout(() => { this.isSaving = false; }, 300);
                     }
@@ -975,12 +984,40 @@
                     this.showSubmitModal = true;
                 },
 
-                confirmSubmit() {
+                async confirmSubmit() {
+                    if (this.isFinishing) return;
+                    this.isFinishing = true;
                     this.selfSubmitting = true;
-                    clearInterval(this.statusInterval);
-                    clearInterval(this.timerInterval);
-                    this.showSubmitModal = false;
                     window.onbeforeunload = null;
+
+                    try {
+                        const response = await fetch("{{ route('komprehensif.mahasiswa.engine.finish-bulk') }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                answers: this.soals.map(s => ({
+                                    jawaban_id: s.id,
+                                    opsi_terpilih: s.jawaban_terpilih,
+                                    is_ragu: !!s.ragu_ragu
+                                }))
+                            })
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.showSubmitModal = false;
+                            window.location.href = data.redirect;
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('Finish bulk error:', error);
+                    }
+
+                    this.showSubmitModal = false;
                     window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}";
                 },
 

@@ -250,8 +250,12 @@
                                 $nim       = $session->user?->student?->student_number ?? '—';
                                 $nama      = $session->user?->name ?? '—';
                                 $poin      = $session->score;
-                                $lulus     = $poin !== null && $poin >= 60;
+                                $lulus     = (bool) ($session->lulus ?? false);
                                 $ujianKe   = $session->ujian_ke ?? '—';
+                                $failedCpls = collect($session->cpl_scores ?? [])
+                                    ->where('lulus', false)
+                                    ->map(fn ($cpl) => $cpl['kode'].' ('.number_format((float) $cpl['nilai'], 2, '.', '').')')
+                                    ->join(', ');
                             @endphp
                             <tr class="hover:bg-gray-50/50 transition-colors">
                                 <td class="px-6 py-4 text-center text-gray-400">
@@ -291,12 +295,12 @@
                                 <td class="px-6 py-4 text-center">
                                     @if($poin !== null)
                                         @if($lulus)
-                                            <span style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px 3px 6px; border-radius:9999px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; background:#ECFDF5; color:#059669;">
+                                            <span title="{{ $failedCpls ? 'CPL di bawah 6.0: '.$failedCpls : '' }}" style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px 3px 6px; border-radius:9999px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; background:#ECFDF5; color:#059669;">
                                                 <span style="width:6px; height:6px; border-radius:50%; background:#059669;"></span>
                                                 LULUS
                                             </span>
                                         @else
-                                            <span style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px 3px 6px; border-radius:9999px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; background:#FEF2F2; color:#DC2626;">
+                                            <span title="{{ $failedCpls ? 'CPL di bawah 6.0: '.$failedCpls : '' }}" style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px 3px 6px; border-radius:9999px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; background:#FEF2F2; color:#DC2626;">
                                                 <span style="width:6px; height:6px; border-radius:50%; background:#DC2626;"></span>
                                                 TIDAK LULUS
                                             </span>
@@ -337,16 +341,26 @@
             <!-- Footer Pagination / Info -->
             <div class="px-6 py-4 border-t border-gray-200 bg-white flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-4 w-full">
-                    <div class="flex items-center gap-2">
-                        <span class="text-[13px] text-gray-700 font-medium whitespace-nowrap">Per page</span>
-                        <div class="relative">
-                            <select onchange="const url = new URL(window.location.href); url.searchParams.set('per_page', this.value); url.searchParams.delete('page'); window.location.href = url.toString();" class="pl-3 pr-8 py-1.5 bg-white border border-gray-300 rounded-lg text-[13px] text-gray-700 font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer outline-none disabled:bg-gray-50 disabled:cursor-not-allowed">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <form method="GET" action="{{ route('banksoal.admin.cbt.riwayat') }}" class="flex items-center gap-2">
+                            @if(request('q'))
+                                <input type="hidden" name="q" value="{{ request('q') }}">
+                            @endif
+                            @if(request('periode_id'))
+                                <input type="hidden" name="periode_id" value="{{ request('periode_id') }}">
+                            @endif
+                            @if(request('keterangan'))
+                                <input type="hidden" name="keterangan" value="{{ request('keterangan') }}">
+                            @endif
+
+                            <span class="text-[13px] text-gray-700 font-medium whitespace-nowrap">Per page</span>
+                            <select name="per_page" onchange="this.form.submit()" class="pl-3 pr-8 py-1.5 bg-white border border-gray-300 rounded-lg text-[13px] text-gray-700 font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer outline-none disabled:bg-gray-50 disabled:cursor-not-allowed">
                                  <option value="5"  {{ request('per_page', 5) == 5  ? 'selected' : '' }}>5</option>
                                  <option value="10" {{ request('per_page', 5) == 10 ? 'selected' : '' }}>10</option>
                                  <option value="25" {{ request('per_page', 5) == 25 ? 'selected' : '' }}>25</option>
                                  <option value="50" {{ request('per_page', 5) == 50 ? 'selected' : '' }}>50</option>
                             </select>
-                        </div>
+                        </form>
                         @if ($sessions instanceof \Illuminate\Pagination\LengthAwarePaginator)
                         <span class="text-[13px] text-gray-600 font-medium ml-2">
                             Showing {{ $sessions->firstItem() ?? 0 }} to {{ $sessions->lastItem() ?? 0 }} of {{ $sessions->total() }} results
@@ -362,98 +376,6 @@
                 </div>
             </div>
         </div>
-
-        {{-- ============================================== --}}
-        {{-- ZONA BERBAHAYA: Reset Data Ujian              --}}
-        {{-- ============================================== --}}
-        {{-- Hanya yang berhak reset (policy resetAll: admin_banksoal / superadmin) yang melihat zona ini. --}}
-        @can('resetAll', \Modules\BankSoal\Models\Komprehensif\KompreSession::class)
-        <div id="reset-section" x-data="{ showResetModal: false }" class="mt-4 mb-8">
-            <div class="border border-rose-200 bg-rose-50 rounded-2xl p-6 shadow-sm">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div class="flex items-start gap-4">
-                        <div class="w-10 h-10 bg-white border border-rose-100 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
-                            <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-[15px] font-bold text-rose-800">Reset Semua Data Ujian</h3>
-                            <p class="text-[13px] text-rose-600 mt-1">Menghapus <strong>seluruh</strong> data periode, jadwal, pendaftar, sesi ujian, jawaban, dan log pelanggaran secara permanen. Aksi ini <strong>tidak dapat dibatalkan</strong>.</p>
-                        </div>
-                    </div>
-                    <button @click="showResetModal = true" type="button"
-                        class="flex-shrink-0 inline-flex items-center gap-2 px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[13px] font-semibold rounded-lg transition-colors shadow-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16"/>
-                        </svg>
-                        Reset Semua Data
-                    </button>
-                </div>
-
-                @if($errors->has('konfirmasi_password'))
-                    <div class="mt-4 p-3 bg-white border border-rose-200 rounded-xl text-[13px] text-rose-700 font-medium flex items-center gap-2 shadow-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                        </svg>
-                        {{ $errors->first('konfirmasi_password') }}
-                    </div>
-                @endif
-            </div>
-
-            {{-- Modal Konfirmasi Password --}}
-            <div x-show="showResetModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" @click="showResetModal = false"></div>
-                <div x-show="showResetModal"
-                    x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                    x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                    class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
-
-                    <div class="bg-rose-600 px-6 py-5 flex items-center gap-3">
-                        <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-[15px] font-bold text-white">Konfirmasi Reset Data</h3>
-                            <p class="text-rose-200 text-[12px] mt-0.5">Aksi ini permanen dan tidak dapat dibatalkan</p>
-                        </div>
-                    </div>
-
-                    <form action="{{ route('banksoal.admin.cbt.reset-semua') }}" method="POST" class="p-6 space-y-5">
-                        @csrf
-                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-[13px] text-amber-800">
-                            <p class="font-bold mb-2">Data yang akan dihapus permanen:</p>
-                            <ul class="list-disc list-inside space-y-1 text-amber-700">
-                                <li>Semua Periode Ujian</li>
-                                <li>Semua Jadwal & Token Sesi</li>
-                                <li>Semua Data Pendaftar</li>
-                                <li>Semua Sesi & Jawaban Ujian Mahasiswa</li>
-                                <li>Semua Log Pelanggaran (Cheat Logs)</li>
-                            </ul>
-                        </div>
-                        <div class="space-y-2">
-                            <label class="block text-[13px] font-semibold text-gray-700">Masukkan password akun Anda untuk konfirmasi:</label>
-                            <input type="password" name="konfirmasi_password" required
-                                placeholder="Password Anda"
-                                class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder-gray-400">
-                        </div>
-                        <div class="flex gap-3 pt-2">
-                            <button type="button" @click="showResetModal = false"
-                                class="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors text-[13px]">
-                                Batal
-                            </button>
-                            <button type="submit"
-                                class="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl transition-colors text-[13px] shadow-sm">
-                                Ya, Reset Sekarang
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        @endcan
 
     </div>
 

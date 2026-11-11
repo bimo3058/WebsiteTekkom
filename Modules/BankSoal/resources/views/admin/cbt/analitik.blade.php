@@ -77,6 +77,7 @@
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
                 <div class="p-6 border-b border-slate-100">
                     <h3 class="text-base font-semibold text-slate-800">Tingkat Kelulusan</h3>
+                    <p class="text-xs text-slate-500 mt-1">Lulus jika setiap CPL memiliki nilai minimal 6.0/10.</p>
                 </div>
                 <div class="p-6 flex-1 flex flex-col justify-center">
                     @if($totalPeserta > 0)
@@ -116,6 +117,12 @@
                                 <p class="text-2xl font-black text-rose-600">{{ $tidakLulus }} <span class="text-xs font-medium text-rose-700/70">Mhs</span></p>
                             </div>
                         </div>
+
+                        @if(($gagalCpl ?? 0) > 0)
+                            <p class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
+                                {{ $gagalCpl }} mahasiswa gagal karena ada CPL di bawah 6.0 meskipun nilai totalnya &ge; 60.
+                            </p>
+                        @endif
                     @else
                         <div class="text-center py-8 text-slate-400">
                             <svg class="mx-auto w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>

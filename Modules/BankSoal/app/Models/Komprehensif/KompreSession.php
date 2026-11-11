@@ -15,12 +15,15 @@ class KompreSession extends Model
 
     protected $fillable = [
         'user_id', 'jadwal_id', 'title', 'started_at', 'finished_at', 'score', 'status',
+        'lulus', 'cpl_scores',
     ];
 
     protected $casts = [
-        'started_at'  => 'datetime',
+        'started_at' => 'datetime',
         'finished_at' => 'datetime',
-        'status'      => KompreSessionStatus::class,
+        'status' => KompreSessionStatus::class,
+        'lulus' => 'boolean',
+        'cpl_scores' => 'array',
     ];
 
     public function jawabans()

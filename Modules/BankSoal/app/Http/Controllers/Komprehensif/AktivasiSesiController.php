@@ -5,20 +5,24 @@ namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Modules\BankSoal\Models\Komprehensif\CheatLog;
 use Modules\BankSoal\Models\Komprehensif\JadwalUjian;
+use Modules\BankSoal\Models\Komprehensif\KompreSession;
 use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
 
 class AktivasiSesiController extends Controller
 {
     /**
-     * Tampilkan halaman aktivitas sesi CBT Admin.
+     * Halaman gabungan: aktivasi sesi/token + pantau peserta ujian.
      */
     public function index(Request $request)
     {
+        $this->authorize('viewAny', KompreSession::class);
+
         $periodes = PeriodeUjian::orderBy('tanggal_mulai', 'desc')->get();
 
         // Default ke periode aktif jika tidak ada filter di URL
-        if (!$request->filled('periode_id')) {
+        if (! $request->filled('periode_id')) {
             $activePeriodeId = $periodes->firstWhere('status', 'aktif')?->id ?? $periodes->first()?->id;
             if ($activePeriodeId) {
                 return redirect()->route('banksoal.aktivasi.index', ['periode_id' => $activePeriodeId]);
@@ -32,7 +36,7 @@ class AktivasiSesiController extends Controller
             $selectedPeriode = $periodes->firstWhere('id', $selectedPeriodeId);
         }
 
-        $jadwals = [];
+        $jadwals = collect();
         if ($selectedPeriode) {
             $jadwals = JadwalUjian::withCount('pendaftars')
                 ->where('periode_ujian_id', $selectedPeriodeId)
@@ -41,7 +45,27 @@ class AktivasiSesiController extends Controller
                 ->get();
         }
 
-        return view('banksoal::aktivasi.index', compact('periodes', 'selectedPeriode', 'selectedPeriodeId', 'jadwals'));
+        $sessions = KompreSession::with([
+            'user.student',
+            'jadwal',
+            'cheatLogs' => fn ($q) => $q->orderBy('created_at'),
+        ])
+            ->withCount([
+                'jawabans',
+                'jawabans as terjawab_count' => fn ($q) => $q->whereNotNull('jawaban_dipilih'),
+                'cheatLogs',
+            ])
+            ->where('status', 'ongoing')
+            ->orderBy('started_at', 'desc')
+            ->get();
+
+        $violationDetails = $sessions->mapWithKeys(fn ($session) => [
+            $session->id => CheatLog::detailsFrom($session->cheatLogs),
+        ]);
+
+        return view('banksoal::aktivasi.index', compact(
+            'periodes', 'selectedPeriode', 'selectedPeriodeId', 'jadwals', 'sessions', 'violationDetails'
+        ));
     }
 
     /**
@@ -62,9 +86,9 @@ class AktivasiSesiController extends Controller
 
         $jadwal->update([
             'status' => $request->status,
-            'token'  => $token,
+            'token' => $token,
         ]);
 
-        return redirect()->back()->with('success', 'Status Sesi "' . $jadwal->nama_sesi . '" berhasil diubah menjadi ' . strtoupper($request->status) . '.');
+        return redirect()->back()->with('success', 'Status Sesi "'.$jadwal->nama_sesi.'" berhasil diubah menjadi '.strtoupper($request->status).'.');
     }
 }
