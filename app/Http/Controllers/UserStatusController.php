@@ -2,25 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\UserPresence;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class UserStatusController extends Controller
 {
-    public function heartbeat(Request $request)
+    public function heartbeat(Request $request, UserPresence $presence)
     {
-        if (Auth::check()) {
-            DB::table('users')
-                ->where('id', Auth::id())
-                ->update([
-                    'is_online' => true,
-                    'last_seen_at' => now(),
-                ]);
+        $userId = $request->user()?->getAuthIdentifier();
 
-            return response()->json(['status' => 'ok']);
+        if (! $userId) {
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        return response()->json(['message' => 'Unauthorized'], 401);
+        $presence->touch((int) $userId);
+
+        return response()->json(['status' => 'ok']);
     }
 }

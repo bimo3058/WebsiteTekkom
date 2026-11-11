@@ -7,12 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Pengumpulan tugas oleh mahasiswa.
  *
- * Tabel: pengumpulan_tugas
- * status_pengumpulan: belum_dicek | revisi | acc
+ * Tabel: eo_prak_pengumpulan_tugas
+ * status_pengumpulan: draft | belum_dicek | revisi | acc
  */
 class PengumpulanTugas extends Model
 {
-    protected $table = 'pengumpulan_tugas';
+    protected $table = 'eo_prak_pengumpulan_tugas';
 
     protected $fillable = [
         'tugas_id',
@@ -33,6 +33,7 @@ class PengumpulanTugas extends Model
 
     // Status constants
     const STATUS_BELUM_DICEK = 'belum_dicek';
+    const STATUS_DRAFT        = 'draft';
     const STATUS_REVISI      = 'revisi';
     const STATUS_ACC         = 'acc';
 

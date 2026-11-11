@@ -8,14 +8,16 @@ use Illuminate\Support\Str;
 /**
  * Modul / pertemuan dalam satu Praktikum.
  *
- * Tabel: modul_praktikum
+ * Tabel: eo_prak_modul_praktikum
  */
 class Modul extends Model
 {
-    protected $table = 'modul_praktikum';
+    protected $table = 'eo_prak_modul_praktikum';
 
     protected $fillable = [
         'praktikum_id',
+        'modul_sumber_id',
+        'pengajuan_modul_id',
         'nama',
         'deskripsi',
         'urutan',
@@ -28,6 +30,16 @@ class Modul extends Model
     public function praktikum()
     {
         return $this->belongsTo(Praktikum::class, 'praktikum_id');
+    }
+
+    public function modulSumber()
+    {
+        return $this->belongsTo(self::class, 'modul_sumber_id');
+    }
+
+    public function pengajuan()
+    {
+        return $this->belongsTo(PengajuanModul::class, 'pengajuan_modul_id');
     }
 
     public function modulAsprak()

@@ -16,7 +16,7 @@ class PraktikumController extends Controller
         $daftarPraktikan = DaftarPraktikan::with([
             'praktikum' => function ($query) {
                 $query->withCount(['daftarPraktikan', 'asprakPraktikum'])
-                      ->with(['dosens', 'koordinator', 'matkul']);
+                      ->with(['dosens', 'koordinator', 'matkul', 'asistenPraktikum']);
             }
         ])
             ->where('user_id', $user->id)

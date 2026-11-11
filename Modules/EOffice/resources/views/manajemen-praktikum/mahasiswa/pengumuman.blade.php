@@ -1,7 +1,7 @@
 @php
     $pageTitle = ($praktikum?->nama ?? 'Praktikum') . ' / Pengumuman';
 @endphp
-<x-eoffice::manajemen-praktikum.layout :pageTitle="$pageTitle">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" :pageTitle="$pageTitle">
 
     @if($praktikumList->isEmpty())
         <div class="mp-page-header">
@@ -66,7 +66,7 @@
                                         $pfPath = isset($lamp['path']) ? $lamp['path'] : $lamp;
                                         $pfName = isset($lamp['name']) ? $lamp['name'] : basename($pfPath);
                                     @endphp
-                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($pfPath, 'eoffice') }}"
+                                    <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($pfPath, 'eoffice', $pfName) }}"
                                         target="_blank" title="{{ $pfName }}"
                                         style="display: flex; flex-direction: column; width: 140px; height: 140px; border: 1px solid #DFE1E7; border-radius: 8px; overflow: hidden; text-decoration: none; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition:transform 0.15s, box-shadow 0.15s;"
                                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"
@@ -78,7 +78,7 @@
                                                 <polyline points="13 2 13 9 20 9"></polyline>
                                             </svg>
                                         </div>
-                                        <div style="background: #293C79; color: #fff; padding: 10px 12px; font-size: 13px; font-weight: 600; text-align: center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                        <div style="background: #0B266E; color: #fff; padding: 10px 12px; font-size: 13px; font-weight: 600; text-align: center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
                                             {{ $pfName }}
                                         </div>
                                     </a>

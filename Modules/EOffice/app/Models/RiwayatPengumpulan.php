@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Riwayat pengumpulan tugas oleh mahasiswa (menyimpan riwayat file & revisi).
  *
- * Tabel: riwayat_pengumpulan_tugas
+ * Tabel: eo_prak_riwayat_pengumpulan_tugas
  */
 class RiwayatPengumpulan extends Model
 {
-    protected $table = 'riwayat_pengumpulan_tugas';
+    protected $table = 'eo_prak_riwayat_pengumpulan_tugas';
 
     protected $fillable = [
         'pengumpulan_tugas_id',

@@ -82,6 +82,7 @@ const DYNAMIC_TITLES: Array<[RegExp, string]> = [
     /^\/admin\/reports\/assessments\/student\/[^/]+(?:\/.*)?$/,
     "Detail Penilaian Mahasiswa",
   ],
+  [/^\/admin\/reports\/peer-reviews\/[^/]+$/, "Detail Peer Review"],
   [/^\/dosen\/titles\/[^/]+$/, "Detail Judul"],
   [/^\/dosen\/evaluation\/[^/]+$/, "Penilaian Mahasiswa"],
   [/^\/dosen\/supervisor-evaluation\/[^/]+$/, "Penilaian Kelompok Bimbingan"],

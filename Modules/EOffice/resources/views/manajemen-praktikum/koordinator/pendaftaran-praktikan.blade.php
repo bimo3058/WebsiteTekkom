@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Seleksi Praktikan — IRS">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Seleksi Praktikan — IRS">
     @if(isset($praktikum) && $praktikum)
         <x-eoffice::manajemen-praktikum.koor-header :praktikum="$praktikum" />
     @endif
@@ -73,7 +73,7 @@
                     </td>
                     <td style="padding:12px 16px;">
                         @if($p->irs_path)
-                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->irs_path, 'eoffice') }}" target="_blank"
+                        <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($p->irs_path, 'eoffice') }}" target="_blank"
                            style="font-size:11px;font-weight:600;color:#0B266E;text-decoration:none;" class="hover:underline">Lihat berkas</a>
                         @else
                         <span style="font-size:11px;color:#808897;">—</span>
@@ -93,6 +93,7 @@
                         @if($p->status === 'pending')
                             @if(isset($praktikum) && $praktikum->is_active)
                             <div class="flex flex-col gap-2 items-start">
+                                <x-eoffice::manajemen-praktikum.ui.action-menu>
                                 <form method="POST" action="{{ route('eoffice.manprak.koor.pendaftaran-praktikan.approve', $p->id) }}">
                                     @csrf
                                     <button type="submit" class="mp-btn primary sm">Setujui IRS</button>
@@ -109,6 +110,7 @@
                                             @click="alasan = prompt('Alasan penolakan (opsional):'); if(alasan !== null) $el.closest('form').submit()"
                                             class="mp-btn destructive sm">Tolak manual…</button>
                                 </form>
+                                </x-eoffice::manajemen-praktikum.ui.action-menu>
                             </div>
                             @else
                             <span style="font-size:11px;color:#808897;">Menunggu Review</span>
@@ -131,8 +133,8 @@
             </tbody>
         </table>
     </div>
-    @if($pendaftaran->hasPages())
-    <div style="padding:12px 16px;border-top:1px solid #DFE1E7;flex-shrink:0;">{{ $pendaftaran->links() }}</div>
+    @if(isset($pendaftaran) && $pendaftaran instanceof \Illuminate\Pagination\LengthAwarePaginator)
+        <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$pendaftaran" />
     @endif
 </div>
 

@@ -53,10 +53,10 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/auth/microsoft/callback', [MicrosoftController::class, 'callback'])
         ->name('microsoft.callback');
-    Route::get(env('SPC_LOGIN_PATH', 'disabled'), function () {
+    Route::get('/' . config('app.spc_login_path', 'disabled'), function () {
         abort_unless(app()->isLocal() || app()->environment('staging'), 403);
         return view('auth.dev-login');
-    });
+    })->name('dev-login');
 });
 
 Route::middleware('auth')->group(function () {
@@ -103,7 +103,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{user}/unsuspend', [SuperAdminController::class, 'unsuspend'])
             ->name('users.unsuspend');
         // Tambah user baru
+        Route::post('/users/bulk-import/preview', [SuperAdminController::class, 'previewBulkImport'])->name('users.bulkImport.preview');
         Route::post('/users/bulk-import', [SuperAdminController::class, 'bulkImport'])->name('users.bulkImport');
+        Route::patch('/users/{user}/sso-access', [SuperAdminController::class, 'updateSsoAccess'])->name('users.sso-access.update');
         Route::post('/import-status/{id}/cancel', [SuperAdminController::class, 'cancelImport'])->name('import.cancel');
         Route::post('/clear-import-session', function () {
             session()->forget('import_id');

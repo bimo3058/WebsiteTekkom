@@ -46,6 +46,7 @@ AI_*.md
 *.md
 !Modules/Capstone/PERFORMANCE.md
 *.sql
+*.gz
 
 _design_system_tmp/
 _ds_tmp/
@@ -58,6 +59,7 @@ _ds_tmp/
 dump.rdb
 package-lock.json
 Modules/EOffice/node_modules
+Modules/Capstone/node_modules
 
 *.dump
 *.list

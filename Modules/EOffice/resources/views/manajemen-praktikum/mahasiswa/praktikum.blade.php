@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Daftar Praktikum">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Daftar Praktikum">
     <div class="mp-page-header" style="margin-bottom: 24px;">
         <div>
             <h1 class="mp-page-title">Daftar Praktikum</h1>
@@ -60,7 +60,10 @@
                                 <br>
                                 Dosen: {{ $dosenNames ?: 'Belum ditunjuk' }}
                                 <br>
-                                {{ $p->daftar_praktikan_count ?? 0 }} Praktikan &bull; {{ $p->asprak_praktikum_count ?? 0 }} Asisten
+                                {{ $p->daftar_praktikan_count ?? 0 }} Praktikan &bull; {{ $p->asistenPraktikum->unique('user_id')->count() }} Asisten
+                                @if($p->koor_id && $p->asistenPraktikum->contains('user_id', $p->koor_id))
+                                    (termasuk koordinator)
+                                @endif
                             </p>
                         </div>
                     </a>

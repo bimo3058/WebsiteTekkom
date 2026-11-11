@@ -22,7 +22,7 @@ class DashboardOverviewTest extends TestCase
             'users' => ['name', 'email', 'deleted_at'],
             'eo_surat' => ['pemohon_id', 'nomor_surat', 'status', 'tanggal_pengajuan'],
             'eo_approval' => ['surat_id', 'approver_id', 'status'],
-            'eo_mr_peminjamans' => ['user_id', 'ruangan_id', 'status', 'tanggal_pinjam', 'jam_mulai', 'jam_selesai', 'tujuan'],
+            'eo_mr_peminjamans' => ['user_id', 'ruangan_id', 'status', 'tanggal_pinjam', 'jam_mulai', 'jam_selesai', 'tujuan', 'deleted_at'],
             'eo_mr_ruangans' => ['nama'],
             'eo_kp_mahasiswa' => ['user_id', 'nama_lengkap'],
             'eo_kp_dosen' => ['user_id', 'nama_lengkap'],
@@ -31,13 +31,13 @@ class DashboardOverviewTest extends TestCase
             'eo_kp_seminar' => ['kp_id', 'tanggal_seminar', 'status_validasi_dosen'],
             'eo_kp_dokumen' => ['kp_id', 'status_validasi', 'approval_status'],
             'eo_kp_pengumuman' => ['judul', 'konten', 'is_active', 'tipe'],
-            'eo_praktikum' => ['nama', 'kode', 'status', 'deleted_at'],
-            'eo_praktikum_dosen' => ['praktikum_id', 'dosen_id'],
-            'daftar_praktikan' => ['praktikum_id', 'user_id'],
-            'modul_praktikum' => ['praktikum_id'],
-            'tugas_praktikum' => ['modul_id', 'judul', 'deadline', 'deadline_acc', 'is_published'],
-            'pengumpulan_tugas' => ['tugas_id', 'daftar_praktikan_id', 'status_pengumpulan'],
-            'absensi_praktikum' => ['daftar_praktikan_id', 'status'],
+            'eo_prak_praktikum' => ['nama', 'kode', 'status', 'deleted_at'],
+            'eo_prak_praktikum_dosen' => ['praktikum_id', 'dosen_id'],
+            'eo_prak_daftar_praktikan' => ['praktikum_id', 'user_id'],
+            'eo_prak_modul_praktikum' => ['praktikum_id'],
+            'eo_prak_tugas_praktikum' => ['modul_id', 'judul', 'deadline', 'deadline_acc', 'is_published'],
+            'eo_prak_pengumpulan_tugas' => ['tugas_id', 'daftar_praktikan_id', 'status_pengumpulan'],
+            'eo_prak_absensi_praktikum' => ['daftar_praktikan_id', 'status'],
         ] as $table => $columns) Schema::create($table, function (Blueprint $t) use ($columns) {
             $t->id(); foreach ($columns as $column) $t->string($column)->nullable(); $t->timestamps();
         });
@@ -138,14 +138,14 @@ class DashboardOverviewTest extends TestCase
     public function test_student_tasks_cover_all_enrollments_exclude_drafts_and_other_submissions(): void
     {
         foreach ([1, 2, 3] as $id) {
-            DB::table('eo_praktikum')->insert(['id' => $id, 'nama' => 'Praktikum '.$id, 'status' => 'aktif']);
-            DB::table('modul_praktikum')->insert(['id' => $id, 'praktikum_id' => $id]);
-            DB::table('daftar_praktikan')->insert(['id' => $id, 'praktikum_id' => $id, 'user_id' => $id === 3 ? 2 : 1]);
-            DB::table('tugas_praktikum')->insert(['id' => $id, 'modul_id' => $id, 'judul' => 'Tugas '.$id, 'is_published' => true, 'deadline' => '2026-09-09', 'deadline_acc' => '2026-09-20']);
+            DB::table('eo_prak_praktikum')->insert(['id' => $id, 'nama' => 'Praktikum '.$id, 'status' => 'aktif']);
+            DB::table('eo_prak_modul_praktikum')->insert(['id' => $id, 'praktikum_id' => $id]);
+            DB::table('eo_prak_daftar_praktikan')->insert(['id' => $id, 'praktikum_id' => $id, 'user_id' => $id === 3 ? 2 : 1]);
+            DB::table('eo_prak_tugas_praktikum')->insert(['id' => $id, 'modul_id' => $id, 'judul' => 'Tugas '.$id, 'is_published' => true, 'deadline' => '2026-09-09', 'deadline_acc' => '2026-09-20']);
         }
-        DB::table('tugas_praktikum')->insert(['id' => 4, 'modul_id' => 1, 'judul' => 'Draf rahasia', 'is_published' => false]);
-        DB::table('pengumpulan_tugas')->insert([['tugas_id' => 1, 'daftar_praktikan_id' => 3, 'status_pengumpulan' => 'acc'], ['tugas_id' => 2, 'daftar_praktikan_id' => 2, 'status_pengumpulan' => 'revisi']]);
-        DB::table('absensi_praktikum')->insert([['daftar_praktikan_id' => 1, 'status' => 'hadir'], ['daftar_praktikan_id' => 2, 'status' => 'tidak_hadir'], ['daftar_praktikan_id' => 3, 'status' => 'hadir']]);
+        DB::table('eo_prak_tugas_praktikum')->insert(['id' => 4, 'modul_id' => 1, 'judul' => 'Draf rahasia', 'is_published' => false]);
+        DB::table('eo_prak_pengumpulan_tugas')->insert([['tugas_id' => 1, 'daftar_praktikan_id' => 3, 'status_pengumpulan' => 'acc'], ['tugas_id' => 2, 'daftar_praktikan_id' => 2, 'status_pengumpulan' => 'revisi']]);
+        DB::table('eo_prak_absensi_praktikum')->insert([['daftar_praktikan_id' => 1, 'status' => 'hadir'], ['daftar_praktikan_id' => 2, 'status' => 'tidak_hadir'], ['daftar_praktikan_id' => 3, 'status' => 'hadir']]);
         $data = (new DashboardOverview)->practice($this->actor(), 'mahasiswa');
         $this->assertSame(2, $data['card']['metrics']['Praktikum aktif']);
         $this->assertSame(2, $data['data']['tugasPendingCount']);
@@ -154,7 +154,7 @@ class DashboardOverviewTest extends TestCase
         $this->assertSame(['Tugas 1', 'Tugas 2'], $data['data']['tugasMendatang']->pluck('judul')->all());
         $this->assertTrue($data['data']['tugasMendatang'][1]['revisi']);
         DB::table('users')->insert(['id' => 1, 'name' => 'Dosen']);
-        DB::table('eo_praktikum_dosen')->insert(['praktikum_id' => 3, 'dosen_id' => 1]);
+        DB::table('eo_prak_praktikum_dosen')->insert(['praktikum_id' => 3, 'dosen_id' => 1]);
         $lecturer = (new DashboardOverview)->practice($this->actor(), 'dosen');
         $this->assertSame(1, $lecturer['card']['metrics']['Praktikum aktif']);
         $this->assertSame('Praktikum 3', $lecturer['card']['entries'][0]['title']);

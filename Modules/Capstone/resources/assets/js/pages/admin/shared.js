@@ -11,6 +11,10 @@ export function basePage(){return {
     get filtered(){let list=this.items.filter(i=>JSON.stringify(i).toLowerCase().includes(this.search.toLowerCase()));if(this.sortKey)list=[...list].sort((a,b)=>String(a[this.sortKey]??'').localeCompare(String(b[this.sortKey]??''),undefined,{numeric:true})*this.sortDirection);return list;},
     get pageCount(){return Math.max(1,Math.ceil(this.filtered.length/Number(this.pageSize)));},
     get visible(){const page=Math.min(this.page,this.pageCount);return this.filtered.slice((page-1)*this.pageSize,page*this.pageSize);},
+    get showingFrom(){return this.filtered.length?(Math.min(this.page,this.pageCount)-1)*Number(this.pageSize)+1:0;},
+    get showingTo(){return Math.min(Math.min(this.page,this.pageCount)*Number(this.pageSize),this.filtered.length);},
+    get pageNumbers(){const total=this.pageCount;const current=Math.min(Math.max(1,this.page),total);const pages=new Set([1,2,current-1,current,current+1,total-1,total].filter(n=>n>=1&&n<=total));return [...pages].sort((a,b)=>a-b);},
+    goPage(n){n=Math.min(Math.max(1,Number(n)||1),this.pageCount);if(n!==this.page)this.page=n;},
     sort(key){this.sortDirection=this.sortKey===key?-this.sortDirection:1;this.sortKey=key;},
     async run(action,message='Perubahan disimpan'){if(this.saving)return false;this.saving=true;this.errors={};try{await action();notify(message);return true;}catch(e){this.errors=e.errors||{};notify(e.message,true);return false;}finally{this.saving=false;}},
 };}

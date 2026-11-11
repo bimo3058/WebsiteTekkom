@@ -1,5 +1,5 @@
 @extends('capstone::layouts.app')
-@section('title','Student Evaluation')
+@section('title','Evaluasi Mahasiswa')
 @section('content')
 @include('capstone::pages.dosen.shared.evaluation-form')
 @endsection

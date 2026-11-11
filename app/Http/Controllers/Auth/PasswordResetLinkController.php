@@ -3,15 +3,20 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class PasswordResetLinkController extends Controller
 {
     /**
-     * Display the password reset link request view.
+     * Display the direct password change form for administrators.
      */
     public function create(): View
     {
@@ -19,26 +24,43 @@ class PasswordResetLinkController extends Controller
     }
 
     /**
-     * Handle an incoming password reset link request.
+     * Change an administrator's password after verifying the current password.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'email' => ['required', 'email'],
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'confirmed', 'different:current_password', Password::defaults()],
+        ], [
+            'current_password.required' => 'Masukkan password lama Anda.',
+            'password.confirmed' => 'Konfirmasi password baru tidak cocok.',
+            'password.different' => 'Password baru harus berbeda dari password lama.',
+            'password.min' => 'Password baru minimal :min karakter.',
         ]);
 
-        // We will send the password reset link to this user. Once we have attempted
-        // to send the link, we will examine the response then see the message we
-        // need to show to the user. Finally, we'll send out a proper response.
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+        $user = User::where('email', $validated['email'])->first();
 
-        return $status == Password::RESET_LINK_SENT
-                    ? back()->with('status', __($status))
-                    : back()->withInput($request->only('email'))
-                        ->withErrors(['email' => __($status)]);
+        if (! $user || ! $user->hasAnyRole(['admin', 'superadmin'])
+            || $user->isSuspended() || ! $user->password
+            || ! Hash::check($validated['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'email' => 'Email atau password lama tidak sesuai, atau akun tidak memiliki akses admin/superadmin.',
+            ]);
+        }
+
+        $user->forceFill([
+            'password' => Hash::make($validated['password']),
+            'remember_token' => Str::random(60),
+        ])->save();
+
+        $user->forceLogout();
+
+        event(new PasswordReset($user));
+
+        return redirect()->route('login')
+            ->with('status', 'Password berhasil diubah. Silakan login dengan password baru.');
     }
 }

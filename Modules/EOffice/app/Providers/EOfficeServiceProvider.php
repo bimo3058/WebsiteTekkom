@@ -53,6 +53,7 @@ class EOfficeServiceProvider extends ServiceProvider
         $this->app->register(RouteServiceProvider::class);
 
         // Services
+        $this->app->scoped(\Modules\EOffice\Services\ManajemenPraktikum\ScoreHistory::class);
         $this->app->singleton(
             \Modules\EOffice\Services\NotifikasiService::class,
             \Modules\EOffice\Services\NotifikasiService::class

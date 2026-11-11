@@ -3,8 +3,8 @@
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { useReportsPeriods, usePeerReviewsReport, useReportExport } from '@/features/admin/reports/hooks/use-reports';
-import { PeerReviewTable } from '@/features/admin/reports/components/PeerReviewTable';
+import { useReportsPeriods, usePeerReviewSummaryReport, useReportExport } from '@/features/admin/reports/hooks/use-reports';
+import { PeerReviewSummaryTable } from '@/features/admin/reports/components/PeerReviewSummaryTable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -17,10 +17,10 @@ import api from '@/lib/api';
 export default function PeerReviewsReportPage() {
     const searchParams = useSearchParams();
     const periodId = searchParams.get('period_id') || '';
-    
+
     const { data: periods = [] } = useReportsPeriods();
     const {
-        reviews,
+        summaries,
         loading,
         pagination,
         filters,
@@ -29,7 +29,7 @@ export default function PeerReviewsReportPage() {
         setSort,
         setPage,
         setPerPage,
-    } = usePeerReviewsReport(periodId);
+    } = usePeerReviewSummaryReport(periodId);
     const exportMutation = useReportExport('peer-reviews', periodId);
     const [groups, setGroups] = useState<Array<{ id: number; code?: string; title: { title: string } }>>([]);
 
@@ -42,12 +42,9 @@ export default function PeerReviewsReportPage() {
             });
     }, [periodId]);
 
-    const handleExport = async () => {
-        if (!periodId) return;
-        exportMutation.mutate({
-            ...(filters.groupId !== 'all' ? { group_id: filters.groupId } : {}),
-            ...(filters.studentSearch ? { student_search: filters.studentSearch } : {}),
-        });
+    const exportParams = {
+        ...(filters.groupId !== 'all' ? { group_id: filters.groupId } : {}),
+        ...(filters.studentSearch ? { student_search: filters.studentSearch } : {}),
     };
 
     const selectedPeriod = periods.find((p) => p.id.toString() === periodId);
@@ -84,20 +81,30 @@ export default function PeerReviewsReportPage() {
                     </Link>
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Peer Reviews</h1>
-                        <p className="text-muted-foreground">Peer assessment results by period.</p>
+                        <p className="text-muted-foreground">Ringkasan penilaian peer per mahasiswa — klik baris untuk melihat siapa saja penilainya.</p>
                     </div>
                 </div>
-                <Button
-                    variant="outline"
-                    onClick={handleExport}
-                    disabled={exportMutation.isPending}
-                >
-                    {exportMutation.isPending ? (
-                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Exporting...</>
-                    ) : (
-                        <><Download className="mr-2 h-4 w-4" /> Export CSV</>
-                    )}
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={() => exportMutation.mutate({ ...exportParams, mode: 'summary' })}
+                        disabled={exportMutation.isPending}
+                    >
+                        {exportMutation.isPending ? (
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Exporting...</>
+                        ) : (
+                            <><Download className="mr-2 h-4 w-4" /> Export Ringkasan</>
+                        )}
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        onClick={() => exportMutation.mutate({ ...exportParams, mode: 'detail' })}
+                        disabled={exportMutation.isPending}
+                        title="Export semua baris per indikator (format lama)"
+                    >
+                        <Download className="mr-2 h-4 w-4" /> Detail CSV
+                    </Button>
+                </div>
             </div>
 
             {/* Filters */}
@@ -116,7 +123,7 @@ export default function PeerReviewsReportPage() {
                                 {selectedPeriod?.name || `Period ${periodId}`}
                             </div>
                         </div>
-                        
+
                         <div className="space-y-2">
                             <Label>Group</Label>
                             <Select value={filters.groupId} onValueChange={setGroupId}>
@@ -152,8 +159,8 @@ export default function PeerReviewsReportPage() {
             </Card>
 
             {/* Data Table */}
-            <PeerReviewTable
-                reviews={reviews}
+            <PeerReviewSummaryTable
+                summaries={summaries}
                 loading={loading}
                 pagination={pagination}
                 search={filters.studentSearch}
@@ -163,6 +170,7 @@ export default function PeerReviewsReportPage() {
                 onSortChange={setSort}
                 onPageChange={setPage}
                 onPerPageChange={setPerPage}
+                periodId={periodId}
             />
         </div>
     );

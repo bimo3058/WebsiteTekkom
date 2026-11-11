@@ -82,6 +82,7 @@
     {{-- Status Periode Ujian ditaruh di sini --}}
     @include('banksoal::dashboard.partials._activity')
 
+    <p style="font-size:11px; color:var(--c-fg-muted); margin-bottom:8px;">Rekapitulasi seluruh periode</p>
     <div class="dash-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
         {{-- Card 1: Total Peserta --}}
         <div style="background:#fff;border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"

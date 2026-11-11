@@ -7,6 +7,12 @@
     $isTugas = $currentRoute == 'eoffice.manprak.mahasiswa.tugas.index' || str_contains($currentRoute, 'mahasiswa.tugas.');
     $isNilai = $currentRoute == 'eoffice.manprak.mahasiswa.nilai.index';
     $isPraktikan = $currentRoute == 'eoffice.manprak.mahasiswa.daftar-praktikan.index';
+    if (str_contains($currentRoute, '.tugas-akhir.')) {
+        $taSection = request()->route('taSection') ?? 'modul';
+        $isModul = $taSection === 'modul';
+        $isTugas = $taSection === 'tugas';
+        $isNilai = $taSection === 'nilai';
+    }
     
     $prakId = $praktikum ? $praktikum->id : null;
     
@@ -21,11 +27,12 @@
 <div x-data="{ st: 0 }" x-init="
         const box = document.querySelector('.mp-box-body');
         if (box) {
+            st = Math.max(0, box.scrollTop);
             let ticking = false;
             box.addEventListener('scroll', () => {
                 if (!ticking) {
                     window.requestAnimationFrame(() => {
-                        st = box.scrollTop;
+                        st = Math.max(0, box.scrollTop);
                         ticking = false;
                     });
                     ticking = true;
@@ -33,7 +40,7 @@
             });
         }
      " class="sticky z-20 bg-white transition-all duration-300"
-    style="top: -200px; margin: -20px -24px 0 -24px; padding: 20px 24px 0 24px; border-bottom: 1px solid var(--c-border); margin-bottom: 16px;">
+    style="top: -200px; margin: -20px -24px 0 -24px; padding: 20px 24px 0 24px; border-bottom: 0; margin-bottom: 16px;">
 
 
     {{-- Banner / Cover Image Container --}}
@@ -45,7 +52,7 @@
             @if($praktikum && $praktikum->cover_path)
                 <img src="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($praktikum->cover_path, 'eoffice') }}"
                      class="w-full h-full object-cover"
-                     :style="`transform: scale(${Math.max(1, 1 + (st / 200) * 0.1)}); opacity: ${Math.max(0.3, 1 - (st / 300))}; filter: blur(${Math.min(8, st / 15)}px);`"
+                     :style="`transform: scale(${1 + Math.min(1, Math.max(0, st / 200)) * 0.04});`"
                      alt="Cover Praktikum">
             @else
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="#828896"
@@ -58,12 +65,12 @@
 
         {{-- 1. Base Gradient --}}
         <div class="absolute inset-0 pointer-events-none"
-            style="border-radius: inherit; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0) 100%);">
+            style="border-radius: inherit; background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0) 100%);">
         </div>
 
         {{-- 2. Scrolled Overlay --}}
         <div class="absolute inset-0 pointer-events-none"
-            :style="`border-radius: inherit; opacity: ${Math.min(1, st / 200)}; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);`">
+            style="display:none;" aria-hidden="true">
         </div>
 
         {{-- Title --}}
@@ -96,4 +103,5 @@
         <a href="{{ route('eoffice.manprak.mahasiswa.daftar-praktikan.index', ['praktikum_id' => $prakId]) }}"
             style="padding: 12px 24px; font-weight: {{ $isPraktikan ? '600' : '500' }}; font-size: 14px; color: {{ $isPraktikan ? '#293C79' : 'var(--c-fg-muted)' }}; text-decoration: none; {!! $isPraktikan ? 'border-bottom: 2px solid #293C79;' : '' !!}">Daftar Praktikan</a>
     </div>
+    <div class="mp-praktikum-tabs-divider" aria-hidden="true"></div>
 </div>

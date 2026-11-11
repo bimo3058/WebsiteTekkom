@@ -10,12 +10,13 @@ final class PageTitle
     /** @var array<string, string> */
     private const EXACT_TITLES = [
         'login' => 'Masuk',
+        'dev-login' => 'Masuk',
         'register' => 'Daftar Akun',
         'microsoft.redirect' => 'Masuk dengan SSO',
         'microsoft.callback' => 'Menghubungkan SSO',
         'microsoft.switch' => 'Ganti Akun',
         'sso.password' => 'Verifikasi SSO',
-        'password.request' => 'Lupa Kata Sandi',
+        'password.request' => 'Ubah Kata Sandi',
         'password.reset' => 'Atur Ulang Kata Sandi',
         'password.confirm' => 'Konfirmasi Kata Sandi',
         'verification.notice' => 'Verifikasi Email',

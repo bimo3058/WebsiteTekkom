@@ -3,17 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Lecturer;
-use App\Models\Student;
 use App\Models\User;
-use App\Services\AcademicRoleSynchronizer;
 use App\Services\AuditLogger;
 use App\Services\SsoAccountResolver;
 use App\Services\MicrosoftSsoSession;
 use App\Services\SupabaseStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
@@ -21,7 +17,6 @@ use Laravel\Socialite\Facades\Socialite;
 class MicrosoftController extends Controller
 {
     public function __construct(
-        private readonly AcademicRoleSynchronizer $academicRoles,
         private readonly SsoAccountResolver $ssoAccounts,
     ) {}
 
@@ -83,62 +78,45 @@ class MicrosoftController extends Controller
                 'email' => $email,
                 'name' => (string) $microsoftUser->getName(),
             ];
-            $raw = (array) $microsoftUser->getRaw();
             $resolution = $this->ssoAccounts->resolve(
                 $ssoData['id'],
-                $ssoData['name'],
                 $email,
-                $raw,
+                $ssoSession->tenant(),
             );
 
-            if ($resolution['ambiguous']) {
+            if ($resolution['ambiguous'] || ! $resolution['user']) {
                 \App\Services\AuditLogger::log(
                     module: 'auth',
                     action: 'AUTH_FAILED',
-                    description: "Akun ambigu terdeteksi untuk email: {$email}",
+                    description: "Akun SSO tidak ditemukan atau ambigu untuk email: {$email}",
                     userId: null
                 );
                 return redirect()->route('login')->withErrors([
-                    'email' => 'Ada lebih dari satu akun impor dengan identitas yang sama. Hubungi Administrator agar akun dapat ditautkan dengan aman.',
+                    'email' => 'Akun Anda belum terdaftar di WebsiteTekkom. Silakan hubungi administrator.',
                 ]);
             }
 
             $user = $resolution['user'];
-            $wasCreated = $resolution['created'];
-            $wasClaimed = $resolution['claimed'];
 
-            $syncTtl = max(1, (int) config('auth.sso.sync_ttl_seconds', 21_600));
-            $identityChanged = (string) $user->external_id !== $ssoData['id']
-                || (string) $user->name !== $ssoData['name']
-                || $user->sso_data !== $ssoData;
-            $identityStale = ! $user->last_synced_from_sso
-                || $user->last_synced_from_sso->lt(now()->subSeconds($syncTtl));
-            $refreshIdentity = $wasCreated || $wasClaimed || $identityChanged || $identityStale;
+            if (! $user->sso_enabled) {
+                try {
+                    AuditLogger::log(
+                        module: 'auth',
+                        action: 'AUTH_FAILED',
+                        description: "Percobaan login SSO tanpa izin: {$user->email}",
+                        userId: $user->id,
+                    );
+                } catch (\Throwable $auditException) {
+                    // A failed audit/notification write must not hide the access denial.
+                    Log::warning('Gagal mencatat penolakan akses Microsoft SSO', [
+                        'exception' => get_class($auditException),
+                    ]);
+                }
 
-            if ($this->academicRoles->shouldSync($user, $refreshIdentity)) {
-                $this->syncAcademicRole($user, $email, $microsoftUser);
-                $this->academicRoles->markSynced($user);
-            }
-
-            if ($refreshIdentity) {
-                $user->forceFill([
-                    'external_id' => $ssoData['id'],
-                    'name' => $ssoData['name'],
-                    'sso_data' => $ssoData,
-                    'last_synced_from_sso' => now(),
-                ])->save();
-            }
-
-            // 2. A Redis marker avoids repeated profile/role/permission repairs.
-
-            // 3. Set the fallback password only once.
-            if ($wasCreated || ! $user->password) {
-                $user->update([
-                    'password' => Hash::make(
-                        explode(' ', $microsoftUser->getName())[0].
-                        ($raw['surname'] ?? '')
-                    ),
-                ]);
+                return redirect()->route('login', ['sso_error' => 'no_access'])->with(
+                    'sso_access_error',
+                    'Anda tidak memiliki akses ke sistem, silahkan hubungi admin.'
+                );
             }
 
             // 4. Reject suspended accounts before scheduling optional work.
@@ -148,15 +126,27 @@ class MicrosoftController extends Controller
                     $message .= ' Alasan: '.$user->suspension_reason;
                 }
 
-                \App\Services\AuditLogger::log(
-                    module: 'auth',
-                    action: 'AUTH_FAILED',
-                    description: "Percobaan login user tersuspend: {$user->name} ({$user->email})",
-                    userId: $user->id
-                );
+                try {
+                    AuditLogger::log(
+                        module: 'auth',
+                        action: 'AUTH_FAILED',
+                        description: "Percobaan login user tersuspend: {$user->name} ({$user->email})",
+                        userId: $user->id
+                    );
+                } catch (\Throwable $auditException) {
+                    Log::warning('Gagal mencatat penolakan SSO untuk akun tersuspend', [
+                        'exception' => get_class($auditException),
+                    ]);
+                }
 
-                return redirect()->route('login')->withErrors(['email' => $message]);
+                return redirect()->route('login', ['sso_error' => 'suspended'])
+                    ->with('sso_access_error', $message);
             }
+
+            $user->forceFill([
+                'sso_data' => $ssoData,
+                'last_synced_from_sso' => now(),
+            ])->save();
 
             if (! $user->getRawOriginal('avatar_url')) {
                 defer(
@@ -165,11 +155,7 @@ class MicrosoftController extends Controller
                 );
             }
 
-            // 5. Read roles from Redis, falling back to one database query.
-            // unsetRelation() wajib dipanggil agar Spatie tidak pakai cache
-            // in-memory yang sudah di-load sebelum syncAcademicRole dipanggil.
-            // Tanpa ini, user yang baru saja di-assign role bisa tetap terdeteksi
-            // "roles kosong" karena object $user masih menyimpan snapshot lama.
+            // Roles and permissions remain managed by User Management.
             $user->unsetRelation('roles');
             $userRoles = $user->getCachedRoleData();
             $roleNames = $userRoles->pluck('name')->map(fn ($role) => strtolower($role));
@@ -233,12 +219,12 @@ class MicrosoftController extends Controller
 
         } catch (\Exception $e) {
             app(MicrosoftSsoSession::class)->clear(request());
-            Log::error('Microsoft SSO Error', [
-                'exception' => get_class($e),
-            ]);
+            $reference = (string) \Illuminate\Support\Str::uuid();
+            $diagnostics = app(\App\Services\SsoFailureDiagnostics::class);
+            Log::error('Microsoft SSO Error', ['reference' => $reference] + $diagnostics->context($e));
 
             return redirect()->route('login')
-                ->with('error', 'Authentication gagal. Silakan coba lagi.');
+                ->with('error', $diagnostics->message($e, $reference));
         }
     }
 
@@ -298,103 +284,5 @@ class MicrosoftController extends Controller
         }
     }
 
-    /**
-     * Repair the academic profile and global role when the Redis marker expires.
-     * Additional roles assigned by an administrator are preserved.
-     */
-    private function syncAcademicRole(User $user, string $email, $microsoftUser): void
-    {
-        if (str_ends_with($email, '@lecturer.undip.ac.id') || str_ends_with($email, '@undip.ac.id')) {
-            $this->ensureLecturerProfile($user, $email, $microsoftUser);
-        } elseif (str_ends_with($email, '@students.undip.ac.id')) {
-            $this->ensureStudentProfile($user, $email, $microsoftUser);
-        }
-
-        // Profil akademik adalah sumber kebenaran role SSO:
-        // lecturers -> dosen, students -> mahasiswa.
-        $this->academicRoles->sync($user);
-    }
-
     // ── Dosen ─────────────────────────────────────────────────────────────────
-    private function ensureLecturerProfile(User $user, string $email, $microsoftUser): void
-    {
-        // Pastikan record lecturers ada
-        $raw = $microsoftUser->getRaw();
-        $employeeNumber = $raw['onPremisesSamAccountName']   // NIP dari AD
-            ?? $raw['employeeId']                            // fallback field lain
-            ?? explode('@', $email)[0];                      // fallback: bagian sebelum @
-
-        Lecturer::updateOrCreate(
-            ['user_id' => $user->id],
-            ['employee_number' => $employeeNumber]
-        );
-
-        Log::info("SSO: Lecturer record ensured untuk {$email}", [
-            'employee_number' => $employeeNumber,
-        ]);
-    }
-
-    // ── Mahasiswa ─────────────────────────────────────────────────────────────
-    private function ensureStudentProfile(User $user, string $email, $microsoftUser): void
-    {
-        // Ekstrak NIM dan tahun angkatan
-        // Microsoft AD untuk UNDIP menyimpan NIM di field 'surname' atau 'onPremisesSamAccountName'
-        $raw = $microsoftUser->getRaw();
-        $nim = $raw['onPremisesSamAccountName']  // NIM dari AD (paling akurat)
-            ?? $raw['surname']                   // fallback lama
-            ?? explode('@', $email)[0];          // fallback: prefix email
-
-        // Hitung cohort year dari digit ke-7 & ke-8 NIM (format UNDIP: XXXXXYYZZZ)
-        // Contoh: NIM 24060122140008 → angkatan 2024 (digit[0..1] = "24")
-        // Atau ambil dari karakter pertama jika format berbeda
-        $cohortYear = $this->extractCohortYear($nim);
-
-        Student::updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'student_number' => $nim,
-                'cohort_year' => $cohortYear,
-            ]
-        );
-
-        Log::info("SSO: Student record ensured untuk {$email}", [
-            'nim' => $nim,
-            'cohort_year' => $cohortYear,
-        ]);
-    }
-
-    /**
-     * Ekstrak tahun angkatan dari NIM mahasiswa UNDIP.
-     *
-     * Format NIM UNDIP: XXXXXYYZZZ (14 digit)
-     * Contoh: 21120123120029
-     *   - digit ke-7 & ke-8 (index 6–7) = "23" → angkatan 2023
-     *
-     * Strategi: utamakan posisi index 6–7, fallback ke prefix 0–1
-     * jika NIM terlalu pendek.
-     */
-    private function extractCohortYear(string $nim): int
-    {
-        $currentYear = (int) date('Y');
-
-        // Primary: digit ke-7 & ke-8 (index 6–7) — format standar NIM UNDIP
-        // Contoh: "21120123120029" → substr(6,2) = "23" → 2023
-        if (strlen($nim) >= 8) {
-            $fromMiddle = (int) ('20'.substr($nim, 6, 2));
-            if ($fromMiddle >= 2000 && $fromMiddle <= $currentYear) {
-                return $fromMiddle;
-            }
-        }
-
-        // Fallback: 2 digit pertama (untuk format NIM non-standar / pendek)
-        if (strlen($nim) >= 2) {
-            $fromPrefix = (int) ('20'.substr($nim, 0, 2));
-            if ($fromPrefix >= 2000 && $fromPrefix <= $currentYear) {
-                return $fromPrefix;
-            }
-        }
-
-        // Last resort: tahun sekarang
-        return $currentYear;
-    }
 }
