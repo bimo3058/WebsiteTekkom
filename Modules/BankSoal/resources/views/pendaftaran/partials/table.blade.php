@@ -24,28 +24,30 @@
     confirmAction: '',
     confirmMethod: 'POST',
     confirmTitle: '',
-    confirmText: '',
-    confirmBtnColor: '',
-    confirmIconColor: '',
-    confirmIconBg: '',
+    confirmMessage: '',
+    confirmVariant: 'primary',
+    confirmConfirmText: '',
     confirmIsBulk: false,
     confirmData: [],
     confirmStatus: null,
     isConfirmSubmitting: false,
 
-    openConfirm(action, method, title, text, btnColor, iconColor, iconBg, isBulk = false, data = [], status = null) {
-        this.confirmAction = action;
-        this.confirmMethod = method;
-        this.confirmTitle = title;
-        this.confirmText = text;
-        this.confirmBtnColor = btnColor;
-        this.confirmIconColor = iconColor;
-        this.confirmIconBg = iconBg;
-        this.confirmIsBulk = isBulk;
-        this.confirmData = data;
-        this.confirmStatus = status;
+    openConfirm(options) {
+        this.confirmAction = options.action ?? '';
+        this.confirmMethod = options.method ?? 'POST';
+        this.confirmTitle = options.title ?? '';
+        this.confirmMessage = options.message ?? '';
+        this.confirmVariant = options.variant ?? 'primary';
+        this.confirmConfirmText = options.confirmText ?? '';
+        this.confirmIsBulk = options.isBulk ?? false;
+        this.confirmData = options.data ?? [];
+        this.confirmStatus = options.status ?? null;
         this.isConfirmSubmitting = false;
         this.confirmModal = true;
+        this.$nextTick(() => {
+            const btn = this.$refs.confirmActionBtn;
+            if (btn) btn.focus();
+        });
     },
     closeConfirm() {
         if (this.isConfirmSubmitting) return;
@@ -69,8 +71,8 @@
         </div>
         <div class="flex items-center gap-2">
             {{-- Tolak --}}
-            <button type="button" @click="openConfirm('{{ route('banksoal.pendaftaran.bulkReject') }}', 'POST', 'Tolak ' + countSelected + ' Peserta?', 'Data akan dihapus permanen dan tidak dapat dikembalikan.', 'bg-red-500 hover:bg-rose-600', 'text-red-500', 'bg-red-50', true, selected)"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-red-300 text-red-700 hover:bg-red-50 active:scale-95 text-xs font-medium rounded-md transition-all">
+            <button type="button" @click="openConfirm({ action: '{{ route('banksoal.pendaftaran.bulkReject') }}', method: 'POST', title: 'Tolak & Hapus ' + countSelected + ' Peserta?', message: countSelected + ' peserta yang dipilih akan ditolak dan datanya dihapus permanen. Aksi ini tidak dapat dikembalikan.', variant: 'danger', confirmText: 'Ya, Tolak & Hapus', isBulk: true, data: selected })"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#DF1C41]/30 text-[#95122B] hover:bg-[#FADAE1]/50 active:scale-95 text-xs font-medium rounded-md cursor-pointer transition-all">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                         d="M6 18L18 6M6 6l12 12" />
@@ -79,8 +81,8 @@
             </button>
 
             {{-- Setujui --}}
-            <button type="button" @click="openConfirm('{{ route('banksoal.pendaftaran.bulkApprove') }}', 'POST', 'Setujui ' + countSelected + ' Peserta?', 'Aksi ini tidak dapat dibatalkan.', 'bg-emerald-600 hover:bg-emerald-700', 'text-emerald-600', 'bg-emerald-50', true, selected)"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-medium rounded-md transition-all shadow-sm">
+            <button type="button" @click="openConfirm({ action: '{{ route('banksoal.pendaftaran.bulkApprove') }}', method: 'POST', title: 'Setujui ' + countSelected + ' Peserta?', message: countSelected + ' peserta yang dipilih akan disetujui. Aksi ini tidak dapat dibatalkan.', variant: 'success', confirmText: 'Ya, Setujui', isBulk: true, data: selected })"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2A3A7C] hover:bg-[#1E2A5E] active:scale-95 text-white text-xs font-medium rounded-md cursor-pointer transition-all shadow-sm">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
                 </svg>
@@ -100,7 +102,7 @@
                         {{-- Checkbox Select All --}}
                         <th scope="col" class="px-6 py-4 w-10 text-center">
                             <input type="checkbox"
-                                class="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-0"
+                                class="w-4 h-4 rounded border-gray-300 text-[#2A3A7C] cursor-pointer focus:ring-2 focus:ring-[#2A3A7C]/20 focus:ring-offset-0"
                                 :checked="allChecked" :indeterminate="indeterminate" @change="toggleAll()"
                                 title="Pilih semua pending">
                         </th>
@@ -123,7 +125,7 @@
                             <td class="px-6 py-4 text-center">
                                 @if ($isPending)
                                     <input type="checkbox"
-                                        class="row-checkbox w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-0"
+                                        class="row-checkbox w-4 h-4 rounded border-gray-300 text-[#2A3A7C] cursor-pointer focus:ring-2 focus:ring-[#2A3A7C]/20 focus:ring-offset-0"
                                         value="{{ $item->id }}" x-model="selected">
                                 @else
                                     <span class="text-gray-300" title="Sudah disetujui">
@@ -188,7 +190,7 @@
                                     @resize.window="actionOpen = false">
                                     {{-- Trigger Kebab --}}
                                     <button type="button" x-ref="trigger" @click="toggleMenu()" title="Aksi"
-                                        class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-transparent text-gray-400 hover:text-[#2A3A7C] hover:bg-[#2A3A7C]/5 transition-colors">
+                                        class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-transparent text-gray-400 hover:text-[#2A3A7C] hover:bg-[#2A3A7C]/5 cursor-pointer transition-colors">
                                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                             <circle cx="5" cy="12" r="2"></circle>
                                             <circle cx="12" cy="12" r="2"></circle>
@@ -217,7 +219,7 @@
                                                             dosen2: '{{ addslashes($item->dosenPembimbing2->name ?? '-') }}',
                                                             ujian_count: {{ $item->sesi_selesai_count ?? 0 }}
                                                         }); actionOpen = false"
-                                        class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium text-gray-700 hover:bg-gray-50 transition-colors text-left">
+                                        class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors text-left">
                                         <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -232,8 +234,8 @@
                                         <div class="h-px bg-gray-100 mx-1.5 my-1"></div>
                                         {{-- Setujui --}}
                                         <button type="button"
-                                            @click="openConfirm('{{ route('banksoal.pendaftaran.updateStatus', $item->id) }}', 'PATCH', 'Setujui Pendaftaran?', 'Setujui pendaftaran {{ addslashes($item->nama_lengkap) }}? Aksi ini tidak dapat dibatalkan.', 'bg-emerald-600 hover:bg-emerald-700', 'text-emerald-500', 'bg-emerald-50', false, [], 'approved'); actionOpen = false"
-                                            class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium text-emerald-600 hover:bg-emerald-50 transition-colors text-left">
+                                            @click="openConfirm({ action: '{{ route('banksoal.pendaftaran.updateStatus', $item->id) }}', method: 'PATCH', title: 'Setujui Pendaftaran?', message: '{{ addslashes($item->nama_lengkap) }}' + ' akan disetujui sebagai peserta periode ini. Aksi ini tidak dapat dibatalkan.', variant: 'success', confirmText: 'Ya, Setujui', status: 'approved' }); actionOpen = false"
+                                            class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium text-[#287F6E] hover:bg-[#DDF2EE] cursor-pointer transition-colors text-left">
                                             <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                             </svg>
@@ -242,8 +244,8 @@
 
                                         {{-- Tolak & Hapus --}}
                                         <button type="button"
-                                            @click="openConfirm('{{ route('banksoal.pendaftaran.destroy', $item->id) }}', 'DELETE', 'Tolak & Hapus?', 'Tolak dan hapus pendaftar {{ addslashes($item->nama_lengkap) }}? Data akan dihapus dari daftar.', 'bg-red-500 hover:bg-rose-600', 'text-red-500', 'bg-red-50'); actionOpen = false"
-                                            class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium text-red-600 hover:bg-red-50 transition-colors text-left">
+                                            @click="openConfirm({ action: '{{ route('banksoal.pendaftaran.destroy', $item->id) }}', method: 'DELETE', title: 'Tolak & Hapus Pendaftaran?', message: '{{ addslashes($item->nama_lengkap) }}' + ' akan ditolak dan datanya dihapus permanen dari daftar. Aksi ini tidak dapat dikembalikan.', variant: 'danger', confirmText: 'Ya, Tolak & Hapus' }); actionOpen = false"
+                                            class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium text-[#95122B] hover:bg-[#FADAE1] cursor-pointer transition-colors text-left">
                                             <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                             </svg>
@@ -313,44 +315,5 @@
         </div>
     </div>
 
-    <!-- Modal Popup: Konfirmasi -->
-    <div x-show="confirmModal" tabindex="-1" class="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6" style="display: none;" x-cloak>
-        <div x-show="confirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" @click="closeConfirm()"></div>
-
-        <div x-show="confirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative w-full max-w-sm bg-white rounded-2xl shadow-xl flex flex-col overflow-hidden max-h-full">
-            
-            <div class="px-6 pt-6 pb-4 text-center">
-                <div :class="'w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ' + confirmIconBg">
-                    <svg :class="'w-7 h-7 ' + confirmIconColor" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                </div>
-                <h3 class="text-[16px] font-semibold text-gray-900 tracking-tight mb-2" x-text="confirmTitle"></h3>
-                <p class="text-[13px] text-gray-500 leading-relaxed" x-text="confirmText"></p>
-            </div>
-
-            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex items-center gap-3">
-                <button type="button" @click="closeConfirm()" class="flex-1 px-4 py-2 text-[13px] font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors">Batal</button>
-                <form :action="confirmAction" method="POST" class="flex-1 m-0" id="form-confirm-action" @submit="if(isConfirmSubmitting){ $event.preventDefault(); return; } isConfirmSubmitting = true">
-                    @csrf
-                    <input type="hidden" name="_method" :value="confirmMethod">
-                    
-                    <!-- Untuk Single Status Update -->
-                    <template x-if="confirmStatus && !confirmIsBulk">
-                        <input type="hidden" name="status_pendaftaran" :value="confirmStatus">
-                    </template>
-                    
-                    <!-- Untuk Bulk Actions -->
-                    <template x-if="confirmIsBulk && confirmData.length > 0">
-                        <template x-for="id in confirmData" :key="id">
-                            <input type="hidden" name="ids[]" :value="id">
-                        </template>
-                    </template>
-                    
-                    <button type="submit" :disabled="isConfirmSubmitting" :class="'w-full px-4 py-2 text-[13px] font-medium text-white rounded-lg transition-all flex justify-center items-center gap-2 ' + confirmBtnColor + (isConfirmSubmitting ? ' opacity-50 cursor-not-allowed' : '')">
-                        <svg x-show="isConfirmSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                        <span x-text="isConfirmSubmitting ? 'Memproses...' : 'Ya, Lanjutkan'"></span>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
+    <x-banksoal::ui.confirm-dialog />
 </div>

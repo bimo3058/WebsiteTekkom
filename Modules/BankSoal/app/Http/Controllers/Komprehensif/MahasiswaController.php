@@ -10,21 +10,34 @@ use Modules\BankSoal\Http\Requests\Komprehensif\StorePendaftaranRequest;
 use Modules\BankSoal\Models\Komprehensif\KompreSession;
 use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
 use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
+use Modules\BankSoal\Services\Komprehensif\KompreSettingService;
 use Modules\BankSoal\Services\Komprehensif\PendaftaranService;
 use Modules\BankSoal\Support\SemesterCalculator;
 
 class MahasiswaController extends Controller
 {
-    public function __construct(private PendaftaranService $pendaftaranService) {}
+    public function __construct(
+        private PendaftaranService $pendaftaranService,
+        private KompreSettingService $settings,
+    ) {}
 
     public function dashboard()
     {
-        $activePeriode   = PeriodeUjian::where('status', 'aktif')->latest()->first();
-        $pendaftar       = null;
+        $activePeriode = PeriodeUjian::where('status', 'aktif')->latest()->first();
+        $pendaftar = null;
         $finishedSession = null;
 
-        if ($activePeriode) {
+        $passedSession = KompreSession::where('user_id', auth()->id())
+            ->where('status', 'finished')
+            ->where('lulus', true)
+            ->latest('finished_at')
+            ->first();
+
+        if ($passedSession) {
+            $finishedSession = $passedSession;
+        } elseif ($activePeriode) {
             $pendaftar = PendaftarUjian::withTrashed()
+                ->with('jadwal')
                 ->where('periode_ujian_id', $activePeriode->id)
                 ->where('mahasiswa_id', auth()->id())
                 ->first();
@@ -36,7 +49,7 @@ class MahasiswaController extends Controller
                     ->first();
 
                 // Auto-grade no-show: delegasikan logika ke service
-                if (!$finishedSession) {
+                if (! $finishedSession) {
                     $finishedSession = $this->pendaftaranService->autoGradeNoShow(
                         $pendaftar->jadwal,
                         auth()->id()
@@ -45,24 +58,33 @@ class MahasiswaController extends Controller
             }
         }
 
-        $semester   = SemesterCalculator::fromCohortYear(auth()->user()->student?->cohort_year);
+        $semester = SemesterCalculator::fromCohortYear(auth()->user()->student?->cohort_year);
         $isEligible = $semester >= 7;
 
-        $kuotaPenuh = $activePeriode && !$pendaftar
-            ? $this->pendaftaranService->isKuotaPenuh($activePeriode)
-            : false;
+        $passingSettings = $this->settings->all();
 
+        // Kuota dihitung sekali: semantik sama dengan PendaftaranService::isKuotaPenuh
+        // (kuota null berarti tanpa batas).
         $kuotaTerisi = $activePeriode
             ? PendaftarUjian::where('periode_ujian_id', $activePeriode->id)->count()
             : 0;
 
+        $kuotaPenuh = $activePeriode && ! $pendaftar
+            ? ($activePeriode->kuota_peserta !== null && $kuotaTerisi >= $activePeriode->kuota_peserta)
+            : false;
+
         return view('banksoal::mahasiswa.dashboard', compact(
-            'activePeriode', 'pendaftar', 'semester', 'isEligible', 'finishedSession', 'kuotaPenuh', 'kuotaTerisi'
+            'activePeriode', 'pendaftar', 'semester', 'isEligible', 'finishedSession', 'kuotaPenuh', 'kuotaTerisi', 'passingSettings'
         ));
     }
 
     public function createPendaftaran()
     {
+        if ($this->pendaftaranService->hasPassed(auth()->id())) {
+            return redirect()->route('komprehensif.mahasiswa.dashboard')
+                ->with('info', 'Anda sudah dinyatakan lulus ujian komprehensif. Pendaftaran tidak diperlukan lagi.');
+        }
+
         $activePeriode = $this->pendaftaranService->getActivePeriode();
 
         $semester = SemesterCalculator::fromCohortYear(auth()->user()->student?->cohort_year);
@@ -71,13 +93,14 @@ class MahasiswaController extends Controller
                 ->with('error', 'Akses ditolak: Anda belum memenuhi syarat minimal Semester 7.');
         }
 
-        if (!$activePeriode || !$activePeriode->pendaftaran_terbuka) {
+        if (! $activePeriode || ! $activePeriode->pendaftaran_terbuka) {
             $msg = 'Pendaftaran tidak tersedia saat ini.';
             if ($activePeriode && $activePeriode->pendaftaran_ditutup_paksa) {
                 $msg = 'Pendaftaran telah ditutup oleh admin sebelum tanggal berakhir.';
-            } elseif (!$activePeriode) {
+            } elseif (! $activePeriode) {
                 $msg = 'Tidak ada periode pendaftaran aktif.';
             }
+
             return redirect()->route('komprehensif.mahasiswa.dashboard')->with('error', $msg);
         }
 
@@ -90,6 +113,7 @@ class MahasiswaController extends Controller
             $msg = $pendaftar->trashed()
                 ? 'Pendaftaran Anda pada periode ini telah ditolak. Anda tidak dapat mendaftar ulang.'
                 : 'Anda sudah terdaftar pada periode ini.';
+
             return redirect()->route('komprehensif.mahasiswa.dashboard')->with('info', $msg);
         }
 
@@ -102,9 +126,14 @@ class MahasiswaController extends Controller
 
     public function storePendaftaran(StorePendaftaranRequest $request): RedirectResponse
     {
+        if ($this->pendaftaranService->hasPassed(auth()->id())) {
+            return redirect()->route('komprehensif.mahasiswa.dashboard')
+                ->with('info', 'Anda sudah dinyatakan lulus ujian komprehensif. Pendaftaran tidak diperlukan lagi.');
+        }
+
         $activePeriode = $this->pendaftaranService->getActivePeriode();
 
-        if (!$activePeriode) {
+        if (! $activePeriode) {
             return redirect()->route('komprehensif.mahasiswa.dashboard');
         }
 
@@ -114,10 +143,11 @@ class MahasiswaController extends Controller
                 ->with('error', 'Akses ditolak: Anda belum memenuhi syarat minimal Semester 7.');
         }
 
-        if (!$activePeriode->pendaftaran_terbuka) {
+        if (! $activePeriode->pendaftaran_terbuka) {
             $msg = $activePeriode->pendaftaran_ditutup_paksa
                 ? 'Aksi ditolak: Pendaftaran telah ditutup oleh admin.'
                 : 'Aksi ditolak: Pendaftaran sedang ditutup.';
+
             return redirect()->route('komprehensif.mahasiswa.dashboard')->with('error', $msg);
         }
 
@@ -140,7 +170,7 @@ class MahasiswaController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('jadwal.periode', function($q) use ($search) {
+            $query->whereHas('jadwal.periode', function ($q) use ($search) {
                 $q->where('nama_periode', 'ilike', "%{$search}%");
             });
         }
@@ -148,7 +178,7 @@ class MahasiswaController extends Controller
         if ($request->filled('sort_by') && $request->filled('sort_dir')) {
             $sortBy = $request->sort_by;
             $sortDir = strtolower($request->sort_dir) === 'asc' ? 'asc' : 'desc';
-            
+
             if ($sortBy === 'score') {
                 $query->orderBy('score', $sortDir);
             } else {
@@ -164,10 +194,10 @@ class MahasiswaController extends Controller
         $sessions = $query->paginate($perPage)->withQueryString();
 
         $allSessions = KompreSession::where('user_id', auth()->id())->where('status', 'finished')->get();
-        $totalUjian     = $allSessions->count();
+        $totalUjian = $allSessions->count();
         $nilaiTertinggi = $allSessions->max('score') ?? 0;
-        $nilaiRataRata  = $totalUjian ? round($allSessions->avg('score'), 1) : 0;
-        $jumlahLulus    = $allSessions->where('score', '>=', 60)->count();
+        $nilaiRataRata = $totalUjian ? round($allSessions->avg('score'), 1) : 0;
+        $jumlahLulus = $allSessions->where('lulus', true)->count();
 
         return view('banksoal::mahasiswa.riwayat', compact(
             'sessions', 'totalUjian', 'nilaiTertinggi', 'nilaiRataRata', 'jumlahLulus'
@@ -194,26 +224,58 @@ class MahasiswaController extends Controller
         // Kelompokkan jawaban per CPL, urutkan berdasarkan kode CPL
         $jawabansPerCpl = $session->jawabans
             ->sortBy('urutan_soal')
-            ->groupBy(fn($j) => optional($j->pertanyaan?->cpl)->kode ?? 'Tanpa CPL')
+            ->groupBy(fn ($j) => optional($j->pertanyaan?->cpl)->kode ?? 'Tanpa CPL')
             ->sortKeys();
 
-        // Hitung statistik per CPL untuk ditampilkan di view
-        $cplStats = $jawabansPerCpl->map(function ($jawabans, $kode) {
-            $total  = $jawabans->count();
-            $benar  = $jawabans->filter(fn($j) => $j->opsiTerpilih?->is_benar)->count();
-            $salah  = $jawabans->filter(fn($j) => $j->jawaban_dipilih && !$j->opsiTerpilih?->is_benar)->count();
+        $isImport = $session->isImport();
 
-            return [
-                'kode'      => $kode,
-                'deskripsi' => $jawabans->first()->pertanyaan?->cpl?->deskripsi ?? '',
-                'total'     => $total,
-                'benar'     => $benar,
-                'salah'     => $salah,
-                'kosong'    => $total - $benar - $salah,
-                'pct_benar' => $total > 0 ? round($benar / $total * 100) : 0,
-            ];
-        })->values();
+        // Aturan kelulusan yang dipakai sesi ini (snapshot) atau setting aktif
+        // untuk sesi lama yang belum menyimpan aturan.
+        $passingRule = $session->passing_rule;
+        $cplMinScore = $this->settings->cplMinScore();
+        $totalMinScore = $this->settings->totalMinScore();
 
-        return view('banksoal::mahasiswa.detail-riwayat', compact('session', 'cplStats'));
+        if ($session->jawabans->isEmpty() && ! empty($session->cpl_scores)) {
+            $cplStats = collect($session->cpl_scores)->map(function ($cpl) {
+                $total = (int) ($cpl['total'] ?? 0);
+                $benar = (int) ($cpl['benar'] ?? 0);
+
+                return [
+                    'kode' => $cpl['kode'] ?? '-',
+                    'deskripsi' => $cpl['deskripsi'] ?? '',
+                    'total' => $total,
+                    'benar' => $benar,
+                    'salah' => 0,
+                    'kosong' => max(0, $total - $benar),
+                    'pct_benar' => $total > 0 ? round($benar / $total * 100) : 0,
+                    'nilai' => (float) ($cpl['nilai'] ?? 0),
+                    'lulus' => true,
+                ];
+            })->values();
+        } else {
+            // Hitung statistik per CPL untuk ditampilkan di view
+            $cplStats = $jawabansPerCpl->map(function ($jawabans, $kode) use ($cplMinScore) {
+                $total = $jawabans->count();
+                $benar = $jawabans->filter(fn ($j) => $j->opsiTerpilih?->is_benar)->count();
+                $salah = $jawabans->filter(fn ($j) => $j->jawaban_dipilih && ! $j->opsiTerpilih?->is_benar)->count();
+                $nilai = $total > 0 ? round($benar / $total * 10, 2) : 0.0;
+
+                return [
+                    'kode' => $kode,
+                    'deskripsi' => $jawabans->first()->pertanyaan?->cpl?->deskripsi ?? '',
+                    'total' => $total,
+                    'benar' => $benar,
+                    'salah' => $salah,
+                    'kosong' => $total - $benar - $salah,
+                    'pct_benar' => $total > 0 ? round($benar / $total * 100) : 0,
+                    'nilai' => $nilai,
+                    'lulus' => $total > 0 && $nilai >= $cplMinScore,
+                ];
+            })->values();
+        }
+
+        return view('banksoal::mahasiswa.detail-riwayat', compact(
+            'session', 'cplStats', 'isImport', 'passingRule', 'cplMinScore', 'totalMinScore'
+        ));
     }
 }

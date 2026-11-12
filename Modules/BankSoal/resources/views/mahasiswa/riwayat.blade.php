@@ -237,7 +237,7 @@
                                 }
                             }
 
-                            $lulus = $score >= 60;
+                            $lulus = (bool) ($session->lulus ?? false);
                             // Meniru status badge superadmin dengan CSS inline
                             $badgeColor = $isNoShow ? '#475569' : ($lulus ? '#059669' : '#DC2626');
                             $badgeBg = $isNoShow ? '#F1F5F9' : ($lulus ? '#ECFDF5' : '#FEF2F2');

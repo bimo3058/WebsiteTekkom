@@ -19,6 +19,7 @@ use Modules\BankSoal\Http\Controllers\BS\GPM\RiwayatValidasiController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\PeriodeRpsController;
 use Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController;
 use Modules\BankSoal\Http\Controllers\Komprehensif\AktivasiSesiController;
+use Modules\BankSoal\Http\Controllers\Komprehensif\ImportController;
 use Modules\BankSoal\Http\Controllers\Komprehensif\AlokasiSesiController;
 use Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController;
 use Modules\BankSoal\Http\Controllers\Komprehensif\JadwalController;
@@ -364,11 +365,12 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
     Route::prefix('admin/aktivasi-sesi')->name('banksoal.aktivasi.')->group(function () {
         Route::middleware('role:admin_banksoal|admin|superadmin')->group(function () {
             Route::get('/', [AktivasiSesiController::class, 'index'])->name('index');
+            Route::get('/violation-status', [AktivasiSesiController::class, 'violationStatus'])->name('violation-status');
             Route::patch('/{id}/toggle', [AktivasiSesiController::class, 'toggle'])->name('toggle');
         });
     });
 
-    # Manajemen Ujian (Live Proctoring & Riwayat)
+    # Manajemen Ujian (Riwayat, Analitik; live-proctoring dialihkan ke Monitoring Ujian)
     Route::prefix('admin/cbt')->name('banksoal.admin.cbt.')->group(function () {
         Route::middleware('role:admin_banksoal|admin|superadmin')->group(function () {
             Route::get('/live-proctoring', [AdminCbtController::class, 'liveProctoring'])->name('live-proctoring');
@@ -377,6 +379,11 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
             Route::get('/analitik', [AdminCbtController::class, 'analytics'])->name('analitik');
             Route::get('/riwayat/{id}', [AdminCbtController::class, 'detailHasil'])->name('detail');
             Route::post('/reset-semua', [AdminCbtController::class, 'resetSemua'])->name('reset-semua');
+            Route::post('/syarat-kelulusan', [AdminCbtController::class, 'updatePassingRule'])->name('passing-rule.update');
+
+            Route::get('/import/template/{periode}', [ImportController::class, 'template'])->name('import.template');
+            Route::post('/import/preview', [ImportController::class, 'preview'])->name('import.preview');
+            Route::post('/import/execute/{token}', [ImportController::class, 'execute'])->name('import.execute');
         });
     });
 
@@ -419,5 +426,6 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
         Route::post('/engine/toggle-ragu', [CbtEngineController::class, 'toggleRagu'])->name('engine.toggle-ragu');
         Route::post('/engine/log-violation', [CbtEngineController::class, 'logViolation'])->name('engine.log-violation');
         Route::get('/engine/finish', [CbtEngineController::class, 'finish'])->name('engine.finish');
+        Route::post('/engine/finish', [CbtEngineController::class, 'finishBulk'])->name('engine.finish-bulk');
     });
 

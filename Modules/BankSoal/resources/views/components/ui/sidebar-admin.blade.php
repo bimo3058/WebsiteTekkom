@@ -126,28 +126,15 @@
             </div>
         </div>
 
-        {{-- Monitoring Ujian Accordion --}}
-        @php 
-            $isMonitoringActive = request()->routeIs('banksoal.aktivasi.*') || request()->routeIs('banksoal.admin.cbt.live-proctoring');
-            $isAktivasi = request()->routeIs('banksoal.aktivasi.index');
-            $isLive = request()->routeIs('banksoal.admin.cbt.live-proctoring');
-        @endphp
-        <div x-data="{ openAcc: {{ $isMonitoringActive ? 'true' : 'false' }} }" class="flex flex-col mt-[1px]">
-            <button @click="if(!sidebarOpen){ sidebarOpen=true; openAcc=true; } else { openAcc=!openAcc }" class="relative w-full flex items-center gap-[9px] p-[7px_10px_7px_14px] rounded-lg text-[13px] transition-colors {{ $isMonitoringActive ? 'bg-[#F6F8FA] text-[#0D0D12] font-semibold' : 'text-[#353849] font-medium hover:bg-[#F6F8FA]' }}" :class="!sidebarOpen ? 'justify-center p-[7px_0]' : ''">
-                @if($isMonitoringActive)
-                    <span class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[20px] bg-[#0B266E] rounded-r-[3px]" x-show="sidebarOpen"></span>
-                @endif
-                <svg class="w-4 h-4 flex-shrink-0 {{ $isMonitoringActive ? 'text-[#0B266E]' : 'text-[#666D80]' }}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="{{ $iconMonitor }}"/></svg>
-                <span x-show="sidebarOpen" class="flex-1 whitespace-nowrap overflow-hidden text-ellipsis leading-tight text-left">Monitoring Ujian</span>
-                <svg x-show="sidebarOpen" class="w-3.5 h-3.5 flex-shrink-0 text-[#666D80] transition-transform duration-200" :class="openAcc ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
-            </button>
-            <div x-show="openAcc && sidebarOpen" x-collapse x-cloak>
-                <div class="flex flex-col gap-[2px] pl-[34px] pr-[10px] py-[2px] mt-[1px]">
-                    <a href="{{ route('banksoal.aktivasi.index') }}" class="block p-[7px_10px] rounded-lg text-[13px] transition-colors {{ $isAktivasi ? 'bg-[#F6F8FA] text-[#0D0D12] font-semibold' : 'text-[#353849] hover:bg-[#F6F8FA]' }}">Aktivasi Sesi</a>
-                    <a href="{{ route('banksoal.admin.cbt.live-proctoring') }}" class="block p-[7px_10px] rounded-lg text-[13px] transition-colors {{ $isLive ? 'bg-[#F6F8FA] text-[#0D0D12] font-semibold' : 'text-[#353849] hover:bg-[#F6F8FA]' }}">Pantau Ujian</a>
-                </div>
-            </div>
-        </div>
+        {{-- Monitoring Ujian (Flat Link) --}}
+        @php $isMonitoring = request()->routeIs('banksoal.aktivasi.*'); @endphp
+        <a href="{{ route('banksoal.aktivasi.index') }}" @click="if(!sidebarOpen) sidebarOpen=true" class="relative flex items-center gap-[9px] p-[7px_10px_7px_14px] rounded-lg text-[13px] mt-[1px] transition-colors {{ $isMonitoring ? 'bg-[#F6F8FA] text-[#0D0D12] font-semibold' : 'text-[#353849] font-medium hover:bg-[#F6F8FA]' }}" :class="!sidebarOpen ? 'justify-center p-[7px_0]' : ''">
+            @if($isMonitoring)
+                <span class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[20px] bg-[#0B266E] rounded-r-[3px]" x-show="sidebarOpen"></span>
+            @endif
+            <svg class="w-4 h-4 flex-shrink-0 {{ $isMonitoring ? 'text-[#0B266E]' : 'text-[#666D80]' }}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="{{ $iconMonitor }}"/></svg>
+            <span x-show="sidebarOpen" class="flex-1 whitespace-nowrap overflow-hidden text-ellipsis leading-tight">Monitoring Ujian</span>
+        </a>
 
         {{-- Riwayat Ujian (Flat Link) --}}
         @php $isRiwayat = request()->routeIs('banksoal.admin.cbt.riwayat') || request()->routeIs('banksoal.admin.cbt.detail'); @endphp
