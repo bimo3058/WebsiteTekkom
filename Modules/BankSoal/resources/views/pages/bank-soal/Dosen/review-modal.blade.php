@@ -31,11 +31,20 @@
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-1.5">Agenda</label>
-                            <select name="agenda" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2 px-3 shadow-sm">
-                                <option value="Ujian Akhir Semester (UAS)">Ujian Akhir Semester (UAS)</option>
-                                <option value="Ujian Tengah Semester (UTS)">Ujian Tengah Semester (UTS)</option>
-                                <option value="Kuis">Kuis</option>
-                            </select>
+                            <div x-data="{ open: false, value: 'Ujian Akhir Semester (UAS)', label: 'Ujian Akhir Semester (UAS)' }" @click.outside="open = false" class="relative">
+                                <input type="hidden" name="agenda" :value="value">
+                                <button type="button" @click="open = !open" :aria-expanded="open"
+                                    class="flex h-[34px] w-full items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 text-left text-xs text-slate-700 shadow-sm focus:border-slate-300 focus:outline-none focus:ring-0">
+                                    <span x-text="label" class="min-w-0 truncate whitespace-nowrap"></span>
+                                    <i class="fas fa-chevron-down text-xs text-slate-400 transition-transform" :class="{ 'rotate-180': open }"></i>
+                                </button>
+                                <div x-show="open" x-cloak x-transition
+                                    class="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                                    <button type="button" @click="value = 'Ujian Akhir Semester (UAS)'; label = 'Ujian Akhir Semester (UAS)'; open = false" class="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">Ujian Akhir Semester (UAS)</button>
+                                    <button type="button" @click="value = 'Ujian Tengah Semester (UTS)'; label = 'Ujian Tengah Semester (UTS)'; open = false" class="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">Ujian Tengah Semester (UTS)</button>
+                                    <button type="button" @click="value = 'Kuis'; label = 'Kuis'; open = false" class="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">Kuis</button>
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-1.5">Tahun Ajaran</label>
@@ -43,11 +52,20 @@
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-1.5">Semester</label>
-                            <select name="semester" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2 px-3 shadow-sm">
-                                <option value="Ganjil">Ganjil</option>
-                                <option value="Genap" selected>Genap</option>
-                                <option value="Antara">Antara</option>
-                            </select>
+                            <div x-data="{ open: false, value: 'Genap', label: 'Genap' }" @click.outside="open = false" class="relative">
+                                <input type="hidden" name="semester" :value="value">
+                                <button type="button" @click="open = !open" :aria-expanded="open"
+                                    class="flex w-full items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-left text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+                                    <span x-text="label"></span>
+                                    <i class="fas fa-chevron-down text-xs text-slate-400 transition-transform" :class="{ 'rotate-180': open }"></i>
+                                </button>
+                                <div x-show="open" x-cloak x-transition
+                                    class="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                                    <button type="button" @click="value = 'Ganjil'; label = 'Ganjil'; open = false" class="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">Ganjil</button>
+                                    <button type="button" @click="value = 'Genap'; label = 'Genap'; open = false" class="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">Genap</button>
+                                    <button type="button" @click="value = 'Antara'; label = 'Antara'; open = false" class="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">Antara</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -70,10 +88,19 @@
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-1.5">Sifat Ujian</label>
-                            <select name="sifat_ujian" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2 px-3 shadow-sm">
-                                <option value="Tertutup">Tertutup</option>
-                                <option value="Terbuka">Terbuka</option>
-                            </select>
+                            <div x-data="{ open: false, value: 'Tertutup', label: 'Tertutup' }" @click.outside="open = false" class="relative">
+                                <input type="hidden" name="sifat_ujian" :value="value">
+                                <button type="button" @click="open = !open" :aria-expanded="open"
+                                    class="flex w-full items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-left text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+                                    <span x-text="label"></span>
+                                    <i class="fas fa-chevron-down text-xs text-slate-400 transition-transform" :class="{ 'rotate-180': open }"></i>
+                                </button>
+                                <div x-show="open" x-cloak x-transition
+                                    class="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                                    <button type="button" @click="value = 'Tertutup'; label = 'Tertutup'; open = false" class="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">Tertutup</button>
+                                    <button type="button" @click="value = 'Terbuka'; label = 'Terbuka'; open = false" class="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">Terbuka</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -90,7 +117,7 @@
                                     <span class="text-sm text-slate-600">Cetak Kertas (Offline)</span>
                                 </label>
                             </div>
-                            <p class="text-xs text-slate-500 mt-1">Jika mode <b>Cetak Kertas</b> dipilih, soal akan otomatis diteruskan ke antrean tugas Admin Cetak.</p>
+                            <p class="text-xs text-slate-500 mt-1">Jika mode <b>Cetak Kertas</b> dipilih, soal akan otomatis diteruskan ke antrean tugas Admin BankSoal untuk di Cetak.</p>
                         </div>
                     </div>
 
@@ -110,7 +137,7 @@
 
                     <div class="mt-4 border-2 border-dashed border-slate-300 rounded-xl bg-white hover:bg-slate-50 transition-colors cursor-pointer text-center py-4 group" onclick="openManualInsertModal()">
                         <span class="text-slate-500 text-sm font-semibold flex items-center justify-center gap-2 group-hover:text-primary transition-colors">
-                            <i class="fas fa-plus bg-slate-100 group-hover:bg-primary/10 rounded-full w-6 h-6 flex items-center justify-center"></i> Tambah Soal Manual
+                            <i class="fas fa-plus bg-slate-100 group-hover:bg-primary/10 rounded-full w-6 h-6 flex items-center justify-center"></i> Tambah Soal dari CPL Lain
                         </span>
                     </div>
                 </div>
@@ -142,8 +169,8 @@
         <!-- Header -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
             <div>
-                <h3 class="text-lg font-bold text-slate-900">Pilih Soal Manual</h3>
-                <p class="text-xs text-slate-500 mt-1">Tambahkan soal spesifik ke daftar ujian Anda.</p>
+                <h3 class="text-lg font-bold text-slate-900">Pilih Soal dari CPL Lain</h3>
+                <p class="text-sm text-slate-500 mt-1">Pilih soal lain yang tersedia pada mata kuliah ini untuk ditambahkan ke lembar ujian. Soal dapat berasal dari CPL yang berbeda.</p>
             </div>
             <button type="button" class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg p-2 transition-colors" onclick="closeManualInsertModal()">
                 <i class="fas fa-times"></i>
@@ -180,7 +207,7 @@
         document.getElementById('reviewBobotTotal').value = data.bobot_total || '';
         document.getElementById('reviewMkNama').value = data.mataKuliah.nama;
         document.getElementById('reviewSoalJson').value = JSON.stringify(data.soals || []);
-        document.getElementById('reviewNamaEkstraksi').value = `${data.mataKuliah.nama} - ${document.querySelector('select[name="agenda"]')?.value || 'Ekstraksi'}`;
+        document.getElementById('reviewNamaEkstraksi').value = `${data.mataKuliah.nama} - ${document.querySelector('input[name="agenda"]')?.value || 'Ekstraksi'}`;
         document.getElementById('reviewRequireBlindReview').value = document.getElementById('requireBlindReview')?.checked ? '1' : '0';
         
         // Build Soal List
@@ -397,7 +424,10 @@
         listDiv.classList.add('hidden');
         if (window.Spinner) window.Spinner.showTable('manualInsertLoading');
 
-        fetch(`/bank-soal/soal/dosen/get-by-mk/${mkId}`, {
+        const availableSoalsUrl = @json(route('banksoal.soal.dosen.get-available-soals', ['mk_id' => '__MK_ID__']))
+            .replace('__MK_ID__', encodeURIComponent(mkId));
+
+        fetch(availableSoalsUrl, {
                 method: 'GET',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
@@ -413,13 +443,14 @@
                 
                 if (data.success && data.soals.length > 0) {
                     // Check existing IDs
-                    const existingInputs = document.querySelectorAll('input[name="soal_ids[]"]');
-                    const existingIds = Array.from(existingInputs).map(inp => parseInt(inp.value));
+                    const existingIds = Array.from(
+                        document.querySelectorAll('#soalListContainer input[name="soal_ids[]"]')
+                    ).map(input => String(input.value));
 
                     let totalAvailable = 0;
 
                     data.soals.forEach(soal => {
-                        const isAdded = existingIds.includes(soal.id);
+                        const isAdded = existingIds.includes(String(soal.id));
                         if (isAdded) return; // Skip if already added
                         
                         totalAvailable++;
@@ -428,7 +459,12 @@
                         if (soal.cpl) badges += `<span class="px-1.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-500 text-[10px] font-semibold rounded uppercase">${soal.cpl}</span>`;
                         if (soal.cpmk) badges += `<span class="px-1.5 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-600 text-[10px] font-semibold rounded uppercase">${soal.cpmk}</span>`;
 
-                        const cleanSoalRaw = soal.soal.replace(/"/g, '&quot;');
+                        const encodedSoal = encodeURIComponent(JSON.stringify({
+                            id: soal.id,
+                            soal: soal.soal,
+                            cpl: soal.cpl || '',
+                            cpmk: soal.cpmk || ''
+                        }));
 
                         listDiv.innerHTML += `
                             <div class="card-soal overflow-hidden border border-slate-200 rounded-lg bg-white shadow-sm flex items-start p-3 hover:border-primary/20 transition-colors" id="manual-soal-${soal.id}">
@@ -437,9 +473,9 @@
                                         <span class="font-bold text-slate-800 text-sm">Q-${String(soal.id).padStart(3, '0')}</span>
                                         ${badges}
                                     </div>
-                                    <p class="text-sm text-slate-600 line-clamp-3">${cleanSoalRaw}</p>
+                                    <p class="text-sm text-slate-600 line-clamp-3">${soal.soal}</p>
                                 </div>
-                                <button type="button" onclick="insertManualSoal(${soal.id}, '${cleanSoalRaw}', '${soal.cpl || ''}', '${soal.cpmk || ''}')" class="flex-shrink-0 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm transition-colors border border-primary/20 mt-0.5 flex items-center gap-1.5">
+                                <button type="button" data-soal-payload="${encodedSoal}" onclick="insertManualSoalFromButton(this)" class="flex-shrink-0 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm transition-colors border border-primary/20 mt-0.5 flex items-center gap-1.5">
                                     <i class="fas fa-plus"></i> Tambah
                                 </button>
                             </div>
@@ -473,6 +509,18 @@
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }, 300);
+    }
+
+    function insertManualSoalFromButton(button) {
+        try {
+            const soal = JSON.parse(decodeURIComponent(button.dataset.soalPayload));
+            insertManualSoal(soal.id, soal.soal, soal.cpl, soal.cpmk);
+        } catch (error) {
+            console.error('Gagal membaca data soal manual', error);
+            if (typeof showSnackbar === 'function') {
+                showSnackbar('Soal manual tidak dapat ditambahkan.', 'error');
+            }
+        }
     }
 
     function insertManualSoal(soalId, text, cpl, cpmk) {

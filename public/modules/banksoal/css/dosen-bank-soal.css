@@ -208,6 +208,33 @@
 .banksoal-management .ts-control > .item { background-color: var(--c-primary-subtle) !important; border-color: var(--c-border) !important; color: var(--c-primary) !important; font-size: 11px !important; }
 .banksoal-management .ts-control > .item .remove { color: var(--c-fg-muted) !important; }
 
+/* Keep Tarik Soal filters aligned with the Alpine Mata Kuliah dropdown. */
+#tarikSoalModal .ts-wrapper,
+#tarikSoalModal .ts-control {
+    width: 100%;
+}
+#tarikSoalModal select[multiple] {
+    width: 100%;
+    height: 40px;
+    min-height: 40px;
+    padding: 8px 40px 8px 16px;
+    border-radius: 8px;
+    line-height: 20px;
+}
+#tarikSoalModal .ts-control {
+    min-height: 40px;
+    padding: 8px 40px 8px 16px;
+    border-radius: 8px;
+    line-height: 20px;
+}
+#tarikSoalModal .ts-control > input {
+    line-height: 20px;
+}
+#tarikSoalModal .ts-control > .item {
+    margin: 0 4px 0 0;
+    line-height: 20px;
+}
+
 .banksoal-management .bs-question-form-panel { overflow: visible; }
 .banksoal-management .bs-alpine-select { position: relative; min-width: 0; }
 .banksoal-management .bs-alpine-select.is-open { z-index: 30; }
