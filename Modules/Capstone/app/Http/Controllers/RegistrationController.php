@@ -2,13 +2,14 @@
 
 namespace Modules\Capstone\Http\Controllers;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Http\Requests\Registration\RegisterPeriodRequest;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\Notification;
 use Modules\Capstone\Models\Period;
 use Modules\Capstone\Models\PeriodRegistration;
 use Modules\Capstone\Support\CapstoneActor;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class RegistrationController extends Controller
 {
@@ -38,11 +39,9 @@ class RegistrationController extends Controller
      * Request to join a period. Creates a PENDING registration
      * that requires admin approval (one request at a time).
      */
-    public function register(Request $request)
+    public function register(RegisterPeriodRequest $request)
     {
-        $request->validate([
-            'period_id' => 'required|exists:capstone_periods,id',
-        ]);
+        $request->validated();
 
         $user = $request->user();
         $period = Period::findOrFail($request->period_id);
@@ -89,13 +88,13 @@ class RegistrationController extends Controller
             // Notify the requester. Admins see the badge via
             // dashboard pending count + approval page.
             Notification::create([
-                    'user_id' => $user->id,
-                    'type' => 'PERIOD_JOIN_REQUESTED',
-                    'title' => 'Join Request Sent',
-                    'message' => "Your request to join {$period->name} has been sent. Please wait for admin approval.",
-                    'related_type' => 'Period',
-                    'related_id' => $period->id,
-                ]);
+                'user_id' => $user->id,
+                'type' => 'PERIOD_JOIN_REQUESTED',
+                'title' => 'Join Request Sent',
+                'message' => "Your request to join {$period->name} has been sent. Please wait for admin approval.",
+                'related_type' => 'Period',
+                'related_id' => $period->id,
+            ]);
 
             DB::commit();
 

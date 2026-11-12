@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Lecturer;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Modules\Capstone\Http\Requests\TaDefense\ApproveTaDefenseRequest;
+use Modules\Capstone\Http\Requests\TaDefense\EvaluateTaDefenseRequest;
+use Modules\Capstone\Http\Requests\TaDefense\RejectTaDefenseRequest;
+use Modules\Capstone\Http\Requests\TaDefense\ScheduleTaDefenseRequest;
 use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\Supervision;
@@ -52,17 +56,9 @@ class TaDefenseController extends Controller
      * Schedule a TA defense for a student (admin).
      * Auto-attaches supervisors from the supervisions table.
      */
-    public function schedule(Request $request)
+    public function schedule(ScheduleTaDefenseRequest $request)
     {
-        $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'date' => 'required|date',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-            'room' => 'nullable|string',
-            'examiner_1_id' => 'required|exists:lecturers,id',
-            'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
-        ]);
+        $request->validated();
 
         // Find student's TA submission
         $taSubmission = TaSubmission::where('student_id', $request->student_id)
@@ -213,13 +209,9 @@ class TaDefenseController extends Controller
     /**
      * Submit TA defense evaluation (per-examiner, transactional).
      */
-    public function evaluate(Request $request, $scheduleId)
+    public function evaluate(EvaluateTaDefenseRequest $request, $scheduleId)
     {
-        $request->validate([
-            'rubric_json' => 'required|array',
-            'score' => 'required|numeric|min:0|max:100',
-            'result' => 'required|in:PASS,FAIL',
-        ]);
+        $request->validated();
 
         $user = $request->user();
         $lecturerId = CapstoneActor::lecturer($user)->id;
@@ -274,16 +266,9 @@ class TaDefenseController extends Controller
      * Approve a student-submitted TA defense schedule request (admin).
      * Auto-attaches supervisors and validates conflicts.
      */
-    public function approve(Request $request, $id)
+    public function approve(ApproveTaDefenseRequest $request, $id)
     {
-        $request->validate([
-            'date' => 'required|date',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-            'room' => 'nullable|string',
-            'examiner_1_id' => 'required|exists:lecturers,id',
-            'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
-        ]);
+        $request->validated();
 
         $schedule = TaDefenseSchedule::where('id', $id)
             ->where('status', 'PENDING_APPROVAL')
@@ -398,9 +383,9 @@ class TaDefenseController extends Controller
     /**
      * Reject a student-submitted TA defense schedule request (admin).
      */
-    public function reject(Request $request, $id)
+    public function reject(RejectTaDefenseRequest $request, $id)
     {
-        $request->validate(['rejection_reason' => 'required|string|max:1000']);
+        $request->validated();
 
         $schedule = TaDefenseSchedule::where('id', $id)
             ->where('status', 'PENDING_APPROVAL')

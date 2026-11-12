@@ -5,6 +5,11 @@ namespace Modules\Capstone\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Http\Requests\PeerReview\GroupReviewsRequest;
+use Modules\Capstone\Http\Requests\PeerReview\IndicatorsRequest;
+use Modules\Capstone\Http\Requests\PeerReview\StoreIndicatorRequest;
+use Modules\Capstone\Http\Requests\PeerReview\StorePeerReviewsRequest;
+use Modules\Capstone\Http\Requests\PeerReview\UpdateIndicatorRequest;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\PeerReview;
@@ -91,16 +96,9 @@ class PeerReviewController extends Controller
     /**
      * [Mahasiswa] Submit peer reviews for all group members.
      */
-    public function store(Request $request)
+    public function store(StorePeerReviewsRequest $request)
     {
-        $data = $request->validate([
-            'reviews' => 'required|array|min:1',
-            'reviews.*.reviewee_id' => 'required|integer',
-            'reviews.*.indicator_id' => 'nullable|integer',
-            'reviews.*.period_indicator_id' => 'nullable|integer',
-            'reviews.*.score' => 'required|numeric|min:0|max:100',
-            'reviews.*.comment' => 'nullable|string|max:5000',
-        ]);
+        $data = $request->validated();
         $studentId = CapstoneActor::student($request->user())->id;
         $member = GroupMember::where('student_id', $studentId)->firstOrFail();
 
@@ -169,11 +167,9 @@ class PeerReviewController extends Controller
     /**
      * [Dosen] View peer review results for a supervised group.
      */
-    public function groupReviews(Request $request)
+    public function groupReviews(GroupReviewsRequest $request)
     {
-        $request->validate([
-            'group_id' => 'required|exists:capstone_groups,id',
-        ]);
+        $request->validated();
 
         $lecturerId = CapstoneActor::lecturer($request->user())->id;
         abort_unless(
@@ -210,11 +206,9 @@ class PeerReviewController extends Controller
     /**
      * [Admin] List peer review indicators for a period.
      */
-    public function indicators(Request $request)
+    public function indicators(IndicatorsRequest $request)
     {
-        $request->validate([
-            'period_id' => 'required|exists:capstone_periods,id',
-        ]);
+        $request->validated();
 
         return response()->json(
             PeerReviewIndicator::where('period_id', $request->period_id)
@@ -226,15 +220,9 @@ class PeerReviewController extends Controller
     /**
      * [Admin] Create/update a peer review indicator.
      */
-    public function storeIndicator(Request $request)
+    public function storeIndicator(StoreIndicatorRequest $request)
     {
-        $data = $request->validate([
-            'period_id' => 'required|exists:capstone_periods,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'weight' => 'required|numeric|min:0|max:100',
-            'sort_order' => 'nullable|integer',
-        ]);
+        $data = $request->validated();
 
         $indicator = PeerReviewIndicator::create($data);
 
@@ -244,16 +232,11 @@ class PeerReviewController extends Controller
     /**
      * [Admin] Update an indicator.
      */
-    public function updateIndicator(Request $request, $id)
+    public function updateIndicator(UpdateIndicatorRequest $request, $id)
     {
         $indicator = PeerReviewIndicator::findOrFail($id);
 
-        $data = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'weight' => 'sometimes|numeric|min:0|max:100',
-            'sort_order' => 'nullable|integer',
-        ]);
+        $data = $request->validated();
 
         $indicator->update($data);
 

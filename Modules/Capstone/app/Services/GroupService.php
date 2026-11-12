@@ -5,7 +5,6 @@ namespace Modules\Capstone\Services;
 use App\Models\Lecturer;
 use App\Models\Student;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -13,6 +12,7 @@ use Illuminate\Support\Str;
 use Modules\Capstone\Concerns\RequiresActivePeriod;
 use Modules\Capstone\Exceptions\ConflictRuleException;
 use Modules\Capstone\Exceptions\DomainRuleException;
+use Modules\Capstone\Exceptions\GroupActionException;
 use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Bid;
 use Modules\Capstone\Models\Group;
@@ -25,6 +25,7 @@ use Modules\Capstone\Models\PeriodRegistration;
 use Modules\Capstone\Models\Supervision;
 use Modules\Capstone\Models\Title;
 use Modules\Capstone\Models\TitleApprovalAudit;
+use Modules\Capstone\Support\CapstoneActor;
 use Throwable;
 
 class GroupService
@@ -129,83 +130,6 @@ class GroupService
 
         } catch (Throwable $e) {
             Log::error('group.join.failed', ['error' => $e->getMessage()]);
-            throw $e;
-        }
-    }
-
-    /**
-     * Enterprise Entry Point: Handle a student leaving a group.
-     */
-    public function handleLeaveGroup(Student $student): void
-    {
-        $startTime = microtime(true);
-        Log::shareContext([
-            'request_id' => Str::uuid(),
-            'student_id' => $student->id,
-        ]);
-
-        Log::info('group.leave.attempt');
-
-        try {
-            retry(3, function () use ($student) {
-                DB::transaction(function () use ($student) {
-                    $lockedStudent = Student::where('id', $student->id)->lockForUpdate()->firstOrFail();
-
-                    $membership = GroupMember::where('student_id', $lockedStudent->id)
-                        ->whereHas('group', fn ($q) => $q->where('status', '!=', 'CLOSED'))
-                        ->lockForUpdate()
-                        ->first();
-
-                    if (! $membership) {
-                        return; // Idempotency
-                    }
-
-                    $oldGroup = Group::where('id', $membership->group_id)->lockForUpdate()->first();
-
-                    $this->ensurePeriodIsActive($oldGroup);
-
-                    // LOCKED: After READY_FOR_FINALIZATION, cannot leave group
-                    if ($this->stateMachine->isAtLeast($oldGroup, 'READY_FOR_FINALIZATION')) {
-                        throw new DomainRuleException('Kelompok sudah terkunci (Ready for Finalization). Tidak dapat keluar dari kelompok.');
-                    }
-
-                    $periodId = $oldGroup->period_id;
-
-                    // A. Detach from current group
-                    $membership->delete();
-
-                    // B. Create new solo group (Automigration to Solo Seeker)
-                    $newSoloGroup = Group::create([
-                        'period_id' => $periodId,
-                        'status' => self::STATUS_FORMING,
-                        'group_mode' => 'GROUP',
-                        'has_existing_group' => true,
-                    ]);
-
-                    GroupMember::create([
-                        'group_id' => $newSoloGroup->id,
-                        'student_id' => $lockedStudent->id,
-                        'is_leader' => true,
-                        'period_id' => $periodId,
-                    ]);
-
-                    // C. Handle Old Group
-                    $remainingMembers = GroupMember::where('group_id', $oldGroup->id)->count();
-                    if ($remainingMembers === 0) {
-                        $this->destroyIfEmpty($oldGroup, 'member_left');
-                    } else {
-                        $this->evaluateGroupReadiness($oldGroup);
-                    }
-                });
-            }, fn ($attempt) => 100 * $attempt, function ($e) {
-                return $e instanceof QueryException;
-            });
-
-            $durationMs = (microtime(true) - $startTime) * 1000;
-            DB::afterCommit(fn () => Log::info('group.leave.success', ['duration_ms' => round($durationMs, 2)]));
-
-        } catch (Throwable $e) {
-            Log::error('group.leave.failed', ['error' => $e->getMessage()]);
             throw $e;
         }
     }
@@ -371,6 +295,192 @@ class GroupService
     }
 
     /**
+     * Auto-transition a newly created FORMING group to READY_FOR_BIDDING
+     * when the member count reaches the period minimum.
+     *
+     * Why a separate method from evaluateGroupReadiness(): this is the
+     * new-group fast path (min fallback 2, INDIVIDUAL mode needs 1, no
+     * quota/title checks). evaluateGroupReadiness() is the general
+     * re-evaluation path (min fallback 3, quota + title guards, demotion).
+     * Do not merge them; the fallbacks and guards differ on purpose.
+     */
+    public function transitionNewGroupToReadyIfEligible(Group $group, Period $period): void
+    {
+        if ($group->status !== 'FORMING') {
+            return;
+        }
+
+        $memberCount = GroupMember::where('group_id', $group->id)->count();
+
+        // INDIVIDUAL mode: 1 member is enough
+        $minSize = $group->group_mode === 'INDIVIDUAL' ? 1 : ($period->min_group_size ?? 2);
+
+        if ($memberCount >= $minSize) {
+            $this->stateMachine->transition($group, 'READY_FOR_BIDDING');
+        }
+    }
+
+    /**
+     * Create a student group (or solo group). Student becomes leader.
+     *
+     * Moved verbatim from GroupController (request-scoped orchestration:
+     * registration approval, locks, creation, readiness). Actor resolution
+     * (CapstoneActor) and input validation stay in the controller; abort_*
+     * guards bubble exactly as before — the controller rethrows HttpException.
+     */
+    public function createStudentGroupFromRequest(Student $student, int $periodId, bool $solo): Group
+    {
+        return DB::transaction(function () use ($student, $periodId, $solo) {
+            Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+            $period = Period::lockForUpdate()->findOrFail($periodId);
+            abort_unless($period->isRegistrationOpen(), 403, 'Period is closed.');
+            abort_unless(PeriodRegistration::where('user_id', $student->id)->where('period_id', $period->id)->where('status', PeriodRegistration::STATUS_APPROVED)->exists(), 403, 'Your join request for this period must be approved by admin first.');
+            abort_if(GroupMember::where('student_id', $student->id)->whereHas('group', fn ($q) => $q->whereNotIn('status', ['CLOSED', 'DISSOLVED']))->exists(), 422, 'You already have an active group.');
+            $group = Group::create(['period_id' => $period->id, 'status' => $solo ? 'FORMING_SOLO' : 'FORMING', 'group_mode' => 'GROUP', 'has_existing_group' => false, 'is_solo' => $solo]);
+            GroupMember::create(['group_id' => $group->id, 'student_id' => $student->id, 'is_leader' => true, 'period_id' => $period->id]);
+            if (! $solo) {
+                $this->transitionNewGroupToReadyIfEligible($group, $period);
+            }
+
+            return $group->load('members.student', 'period');
+        });
+    }
+
+    /**
+     * Delete a group with full cascade (leader flow).
+     *
+     * Membership/leader/presenter gates stay in the controller (actor +
+     * action-matrix authorization); the finalized guard and the cascade
+     * live here. The finalized branch is unreachable behind the presenter
+     * lock and stays as defense-in-depth.
+     */
+    public function deleteGroupCascade(Group $group): void
+    {
+        // Only allow deletion before KELOMPOK_FINAL
+        if ($this->stateMachine->isAtLeast($group, 'KELOMPOK_FINAL')) {
+            throw new GroupActionException('Cannot delete group after finalization.', 400);
+        }
+
+        DB::transaction(function () use ($group) {
+            // Delete any student proposals tied to this group
+            Title::where('proposed_by_group_id', $group->id)
+                ->where('title_source', 'STUDENT')
+                ->delete();
+
+            // Delete bids
+            $group->bids()->delete();
+
+            // Delete supervisor proposals
+            $group->supervisorProposals()->delete();
+
+            // Delete all members
+            GroupMember::where('group_id', $group->id)->delete();
+
+            // Delete the group
+            $group->delete();
+        });
+    }
+
+    /**
+     * Apply a ready-state transition with member notifications (endpoint orchestration).
+     *
+     * The presenter action-matrix gate stays in the controller (actor +
+     * action-matrix authorization, abort_unless bubbles); target selection,
+     * transition, and notifications live here. No new guards.
+     */
+    public function transitionReadyState(Group $group, bool $cancel): Group
+    {
+        return DB::transaction(function () use ($group, $cancel) {
+            $target = 'READY_FOR_FINALIZATION';
+            if ($cancel) {
+                $target = Title::where('proposed_by_group_id', $group->id)->where('title_source', 'STUDENT')->where('supervisor_approval_status', 'APPROVED')->exists() ? 'TITLE_APPROVED' : 'READY_FOR_BIDDING';
+            }
+            $this->stateMachine->transition($group, $target);
+            $group->load('members.student');
+            foreach ($group->members as $member) {
+                $this->notificationService->send($member->student->user_id, $cancel ? 'GROUP_FINALIZATION_CANCELLED' : 'GROUP_READY_FOR_FINALIZATION', $cancel ? 'Finalization Cancelled' : 'Ready for Finalization', $cancel ? 'Status siap finalisasi kelompok dibatalkan.' : 'Kelompok siap untuk finalisasi admin.', 'Group', $group->id);
+            }
+
+            return $group;
+        });
+    }
+
+    /**
+     * Invite a student to the leader's group (endpoint orchestration).
+     *
+     * Membership/leader/group-load/presenter gates stay in the controller;
+     * the finalized/capacity/lookup guards and the invitation transaction
+     * live here. The finalized and full-group branches are unreachable
+     * behind the presenter lock and stay as defense-in-depth.
+     */
+    public function sendMemberInvitation(Group $group, User $leader, string $email): Group
+    {
+        $studentId = CapstoneActor::student($leader)->id;
+
+        // Only allow adding members before KELOMPOK_FINAL
+        if ($this->stateMachine->isAtLeast($group, 'KELOMPOK_FINAL')) {
+            throw new GroupActionException('Cannot add members after finalization.', 400);
+        }
+
+        // Member limit from period config
+        $maxMembers = $group->period->max_group_size ?? 4;
+        $memberCount = GroupMember::where('group_id', $group->id)->count();
+        if ($memberCount >= $maxMembers) {
+            throw new GroupActionException("Group is full. Maximum {$maxMembers} members allowed.", 400);
+        }
+
+        // Find the student to add
+        $studentUser = User::with('student')
+            ->where('email', $email)
+            ->whereHas('roles', fn ($query) => $query->where('name', 'mahasiswa'))
+            ->first();
+        $student = $studentUser?->student;
+        if (! $student) {
+            throw new GroupActionException('Student not found.', 404);
+        }
+
+        if ($studentUser->id === $leader->id) {
+            throw new GroupActionException('You are already in this group.', 400);
+        }
+
+        // V4: Check if student is already in a group for THIS period
+        $inPeriodGroup = GroupMember::where('student_id', $student->id)
+            ->where('period_id', $group->period_id)
+            ->exists();
+        if ($inPeriodGroup) {
+            throw new GroupActionException('This student is already in a group for this period.', 400);
+        }
+
+        // Check if there's already a pending invitation
+        $existingInvite = GroupInvitation::where('group_id', $group->id)
+            ->where('student_id', $student->id)
+            ->where('status', 'PENDING')
+            ->exists();
+        if ($existingInvite) {
+            throw new GroupActionException('An invitation is already pending for this student.', 400);
+        }
+
+        return DB::transaction(function () use ($group, $studentId, $student, $studentUser, $leader) {
+            $invitation = GroupInvitation::updateOrCreate(
+                ['group_id' => $group->id, 'student_id' => $student->id],
+                ['inviter_id' => $studentId, 'status' => 'PENDING']
+            );
+
+            // Send notification to student
+            $this->notificationService->send(
+                $studentUser->id,
+                'GROUP_INVITATION',
+                'Group Invitation',
+                "{$leader->name} invited you to join their capstone group.",
+                'group_invitations',
+                $invitation->id
+            );
+
+            return $group->fresh()->load('members.student');
+        });
+    }
+
+    /**
      * Strict State Transition: Evaluate if group is ready for bidding.
      */
     public function evaluateGroupReadiness(Group $group): void
@@ -380,8 +490,10 @@ class GroupService
         // IMPORTANT: Refresh to get latest status from DB (avoid stale data from eager loading)
         $group->refresh();
 
-        // Guard: Skip if already finalized, dissolved, or has approved title (solo seeker waiting for leader to finalize)
-        if ($this->stateMachine->isAtLeast($group, 'READY_FOR_FINALIZATION') || $group->status === 'TITLE_APPROVED' || $group->status === self::STATUS_DISSOLVED) {
+        // Guard: Skip if already finalized or later (covers DISSOLVED via
+        // status order), or has approved title (solo seeker waiting for
+        // leader to finalize).
+        if ($this->stateMachine->isAtLeast($group, 'READY_FOR_FINALIZATION') || $group->status === 'TITLE_APPROVED') {
             return;
         }
 
@@ -457,6 +569,7 @@ class GroupService
             $preApprovedTitle->update(['supervisor_approval_status' => 'APPROVED']);
             // Assignment remains an admin finalization operation.
             $this->stateMachine->transition($group, 'TITLE_APPROVED');
+
             return;
         }
 
@@ -697,402 +810,16 @@ class GroupService
     }
 
     // ======================================================================
-    // Period Resolution
-    // ======================================================================
-
-    /**
-     * Resolve the active, non-finalized period for group operations.
-     */
-    public function resolvePeriod(?int $periodId): Period
-    {
-        if ($periodId) {
-            $period = Period::where('id', $periodId)->where('is_finalized', false)->first();
-        } else {
-            $period = Period::where('is_active', true)
-                ->where('is_finalized', false)
-                ->orderBy('created_at', 'desc')
-                ->first();
-        }
-
-        if (! $period) {
-            throw new DomainRuleException('Periode pendaftaran tidak ditemukan atau sudah ditutup.');
-        }
-
-        return $period;
-    }
-
-    /**
-     * Resolve the period for the user's group context (with registration fallback).
-     */
-    public function resolveUserGroupPeriod(int $userId, ?int $periodId): ?Period
-    {
-        $period = null;
-
-        if ($periodId) {
-            $period = Period::find($periodId);
-        }
-
-        if (! $period) {
-            $registration = PeriodRegistration::where('user_id', $userId)
-                ->where('status', PeriodRegistration::STATUS_APPROVED)
-                ->first();
-            if ($registration) {
-                $period = Period::find($registration->period_id);
-            }
-        }
-
-        if (! $period) {
-            $period = Period::where('is_active', true)
-                ->orderBy('created_at', 'desc')
-                ->first();
-        }
-
-        return $period;
-    }
-
-    // ======================================================================
-    // Status Resolution
-    // ======================================================================
-
-    /**
-     * Resolve human-readable status label for student view.
-     */
-    public function resolveStatusLabel(Group $group): string
-    {
-        if ($group->status === 'READY_FOR_BIDDING') {
-            return $group->title_id ? 'Ready for Finalization' : 'Ready for Bidding';
-        }
-
-        return match ($group->status) {
-            'FORMING' => 'Incomplete Group',
-            'FORMING_SOLO' => 'Solo Seeker',
-            'WAITING_SUPERVISOR_APPROVAL' => 'Waiting Supervisor Approval',
-            'TITLE_APPROVED' => 'Title Approved',
-            'READY_FOR_FINALIZATION' => 'Ready for Finalization',
-            default => str_replace('_', ' ', $group->status),
-        };
-    }
-
-    /**
-     * Resolve human-readable status label for admin view.
-     */
-    public function resolveAdminStatusLabel(string $status): string
-    {
-        return match ($status) {
-            'FORMING' => 'Incomplete Group',
-            'FORMING_SOLO' => 'Solo Seeker',
-            'READY_FOR_BIDDING' => 'Ready for Bidding',
-            'WAITING_SUPERVISOR_APPROVAL' => 'Waiting Supervisor Approval',
-            'TITLE_APPROVED' => 'Title Approved',
-            'READY_FOR_FINALIZATION' => 'Ready for Finalization',
-            'KELOMPOK_FINAL' => 'Kelompok Final',
-            'PDC1_ACTIVE' => 'PDC1 Active',
-            'PDC2_ACTIVE' => 'PDC2 Active',
-            default => str_replace('_', ' ', $status),
-        };
-    }
-
-    /**
-     * Resolve group name for admin view.
-     */
-    public function resolveAdminGroupName(Group $group): string
-    {
-        $name = trim((string) ($group->name ?? ''));
-
-        if ($name !== '') {
-            return $name;
-        }
-
-        return $group->code ?? "Kelompok #{$group->id}";
-    }
-
-    /**
-     * Build canonical group payload with status label and allowed actions.
-     */
-    public function buildCanonicalGroupPayload(Group $group, User $user): array
-    {
-        $groupArray = $group->toArray();
-
-        // Surface an approved student proposal as the display title while
-        // title_id is still null (admin finalization has not run yet).
-        // Governance is preserved: title_id itself is never written here.
-        if (empty($groupArray['title_id']) && empty($groupArray['title'])) {
-            $approvedProposal = Title::where('proposed_by_group_id', $group->id)
-                ->where('title_source', 'STUDENT')
-                ->where('supervisor_approval_status', 'APPROVED')
-                ->with('proposedSupervisor')
-                ->first();
-            if ($approvedProposal) {
-                $groupArray['title'] = [
-                    'id' => $approvedProposal->id,
-                    'title' => $approvedProposal->title,
-                    'description' => $approvedProposal->description,
-                    'lecturer' => $approvedProposal->proposedSupervisor,
-                    'title_source' => 'STUDENT',
-                ];
-            }
-        }
-
-        $groupArray['status_label'] = $this->resolveStatusLabel($group);
-        $groupArray['allowed_actions'] = $this->resolveAllowedActions($group, $user);
-
-        return $groupArray;
-    }
-
-    /**
-     * Resolve allowed actions based on group state, membership, and period.
-     */
-    public function resolveAllowedActions(Group $group, User $user): array
-    {
-        $period = $group->period;
-        $memberCount = $group->members()->count();
-        $minSize = $period?->min_group_size ?? 3;
-        $maxSize = $period?->max_group_size ?? 4;
-        $isLocked = !$period || !$period->is_active || $period->is_finalized || !in_array($group->status, ['FORMING','FORMING_SOLO','WAITING_SUPERVISOR_APPROVAL','READY_FOR_BIDDING','TITLE_APPROVED'], true);
-        $isLeader = GroupMember::where('student_id', \Modules\Capstone\Support\CapstoneActor::student($user)->id)
-            ->where('group_id', $group->id)
-            ->where('is_leader', true)
-            ->exists();
-
-        $hasAcceptedBid = $group->bids()
-            ->where('lecturer_recommendation', 'ACCEPT')
-            ->exists();
-
-        $hasApprovedProposal = Title::where('proposed_by_group_id', $group->id)
-            ->where('title_source', 'STUDENT')
-            ->where('supervisor_approval_status', 'APPROVED')
-            ->exists();
-
-        $canMarkReady = $isLeader
-            && in_array($group->status, ['FORMING_SOLO', 'READY_FOR_BIDDING', 'TITLE_APPROVED'])
-            && $period?->is_active && !$period->is_finalized
-            && $memberCount >= $minSize
-            && $memberCount <= $maxSize
-            && ($hasAcceptedBid || $hasApprovedProposal);
-
-        return [
-            'can_add_member' => $isLeader && ! $isLocked && $memberCount < $maxSize,
-            'can_remove_member' => $isLeader && ! $isLocked && $memberCount > 1,
-            'can_leave_group' => ! $isLeader && ! $isLocked,
-            'can_delete_group' => $isLeader && !$isLocked
-                && in_array($group->status, ['FORMING', 'FORMING_SOLO', 'READY_FOR_BIDDING', 'TITLE_APPROVED'])
-                && $memberCount <= 1,
-            'can_mark_ready_for_finalization' => $canMarkReady,
-            'can_cancel_ready_for_finalization' => $isLeader
-                && $group->status === 'READY_FOR_FINALIZATION'
-                && (bool) ($period?->is_active) && !$period->is_finalized,
-        ];
-    }
-
-    // ======================================================================
     // Group CRUD
     // ======================================================================
 
     /**
-     * Ensure student has no existing active membership.
-     */
-    private function ensureNoExistingMembership(User $user, int $periodId): void
-    {
-        $existingMembership = GroupMember::where('student_id', $user->id)
-            ->where('period_id', $periodId)
-            ->exists();
-
-        if ($existingMembership) {
-            throw new DomainRuleException('Anda sudah terdaftar di kelompok lain pada periode ini. Keluar dari kelompok lama terlebih dahulu.');
-        }
-
-        $anyExistingMembership = GroupMember::where('student_id', $user->id)
-            ->whereHas('group', fn ($q) => $q->whereNotIn('status', ['CLOSED', 'DISSOLVED']))
-            ->exists();
-
-        if ($anyExistingMembership) {
-            throw new DomainRuleException('Anda sudah memiliki kelompok aktif. Hanya boleh 1 kelompok per mahasiswa.');
-        }
-    }
-
-    /**
-     * Create a new group. Student becomes leader. Status = FORMING.
-     */
-    public function createGroup(User $user, ?int $periodId, string $groupMode, bool $hasExistingGroup): Group
-    {
-        return DB::transaction(function () use ($user, $periodId, $groupMode, $hasExistingGroup) {
-            $period = $this->resolvePeriod($periodId);
-
-            $this->ensureNoExistingMembership($user, $period->id);
-
-            $group = Group::create([
-                'title_id' => null,
-                'period_id' => $period->id,
-                'status' => 'FORMING',
-                'group_mode' => $groupMode,
-                'has_existing_group' => $hasExistingGroup,
-            ])->refresh();
-
-            GroupMember::create([
-                'group_id' => $group->id,
-                'student_id' => $user->id,
-                'is_leader' => true,
-                'period_id' => $period->id,
-            ]);
-
-            $this->evaluateGroupReadiness($group);
-
-            return $group->load('members.student', 'period');
-        });
-    }
-
-    /**
-     * Create a new solo seeker group. Status = FORMING_SOLO.
-     */
-    public function createSoloGroup(User $user, ?int $periodId): Group
-    {
-        return DB::transaction(function () use ($user, $periodId) {
-            $period = $this->resolvePeriod($periodId);
-
-            $this->ensureNoExistingMembership($user, $period->id);
-
-            $group = Group::create([
-                'title_id' => null,
-                'period_id' => $period->id,
-                'status' => 'FORMING_SOLO',
-                'group_mode' => 'GROUP',
-                'has_existing_group' => false,
-                'is_solo' => true,
-            ])->refresh();
-
-            GroupMember::create([
-                'group_id' => $group->id,
-                'student_id' => $user->id,
-                'is_leader' => true,
-                'period_id' => $period->id,
-            ]);
-
-            return $group->load('members.student', 'period');
-        });
-    }
-
-    /**
-     * Delete a group (leader only, before finalization).
-     */
-    public function deleteGroup(Group $group, User $user): void
-    {
-        $membership = GroupMember::where('student_id', $user->id)
-            ->where('group_id', $group->id)
-            ->first();
-
-        if (! $membership) {
-            throw new DomainRuleException('Anda belum memiliki kelompok. Buat atau bergabung dengan kelompok terlebih dahulu.');
-        }
-
-        if (! $membership->is_leader) {
-            throw new DomainRuleException('Hanya ketua kelompok yang dapat membubarkan kelompok.');
-        }
-
-        $this->ensurePeriodIsActive($group);
-
-        $memberCount = GroupMember::where('group_id', $group->id)->count();
-        if ($memberCount > 1) {
-            throw new DomainRuleException('Tidak dapat membubarkan kelompok dengan anggota lain. Keluarankan anggota terlebih dahulu.');
-        }
-
-        if ($this->stateMachine->isAtLeast($group, self::STATUS_KELOMPOK_FINAL)) {
-            throw new DomainRuleException('Kelompok sudah difinalisasi dan tidak dapat dibubarkan. Hubungi admin jika ada kebutuhan khusus.');
-        }
-
-        DB::transaction(function () use ($group) {
-            Title::where('proposed_by_group_id', $group->id)
-                ->where('title_source', 'STUDENT')
-                ->delete();
-
-            $group->bids()->delete();
-            $group->supervisorProposals()->delete();
-            GroupMember::where('group_id', $group->id)->delete();
-            $group->delete();
-        });
-    }
-
-    /**
-     * Admin force-delete a group with full cascade and audit logging.
-     *
-     * @return int Number of affected students
-     */
-    public function adminDeleteGroup(Group $group, User $admin): int
-    {
-        $period = $group->period;
-        $canDelete = false;
-
-        if (! $period) {
-            $canDelete = true;
-        } elseif (! $period->is_active) {
-            $canDelete = true;
-        } elseif (in_array($group->status, ['FORMING', 'FORMING_SOLO'])) {
-            $canDelete = true;
-        }
-
-        if (! $canDelete) {
-            throw new DomainRuleException('Cannot delete group: must be inactive period or group in FORMING/FORMING_SOLO status. Current status: '.$group->status);
-        }
-
-        $affectedStudents = $group->members()->pluck('student_id')->toArray();
-        // Notifications target users.id; members carry student-profile ids.
-        $notifyUserIds = $group->members()->with('student')->get()
-            ->pluck('student.user_id')->filter()->unique()->values()->all();
-
-        DB::transaction(function () use ($group, $admin, $period, $affectedStudents, $notifyUserIds) {
-            Title::where('proposed_by_group_id', $group->id)
-                ->where('title_source', 'STUDENT')
-                ->delete();
-
-            $group->bids()->delete();
-            $group->supervisorProposals()->delete();
-            $group->supervisions()->delete();
-            $group->taSubmissions()->delete();
-            $group->documents()->delete();
-            $group->evaluations()->delete();
-            $group->schedules()->delete();
-            $group->seminarSchedules()->delete();
-            $group->taDefenseSchedules()->delete();
-            TitleApprovalAudit::where('affected_group_id', $group->id)->delete();
-            $group->members()->delete();
-            GroupInvitation::where('group_id', $group->id)->delete();
-            JoinRequest::where('group_id', $group->id)->delete();
-
-            AuditLog::create([
-                'user_id' => $admin->id,
-                'action' => 'GROUP_DELETED_BY_ADMIN',
-                'target_type' => 'Group',
-                'target_id' => $group->id,
-                'payload' => [
-                    'group_id' => $group->id,
-                    'period_id' => $group->period_id,
-                    'status' => $group->status,
-                    'affected_students' => $affectedStudents,
-                ],
-            ]);
-
-            $group->delete();
-
-            foreach ($notifyUserIds as $userId) {
-                Notification::create([
-                    'user_id' => $userId,
-                    'type' => 'GROUP_DELETED_BY_ADMIN',
-                    'title' => 'Kelompok Dihapus oleh Admin',
-                    'message' => 'Kelompok Anda telah dihapus oleh admin. Anda sekarang dapat mendaftar kembali ke periode yang aktif.',
-                    'related_type' => 'Period',
-                    'related_id' => $period?->id,
-                ]);
-            }
-        });
-
-        return count($affectedStudents);
-    }
-
-    /**
      * Admin force-delete a group in ANY status.
      *
-     * Unlike adminDeleteGroup() (inactive period or FORMING only), this allows
-     * deletion of finalized/active groups. The trade-off is a mandatory reason
-     * which is stored in the audit log payload and shown to affected students.
+     * This is the only admin group-deletion path: the older
+     * FORMING/inactive-only twin had zero callers (verified Stream 1) and
+     * was removed. The mandatory reason is stored in the audit log payload
+     * and shown to affected students.
      *
      * @return int Number of affected students
      */
@@ -1173,77 +900,111 @@ class GroupService
     }
 
     /**
-     * Send a group invitation to a student.
+     * Accept a group invitation as the invited student (endpoint orchestration).
+     *
+     * Moved verbatim from GroupController. Kept separate from
+     * validateInvitationAcceptance()/handleJoinGroup(): those serve the
+     * join-request flow with different guards and merge semantics, while
+     * this serves the invitation-accept flow (capacity check, cancel other
+     * invites, mark notification read). Lookup failures report 404 envelopes.
      */
-    public function sendInvitation(Group $group, User $leader, string $email): GroupInvitation
+    public function acceptInvitationAsStudent(User $user, int $invitationId): void
     {
-        $this->ensurePeriodIsActive($group);
+        $studentId = CapstoneActor::student($user)->id;
+        $invitation = GroupInvitation::with('inviter.user')->where('id', $invitationId)
+            ->where('student_id', $studentId)
+            ->where('status', 'PENDING')
+            ->first();
 
-        if ($this->stateMachine->isAtLeast($group, 'READY_FOR_FINALIZATION')) {
-            throw new DomainRuleException('Kelompok sudah terkunci (Ready for Finalization). Batalkan finalisasi terlebih dahulu untuk mengundang anggota.');
+        if (! $invitation) {
+            throw new GroupActionException('Invitation not found or already processed.', 404);
+        }
+
+        $group = Group::with('period')->find($invitation->group_id);
+
+        if (! $group || $group->status === 'CLOSED') {
+            throw new GroupActionException('Group is no longer available.', 400);
+        }
+
+        if ($this->stateMachine->isAtLeast($group, 'KELOMPOK_FINAL')) {
+            throw new GroupActionException('Group is finalized, cannot join now.', 400);
+        }
+
+        $inPeriodGroup = GroupMember::where('student_id', $studentId)
+            ->where('period_id', $group->period_id)
+            ->exists();
+
+        if ($inPeriodGroup) {
+            throw new GroupActionException('You are already in a group for this period.', 400);
         }
 
         $maxMembers = $group->period->max_group_size ?? 4;
         $memberCount = GroupMember::where('group_id', $group->id)->count();
         if ($memberCount >= $maxMembers) {
-            throw new DomainRuleException("Kelompok sudah penuh. Maksimal {$maxMembers} anggota diperbolehkan.");
+            throw new GroupActionException('Group is already full.', 400);
         }
 
-        $student = User::where('email', $email)->where('role', 'mahasiswa')->first();
-        if (! $student) {
-            throw new DomainRuleException('Mahasiswa tidak ditemukan.');
-        }
+        DB::transaction(function () use ($invitation, $group, $studentId, $user) {
+            $invitation->update(['status' => 'ACCEPTED']);
 
-        if ($student->id === $leader->id) {
-            throw new DomainRuleException('Anda sudah berada di kelompok ini.');
-        }
+            GroupMember::create([
+                'group_id' => $group->id,
+                'student_id' => $studentId,
+                'is_leader' => DB::raw('false'),
+                'period_id' => $group->period_id,
+            ]);
 
-        $inStandardGroup = GroupMember::where('student_id', $student->id)
-            ->where('period_id', $group->period_id)
-            ->whereHas('group', fn ($q) => $q->whereNotIn('status', ['FORMING', 'WAITING_SUPERVISOR_APPROVAL']))
-            ->exists();
-
-        if ($inStandardGroup) {
-            throw new DomainRuleException('Mahasiswa ini sudah terdaftar di kelompok lain pada periode ini.');
-        }
-
-        $existingInvite = GroupInvitation::where('group_id', $group->id)
-            ->where('student_id', $student->id)
-            ->where('status', 'PENDING')
-            ->exists();
-
-        if ($existingInvite) {
-            throw new DomainRuleException('Undangan sudah dikirim sebelumnya. Tunggu mahasiswa tersebut merespon.');
-        }
-
-        return DB::transaction(function () use ($group, $leader, $student) {
-            $invitation = GroupInvitation::updateOrCreate(
-                ['group_id' => $group->id, 'student_id' => $student->id],
-                ['inviter_id' => $leader->id, 'status' => 'PENDING']
-            );
+            $this->transitionNewGroupToReadyIfEligible($group, $group->period);
 
             $this->notificationService->send(
-                $student->id,
-                'GROUP_INVITATION',
-                'Group Invitation',
-                "{$leader->name} invited you to join their capstone group.",
-                'group_invitations',
-                $invitation->id
+                $invitation->inviter->user_id,
+                'INVITE_ACCEPTED',
+                'Invitation Accepted',
+                "{$user->name} has joined your group.",
+                'groups',
+                $group->id
             );
 
-            return $invitation;
+            // Mark invitation notification as read
+            Notification::where('user_id', $user->id)
+                ->where('type', 'GROUP_INVITATION')
+                ->where('related_id', $invitation->id)
+                ->update(['is_read' => DB::raw('true')]);
+
+            // Cancel any other pending invitations for this student in this period
+            GroupInvitation::where('student_id', $studentId)
+                ->where('status', 'PENDING')
+                ->whereHas('group', function ($q) use ($group) {
+                    $q->where('period_id', $group->period_id);
+                })
+                ->update(['status' => 'REJECTED']);
         });
     }
 
     /**
-     * Reject a group invitation.
+     * Reject a group invitation as the invited student (endpoint orchestration).
+     *
+     * Moved verbatim from GroupController. Kept separate from
+     * rejectInvitation(): that twin notifies inviter_id (profile id) with a
+     * boolean flag, while this flow notifies inviter->user_id (app id) with
+     * a raw expression — different recipients and payloads.
      */
-    public function rejectInvitation(GroupInvitation $invitation, User $user): void
+    public function rejectInvitationAsStudent(User $user, int $invitationId): void
     {
+        $studentId = CapstoneActor::student($user)->id;
+        $invitation = GroupInvitation::with('inviter.user')->where('id', $invitationId)
+            ->where('student_id', $studentId)
+            ->where('status', 'PENDING')
+            ->first();
+
+        if (! $invitation) {
+            throw new GroupActionException('Invitation not found or already processed.', 404);
+        }
+
         $invitation->update(['status' => 'REJECTED']);
 
         $this->notificationService->send(
-            $invitation->inviter_id,
+            $invitation->inviter->user_id,
             'INVITE_REJECTED',
             'Invitation Rejected',
             "{$user->name} declined your group invitation.",
@@ -1251,113 +1012,81 @@ class GroupService
             $invitation->group_id
         );
 
+        // Mark invitation notification as read
         Notification::where('user_id', $user->id)
             ->where('type', 'GROUP_INVITATION')
             ->where('related_id', $invitation->id)
-            ->update(['is_read' => true]);
+            ->update(['is_read' => DB::raw('true')]);
     }
 
     /**
-     * Remove a member from the group (leader only).
+     * Remove a member from the group (leader flow cascade).
+     *
+     * Membership/leader/member-lookup/self/presenter gates stay in the
+     * controller (actor + action-matrix authorization); the finalized
+     * guard and the delete/shrink orchestration live here.
+     *
+     * @return array{deleted: bool, group: ?Group, shrink: ?array}
      */
-    public function removeMember(Group $group, User $leader, int $memberId): Group
+    public function removeMemberCascade(Group $group, GroupMember $member, int $triggeredBy): array
     {
-        $leaderMembership = GroupMember::where('student_id', $leader->id)
-            ->where('group_id', $group->id)
-            ->first();
-
-        if (! $leaderMembership) {
-            throw new DomainRuleException('Anda belum memiliki kelompok.');
+        // After KELOMPOK_FINAL: require admin approval (handled separately)
+        if ($this->stateMachine->isAtLeast($group, 'KELOMPOK_FINAL')) {
+            throw new GroupActionException('Cannot remove members after finalization. Request admin approval.', 400);
         }
 
-        if (! $leaderMembership->is_leader) {
-            throw new DomainRuleException('Hanya ketua kelompok yang dapat mengeluarkan anggota.');
-        }
-
-        $member = GroupMember::where('id', $memberId)
-            ->where('group_id', $group->id)
-            ->first();
-
-        if (! $member) {
-            throw new DomainRuleException('Anggota tidak ditemukan di kelompok Anda.');
-        }
-
-        if ($member->student_id === $leader->id) {
-            throw new DomainRuleException('Anda tidak dapat mengeluarkan diri sendiri.');
-        }
-
-        $this->ensurePeriodIsActive($group);
-
-        if ($this->stateMachine->isAtLeast($group, 'READY_FOR_FINALIZATION') && ! $leader->hasRole('admin')) {
-            throw new DomainRuleException('Kelompok sudah terkunci (Ready for Finalization). Batalkan finalisasi terlebih dahulu untuk mengubah anggota.');
-        }
-
-        DB::transaction(function () use ($group, $member) {
-            $removedStudentId = $member->student_id;
+        $result = DB::transaction(function () use ($group, $member, $triggeredBy) {
             $member->delete();
 
-            $remainingMembers = GroupMember::where('group_id', $group->id)->count();
-            if ($remainingMembers === 0) {
-                $group->setAttribute('was_auto_deleted', $this->destroyIfEmpty($group, 'member_removed'));
-            } else {
-                $this->evaluateGroupReadiness($group);
-                $this->handleMembershipShrink($group);
+            // Empty group (no remaining active members) is hard-deleted,
+            // never left behind as an orphan row.
+            $groupId = $group->id;
+            if (GroupMember::where('group_id', $groupId)->count() === 0) {
+                $this->destroyIfEmpty($groupId, 'member_removed', $triggeredBy);
+
+                return ['deleted' => true, 'group' => null, 'shrink' => null];
             }
 
-            Notification::create([
-                'user_id' => $removedStudentId,
-                'type' => 'REMOVED_FROM_GROUP',
-                'title' => 'Dikeluarkan dari Grup',
-                'message' => 'Anda telah dikeluarkan dari grup oleh ketua grup.',
-                'related_type' => 'Group',
-                'related_id' => $group->id,
-            ]);
+            // Shrink policy: auto-cancel PENDING bids below min (ACCEPT kept,
+            // title retained), demote bidding statuses, notify members.
+            $shrink = $this->handleMembershipShrink($group);
+
+            return ['deleted' => false, 'group' => Group::with('members.student')->find($group->id), 'shrink' => $shrink];
         });
 
-        return $group->load('members.student', 'period');
+        return $result;
     }
 
     /**
-     * Leave a group (non-leader only).
+     * Leave a group (non-leader flow cascade).
      *
-     * @return bool True if the group was dissolved
+     * Membership/leader/presenter gates stay in the controller; the
+     * finalized guard and the leave/shrink orchestration live here.
+     *
+     * @return array{deleted: bool, shrink: ?array}
      */
-    public function leaveGroup(Group $group, User $user): bool
+    public function leaveGroupCascade(Group $group, GroupMember $membership, int $triggeredBy): array
     {
-        $membership = GroupMember::where('student_id', $user->id)
-            ->where('group_id', $group->id)
-            ->first();
-
-        if (! $membership) {
-            throw new DomainRuleException('Anda belum memiliki kelompok.');
+        if ($this->stateMachine->isAtLeast($group, 'KELOMPOK_FINAL')) {
+            throw new GroupActionException('Group is finalized, you cannot leave.', 400);
         }
 
-        if ($membership->is_leader) {
-            throw new DomainRuleException('Ketua kelompok tidak dapat keluar. Bubarkan kelompok terlebih dahulu.');
-        }
-
-        $this->ensurePeriodIsActive($group);
-
-        if (! in_array($group->status, ['FORMING', 'FORMING_SOLO', 'WAITING_SUPERVISOR_APPROVAL'])) {
-            throw new DomainRuleException('Hanya dapat keluar sepenuhnya dari grup dengan status FORMING.');
-        }
-
-        $groupDissolved = false;
-
-        DB::transaction(function () use ($group, $membership, &$groupDissolved) {
+        return DB::transaction(function () use ($group, $membership, $triggeredBy) {
+            $groupId = $membership->group_id;
             $membership->delete();
 
-            $remainingMembers = GroupMember::where('group_id', $group->id)->count();
-            if ($remainingMembers === 0) {
-                $groupDissolved = $this->destroyIfEmpty($group, 'member_left');
-                $group->setAttribute('was_auto_deleted', $groupDissolved);
-            } else {
-                $this->evaluateGroupReadiness($group);
-                $this->handleMembershipShrink($group);
-            }
-        });
+            // Empty group (no remaining active members) is hard-deleted,
+            // never left behind as an orphan row.
+            if (GroupMember::where('group_id', $groupId)->count() === 0) {
+                $this->destroyIfEmpty($groupId, 'member_left', $triggeredBy);
 
-        return $groupDissolved;
+                return ['deleted' => true, 'shrink' => null];
+            }
+
+            $shrink = $this->handleMembershipShrink($group);
+
+            return ['deleted' => false, 'shrink' => $shrink];
+        });
     }
 
     // ======================================================================
@@ -1365,28 +1094,35 @@ class GroupService
     // ======================================================================
 
     /**
-     * Assign Supervisor 2 to a group (admin only).
+     * Assign Supervisor 2 looked up by lecturers.id (admin group endpoint).
+     *
+     * Why the only assignSupervisor2* method: the admin endpoint addresses
+     * supervisors by Lecturer row id with a dosen-role check. The older
+     * User-id twin had zero callers (verified Stream 1) and was removed.
+     * Guards throw DomainRuleException with the same messages the endpoint
+     * returns as 400 JSON; callers map the exception to the response envelope.
      */
-    public function assignSupervisor2(Group $group, int $supervisor2Id, User $admin): Group
+    public function assignSupervisor2ByLecturerId(Group $group, int $lecturerId, int $assignedBy): Group
     {
-        $this->ensurePeriodIsActive($group);
+        $supervisor = Lecturer::whereKey($lecturerId)
+            ->whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))
+            ->first();
 
-        $supervisor = User::findOrFail($supervisor2Id);
-
-        if (! $supervisor->hasRole('dosen')) {
+        if (! $supervisor) {
             throw new DomainRuleException('Supervisor 2 must be a lecturer.');
         }
 
-        if ($group->supervisor_1_id && $group->supervisor_1_id === $supervisor->id) {
+        // Check not same as Supervisor 1
+        if ($group->supervisor_1_id && (int) $group->supervisor_1_id === (int) $supervisor->id) {
             throw new DomainRuleException('Supervisor 2 cannot be the same as Supervisor 1.');
         }
 
-        DB::transaction(function () use ($group, $supervisor, $admin) {
+        DB::transaction(function () use ($group, $supervisor, $assignedBy) {
             Supervision::updateOrCreate(
                 ['group_id' => $group->id, 'role' => 'SUPERVISOR_2'],
                 [
                     'supervisor_id' => $supervisor->id,
-                    'assigned_by' => $admin->id,
+                    'assigned_by' => $assignedBy,
                 ]
             );
 
@@ -1397,211 +1133,8 @@ class GroupService
     }
 
     // ======================================================================
-    // Finalization
-    // ======================================================================
-
-    /**
-     * Mark group as ready for finalization.
-     */
-    public function markReadyForFinalization(Group $group, User $leader): void
-    {
-        $membership = GroupMember::where('student_id', $leader->id)
-            ->where('group_id', $group->id)
-            ->first();
-
-        if (! $membership) {
-            throw new DomainRuleException('Anda bukan anggota kelompok ini.');
-        }
-
-        if (! $membership->is_leader) {
-            throw new DomainRuleException('Hanya ketua kelompok yang dapat menandai siap finalisasi.');
-        }
-
-        if (! in_array($group->status, ['FORMING_SOLO', 'READY_FOR_BIDDING', 'TITLE_APPROVED'])) {
-            throw new DomainRuleException('Grup tidak dalam status yang dapat ditandai siap finalisasi. Status saat ini: '.$group->status);
-        }
-
-        $period = $group->period;
-        if (! $period || ! $period->is_active) {
-            throw new DomainRuleException('Periode tidak aktif.');
-        }
-
-        $memberCount = GroupMember::where('group_id', $group->id)->count();
-        $minSize = $period->min_group_size ?? 3;
-        $maxSize = $period->max_group_size ?? 4;
-
-        if ($memberCount < $minSize || $memberCount > $maxSize) {
-            throw new DomainRuleException("Jumlah anggota harus antara {$minSize}-{$maxSize} orang (saat ini: {$memberCount}).");
-        }
-
-        $hasAcceptedBid = $group->bids()
-            ->where('lecturer_recommendation', 'ACCEPT')
-            ->exists();
-
-        $hasApprovedProposal = Title::where('proposed_by_group_id', $group->id)
-            ->where('title_source', 'STUDENT')
-            ->where('supervisor_approval_status', 'APPROVED')
-            ->exists();
-
-        if (! $hasAcceptedBid && ! $hasApprovedProposal) {
-            throw new DomainRuleException('Grup belum memiliki bid yang diterima atau proposal yang disetujui oleh dosen.');
-        }
-
-        $this->stateMachine->transition($group, 'READY_FOR_FINALIZATION');
-        $this->notificationService->notifyGroupMembersOfFinalization($group);
-    }
-
-    /**
-     * Cancel finalization and revert to previous status.
-     *
-     * @return string The target status reverted to
-     */
-    public function cancelReadyForFinalization(Group $group, User $leader): string
-    {
-        $membership = GroupMember::where('student_id', $leader->id)
-            ->where('group_id', $group->id)
-            ->first();
-
-        if (! $membership) {
-            throw new DomainRuleException('Anda bukan anggota kelompok ini.');
-        }
-
-        if (! $membership->is_leader) {
-            throw new DomainRuleException('Hanya ketua kelompok yang dapat membatalkan finalisasi.');
-        }
-
-        if ($group->status !== 'READY_FOR_FINALIZATION') {
-            throw new DomainRuleException('Grup tidak dalam status siap finalisasi. Status saat ini: '.$group->status);
-        }
-
-        $period = $group->period;
-        if (! $period || ! $period->is_active) {
-            throw new DomainRuleException('Periode tidak aktif. Tidak dapat membatalkan finalisasi.');
-        }
-
-        $hasOwnApprovedTitle = false;
-        if ($group->title_id) {
-            $title = Title::find($group->title_id);
-            if ($title && $title->supervisor_approval_status === 'APPROVED') {
-                $hasOwnApprovedTitle = true;
-            }
-        }
-
-        $targetStatus = $hasOwnApprovedTitle ? 'TITLE_APPROVED' : 'READY_FOR_BIDDING';
-
-        $this->stateMachine->transition($group, $targetStatus);
-        $this->notificationService->notifyGroupMembersOfCancellation($group);
-
-        return $targetStatus;
-    }
-
-    // ======================================================================
     // Query Helpers
     // ======================================================================
-
-    /**
-     * Resolve user's group data for the index endpoint.
-     */
-    public function getUserGroupData(User $user, ?int $periodId): array
-    {
-        $period = $this->resolveUserGroupPeriod($user->id, $periodId);
-
-        $membership = GroupMember::where('student_id', $user->id)
-            ->where('period_id', $period?->id)
-            ->whereHas('group', fn ($q) => $q->whereNotIn('status', ['CLOSED']))
-            ->first();
-
-        if (! $membership || ! $period) {
-            return ['group' => null];
-        }
-
-        $group = Group::with([
-            'members.student', 'title.lecturer', 'period', 'bids.title',
-            'supervisorProposals.supervisor1', 'supervisorProposals.supervisor2',
-            'supervisions.supervisor', 'supervisor1', 'supervisor2',
-        ])->find($membership->group_id);
-
-        return ['group' => $this->buildCanonicalGroupPayload($group, $user)];
-    }
-
-    /**
-     * Transform a group for the admin list endpoint.
-     */
-    public function transformGroupForAdminList(Group $group): array
-    {
-        $groupArray = $group->toArray();
-        $groupArray['name'] = $this->resolveAdminGroupName($group);
-        $groupArray['status_label'] = $this->resolveAdminStatusLabel($group->status);
-        $groupArray['allowed_actions'] = [
-            'can_manage_finalization' => in_array($group->status, ['READY_FOR_FINALIZATION', 'KELOMPOK_FINAL', 'TITLE_APPROVED', 'READY_FOR_BIDDING'], true)
-                && ! ($group->period?->is_finalized),
-            'reason' => $group->period?->is_finalized ? 'PERIOD_FINALIZED' : null,
-        ];
-
-        return $groupArray;
-    }
-
-    /**
-     * Transform a group for the progress endpoint.
-     */
-    public function transformGroupForProgress(Group $group, $documents, $periodRequirements): array
-    {
-        $progressData = null;
-        if ($documents->isNotEmpty() || $periodRequirements->isNotEmpty()) {
-            try {
-                $workflowService = app(WorkflowService::class);
-                $progressData = $workflowService->getWorkflowData($group, $documents, $periodRequirements);
-            } catch (\Exception $e) {
-                Log::error('Failed to get workflow data', ['group_id' => $group->id, 'error' => $e->getMessage()]);
-            }
-        }
-
-        $statusOrder = [
-            'FORMING', 'FORMING_SOLO', 'READY_FOR_BIDDING', 'TITLE_PROPOSED', 'TITLE_APPROVED',
-            'READY_FOR_FINALIZATION', 'KELOMPOK_FINAL', 'PDC1_ACTIVE', 'READY_FOR_SEMPRO', 'SEMPRO_DONE',
-            'PDC2_ACTIVE', 'PDC2_READY_FOR_EXPO', 'EXPO_REGISTERED', 'EXPO_DONE', 'READY_FOR_TA_INDIVIDUAL',
-            'TA_IN_PROGRESS', 'CLOSED', 'DISSOLVED',
-        ];
-        $statusIndex = array_search($group->status, $statusOrder);
-        $progressPercentage = $statusIndex !== false
-            ? min(round((($statusIndex + 1) / count($statusOrder)) * 100), 100)
-            : 0;
-
-        return [
-            'id' => $group->id,
-            'name' => null,
-            'status' => $group->status,
-            'period_id' => $group->period_id,
-            'period' => $group->period ? [
-                'id' => $group->period->id,
-                'name' => $group->period->name,
-                'is_active' => $group->period->is_active,
-            ] : null,
-            'title' => $group->title ? [
-                'id' => $group->title->id,
-                'title' => $group->title->title,
-            ] : null,
-            'supervisor1' => $group->supervisor1 ? [
-                'id' => $group->supervisor1->id,
-                'name' => $group->supervisor1->name,
-            ] : null,
-            'supervisor2' => $group->supervisor2 ? [
-                'id' => $group->supervisor2->id,
-                'name' => $group->supervisor2->name,
-            ] : null,
-            'members' => $group->members?->map(fn ($m) => [
-                'id' => $m->id,
-                'student' => [
-                    'id' => $m->student?->id,
-                    'name' => $m->student?->name,
-                    'nim' => $m->student?->nim,
-                ],
-            ])->toArray() ?? [],
-            'members_count' => $group->members?->count() ?? 0,
-            'progress' => $progressData,
-            'progress_percentage' => $progressPercentage,
-        ];
-    }
 
     /**
      * Validate invitation acceptance and prepare membership context.
@@ -1656,28 +1189,5 @@ class GroupService
         }
 
         return ['group' => $group, 'auto_registered' => false];
-    }
-
-    /**
-     * Enrich supervised groups with supervisor role data.
-     *
-     * @param  Collection  $groups
-     */
-    public function enrichSupervisedGroups($groups, Lecturer $lecturer): Collection
-    {
-        return $groups->map(function ($group) use ($lecturer) {
-            $supervision = $group->supervisions->firstWhere('supervisor_id', $lecturer->id);
-            $dosbing1 = $group->supervisions->firstWhere('role', 'SUPERVISOR_1');
-            $dosbing2 = $group->supervisions->firstWhere('role', 'SUPERVISOR_2');
-
-            $group->dosbing_1_name = $dosbing1?->supervisor?->name ?? $group->supervisor1?->name;
-            $group->dosbing_2_name = $dosbing2?->supervisor?->name ?? $group->supervisor2?->name;
-            $group->is_dosbing_1 = $supervision?->role === 'SUPERVISOR_1'
-                || (int) $group->supervisor_1_id === $lecturer->id;
-            $group->is_dosbing_2 = $supervision?->role === 'SUPERVISOR_2'
-                || (int) $group->supervisor_2_id === $lecturer->id;
-
-            return $group;
-        });
     }
 }

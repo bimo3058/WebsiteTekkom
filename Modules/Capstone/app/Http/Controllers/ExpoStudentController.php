@@ -4,6 +4,8 @@ namespace Modules\Capstone\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Http\Requests\Expo\SubmitExpoScoresRequest;
+use Modules\Capstone\Http\Requests\Expo\UploadExpoDocumentRequest;
 use Modules\Capstone\Models\ExpoEvent;
 use Modules\Capstone\Models\ExpoRegistration;
 use Modules\Capstone\Models\ExpoSelfEvaluation;
@@ -19,8 +21,12 @@ class ExpoStudentController extends Controller
     {
         $studentId = CapstoneActor::student($request->user())->id;
 
-        return ExpoRegistration::where('expo_event_id', $expoEvent->id)->where('status', 'REGISTERED')
-            ->whereHas('group.members', fn ($q) => $q->where('student_id', $studentId))->firstOrFail();
+        $registration = ExpoRegistration::where('expo_event_id', $expoEvent->id)->where('status', 'REGISTERED')
+            ->whereHas('group.members', fn ($q) => $q->where('student_id', $studentId))->first();
+
+        abort_if($registration === null, 403, 'Kelompok Anda belum terdaftar pada expo ini.');
+
+        return $registration;
     }
 
     /**
@@ -88,17 +94,18 @@ class ExpoStudentController extends Controller
      * Submit the group self-evaluation (representative member). Immutable
      * while under supervisor review; reopenable after a rejection.
      */
-    public function evaluate(Request $request, ExpoEvent $expoEvent)
+    public function evaluate(SubmitExpoScoresRequest $request, ExpoEvent $expoEvent)
     {
         $registration = $this->registration($request, $expoEvent);
         $studentId = CapstoneActor::student($request->user())->id;
-        $data = $request->validate(['scores' => 'required|array|min:1', 'scores.*.period_component_id' => 'required|integer|distinct', 'scores.*.score' => 'required|numeric|min:1|max:100', 'scores.*.notes' => 'nullable|string|max:5000']);
+        $data = $request->validated();
         $response = DB::transaction(function () use ($registration, $studentId, $expoEvent, $data) {
             $registration = ExpoRegistration::whereKey($registration->id)->where('status', 'REGISTERED')->lockForUpdate()->firstOrFail();
             if (! $registration->allowsSubmission()) {
                 $message = $registration->review_status === 'APPROVED'
                     ? 'Self-evaluation kelompok sudah disetujui dosbing dan tidak dapat diubah.'
                     : 'Self-evaluation kelompok sudah dikirim dan sedang direview dosbing.';
+
                 return response()->json(['message' => $message], 403);
             }
             $expected = PeriodAssessmentComponent::where('period_id', $expoEvent->period_id ?? $registration->group->period_id)->where('type', 'EXPO')->pluck('id')->sort()->values()->all();
@@ -130,11 +137,11 @@ class ExpoStudentController extends Controller
      * per registration; replaceable after a REVISE/REJECTED review or a
      * rejected supervisor submission.
      */
-    public function document(Request $request, ExpoEvent $expoEvent, DocumentStorageService $storage)
+    public function document(UploadExpoDocumentRequest $request, ExpoEvent $expoEvent, DocumentStorageService $storage)
     {
         $registration = $this->registration($request, $expoEvent);
         $studentId = CapstoneActor::student($request->user())->id;
-        $request->validate(['file' => 'required|file|mimes:pdf,doc,docx,ppt,pptx|max:10240']);
+        $request->validated();
         $response = DB::transaction(function () use ($request, $registration, $studentId, $storage) {
             $registration = ExpoRegistration::whereKey($registration->id)->where('status', 'REGISTERED')->lockForUpdate()->firstOrFail();
             if ($registration->review_status === 'APPROVED') {

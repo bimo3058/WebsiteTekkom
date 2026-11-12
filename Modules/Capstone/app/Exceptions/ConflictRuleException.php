@@ -2,9 +2,7 @@
 
 namespace Modules\Capstone\Exceptions;
 
-use Exception;
-
-class ConflictRuleException extends Exception
+class ConflictRuleException extends DomainRuleException
 {
     //
 }

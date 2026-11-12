@@ -1,18 +1,18 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Modules\Capstone\Http\Requests\Scheduling\SeminarScheduleRequest;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\SeminarSchedule;
-use Modules\Capstone\Models\Supervision;
-use Modules\Capstone\Models\TaDefenseSchedule;
 use Modules\Capstone\Models\TaDefenseExaminer;
+use Modules\Capstone\Models\TaDefenseSchedule;
 use Modules\Capstone\Models\TaSubmission;
 use Modules\Capstone\Services\SchedulingService;
 use Modules\Capstone\Support\CapstoneActor;
-use Illuminate\Http\Request;
 
 class ScheduleRequestController extends Controller
 {
@@ -32,7 +32,7 @@ class ScheduleRequestController extends Controller
         $studentId = CapstoneActor::student($user)->id;
 
         $group = $this->getStudentGroup($studentId);
-        if (!$group) {
+        if (! $group) {
             return response()->json(['data' => ['seminars' => [], 'ta_defense' => null]]);
         }
 
@@ -56,7 +56,7 @@ class ScheduleRequestController extends Controller
     /**
      * Student requests a SEMPRO schedule.
      */
-    public function requestSempro(Request $request)
+    public function requestSempro(SeminarScheduleRequest $request)
     {
         return $this->requestSeminar($request, 'SEMPRO', 'READY_FOR_SEMPRO');
     }
@@ -64,7 +64,7 @@ class ScheduleRequestController extends Controller
     /**
      * Student requests an EXPO schedule.
      */
-    public function requestExpo(Request $request)
+    public function requestExpo(SeminarScheduleRequest $request)
     {
         return $this->requestSeminar($request, 'EXPO', 'EXPO_READY');
     }
@@ -72,21 +72,14 @@ class ScheduleRequestController extends Controller
     /**
      * Internal: handle SEMPRO/EXPO request.
      */
-    private function requestSeminar(Request $request, string $type, string $requiredStatus)
+    private function requestSeminar(SeminarScheduleRequest $request, string $type, string $requiredStatus)
     {
-        $request->validate([
-            'date' => 'required|date|after:today',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-            'room' => 'nullable|string|max:100',
-            'examiner_1_id' => 'required|exists:lecturers,id',
-            'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
-        ]);
+        $request->validated();
 
         $user = $request->user();
         $group = $this->getStudentGroup(CapstoneActor::student($user)->id);
 
-        if (!$group) {
+        if (! $group) {
             return response()->json(['message' => 'You are not in a group.'], 400);
         }
 
@@ -145,16 +138,9 @@ class ScheduleRequestController extends Controller
     /**
      * Student requests a TA defense schedule.
      */
-    public function requestTaDefense(Request $request)
+    public function requestTaDefense(SeminarScheduleRequest $request)
     {
-        $request->validate([
-            'date' => 'required|date|after:today',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-            'room' => 'nullable|string|max:100',
-            'examiner_1_id' => 'required|exists:lecturers,id',
-            'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
-        ]);
+        $request->validated();
 
         $user = $request->user();
         $studentId = CapstoneActor::student($user)->id;
@@ -164,14 +150,14 @@ class ScheduleRequestController extends Controller
             ->where('status', 'TA_REGISTERED')
             ->first();
 
-        if (!$taSubmission) {
+        if (! $taSubmission) {
             return response()->json(['message' => 'Must have a TA submission in TA_REGISTERED status.'], 400);
         }
 
         $group = Group::findOrFail($taSubmission->group_id);
 
         // Eligibility: group status
-        if (!in_array($group->status, ['PDC2_COMPLETE', 'EXPO_DONE'])) {
+        if (! in_array($group->status, ['PDC2_COMPLETE', 'EXPO_DONE'])) {
             return response()->json(['message' => 'Student not eligible for TA defense. Group must be in PDC2_COMPLETE or EXPO_DONE.'], 400);
         }
 
@@ -227,6 +213,7 @@ class ScheduleRequestController extends Controller
     private function getStudentGroup(int $studentId): ?Group
     {
         $membership = GroupMember::where('student_id', $studentId)->first();
+
         return $membership ? Group::find($membership->group_id) : null;
     }
 }

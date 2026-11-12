@@ -3,19 +3,16 @@
 namespace Modules\Capstone\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Modules\Capstone\Http\Requests\File\UploadFileRequest;
 use Modules\Capstone\Services\DocumentStorageService;
 
 class FileController extends Controller
 {
-    public function __construct(private readonly DocumentStorageService $storage)
-    {
-    }
+    public function __construct(private readonly DocumentStorageService $storage) {}
 
-    public function upload(Request $request)
+    public function upload(UploadFileRequest $request)
     {
-        $validated = $request->validate([
-            'file' => ['required', 'file', 'max:10240'],
-        ]);
+        $validated = $request->validated();
 
         $path = $this->storage->store(
             $validated['file'],

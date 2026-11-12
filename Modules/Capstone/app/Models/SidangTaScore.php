@@ -3,13 +3,19 @@
 namespace Modules\Capstone\Models;
 
 use App\Models\Lecturer;
-use App\Models\Student;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\Capstone\Traits\HasAssessmentScore;
 
 class SidangTaScore extends Model
 {
+    use HasAssessmentScore {
+        HasAssessmentScore::evaluator as traitEvaluator;
+        HasAssessmentScore::scopeByEvaluator as traitScopeByEvaluator;
+    }
+
     protected $table = 'capstone_sidang_ta_scores';
+
     public $timestamps = true;
 
     protected $fillable = [
@@ -36,37 +42,14 @@ class SidangTaScore extends Model
         return 'SIDANG_TA';
     }
 
-    public function component(): BelongsTo
-    {
-        return $this->belongsTo(AssessmentComponent::class, 'component_id');
-    }
-
-    public function periodComponent(): BelongsTo
-    {
-        return $this->belongsTo(PeriodAssessmentComponent::class, 'period_component_id');
-    }
-
     public function examiner(): BelongsTo
     {
         return $this->belongsTo(Lecturer::class, 'examiner_id');
     }
 
-    /**
-     * Alias for examiner to maintain compatibility with other score models
-     */
     public function evaluator(): BelongsTo
     {
-        return $this->belongsTo(Lecturer::class, 'examiner_id');
-    }
-
-    public function group(): BelongsTo
-    {
-        return $this->belongsTo(Group::class);
-    }
-
-    public function student(): BelongsTo
-    {
-        return $this->belongsTo(Student::class, 'student_id');
+        return $this->examiner();
     }
 
     public function scopeByExaminer($query, int $examinerId)
@@ -74,31 +57,9 @@ class SidangTaScore extends Model
         return $query->where('examiner_id', $examinerId);
     }
 
-    public function scopeByGroup($query, int $groupId)
+    public function scopeByEvaluator($query, int $evaluatorId)
     {
-        return $query->where('group_id', $groupId);
-    }
-
-    public function scopeByStudent($query, int $studentId)
-    {
-        return $query->where('student_id', $studentId);
-    }
-
-    public function getComponentAttribute()
-    {
-        if ($this->component_id !== null) {
-            if (! $this->relationLoaded('component')) {
-                $this->setRelation('component', $this->component()->first());
-            }
-
-            return $this->relations['component'];
-        }
-
-        if (! $this->relationLoaded('periodComponent')) {
-            $this->setRelation('periodComponent', $this->periodComponent()->first());
-        }
-
-        return $this->relations['periodComponent'];
+        return $this->scopeByExaminer($query, $evaluatorId);
     }
 
     public function getEvaluatorAttribute()
@@ -108,5 +69,10 @@ class SidangTaScore extends Model
         }
 
         return $this->relations['examiner'];
+    }
+
+    public function isByEvaluator(int $evaluatorId): bool
+    {
+        return $this->examiner_id === $evaluatorId;
     }
 }

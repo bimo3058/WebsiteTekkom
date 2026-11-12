@@ -13,6 +13,10 @@ class BladeController extends Controller
     {
         $page = $request->route()->defaults['capstone_page'];
         $file = module_path('Capstone', 'resources/views/pages/'.$page.'.blade.php');
+        if (! is_file($file)) {
+            $index = module_path('Capstone', 'resources/views/pages/'.$page.'/index.blade.php');
+            $file = is_file($index) ? $index : $file;
+        }
         $actor = $request->user() ? CapstoneActor::payload($request->user(), $request->attributes->get('capstone_role')) : null;
         $data = [
             'actor' => $actor,
@@ -20,10 +24,12 @@ class BladeController extends Controller
             'pagePath' => '/'.preg_replace('#^capstone/?#', '', $request->path()),
             'pageParams' => $request->route()->parameters(),
             'featureAccess' => $request->attributes->get('capstone_feature_access', []),
+            'peer' => $request->route()->defaults['peer'] ?? null,
         ];
-        if (!is_file($file)) {
+        if (! is_file($file)) {
             return response()->view('capstone::pages.unavailable', $data, 503)->header('Cache-Control', 'no-store');
         }
+
         return View::file($file, $data);
     }
 
@@ -33,6 +39,7 @@ class BladeController extends Controller
         $role = $request->session()->get('capstone.blade_role');
         $role = in_array($role, $roles, true) ? $role : ($roles[0] ?? null);
         abort_unless($role, 403);
+
         return redirect('/capstone/'.$role.'/dashboard');
     }
 
@@ -47,6 +54,7 @@ class BladeController extends Controller
             'woff2' => 'font/woff2', 'ico' => 'image/x-icon', default => null,
         };
         abort_unless($type, 404);
+
         return response()->file($file, ['Content-Type' => $type, 'Cache-Control' => 'public, max-age=3600', 'X-Content-Type-Options' => 'nosniff']);
     }
 }

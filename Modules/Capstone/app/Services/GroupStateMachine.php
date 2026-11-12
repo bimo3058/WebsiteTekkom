@@ -50,7 +50,10 @@ class GroupStateMachine
         'EXPO_REGISTERED',
         'EXPO_DONE',
         'PDC2_COMPLETED',
+        'READY_FOR_TA_INDIVIDUAL',
+        'TA_IN_PROGRESS',
         'CLOSED',
+        'DISSOLVED',
     ];
 
     /**
@@ -110,5 +113,29 @@ class GroupStateMachine
     public function isAtLeast(Group $group, string $minStatus): bool
     {
         return $this->statusOrder($group->status) >= $this->statusOrder($minStatus);
+    }
+
+    /**
+     * Whether a group reads as solo: the `is_solo` flag and the `FORMING_SOLO`
+     * status mean the same thing. Single home so formation, bidding, and
+     * readiness agree on it. (`group_mode === 'INDIVIDUAL'` only affects the
+     * minimum-member count and stays at those two call sites.)
+     */
+    public static function isSolo(Group $group): bool
+    {
+        $attributes = $group->getAttributes();
+
+        return (bool) ($attributes['is_solo'] ?? false)
+            || ($group->status === 'FORMING_SOLO');
+    }
+
+    /**
+     * Whether a status is sticky: lifecycle states at/after title approval
+     * are never recomputed from member counts, only the four formation
+     * states are.
+     */
+    public static function isLifecycleSticky(string $status): bool
+    {
+        return ! in_array($status, ['FORMING', 'FORMING_SOLO', 'READY_FOR_BIDDING', 'WAITING_SUPERVISOR_APPROVAL'], true);
     }
 }

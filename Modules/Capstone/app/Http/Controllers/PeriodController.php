@@ -1,11 +1,11 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
+use Modules\Capstone\Http\Requests\Period\StorePeriodRequest;
+use Modules\Capstone\Http\Requests\Period\UpdatePeriodRequest;
 use Modules\Capstone\Models\Period;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class PeriodController extends Controller
 {
@@ -19,29 +19,9 @@ class PeriodController extends Controller
         return response()->json($period);
     }
 
-    public function store(Request $request)
+    public function store(StorePeriodRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
-            'is_active' => 'boolean',
-            // Bidding config
-            'bidding_start' => 'nullable|date',
-            'bidding_end' => 'nullable|date|after_or_equal:bidding_start',
-            // Phase dates
-            'pdc1_start' => 'nullable|date',
-            'pdc1_end' => 'nullable|date|after_or_equal:pdc1_start',
-            'pdc2_start' => 'nullable|date',
-            'pdc2_end' => 'nullable|date|after_or_equal:pdc2_start',
-            'expo_date' => 'nullable|date',
-            'ta_start' => 'nullable|date',
-            'ta_end' => 'nullable|date|after_or_equal:ta_start',
-            // Group config
-            'min_group_size' => 'nullable|integer|min:1|max:10',
-            'max_group_size' => 'nullable|integer|min:1|max:10',
-            'max_supervise_load' => 'nullable|integer|min:1|max:50',
-        ]);
+        $validated = $request->validated();
 
         // V4: Allow multiple active periods â€” no auto-deactivation
 
@@ -50,29 +30,9 @@ class PeriodController extends Controller
         return response()->json($period->fresh(), 201);
     }
 
-    public function update(Request $request, Period $period)
+    public function update(UpdatePeriodRequest $request, Period $period)
     {
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'start_date' => 'sometimes|date',
-            'end_date' => 'sometimes|date|after:start_date',
-            'is_active' => 'boolean',
-            // Bidding config
-            'bidding_start' => 'nullable|date',
-            'bidding_end' => 'nullable|date|after_or_equal:bidding_start',
-            // Phase dates
-            'pdc1_start' => 'nullable|date',
-            'pdc1_end' => 'nullable|date|after_or_equal:pdc1_start',
-            'pdc2_start' => 'nullable|date',
-            'pdc2_end' => 'nullable|date|after_or_equal:pdc2_start',
-            'expo_date' => 'nullable|date',
-            'ta_start' => 'nullable|date',
-            'ta_end' => 'nullable|date|after_or_equal:ta_start',
-            // Group config
-            'min_group_size' => 'nullable|integer|min:1|max:10',
-            'max_group_size' => 'nullable|integer|min:1|max:10',
-            'max_supervise_load' => 'nullable|integer|min:1|max:50',
-        ]);
+        $validated = $request->validated();
 
         // V4: Allow multiple active periods â€” no auto-deactivation
 
@@ -90,6 +50,7 @@ class PeriodController extends Controller
 
         // Soft delete
         $period->delete();
+
         return response()->json(['message' => 'Period archived successfully.']);
     }
 }

@@ -5,6 +5,11 @@ namespace Modules\Capstone\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\Capstone\Exceptions\DomainRuleException;
+use Modules\Capstone\Http\Requests\Admin\Monitoring\DestroyGroupRequest;
+use Modules\Capstone\Http\Requests\Admin\Monitoring\FlagMemberRequest;
+use Modules\Capstone\Http\Requests\Admin\Monitoring\MessageGroupRequest;
+use Modules\Capstone\Http\Requests\Admin\Monitoring\PeerReviewsQueryRequest;
+use Modules\Capstone\Http\Requests\Admin\Monitoring\ProgressQueryRequest;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\Period;
@@ -17,9 +22,9 @@ use Modules\Capstone\Support\BladeFeatureAccess;
 
 class BladeMonitoringController extends Controller
 {
-    public function progress(Request $request, GroupService $service)
+    public function progress(ProgressQueryRequest $request, GroupService $service)
     {
-        $request->validate(['period_id' => 'nullable|integer|exists:capstone_periods,id']);
+        $request->validated();
         $groups = Group::with(['period', 'title', 'members.student', 'supervisor1', 'supervisor2', 'documents'])
             ->when($request->filled('period_id'), fn ($q) => $q->where('period_id', $request->integer('period_id')))->latest()->get();
         $requirements = PhaseDocumentRequirement::whereIn('period_id', $groups->pluck('period_id')->unique())->get()->groupBy('period_id');
@@ -27,9 +32,9 @@ class BladeMonitoringController extends Controller
         return response()->json(['data' => $groups->map(fn ($group) => $service->transformGroupForProgress($group, $group->documents, $requirements->get($group->period_id, collect())))]);
     }
 
-    public function peerReviews(Request $request)
+    public function peerReviews(PeerReviewsQueryRequest $request)
     {
-        $request->validate(['period_id' => 'nullable|integer|exists:capstone_periods,id']);
+        $request->validated();
         $groups = Group::with(['period', 'members.student.user'])
             ->whereIn('status', BladeFeatureAccess::PEER_REVIEW_STATUSES)
             ->when($request->filled('period_id'), fn ($q) => $q->where('period_id', $request->integer('period_id')))->get();
@@ -63,13 +68,9 @@ class BladeMonitoringController extends Controller
         return response()->json(['message' => 'Pengingat dikirim.', 'count' => count($users)]);
     }
 
-    public function message(Group $group, Request $request, NotificationService $notifications)
+    public function message(Group $group, MessageGroupRequest $request, NotificationService $notifications)
     {
-        $data = $request->validate([
-            'user_ids' => 'required|array|min:1',
-            'user_ids.*' => 'integer',
-            'message' => 'required|string|max:1000',
-        ]);
+        $data = $request->validated();
         $memberUserIds = $group->members()->with('student')->get()
             ->pluck('student.user_id')->filter()->unique()->all();
         $targets = array_values(array_intersect($data['user_ids'], $memberUserIds));
@@ -79,9 +80,9 @@ class BladeMonitoringController extends Controller
         return response()->json(['message' => 'Pesan dikirim.', 'count' => count($targets)]);
     }
 
-    public function flagMember(Group $group, int $memberId, Request $request, StudentFlagService $flags)
+    public function flagMember(Group $group, int $memberId, FlagMemberRequest $request, StudentFlagService $flags)
     {
-        $data = $request->validate(['reason' => 'required|string|max:1000']);
+        $data = $request->validated();
         $member = GroupMember::with('student')->where('group_id', $group->id)->findOrFail($memberId);
         abort_unless($member->student, 422, 'Data mahasiswa tidak ditemukan.');
         $period = $group->period ?? Period::findOrFail($group->period_id);
@@ -113,9 +114,9 @@ class BladeMonitoringController extends Controller
      * Admin force-delete a group in any status.
      * Requires a mandatory reason (min 10 chars) recorded in the audit log.
      */
-    public function destroy(Group $group, Request $request, GroupService $groups)
+    public function destroy(Group $group, DestroyGroupRequest $request, GroupService $groups)
     {
-        $data = $request->validate(['reason' => 'required|string|min:10|max:1000']);
+        $data = $request->validated();
         try {
             $count = $groups->adminForceDeleteGroup($group, $request->user(), $data['reason']);
         } catch (DomainRuleException $e) {

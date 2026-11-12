@@ -18,30 +18,87 @@ use Modules\Capstone\Models\PeriodPeerReviewIndicator;
 use Modules\Capstone\Models\SeminarSchedule;
 use Modules\Capstone\Models\StudentPeerReviewStatus;
 use Modules\Capstone\Repositories\AssessmentScoreRepository;
+use Modules\Capstone\Support\WorkflowPhases;
 
 class WorkflowService
 {
-    const PHASES = ['PDC1', 'SEMPRO', 'PDC2', 'TA_DRAFT', 'EXPO'];
+    public const PHASES = WorkflowPhases::PHASES;
 
-    const UNLOCK_RULES = [
-        'PDC1' => null,
-        'SEMPRO' => 'PDC1',
-        'PDC2' => 'SEMPRO',
-        'TA_DRAFT' => 'PDC2',
-        'EXPO' => 'PDC2',
-    ];
+    public const UNLOCK_RULES = WorkflowPhases::UNLOCK_RULES;
 
-    const STATUS_GATES = [
-        'PDC2' => 'SEMPRO_DONE',
-        'TA_DRAFT' => 'PDC2_ACTIVE',
-        'EXPO' => 'PDC2_READY_FOR_EXPO',
-    ];
+    public const STATUS_GATES = WorkflowPhases::STATUS_GATES;
 
     protected GroupStateMachine $stateMachine;
 
     public function __construct(GroupStateMachine $stateMachine)
     {
         $this->stateMachine = $stateMachine;
+    }
+
+    /**
+     * Shared per-phase document shape: required types (with the `GENERAL`
+     * fallback when a phase has no configured requirements), the latest
+     * document per type, and the aggregate approval flags. Single home for
+     * the loop used by getWorkflowData, getNextPhaseRequirements, and
+     * DocumentController::workflow.
+     *
+     * @return array{required_types: array<int, string>, types_status: array<int, array{type: string, status: string, latest_document: mixed}>, all_approved: bool, any_rejected: bool, any_submitted: bool, uploaded_count: int, document_count: int}
+     */
+    public static function phaseShape($documents, $allRequirements, string $phase): array
+    {
+        $phaseDocs = $documents->where('phase', $phase);
+
+        $reqs = $allRequirements->where('phase', $phase)->where('is_required', true);
+        $requiredTypes = $reqs->pluck('name')->toArray();
+        if (empty($requiredTypes)) {
+            $requiredTypes = ['GENERAL'];
+        }
+
+        $typesStatus = [];
+        $allApproved = true;
+        $anyRejected = false;
+        $anySubmitted = false;
+        $uploadedCount = 0;
+
+        foreach ($requiredTypes as $type) {
+            $latestForType = $phaseDocs->where('document_type', $type)->sortByDesc('version')->first();
+            if ($type === 'GENERAL' && empty($allRequirements->where('phase', $phase)->toArray())) {
+                $latestForType = $phaseDocs->sortByDesc('version')->first();
+            }
+
+            $status = 'missing';
+            if ($latestForType) {
+                $status = $latestForType->status;
+                $uploadedCount++;
+                if ($status === 'REJECTED') {
+                    $anyRejected = true;
+                }
+                if ($status === 'SUBMITTED') {
+                    $anySubmitted = true;
+                }
+                if ($status !== 'APPROVED') {
+                    $allApproved = false;
+                }
+            } else {
+                $allApproved = false;
+            }
+
+            $typesStatus[] = [
+                'type' => $type,
+                'status' => $status,
+                'latest_document' => $latestForType,
+            ];
+        }
+
+        return [
+            'required_types' => $requiredTypes,
+            'types_status' => $typesStatus,
+            'all_approved' => $allApproved,
+            'any_rejected' => $anyRejected,
+            'any_submitted' => $anySubmitted,
+            'uploaded_count' => $uploadedCount,
+            'document_count' => $phaseDocs->count(),
+        ];
     }
 
     /**
@@ -52,50 +109,13 @@ class WorkflowService
         $phases = [];
 
         foreach (self::PHASES as $phase) {
-            $phaseDocs = $documents->where('phase', $phase);
-
-            // Get required document types for this phase
-            $reqs = $allRequirements->where('phase', $phase)->where('is_required', true);
-            $requiredTypes = $reqs->pluck('name')->toArray();
-            if (empty($requiredTypes)) {
-                $requiredTypes = ['GENERAL'];
-            }
-
-            $typesStatus = [];
-            $allApproved = true;
-            $anyRejected = false;
-            $anySubmitted = false;
-            $uploadedCount = 0;
-
-            foreach ($requiredTypes as $type) {
-                $latestForType = $phaseDocs->where('document_type', $type)->sortByDesc('version')->first();
-                if ($type === 'GENERAL' && empty($allRequirements->where('phase', $phase)->toArray())) {
-                    $latestForType = $phaseDocs->sortByDesc('version')->first();
-                }
-
-                $status = 'missing';
-                if ($latestForType) {
-                    $status = $latestForType->status;
-                    $uploadedCount++;
-                    if ($status === 'REJECTED') {
-                        $anyRejected = true;
-                    }
-                    if ($status === 'SUBMITTED') {
-                        $anySubmitted = true;
-                    }
-                    if ($status !== 'APPROVED') {
-                        $allApproved = false;
-                    }
-                } else {
-                    $allApproved = false;
-                }
-
-                $typesStatus[] = [
-                    'type' => $type,
-                    'status' => $status,
-                    'latest_document' => $latestForType,
-                ];
-            }
+            $shape = self::phaseShape($documents, $allRequirements, $phase);
+            $requiredTypes = $shape['required_types'];
+            $typesStatus = $shape['types_status'];
+            $allApproved = $shape['all_approved'];
+            $anyRejected = $shape['any_rejected'];
+            $anySubmitted = $shape['any_submitted'];
+            $uploadedCount = $shape['uploaded_count'];
 
             $phaseStatus = 'locked';
             $prereq = self::UNLOCK_RULES[$phase];
@@ -158,7 +178,7 @@ class WorkflowService
                 'status' => $phaseStatus,
                 'documents' => $typesStatus,
                 'required_types' => $requiredTypes,
-                'document_count' => $phaseDocs->count(),
+                'document_count' => $shape['document_count'],
             ];
         }
 
@@ -213,26 +233,14 @@ class WorkflowService
             return null;
         }
 
-        $reqs = $allRequirements->where('phase', $phase)->where('is_required', true);
-        $requiredTypes = $reqs->pluck('name')->toArray();
-        if (empty($requiredTypes)) {
-            $requiredTypes = ['GENERAL'];
-        }
+        $shape = self::phaseShape($documents, $allRequirements, $phase);
+        $requiredTypes = $shape['required_types'];
 
         $pendingDocs = [];
         $approvedDocs = 0;
-        foreach ($requiredTypes as $type) {
-            $latestForType = $documents->where('phase', $phase)
-                ->where('document_type', $type)
-                ->sortByDesc('version')
-                ->first();
-
-            if ($type === 'GENERAL' && empty($allRequirements->where('phase', $phase)->toArray())) {
-                $latestForType = $documents->where('phase', $phase)->sortByDesc('version')->first();
-            }
-
-            if (! $latestForType || $latestForType->status !== 'APPROVED') {
-                $pendingDocs[] = $type;
+        foreach ($shape['types_status'] as $typeStatus) {
+            if ($typeStatus['status'] !== 'APPROVED') {
+                $pendingDocs[] = $typeStatus['type'];
             } else {
                 $approvedDocs++;
             }
@@ -774,11 +782,6 @@ class WorkflowService
      */
     private function getNextPhase(string $currentPhase): ?string
     {
-        $index = array_search($currentPhase, self::PHASES);
-        if ($index === false || $index >= count(self::PHASES) - 1) {
-            return null;
-        }
-
-        return self::PHASES[$index + 1];
+        return WorkflowPhases::nextPhase($currentPhase);
     }
 }

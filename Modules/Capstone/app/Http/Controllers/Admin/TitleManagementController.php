@@ -3,7 +3,7 @@
 namespace Modules\Capstone\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use Modules\Capstone\Http\Requests\Admin\TitleManagement\UpdateTitleTextRequest;
 use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Title;
 
@@ -19,29 +19,9 @@ use Modules\Capstone\Models\Title;
  */
 class TitleManagementController extends Controller
 {
-    public function update(Request $request, Title $title)
+    public function update(UpdateTitleTextRequest $request, Title $title)
     {
-        $validated = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'sometimes|nullable|string',
-            'problem_statement' => 'sometimes|nullable|string',
-            'scope' => 'sometimes|nullable|string',
-            'specializations' => 'sometimes|nullable|array|min:1',
-            'specializations.*' => 'string|in:Software,Embedded,Network,Multimedia,AI,Blockchain',
-            // Governance columns: admin text edit must never change these.
-            'status' => 'prohibited',
-            'quota' => 'prohibited',
-            'lecturer_id' => 'prohibited',
-            'period_id' => 'prohibited',
-            'title_source' => 'prohibited',
-            'proposed_by_group_id' => 'prohibited',
-            'proposed_supervisor_id' => 'prohibited',
-            'supervisor_approval_status' => 'prohibited',
-            'approved_by_admin' => 'prohibited',
-            'is_reserved' => 'prohibited',
-            'pre_assigned_group_id' => 'prohibited',
-            'rejection_reason' => 'prohibited',
-        ]);
+        $validated = $request->validated();
 
         if (empty($validated)) {
             return response()->json(['message' => 'No editable field provided.'], 422);

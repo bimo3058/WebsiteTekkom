@@ -1,26 +1,25 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
-use Modules\Capstone\Models\GradeConsistencyCheck;
+use App\Http\Controllers\Controller;
+use Modules\Capstone\Http\Requests\Grade\GradeConsistencyQueryRequest;
+use Modules\Capstone\Http\Requests\Grade\UpdateConsistencyCheckRequest;
 use Modules\Capstone\Models\AssessmentScore;
+use Modules\Capstone\Models\GradeConsistencyCheck;
 use Modules\Capstone\Models\Group;
-use Illuminate\Http\Request;
 
 class GradeConsistencyController extends Controller
 {
     /**
      * List grade consistency checks for a period.
      */
-    public function index(Request $request)
+    public function index(GradeConsistencyQueryRequest $request)
     {
-        $request->validate([
-            'period_id' => 'required|exists:capstone_periods,id',
-        ]);
+        $request->validated();
 
         $checks = GradeConsistencyCheck::with(['group.title', 'student', 'checker'])
-            ->whereHas('group', fn($q) => $q->where('period_id', $request->period_id))
+            ->whereHas('group', fn ($q) => $q->where('period_id', $request->period_id))
             ->orderBy('deviation', 'desc')
             ->get();
 
@@ -30,11 +29,9 @@ class GradeConsistencyController extends Controller
     /**
      * Auto-generate consistency checks from assessment scores.
      */
-    public function generate(Request $request)
+    public function generate(GradeConsistencyQueryRequest $request)
     {
-        $request->validate([
-            'period_id' => 'required|exists:capstone_periods,id',
-        ]);
+        $request->validated();
 
         $groups = Group::where('period_id', $request->period_id)
             ->where('status', 'APPROVED')
@@ -91,14 +88,11 @@ class GradeConsistencyController extends Controller
     /**
      * Update notes/status for a check.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateConsistencyCheckRequest $request, $id)
     {
         $check = GradeConsistencyCheck::findOrFail($id);
 
-        $data = $request->validate([
-            'status' => 'sometimes|string|in:UNCHECKED,CONSISTENT,INCONSISTENT',
-            'notes' => 'nullable|string',
-        ]);
+        $data = $request->validated();
 
         $data['checked_by'] = $request->user()->id;
         $check->update($data);

@@ -6,6 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Lecturer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Http\Requests\Sempro\ApproveSemproRequest;
+use Modules\Capstone\Http\Requests\Sempro\EvaluateSemproRequest;
+use Modules\Capstone\Http\Requests\Sempro\RejectSemproRequest;
+use Modules\Capstone\Http\Requests\Sempro\ScheduleSemproRequest;
+use Modules\Capstone\Http\Requests\Sempro\UpdateSemproScheduleRequest;
 use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\SeminarEvaluation;
@@ -43,15 +48,9 @@ class SemproController extends Controller
         return response()->json(['data' => $schedules]);
     }
 
-    public function update(Request $request, int $id)
+    public function update(UpdateSemproScheduleRequest $request, int $id)
     {
-        $data = $request->validate([
-            'date' => 'required|date', 'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-            'eoffice_ruangan_id' => 'required|integer|exists:eo_mr_ruangans,id',
-            'examiner_1_id' => 'required|exists:lecturers,id',
-            'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
-        ]);
+        $data = $request->validated();
 
         return DB::transaction(function () use ($request, $id, $data) {
             $schedule = SeminarSchedule::where('type', 'SEMPRO')->lockForUpdate()->findOrFail($id);
@@ -129,17 +128,9 @@ class SemproController extends Controller
      * Validates double-booking and room conflicts.
      * Auto-generates evaluation rows for each examiner.
      */
-    public function schedule(Request $request)
+    public function schedule(ScheduleSemproRequest $request)
     {
-        $request->validate([
-            'group_id' => 'required|exists:capstone_groups,id',
-            'date' => 'required|date',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-            'eoffice_ruangan_id' => 'required|integer|exists:eo_mr_ruangans,id',
-            'examiner_1_id' => 'required|exists:lecturers,id',
-            'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
-        ]);
+        $request->validated();
 
         $group = Group::with(['supervisors'])->findOrFail($request->group_id);
 
@@ -237,13 +228,9 @@ class SemproController extends Controller
     /**
      * Submit SEMPRO evaluation (per-examiner, transactional).
      */
-    public function evaluate(Request $request, $scheduleId)
+    public function evaluate(EvaluateSemproRequest $request, $scheduleId)
     {
-        $request->validate([
-            'rubric_json' => 'required|array',
-            'score' => 'required|numeric|min:0|max:100',
-            'result' => 'required|in:PASS,FAIL',
-        ]);
+        $request->validated();
 
         $user = $request->user();
         $lecturerId = CapstoneActor::lecturer($user)->id;
@@ -283,17 +270,9 @@ class SemproController extends Controller
      * Approve a student-submitted SEMPRO schedule request (admin).
      * Conflict validation happens HERE â€” authoritative layer.
      */
-    public function approve(Request $request, $id)
+    public function approve(ApproveSemproRequest $request, $id)
     {
-        $request->validate([
-            'date' => 'required|date',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-            'eoffice_ruangan_id' => 'nullable|integer|exists:eo_mr_ruangans,id',
-            'room' => 'nullable|string|max:255',
-            'examiner_1_id' => 'required|exists:lecturers,id',
-            'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
-        ]);
+        $request->validated();
 
         $schedule = SeminarSchedule::where('id', $id)
             ->where('type', 'SEMPRO')
@@ -387,11 +366,9 @@ class SemproController extends Controller
     /**
      * Reject a student-submitted SEMPRO schedule request (admin).
      */
-    public function reject(Request $request, $id)
+    public function reject(RejectSemproRequest $request, $id)
     {
-        $request->validate([
-            'rejection_reason' => 'required|string|max:1000',
-        ]);
+        $request->validated();
 
         $schedule = SeminarSchedule::where('id', $id)
             ->where('type', 'SEMPRO')

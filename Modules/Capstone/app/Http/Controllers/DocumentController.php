@@ -3,10 +3,12 @@
 namespace Modules\Capstone\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
+use Modules\Capstone\Exceptions\DomainRuleException;
+use Modules\Capstone\Http\Requests\Document\ReviewDocumentRequest;
+use Modules\Capstone\Http\Requests\Document\StoreDocumentRequest;
 use Modules\Capstone\Models\Document;
 use Modules\Capstone\Models\ExpoStudentDocument;
 use Modules\Capstone\Models\Group;
@@ -14,26 +16,23 @@ use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\PhaseDocumentRequirement;
 use Modules\Capstone\Models\SeminarSchedule;
 use Modules\Capstone\Services\DocumentStorageService;
-use Modules\Capstone\Services\GroupLifecycleService;
-use Modules\Capstone\Services\GroupStateMachine;
 use Modules\Capstone\Services\IndividualTaWorkflow;
-use Modules\Capstone\Services\NotificationService;
+use Modules\Capstone\Services\WorkflowService;
 use Modules\Capstone\Support\BladeFeatureAccess;
 use Modules\Capstone\Support\CapstoneActor;
+use Modules\Capstone\Support\WorkflowPhases;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class DocumentController extends Controller
 {
-    protected GroupStateMachine $stateMachine;
-
     public function __construct(
-        GroupStateMachine $stateMachine,
         private readonly DocumentStorageService $documentStorage,
-    ) {
-        $this->stateMachine = $stateMachine;
-    }
+    ) {}
 
-    // Workflow phase order
-    const PHASES = ['PDC1', 'SEMPRO', 'PDC2', 'TA', 'EXPO', 'SIDANG'];
+    // UI stepper phases (1:1 with the dashboard blade, see StepperPhaseContractTest).
+    // The approval engine uses WorkflowPhases::PHASES (`TA_DRAFT`, no `SIDANG`);
+    // `TA` here maps to engine `TA_DRAFT` wherever the two meet.
+    const PHASES = WorkflowPhases::UI_PHASES;
 
     // Unlock rules: phase => prerequisite phase that must be APPROVED
     const UNLOCK_RULES = [
@@ -77,61 +76,20 @@ class DocumentController extends Controller
         ]);
 
         foreach (self::PHASES as $phase) {
-            $phaseDocs = $documents->where('phase', $phase);
-
-            // Get required document types for this phase
-            $reqs = $allRequirements->where('phase', $phase)->where('is_required', true);
-            $requiredTypes = $reqs->pluck('name')->toArray();
-            if (empty($requiredTypes)) {
-                $requiredTypes = ['GENERAL']; // Fallback if no specific requirements
-            }
-
-            $typesStatus = [];
-            $allApproved = true;
-            $anyRejected = false;
-            $anySubmitted = false;
-            $uploadedCount = 0;
-
-            foreach ($requiredTypes as $type) {
-                // Find latest document for this specific type
-                $latestForType = $phaseDocs->where('document_type', $type)->sortByDesc('version')->first();
-                // If it's the fallback 'GENERAL', we might just look at the first doc without a specific type
-                if ($type === 'GENERAL' && empty($allRequirements->where('phase', $phase)->toArray())) {
-                    $latestForType = $phaseDocs->sortByDesc('version')->first();
-                }
-
-                $status = 'missing';
-                if ($latestForType) {
-                    $status = $latestForType->status;
-                    $uploadedCount++;
-                    if ($status === 'REJECTED') {
-                        $anyRejected = true;
-                    }
-                    if ($status === 'SUBMITTED') {
-                        $anySubmitted = true;
-                    }
-                    if ($status !== 'APPROVED') {
-                        $allApproved = false;
-                    }
-                } else {
-                    $allApproved = false;
-                }
-
-                $typesStatus[] = [
-                    'type' => $type,
-                    'status' => $status,
-                    'latest_document' => $latestForType,
-                ];
-            }
+            $shape = WorkflowService::phaseShape($documents, $allRequirements, $phase);
+            $requiredTypes = $shape['required_types'];
+            $typesStatus = $shape['types_status'];
+            $allApproved = $shape['all_approved'];
+            $anyRejected = $shape['any_rejected'];
+            $anySubmitted = $shape['any_submitted'];
+            $uploadedCount = $shape['uploaded_count'];
 
             $phaseStatus = 'locked';
             $prereq = self::UNLOCK_RULES[$phase];
 
-            // Check if unlocked based on prereq
             if ($prereq === null) {
                 $phaseStatus = 'unlocked';
             } else {
-                // Prerequisite must be fully approved based on its own requirements
                 $prereqReqs = $allRequirements->where('phase', $prereq)->where('is_required', true)->pluck('name')->toArray();
                 if (empty($prereqReqs)) {
                     $prereqReqs = ['GENERAL'];
@@ -154,7 +112,6 @@ class DocumentController extends Controller
                 }
             }
 
-            // Determine overall phase status if unlocked
             if ($phaseStatus === 'unlocked') {
                 if ($phase === 'EXPO') {
                     // Custom rule for EXPO: requires at least 1 APPROVED TA draft
@@ -184,7 +141,7 @@ class DocumentController extends Controller
                 'status' => $phaseStatus,
                 'documents' => $typesStatus,
                 'required_types' => $requiredTypes,
-                'document_count' => $phaseDocs->count(),
+                'document_count' => $shape['document_count'],
             ];
 
             // Per-phase group-status gate: the document-approval chain alone
@@ -209,7 +166,6 @@ class DocumentController extends Controller
             $phases[] = $phaseInfo;
         }
 
-        // Determine current phase
         $currentPhase = null;
         foreach ($phases as $p) {
             if ($p['status'] !== 'completed') {
@@ -218,7 +174,6 @@ class DocumentController extends Controller
             }
         }
 
-        // Check if all done = GRADUATED
         $allCompleted = collect($phases)->every(fn ($p) => $p['status'] === 'completed');
 
         return response()->json([
@@ -248,7 +203,7 @@ class DocumentController extends Controller
             }
             $documents = Document::where('group_id', $groupMember->group_id)
                 ->where(fn ($query) => $query->where('phase', '!=', IndividualTaWorkflow::DOCUMENT_PHASE)->orWhere('student_id', CapstoneActor::student($user)->id))
-                ->with('student')
+                ->with(['student', 'versions'])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -257,7 +212,7 @@ class DocumentController extends Controller
 
         if ($role === 'dosen') {
             $lecturerId = CapstoneActor::lecturer($user)->id;
-            $query = Document::with(['student', 'group.title']);
+            $query = Document::with(['student', 'group.title', 'versions']);
             $supervisedGroupIds = Group::supervisedBy($lecturerId)->pluck('id');
 
             $query->whereIn('group_id', $supervisedGroupIds);
@@ -310,87 +265,37 @@ class DocumentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreDocumentRequest $request)
     {
-        $validationRules = [
-            'phase' => ['required', 'string', Rule::in(self::PHASES)],
-            'file' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
-        ];
-
+        $validated = $request->validated();
         $user = Auth::user();
-        $studentId = CapstoneActor::student($user)->id;
-        $groupMember = GroupMember::with('group')->where('student_id', $studentId)->first();
 
-        if (! $groupMember) {
-            return response()->json(['message' => 'You are not in any group.'], 400);
-        }
-
-        // Add document_type validation if phase has dynamic sub-types from DB
-        if ($request->phase) {
-            $periodId = $groupMember->group->period_id;
-            $requirements = PhaseDocumentRequirement::where('period_id', $periodId)
-                ->where('phase', $request->phase)
-                ->pluck('name')->toArray();
-
-            if (! empty($requirements)) {
-                $validationRules['document_type'] = ['required', 'string', Rule::in($requirements)];
-            } else {
-                $validationRules['document_type'] = ['nullable', 'string'];
-            }
-        }
-
-        $request->validate($validationRules);
-
-        // Recompute the workflow at submission time, before touching storage.
+        // The workflow reader is the single source of upload gates; the
+        // service replays it, so forged POSTs are blocked as well.
         // Disabling a button alone does not protect a forged or stale upload.
         $workflow = $this->workflow($request)->getData(true);
-        $phaseInfo = collect($workflow['phases'])->firstWhere('phase', $request->phase);
-        $documentInfo = collect($phaseInfo['documents'] ?? [])->firstWhere('type', $request->input('document_type', 'GENERAL'));
-        $reason = $phaseInfo['locked_reason'] ?? $documentInfo['locked_reason'] ?? null;
-        if (! $phaseInfo || ! ($phaseInfo['can_upload'] ?? false) || ($documentInfo && ! $documentInfo['can_upload'])) {
-            return response()->json(['message' => $reason ?? 'Document upload is locked.'], 403);
+
+        try {
+            $document = $this->documentStorage->submitDocument(
+                $workflow,
+                $request->file('file'),
+                $validated['phase'],
+                $validated['document_type'] ?? 'GENERAL',
+                $user
+            );
+        } catch (AuthorizationException $e) {
+            return response()->json(['message' => $e->getMessage()], 403);
+        } catch (DomainRuleException $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to upload document: '.$e->getMessage()], 500);
         }
 
-        $existingDoc = Document::where('group_id', $groupMember->group_id)
-            ->where('phase', $request->phase)
-            ->where('document_type', $request->input('document_type', 'GENERAL'))
-            ->first();
-        if ($existingDoc?->status === 'APPROVED') {
-            return response()->json(['message' => 'Approved documents cannot be replaced.'], 403);
+        if ($document->wasRecentlyCreated) {
+            return response()->json(['message' => 'Document uploaded successfully', 'data' => $document], 201);
         }
 
-        $path = $this->documentStorage->store(
-            $request->file('file'), 'documents', $groupMember->group_id.'/'.$request->phase
-        );
-
-        if ($existingDoc) {
-            // Delete old file from storage
-            if ($existingDoc->file_path) {
-                $this->documentStorage->delete($existingDoc->file_path);
-            }
-
-            // Update existing record (overwrite)
-            $existingDoc->update([
-                'file_path' => $path,
-                'status' => 'SUBMITTED',
-                'feedback' => null, // Reset feedback on resubmit
-            ]);
-
-            return response()->json(['message' => 'Document revised (replaced) successfully', 'data' => $existingDoc->fresh()], 200);
-        }
-
-        // First-time upload
-        $document = Document::create([
-            'group_id' => $groupMember->group_id,
-            'student_id' => $studentId,
-            'phase' => $request->phase,
-            'document_type' => $request->document_type ?? 'GENERAL',
-            'file_path' => $path,
-            'version' => 1,
-            'status' => 'SUBMITTED',
-        ]);
-
-        return response()->json(['message' => 'Document uploaded successfully', 'data' => $document], 201);
+        return response()->json(['message' => 'Document revised (replaced) successfully', 'data' => $document], 200);
     }
 
     /**
@@ -434,7 +339,7 @@ class DocumentController extends Controller
 
             return response($file['content'], 200, [
                 'Content-Type' => $file['mime_type'],
-                'Content-Disposition' => 'attachment; filename="'.($expoDocument->original_name ?? basename($expoDocument->file_path)).'"',
+                'Content-Disposition' => 'attachment; filename="'.$this->downloadFilename('Expo Document', $expoDocument->original_name, $expoDocument->file_path).'"',
             ]);
         }
 
@@ -464,168 +369,65 @@ class DocumentController extends Controller
 
         abort_unless($allowed, 403);
 
-        $file = $this->documentStorage->get($document->file_path);
+        $requestedVersion = $request->query('version');
+        $filePath = $document->file_path;
+        $originalName = $document->original_name;
+        if ($requestedVersion !== null && (int) $requestedVersion !== (int) $document->version) {
+            $historical = $document->versions()->where('version', (int) $requestedVersion)->first();
+            abort_if($historical === null, 404, 'Document version not found');
+            $filePath = $historical->file_path;
+            $originalName = $historical->original_name;
+        }
+
+        $file = $this->documentStorage->get($filePath);
         abort_unless($file, 404, 'File not found');
 
         return response($file['content'], 200, [
             'Content-Type' => $file['mime_type'],
-            'Content-Disposition' => 'attachment; filename="'.basename($document->file_path).'"',
+            'Content-Disposition' => 'attachment; filename="'.$this->downloadFilename($document->document_type, $originalName, $filePath).'"',
         ]);
+    }
+
+    /**
+     * Build the download filename so it follows the given document naming
+     * (e.g. document_type C-100): `{TYPE}_{original}` with a safe fallback
+     * for legacy rows without an original name.
+     */
+    private function downloadFilename(?string $type, ?string $originalName, string $filePath): string
+    {
+        $base = $originalName ?: basename($filePath);
+        $base = str_replace(['"', "\r", "\n"], '', $base);
+        $prefix = $type ? preg_replace('/[^A-Za-z0-9\-]+/', '', (string) $type) : '';
+
+        if ($prefix !== '' && ! str_starts_with($base, $prefix.'_') && ! str_starts_with($base, $prefix.'-')) {
+            return $prefix.'_'.$base;
+        }
+
+        return $base;
     }
 
     /**
      * Update the specified resource in storage (Dosen review).
      */
-    public function update(Request $request, string $id)
+    public function update(ReviewDocumentRequest $request, string $id)
     {
         $user = Auth::user();
         $lecturerId = CapstoneActor::lecturer($user)->id;
 
-        $request->validate([
-            // 3-status review: APPROVED locks, REVISE and REJECTED both let
-            // the student re-upload (REJECTED additionally implies the
-            // supervisor refused the version outright).
-            'status' => ['required', Rule::in(['APPROVED', 'REVISE', 'REJECTED'])],
-            'feedback' => ['nullable', 'string'],
-        ]);
-
-        // Namespaced expo ids (see index): supervisor review of a member
-        // expo document. Approving the last pending member document
-        // advances the group (EXPO_DONE, cascading to PDC2_COMPLETED when
-        // final readiness is met); rejected documents can be re-uploaded
-        // by the student.
-        if (str_starts_with($id, 'expo-')) {
-            $expoId = (int) substr($id, 5);
-
-            return DB::transaction(function () use ($expoId, $lecturerId, $request, $user) {
-                $expoDocument = ExpoStudentDocument::whereKey($expoId)->lockForUpdate()->firstOrFail();
-                Group::whereKey($expoDocument->group_id)->lockForUpdate()->firstOrFail();
-                abort_unless(
-                    Group::whereKey($expoDocument->group_id)
-                        ->supervisedBy($lecturerId)
-                        ->exists(),
-                    403,
-                    'Anda bukan dosen pembimbing kelompok ini.'
-                );
-                $expoDocument->update([
-                    'status' => $request->status,
-                    'feedback' => $request->feedback,
-                    'reviewed_by' => $user->id,
-                ]);
-
-                $studentUserId = $expoDocument->student?->user_id;
-                if ($studentUserId) {
-                    $statusStr = strtolower($request->status);
-                    app(NotificationService::class)->sendToMany(
-                        [$studentUserId],
-                        'PROPOSAL_'.strtoupper($request->status),
-                        "Document {$request->status}",
-                        "Your EXPO document ({$expoDocument->original_name}) has been {$statusStr}".($request->feedback ? " with feedback: {$request->feedback}" : '.'),
-                        'documents',
-                        $expoDocument->id
-                    );
-                }
-
-                if ($request->status === 'APPROVED') {
-                    app(GroupLifecycleService::class)->advanceIfComplete(Group::find($expoDocument->group_id));
-                }
-
-                return response()->json(['message' => 'Expo document review updated', 'data' => $expoDocument]);
-            });
-        }
-
-        return DB::transaction(function () use ($id, $lecturerId, $request, $user) {
-            $document = Document::findOrFail($id);
-            Group::whereKey($document->group_id)->lockForUpdate()->firstOrFail();
-            $document = Document::whereKey($id)->lockForUpdate()->firstOrFail();
-            abort_unless(
-                Group::whereKey($document->group_id)
-                    ->supervisedBy($lecturerId)
-                    ->exists(),
-                403,
-                'Anda bukan dosen pembimbing kelompok ini.'
-            );
-            $document->update([
-                'status' => $request->status,
-                'feedback' => $request->feedback,
-                'reviewed_by' => $user->id,
-            ]);
-
-            // Auto-transition: if all required document subtypes for phase are APPROVED
-            $group = Group::findOrFail($document->group_id);
-            if ($document->phase === IndividualTaWorkflow::DOCUMENT_PHASE) {
-                app(IndividualTaWorkflow::class)->syncSubmission($document->student_id);
-            }
-            $hasRequirements = PhaseDocumentRequirement::where('period_id', $group->period_id)
-                ->where('phase', $document->phase)
-                ->where('is_required', true)
-                ->exists();
-
-            if ($request->status === 'APPROVED' && $hasRequirements) {
-                $this->checkPhaseCompletion($document->group_id, $document->phase);
-            }
-
-            // Send notifications
-            $notificationService = app(NotificationService::class);
-            $studentIds = $group->members()->with('student')->get()
-                ->pluck('student.user_id')
-                ->filter()
-                ->values()
-                ->all();
-            if ($document->phase === IndividualTaWorkflow::DOCUMENT_PHASE) {
-                $studentIds = array_filter([$document->student?->user_id]);
-            }
-            $statusStr = strtolower($request->status);
-            $notificationService->sendToMany(
-                $studentIds,
-                'PROPOSAL_'.strtoupper($request->status), // e.g. PROPOSAL_APPROVED, PROPOSAL_REJECTED (reused for doc status)
-                "Document {$request->status}",
-                "Your {$document->phase} document ({$document->document_type}) has been {$statusStr}".($request->feedback ? " with feedback: {$request->feedback}" : '.'),
-                'documents',
-                $document->id
-            );
-
-            return response()->json(['message' => 'Document review updated', 'data' => $document]);
-        });
-    }
-
-    /**
-     * Check if all required document types for a phase are approved, and auto-transition.
-     */
-    private function checkPhaseCompletion(int $groupId, string $phase): void
-    {
-        $group = Group::findOrFail($groupId);
-        $requiredTypes = PhaseDocumentRequirement::where('period_id', $group->period_id)
-            ->where('phase', $phase)
-            ->where('is_required', true)
-            ->pluck('name')->toArray();
-
-        if (empty($requiredTypes)) {
-            return;
-        }
-
-        foreach ($requiredTypes as $type) {
-            $hasApproved = Document::where('group_id', $groupId)
-                ->where('phase', $phase)
-                ->where('document_type', $type)
-                ->where('status', 'APPROVED')
-                ->exists();
-
-            if (! $hasApproved) {
-                return;
-            } // Not all types approved yet
-        }
-
-        // All required types approved â€” trigger transition
         try {
-            if ($phase === 'PDC1' && $group->status === 'PDC1_ACTIVE') {
-                $this->stateMachine->transition($group, 'READY_FOR_SEMPRO');
-            } elseif ($phase === 'PDC2' && in_array($group->status, ['PDC2_ACTIVE', 'TA_DRAFT'], true)) {
-                $this->stateMachine->transition($group, 'PDC2_READY_FOR_EXPO');
-            }
-        } catch (\InvalidArgumentException $e) {
-            // Transition not valid from current state â€” ignore
+            $document = $this->documentStorage->reviewDocument($id, $request->validated(), $lecturerId, $user->id);
+        } catch (HttpException $e) {
+            // Supervisor guards bubble identical 403s through the handler.
+            throw $e;
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to review document: '.$e->getMessage()], 500);
         }
+
+        $message = $document instanceof ExpoStudentDocument
+            ? 'Expo document review updated'
+            : 'Document review updated';
+
+        return response()->json(['message' => $message, 'data' => $document]);
     }
 
     /**

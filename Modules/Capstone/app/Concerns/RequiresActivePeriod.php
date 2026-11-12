@@ -2,9 +2,10 @@
 
 namespace Modules\Capstone\Concerns;
 
+use Illuminate\Database\Eloquent\Model;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\Period;
-use Illuminate\Database\Eloquent\Model;
+use Modules\Capstone\Support\PeriodGate;
 
 trait RequiresActivePeriod
 {
@@ -12,33 +13,26 @@ trait RequiresActivePeriod
     {
         $period = $group->relationLoaded('period') ? $group->period : Period::find($group->period_id);
 
-        if (! $period || ! $period->is_active) {
-            abort(403, 'Periode tidak aktif. Operasi tidak diizinkan.');
-        }
+        PeriodGate::ensureActive($period);
     }
 
     protected function ensurePeriodActiveById(int $periodId): void
     {
-        $period = Period::find($periodId);
-
-        if (! $period || ! $period->is_active) {
-            abort(403, 'Periode tidak aktif. Operasi tidak diizinkan.');
-        }
+        PeriodGate::ensureActive(Period::find($periodId));
     }
 
     protected function ensureModelPeriodActive(Model $model): void
     {
         $periodRel = $model->relationLoaded('period') ? $model->period : null;
 
-        if ($periodRel && ! $periodRel->is_active) {
-            abort(403, 'Periode tidak aktif. Operasi tidak diizinkan.');
+        if ($periodRel) {
+            PeriodGate::ensureActive($periodRel);
+
+            return;
         }
 
-        if (! $periodRel && $model->period_id) {
-            $period = Period::find($model->period_id);
-            if (! $period || ! $period->is_active) {
-                abort(403, 'Periode tidak aktif. Operasi tidak diizinkan.');
-            }
+        if ($model->period_id) {
+            PeriodGate::ensureActive(Period::find($model->period_id));
         }
     }
 }

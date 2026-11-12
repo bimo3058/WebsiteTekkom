@@ -4,6 +4,8 @@ namespace Modules\Capstone\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Modules\Capstone\Http\Requests\Title\StoreTitleRequest;
+use Modules\Capstone\Http\Requests\Title\UpdateTitleRequest;
 use Modules\Capstone\Models\PeriodRegistration;
 use Modules\Capstone\Models\Title;
 use Modules\Capstone\Support\CapstoneActor;
@@ -57,17 +59,9 @@ class TitleController extends Controller
         return Title::with('lecturer')->get();
     }
 
-    public function store(Request $request)
+    public function store(StoreTitleRequest $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'problem_statement' => 'required|string',
-            'scope' => 'required|string',
-            'specializations' => 'required|array|min:1',
-            'specializations.*' => 'string|in:Software,Embedded,Network,Multimedia,AI,Blockchain',
-            'quota' => 'required|integer|min:1',
-        ]);
+        $validated = $request->validated();
 
         $title = Title::create([
             'lecturer_id' => CapstoneActor::lecturer($request->user())->id,
@@ -109,24 +103,13 @@ class TitleController extends Controller
         ]);
     }
 
-    public function update(Request $request, Title $title)
+    public function update(UpdateTitleRequest $request, Title $title)
     {
         if (CapstoneActor::lecturer($request->user())->id !== $title->lecturer_id) {
             abort(403, 'Unauthorized');
         }
 
-        $validated = $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'problem_statement' => 'sometimes|string',
-            'scope' => 'sometimes|string',
-            'specializations' => 'sometimes|array|min:1',
-            'specializations.*' => 'string|in:Software,Embedded,Network,Multimedia,AI,Blockchain',
-            'quota' => 'sometimes|integer|min:1',
-            'status' => 'sometimes|in:open,closed',
-            // Dosen titles stay cross-period: period_id can never be set via update.
-            'period_id' => 'prohibited',
-        ]);
+        $validated = $request->validated();
 
         unset($validated['period_id']);
         // Guard legacy rows that may carry a period_id: keep them global.

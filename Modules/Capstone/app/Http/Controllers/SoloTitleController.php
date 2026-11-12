@@ -2,26 +2,22 @@
 
 namespace Modules\Capstone\Http\Controllers;
 
-use Modules\Capstone\Concerns\RequiresActivePeriod;
-use Modules\Capstone\Models\Group;
-use Modules\Capstone\Models\GroupMember;
-use Modules\Capstone\Models\Period;
-use Modules\Capstone\Models\Title;
-use Modules\Capstone\Support\CapstoneActor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Concerns\RequiresActivePeriod;
+use Modules\Capstone\Models\Bid;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Models\Notification;
+use Modules\Capstone\Models\Period;
+use Modules\Capstone\Models\Title;
+use Modules\Capstone\Support\CapstoneActor;
+use Modules\Capstone\Support\StudentTitleAccess;
 
 class SoloTitleController extends Controller
 {
     use ApiResponseTrait, RequiresActivePeriod;
-
-    /**
-     * Group statuses whose approved titles stay open for recruitment.
-     * Covers solo seekers AND merged (ex-solo) groups that fell below
-     * minimum members. Locked/finalized groups are excluded.
-     */
-    public const RECRUITABLE_STATUSES = ['FORMING', 'FORMING_SOLO', 'WAITING_SUPERVISOR_APPROVAL', 'TITLE_APPROVED', 'READY_FOR_BIDDING'];
 
     /**
      * List solo seeker titles in marketplace.
@@ -55,7 +51,7 @@ class SoloTitleController extends Controller
             ->where('supervisor_approval_status', 'APPROVED')
             ->where('status', 'open')
             ->whereHas('proposedByGroup', function ($q) {
-                $q->whereIn('status', self::RECRUITABLE_STATUSES);
+                $q->whereIn('status', StudentTitleAccess::RECRUITABLE_STATUSES);
             });
 
         if ($period) {
@@ -74,7 +70,7 @@ class SoloTitleController extends Controller
                 if ($maxSize - $title->proposedByGroup->members->count() <= 0) {
                     return false;
                 }
-                if ($currentGroupId && \Modules\Capstone\Models\Bid::where('group_id', $currentGroupId)
+                if ($currentGroupId && Bid::where('group_id', $currentGroupId)
                     ->where('title_id', $title->id)
                     ->exists()) {
                     return false;
@@ -105,7 +101,7 @@ class SoloTitleController extends Controller
             return $this->successResponse([]);
         }
 
-        $bids = \Modules\Capstone\Models\Bid::with(['group.members.student', 'title'])
+        $bids = Bid::with(['group.members.student', 'title'])
             ->where('status', 'PENDING')
             ->whereHas('title', fn ($q) => $q->where('title_source', 'STUDENT')
                 ->where('supervisor_approval_status', 'APPROVED')
@@ -139,7 +135,7 @@ class SoloTitleController extends Controller
         $soloGroup = $title->proposedByGroup;
         $soloGroup?->loadMissing('period');
 
-        if (! $soloGroup || ! in_array($soloGroup->status, self::RECRUITABLE_STATUSES, true)) {
+        if (! $soloGroup || ! in_array($soloGroup->status, StudentTitleAccess::RECRUITABLE_STATUSES, true)) {
             return $this->errorResponse('Kelompok pemilik judul tidak sedang membuka rekrutmen.', 400);
         }
 
@@ -219,7 +215,7 @@ class SoloTitleController extends Controller
         // 7. Create bid
         // For solo titles, we store it differently - as a special type of bid
         // that indicates intent to join/merge
-        $bid = \Modules\Capstone\Models\Bid::create([
+        $bid = Bid::create([
             'group_id' => $group->id,
             'title_id' => $title->id,
             'priority' => 1, // Default for solo title bids
@@ -231,7 +227,7 @@ class SoloTitleController extends Controller
         // Create notification for solo seeker leader
         $soloLeader = $soloGroup->members()->where('is_leader', true)->first();
         if ($soloLeader) {
-            \Modules\Capstone\Models\Notification::create([
+            Notification::create([
                 'user_id' => $soloLeader->student->user_id,
                 'type' => 'BID_TO_SOLO_TITLE',
                 'title' => 'Permintaan Join ke Judul Anda',
@@ -278,7 +274,7 @@ class SoloTitleController extends Controller
         }
 
         // 3. Get the bid
-        $bid = \Modules\Capstone\Models\Bid::with('group.members')->find($bidId);
+        $bid = Bid::with('group.members')->find($bidId);
         if (! $bid || (int) $bid->title_id !== (int) $titleId) {
             return $this->notFoundResponse('Bid tidak ditemukan.');
         }
@@ -324,7 +320,7 @@ class SoloTitleController extends Controller
 
             // Notify bidder group members
             foreach ($bid->group->members as $member) {
-                \Modules\Capstone\Models\Notification::create([
+                Notification::create([
                     'user_id' => $member->student->user_id,
                     'type' => 'BID_ACCEPTED',
                     'title' => 'Bid Diterima',
@@ -376,7 +372,7 @@ class SoloTitleController extends Controller
         }
 
         // 3. Get and reject the bid
-        $bid = \Modules\Capstone\Models\Bid::find($bidId);
+        $bid = Bid::find($bidId);
         if (! $bid || (int) $bid->title_id !== (int) $titleId) {
             return $this->notFoundResponse('Bid tidak ditemukan.');
         }
@@ -385,7 +381,7 @@ class SoloTitleController extends Controller
 
         // Notify bidder
         foreach ($bid->group->members as $member) {
-            \Modules\Capstone\Models\Notification::create([
+            Notification::create([
                 'user_id' => $member->student->user_id,
                 'type' => 'BID_REJECTED',
                 'title' => 'Bid Ditolak',

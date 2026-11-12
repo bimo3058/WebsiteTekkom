@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Capstone\Http\Controllers\ApiResponseTrait;
+use Modules\Capstone\Http\Requests\Admin\PeriodRegistration\RejectPeriodRegistrationRequest;
 use Modules\Capstone\Models\Notification;
 use Modules\Capstone\Models\PeriodRegistration;
 
@@ -76,11 +77,9 @@ class PeriodRegistrationApprovalController extends Controller
         );
     }
 
-    public function reject(Request $request, $id)
+    public function reject(RejectPeriodRegistrationRequest $request, $id)
     {
-        $validated = $request->validate([
-            'rejection_reason' => 'required|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         $registration = PeriodRegistration::where('status', PeriodRegistration::STATUS_PENDING)->find($id);
 

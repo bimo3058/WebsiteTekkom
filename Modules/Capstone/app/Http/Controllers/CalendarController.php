@@ -3,8 +3,8 @@
 namespace Modules\Capstone\Http\Controllers;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Modules\Capstone\Http\Requests\Scheduling\CalendarIndexRequest;
 use Modules\Capstone\Models\ExpoEvent;
 use Modules\Capstone\Models\SeminarSchedule;
 use Modules\Capstone\Models\TaDefenseSchedule;
@@ -13,27 +13,29 @@ use Modules\Capstone\Support\CapstoneActor;
 /** One calendar feed, scoped before loading related academic identities. */
 class CalendarController extends Controller
 {
-    public function index(Request $request)
+    public function index(CalendarIndexRequest $request)
     {
         $role = CapstoneActor::role($request->user(), $request->attributes->get('capstone_role'));
         abort_unless(in_array($role, ['admin', 'dosen', 'mahasiswa'], true), 403);
-        $request->validate(['period_id' => 'nullable|integer|min:1']);
+        $request->validated();
         // Cancelled rows stay in the DB (audit trail) but must never render:
         // dosen/mahasiswa learn about cancellations via notifications only.
-        $seminars = SeminarSchedule::query()->where('status', '!=', 'CANCELLED');
+        // Per-group EXPO schedules are hidden by design: the calendar shows
+        // only the single expo master row (is_master=true). Group titles must
+        // never appear in the schedule feed.
+        $seminars = SeminarSchedule::query()->where('status', '!=', 'CANCELLED')->where('type', '!=', 'EXPO');
         $defenses = TaDefenseSchedule::query()->where('status', '!=', 'CANCELLED');
 
         if ($role === 'dosen') {
             $lecturerId = CapstoneActor::lecturer($request->user())->id;
             // Slot-split visibility: SEMPRO belongs to supervisor 2, TA
             // defense to supervisor 1 (visibility only; duties unchanged).
-            // EXPO is global read-only: every schedule, every period.
+            // EXPO is shown only via master rows below, never per-group.
             // Examiner slots always stay visible regardless of slot.
             $seminars->where(fn (Builder $q) => $q
                 ->where(fn (Builder $sempro) => $sempro
                     ->where('type', 'SEMPRO')
                     ->whereHas('group', fn (Builder $g) => $g->supervisedByInSlot($lecturerId, 'SUPERVISOR_2')))
-                ->orWhere(fn (Builder $expo) => $expo->where('type', 'EXPO'))
                 ->orWhere(fn (Builder $other) => $other
                     ->whereNotIn('type', ['SEMPRO', 'EXPO'])
                     ->whereHas('group', fn (Builder $g) => $g->supervisedBy($lecturerId)))
@@ -44,23 +46,22 @@ class CalendarController extends Controller
                 ->orWhereHas('examiners', fn (Builder $e) => $e->where('examiner_id', $lecturerId)));
         } elseif ($role === 'mahasiswa') {
             $studentId = CapstoneActor::student($request->user())->id;
-            // Own group's schedules plus the global read-only EXPO feed
-            // (all groups, all periods) so cross-period expos are visible.
+            // Own group's schedules only. EXPO is shown via master rows
+            // below so cross-period expos stay visible without leaking
+            // other groups' titles.
             // A group member must not see another student's individual defense.
             $seminars->where(fn (Builder $q) => $q
                 ->whereHas('group', fn (Builder $g) => $g->whereNotIn('status', ['REJECTED', 'DISSOLVED'])
-                    ->whereHas('members', fn (Builder $m) => $m->where('student_id', $studentId)))
-                ->orWhere(fn (Builder $expo) => $expo->where('type', 'EXPO')));
+                    ->whereHas('members', fn (Builder $m) => $m->where('student_id', $studentId))));
             // A group member must not see another student's individual defense.
             $defenses->where(fn (Builder $q) => $q->where('student_id', $studentId)
                 ->orWhereHas('students', fn (Builder $s) => $s->where('students.id', $studentId)));
         }
 
-        // EXPO is cross-period: an explicit period filter never hides it.
+        // Seminar rows are per-group; EXPO masters below are the only EXPO
+        // representation, so the period filter applies to seminars directly.
         $seminars->when($request->filled('period_id'), fn (Builder $q) => $q
-            ->where(fn (Builder $w) => $w
-                ->whereHas('group', fn (Builder $g) => $g->where('period_id', $request->integer('period_id')))
-                ->orWhere('type', 'EXPO')));
+            ->whereHas('group', fn (Builder $g) => $g->where('period_id', $request->integer('period_id'))));
         $defenses->when($request->filled('period_id'), fn (Builder $q) => $q
             ->whereHas('group', fn (Builder $g) => $g->where('period_id', $request->integer('period_id'))));
         foreach ([$seminars, $defenses] as $query) {

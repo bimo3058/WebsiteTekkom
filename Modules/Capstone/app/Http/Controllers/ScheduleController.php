@@ -5,9 +5,12 @@ namespace Modules\Capstone\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Modules\Capstone\Http\Requests\Scheduling\StoreScheduleRequest;
+use Modules\Capstone\Http\Requests\Scheduling\UpdateScheduleRequest;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\Schedule;
+use Modules\Capstone\Services\EofficeAvailabilityService;
 use Modules\Capstone\Support\CapstoneActor;
 
 class ScheduleController extends Controller
@@ -69,7 +72,7 @@ class ScheduleController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreScheduleRequest $request)
     {
         $user = Auth::user();
         $role = CapstoneActor::role(
@@ -86,16 +89,7 @@ class ScheduleController extends Controller
             ? ['BIMBINGAN']
             : ['SEMPRO', 'SIDANG', 'EXPO'];
 
-        $validated = $request->validate([
-            'group_id' => 'required|exists:capstone_groups,id',
-            'type' => ['required', 'string', 'in:'.implode(',', $allowedTypes)],
-            'date' => 'required|date',
-            'start_time' => 'required|date_format:H:i,H:i:s',
-            'end_time' => 'required|date_format:H:i,H:i:s|after:start_time',
-            'room' => 'required|string',
-            'mode' => 'nullable|string|in:online,offline',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         if ($role === 'dosen') {
             abort_unless(
@@ -108,7 +102,7 @@ class ScheduleController extends Controller
         }
 
         // Anti-collision with EOffice (approved bookings + internal schedules).
-        $eofficeConflict = app(\Modules\Capstone\Services\EofficeAvailabilityService::class)->checkByRoom(
+        $eofficeConflict = app(EofficeAvailabilityService::class)->checkByRoom(
             $validated['room'] ?? null,
             null,
             $validated['date'],
@@ -135,7 +129,7 @@ class ScheduleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateScheduleRequest $request, string $id)
     {
         $user = Auth::user();
         $role = CapstoneActor::role(
@@ -159,16 +153,7 @@ class ScheduleController extends Controller
                 ->supervisedBy(CapstoneActor::lecturer($user)->id)->exists(), 403);
         }
 
-        $validated = $request->validate([
-            'group_id' => 'exists:capstone_groups,id',
-            'type' => ['string', 'in:'.implode(',', $allowedTypes)],
-            'date' => 'date',
-            'start_time' => 'required_with:end_time|date_format:H:i,H:i:s',
-            'end_time' => 'required_with:start_time|date_format:H:i,H:i:s|after:start_time',
-            'room' => 'string',
-            'mode' => 'nullable|string|in:online,offline',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         if ($role === 'dosen') {
             $targetGroupId = (int) $request->input('group_id', $schedule->group_id);
@@ -182,7 +167,7 @@ class ScheduleController extends Controller
         }
 
         // Anti-collision with EOffice on the resulting slot.
-        $eofficeConflict = app(\Modules\Capstone\Services\EofficeAvailabilityService::class)->checkByRoom(
+        $eofficeConflict = app(EofficeAvailabilityService::class)->checkByRoom(
             $validated['room'] ?? $schedule->room,
             null,
             $validated['date'] ?? $schedule->date->format('Y-m-d'),

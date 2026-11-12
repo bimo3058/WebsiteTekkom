@@ -2,11 +2,11 @@
 
 namespace Modules\Capstone\Services;
 
+use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Bid;
 use Modules\Capstone\Models\Group;
-use Illuminate\Support\Facades\DB;
-use InvalidArgumentException;
 
 /**
  * GROUP AUTO-FIX SERVICE
@@ -80,7 +80,8 @@ class GroupAutoFixService
                 }
             }
 
-            // Refresh snapshot after fixes
+            // Refresh snapshot after fixes via the single readiness engine.
+            app(GroupService::class)->evaluateGroupReadiness($group);
             $group->refreshReadinessSnapshot();
 
             // Audit log the auto-fix operation

@@ -3,6 +3,7 @@
 namespace Modules\Capstone\Services;
 
 use App\Models\Student;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Modules\Capstone\Models\ExpoSelfEvaluation;
 use Modules\Capstone\Models\Group;
@@ -483,7 +484,7 @@ class GradeCalculationService
      * group's APPROVED supervisor review. Prefers the student's own rows and
      * falls back to the representative's (group-level) submission.
      *
-     * @return \Illuminate\Support\Collection<int, ExpoSelfEvaluation>
+     * @return Collection<int, ExpoSelfEvaluation>
      */
     private function approvedExpoSelfEvals(int $studentId, int $groupId)
     {
@@ -559,6 +560,8 @@ class GradeCalculationService
 
     /**
      * Calculate peer review average from cached reviews.
+     * Same weight-then-fallback semantics as peerReviewWeightedAverage();
+     * the indicator weight comes from the preloaded batch cache.
      */
     public function calculatePeerReviewAverageFromCache(array $reviews): ?float
     {
@@ -566,20 +569,56 @@ class GradeCalculationService
             return null;
         }
 
-        $totalWeighted = 0;
-        $totalWeight = 0;
-
+        $rows = [];
         foreach ($reviews as $review) {
             $indicator = $this->batchCache['peer_review_indicators'][$review->period_indicator_id] ?? null;
-            if ($indicator && $indicator->template) {
-                $weight = $indicator->template->weight;
-                $convertedScore = $review->raw_score * 25;
-                $totalWeighted += $convertedScore * $weight;
-                $totalWeight += $weight;
+            $rows[] = [
+                'weight' => $indicator?->template?->weight !== null ? (float) $indicator->template->weight : null,
+                'value' => $review->raw_score !== null ? (float) $review->raw_score * 25 : null,
+                'plain' => $review->score ?? null,
+            ];
+        }
+
+        return self::combinePeerRows($rows);
+    }
+
+    /**
+     * Single home for the peer-review combination shape: indicator-weighted
+     * average of converted values, falling back to the plain average when no
+     * weight is usable. Every peer-review caller combines rows the same way.
+     * Returns the unrounded average; callers keep their own rounding.
+     *
+     * @param  array<int, array{weight: float|null, value: float|null, plain: float|null}>  $rows
+     */
+    private static function combinePeerRows(array $rows): ?float
+    {
+        if (empty($rows)) {
+            return null;
+        }
+
+        $totalWeighted = 0.0;
+        $totalWeight = 0.0;
+        $plains = [];
+
+        foreach ($rows as $row) {
+            if ($row['weight'] !== null && $row['value'] !== null) {
+                $totalWeighted += $row['value'] * $row['weight'];
+                $totalWeight += $row['weight'];
+            }
+            if ($row['plain'] !== null) {
+                $plains[] = (float) $row['plain'];
             }
         }
 
-        return $totalWeight > 0 ? ($totalWeighted / $totalWeight) : null;
+        if ($totalWeight > 0) {
+            return $totalWeighted / $totalWeight;
+        }
+
+        if ($plains !== []) {
+            return array_sum($plains) / count($plains);
+        }
+
+        return null;
     }
 
     /**
@@ -588,30 +627,26 @@ class GradeCalculationService
      */
     private function calculateWeightedAverageFromCache(array $scores): ?float
     {
-        if (empty($scores)) {
-            return null;
-        }
+        return self::weightedAverageOf($scores);
+    }
 
-        $totalWeighted = 0;
-        $totalWeight = 0;
+    /**
+     * Single home for the weighted-average shape: period-component template
+     * weight preferred, component weight next, equal weighting (1.0) when no
+     * component info is available. Every grade caller combines scores the
+     * same way.
+     *
+     * @param  iterable<mixed>  $scores  Objects with `score` plus
+     *                                   `periodComponent`/`component` relations.
+     */
+    private static function weightedAverageOf(iterable $scores): ?float
+    {
+        $totalWeighted = 0.0;
+        $totalWeight = 0.0;
         $hasValidScores = false;
 
         foreach ($scores as $score) {
-            $weight = null;
-
-            // Method 1: Use periodComponent template weight (preferred)
-            $component = $score->periodComponent;
-            if ($component && $component->template) {
-                $weight = $component->template->weight;
-            }
-            // Method 2: Fall back to component template weight
-            elseif ($score->component) {
-                $weight = $score->component->weight ?? 1;
-            }
-            // Method 3: Use equal weighting (1.0) when no component info available
-            else {
-                $weight = 1.0;
-            }
+            $weight = self::scoreWeight($score);
 
             if ($weight !== null && $score->score !== null) {
                 $totalWeighted += $score->score * $weight;
@@ -621,6 +656,24 @@ class GradeCalculationService
         }
 
         return $hasValidScores && $totalWeight > 0 ? ($totalWeighted / $totalWeight) : null;
+    }
+
+    /**
+     * Resolve one score's weight: period-component template first, component
+     * weight next, equal weighting (1.0) when neither is available.
+     */
+    private static function scoreWeight($score): ?float
+    {
+        $component = $score->periodComponent;
+        if ($component && $component->template) {
+            return (float) $component->template->weight;
+        }
+
+        if ($score->component) {
+            return (float) ($score->component->weight ?? 1);
+        }
+
+        return 1.0;
     }
 
     /**
@@ -689,21 +742,7 @@ class GradeCalculationService
                 ];
             }
 
-            $weight = null;
-
-            // Method 1: Use periodComponent template weight (preferred)
-            $component = $score->periodComponent;
-            if ($component && $component->template) {
-                $weight = $component->template->weight;
-            }
-            // Method 2: Fall back to component template weight
-            elseif ($score->component) {
-                $weight = $score->component->weight ?? 1;
-            }
-            // Method 3: Use equal weighting (1.0) when no component info available
-            else {
-                $weight = 1.0;
-            }
+            $weight = self::scoreWeight($score);
 
             if ($weight !== null && $score->score !== null) {
                 $evaluatorData[$evaluatorId]['total_weighted'] += $score->score * $weight;
@@ -1015,6 +1054,59 @@ class GradeCalculationService
     }
 
     /**
+     * Mean of the non-null inputs, rounded to 2 decimals.
+     * Single home for the PDC1/PDC2/TA/Final combination shape so every
+     * caller combines partial scores the same way.
+     */
+    public static function mean(?float ...$scores): ?float
+    {
+        $valid = array_filter($scores, fn ($s) => $s !== null);
+
+        return ! empty($valid) ? round(array_sum($valid) / count($valid), 2) : null;
+    }
+
+    /**
+     * Peer-review weighted average over raw review rows.
+     * Single home for the weight-then-fallback-to-plain-average shape used
+     * by report reads and CSV exports.
+     *
+     * @param  iterable<mixed>|null  $reviews
+     */
+    public static function peerReviewWeightedAverage($reviews): ?float
+    {
+        if ($reviews === null || count($reviews) === 0) {
+            return null;
+        }
+
+        $average = self::combinePeerRows(self::peerRows($reviews));
+
+        return $average === null ? null : round($average, 2);
+    }
+
+    /**
+     * Adapt review rows to combiner input: indicator weight (null when
+     * unknown), converted value (`raw_score * 25`, null when missing), and
+     * the plain score used only when no weight is usable.
+     *
+     * @param  iterable<mixed>  $reviews
+     * @return array<int, array{weight: float|null, value: float|null, plain: float|null}>
+     */
+    private static function peerRows(iterable $reviews): array
+    {
+        $rows = [];
+        foreach ($reviews as $review) {
+            $weight = $review->periodIndicator?->template?->weight;
+            $rows[] = [
+                'weight' => $weight !== null ? (float) $weight : null,
+                'value' => $review->raw_score !== null ? (float) $review->raw_score * 25 : null,
+                'plain' => $review->score ?? null,
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
      * Get evaluation score for a specific student.
      */
     private function getStudentEvaluationScore(int $studentId, int $groupId, string $evaluationType): ?float
@@ -1101,6 +1193,9 @@ class GradeCalculationService
 
     /**
      * Get peer review average for a student.
+     * Same weight-then-fallback semantics as peerReviewWeightedAverage():
+     * indicator-weighted converted values first, plain average when no
+     * weight is usable.
      */
     private function getStudentPeerReviewAverage(int $studentId, int $groupId): ?float
     {
@@ -1114,17 +1209,26 @@ class GradeCalculationService
             return null;
         }
 
-        // Calculate weighted average based on indicator weights
-        $totalWeighted = 0;
-        $totalWeight = 0;
+        return self::combinePeerRows(self::peerRows($reviews));
+    }
 
-        foreach ($reviews as $review) {
-            $weight = $review->periodIndicator->template->weight ?? 1;
-            $totalWeighted += $review->score * $weight;
-            $totalWeight += $weight;
+    /**
+     * Get peer review average pooled across a group (one query, no per-member
+     * loop). Same kernel as the student-level average, matching the pooled
+     * semantics of the other group-level components.
+     */
+    private function getGroupPeerReviewAverage(int $groupId): ?float
+    {
+        $reviews = PeerReview::with(['periodIndicator.template'])
+            ->where('group_id', $groupId)
+            ->where('is_final_submission', true)
+            ->get();
+
+        if ($reviews->isEmpty()) {
+            return null;
         }
 
-        return $totalWeight > 0 ? ($totalWeighted / $totalWeight) : null;
+        return self::combinePeerRows(self::peerRows($reviews));
     }
 
     /**
@@ -1187,33 +1291,7 @@ class GradeCalculationService
             return null;
         }
 
-        $totalWeighted = 0;
-        $totalWeight = 0;
-
-        foreach ($scores as $score) {
-            $weight = null;
-
-            // Method 1: Use periodComponent template weight (preferred)
-            $component = $score->periodComponent;
-            if ($component && $component->template) {
-                $weight = $component->template->weight;
-            }
-            // Method 2: Fall back to component weight
-            elseif ($score->component) {
-                $weight = $score->component->weight ?? 1;
-            }
-            // Method 3: Use equal weighting (1.0) when no component info available
-            else {
-                $weight = 1.0;
-            }
-
-            if ($weight !== null && $score->score !== null) {
-                $totalWeighted += $score->score * $weight;
-                $totalWeight += $weight;
-            }
-        }
-
-        return $totalWeight > 0 ? ($totalWeighted / $totalWeight) : null;
+        return self::weightedAverageOf($scores);
     }
 
     /**
@@ -1267,6 +1345,8 @@ class GradeCalculationService
 
     /**
      * Legacy: Calculate PDC2 grade for a group (for backward compatibility).
+     * Four components like the student-level path: NILAI_DOSEN, MILESTONE,
+     * EXPO, and PEER_REVIEW pooled across the group.
      */
     public function calculatePDC2(int $groupId): ?array
     {
@@ -1274,6 +1354,7 @@ class GradeCalculationService
             $nilaiDosenScore = $this->getAverageEvaluationScore($groupId, 'NILAI_DOSEN');
             $milestoneScore = $this->getAverageEvaluationScore($groupId, 'MILESTONE');
             $expoScore = $this->getAverageEvaluationScore($groupId, 'EXPO');
+            $peerReviewScore = $this->getGroupPeerReviewAverage($groupId);
 
             $hasScore = false;
             $componentCount = 0;
@@ -1297,6 +1378,12 @@ class GradeCalculationService
                 $totalScore += $expoScore;
             }
 
+            if ($peerReviewScore !== null) {
+                $hasScore = true;
+                $componentCount++;
+                $totalScore += $peerReviewScore;
+            }
+
             if (! $hasScore) {
                 return null;
             }
@@ -1309,15 +1396,156 @@ class GradeCalculationService
                     'NILAI_DOSEN' => ['score' => $nilaiDosenScore],
                     'MILESTONE' => ['score' => $milestoneScore],
                     'EXPO' => ['score' => $expoScore],
+                    'PEER_REVIEW' => ['score' => $peerReviewScore],
                 ],
                 'component_count' => $componentCount,
-                'status' => $componentCount === 3 ? 'COMPLETE' : 'PARTIAL',
+                'status' => $componentCount === 4 ? 'COMPLETE' : 'PARTIAL',
             ];
         } catch (\Exception $e) {
             Log::error("Failed to calculate PDC2 for group {$groupId}: ".$e->getMessage());
 
             return null;
         }
+    }
+
+    /**
+     * Resolve phase weights for a period: admin-configured phase weights
+     * from grade_configuration, falling back to the given defaults when
+     * unconfigured. Unconfigured periods therefore grade exactly as the
+     * legacy unweighted endpoints did (see weightedGroupPhaseGrade).
+     *
+     * @param  array<string, int|float>  $defaults
+     * @return array<string, int|float>
+     */
+    public function phaseWeights(Period $period, string $phase, array $defaults): array
+    {
+        $configured = $period->grade_configuration[$phase] ?? null;
+
+        return is_array($configured) ? $configured : $defaults;
+    }
+
+    /**
+     * Weighted phase grade for a group (single weighted math for phase
+     * grades). Each configured type contributes avg(scores) × weight / 100
+     * over the types that have scores; missing types are reported, never
+     * zero-filled. Types the score repository does not support are reported
+     * as not evaluated, mirroring the grade endpoints.
+     *
+     * With an unconfigured period this is numerically identical to the
+     * former controller math (same avgs, same weights, same rounding) —
+     * pinned by PhaseWeightsTest with strict identity.
+     *
+     * Terminology: these are phase weights (admin-configured per phase),
+     * not component weights (template weights in grade math) or indicator
+     * weights (peer-review importance).
+     *
+     * @param  array<string, int|float>  $defaults
+     * @return array{grades: array<string, array{status: string, average_score: ?float, weight: int|float, weighted_score: ?float}>, final: ?float, total_weight: int|float}
+     */
+    public function weightedGroupPhaseGrade(Group $group, string $phase, array $defaults): array
+    {
+        $period = $group->relationLoaded('period') && $group->period !== null
+            ? $group->period
+            : Period::findOrFail($group->period_id);
+
+        $weights = $this->phaseWeights($period, $phase, $defaults);
+
+        $grades = [];
+        $totalWeightedScore = 0;
+        $totalWeight = 0;
+
+        foreach ($weights as $type => $weight) {
+            // Check if type is supported by repository
+            if (AssessmentScoreRepository::isSupportedType($type)) {
+                $scores = AssessmentScoreRepository::getByGroupAndType($group->id, $type);
+            } else {
+                $scores = collect();
+            }
+
+            if ($scores->isEmpty()) {
+                $grades[$type] = [
+                    'status' => 'not_evaluated',
+                    'average_score' => null,
+                    'weight' => $weight,
+                    'weighted_score' => null,
+                ];
+
+                continue;
+            }
+
+            // Calculate average score for this evaluation type
+            $avgScore = $scores->avg('score');
+            $weightedScore = ($avgScore * $weight) / 100;
+
+            $grades[$type] = [
+                'status' => 'evaluated',
+                'average_score' => round($avgScore, 2),
+                'weight' => $weight,
+                'weighted_score' => round($weightedScore, 2),
+            ];
+
+            $totalWeightedScore += $weightedScore;
+            $totalWeight += $weight;
+        }
+
+        return [
+            'grades' => $grades,
+            'final' => $totalWeight > 0 ? round($totalWeightedScore, 2) : null,
+            'total_weight' => $totalWeight,
+        ];
+    }
+
+    /**
+     * Weighted phase grade for a student (per-student scores, e.g. TA).
+     * Same math shape as the group variant; mirrors the former TA endpoint
+     * (no repository-type guard there, so unsupported types bubble exactly
+     * as they did).
+     *
+     * @param  array<string, int|float>  $defaults
+     * @return array{grades: array<string, array{status: string, average_score: ?float, weight: int|float, weighted_score: ?float}>, final: ?float, total_weight: int|float}
+     */
+    public function weightedStudentPhaseGrade(int $studentId, Period $period, string $phase, array $defaults): array
+    {
+        $weights = $this->phaseWeights($period, $phase, $defaults);
+
+        $grades = [];
+        $totalWeightedScore = 0;
+        $totalWeight = 0;
+
+        foreach ($weights as $type => $weight) {
+            $scores = AssessmentScoreRepository::getByStudentAndType($studentId, $type);
+
+            if ($scores->isEmpty()) {
+                $grades[$type] = [
+                    'status' => 'not_evaluated',
+                    'average_score' => null,
+                    'weight' => $weight,
+                    'weighted_score' => null,
+                ];
+
+                continue;
+            }
+
+            // Calculate average score for this evaluation type
+            $avgScore = $scores->avg('score');
+            $weightedScore = ($avgScore * $weight) / 100;
+
+            $grades[$type] = [
+                'status' => 'evaluated',
+                'average_score' => round($avgScore, 2),
+                'weight' => $weight,
+                'weighted_score' => round($weightedScore, 2),
+            ];
+
+            $totalWeightedScore += $weightedScore;
+            $totalWeight += $weight;
+        }
+
+        return [
+            'grades' => $grades,
+            'final' => $totalWeight > 0 ? round($totalWeightedScore, 2) : null,
+            'total_weight' => $totalWeight,
+        ];
     }
 
     /**

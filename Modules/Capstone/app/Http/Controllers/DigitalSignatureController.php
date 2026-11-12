@@ -1,29 +1,26 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
-use Modules\Capstone\Models\DigitalSignature;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Modules\Capstone\Http\Requests\DigitalSignature\SignDocumentRequest;
+use Modules\Capstone\Models\DigitalSignature;
 
 class DigitalSignatureController extends Controller
 {
     /**
      * Sign a document.
      */
-    public function sign(Request $request)
+    public function sign(SignDocumentRequest $request)
     {
-        $request->validate([
-            'document_reference' => 'required|string|max:255',
-            'document_type' => 'required|string|in:SURAT_TUGAS,BERITA_ACARA,SURAT_KEPUTUSAN,LAINNYA',
-            'signature_data' => 'required|string', // base64 signature image
-        ]);
+        $request->validated();
 
         $user = $request->user();
 
         // Generate unique hash for verification
-        $hash = hash('sha256', $user->id . $request->document_reference . now()->timestamp . Str::random(16));
+        $hash = hash('sha256', $user->id.$request->document_reference.now()->timestamp.Str::random(16));
 
         $signature = DigitalSignature::create([
             'user_id' => $user->id,
@@ -50,7 +47,7 @@ class DigitalSignatureController extends Controller
             ->where('hash', $hash)
             ->first();
 
-        if (!$signature) {
+        if (! $signature) {
             return response()->json([
                 'valid' => false,
                 'message' => 'Signature not found or invalid',

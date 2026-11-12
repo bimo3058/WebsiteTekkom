@@ -2,11 +2,14 @@
 
 namespace Modules\Capstone\Http\Controllers;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Http\Requests\Assessment\CopyPeerReviewConfigRequest;
+use Modules\Capstone\Http\Requests\Assessment\StorePeerReviewConfigRequest;
 use Modules\Capstone\Models\PeerReviewIndicatorTemplate;
 use Modules\Capstone\Models\Period;
 use Modules\Capstone\Models\PeriodPeerReviewIndicator;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Support\PeriodGate;
 
 class PeriodPeerReviewConfigController extends Controller
 {
@@ -50,18 +53,14 @@ class PeriodPeerReviewConfigController extends Controller
     /**
      * Configure peer review indicators for a period.
      */
-    public function store(Request $request, $periodId)
+    public function store(StorePeerReviewConfigRequest $request, $periodId)
     {
-        $request->validate([
-            'template_ids' => 'present|array',
-            'template_ids.*' => 'integer|distinct|exists:capstone_peer_review_indicator_templates,id',
-        ]);
+        $request->validated();
 
         return DB::transaction(function () use ($periodId, $request) {
-            $period = Period::whereKey($periodId)->lockForUpdate()->firstOrFail();
-            abort_if($period->is_finalized, 403, 'Periode final tidak dapat diubah.');
-            $current = PeriodPeerReviewIndicator::where('period_id', $periodId)->orderBy('sort_order')->pluck('template_id')->map(fn($id)=>(int)$id)->all();
-            if ($current !== array_map('intval', $request->template_ids)) abort_if(\Modules\Capstone\Models\Group::where('period_id', $periodId)->exists(), 403, 'Konfigurasi evaluasi tidak dapat diubah setelah kelompok terbentuk.');
+            PeriodGate::lockedPeriod($periodId);
+            $current = PeriodPeerReviewIndicator::where('period_id', $periodId)->orderBy('sort_order')->pluck('template_id')->map(fn ($id) => (int) $id)->all();
+            PeriodGate::assertNoGroupsIfChanged($periodId, $current, $request->template_ids, 'diubah');
             // Delete existing config for this period
             PeriodPeerReviewIndicator::where('period_id', $periodId)->whereNotIn('template_id', $request->template_ids)->delete();
 
@@ -84,18 +83,15 @@ class PeriodPeerReviewConfigController extends Controller
     /**
      * Copy peer review configuration from another period.
      */
-    public function copy(Request $request, $periodId)
+    public function copy(CopyPeerReviewConfigRequest $request, $periodId)
     {
-        $request->validate([
-            'source_period_id' => 'required|integer|exists:capstone_periods,id|not_in:'.$periodId,
-        ]);
+        $request->validated();
 
         $sourcePeriodId = $request->source_period_id;
 
         return DB::transaction(function () use ($periodId, $sourcePeriodId) {
-            $period = Period::whereKey($periodId)->lockForUpdate()->firstOrFail();
-            abort_if($period->is_finalized, 403, 'Periode final tidak dapat diubah.');
-            abort_if(\Modules\Capstone\Models\Group::where('period_id', $periodId)->exists(), 403, 'Konfigurasi evaluasi tidak dapat disalin setelah kelompok terbentuk.');
+            PeriodGate::lockedPeriod($periodId);
+            PeriodGate::assertNoGroups($periodId, 'disalin');
             // Get all indicators from source period
             $sourceIndicators = PeriodPeerReviewIndicator::where('period_id', $sourcePeriodId)
                 ->orderBy('sort_order')

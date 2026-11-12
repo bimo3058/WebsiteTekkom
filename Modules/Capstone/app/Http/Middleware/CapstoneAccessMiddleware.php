@@ -8,7 +8,7 @@ use Modules\Capstone\Support\CapstoneActor;
 
 class CapstoneAccessMiddleware
 {
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next, ?string $expected = null)
     {
         $user = $request->user();
 
@@ -23,6 +23,10 @@ class CapstoneAccessMiddleware
         $role = CapstoneActor::role($user, $request->header('X-Capstone-Role'));
         if (! $role) {
             return response()->json(['message' => 'User tidak punya role Capstone.'], 403);
+        }
+
+        if ($expected !== null && ! self::allows($expected, $role)) {
+            return response()->json(['message' => 'Forbidden.'], 403);
         }
 
         if ($role === 'mahasiswa') {
@@ -42,5 +46,16 @@ class CapstoneAccessMiddleware
         $request->attributes->set('capstone_role', $role);
 
         return $next($request);
+    }
+
+    public static function allows(string $expected, ?string $role): bool
+    {
+        return match ($expected) {
+            'admin' => $role === 'admin',
+            'dosen' => $role === 'dosen',
+            'mahasiswa' => $role === 'mahasiswa',
+            'admin_or_dosen' => in_array($role, ['admin', 'dosen'], true),
+            default => false,
+        };
     }
 }

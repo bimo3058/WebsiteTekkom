@@ -2,9 +2,9 @@
 
 namespace Modules\Capstone\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Modules\Capstone\Http\Requests\Period\SavePeriodRequest;
 use Modules\Capstone\Models\AssessmentComponentTemplate;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\PeerReviewIndicatorTemplate;
@@ -41,36 +41,19 @@ class BladePeriodController extends Controller
         return ['assessments' => $assessments, 'peer_ids' => PeriodPeerReviewIndicator::where('period_id', $period->id)->orderBy('sort_order')->pluck('template_id')->all()];
     }
 
-    public function store(Request $request)
+    public function store(SavePeriodRequest $request)
     {
         return $this->save($request);
     }
 
-    public function update(Request $request, Period $period)
+    public function update(SavePeriodRequest $request, Period $period)
     {
         return $this->save($request, $period);
     }
 
-    private function save(Request $request, ?Period $period = null)
+    private function save(SavePeriodRequest $request, ?Period $period = null)
     {
-        $rules = [
-            'name' => 'required|string|max:255', 'start_date' => 'required|date', 'end_date' => 'required|date|after:start_date', 'is_active' => 'required|boolean',
-            'min_group_size' => 'required|integer|min:1|max:10', 'max_group_size' => 'required|integer|min:1|max:10|gte:min_group_size', 'max_supervisor_load' => 'required|integer|min:1|max:50',
-            'assessments' => 'required|array:'.implode(',', self::TYPES), 'peer_ids' => 'present|array',
-            'peer_ids.*' => 'integer|distinct|exists:capstone_peer_review_indicator_templates,id',
-        ];
-        foreach (self::TYPES as $type) {
-            $rules['assessments.'.$type] = 'present|array';
-            $rules['assessments.'.$type.'.*'] = 'integer|distinct|exists:capstone_assessment_component_templates,id';
-        }
-        foreach (['bidding', 'pdc1', 'pdc2', 'ta'] as $phase) {
-            $rules[$phase.'_start'] = 'nullable|date';
-            $rules[$phase.'_end'] = 'nullable|date|after_or_equal:'.$phase.'_start';
-        }
-        foreach (['expo_date', 'bidding_reminder_at', 'pdc1_reminder_at', 'pdc2_reminder_at', 'expo_reminder_at', 'ta_reminder_at'] as $field) {
-            $rules[$field] = 'nullable|date';
-        }
-        $data = $request->validate($rules);
+        $data = $request->validated();
 
         return DB::transaction(function () use ($data, $period) {
             $editing = $period !== null;

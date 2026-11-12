@@ -3,14 +3,19 @@
 namespace Modules\Capstone\Services;
 
 use App\Models\Lecturer;
+use App\Models\Student;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Modules\Capstone\Exceptions\DomainRuleException;
+use Modules\Capstone\Exceptions\ScheduleConflictException;
 use Modules\Capstone\Models\AssessmentComponent;
 use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\Location;
+use Modules\Capstone\Models\Notification;
 use Modules\Capstone\Models\PeriodAssessmentComponent;
 use Modules\Capstone\Models\SeminarEvaluation;
 use Modules\Capstone\Models\SeminarSchedule;
@@ -19,16 +24,28 @@ use Modules\Capstone\Models\SidangTaScore;
 use Modules\Capstone\Models\TaDefenseEvaluation;
 use Modules\Capstone\Models\TaDefenseExaminer;
 use Modules\Capstone\Models\TaDefenseSchedule;
+use Modules\Capstone\Models\TaRegistration;
 use Modules\Capstone\Models\TaSubmission;
 use Modules\Capstone\Support\EvaluationDeadline;
+use Modules\EOffice\Models\Ruangan;
 
 class SchedulingService
 {
+    public const PASS_THRESHOLD = 60.0;
+
     protected GroupStateMachine $stateMachine;
 
     public function __construct(GroupStateMachine $stateMachine)
     {
         $this->stateMachine = $stateMachine;
+    }
+
+    /**
+     * Derive PASS/FAIL from the weighted average (single source of truth).
+     */
+    public static function deriveResult(float $score): string
+    {
+        return $score >= self::PASS_THRESHOLD ? 'PASS' : 'FAIL';
     }
 
     // ══════════════════════════════════════════
@@ -345,6 +362,13 @@ class SchedulingService
                 throw new \InvalidArgumentException('Result is locked after the schedule is completed.');
             }
 
+            if (! $scheduleCompleted) {
+                $expected = self::deriveResult($score);
+                if ($result !== $expected) {
+                    throw new \InvalidArgumentException('Hasil harus mengikuti rata-rata nilai (≥60 Lulus, <60 Tidak Lulus).');
+                }
+            }
+
             // Snapshot the pre-overwrite record: when the membership changed
             // since the exam, a fresh submit replaces the old rubric keys
             // entirely, so the previous scores are archived in the audit log.
@@ -453,6 +477,13 @@ class SchedulingService
 
             if ($isUpdate && $scheduleCompleted && $evaluation->result !== null && $result !== $evaluation->result) {
                 throw new \InvalidArgumentException('Result is locked after the schedule is completed.');
+            }
+
+            if (! $scheduleCompleted) {
+                $expectedTa = self::deriveResult($score);
+                if ($result !== $expectedTa) {
+                    throw new \InvalidArgumentException('Hasil harus mengikuti rata-rata nilai (≥60 Lulus, <60 Tidak Lulus).');
+                }
             }
 
             $evaluation->update([
@@ -692,5 +723,400 @@ class SchedulingService
         } catch (\Exception $e) {
             Log::error('Failed to send deadline notification: '.$e->getMessage());
         }
+    }
+
+    // ══════════════════════════════════════════
+    // TA Defense Write Orchestration
+    // ══════════════════════════════════════════
+    //
+    // Moved verbatim from TaDefenseScheduleController (Batch B): the
+    // controller keeps admin authorization + response envelopes; every
+    // cross-row guard lives here and throws with the same message the
+    // endpoint returns. Envelope mapping (controller side):
+    // DomainRuleException → 400 same message,
+    // ScheduleConflictException → 400 same message + conflicts detail,
+    // AuthorizationException → 403 same message (evaluation lock),
+    // other \Exception → 500 'Failed ...' same prefix.
+
+    /**
+     * Create a TA defense schedule with multi-student support.
+     *
+     * @param  array<string, mixed>  $validated  Validated StoreTaDefenseRequest data.
+     */
+    public function scheduleTaDefense(array $validated, int $adminId): TaDefenseSchedule
+    {
+        return DB::transaction(function () use ($validated) {
+            $studentIds = $validated['student_ids'];
+            $group = Group::with(['supervisors', 'period', 'members'])->whereKey($validated['group_id'])->lockForUpdate()->firstOrFail();
+            if (isset($validated['period_id']) && (int) $validated['period_id'] !== $group->period_id) {
+                throw new DomainRuleException('The selected group belongs to another period');
+            }
+
+            // Validate all students are from the same group
+            $groupMemberIds = $group->members->pluck('student_id')->toArray();
+            $invalidStudents = array_diff($studentIds, $groupMemberIds);
+
+            if (! empty($invalidStudents)) {
+                throw new DomainRuleException('All selected students must be from the same group');
+            }
+
+            // Validate all students have TA_DOCUMENTS_APPROVED status
+            $validSubmissions = TaSubmission::whereIn('student_id', $studentIds)
+                ->where('group_id', $group->id)
+                ->where('status', 'TA_DOCUMENTS_APPROVED')
+                ->pluck('student_id')
+                ->toArray();
+
+            $invalidStatusStudents = array_diff($studentIds, $validSubmissions);
+            if (! empty($invalidStatusStudents)) {
+                throw new DomainRuleException('All selected students must have TA_DOCUMENTS_APPROVED status');
+            }
+
+            // Validate all students have an APPROVED sidang TA registration
+            $approvedRegistrations = TaRegistration::whereIn('student_id', $studentIds)
+                ->where('group_id', $group->id)
+                ->where('status', TaRegistration::STATUS_APPROVED)
+                ->pluck('student_id')
+                ->toArray();
+
+            $unapprovedStudents = array_diff($studentIds, $approvedRegistrations);
+            if (! empty($unapprovedStudents)) {
+                throw new DomainRuleException('All selected students must have an approved sidang TA registration');
+            }
+
+            // Check for existing scheduled defenses for these students
+            $existingScheduled = TaDefenseSchedule::where(fn ($q) => $q->whereIn('student_id', $studentIds)->orWhereHas('students', fn ($q) => $q->whereIn('students.id', $studentIds)))
+                ->whereIn('status', ['SCHEDULED', 'DONE'])
+                ->exists();
+
+            if ($existingScheduled) {
+                throw new DomainRuleException('One or more selected students already have a scheduled or completed defense');
+            }
+
+            // Validate examiners are not supervisors
+            $supervisorIds = array_unique(array_merge($group->supervisors->pluck('id')->all(), array_filter([$group->supervisor_1_id, $group->supervisor_2_id])));
+
+            if (in_array($validated['examiner_1_id'], $supervisorIds)) {
+                throw new DomainRuleException('Examiner 1 cannot be a supervisor of this group');
+            }
+
+            if (in_array($validated['examiner_2_id'], $supervisorIds)) {
+                throw new DomainRuleException('Examiner 2 cannot be a supervisor of this group');
+            }
+
+            // Validate examiners are dosen
+            $examiner1 = Lecturer::find($validated['examiner_1_id']);
+            $examiner2 = Lecturer::find($validated['examiner_2_id']);
+
+            if (! $examiner1) {
+                throw new DomainRuleException('Examiner 1 must be a dosen');
+            }
+
+            if (! $examiner2) {
+                throw new DomainRuleException('Examiner 2 must be a dosen');
+            }
+
+            // Validate scheduling conflicts
+            $examinerIds = [$validated['examiner_1_id'], $validated['examiner_2_id']];
+
+            // Determine room for conflict checking — single source: EOffice.
+            $ruangan = Ruangan::findOrFail($validated['eoffice_ruangan_id']);
+            $room = $ruangan->nama;
+
+            $conflicts = $this->validateScheduleConflicts(
+                $examinerIds,
+                $validated['date'],
+                $validated['start_time'],
+                $validated['end_time'],
+                $room,
+                null,
+                null,
+                null,
+                null,
+                $ruangan->id
+            );
+
+            if (! empty($conflicts)) {
+                throw new ScheduleConflictException('Scheduling conflicts detected.', $conflicts);
+            }
+
+            // Auto-calculate evaluation deadline
+            $evaluationDeadline = date('Y-m-d H:i:s', strtotime($validated['date'].' +2 days'));
+
+            DB::beginTransaction();
+            try {
+                $payload = [
+                    'group_id' => $validated['group_id'],
+                    'student_id' => $studentIds[0], // Backward compatibility
+                    'examiner_1_id' => $validated['examiner_1_id'],
+                    'examiner_2_id' => $validated['examiner_2_id'],
+                    'date' => $validated['date'],
+                    'start_time' => $validated['start_time'],
+                    'end_time' => $validated['end_time'],
+                    'room' => $room,
+                    'eoffice_ruangan_id' => $ruangan->id,
+                    'status' => 'SCHEDULED',
+                    'evaluation_deadline' => $evaluationDeadline,
+                    'notes' => $validated['notes'] ?? null,
+                ];
+
+                if (Schema::hasColumn('capstone_ta_defense_schedules', 'period_id')) {
+                    $payload['period_id'] = $validated['period_id'] ?? $group->period_id;
+                }
+
+                $schedule = TaDefenseSchedule::create($payload);
+
+                // Attach all students to pivot table
+                $schedule->students()->attach($studentIds);
+
+                // Update or create TA submissions for all scheduled students
+                foreach ($studentIds as $studentId) {
+                    TaSubmission::updateOrCreate(
+                        ['student_id' => $studentId, 'group_id' => $group->id],
+                        [
+                            'status' => 'TA_READY_FOR_SIDANG',
+                            'group_id' => $group->id,
+                            'period_id' => $payload['period_id'] ?? $group->period_id,
+                        ]
+                    );
+                }
+
+                // Create evaluation records
+                $this->createTaDefenseEvaluations($schedule, $studentIds);
+
+                // Reload schedule with students relationship for notification
+                $schedule->load('students');
+
+                // Notify all students and examiners
+                $this->notifyTaDefenseScheduled($schedule, $studentIds);
+
+                DB::commit();
+
+                return $schedule->load(['students', 'group.title', 'group.period', 'examiner1', 'examiner2']);
+            } catch (\Exception $e) {
+                DB::rollBack();
+
+                Log::error('Failed to create TA defense schedule', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                    'request_data' => $validated,
+                ]);
+
+                throw $e;
+            }
+        });
+    }
+
+    /**
+     * Update a TA defense schedule with multi-student support.
+     *
+     * @param  array<string, mixed>  $validated  Validated Update/AssignExaminers data.
+     */
+    public function updateTaDefenseSchedule(int $id, array $validated): TaDefenseSchedule
+    {
+        return DB::transaction(function () use ($validated, $id) {
+            $initial = TaDefenseSchedule::findOrFail($id);
+            $group = Group::with(['members', 'supervisors'])->whereKey($initial->group_id)->lockForUpdate()->firstOrFail();
+            $schedule = TaDefenseSchedule::with('students')->whereKey($id)->lockForUpdate()->firstOrFail();
+            if ($schedule->status !== 'SCHEDULED' && ! in_array($schedule->status, ['PENDING', 'PENDING_APPROVAL'], true)) {
+                throw new DomainRuleException('Cannot update a completed or cancelled schedule');
+            }
+            $currentIds = $schedule->students->pluck('id')->all() ?: array_filter([$schedule->student_id]);
+            $studentIds = array_values(array_unique(array_map('intval', $validated['student_ids'] ?? $currentIds)));
+            if (array_diff($currentIds, $studentIds)) {
+                throw new DomainRuleException('Already selected students cannot be removed');
+            }
+            if (array_diff($studentIds, $group->members->pluck('student_id')->all())) {
+                throw new DomainRuleException('All selected students must be from the same group');
+            }
+            $added = array_values(array_diff($studentIds, $currentIds));
+            $ready = TaSubmission::where('group_id', $group->id)->whereIn('student_id', $added)->where('status', 'TA_DOCUMENTS_APPROVED')->pluck('student_id')->all();
+            if (array_diff($added, $ready)) {
+                throw new DomainRuleException('All selected students must have TA_DOCUMENTS_APPROVED status');
+            }
+            $registered = TaRegistration::where('group_id', $group->id)->whereIn('student_id', $added)->where('status', TaRegistration::STATUS_APPROVED)->pluck('student_id')->all();
+            if (array_diff($added, $registered)) {
+                throw new DomainRuleException('All selected students must have an approved sidang TA registration');
+            }
+            $hasOtherDefense = TaDefenseSchedule::whereKeyNot($id)->whereIn('status', ['SCHEDULED', 'DONE', 'COMPLETED'])
+                ->where(fn ($q) => $q->whereIn('student_id', $added)->orWhereHas('students', fn ($q) => $q->whereIn('students.id', $added)))->exists();
+            if ($hasOtherDefense) {
+                throw new DomainRuleException('A selected student already has an active defense');
+            }
+            $examinerIds = [(int) ($validated['examiner_1_id'] ?? $schedule->examiner_1_id), (int) ($validated['examiner_2_id'] ?? $schedule->examiner_2_id)];
+            $supervisorIds = array_unique(array_merge($group->supervisors->pluck('id')->all(), array_filter([$group->supervisor_1_id, $group->supervisor_2_id])));
+            if ($examinerIds[0] === $examinerIds[1] || count(array_filter($examinerIds)) !== 2) {
+                throw new DomainRuleException('Choose two different examiners');
+            }
+            if (array_intersect($examinerIds, $supervisorIds)) {
+                throw new DomainRuleException('Examiners cannot be supervisors of this group');
+            }
+            $examinersChanged = $examinerIds !== [(int) $schedule->examiner_1_id, (int) $schedule->examiner_2_id];
+            if (($examinersChanged || $added) && TaDefenseEvaluation::where('schedule_id', $id)->where('status', '!=', 'PENDING')->exists()) {
+                throw new AuthorizationException('Examiners and students are locked after evaluation submission');
+            }
+            $payload = collect($validated)->only(['date', 'start_time', 'end_time', 'eoffice_ruangan_id', 'notes', 'status', 'examiner_1_id', 'examiner_2_id'])->all();
+            unset($payload['room'], $payload['location_id']);
+            if (! empty($payload['eoffice_ruangan_id'])) {
+                $payload['room'] = Ruangan::findOrFail($payload['eoffice_ruangan_id'])->nama;
+            }
+            $eofficeId = isset($payload['eoffice_ruangan_id']) ? (int) $payload['eoffice_ruangan_id'] : ($schedule->getAttributes()['eoffice_ruangan_id'] ?? null);
+            $conflicts = $this->validateScheduleConflicts($examinerIds, $payload['date'] ?? $schedule->date->format('Y-m-d'), $payload['start_time'] ?? $schedule->start_time, $payload['end_time'] ?? $schedule->end_time, $payload['room'] ?? $schedule->room, null, $schedule->id, null, ($schedule->getAttributes()['eoffice_peminjaman_id'] ?? null), $eofficeId ? (int) $eofficeId : null);
+            if ($conflicts) {
+                throw new ScheduleConflictException('Scheduling conflicts detected.', $conflicts);
+            }
+            $schedule->update($payload);
+            if ($added) {
+                $schedule->students()->syncWithoutDetaching($added);
+                TaSubmission::where('group_id', $group->id)->whereIn('student_id', $added)->update(['status' => 'TA_READY_FOR_SIDANG']);
+            }
+            if ($examinersChanged) {
+                TaDefenseEvaluation::where('schedule_id', $id)->where('status', 'PENDING')->delete();
+                TaDefenseExaminer::where('schedule_id', $id)->delete();
+                $this->createTaDefenseEvaluations($schedule->fresh(), $studentIds);
+            }
+            $this->notifyDefenseUpdated($schedule, $studentIds);
+
+            return $schedule->fresh()->load(['students', 'group.title', 'group.period', 'examiner1', 'examiner2']);
+        });
+    }
+
+    /**
+     * Cancel a TA defense schedule: revert submissions, clean pending
+     * evaluations, audit, notify.
+     */
+    public function cancelTaDefenseSchedule(int $id, int $adminId): void
+    {
+        $schedule = TaDefenseSchedule::with(['students', 'group'])->findOrFail($id);
+
+        if ($schedule->status === 'DONE') {
+            throw new DomainRuleException('Cannot cancel completed schedule');
+        }
+
+        $studentIds = $schedule->students->pluck('id')->toArray();
+
+        DB::beginTransaction();
+        try {
+            $schedule->update(['status' => 'CANCELLED']);
+
+            // Revert status for all students
+            TaSubmission::whereIn('student_id', $studentIds)
+                ->where('status', 'TA_READY_FOR_SIDANG')
+                ->update(['status' => 'TA_DOCUMENTS_APPROVED']);
+
+            // Clean up pending evaluations
+            TaDefenseEvaluation::where('schedule_id', $schedule->id)
+                ->where('status', 'PENDING')
+                ->delete();
+
+            AuditLog::create([
+                'user_id' => $adminId,
+                'action' => 'TA_DEFENSE_CANCELLED',
+                'target_type' => 'TaDefenseSchedule',
+                'target_id' => $schedule->id,
+                'payload' => ['group_id' => $schedule->group_id],
+            ]);
+
+            // Notify all students of cancellation
+            $this->notifyDefenseCancelled($schedule, $studentIds);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Notify students and examiners when defense is scheduled
+     */
+    private function notifyDefenseStudents($schedule, array $studentIds, string $type, string $title, string $message): void
+    {
+        foreach ($studentIds as $studentId) {
+            Notification::create([
+                'user_id' => Student::find($studentId)?->user_id,
+                'type' => $type,
+                'title' => $title,
+                'message' => $message,
+                'related_type' => 'TaDefenseSchedule',
+                'related_id' => $schedule->id,
+                'is_read' => false,
+            ]);
+        }
+    }
+
+    private function notifyDefenseExaminers($schedule, string $type, string $title, string $message): void
+    {
+        foreach ([$schedule->examiner_1_id, $schedule->examiner_2_id] as $examinerId) {
+            Notification::create([
+                'user_id' => Lecturer::find($examinerId)?->user_id,
+                'type' => $type,
+                'title' => $title,
+                'message' => $message,
+                'related_type' => 'TaDefenseSchedule',
+                'related_id' => $schedule->id,
+                'is_read' => false,
+            ]);
+        }
+    }
+
+    private function notifyTaDefenseScheduled($schedule, array $studentIds): void
+    {
+        $studentNames = $schedule->students->pluck('name')->join(', ');
+
+        $this->notifyDefenseStudents(
+            $schedule,
+            $studentIds,
+            'TA_DEFENSE_SCHEDULED',
+            'Jadwal Sidang TA',
+            "Anda dijadwalkan sidang TA pada {$schedule->date} pukul {$schedule->start_time} di {$schedule->room}"
+        );
+        $this->notifyDefenseExaminers(
+            $schedule,
+            'TA_DEFENSE_EXAMINER_ASSIGNED',
+            'Penugasan Penguji Sidang TA',
+            "Anda ditugaskan sebagai penguji sidang TA untuk mahasiswa: {$studentNames}"
+        );
+    }
+
+    /**
+     * Notify all students when defense is updated
+     */
+    private function notifyDefenseUpdated($schedule, array $studentIds): void
+    {
+        $this->notifyDefenseStudents(
+            $schedule,
+            $studentIds,
+            'TA_DEFENSE_UPDATED',
+            'Jadwal Sidang TA Diperbarui',
+            "Jadwal sidang TA Anda telah diperbarui. Tanggal: {$schedule->date}, Waktu: {$schedule->start_time}, Ruang: {$schedule->room}"
+        );
+        $this->notifyDefenseExaminers(
+            $schedule,
+            'TA_DEFENSE_UPDATED',
+            'Jadwal Sidang TA Diperbarui',
+            "Jadwal sidang TA yang Anda uji telah diperbarui. Tanggal: {$schedule->date}, Waktu: {$schedule->start_time}, Ruang: {$schedule->room}"
+        );
+    }
+
+    /**
+     * Notify all students when defense is cancelled
+     */
+    private function notifyDefenseCancelled($schedule, array $studentIds): void
+    {
+        $this->notifyDefenseStudents(
+            $schedule,
+            $studentIds,
+            'TA_DEFENSE_CANCELLED',
+            'Jadwal Sidang TA Dibatalkan',
+            "Jadwal sidang TA Anda pada {$schedule->date} telah dibatalkan. Anda dapat menjadwalkan ulang."
+        );
+        $this->notifyDefenseExaminers(
+            $schedule,
+            'TA_DEFENSE_CANCELLED',
+            'Jadwal Sidang TA Dibatalkan',
+            "Jadwal sidang TA yang Anda uji pada {$schedule->date} telah dibatalkan. Anda dapat mengabaikan penugasan ini."
+        );
     }
 }

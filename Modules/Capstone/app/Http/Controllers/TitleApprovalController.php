@@ -1,13 +1,14 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
-use Modules\Capstone\Models\Title;
-use Modules\Capstone\Models\Group;
-use Modules\Capstone\Models\Notification;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Http\Requests\Title\RejectTitleProposalRequest;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\Notification;
+use Modules\Capstone\Models\Title;
 use Modules\Capstone\Support\CapstoneActor;
 
 class TitleApprovalController extends Controller
@@ -44,7 +45,7 @@ class TitleApprovalController extends Controller
             ->with(['proposedByGroup.members.student', 'proposedByGroup.period', 'proposedSupervisor'])
             ->first();
 
-        if (!$proposal) {
+        if (! $proposal) {
             return response()->json(['message' => 'Proposal not found.'], 404);
         }
 
@@ -70,7 +71,7 @@ class TitleApprovalController extends Controller
             ->where('supervisor_approval_status', 'PENDING')
             ->first();
 
-        if (!$title) {
+        if (! $title) {
             return response()->json(['message' => 'Proposal not found or already processed.'], 404);
         }
 
@@ -81,7 +82,7 @@ class TitleApprovalController extends Controller
 
         $group = Group::find($title->proposed_by_group_id);
 
-        if (!$group) {
+        if (! $group) {
             return response()->json(['message' => 'Associated group not found.'], 404);
         }
 
@@ -127,18 +128,17 @@ class TitleApprovalController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Failed to approve: ' . $e->getMessage()], 500);
+
+            return response()->json(['message' => 'Failed to approve: '.$e->getMessage()], 500);
         }
     }
 
     /**
      * Reject a student title proposal.
      */
-    public function reject(Request $request, $id)
+    public function reject(RejectTitleProposalRequest $request, $id)
     {
-        $validated = $request->validate([
-            'rejection_reason' => 'required|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         $user = $request->user();
         $lecturerId = CapstoneActor::lecturer($user)->id;
@@ -149,13 +149,13 @@ class TitleApprovalController extends Controller
             ->where('supervisor_approval_status', 'PENDING')
             ->first();
 
-        if (!$title) {
+        if (! $title) {
             return response()->json(['message' => 'Proposal not found or already processed.'], 404);
         }
 
         $group = Group::find($title->proposed_by_group_id);
 
-        if (!$group) {
+        if (! $group) {
             return response()->json(['message' => 'Associated group not found.'], 404);
         }
 
@@ -191,7 +191,8 @@ class TitleApprovalController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Failed to reject: ' . $e->getMessage()], 500);
+
+            return response()->json(['message' => 'Failed to reject: '.$e->getMessage()], 500);
         }
     }
 }

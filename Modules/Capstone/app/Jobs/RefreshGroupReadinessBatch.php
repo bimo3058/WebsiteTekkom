@@ -2,48 +2,43 @@
 
 namespace Modules\Capstone\Jobs;
 
-use Modules\Capstone\Models\Group;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Services\GroupService;
 
-/**
- * Batch refresh readiness snapshots for multiple groups.
- * Dispatched to queue for better performance during finalization.
- */
 class RefreshGroupReadinessBatch implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * The group IDs to refresh.
-     *
-     * @var array<int>
-     */
+    /** @var array<int> */
     public array $groupIds;
 
-    /**
-     * Create a new job instance.
-     *
-     * @param  array<int>  $groupIds
-     */
     public function __construct(array $groupIds)
     {
         $this->groupIds = $groupIds;
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
-        Group::whereIn('id', $this->groupIds)
-            ->chunkById(100, function ($groups) {
-                foreach ($groups as $group) {
-                    $group->refreshReadinessSnapshot();
-                }
-            });
+        try {
+            $service = app(GroupService::class);
+
+            Group::whereIn('id', $this->groupIds)
+                ->chunkById(100, function ($groups) use ($service) {
+                    foreach ($groups as $group) {
+                        try {
+                            $service->evaluateGroupReadiness($group);
+                        } catch (\Throwable $e) {
+                            report($e);
+                        }
+                    }
+                });
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 }

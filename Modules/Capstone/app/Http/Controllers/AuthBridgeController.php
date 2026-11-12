@@ -7,15 +7,15 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
+use Modules\Capstone\Http\Requests\Auth\ExchangeTokenRequest;
+use Modules\Capstone\Http\Requests\Auth\SetActiveRoleRequest;
 use Modules\Capstone\Support\CapstoneActor;
 
 class AuthBridgeController extends Controller
 {
-    public function exchange(Request $request)
+    public function exchange(ExchangeTokenRequest $request)
     {
-        $request->validate([
-            'ott' => 'required|string|size:64',
-        ]);
+        $request->validated();
 
         // Rate limit per IP â€” cegah brute force
         $key = 'capstone-auth-exchange:'.$request->ip();
@@ -95,11 +95,9 @@ class AuthBridgeController extends Controller
         ]);
     }
 
-    public function setActiveRole(Request $request)
+    public function setActiveRole(SetActiveRoleRequest $request)
     {
-        $validated = $request->validate([
-            'role' => ['required', 'string', 'in:admin,dosen,mahasiswa'],
-        ]);
+        $validated = $request->validated();
 
         $user = CapstoneActor::loadProfiles($request->user());
         $role = CapstoneActor::role($user, $validated['role']);

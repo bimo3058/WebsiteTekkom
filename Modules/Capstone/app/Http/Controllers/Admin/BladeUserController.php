@@ -5,6 +5,7 @@ namespace Modules\Capstone\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Modules\Capstone\Http\Requests\Admin\User\IndexUsersRequest;
 use Modules\Capstone\Support\CapstoneActor;
 
 /** Account management uses users.id; academic selectors keep their existing IDs. */
@@ -12,13 +13,9 @@ class BladeUserController extends Controller
 {
     private const ROLE_NAMES = ['admin_capstone', 'dosen', 'mahasiswa'];
 
-    public function index(Request $request)
+    public function index(IndexUsersRequest $request)
     {
-        $data = $request->validate([
-            'role' => 'nullable|in:admin,dosen,mahasiswa', 'search' => 'nullable|string|max:255',
-            'status' => 'nullable|in:active,suspended', 'sort_by' => 'nullable|in:name,email,created_at',
-            'sort_order' => 'nullable|in:asc,desc', 'per_page' => 'nullable|integer|min:1|max:100',
-        ]);
+        $data = $request->validated();
         $query = User::query()->with(['roles', 'student' => fn ($q) => $q->without('user'), 'lecturer' => fn ($q) => $q->without('user')]);
         if (! empty($data['role'])) {
             $names = $data['role'] === 'admin' ? ['admin_capstone', 'superadmin'] : [$data['role']];

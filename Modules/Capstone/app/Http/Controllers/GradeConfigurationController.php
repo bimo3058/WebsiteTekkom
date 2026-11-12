@@ -2,10 +2,15 @@
 
 namespace Modules\Capstone\Http\Controllers;
 
-use Modules\Capstone\Models\Period;
-use Modules\Capstone\Repositories\AssessmentScoreRepository;
+use App\Models\Student;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\Capstone\Http\Requests\Grade\UpdateWeightsRequest;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Models\Period;
+use Modules\Capstone\Services\GradeCalculationService;
+use Modules\Capstone\Support\CapstoneActor;
 
 class GradeConfigurationController extends Controller
 {
@@ -30,7 +35,7 @@ class GradeConfigurationController extends Controller
 
     protected $gradeCalculationService;
 
-    public function __construct(\Modules\Capstone\Services\GradeCalculationService $gradeCalculationService)
+    public function __construct(GradeCalculationService $gradeCalculationService)
     {
         $this->gradeCalculationService = $gradeCalculationService;
     }
@@ -89,23 +94,11 @@ class GradeConfigurationController extends Controller
     /**
      * Update grade weight configuration
      */
-    public function updateWeights(Request $request, int $periodId): JsonResponse
+    public function updateWeights(UpdateWeightsRequest $request, int $periodId): JsonResponse
     {
         $period = Period::findOrFail($periodId);
 
-        $validated = $request->validate([
-            'pdc1_weights' => 'nullable|array',
-            'pdc1_weights.SEMPRO' => 'nullable|numeric|min:0',
-            'pdc1_weights.BIMBINGAN_SEMPRO' => 'nullable|numeric|min:0',
-            'pdc2_weights' => 'nullable|array',
-            'pdc2_weights.NILAI_DOSEN' => 'nullable|numeric|min:0',
-            'pdc2_weights.MILESTONE' => 'nullable|numeric|min:0',
-            'pdc2_weights.EXPO' => 'nullable|numeric|min:0',
-            'pdc2_weights.PEER_REVIEW' => 'nullable|numeric|min:0',
-            'ta_weights' => 'nullable|array',
-            'ta_weights.BIMBINGAN_TA' => 'nullable|numeric|min:0',
-            'ta_weights.SIDANG_TA' => 'nullable|numeric|min:0',
-        ]);
+        $validated = $request->validated();
 
         $gradeConfig = $period->grade_configuration ?? [];
 
@@ -143,57 +136,7 @@ class GradeConfigurationController extends Controller
      */
     public function calculatePDC1Grade(Request $request, int $groupId): JsonResponse
     {
-        $group = \Modules\Capstone\Models\Group::with('period')->findOrFail($groupId);
-        $period = $group->period;
-
-        $weights = $period->grade_configuration['pdc1'] ?? self::DEFAULT_PDC1_WEIGHTS;
-
-        $grades = [];
-        $totalWeightedScore = 0;
-        $totalWeight = 0;
-
-        foreach ($weights as $type => $weight) {
-            // Check if type is supported by repository
-            if (AssessmentScoreRepository::isSupportedType($type)) {
-                $scores = AssessmentScoreRepository::getByGroupAndType($groupId, $type);
-            } else {
-                $scores = collect();
-            }
-
-            if ($scores->isEmpty()) {
-                $grades[$type] = [
-                    'status' => 'not_evaluated',
-                    'average_score' => null,
-                    'weight' => $weight,
-                    'weighted_score' => null,
-                ];
-
-                continue;
-            }
-
-            // Calculate average score for this evaluation type
-            $avgScore = $scores->avg('score');
-            $weightedScore = ($avgScore * $weight) / 100;
-
-            $grades[$type] = [
-                'status' => 'evaluated',
-                'average_score' => round($avgScore, 2),
-                'weight' => $weight,
-                'weighted_score' => round($weightedScore, 2),
-            ];
-
-            $totalWeightedScore += $weightedScore;
-            $totalWeight += $weight;
-        }
-
-        return $this->successResponse([
-            'group_id' => $groupId,
-            'group_name' => $group->code,
-            'period_id' => $period->id,
-            'pdc1_grades' => $grades,
-            'final_pdc1_score' => $totalWeight > 0 ? round($totalWeightedScore, 2) : null,
-            'total_weight' => $totalWeight,
-        ]);
+        return $this->phaseGrade($groupId, 'pdc1', self::DEFAULT_PDC1_WEIGHTS, 'pdc1_grades', 'final_pdc1_score');
     }
 
     /**
@@ -201,57 +144,23 @@ class GradeConfigurationController extends Controller
      */
     public function calculatePDC2Grade(Request $request, int $groupId): JsonResponse
     {
-        $group = \Modules\Capstone\Models\Group::with('period')->findOrFail($groupId);
+        return $this->phaseGrade($groupId, 'pdc2', self::DEFAULT_PDC2_WEIGHTS, 'pdc2_grades', 'final_pdc2_score');
+    }
+
+    private function phaseGrade(int $groupId, string $weightsKey, array $defaults, string $gradesKey, string $finalKey): JsonResponse
+    {
+        $group = Group::with('period')->findOrFail($groupId);
         $period = $group->period;
 
-        $weights = $period->grade_configuration['pdc2'] ?? self::DEFAULT_PDC2_WEIGHTS;
-
-        $grades = [];
-        $totalWeightedScore = 0;
-        $totalWeight = 0;
-
-        foreach ($weights as $type => $weight) {
-            // Check if type is supported by repository
-            if (AssessmentScoreRepository::isSupportedType($type)) {
-                $scores = AssessmentScoreRepository::getByGroupAndType($groupId, $type);
-            } else {
-                // PEER_REVIEW and other types not in split tables
-                $scores = collect();
-            }
-
-            if ($scores->isEmpty()) {
-                $grades[$type] = [
-                    'status' => 'not_evaluated',
-                    'average_score' => null,
-                    'weight' => $weight,
-                    'weighted_score' => null,
-                ];
-
-                continue;
-            }
-
-            // Calculate average score for this evaluation type
-            $avgScore = $scores->avg('score');
-            $weightedScore = ($avgScore * $weight) / 100;
-
-            $grades[$type] = [
-                'status' => 'evaluated',
-                'average_score' => round($avgScore, 2),
-                'weight' => $weight,
-                'weighted_score' => round($weightedScore, 2),
-            ];
-
-            $totalWeightedScore += $weightedScore;
-            $totalWeight += $weight;
-        }
+        $result = $this->gradeCalculationService->weightedGroupPhaseGrade($group, $weightsKey, $defaults);
 
         return $this->successResponse([
             'group_id' => $groupId,
             'group_name' => $group->code,
             'period_id' => $period->id,
-            'pdc2_grades' => $grades,
-            'final_pdc2_score' => $totalWeight > 0 ? round($totalWeightedScore, 2) : null,
-            'total_weight' => $totalWeight,
+            $gradesKey => $result['grades'],
+            $finalKey => $result['final'],
+            'total_weight' => $result['total_weight'],
         ]);
     }
 
@@ -311,10 +220,10 @@ class GradeConfigurationController extends Controller
      */
     public function calculateTAGrade(Request $request, int $studentId): JsonResponse
     {
-        $student = \App\Models\Student::findOrFail($studentId);
+        $student = Student::findOrFail($studentId);
 
         // Get student's group to access period
-        $groupMember = \Modules\Capstone\Models\GroupMember::with('group.period')
+        $groupMember = GroupMember::with('group.period')
             ->where('student_id', $studentId)
             ->first();
 
@@ -325,41 +234,12 @@ class GradeConfigurationController extends Controller
         $group = $groupMember->group;
         $period = $group->period;
 
-        $weights = $period->grade_configuration['ta'] ?? self::DEFAULT_TA_WEIGHTS;
-
-        $grades = [];
-        $totalWeightedScore = 0;
-        $totalWeight = 0;
-
-        foreach ($weights as $type => $weight) {
-            // TA uses per-student scores, not group scores
-            $scores = AssessmentScoreRepository::getByStudentAndType($studentId, $type);
-
-            if ($scores->isEmpty()) {
-                $grades[$type] = [
-                    'status' => 'not_evaluated',
-                    'average_score' => null,
-                    'weight' => $weight,
-                    'weighted_score' => null,
-                ];
-
-                continue;
-            }
-
-            // Calculate average score for this evaluation type
-            $avgScore = $scores->avg('score');
-            $weightedScore = ($avgScore * $weight) / 100;
-
-            $grades[$type] = [
-                'status' => 'evaluated',
-                'average_score' => round($avgScore, 2),
-                'weight' => $weight,
-                'weighted_score' => round($weightedScore, 2),
-            ];
-
-            $totalWeightedScore += $weightedScore;
-            $totalWeight += $weight;
-        }
+        $result = $this->gradeCalculationService->weightedStudentPhaseGrade(
+            $student->id,
+            $period,
+            'ta',
+            self::DEFAULT_TA_WEIGHTS
+        );
 
         return $this->successResponse([
             'student_id' => $studentId,
@@ -367,9 +247,9 @@ class GradeConfigurationController extends Controller
             'group_id' => $group->id,
             'group_name' => $group->code,
             'period_id' => $period->id,
-            'ta_grades' => $grades,
-            'final_ta_score' => $totalWeight > 0 ? round($totalWeightedScore, 2) : null,
-            'total_weight' => $totalWeight,
+            'ta_grades' => $result['grades'],
+            'final_ta_score' => $result['final'],
+            'total_weight' => $result['total_weight'],
         ]);
     }
 
@@ -379,10 +259,10 @@ class GradeConfigurationController extends Controller
     public function getMyGrades(Request $request): JsonResponse
     {
         $user = $request->user();
-        $student = \Modules\Capstone\Support\CapstoneActor::student($user);
+        $student = CapstoneActor::student($user);
 
         // Get student's group
-        $groupMember = \Modules\Capstone\Models\GroupMember::with('group.period')
+        $groupMember = GroupMember::with('group.period')
             ->where('student_id', $student->id)
             ->whereHas('group', fn ($query) => $query->whereNotIn('status', ['CLOSED', 'DISSOLVED']))
             ->first();
@@ -436,10 +316,10 @@ class GradeConfigurationController extends Controller
      */
     public function getStudentGrades(Request $request, int $studentId): JsonResponse
     {
-        $student = \App\Models\Student::findOrFail($studentId);
+        $student = Student::findOrFail($studentId);
 
         // Get student's group
-        $groupMember = \Modules\Capstone\Models\GroupMember::with('group.period')
+        $groupMember = GroupMember::with('group.period')
             ->where('student_id', $studentId)
             ->first();
 

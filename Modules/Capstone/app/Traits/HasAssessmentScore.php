@@ -2,13 +2,20 @@
 
 namespace Modules\Capstone\Traits;
 
+use App\Models\Lecturer;
+use App\Models\Student;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\Capstone\Models\AssessmentComponent;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\PeriodAssessmentComponent;
 
 /**
  * HasAssessmentScore Trait
  *
  * Provides common functionality for assessment score models.
- * Used by: BimbinganSemproScore, BimbinganTaScore, ExpoScore, MilestoneScore, NilaiDosenScore
+ * Used by: BimbinganSemproScore, BimbinganTaScore, ExpoScore, MilestoneScore, NilaiDosenScore, SemproScore, SidangTaScore.
+ * SemproScore and SidangTaScore store the evaluator in `examiner_id` and override
+ * evaluator(), scopeByEvaluator(), isByEvaluator() and getEvaluatorAttribute().
  *
  * Note: Models using this trait must define their own $fillable property.
  * Do NOT define $fillable or $casts in this trait.
@@ -20,7 +27,7 @@ trait HasAssessmentScore
      */
     public function component(): BelongsTo
     {
-        return $this->belongsTo(\Modules\Capstone\Models\AssessmentComponent::class, 'component_id');
+        return $this->belongsTo(AssessmentComponent::class, 'component_id');
     }
 
     /**
@@ -28,7 +35,7 @@ trait HasAssessmentScore
      */
     public function periodComponent(): BelongsTo
     {
-        return $this->belongsTo(\Modules\Capstone\Models\PeriodAssessmentComponent::class, 'period_component_id');
+        return $this->belongsTo(PeriodAssessmentComponent::class, 'period_component_id');
     }
 
     /**
@@ -60,7 +67,7 @@ trait HasAssessmentScore
      */
     public function evaluator(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Lecturer::class, 'evaluator_id');
+        return $this->belongsTo(Lecturer::class, 'evaluator_id');
     }
 
     /**
@@ -68,7 +75,7 @@ trait HasAssessmentScore
      */
     public function group(): BelongsTo
     {
-        return $this->belongsTo(\Modules\Capstone\Models\Group::class);
+        return $this->belongsTo(Group::class);
     }
 
     /**
@@ -76,7 +83,7 @@ trait HasAssessmentScore
      */
     public function student(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Student::class, 'student_id');
+        return $this->belongsTo(Student::class, 'student_id');
     }
 
     /**

@@ -1,14 +1,16 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
-use Modules\Capstone\Models\AssessmentScore;
+use App\Http\Controllers\Controller;
+use Modules\Capstone\Http\Requests\Assessment\ScoreFormRequest;
+use Modules\Capstone\Http\Requests\Assessment\ScoreSummaryRequest;
+use Modules\Capstone\Http\Requests\Assessment\StoreScoresRequest;
 use Modules\Capstone\Models\AssessmentComponent;
+use Modules\Capstone\Models\AssessmentScore;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Support\CapstoneActor;
-use Illuminate\Http\Request;
 
 class AssessmentScoreController extends Controller
 {
@@ -16,12 +18,8 @@ class AssessmentScoreController extends Controller
      * Get the assessment form: components + any existing scores for a group.
      * Used by Dosen to fill evaluations.
      */
-    public function index(Request $request)
+    public function index(ScoreFormRequest $request)
     {
-        $request->validate([
-            'group_id' => 'required|exists:capstone_groups,id',
-            'type' => 'required|string|in:SEMPRO,SIDANG_TA,EXPO,BIMBINGAN',
-        ]);
 
         $lecturerId = CapstoneActor::lecturer($request->user())->id;
         $group = Group::with('members.student', 'period')->findOrFail($request->group_id);
@@ -39,7 +37,7 @@ class AssessmentScoreController extends Controller
             ->where('evaluation_type', $request->type)
             ->get()
             ->keyBy(function ($score) {
-                return $score->component_id . '_' . $score->student_id;
+                return $score->component_id.'_'.$score->student_id;
             });
 
         return response()->json([
@@ -52,17 +50,8 @@ class AssessmentScoreController extends Controller
     /**
      * Submit batch scores for a group.
      */
-    public function store(Request $request)
+    public function store(StoreScoresRequest $request)
     {
-        $request->validate([
-            'group_id' => 'required|exists:capstone_groups,id',
-            'evaluation_type' => 'required|string|in:SEMPRO,SIDANG_TA,EXPO,BIMBINGAN',
-            'scores' => 'required|array|min:1',
-            'scores.*.component_id' => 'required|exists:capstone_assessment_components,id',
-            'scores.*.student_id' => 'nullable|exists:students,id',
-            'scores.*.score' => 'required|numeric|min:0|max:100',
-            'scores.*.notes' => 'nullable|string',
-        ]);
 
         $lecturerId = CapstoneActor::lecturer($request->user())->id;
         $group = Group::findOrFail($request->group_id);
@@ -110,15 +99,10 @@ class AssessmentScoreController extends Controller
     /**
      * Admin summary: aggregated scores per group/student for a period.
      */
-    public function summary(Request $request)
+    public function summary(ScoreSummaryRequest $request)
     {
-        $request->validate([
-            'period_id' => 'required|exists:capstone_periods,id',
-            'type' => 'required|string|in:SEMPRO,SIDANG_TA,EXPO,BIMBINGAN',
-        ]);
-
         $scores = AssessmentScore::with(['component', 'evaluator', 'student', 'group'])
-            ->whereHas('group', fn($q) => $q->where('period_id', $request->period_id))
+            ->whereHas('group', fn ($q) => $q->where('period_id', $request->period_id))
             ->where('evaluation_type', $request->type)
             ->get();
 

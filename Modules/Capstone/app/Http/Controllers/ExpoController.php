@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Lecturer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Http\Requests\Expo\RejectExpoRequest;
 use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\SeminarSchedule;
@@ -110,9 +111,9 @@ class ExpoController extends Controller
     /**
      * Reject a student-submitted EXPO schedule request (admin).
      */
-    public function reject(Request $request, $id)
+    public function reject(RejectExpoRequest $request, $id)
     {
-        $request->validate(['rejection_reason' => 'required|string|max:1000']);
+        $request->validated();
 
         $schedule = SeminarSchedule::where('id', $id)
             ->where('type', 'EXPO')

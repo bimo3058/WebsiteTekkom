@@ -2,7 +2,8 @@
 
 namespace Modules\Capstone\Http\Controllers;
 
-use Illuminate\Http\Request;
+use Modules\Capstone\Http\Requests\Assessment\StoreIndicatorTemplateRequest;
+use Modules\Capstone\Http\Requests\Assessment\UpdateIndicatorTemplateRequest;
 use Modules\Capstone\Models\PeerReviewIndicatorTemplate;
 
 class PeerReviewIndicatorTemplateController extends Controller
@@ -24,15 +25,9 @@ class PeerReviewIndicatorTemplateController extends Controller
     /**
      * Create a new peer review indicator template.
      */
-    public function store(Request $request)
+    public function store(StoreIndicatorTemplateRequest $request)
     {
-        $data = $request->validate([
-            'code' => 'required|string|max:50|unique:capstone_peer_review_indicator_templates',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'weight' => 'required|numeric|min:0|max:100',
-            'sort_order' => 'nullable|integer',
-        ]);
+        $data = $request->validated();
 
         $data['created_by'] = $request->user()->id;
 
@@ -44,18 +39,11 @@ class PeerReviewIndicatorTemplateController extends Controller
     /**
      * Update a peer review indicator template.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateIndicatorTemplateRequest $request, $id)
     {
         $template = PeerReviewIndicatorTemplate::findOrFail($id);
 
-        $data = $request->validate([
-            'code' => 'sometimes|string|max:50|unique:capstone_peer_review_indicator_templates,code,'.$id,
-            'name' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'weight' => 'sometimes|numeric|min:0|max:100',
-            'sort_order' => 'nullable|integer',
-            'is_active' => 'sometimes|boolean',
-        ]);
+        $data = $request->validated();
 
         $template->update($data);
 

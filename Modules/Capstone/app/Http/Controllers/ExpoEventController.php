@@ -4,10 +4,15 @@ namespace Modules\Capstone\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Http\Requests\Expo\StoreExpoEventRequest;
+use Modules\Capstone\Http\Requests\Expo\UpdateExpoEventRequest;
 use Modules\Capstone\Models\ExpoEvent;
 use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Models\SeminarSchedule;
 use Modules\Capstone\Services\EofficeAvailabilityService;
 use Modules\Capstone\Services\ExpoService;
+use Modules\Capstone\Services\NotificationService;
 use Modules\Capstone\Support\CapstoneActor;
 use Modules\EOffice\Models\Ruangan;
 
@@ -52,19 +57,10 @@ class ExpoEventController extends Controller
         return response()->json($query->orderBy('date', 'desc')->get());
     }
 
-    public function store(Request $request)
+    public function store(StoreExpoEventRequest $request)
     {
         $this->normalizePeriodInput($request);
-        $validated = $request->validate([
-            'period_id' => 'nullable|exists:capstone_periods,id',
-            'name' => 'required|string|max:255',
-            'date' => 'required|date',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-            'eoffice_ruangan_id' => 'required|integer|exists:eo_mr_ruangans,id',
-            'capacity' => 'required|integer|min:1|max:200',
-            'is_published' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         // Rooms come from EOffice only; `room` is a display snapshot.
         $ruangan = Ruangan::findOrFail($validated['eoffice_ruangan_id']);
@@ -94,18 +90,10 @@ class ExpoEventController extends Controller
         );
     }
 
-    public function update(Request $request, ExpoEvent $expoEvent)
+    public function update(UpdateExpoEventRequest $request, ExpoEvent $expoEvent)
     {
         $this->normalizePeriodInput($request);
-        $validated = $request->validate([
-            'period_id' => 'sometimes|nullable|exists:capstone_periods,id',
-            'name' => 'sometimes|string|max:255',
-            'date' => 'sometimes|date',
-            'start_time' => 'sometimes|date_format:H:i',
-            'end_time' => 'sometimes|date_format:H:i',
-            'eoffice_ruangan_id' => 'sometimes|integer|exists:eo_mr_ruangans,id',
-            'capacity' => 'sometimes|integer|min:1|max:200',
-        ]);
+        $validated = $request->validated();
 
         unset($validated['room']);
         if (array_key_exists('period_id', $validated) && empty($validated['period_id'])) {
@@ -129,8 +117,10 @@ class ExpoEventController extends Controller
         }
 
         $expoEvent->update($validated);
+        $fresh = $expoEvent->fresh();
+        $this->migrateChildSchedules($fresh);
 
-        return response()->json($expoEvent->fresh()->load(['period', 'creator']));
+        return response()->json($fresh->load(['period', 'creator']));
     }
 
     public function destroy(ExpoEvent $expoEvent)
@@ -229,5 +219,67 @@ class ExpoEventController extends Controller
         } catch (\InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 400);
         }
+    }
+
+    /**
+     * Migrate active child EXPO schedules to the event's latest slot.
+     * Frozen statuses (COMPLETED/CANCELLED/REJECTED) are never touched;
+     * SeminarScheduleObserver re-syncs EOffice on each update. Fail-open:
+     * notification failures must not roll back the date change.
+     */
+    private function migrateChildSchedules(ExpoEvent $event): void
+    {
+        $groupIds = $event->registrations()->where('status', 'REGISTERED')->pluck('group_id')->all();
+        if ($groupIds === []) {
+            return;
+        }
+
+        $date = $event->date instanceof \DateTimeInterface ? $event->date->format('Y-m-d') : (string) $event->date;
+        $payload = array_filter([
+            'date' => $date,
+            'start_time' => $event->start_time,
+            'end_time' => $event->end_time,
+            'room' => $event->room,
+        ], fn ($v) => $v !== null && $v !== '');
+
+        if ($payload === []) {
+            return;
+        }
+
+        DB::transaction(function () use ($groupIds, $payload) {
+            $schedules = SeminarSchedule::whereIn('group_id', $groupIds)
+                ->where('type', 'EXPO')
+                ->whereNotIn('status', ['COMPLETED', 'CANCELLED', 'REJECTED'])
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($schedules as $schedule) {
+                $schedule->update($payload);
+            }
+        });
+
+        try {
+            $this->notifyScheduleMigration($event, $groupIds, $date);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    private function notifyScheduleMigration(ExpoEvent $event, array $groupIds, string $date): void
+    {
+        $members = GroupMember::whereIn('group_id', $groupIds)->with('student')->get();
+        $userIds = $members->map(fn ($m) => $m->student?->user_id)->filter()->unique()->values()->all();
+        if ($userIds === []) {
+            return;
+        }
+
+        app(NotificationService::class)->sendToMany(
+            $userIds,
+            'EXPO_RESCHEDULED',
+            'Jadwal EXPO Diperbarui',
+            "Jadwal EXPO {$event->name} dipindah ke {$date} pukul {$event->start_time}. Kelompok Anda ikut termigrasi otomatis.",
+            'ExpoEvent',
+            $event->id
+        );
     }
 }

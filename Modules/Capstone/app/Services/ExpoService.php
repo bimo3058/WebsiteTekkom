@@ -10,7 +10,9 @@ use Modules\Capstone\Models\ExpoRegistration;
 use Modules\Capstone\Models\ExpoSelfEvaluation;
 use Modules\Capstone\Models\ExpoStudentDocument;
 use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\PeerReview;
 use Modules\Capstone\Models\SeminarSchedule;
+use Modules\Capstone\Models\StudentPeerReviewStatus;
 
 class ExpoService
 {
@@ -121,6 +123,10 @@ class ExpoService
             if (ExpoSelfEvaluation::where('expo_registration_id', $registration->id)->exists()
                 || ExpoStudentDocument::where('expo_registration_id', $registration->id)->exists()) {
                 throw new InvalidArgumentException('Withdrawal is locked after an evaluation or document has been submitted.');
+            }
+            if (PeerReview::where('group_id', $group->id)->exists()
+                || StudentPeerReviewStatus::where('group_id', $group->id)->where('has_completed_peer_review', true)->exists()) {
+                throw new InvalidArgumentException('Withdrawal is locked after peer review has been submitted.');
             }
             $registration->update(['status' => 'WITHDRAWN']);
             SeminarSchedule::where('group_id', $group->id)->where('type', 'EXPO')->update(['status' => 'CANCELLED']);

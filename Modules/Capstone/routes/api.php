@@ -48,7 +48,9 @@ use Modules\Capstone\Http\Controllers\SemproController;
 use Modules\Capstone\Http\Controllers\SoloTitleController;
 use Modules\Capstone\Http\Controllers\StudentProposalController;
 use Modules\Capstone\Http\Controllers\StudentStateController;
+use Modules\Capstone\Http\Controllers\SupervisorEvaluationAdminController;
 use Modules\Capstone\Http\Controllers\SupervisorEvaluationController;
+use Modules\Capstone\Http\Controllers\SupervisorScheduleController;
 use Modules\Capstone\Http\Controllers\TaDefenseController;
 use Modules\Capstone\Http\Controllers\TaDefenseScheduleController;
 use Modules\Capstone\Http\Controllers\TaRegistrationController;
@@ -201,9 +203,9 @@ Route::prefix('capstone')->group(function () {
             Route::delete('/assessment-components/{id}', [AssessmentComponentController::class, 'destroy']);
 
             Route::get('/assessment-scores/summary', [AssessmentScoreController::class, 'summary']);
-            Route::get('/supervisor-evaluation/schedules/{scheduleId}/summary', [SupervisorEvaluationController::class, 'adminScheduleSummary']);
-            Route::get('/supervisor-evaluation/schedules/{scheduleId}/export', [SupervisorEvaluationController::class, 'exportScheduleSummary']);
-            Route::get('/supervisor-evaluation/schedules/{scheduleId}/grades', [SupervisorEvaluationController::class, 'getGradesForSchedule']);
+            Route::get('/supervisor-evaluation/schedules/{scheduleId}/summary', [SupervisorEvaluationAdminController::class, 'adminScheduleSummary']);
+            Route::get('/supervisor-evaluation/schedules/{scheduleId}/export', [SupervisorEvaluationAdminController::class, 'exportScheduleSummary']);
+            Route::get('/supervisor-evaluation/schedules/{scheduleId}/grades', [SupervisorEvaluationAdminController::class, 'getGradesForSchedule']);
 
             // Peer Review
             Route::get('/peer-review/indicators', [PeerReviewController::class, 'indicators']);
@@ -333,9 +335,9 @@ Route::prefix('capstone')->group(function () {
             // Digital signatures (own)
             Route::get('/digital-signatures', [DigitalSignatureController::class, 'mySignatures']);
             Route::get('/ta-defense-schedules/examiner', [TaDefenseScheduleController::class, 'examinerSchedules']);
-            Route::get('/supervisor-evaluation/groups', [SupervisorEvaluationController::class, 'groups']);
-            Route::get('/supervisor-evaluation/schedules', [SupervisorEvaluationController::class, 'schedules']);
-            Route::get('/supervisor-evaluation/pending-count', [SupervisorEvaluationController::class, 'pendingCount']);
+            Route::get('/supervisor-evaluation/groups', [SupervisorScheduleController::class, 'groups']);
+            Route::get('/supervisor-evaluation/schedules', [SupervisorScheduleController::class, 'schedules']);
+            Route::get('/supervisor-evaluation/pending-count', [SupervisorScheduleController::class, 'pendingCount']);
             Route::get('/supervisor-evaluation/form/{groupId}', [SupervisorEvaluationController::class, 'form']);
             Route::post('/supervisor-evaluation', [SupervisorEvaluationController::class, 'store']);
             // Group-level EXPO submission review (approve/reject per group)

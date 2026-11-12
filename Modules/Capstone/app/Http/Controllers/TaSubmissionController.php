@@ -1,16 +1,18 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Http\Requests\TaSubmission\ReviewTaSubmissionRequest;
+use Modules\Capstone\Http\Requests\TaSubmission\TaSubmissionFileRequest;
 use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\TaSubmission;
 use Modules\Capstone\Services\GroupStateMachine;
 use Modules\Capstone\Support\CapstoneActor;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class TaSubmissionController extends Controller
 {
@@ -39,80 +41,76 @@ class TaSubmissionController extends Controller
     /**
      * Upload TA draft (student).
      */
-    public function upload(Request $request)
+    public function upload(TaSubmissionFileRequest $request)
     {
-        $request->validate([
-            'file_path' => 'required|string',
-        ]);
+        $request->validated();
 
         $user = $request->user();
         $studentId = CapstoneActor::student($user)->id;
 
         // Find student's group
         $membership = GroupMember::where('student_id', $studentId)->first();
-        if (!$membership) {
+        if (! $membership) {
             return response()->json(['message' => 'You are not in a group.'], 400);
         }
 
         return DB::transaction(function () use ($request, $studentId, $membership) {
-        $group = Group::whereKey($membership->group_id)->lockForUpdate()->firstOrFail();
+            $group = Group::whereKey($membership->group_id)->lockForUpdate()->firstOrFail();
 
-        // Gate: group must be at least PDC2_ACTIVE
-        if (!$this->stateMachine->isAtLeast($group, 'PDC2_ACTIVE')) {
-            return response()->json(['message' => 'Group must be at least in PDC2_ACTIVE status.'], 400);
-        }
+            // Gate: group must be at least PDC2_ACTIVE
+            if (! $this->stateMachine->isAtLeast($group, 'PDC2_ACTIVE')) {
+                return response()->json(['message' => 'Group must be at least in PDC2_ACTIVE status.'], 400);
+            }
 
-        // Create or update TA submission
-        $existing = TaSubmission::where('student_id', $studentId)->where('group_id', $group->id)->first();
-        if ($existing && ! in_array($existing->status, ['TA_LOCKED','TA_DRAFT','TA_REVISED'], true)) {
-            return response()->json(['message'=>'TA submission is under review or already approved.'], 403);
-        }
-        $submission = TaSubmission::updateOrCreate(
-            ['student_id' => $studentId, 'group_id' => $group->id],
-            [
-                'status' => 'TA_DRAFT',
-                'file_path' => $request->file_path,
-                'feedback' => null,
-            ]
-        );
+            // Create or update TA submission
+            $existing = TaSubmission::where('student_id', $studentId)->where('group_id', $group->id)->first();
+            if ($existing && ! in_array($existing->status, ['TA_LOCKED', 'TA_DRAFT', 'TA_REVISED'], true)) {
+                return response()->json(['message' => 'TA submission is under review or already approved.'], 403);
+            }
+            $submission = TaSubmission::updateOrCreate(
+                ['student_id' => $studentId, 'group_id' => $group->id],
+                [
+                    'status' => 'TA_DRAFT',
+                    'file_path' => $request->file_path,
+                    'feedback' => null,
+                ]
+            );
 
-        return response()->json([
-            'message' => 'TA draft uploaded.',
-            'data' => $submission,
-        ]);
+            return response()->json([
+                'message' => 'TA draft uploaded.',
+                'data' => $submission,
+            ]);
         });
     }
 
     /**
      * Submit a revision (student).
      */
-    public function revise(Request $request)
+    public function revise(TaSubmissionFileRequest $request)
     {
-        $request->validate([
-            'file_path' => 'required|string',
-        ]);
+        $request->validated();
 
         $user = $request->user();
         $studentId = CapstoneActor::student($user)->id;
 
         return DB::transaction(function () use ($request, $studentId) {
-        $initial = TaSubmission::where('student_id', $studentId)->firstOrFail();
-        Group::whereKey($initial->group_id)->lockForUpdate()->firstOrFail();
-        $submission = TaSubmission::whereKey($initial->id)->lockForUpdate()->firstOrFail();
+            $initial = TaSubmission::where('student_id', $studentId)->firstOrFail();
+            Group::whereKey($initial->group_id)->lockForUpdate()->firstOrFail();
+            $submission = TaSubmission::whereKey($initial->id)->lockForUpdate()->firstOrFail();
 
-        if (! in_array($submission->status, ['TA_DRAFT','TA_REVISED'], true)) {
-            return response()->json(['message'=>'Approved or scheduled TA submissions cannot be replaced.'], 403);
-        }
-        $submission->update([
-            'status' => 'TA_REVISED',
-            'file_path' => $request->file_path,
-            'feedback' => null,
-        ]);
+            if (! in_array($submission->status, ['TA_DRAFT', 'TA_REVISED'], true)) {
+                return response()->json(['message' => 'Approved or scheduled TA submissions cannot be replaced.'], 403);
+            }
+            $submission->update([
+                'status' => 'TA_REVISED',
+                'file_path' => $request->file_path,
+                'feedback' => null,
+            ]);
 
-        return response()->json([
-            'message' => 'TA revision submitted.',
-            'data' => $submission->fresh(),
-        ]);
+            return response()->json([
+                'message' => 'TA revision submitted.',
+                'data' => $submission->fresh(),
+            ]);
         });
     }
 
@@ -148,12 +146,9 @@ class TaSubmissionController extends Controller
     /**
      * Review TA submission (dosen).
      */
-    public function review(Request $request, $id)
+    public function review(ReviewTaSubmissionRequest $request, $id)
     {
-        $request->validate([
-            'result' => 'required|in:APPROVE,REVISE',
-            'feedback' => 'nullable|string',
-        ]);
+        $request->validated();
 
         $user = $request->user();
         $lecturerId = CapstoneActor::lecturer($user)->id;

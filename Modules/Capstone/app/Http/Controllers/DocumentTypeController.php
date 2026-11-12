@@ -1,10 +1,11 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
+use Modules\Capstone\Http\Requests\Document\StoreDocumentTypeRequest;
+use Modules\Capstone\Http\Requests\Document\UpdateDocumentTypeRequest;
 use Modules\Capstone\Models\DocumentType;
-use Illuminate\Http\Request;
 
 class DocumentTypeController extends Controller
 {
@@ -13,14 +14,9 @@ class DocumentTypeController extends Controller
         return response()->json(DocumentType::orderBy('name')->get());
     }
 
-    public function store(Request $request)
+    public function store(StoreDocumentTypeRequest $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'phase' => 'nullable|string|in:PDC1,SEMPRO,PDC2,TA,EXPO,SIDANG',
-            'is_active' => 'boolean',
-        ]);
+        $data = $request->validated();
 
         $type = DocumentType::create($data);
 
@@ -32,16 +28,11 @@ class DocumentTypeController extends Controller
         return response()->json(DocumentType::findOrFail($id));
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateDocumentTypeRequest $request, $id)
     {
         $type = DocumentType::findOrFail($id);
 
-        $data = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'phase' => 'nullable|string|in:PDC1,SEMPRO,PDC2,TA,EXPO,SIDANG',
-            'is_active' => 'boolean',
-        ]);
+        $data = $request->validated();
 
         $type->update($data);
 

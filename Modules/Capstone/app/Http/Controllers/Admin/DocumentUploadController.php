@@ -4,12 +4,12 @@ namespace Modules\Capstone\Http\Controllers\Admin;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\Capstone\Documents\DocumentQueries;
 use Modules\Capstone\Http\Controllers\ApiResponseTrait;
 use Modules\Capstone\Http\Controllers\Controller;
 use Modules\Capstone\Models\Document;
 use Modules\Capstone\Models\ExpoStudentDocument;
 use Modules\Capstone\Models\Group;
-use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\TaSubmission;
 use Modules\Capstone\Services\DocumentStorageService;
 
@@ -17,12 +17,10 @@ class DocumentUploadController extends Controller
 {
     use ApiResponseTrait;
 
-    protected DocumentStorageService $documentStorage;
-
-    public function __construct(DocumentStorageService $documentStorage)
-    {
-        $this->documentStorage = $documentStorage;
-    }
+    public function __construct(
+        protected DocumentStorageService $documentStorage,
+        protected DocumentQueries $queries,
+    ) {}
 
     /**
      * Get all uploaded documents grouped by group with filters and pagination.
@@ -37,15 +35,15 @@ class DocumentUploadController extends Controller
         $sourceFilter = $request->input('source');
 
         if (! $sourceFilter || $sourceFilter === 'phase_documents') {
-            $documents = $documents->merge($this->getPhaseDocuments($request));
+            $documents = $documents->merge($this->queries->getPhaseDocuments($request));
         }
 
         if (! $sourceFilter || $sourceFilter === 'expo_documents') {
-            $documents = $documents->merge($this->getExpoDocuments($request));
+            $documents = $documents->merge($this->queries->getExpoDocuments($request));
         }
 
         if (! $sourceFilter || $sourceFilter === 'ta_documents') {
-            $documents = $documents->merge($this->getTaDocuments($request));
+            $documents = $documents->merge($this->queries->getTaDocuments($request));
         }
 
         $documents = $documents->sortByDesc('uploaded_at')->values();
@@ -53,7 +51,7 @@ class DocumentUploadController extends Controller
         // Group documents by group_id
         $grouped = $documents->groupBy('group.id')->map(function ($docs, $groupId) {
             $firstDoc = $docs->first();
-            $members = $this->getGroupMembers((int) $groupId);
+            $members = $this->queries->getGroupMembers((int) $groupId);
 
             $phaseCount = $docs->where('source', 'phase_documents')->count();
             $expoCount = $docs->where('source', 'expo_documents')->count();
@@ -183,7 +181,7 @@ class DocumentUploadController extends Controller
                 $document = Document::with(['group', 'student'])->find($id);
                 if ($document) {
                     $filePath = $document->file_path;
-                    $originalName = basename($filePath);
+                    $originalName = $this->prefixedName($document->document_type, $document->original_name ?? basename($filePath));
                 }
                 break;
 
@@ -191,7 +189,7 @@ class DocumentUploadController extends Controller
                 $document = ExpoStudentDocument::with(['group', 'student', 'expoRegistration'])->find($id);
                 if ($document) {
                     $filePath = $document->file_path;
-                    $originalName = $document->original_name ?? basename($filePath);
+                    $originalName = $this->prefixedName('Expo Document', $document->original_name ?? basename($filePath));
                 }
                 break;
 
@@ -221,250 +219,15 @@ class DocumentUploadController extends Controller
         ]);
     }
 
-    /**
-     * Get members for a group.
-     */
-    private function getGroupMembers(int $groupId): array
+    private function prefixedName(?string $type, string $base): string
     {
-        return GroupMember::with(['student'])
-            ->where('group_id', $groupId)
-            ->whereNull('deleted_at')
-            ->get()
-            ->map(fn (GroupMember $member) => [
-                'id' => $member->student->id ?? null,
-                'name' => $member->student->name ?? 'Unknown',
-                'nim' => $member->student->nim ?? null,
-                'email' => $member->student->email ?? null,
-                'is_leader' => $member->is_leader,
-            ])
-            ->toArray();
-    }
+        $base = str_replace(['"', "\r", "\n"], '', $base);
+        $prefix = $type ? preg_replace('/[^A-Za-z0-9\-]+/', '', (string) $type) : '';
 
-    /**
-     * Get phase documents with filters.
-     */
-    private function getPhaseDocuments(Request $request): array
-    {
-        $query = Document::with(['student', 'group.period', 'reviewer']);
-
-        if ($request->filled('period_id')) {
-            $query->whereHas('group', fn ($q) => $q->where('period_id', $request->input('period_id')));
+        if ($prefix !== '' && ! str_starts_with($base, $prefix.'_') && ! str_starts_with($base, $prefix.'-')) {
+            return $prefix.'_'.$base;
         }
 
-        if ($request->filled('group_id')) {
-            $query->where('group_id', $request->input('group_id'));
-        }
-
-        if ($request->filled('student_id')) {
-            $query->where('student_id', $request->input('student_id'));
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->input('date_from'));
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->input('date_to'));
-        }
-
-        return $query->get()->map(function ($doc) {
-            return [
-                'id' => $doc->id,
-                'source' => 'phase_documents',
-                'source_label' => 'Phase Documents',
-                'file_path' => $doc->file_path,
-                'original_name' => basename($doc->file_path),
-                'document_type' => $doc->document_type ?? $doc->phase,
-                'phase' => $doc->phase,
-                'status' => $doc->status,
-                'feedback' => $doc->feedback,
-                'uploaded_at' => $doc->created_at->toIso8601String(),
-                'student' => $doc->student ? [
-                    'id' => $doc->student->id,
-                    'name' => $doc->student->name,
-                    'nim' => $doc->student->nim ?? null,
-                    'email' => $doc->student->email,
-                ] : null,
-                'group' => $doc->group ? [
-                    'id' => $doc->group->id,
-                    'code' => $doc->group->code,
-                ] : null,
-                'period' => $doc->group?->period ? [
-                    'id' => $doc->group->period->id,
-                    'name' => $doc->group->period->name,
-                ] : null,
-                'reviewer' => $doc->reviewer ? [
-                    'id' => $doc->reviewer->id,
-                    'name' => $doc->reviewer->name,
-                ] : null,
-            ];
-        })->toArray();
-    }
-
-    /**
-     * Get expo documents with filters.
-     */
-    private function getExpoDocuments(Request $request): array
-    {
-        $query = ExpoStudentDocument::with(['student', 'group.period', 'expoRegistration.expoEvent', 'reviewer']);
-
-        if ($request->filled('period_id')) {
-            $query->whereHas('group', fn ($q) => $q->where('period_id', $request->input('period_id')));
-        }
-
-        if ($request->filled('group_id')) {
-            $query->where('group_id', $request->input('group_id'));
-        }
-
-        if ($request->filled('student_id')) {
-            $query->where('student_id', $request->input('student_id'));
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->input('date_from'));
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->input('date_to'));
-        }
-
-        return $query->get()->map(function ($doc) {
-            return [
-                'id' => $doc->id,
-                'source' => 'expo_documents',
-                'source_label' => 'Expo Documents',
-                'file_path' => $doc->file_path,
-                'original_name' => $doc->original_name,
-                'document_type' => 'Expo Document',
-                'phase' => 'EXPO',
-                'status' => $doc->status,
-                'feedback' => $doc->feedback,
-                'uploaded_at' => $doc->created_at->toIso8601String(),
-                'student' => $doc->student ? [
-                    'id' => $doc->student->id,
-                    'name' => $doc->student->name,
-                    'nim' => $doc->student->nim ?? null,
-                    'email' => $doc->student->email,
-                ] : null,
-                'group' => $doc->group ? [
-                    'id' => $doc->group->id,
-                    'code' => $doc->group->code,
-                ] : null,
-                'period' => $doc->group?->period ? [
-                    'id' => $doc->group->period->id,
-                    'name' => $doc->group->period->name,
-                ] : null,
-                'expo_event' => $doc->expoRegistration?->expoEvent ? [
-                    'id' => $doc->expoRegistration->expoEvent->id,
-                    'name' => $doc->expoRegistration->expoEvent->name,
-                ] : null,
-                'reviewer' => $doc->reviewer ? [
-                    'id' => $doc->reviewer->id,
-                    'name' => $doc->reviewer->name,
-                ] : null,
-            ];
-        })->toArray();
-    }
-
-    /**
-     * Get TA documents with filters.
-     */
-    private function getTaDocuments(Request $request): array
-    {
-        $query = TaSubmission::with(['student', 'group.period', 'reviewer']);
-
-        if ($request->filled('period_id')) {
-            $query->whereHas('group', fn ($q) => $q->where('period_id', $request->input('period_id')));
-        }
-
-        if ($request->filled('group_id')) {
-            $query->where('group_id', $request->input('group_id'));
-        }
-
-        if ($request->filled('student_id')) {
-            $query->where('student_id', $request->input('student_id'));
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->input('date_from'));
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->input('date_to'));
-        }
-
-        $query->where(function ($q) {
-            $q->whereNotNull('file_path')
-                ->orWhereNotNull('draft_report_path')
-                ->orWhereNotNull('paper_path');
-        });
-
-        $documents = [];
-        $submissions = $query->get();
-
-        foreach ($submissions as $submission) {
-            if ($submission->file_path) {
-                $documents[] = $this->formatTaDocument($submission, 'file_path', 'TA File');
-            }
-            if ($submission->draft_report_path) {
-                $documents[] = $this->formatTaDocument($submission, 'draft_report_path', 'Draft Report');
-            }
-            if ($submission->paper_path) {
-                $documents[] = $this->formatTaDocument($submission, 'paper_path', 'Paper');
-            }
-        }
-
-        return $documents;
-    }
-
-    /**
-     * Format TA submission as document.
-     */
-    private function formatTaDocument(TaSubmission $submission, string $field, string $documentType): array
-    {
-        $filePath = $submission->{$field};
-
-        return [
-            'id' => $submission->id,
-            'source' => 'ta_documents',
-            'source_label' => 'TA Documents',
-            'file_path' => $filePath,
-            'original_name' => basename($filePath),
-            'document_type' => $documentType,
-            'phase' => 'TA',
-            'status' => $submission->status,
-            'feedback' => $submission->feedback,
-            'uploaded_at' => $submission->created_at->toIso8601String(),
-            'student' => $submission->student ? [
-                'id' => $submission->student->id,
-                'name' => $submission->student->name,
-                'nim' => $submission->student->nim ?? null,
-                'email' => $submission->student->email,
-            ] : null,
-            'group' => $submission->group ? [
-                'id' => $submission->group->id,
-                'code' => $submission->group->code,
-            ] : null,
-            'period' => $submission->group?->period ? [
-                'id' => $submission->group->period->id,
-                'name' => $submission->group->period->name,
-            ] : null,
-            'reviewer' => $submission->reviewer ? [
-                'id' => $submission->reviewer->id,
-                'name' => $submission->reviewer->name,
-            ] : null,
-        ];
+        return $base;
     }
 }

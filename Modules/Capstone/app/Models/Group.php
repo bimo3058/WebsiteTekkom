@@ -6,6 +6,7 @@ use App\Models\Lecturer;
 use App\Models\Student;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Capstone\Services\GroupStateMachine;
 
 class Group extends Model
 {
@@ -194,6 +195,93 @@ class Group extends Model
     public function activeMembers()
     {
         return $this->hasMany(GroupMember::class);
+    }
+
+    public function isReadyForBidding(): bool
+    {
+        return $this->status === 'READY_FOR_BIDDING';
+    }
+
+    /**
+     * @return array{critical: array<int, string>}
+     */
+    public function getReadinessIssues(): array
+    {
+        $issues = [];
+        $attrs = $this->getAttributes();
+        $period = $this->relationLoaded('period') ? $this->period : $this->period()->first();
+        $periodAttrs = $period ? $period->getAttributes() : [];
+        $mode = $attrs['group_mode'] ?? null;
+        $min = $mode === 'INDIVIDUAL' ? 1 : (int) ($periodAttrs['min_group_size'] ?? 3);
+        $max = (int) ($periodAttrs['max_group_size'] ?? 4);
+        $count = $this->members()->count();
+
+        if ($count < $min || $count > $max) {
+            $issues[] = "Anggota kelompok harus {$min}–{$max} orang (saat ini: {$count}).";
+        }
+
+        $titleId = $attrs['title_id'] ?? null;
+
+        if (! $titleId && ! $this->bids()->where('status', '!=', 'REJECTED')->exists()) {
+            $issues[] = 'Judul belum ada: ajukan via Bursa Ide atau bidding judul dosen.';
+        }
+
+        $supervisor1Id = $attrs['supervisor_1_id'] ?? null;
+
+        if (! $supervisor1Id && ! $this->supervisions()->where('role', 'SUPERVISOR_1')->exists()) {
+            $issues[] = 'Pembimbing 1 belum ditetapkan.';
+        }
+
+        return ['critical' => $issues];
+    }
+
+    public function determineStatus(): string
+    {
+        if (GroupStateMachine::isLifecycleSticky($this->status)) {
+            return $this->status;
+        }
+
+        if ($this->status === 'FORMING_SOLO') {
+            $title = $this->relationLoaded('title') ? $this->title : $this->title()->first();
+            $source = $title ? ($title->getAttributes()['title_source'] ?? null) : null;
+            if ($source === 'STUDENT') {
+                return 'FORMING_SOLO';
+            }
+        }
+
+        $attrs = $this->getAttributes();
+        $period = $this->relationLoaded('period') ? $this->period : $this->period()->first();
+        $periodAttrs = $period ? $period->getAttributes() : [];
+        $mode = $attrs['group_mode'] ?? null;
+        $min = $mode === 'INDIVIDUAL' ? 1 : (int) ($periodAttrs['min_group_size'] ?? 3);
+        $count = $this->members()->count();
+
+        if ($count < $min) {
+            $isSolo = (bool) ($attrs['is_solo'] ?? false);
+            $titleId = $attrs['title_id'] ?? null;
+
+            return ($isSolo || $titleId) ? 'FORMING_SOLO' : 'FORMING';
+        }
+
+        return 'READY_FOR_BIDDING';
+    }
+
+    public function refreshReadinessSnapshot(): void
+    {
+        $snapshot = $this->isReadyForBidding() && empty($this->getReadinessIssues()['critical'])
+            ? 'READY'
+            : 'NOT_READY';
+
+        if (($this->attributes['readiness_status'] ?? null) !== $snapshot) {
+            try {
+                $this->newQueryWithoutScopes()->whereKey($this->getKey())->update(['readiness_status' => $snapshot]);
+            } catch (\Throwable $e) {
+                report($e);
+
+                return;
+            }
+            $this->setAttribute('readiness_status', $snapshot);
+        }
     }
 
     public function seminarSchedules()

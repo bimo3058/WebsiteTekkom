@@ -35,6 +35,16 @@ class ExpoEvent extends Model
         'capacity' => 'integer',
     ];
 
+    public function toArray(): array
+    {
+        $array = parent::toArray();
+        if ($this->date) {
+            $array['date'] = $this->date->format('Y-m-d');
+        }
+
+        return $array;
+    }
+
     /**
      * Cross-period (global) event: visible and registrable from every period.
      */

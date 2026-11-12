@@ -2,28 +2,22 @@
 
 namespace Modules\Capstone\Http\Controllers;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Http\Requests\BursaIde\RequestJoinRequest;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\JoinRequest;
 use Modules\Capstone\Models\Notification;
 use Modules\Capstone\Models\Title;
-use Modules\Capstone\Services\GroupStateMachine;
 use Modules\Capstone\Services\GroupService;
+use Modules\Capstone\Services\GroupStateMachine;
 use Modules\Capstone\Support\CapstoneActor;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Support\StudentTitleAccess;
 
 class BursaIdeController extends Controller
 {
     use ApiResponseTrait;
-
-    /**
-     * Solo Seeker statuses — FORMING_SOLO and FORMING transitions to WAITING_SUPERVISOR_APPROVAL
-     * after proposing a title, then back to FORMING/FORMING_SOLO after Pre-Approval.
-     * TITLE_APPROVED is the status after supervisor approves - title is open for recruitment.
-     * All statuses represent a "Solo Seeker" in different lifecycle phases.
-     */
-    private const SOLO_STATUSES = ['FORMING_SOLO', 'FORMING', 'WAITING_SUPERVISOR_APPROVAL', 'TITLE_APPROVED'];
 
     protected GroupStateMachine $stateMachine;
 
@@ -53,7 +47,7 @@ class BursaIdeController extends Controller
             ])
             // Titles vanish from the marketplace only when the owner group
             // locks for finalization — not when it reaches minimum members.
-            ->whereHas('proposedByGroup', fn ($q) => $q->whereIn('status', SoloTitleController::RECRUITABLE_STATUSES));
+            ->whereHas('proposedByGroup', fn ($q) => $q->whereIn('status', StudentTitleAccess::RECRUITABLE_STATUSES));
 
         if ($periodId) {
             $query->where('period_id', $periodId);
@@ -79,7 +73,7 @@ class BursaIdeController extends Controller
             $canRequestJoin = true;
         } elseif ($userMembership) {
             $userGroup = Group::find($userMembership->group_id);
-            if ($userGroup && in_array($userGroup->status, self::SOLO_STATUSES) && $userMembership->is_leader) {
+            if ($userGroup && in_array($userGroup->status, StudentTitleAccess::SOLO_STATUSES) && $userMembership->is_leader) {
                 // Leader of a seeker group — can join and merge their team
                 $canRequestJoin = true;
             }
@@ -101,11 +95,9 @@ class BursaIdeController extends Controller
     /**
      * Request to join a solo seeker's group.
      */
-    public function requestJoin(Request $request, $groupId)
+    public function requestJoin(RequestJoinRequest $request, $groupId)
     {
-        $request->validate([
-            'message' => 'nullable|string|max:500',
-        ]);
+        $request->validated();
 
         $user = $request->user();
         $group = Group::with('period')->findOrFail($groupId);
@@ -121,7 +113,7 @@ class BursaIdeController extends Controller
         }
 
         // Guard: only Solo Seeker groups can be joined
-        if (! in_array($group->status, self::SOLO_STATUSES)) {
+        if (! in_array($group->status, StudentTitleAccess::SOLO_STATUSES)) {
             return $this->errorResponse('This group is not accepting join requests.', 400);
         }
 
@@ -139,7 +131,7 @@ class BursaIdeController extends Controller
 
         if ($userMembership) {
             $userGroup = Group::find($userMembership->group_id);
-            if (! $userGroup || ! in_array($userGroup->status, self::SOLO_STATUSES)) {
+            if (! $userGroup || ! in_array($userGroup->status, StudentTitleAccess::SOLO_STATUSES)) {
                 return $this->errorResponse('Anda sudah terdaftar di grup permanen atau sedang melakukan bidding.', 400);
             }
             if (! $userMembership->is_leader) {
@@ -217,7 +209,7 @@ class BursaIdeController extends Controller
 
         $membership = GroupMember::where('student_id', CapstoneActor::student($user)->id)
             ->where('is_leader', true)
-            ->whereHas('group', fn ($q) => $q->whereIn('status', self::SOLO_STATUSES))
+            ->whereHas('group', fn ($q) => $q->whereIn('status', StudentTitleAccess::SOLO_STATUSES))
             ->first();
 
         if (! $membership) {
@@ -265,7 +257,7 @@ class BursaIdeController extends Controller
 
         $group = Group::with('period')->find($joinRequest->group_id);
 
-        if (! $group || ! in_array($group->status, self::SOLO_STATUSES)) {
+        if (! $group || ! in_array($group->status, StudentTitleAccess::SOLO_STATUSES)) {
             return $this->errorResponse('Group is not accepting members.', 400);
         }
 
@@ -278,7 +270,7 @@ class BursaIdeController extends Controller
         // SECURITY FIX: For solo seeker groups, check if title is still APPROVED
         // Prevent joining if the title has been withdrawn by lecturer
         if ($group->is_solo && $group->title_id) {
-            $title = \Modules\Capstone\Models\Title::find($group->title_id);
+            $title = Title::find($group->title_id);
             if (! $title || $title->supervisor_approval_status !== 'APPROVED') {
                 return $this->errorResponse('Judul kelompok ini telah dibatalkan oleh dosen. Tidak dapat menerima anggota baru.', 400);
             }
@@ -369,7 +361,7 @@ class BursaIdeController extends Controller
             ];
         }
 
-        $isSoloLeader = $membership->is_leader && in_array($group->status, self::SOLO_STATUSES, true);
+        $isSoloLeader = $membership->is_leader && in_array($group->status, StudentTitleAccess::SOLO_STATUSES, true);
 
         if ($group->period?->is_finalized) {
             return [

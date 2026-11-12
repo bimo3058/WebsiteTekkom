@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Capstone\Http\Controllers\ApiResponseTrait;
+use Modules\Capstone\Http\Requests\Admin\TaRegistration\RejectTaRegistrationRequest;
 use Modules\Capstone\Models\Notification;
 use Modules\Capstone\Models\TaRegistration;
 
@@ -66,11 +67,9 @@ class TaRegistrationApprovalController extends Controller
         );
     }
 
-    public function reject(Request $request, $id)
+    public function reject(RejectTaRegistrationRequest $request, $id)
     {
-        $validated = $request->validate([
-            'rejection_reason' => 'required|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         $registration = TaRegistration::where('status', TaRegistration::STATUS_PENDING)->find($id);
 

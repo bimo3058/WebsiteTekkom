@@ -5,12 +5,16 @@ namespace Modules\Capstone\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Http\Requests\Title\RecommendBidRequest;
+use Modules\Capstone\Http\Requests\Title\ReorderBidsRequest;
+use Modules\Capstone\Http\Requests\Title\StoreBidRequest;
 use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Bid;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\Notification;
 use Modules\Capstone\Models\Title;
 use Modules\Capstone\Services\BiddingService;
+use Modules\Capstone\Services\TitleAcquisitionService;
 use Modules\Capstone\Support\CapstoneActor;
 use Modules\Capstone\Support\StudentTitleAccess;
 
@@ -18,9 +22,12 @@ class BidController extends Controller
 {
     protected BiddingService $biddingService;
 
-    public function __construct(BiddingService $biddingService)
+    protected TitleAcquisitionService $acquisition;
+
+    public function __construct(BiddingService $biddingService, TitleAcquisitionService $acquisition)
     {
         $this->biddingService = $biddingService;
+        $this->acquisition = $acquisition;
     }
 
     /**
@@ -34,20 +41,14 @@ class BidController extends Controller
         return response()->json(['data' => $bids, 'flow' => StudentTitleAccess::bidFlow($member)]);
     }
 
-    public function store(Request $request)
+    public function store(StoreBidRequest $request)
     {
-        $data = $request->validate([
-            'title_id' => 'required|integer|exists:capstone_titles,id',
-            'priority' => 'sometimes|integer|min:1|max:3',
-        ]);
+        $data = $request->validated();
 
         return DB::transaction(function () use ($request, $data) {
-            $member = StudentTitleAccess::membership($request->user());
-            abort_unless($member && $member->is_leader, 403, 'Only the group leader can submit bids.');
-            $group = Group::with('period')->lockForUpdate()->findOrFail($member->group_id);
-            $member->setRelation('group', $group);
-            $flow = StudentTitleAccess::bidFlow($member);
-            abort_unless($flow['can_submit_bid'], 403, $flow['reason'] ?? 'Bidding locked.');
+            $member = $this->acquisition->leaderMembership($request->user(), 'submit bids');
+            $group = $this->acquisition->lockedGroup($member);
+            $this->acquisition->requireBidAction($member, 'can_submit_bid');
             $title = Title::lockForUpdate()->findOrFail($data['title_id']);
             abort_if($title->title_source === 'STUDENT' || $title->status !== 'open', 422, 'Title is not open for bidding.');
             // Dosen (LECTURER) titles are cross-period: period_id is ignored for them,
@@ -70,11 +71,9 @@ class BidController extends Controller
     public function destroy(Request $request, $id)
     {
         return DB::transaction(function () use ($request, $id) {
-            $member = StudentTitleAccess::membership($request->user());
-            abort_unless($member && $member->is_leader, 403, 'Only the group leader can delete bids.');
-            $group = Group::with('period')->lockForUpdate()->findOrFail($member->group_id);
-            $member->setRelation('group', $group);
-            abort_unless(StudentTitleAccess::bidFlow($member)['can_delete_bid'], 403, 'Bidding is locked.');
+            $member = $this->acquisition->leaderMembership($request->user(), 'delete bids');
+            $group = $this->acquisition->lockedGroup($member);
+            $this->acquisition->requireBidAction($member, 'can_delete_bid', 'Bidding is locked.');
             $bid = $group->bids()->lockForUpdate()->findOrFail($id);
             abort_unless(in_array($bid->status, ['PENDING', 'REJECTED'], true), 403, 'Only pending or rejected bids can be deleted.');
             $bid->delete();
@@ -87,16 +86,14 @@ class BidController extends Controller
         });
     }
 
-    public function reorder(Request $request)
+    public function reorder(ReorderBidsRequest $request)
     {
-        $data = $request->validate(['bids' => 'required|array|min:1|max:3', 'bids.*.id' => 'required|integer|distinct', 'bids.*.priority' => 'required|integer|distinct|min:1|max:3']);
+        $data = $request->validated();
 
         return DB::transaction(function () use ($request, $data) {
-            $member = StudentTitleAccess::membership($request->user());
-            abort_unless($member && $member->is_leader, 403, 'Only the group leader can reorder bids.');
-            $group = Group::with('period')->lockForUpdate()->findOrFail($member->group_id);
-            $member->setRelation('group', $group);
-            abort_unless(StudentTitleAccess::bidFlow($member)['can_reorder_bid'], 403, 'Bidding is locked.');
+            $member = $this->acquisition->leaderMembership($request->user(), 'reorder bids');
+            $group = $this->acquisition->lockedGroup($member);
+            $this->acquisition->requireBidAction($member, 'can_reorder_bid', 'Bidding is locked.');
             // Only active (PENDING) bids participate in priority ordering; rejected bids live in history.
             $bids = $group->bids()->where('status', 'PENDING')->lockForUpdate()->get();
             $ids = collect($data['bids'])->pluck('id')->sort()->values()->all();
@@ -120,10 +117,11 @@ class BidController extends Controller
         $user = $request->user();
         $lecturerId = CapstoneActor::lecturer($user)->id;
 
-        $bids = Bid::with(['group.members.student', 'title', 'proposedSupervisor1', 'proposedSupervisor2'])
+        $bids = Bid::with(['group.period', 'group.members.student', 'title', 'proposedSupervisor1', 'proposedSupervisor2'])
             ->whereHas('title', function ($q) use ($lecturerId) {
                 $q->where('lecturer_id', $lecturerId);
             })
+            ->when($request->filled('period_id'), fn ($q) => $q->whereHas('group', fn ($g) => $g->where('period_id', $request->integer('period_id'))))
             ->orderBy('title_id')
             ->orderBy('priority')
             ->get();
@@ -137,11 +135,9 @@ class BidController extends Controller
      * its slot is freed automatically, members are notified and the action is logged.
      * CANCEL clears a previous recommendation (undo accept/reject) back to PENDING.
      */
-    public function recommend(Request $request, $id)
+    public function recommend(RecommendBidRequest $request, $id)
     {
-        $request->validate([
-            'recommendation' => 'required|in:ACCEPT,REJECT,CANCEL',
-        ]);
+        $request->validated();
 
         return DB::transaction(function () use ($request, $id) {
             $user = $request->user();

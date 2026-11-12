@@ -2,8 +2,9 @@
 
 namespace Modules\Capstone\Http\Controllers;
 
+use Modules\Capstone\Http\Requests\Assessment\StoreComponentTemplateRequest;
+use Modules\Capstone\Http\Requests\Assessment\UpdateComponentTemplateRequest;
 use Modules\Capstone\Models\AssessmentComponentTemplate;
-use Illuminate\Http\Request;
 
 class AssessmentComponentTemplateController extends Controller
 {
@@ -25,16 +26,9 @@ class AssessmentComponentTemplateController extends Controller
     /**
      * Create a new assessment component template.
      */
-    public function store(Request $request)
+    public function store(StoreComponentTemplateRequest $request)
     {
-        $data = $request->validate([
-            'code' => 'required|string|max:50|unique:capstone_assessment_component_templates',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'weight' => 'required|numeric|min:0|max:100',
-            'is_active' => 'sometimes|boolean',
-            'sort_order' => 'nullable|integer',
-        ]);
+        $data = $request->validated();
 
         $data['created_by'] = $request->user()->id;
 
@@ -56,18 +50,11 @@ class AssessmentComponentTemplateController extends Controller
     /**
      * Update an assessment component template.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateComponentTemplateRequest $request, $id)
     {
         $template = AssessmentComponentTemplate::findOrFail($id);
 
-        $data = $request->validate([
-            'code' => 'sometimes|string|max:50|unique:capstone_assessment_component_templates,code,'.$id,
-            'name' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'weight' => 'sometimes|numeric|min:0|max:100',
-            'sort_order' => 'nullable|integer',
-            'is_active' => 'sometimes|boolean',
-        ]);
+        $data = $request->validated();
 
         $template->update($data);
 

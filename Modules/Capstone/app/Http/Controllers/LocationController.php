@@ -2,9 +2,11 @@
 
 namespace Modules\Capstone\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use Modules\Capstone\Http\Requests\Scheduling\AvailableLocationsRequest;
+use Modules\Capstone\Http\Requests\Scheduling\StoreLocationRequest;
+use Modules\Capstone\Http\Requests\Scheduling\UpdateLocationRequest;
 use Modules\Capstone\Models\ExpoEvent;
 use Modules\Capstone\Models\Location;
 use Modules\Capstone\Models\SeminarSchedule;
@@ -65,19 +67,13 @@ class LocationController extends Controller
     /**
      * Store a newly created location (admin only).
      */
-    public function store(Request $request)
+    public function store(StoreLocationRequest $request)
     {
         if (! in_array('admin', CapstoneActor::roles(Auth::user()), true)) {
             return $this->unauthorizedResponse('Unauthorized');
         }
 
-        $request->validate([
-            'name' => 'required|string|max:255|unique:capstone_locations,name',
-            'capacity' => 'nullable|integer|min:1',
-            'type' => 'required|string|in:online',
-            'description' => 'nullable|string|max:1000',
-            'eoffice_ruangan_id' => 'prohibited',
-        ]);
+        $request->validated();
 
         $location = Location::create([
             'name' => $request->name,
@@ -107,7 +103,7 @@ class LocationController extends Controller
     /**
      * Update the specified location (admin only).
      */
-    public function update(Request $request, $id)
+    public function update(UpdateLocationRequest $request, $id)
     {
         if (! in_array('admin', CapstoneActor::roles(Auth::user()), true)) {
             return $this->unauthorizedResponse('Unauthorized');
@@ -115,14 +111,7 @@ class LocationController extends Controller
 
         $location = Location::findOrFail($id);
 
-        $request->validate([
-            'name' => 'sometimes|string|max:255|unique:capstone_locations,name,'.$id,
-            'capacity' => 'nullable|integer|min:1',
-            'type' => 'sometimes|string|in:online',
-            'description' => 'nullable|string|max:1000',
-            'is_active' => 'sometimes|boolean',
-            'eoffice_ruangan_id' => 'prohibited',
-        ]);
+        $request->validated();
 
         $data = $request->all();
         $data['type'] = 'online';
@@ -159,17 +148,9 @@ class LocationController extends Controller
      * EOffice is the single source of rooms; Capstone no longer keeps
      * its own offline room list.
      */
-    public function available(Request $request)
+    public function available(AvailableLocationsRequest $request)
     {
-        $request->validate([
-            'date' => 'required|date',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-            'exclude_schedule_id' => 'nullable|integer',
-            'exclude_seminar_id' => 'nullable|integer',
-            'exclude_ta_defense_id' => 'nullable|integer',
-            'exclude_expo_id' => 'nullable|integer',
-        ]);
+        $request->validated();
 
         $date = $request->date;
         $startTime = $request->start_time;

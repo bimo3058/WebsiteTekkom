@@ -2,12 +2,12 @@
 
 namespace Modules\Capstone\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Http\Requests\Report\SummaryRequest;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\PeerReview;
 use Modules\Capstone\Repositories\AssessmentScoreRepository;
 use Modules\Capstone\Services\GradeCalculationService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ReportSummaryController extends Controller
 {
@@ -16,11 +16,9 @@ class ReportSummaryController extends Controller
     /**
      * Get summary data for all report types.
      */
-    public function summary(Request $request)
+    public function summary(SummaryRequest $request)
     {
-        $request->validate([
-            'period_id' => 'required|exists:capstone_periods,id',
-        ]);
+        $request->validated();
 
         $periodId = $request->period_id;
 
@@ -63,7 +61,7 @@ class ReportSummaryController extends Controller
         $averageScore = $totalScores > 0 ? ($totalScoreSum / $totalScores) : 0;
 
         // Calculate per-phase averages using GradeCalculationService
-        $gradeService = app(\Modules\Capstone\Services\GradeCalculationService::class);
+        $gradeService = app(GradeCalculationService::class);
         $gradeService->preloadPeriodData($periodId);
 
         $groups = Group::where('period_id', $periodId)
@@ -193,7 +191,7 @@ class ReportSummaryController extends Controller
      */
     private function getFinalGradesSummary(int $periodId): array
     {
-        $gradeService = app(\Modules\Capstone\Services\GradeCalculationService::class);
+        $gradeService = app(GradeCalculationService::class);
 
         // Preload all period data (5 queries total instead of 3,200+)
         $gradeService->preloadPeriodData($periodId);

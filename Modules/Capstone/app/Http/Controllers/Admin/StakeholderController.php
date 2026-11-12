@@ -2,11 +2,14 @@
 
 namespace Modules\Capstone\Http\Controllers\Admin;
 
+use Illuminate\Http\Request;
 use Modules\Capstone\Http\Controllers\ApiResponseTrait;
 use Modules\Capstone\Http\Controllers\Controller;
+use Modules\Capstone\Http\Requests\Admin\Stakeholder\AttachStakeholderRequest;
+use Modules\Capstone\Http\Requests\Admin\Stakeholder\StoreStakeholderRequest;
+use Modules\Capstone\Http\Requests\Admin\Stakeholder\UpdateStakeholderRequest;
 use Modules\Capstone\Models\Stakeholder;
 use Modules\Capstone\Models\Title;
-use Illuminate\Http\Request;
 
 class StakeholderController extends Controller
 {
@@ -23,32 +26,18 @@ class StakeholderController extends Controller
         return $this->successResponse($query->orderBy('name')->get());
     }
 
-    public function store(Request $request)
+    public function store(StoreStakeholderRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'organization' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
-            'type' => 'nullable|string|max:50',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $stakeholder = Stakeholder::create($validated);
 
         return $this->createdResponse($stakeholder, 'Stakeholder created successfully.');
     }
 
-    public function update(Request $request, Stakeholder $stakeholder)
+    public function update(UpdateStakeholderRequest $request, Stakeholder $stakeholder)
     {
-        $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'organization' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
-            'type' => 'nullable|string|max:50',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $stakeholder->update($validated);
 
@@ -62,13 +51,9 @@ class StakeholderController extends Controller
         return $this->successResponse(null, 'Stakeholder deleted successfully.');
     }
 
-    public function attachToTitle(Request $request, Title $title)
+    public function attachToTitle(AttachStakeholderRequest $request, Title $title)
     {
-        $validated = $request->validate([
-            'stakeholder_id' => 'required|exists:stakeholders,id',
-            'role' => 'nullable|string|max:50',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         // Stakeholders are governed for student-proposed ideas only.
         if ($title->title_source !== 'STUDENT') {

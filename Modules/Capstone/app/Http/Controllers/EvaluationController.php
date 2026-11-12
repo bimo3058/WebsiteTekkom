@@ -5,7 +5,7 @@ namespace Modules\Capstone\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
+use Modules\Capstone\Http\Requests\Evaluation\StoreEvaluationRequest;
 use Modules\Capstone\Models\Evaluation;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Support\CapstoneActor;
@@ -50,17 +50,11 @@ class EvaluationController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreEvaluationRequest $request)
     {
         $lecturerId = CapstoneActor::lecturer(Auth::user())->id;
 
-        $request->validate([
-            'group_id' => 'required|exists:capstone_groups,id',
-            'student_id' => 'required|exists:students,id',
-            'type' => ['required', Rule::in(['bimbingan', 'proposal', 'skripsi'])], // Using lowercase to match migration or enum? Migration said string.
-            'score' => 'required|numeric|min:0|max:100',
-            'feedback' => 'nullable|string',
-        ]);
+        $request->validated();
 
         abort_unless(
             Group::whereKey($request->group_id)

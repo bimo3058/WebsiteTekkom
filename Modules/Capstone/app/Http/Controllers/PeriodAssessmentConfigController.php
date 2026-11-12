@@ -2,13 +2,17 @@
 
 namespace Modules\Capstone\Http\Controllers;
 
-use Modules\Capstone\Models\AssessmentComponent;
-use Modules\Capstone\Models\AssessmentComponentTemplate;
-use Modules\Capstone\Models\Period;
-use Modules\Capstone\Models\PeriodAssessmentComponent;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Modules\Capstone\Http\Requests\Assessment\CopyAssessmentConfigRequest;
+use Modules\Capstone\Http\Requests\Assessment\ShowAssessmentConfigRequest;
+use Modules\Capstone\Http\Requests\Assessment\StoreAssessmentConfigRequest;
+use Modules\Capstone\Models\AssessmentComponent;
+use Modules\Capstone\Models\AssessmentComponentTemplate;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\Period;
+use Modules\Capstone\Models\PeriodAssessmentComponent;
+use Modules\Capstone\Support\PeriodGate;
 
 class PeriodAssessmentConfigController extends Controller
 {
@@ -22,11 +26,9 @@ class PeriodAssessmentConfigController extends Controller
     /**
      * Get assessment configuration for a period by type.
      */
-    public function show(Request $request, $periodId)
+    public function show(ShowAssessmentConfigRequest $request, $periodId)
     {
-        $request->validate([
-            'type' => 'required|string|in:SEMPRO,SIDANG_TA,EXPO,BIMBINGAN_SEMPRO,BIMBINGAN_TA,NILAI_DOSEN,MILESTONE',
-        ]);
+        $request->validated();
 
         $period = Period::findOrFail($periodId);
         $type = $request->type;
@@ -81,24 +83,19 @@ class PeriodAssessmentConfigController extends Controller
     /**
      * Configure assessment components for a period + type.
      */
-    public function store(Request $request, $periodId)
+    public function store(StoreAssessmentConfigRequest $request, $periodId)
     {
-        $request->validate([
-            'type' => 'required|string|in:SEMPRO,SIDANG_TA,EXPO,BIMBINGAN_SEMPRO,BIMBINGAN_TA,NILAI_DOSEN,MILESTONE',
-            'template_ids' => 'present|array',
-            'template_ids.*' => 'integer|distinct|exists:capstone_assessment_component_templates,id',
-        ]);
+        $request->validated();
 
         $type = $request->type;
 
         return DB::transaction(function () use ($periodId, $type, $request) {
-            $period = Period::whereKey($periodId)->lockForUpdate()->firstOrFail();
-            abort_if($period->is_finalized, 403, 'Periode final tidak dapat diubah.');
+            PeriodGate::lockedPeriod($periodId);
             $created = [];
 
             if ($this->hasPeriodAssessmentTable()) {
-                $current = PeriodAssessmentComponent::where('period_id', $periodId)->where('type', $type)->orderBy('sort_order')->pluck('template_id')->map(fn($id)=>(int)$id)->all();
-                if ($current !== array_map('intval', $request->template_ids)) abort_if(\Modules\Capstone\Models\Group::where('period_id', $periodId)->exists(), 403, 'Konfigurasi evaluasi tidak dapat diubah setelah kelompok terbentuk.');
+                $current = PeriodAssessmentComponent::where('period_id', $periodId)->where('type', $type)->orderBy('sort_order')->pluck('template_id')->map(fn ($id) => (int) $id)->all();
+                PeriodGate::assertNoGroupsIfChanged($periodId, $current, $request->template_ids, 'diubah');
                 // New schema path
                 PeriodAssessmentComponent::where('period_id', $periodId)
                     ->where('type', $type)
@@ -114,7 +111,7 @@ class PeriodAssessmentConfigController extends Controller
                 }
             } else {
                 // Legacy schema fallback
-                abort_if(\Modules\Capstone\Models\Group::where('period_id', $periodId)->exists(), 403, 'Konfigurasi evaluasi tidak dapat diubah setelah kelompok terbentuk.');
+                abort_if(Group::where('period_id', $periodId)->exists(), 403, 'Konfigurasi evaluasi tidak dapat diubah setelah kelompok terbentuk.');
                 AssessmentComponent::where('period_id', $periodId)
                     ->where('type', $type)
                     ->delete();
@@ -149,18 +146,15 @@ class PeriodAssessmentConfigController extends Controller
     /**
      * Copy assessment configuration from another period.
      */
-    public function copy(Request $request, $periodId)
+    public function copy(CopyAssessmentConfigRequest $request, $periodId)
     {
-        $request->validate([
-            'source_period_id' => 'required|integer|exists:capstone_periods,id|not_in:'.$periodId,
-        ]);
+        $request->validated();
 
         $sourcePeriodId = $request->source_period_id;
 
         return DB::transaction(function () use ($periodId, $sourcePeriodId) {
-            $period = Period::whereKey($periodId)->lockForUpdate()->firstOrFail();
-            abort_if($period->is_finalized, 403, 'Periode final tidak dapat diubah.');
-            abort_if(\Modules\Capstone\Models\Group::where('period_id', $periodId)->exists(), 403, 'Konfigurasi evaluasi tidak dapat disalin setelah kelompok terbentuk.');
+            PeriodGate::lockedPeriod($periodId);
+            PeriodGate::assertNoGroups($periodId, 'disalin');
             if ($this->hasPeriodAssessmentTable()) {
                 // Get all components from source period (new schema)
                 $sourceComponents = PeriodAssessmentComponent::where('period_id', $sourcePeriodId)
@@ -173,7 +167,7 @@ class PeriodAssessmentConfigController extends Controller
 
                 // Delete existing config for this period (all types)
                 $sourceKeys = $sourceComponents->map(fn ($c) => $c->type.':'.$c->template_id);
-                $removeIds = PeriodAssessmentComponent::where('period_id', $periodId)->get()->filter(fn ($c) => !$sourceKeys->contains($c->type.':'.$c->template_id))->pluck('id');
+                $removeIds = PeriodAssessmentComponent::where('period_id', $periodId)->get()->filter(fn ($c) => ! $sourceKeys->contains($c->type.':'.$c->template_id))->pluck('id');
                 PeriodAssessmentComponent::whereIn('id', $removeIds)->delete();
 
                 // Copy config

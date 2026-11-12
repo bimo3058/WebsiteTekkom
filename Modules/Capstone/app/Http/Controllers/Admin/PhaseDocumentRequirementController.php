@@ -2,19 +2,20 @@
 
 namespace Modules\Capstone\Http\Controllers\Admin;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Modules\Capstone\Http\Controllers\ApiResponseTrait;
 use Modules\Capstone\Http\Controllers\Controller;
 use Modules\Capstone\Models\Period;
 use Modules\Capstone\Models\PhaseDocumentRequirement;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Support\WorkflowPhases;
 
 class PhaseDocumentRequirementController extends Controller
 {
     use ApiResponseTrait;
 
-    const PHASES = ['PDC1', 'SEMPRO', 'PDC2', 'EXPO', 'TA', 'SIDANG'];
+    const PHASES = WorkflowPhases::UI_PHASES;
 
     public function index(Request $request)
     {
@@ -58,9 +59,13 @@ class PhaseDocumentRequirementController extends Controller
         }
 
         $data = $validator->validated();
+
         return DB::transaction(function () use ($data) {
             $period = Period::whereKey($data['period_id'])->lockForUpdate()->firstOrFail();
-            if ($period->is_finalized) return $this->errorResponse('Cannot modify document requirements for a finalized period.', 403);
+            if ($period->is_finalized) {
+                return $this->errorResponse('Cannot modify document requirements for a finalized period.', 403);
+            }
+
             return $this->createdResponse(PhaseDocumentRequirement::create($data), 'Document requirement created successfully');
         });
     }
@@ -88,7 +93,9 @@ class PhaseDocumentRequirementController extends Controller
 
         return DB::transaction(function () use ($requirement, $validator) {
             $period = Period::whereKey($requirement->period_id)->lockForUpdate()->firstOrFail();
-            if ($period->is_finalized) return $this->errorResponse('Cannot modify document requirements for a finalized period.', 403);
+            if ($period->is_finalized) {
+                return $this->errorResponse('Cannot modify document requirements for a finalized period.', 403);
+            }
             $requirement = PhaseDocumentRequirement::whereKey($requirement->id)->lockForUpdate()->firstOrFail();
             $requirement->update($validator->validated());
 
@@ -107,7 +114,9 @@ class PhaseDocumentRequirementController extends Controller
 
         return DB::transaction(function () use ($requirement) {
             $period = Period::whereKey($requirement->period_id)->lockForUpdate()->firstOrFail();
-            if ($period->is_finalized) return $this->errorResponse('Cannot delete document requirements for a finalized period.', 403);
+            if ($period->is_finalized) {
+                return $this->errorResponse('Cannot delete document requirements for a finalized period.', 403);
+            }
             PhaseDocumentRequirement::whereKey($requirement->id)->lockForUpdate()->firstOrFail()->delete();
 
             return $this->successResponse(null, 'Document requirement deleted successfully');
@@ -141,7 +150,9 @@ class PhaseDocumentRequirementController extends Controller
                 return $this->errorResponse('Cannot modify document requirements for a finalized period.', 403);
             }
             $query = PhaseDocumentRequirement::where('period_id', $period->id);
-            if (! empty($data['phase'])) $query->where('phase', $data['phase']);
+            if (! empty($data['phase'])) {
+                $query->where('phase', $data['phase']);
+            }
             $query->delete();
             $created = [];
             foreach ($data['requirements'] as $req) {
@@ -153,6 +164,7 @@ class PhaseDocumentRequirementController extends Controller
                     'is_required' => $req['is_required'] ?? false,
                 ]);
             }
+
             return $this->successResponse($created, 'Document requirements updated successfully');
         });
     }
@@ -169,7 +181,7 @@ class PhaseDocumentRequirementController extends Controller
         }
 
         $requirements = PhaseDocumentRequirement::where('period_id', $periodId)
-            ->orderByRaw("CASE phase WHEN 'PDC1' THEN 1 WHEN 'SEMPRO' THEN 2 WHEN 'PDC2' THEN 3 WHEN 'EXPO' THEN 4 WHEN 'TA' THEN 5 WHEN 'SIDANG' THEN 6 ELSE 7 END")
+            ->orderByRaw("CASE phase WHEN 'PDC1' THEN 1 WHEN 'SEMPRO' THEN 2 WHEN 'PDC2' THEN 3 WHEN 'TA' THEN 4 WHEN 'EXPO' THEN 5 WHEN 'SIDANG' THEN 6 ELSE 7 END")
             ->get();
 
         // Group by phase and calculate aggregates
