@@ -15,14 +15,14 @@
         <form @submit.prevent="save">
             <div class="grid gap-4 py-4">
                 <x-capstone::field name="group_id" label="Kelompok" type="select" :options="[''=>'Pilih kelompok']" required><template x-for="group in groups" :key="group.id"><option :value="group.id" x-text="group.title?.title || group.code || 'Kelompok '+group.id"></option></template></x-capstone::field>
-                <x-capstone::field name="date" label="Tanggal" type="date" required />
-                <div class="grid grid-cols-2 gap-4"><x-capstone::field name="start_time" label="Waktu Mulai" type="time" required /><x-capstone::field name="end_time" label="Waktu Selesai" type="time" required /></div>
+                <x-capstone::field name="date" label="Tanggal" type="date" placeholder="dd/mm/yyyy" required />
+                <div class="grid grid-cols-2 gap-4"><x-capstone::field name="start_time" label="Waktu Mulai" type="time" placeholder="cth., 09:00" required /><x-capstone::field name="end_time" label="Waktu Selesai" type="time" placeholder="cth., 12:00" required /></div>
                 <x-capstone::field name="mode" label="Mode" type="select" :options="['offline'=>'Luring','online'=>'Daring']" />
                 <template x-if="form.mode!=='online'"><div><x-capstone::field name="room" label="Lokasi" type="select" :options="[''=>'Pilih lokasi']" required><template x-for="location in locations.filter(l=>l.type==='offline')" :key="location.id"><option :value="location.name" x-text="location.name"></option></template></x-capstone::field></div></template>
                 <template x-if="form.mode==='online'"><div><x-capstone::field name="room" label="Tautan Rapat / Platform" placeholder="cth., tautan Zoom atau URL Google Meet" required /></div></template>
-                <x-capstone::field name="notes" label="Catatan (Opsional)" type="textarea" maxlength="1000" />
+                <x-capstone::field name="notes" label="Catatan (Opsional)" type="textarea" placeholder="cth., Bawa laptop masing-masing..." maxlength="1000" />
             </div>
-            <div class="flex justify-end gap-2"><x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button><x-capstone::button type="submit" ::disabled="saving"><span x-text="saving ? 'Menyimpan...' : editing ? 'Simpan Perubahan' : 'Buat Jadwal'"></span></x-capstone::button></div>
+            <div class="flex justify-end gap-2"><x-btn style="outline" @click="$el.closest('dialog').close()">Batal</x-btn><x-btn type="submit" x-bind:disabled="saving"><span x-text="saving ? 'Menyimpan...' : editing ? 'Simpan Perubahan' : 'Buat Jadwal'"></span></x-btn></div>
         </form>
     </x-capstone::dialog>
 </div>

@@ -1,18 +1,29 @@
-@props(['variant' => 'default', 'size' => 'default', 'href' => null])
+@props([
+    'variant' => 'default',
+    'size' => 'default',
+    'as' => 'button',
+])
 @php
-    $base = "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive";
-    $variants = ['default' => 'bg-primary text-primary-foreground hover:bg-primary/90', 'destructive' => 'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60', 'outline' => 'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50', 'secondary' => 'bg-secondary text-secondary-foreground hover:bg-secondary/80', 'ghost' => 'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50', 'link' => 'text-primary underline-offset-4 hover:underline'];
-    $sizes = ['default' => 'h-9 px-4 py-2 has-[>svg]:px-3', 'xs' => "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3", 'sm' => 'h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5', 'lg' => 'h-10 rounded-md px-6 has-[>svg]:px-4', 'icon' => 'size-9', 'icon-xs' => "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3", 'icon-sm' => 'size-8', 'icon-lg' => 'size-10'];
-    $featurePath = $href && str_starts_with($href, '/capstone/') ? substr($href, strlen('/capstone')) : $href;
-    $state = request()->attributes->get('capstone_feature_access', []);
-    $lockedReason = $href && $state ? \Modules\Capstone\Support\BladeFeatureAccess::reason($featurePath, $state) : null;
+    $base = 'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-radius font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-strong focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+    $variants = [
+        'default' => 'bg-primary text-on-primary hover:bg-primary/90 shadow-xs',
+        'destructive' => 'bg-danger text-on-danger hover:bg-danger/90 shadow-xs',
+        'outline' => 'border border-outline bg-surface hover:bg-surface-alt hover:text-on-surface-strong shadow-xs',
+        'secondary' => 'bg-surface-alt text-on-surface hover:bg-surface-alt/80 shadow-xs',
+        'ghost' => 'hover:bg-surface-alt hover:text-on-surface-strong',
+        'link' => 'text-primary underline-offset-4 hover:underline',
+    ];
+    $sizes = [
+        'default' => 'h-9 px-4 py-2 text-sm',
+        'xs' => 'h-7 rounded-radius px-2.5 text-xs',
+        'sm' => 'h-8 rounded-radius px-3 text-xs',
+        'lg' => 'h-10 rounded-radius px-6 text-sm',
+        'icon' => 'size-9',
+    ];
+    $classes = $base . ' ' . ($variants[$variant] ?? $variants['default']) . ' ' . ($sizes[$size] ?? $sizes['default']);
 @endphp
-@if($href)
-@if($lockedReason)
-<a role="link" aria-disabled="true" tabindex="-1" title="{{ $lockedReason }}" {{ $attributes->except(['href', ':href', '@click'])->class([$base, $variants[$variant] ?? $variants['default'], $sizes[$size] ?? $sizes['default'], 'opacity-50 cursor-not-allowed']) }}>{{ $slot }}</a>
+@if ($as === 'a')
+    <a {{ $attributes->merge(['class' => $classes]) }}>{{ $slot }}</a>
 @else
-<a href="{{ str_starts_with($href, '/') && !str_starts_with($href, '/capstone') ? url('/capstone'.$href) : $href }}" {{ $attributes->class([$base, $variants[$variant] ?? $variants['default'], $sizes[$size] ?? $sizes['default']]) }}>{{ $slot }}</a>
-@endif
-@else
-<button {{ $attributes->merge(['type' => 'button'])->class([$base, $variants[$variant] ?? $variants['default'], $sizes[$size] ?? $sizes['default']]) }}>{{ $slot }}</button>
+    <button {{ $attributes->merge(['type' => 'button', 'class' => $classes]) }}>{{ $slot }}</button>
 @endif

@@ -1,7 +1,7 @@
 <x-capstone::dialog id="schedule-detail" title="Detail Jadwal" class="sm:max-w-[520px]">
     <template x-if="selected"><div class="space-y-4 py-4">
         <div class="flex items-center gap-2"><span class="rounded-md px-2.5 py-1 text-xs font-medium" :class="color(selected.type)" x-text="label(selected.type)"></span><span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="statusColor(selected.status)" x-text="selected.status"></span></div>
-        <h3 class="text-lg font-semibold" x-text="selected.group?.title?.title || 'Tanpa Judul'"></h3>
+        <h3 class="text-lg font-semibold" x-text="selected.type==='EXPO' ? (selected.name || 'Expo') : (selected.group?.title?.title || 'Tanpa Judul')"></h3>
         <div class="grid gap-4 sm:grid-cols-2">
             <div><p class="text-sm text-muted-foreground">Tanggal &amp; Waktu</p><p class="font-medium" x-text="date(selected.date)+' '+time(selected)"></p></div>
             <div><p class="text-sm text-muted-foreground">Lokasi</p><p class="font-medium break-all" x-text="selected.room || selected.mode || '—'"></p></div>
@@ -16,10 +16,10 @@
         <a x-show="selected.online_link || (selected.mode==='online' && safeLink(selected.room)!=='#')" :href="safeLink(selected.online_link || selected.room)" target="_blank" rel="noopener noreferrer" class="text-primary underline">Gabung Pertemuan</a>
         <div class="flex flex-wrap justify-end gap-2">
             @if($activeRole==='dosen' && ($allowManage ?? true))
-            <x-capstone::button variant="outline" x-show="canEdit(selected)" @click="document.getElementById('schedule-detail').close();edit(selected)"><x-capstone::icon name="Edit" />Ubah</x-capstone::button>
-            <x-capstone::button variant="destructive" x-show="canEdit(selected)" @click="document.getElementById('schedule-detail').close();confirmDelete(selected)"><x-capstone::icon name="Trash2" />Hapus</x-capstone::button>
+            <x-btn style="outline" x-show="canEdit(selected)" @click="document.getElementById('schedule-detail').close();edit(selected)"><x-capstone::icon name="Edit" />Ubah</x-btn>
+            <x-btn style="danger" x-show="canEdit(selected)" @click="document.getElementById('schedule-detail').close();confirmDelete(selected)"><x-capstone::icon name="Trash2" />Hapus</x-btn>
             @endif
-            <x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Tutup</x-capstone::button>
+            <x-btn style="outline" @click="$el.closest('dialog').close()">Tutup</x-btn>
         </div>
     </div></template>
 </x-capstone::dialog>

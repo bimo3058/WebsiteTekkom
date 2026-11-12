@@ -12,6 +12,6 @@
             </template>
             <p x-show="!dayEvents.length" class="py-6 text-center text-sm text-slate-400">Tidak ada kegiatan pada tanggal ini.</p>
         </div>
-        <div class="mt-4 flex justify-end"><x-capstone::button variant="outline" size="sm" @click="$el.closest('dialog').close()">Tutup</x-capstone::button></div>
+        <div class="mt-4 flex justify-end"><x-btn style="outline" size="sm" @click="$el.closest('dialog').close()">Tutup</x-btn></div>
     </div>
 </x-capstone::dialog>

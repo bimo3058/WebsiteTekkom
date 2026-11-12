@@ -10,10 +10,10 @@
                 <div @click="selectedDate = day.key" @keydown.enter.self="selectedDate = day.key" @keydown.space.self.prevent="selectedDate = day.key"
                     tabindex="0" role="button" :aria-label="day.key + ', ' + eventsFor(day.key).length + ' kegiatan'" :aria-pressed="day.key === selectedDate"
                     class="min-h-[120px] cursor-pointer border-b border-r border-slate-200 p-2 text-right transition-colors hover:bg-slate-50 sm:min-h-[132px]"
-                    :class="[!day.current && 'bg-[#F6F8FA]', (index + 1) % 7 === 0 && 'border-r-0', index >= days.length - 7 && 'border-b-0', (index % 7 === 0) && day.current && 'bg-[#F6F8FA]/60']">
+                    :class="[!day.current && 'bg-muted', (index + 1) % 7 === 0 && 'border-r-0', index >= days.length - 7 && 'border-b-0', (index % 7 === 0) && day.current && 'bg-muted/60']">
                     <div class="mb-1 flex justify-end">
                         <span class="inline-flex h-6 min-w-6 items-center justify-center rounded-md px-1 text-[13px]"
-                            :class="day.key === selectedDate ? 'bg-[#0B266E] font-semibold text-white' : (day.current ? 'font-medium text-slate-900' : 'text-slate-400')"
+                            :class="day.key === selectedDate ? 'bg-primary font-semibold text-white' : (day.current ? 'font-medium text-slate-900' : 'text-slate-400')"
                             x-text="day.number"></span>
                     </div>
                     <div class="space-y-1 text-left">
@@ -41,8 +41,8 @@
         <label for="schedule-reason" class="text-sm font-medium">Alasan Penolakan</label>
         <textarea id="schedule-reason" x-model="reason" required maxlength="1000" class="min-h-24 w-full rounded-md border p-3 text-sm" placeholder="Alasan..."></textarea>
         <div class="flex justify-end gap-2">
-            <x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button>
-            <x-capstone::button type="submit" variant="destructive" ::disabled="saving || !reason.trim()">Tolak</x-capstone::button>
+            <x-btn style="outline" @click="$el.closest('dialog').close()">Batal</x-btn>
+            <x-btn type="submit" style="danger" x-bind:disabled="saving || !reason.trim()">Tolak</x-btn>
         </div>
     </form>
 </x-capstone::dialog>
@@ -50,8 +50,8 @@
 @if($activeRole === 'dosen')
 <x-capstone::dialog id="schedule-delete" title="Hapus Jadwal" description="Apakah Anda yakin ingin menghapus jadwal ini? Tindakan ini tidak dapat dibatalkan.">
     <div class="mt-6 flex justify-end gap-2">
-        <x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button>
-        <x-capstone::button variant="destructive" @click="remove" ::disabled="saving">Hapus</x-capstone::button>
+        <x-btn style="outline" @click="$el.closest('dialog').close()">Batal</x-btn>
+        <x-btn style="danger" @click="remove" x-bind:disabled="saving">Hapus</x-btn>
     </div>
 </x-capstone::dialog>
 @endif

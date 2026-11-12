@@ -10,12 +10,12 @@
         </div>
         <label class="inline-flex items-center gap-2 rounded-lg border border-input bg-white px-4 py-2 text-sm font-semibold shadow-xs">
             <span class="sr-only">Periode</span>
-            <select x-model="periodId" @change="page=1;load()" :disabled="saving" aria-label="Pilih periode" class="bg-transparent font-semibold outline-none">
-                <option value="" disabled x-show="!periodId">Pilih periode</option>
+            <x-capstone::select-menu x-model="periodId" @select-menu-change.window="page=1;load()" :options="[]" placeholder="Pilih periode" aria-label="Pilih periode" disabled-when="saving">
+                
                 <template x-for="period in periods" :key="period.id">
-                    <option :value="String(period.id)" x-text="period.name" :selected="String(period.id)===String(periodId)"></option>
+                    <button type="button" role="option" @click="pick(String(period.id), period.name)" :aria-selected="(String(selectedValue) === String(String(period.id))).toString()" class="flex w-full items-center justify-between gap-2 rounded-radius px-2 py-1.5 text-sm hover:bg-surface-alt" :class="String(selectedValue) === String(String(period.id)) ? 'bg-primary/10 font-medium' : ''"><span class="truncate" x-text="period.name"></span><span x-show="String(selectedValue) === String(String(period.id))" class="text-primary"><x-capstone::icon name="Check" size="14" /></span></button>
                 </template>
-            </select>
+            </x-capstone::select-menu>
             <x-capstone::icon name="ChevronDown" class="size-4 text-muted-foreground" />
         </label>
     </div>
@@ -28,7 +28,7 @@
             <div class="flex flex-wrap items-center gap-2.5">
                 <div class="relative">
                     <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"><x-capstone::icon name="Search" class="size-4" /></span>
-                    <input type="search" x-model="search" @input="page=1" placeholder="Cari" aria-label="Cari tipe penilaian" class="h-9 w-64 rounded-lg border border-input bg-white pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring">
+                    <input type="search" x-model="search" @input="page=1" placeholder="Cari..." aria-label="Cari tipe penilaian" class="h-9 w-64 rounded-lg border border-input bg-white pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring">
                 </div>
                 <div class="relative">
                     <button type="button" @click="filterMenu=!filterMenu;sortMenu=false" class="inline-flex h-9 items-center gap-2 rounded-lg border border-input bg-white px-3.5 text-sm text-muted-foreground shadow-xs hover:bg-accent">
@@ -61,7 +61,7 @@
         <div class="mt-4 overflow-x-auto">
             <table class="w-full min-w-[820px] text-left text-sm">
                 <thead>
-                    <tr class="bg-[#F8F9FB] text-[13px] font-medium text-[#666D80]">
+                    <tr class="bg-muted text-[13px] font-medium text-muted-foreground">
                         <th class="px-4 py-3 font-medium">No</th>
                         <th class="px-4 py-3 font-medium">Tipe Penilaian</th>
                         <th class="px-4 py-3 font-medium">Total Komponen</th>
@@ -82,7 +82,7 @@
                                 <span x-show="!item.components.length" class="text-muted-foreground">—</span>
                             </td>
                             <td class="px-5 py-4 text-right">
-                                <button type="button" @click="openRowMenu($event, item.id, editUrl(item))" aria-label="Aksi" aria-haspopup="menu" class="rounded-md p-1.5 text-[#666D80] hover:bg-muted"><x-capstone::icon name="Ellipsis" class="size-5" /></button>
+                                <button type="button" @click="openRowMenu($event, item.id, editUrl(item))" aria-label="Aksi" aria-haspopup="menu" class="rounded-md p-1.5 text-muted-foreground hover:bg-muted"><x-capstone::icon name="Ellipsis" class="size-5" /></button>
                             </td>
                         </tr>
                     </template>
@@ -93,11 +93,9 @@
 
         <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
             <div class="flex items-center gap-3">
-                <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
+                <label class="inline-flex items-center gap-0 overflow-visible rounded-lg border border-input bg-white text-[13px]">
                     <span class="px-2.5 text-muted-foreground">Per halaman</span>
-                    <select x-model.number="pageSize" @change="page=1" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none">
-                        <option>10</option><option>25</option><option>50</option>
-                    </select>
+                    <x-capstone::select-menu x-model.number="pageSize" @select-menu-change.window="page=1" :options="[10,25,50]" size="sm" borderless dropup aria-label="Baris per halaman" class="min-w-20" />
                 </label>
                 <span class="text-foreground"><span x-text="'Menampilkan '+showingFrom+' sampai '+showingTo+' dari '+sortedFiltered.length+' data'"></span></span>
             </div>
@@ -106,7 +104,7 @@
                 <template x-for="(n,i) in pageNumbers" :key="n">
                     <span class="flex items-center gap-1.5">
                         <span x-show="i>0 && n-pageNumbers[i-1]>1" class="px-1 text-muted-foreground">...</span>
-                        <button type="button" @click="goPage(n)" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="Math.min(page,pageCount)===n?'border-[#1E2A5A] bg-[#1E2A5A] font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
+                        <button type="button" @click="goPage(n)" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="Math.min(page,pageCount)===n?'border-[#1E2A5A] bg-primary font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
                     </span>
                 </template>
                 <button type="button" @click="goPage(Math.min(page,pageCount)+1)" :disabled="page>=pageCount" aria-label="Halaman berikutnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronRight" class="size-4" /></button>

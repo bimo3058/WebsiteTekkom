@@ -2,7 +2,7 @@
     <div class="overflow-x-auto">
         <table class="w-full min-w-[960px] text-sm">
             <thead>
-                <tr class="border-b border-slate-200 bg-[#F6F8FA] text-left text-[13px] font-medium text-slate-500">
+                <tr class="border-b border-slate-200 bg-muted text-left text-[13px] font-medium text-slate-500">
                     <th class="px-2 py-3 font-medium">No</th>
                     <th class="px-4 py-3 font-medium">Tanggal</th>
                     <th class="px-4 py-3 font-medium">Waktu</th>
@@ -75,32 +75,5 @@
             </tbody>
         </table>
     </div>
-    <div class="flex flex-col gap-3 border-t border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex flex-wrap items-center gap-3 text-sm">
-            <label class="flex items-center gap-2 text-slate-600">Per halaman
-                <select x-model.number="perPage" @change="page = 1" aria-label="Baris per halaman" class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-900">
-                    <option>10</option>
-                    <option>20</option>
-                    <option>50</option>
-                </select>
-            </label>
-            <span class="font-medium text-slate-900" x-text="'Menampilkan ' + showingFrom + ' sampai ' + showingTo + ' dari ' + tableRows.length + ' data'"></span>
-        </div>
-        <div class="flex items-center gap-1.5">
-            <button type="button" @click="goto(currentPage - 1)" ::disabled="currentPage <= 1" aria-label="Halaman Sebelumnya"
-                class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-40">
-                <x-capstone::icon name="ChevronLeft" class="h-4 w-4" />
-            </button>
-            <template x-for="p in pageList" :key="'pg' + p">
-                <button type="button" x-show="p !== '…'" @click="goto(p)" :aria-current="p === currentPage ? 'page' : null
-                    :class="p === currentPage ? 'bg-[#0B266E] text-white' : 'bg-white text-slate-600 hover:bg-slate-50'"
-                    class="inline-flex h-9 min-w-9 items-center justify-center rounded-lg border border-slate-200 px-2 text-sm font-medium transition-colors" x-text="p"></button>
-                <span x-show="p === '…'" class="inline-flex h-9 min-w-9 items-center justify-center text-sm text-slate-400">…</span>
-            </template>
-            <button type="button" @click="goto(currentPage + 1)" ::disabled="currentPage >= totalPages" aria-label="Halaman Berikutnya"
-                class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-40">
-                <x-capstone::icon name="ChevronRight" class="h-4 w-4" />
-            </button>
-        </div>
-    </div>
+    @include('capstone::partials.table-footer', ['page' => 'currentPage', 'pageSize' => 'perPage', 'pageCount' => 'totalPages', 'total' => 'tableRows.length', 'from' => 'showingFrom', 'to' => 'showingTo', 'pageList' => 'pageList', 'prevAction' => 'goto(currentPage - 1)', 'nextAction' => 'goto(currentPage + 1)', 'goAction' => 'goto(p)'])
 </div>

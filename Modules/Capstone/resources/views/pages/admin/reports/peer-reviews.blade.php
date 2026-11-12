@@ -8,20 +8,15 @@
             <p class="mt-1 text-sm text-muted-foreground">Ringkasan telaah sejawat per mahasiswa — klik baris untuk melihat siapa saja penilainya.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-            <x-capstone::button href="/admin/reports" variant="outline">Laporan</x-capstone::button>
-            <button type="button" @click="exportPeerReviews('summary')" :disabled="loading || saving || !periodId" class="inline-flex h-9 items-center gap-2 rounded-lg bg-[#1E2A5A] px-4 text-sm font-medium text-white shadow-xs hover:bg-[#16204a] disabled:opacity-40"><x-capstone::icon name="Download" class="size-4" />Ekspor Ringkasan</button>
+            <x-btn href="{{ \Modules\Capstone\Support\CapstoneUrl::to('/admin/reports') }}" style="outline">Laporan</x-btn>
+            <button type="button" @click="exportPeerReviews('summary')" :disabled="loading || saving || !periodId" class="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-white shadow-xs hover:bg-primary/90 disabled:opacity-40"><x-capstone::icon name="Download" class="size-4" />Ekspor Ringkasan</button>
             <button type="button" @click="exportPeerReviews('detail')" :disabled="loading || saving || !periodId" title="Ekspor semua baris per indikator" class="inline-flex h-9 items-center gap-2 rounded-lg border border-input bg-white px-4 text-sm font-medium text-foreground shadow-xs hover:bg-accent disabled:opacity-40"><x-capstone::icon name="Download" class="size-4" />Rincian CSV</button>
         </div>
     </div>
     @include('capstone::pages.admin.shared.toolbar')
     <div class="flex flex-wrap items-center gap-2.5 rounded-xl border border-border bg-white p-4 shadow-xs">
         <span class="text-sm text-muted-foreground">Urutkan:</span>
-        <select x-model="summarySort" @change="page=1;load()" aria-label="Urutkan berdasarkan" class="h-9 rounded-lg border border-input bg-white px-2.5 text-sm outline-none">
-            <option value="reviewee">Mahasiswa</option>
-            <option value="group">Kelompok</option>
-            <option value="avg_score">Rata-rata nilai</option>
-            <option value="reviewers_count">Jumlah penilai</option>
-        </select>
+        <x-capstone::select-menu x-model="summarySort" @select-menu-change.window="page=1;load()" :options="['reviewee'=>'Mahasiswa','group'=>'Kelompok','avg_score'=>'Rata-rata nilai','reviewers_count'=>'Jumlah penilai']" placeholder="Urutkan berdasarkan" aria-label="Urutkan berdasarkan" />
         <button type="button" @click="summaryDir=summaryDir==='asc'?'desc':'asc';page=1;load()" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-input bg-white px-3 text-sm font-medium hover:bg-accent" :aria-label="summaryDir==='asc'?'Urut menaik':'Urut menurun'">
             <span x-text="summaryDir==='asc'?'↑ A–Z / 0–100':'↓ Z–A / 100–0'"></span>
         </button>
@@ -36,7 +31,7 @@
         <div class="mt-4 overflow-x-auto">
             <table class="w-full min-w-[860px] text-left text-sm">
                 <thead>
-                    <tr class="bg-[#F8F9FB] text-[13px] font-medium text-[#666D80]">
+                    <tr class="bg-muted text-[13px] font-medium text-muted-foreground">
                         <th class="w-10 px-4 py-3 font-medium"></th>
                         <th class="px-4 py-3 font-medium">Mahasiswa Dinilai</th>
                         <th class="px-4 py-3 font-medium">Kelompok</th>
@@ -59,7 +54,7 @@
                             </td>
                             <td class="px-4 py-4 font-medium text-foreground" x-text="item.group_name"></td>
                             <td class="px-4 py-4">
-                                <span x-show="item.status==='DINILAI'" class="inline-flex items-center rounded-full bg-[#1E2A5A] px-2.5 py-0.5 text-[11px] font-semibold text-white">Dinilai</span>
+                                <span x-show="item.status==='DINILAI'" class="inline-flex items-center rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-semibold text-white">Dinilai</span>
                                 <span x-show="item.status!=='DINILAI'" class="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">Belum dinilai</span>
                             </td>
                             <td class="px-4 py-4 text-right">
@@ -133,9 +128,9 @@
         </div>
         <div x-show="items.length" x-cloak class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
             <div class="flex items-center gap-3">
-                <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
+                <label class="inline-flex items-center gap-0 overflow-visible rounded-lg border border-input bg-white text-[13px]">
                     <span class="px-2.5 text-muted-foreground">Per halaman</span>
-                    <select x-model.number="pageSize" @change="page=1;load()" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none"><option>10</option><option>25</option><option>50</option></select>
+                    <x-capstone::select-menu x-model.number="pageSize" @select-menu-change.window="page=1;load()" :options="[10,25,50]" size="sm" borderless dropup aria-label="Baris per halaman" class="min-w-20" />
                 </label>
                 <span class="text-foreground"><span x-text="'Menampilkan '+showingFrom+' sampai '+showingTo+' dari '+(pagination.total ?? 0)+' data'"></span></span>
             </div>
@@ -144,7 +139,7 @@
                 <template x-for="(n,i) in pageNumbers" :key="n">
                     <span class="flex items-center gap-1.5">
                         <span x-show="i>0 && n-pageNumbers[i-1]>1" class="px-1 text-muted-foreground">...</span>
-                        <button type="button" @click="gotoPage(n)" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="page===n?'border-[#1E2A5A] bg-[#1E2A5A] font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
+                        <button type="button" @click="gotoPage(n)" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="page===n?'border-primary bg-primary font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
                     </span>
                 </template>
                 <button type="button" @click="gotoPage(page+1)" :disabled="page>=(pagination.last_page||1)" aria-label="Halaman berikutnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronRight" class="size-4" /></button>

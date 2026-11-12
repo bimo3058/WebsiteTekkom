@@ -9,15 +9,15 @@
         <div class="flex flex-wrap items-center gap-2.5">
             <label class="inline-flex items-center gap-2 rounded-lg border border-input bg-white px-4 py-2 text-sm font-semibold shadow-xs">
                 <span class="sr-only">Periode</span>
-                <select x-model="selectedPeriod" @change="load()" :disabled="saving" aria-label="Pilih periode" class="bg-transparent font-semibold outline-none">
-                    <option value="" disabled x-show="!selectedPeriod">Pilih periode</option>
+                <x-capstone::select-menu x-model="selectedPeriod" @select-menu-change.window="load()" :options="[]" placeholder="Pilih periode" aria-label="Pilih periode" disabled-when="saving">
+                    
                     <template x-for="period in periods" :key="period.id">
-                        <option :value="String(period.id)" x-text="period.name+(period.is_active ? ' (Aktif)' : '')" :selected="String(period.id)===String(selectedPeriod)"></option>
+                        <button type="button" role="option" @click="pick(String(period.id), period.name+(period.is_active ? ' (Aktif)' : ''))" :aria-selected="(String(selectedValue) === String(String(period.id))).toString()" class="flex w-full items-center justify-between gap-2 rounded-radius px-2 py-1.5 text-sm hover:bg-surface-alt" :class="String(selectedValue) === String(String(period.id)) ? 'bg-primary/10 font-medium' : ''"><span class="truncate" x-text="period.name+(period.is_active ? ' (Aktif)' : '')"></span><span x-show="String(selectedValue) === String(String(period.id))" class="text-primary"><x-capstone::icon name="Check" size="14" /></span></button>
                     </template>
-                </select>
+                </x-capstone::select-menu>
                 <x-capstone::icon name="ChevronDown" class="size-4 text-muted-foreground" />
             </label>
-            <button type="button" @click="$refs.defaults.showModal()" :disabled="!editable" class="inline-flex h-9 items-center gap-2 rounded-lg bg-[#1E2A5A] px-4 text-sm font-semibold text-white shadow-xs hover:bg-[#16204a] disabled:opacity-40">
+            <button type="button" @click="$refs.defaults.showModal()" :disabled="!editable" class="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white shadow-xs hover:bg-primary/90 disabled:opacity-40">
                 <x-capstone::icon name="Settings" class="size-4" />Gunakan konfigurasi bawaan
             </button>
         </div>
@@ -32,7 +32,7 @@
             <div class="flex flex-wrap items-center gap-2.5">
                 <div class="relative">
                     <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"><x-capstone::icon name="Search" class="size-4" /></span>
-                    <input type="search" x-model="search" @input="page=1" placeholder="Cari" aria-label="Cari dokumen" class="h-9 w-64 rounded-lg border border-input bg-white pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring">
+                    <input type="search" x-model="search" @input="page=1" placeholder="Cari..." aria-label="Cari dokumen" class="h-9 w-64 rounded-lg border border-input bg-white pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring">
                 </div>
                 <div class="relative">
                     <button type="button" @click="filterMenu=!filterMenu;sortMenu=false" class="inline-flex h-9 items-center gap-2 rounded-lg border border-input bg-white px-3.5 text-sm text-muted-foreground shadow-xs hover:bg-accent">
@@ -65,7 +65,7 @@
         <div class="mt-4 overflow-x-auto">
             <table class="w-full min-w-[820px] text-left text-sm">
                 <thead>
-                    <tr class="bg-[#F8F9FB] text-[13px] font-medium text-[#666D80]">
+                    <tr class="bg-muted text-[13px] font-medium text-muted-foreground">
                         <th class="px-4 py-3 font-medium">No</th>
                         <th class="px-4 py-3 font-medium">Fase</th>
                         <th class="px-4 py-3 font-medium">Syarat Dokumen</th>
@@ -81,7 +81,7 @@
                             <td class="px-4 py-4 text-foreground"><span x-text="item.document_count+' Dokumen'"></span><span x-show="item.required_count" class="ml-1 text-xs text-emerald-600" x-text="'('+item.required_count+' required)'"></span></td>
                             <td class="max-w-[280px] truncate px-4 py-4 text-foreground" x-text="dokumenLabel(item)"></td>
                             <td class="px-5 py-4 text-right">
-                                <button type="button" @click.stop="openRowMenu($event, item.phase, phaseUrl(item.phase))" aria-label="Aksi" aria-haspopup="menu" class="rounded-md p-1.5 text-[#666D80] hover:bg-muted"><x-capstone::icon name="Ellipsis" class="size-5" /></button>
+                                <button type="button" @click.stop="openRowMenu($event, item.phase, phaseUrl(item.phase))" aria-label="Aksi" aria-haspopup="menu" class="rounded-md p-1.5 text-muted-foreground hover:bg-muted"><x-capstone::icon name="Ellipsis" class="size-5" /></button>
                             </td>
                         </tr>
                     </template>
@@ -92,11 +92,9 @@
 
         <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
             <div class="flex items-center gap-3">
-                <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
+                <label class="inline-flex items-center gap-0 overflow-visible rounded-lg border border-input bg-white text-[13px]">
                     <span class="px-2.5 text-muted-foreground">Per halaman</span>
-                    <select x-model.number="pageSize" @change="page=1" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none">
-                        <option>10</option><option>25</option><option>50</option>
-                    </select>
+                    <x-capstone::select-menu x-model.number="pageSize" @select-menu-change.window="page=1" :options="[10,25,50]" size="sm" borderless dropup aria-label="Baris per halaman" class="min-w-20" />
                 </label>
                 <span class="text-foreground"><span x-text="'Menampilkan '+showingFrom+' sampai '+showingTo+' dari '+filtered.length+' data'"></span></span>
             </div>
@@ -105,7 +103,7 @@
                 <template x-for="(n,i) in pageNumbers" :key="n">
                     <span class="flex items-center gap-1.5">
                         <span x-show="i>0 && n-pageNumbers[i-1]>1" class="px-1 text-muted-foreground">...</span>
-                        <button type="button" @click="goPage(n)" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="Math.min(page,pageCount)===n?'border-[#1E2A5A] bg-[#1E2A5A] font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
+                        <button type="button" @click="goPage(n)" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="Math.min(page,pageCount)===n?'border-primary bg-primary font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
                     </span>
                 </template>
                 <button type="button" @click="goPage(Math.min(page,pageCount)+1)" :disabled="page>=pageCount" aria-label="Halaman berikutnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronRight" class="size-4" /></button>
@@ -119,6 +117,6 @@
         <a :href="openMenuHref" class="block rounded-md px-2 py-1.5 text-sm text-foreground hover:bg-accent" x-text="finalized?'Lihat konfigurasi':'Ubah konfigurasi'"></a>
     </div>
 
-    <x-capstone::dialog id="defaults-confirm" x-ref="defaults" title="Gunakan konfigurasi bawaan"><p class="py-4 text-sm text-muted-foreground">Konfigurasi dokumen semua fase pada periode ini akan diganti dengan konfigurasi bawaan.</p><div class="flex justify-end gap-2"><x-capstone::button variant="outline" @click="$refs.defaults.close()" ::disabled="saving">Batal</x-capstone::button><x-capstone::button @click="save(true)" ::disabled="!editable" x-text="saving ? 'Menyimpan...' : 'Gunakan konfigurasi bawaan'" /></div></x-capstone::dialog>
+    <x-capstone::dialog id="defaults-confirm" x-ref="defaults" title="Gunakan konfigurasi bawaan"><p class="py-4 text-sm text-muted-foreground">Konfigurasi dokumen semua fase pada periode ini akan diganti dengan konfigurasi bawaan.</p><div class="flex justify-end gap-2"><x-btn style="outline" @click="$refs.defaults.close()" x-bind:disabled="saving">Batal</x-btn><x-btn @click="save(true)" x-bind:disabled="!editable" x-text="saving ? 'Menyimpan...' : 'Gunakan konfigurasi bawaan'" /></div></x-capstone::dialog>
 </div>
 @endsection

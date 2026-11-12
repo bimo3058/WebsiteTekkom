@@ -14,39 +14,32 @@
         <div class="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-100 p-3">
             <h2 class="text-sm font-bold text-foreground">Tabel Pengguna</h2>
             <div class="flex items-center gap-2">
-                <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500">
+                <label class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500">
                     <x-capstone::icon name="Search" size="15" />
-                    <input x-model.debounce.300ms="search" @input="page=1" type="search" placeholder="Cari" class="w-28 bg-transparent outline-none placeholder:text-slate-400 sm:w-44" aria-label="Cari pengguna">
+                    <input x-model.debounce.300ms="search" @input="page=1" type="search" placeholder="Cari..." class="w-28 bg-transparent outline-none placeholder:text-slate-400 sm:w-44" aria-label="Cari pengguna">
                 </label>
-                <span x-data="{open:false}" @click.outside="open=false" @keydown.escape.window="open=false" class="relative">
-                    <button type="button" @click="open=!open" :aria-expanded="open" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500 hover:bg-slate-50">
-                        <x-capstone::icon name="ListFilter" size="15" /> Filter
-                    </button>
-                    <span x-show="open" x-cloak class="absolute right-0 z-20 mt-1 w-56 rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
-                        <label class="mb-2 block text-xs font-medium text-slate-500">Peran
-                            <select x-model="role" @change="filter()" class="mt-1 w-full rounded-md border border-slate-200 bg-transparent px-2 py-1.5 text-[13px] text-slate-700 outline-none">
-                                <option value="all">Semua role</option>
-                                <option value="mahasiswa">Mahasiswa</option>
-                                <option value="dosen">Dosen</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </label>
-                        <label class="block text-xs font-medium text-slate-500">Status
-                            <select x-model="status" @change="filter()" class="mt-1 w-full rounded-md border border-slate-200 bg-transparent px-2 py-1.5 text-[13px] text-slate-700 outline-none">
-                                <option value="all">Semua status</option>
-                                <option value="active">Aktif</option>
-                                <option value="suspended">Ditangguhkan</option>
-                            </select>
-                        </label>
-                    </span>
-                </span>
-                <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500" title="Urutkan">
+                <x-capstone::dropdown>
+                    <x-slot:trigger>
+                        <button type="button" class="inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 px-3.5 text-[13px] text-slate-500 hover:bg-slate-50" aria-label="Filter pengguna">
+                            <x-capstone::icon name="ListFilter" size="15" /> Filter
+                        </button>
+                    </x-slot:trigger>
+                    <p class="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Peran</p>
+                    <template x-for="opt in [{v:'all',l:'Semua role'},{v:'mahasiswa',l:'Mahasiswa'},{v:'dosen',l:'Dosen'},{v:'admin',l:'Admin'}]" :key="'role-'+opt.v">
+                        <button type="button" @click="role=opt.v;page=1;filter();open=false" class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-slate-50" :class="role===opt.v?'font-semibold text-slate-900':'text-slate-500'" role="menuitem">
+                            <span x-text="opt.l"></span><span x-show="role===opt.v"><x-capstone::icon name="Check" size="14" /></span>
+                        </button>
+                    </template>
+                    <p class="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</p>
+                    <template x-for="opt in [{v:'all',l:'Semua status'},{v:'active',l:'Aktif'},{v:'suspended',l:'Ditangguhkan'}]" :key="'status-'+opt.v">
+                        <button type="button" @click="status=opt.v;page=1;filter();open=false" class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-slate-50" :class="status===opt.v?'font-semibold text-slate-900':'text-slate-500'" role="menuitem">
+                            <span x-text="opt.l"></span><span x-show="status===opt.v"><x-capstone::icon name="Check" size="14" /></span>
+                        </button>
+                    </template>
+                </x-capstone::dropdown>
+                <label class="inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500" title="Urutkan">
                     <x-capstone::icon name="ArrowUpDown" size="15" />
-                    <select @change="applySort($event.target.value)" class="max-w-24 bg-transparent outline-none" aria-label="Urutkan pengguna">
-                        <option value="name">Urutkan</option>
-                        <option value="name">Nama</option>
-                        <option value="date">Tanggal Daftar</option>
-                    </select>
+                    <x-capstone::select-menu borderless @select-menu-change.window="applySort($event.detail.value)" :options="['name'=>'Nama','date'=>'Tanggal Daftar']" placeholder="Urutkan" aria-label="Urutkan pengguna" size="sm" class="max-w-28 border-0 shadow-none" />
                 </label>
             </div>
         </div>
@@ -98,22 +91,7 @@
             </table>
         </div>
 
-        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 p-3 text-[13px]">
-            <div class="flex items-center gap-2 text-slate-500">
-                <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1">Per halaman
-                    <select x-model.number="pageSize" @change="filter()" class="bg-transparent font-semibold text-slate-700 outline-none" aria-label="Baris per halaman"><option>10</option><option>25</option><option>50</option></select>
-                </label>
-                <span x-text="'Menampilkan '+userFrom+' sampai '+userTo+' dari '+userTotal+' data'"></span>
-            </div>
-            <div class="flex items-center gap-1">
-                <button type="button" @click="page=Math.max(1,userPage-1)" :disabled="userPage<=1" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman sebelumnya"><x-capstone::icon name="ChevronLeft" size="15" /></button>
-                <template x-for="(p,i) in userPageList" :key="i+'-'+p">
-                    <button type="button" x-show="p!=='…'" @click="page=p" class="min-w-8 rounded-lg border px-2 py-1.5 text-xs font-semibold" :class="p===userPage ? 'border-primary bg-primary text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-50'" x-text="p"></button>
-                    <span x-show="p==='…'" class="px-1 text-xs text-slate-400">...</span>
-                </template>
-                <button type="button" @click="page=Math.min(userLastPage,userPage+1)" :disabled="userPage>=userLastPage" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman berikutnya"><x-capstone::icon name="ChevronRight" size="15" /></button>
-            </div>
-        </div>
+        @include('capstone::partials.table-footer', ['page' => 'userPage', 'pageCount' => 'userLastPage', 'total' => 'userTotal', 'from' => 'userFrom', 'to' => 'userTo', 'pageList' => 'userPageList', 'prevAction' => 'page=Math.max(1,userPage-1)', 'nextAction' => 'page=Math.min(userLastPage,userPage+1)', 'goAction' => 'page=p'])
     </div>
 </div>
 @endsection

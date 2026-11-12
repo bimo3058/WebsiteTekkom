@@ -15,7 +15,7 @@
             </section>
             <section class="rounded-xl border bg-card p-6">
                 <h2 class="mb-3 font-semibold">Anggota Kelompok</h2>
-                <div class="space-y-2"><template x-for="member in data.members||[]" :key="member.id"><div class="flex items-center justify-between gap-2 border-t py-2 text-sm"><div class="min-w-0"><p class="truncate font-medium" x-text="member.name"></p><p class="text-xs text-muted-foreground" x-text="member.nim"></p></div><x-capstone::badge x-show="member.is_representative" variant="secondary" class="shrink-0 bg-primary/10 text-primary text-xs">Perwakilan</x-capstone::badge></div></template></div>
+                <div class="space-y-2"><template x-for="member in data.members||[]" :key="member.id"><div class="flex items-center justify-between gap-2 border-t py-2 text-sm"><div class="min-w-0"><p class="truncate font-medium" x-text="member.name"></p><p class="text-xs text-muted-foreground" x-text="member.nim"></p></div><x-badge x-show="member.is_representative" style="secondary" class="shrink-0 bg-primary/10 text-primary text-xs">Perwakilan</x-badge></div></template></div>
             </section>
             <section class="rounded-xl border bg-card p-6">
                 <h2 class="mb-3 font-semibold">Ringkasan Nilai</h2>
@@ -37,7 +37,7 @@
             <section class="rounded-xl border bg-card p-6">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div><h2 class="font-semibold">Dokumen EXPO</h2><p class="mt-1 text-sm text-muted-foreground" x-show="!document">Belum ada dokumen yang diunggah.</p></div>
-                    <x-capstone::button x-show="document" variant="outline" size="sm" @click="download()" ::disabled="!!downloading"><x-capstone::icon name="Download" /><span x-text="downloading?'Mengunduh...':'Unduh Dokumen'"></span></x-capstone::button>
+                    <x-btn x-show="document" style="outline" size="sm" @click="download()" x-bind:disabled="!!downloading"><x-capstone::icon name="Download" /><span x-text="downloading?'Mengunduh...':'Unduh Dokumen'"></span></x-btn>
                 </div>
                 <div x-show="document" class="mt-4 space-y-1 rounded-lg border bg-muted/20 p-4 text-sm"><p class="font-medium" x-text="document?.original_name"></p><p class="text-muted-foreground" x-text="'Status: '+(document?.status||'—')+(document?.uploaded_by?.name?' • oleh '+document.uploaded_by.name:'')"></p><p class="text-muted-foreground" x-show="document?.feedback" x-text="'Catatan: '+document.feedback"></p><p class="text-muted-foreground" x-show="document?.created_at" x-text="'Diunggah '+date(document.created_at)"></p></div>
             </section>
@@ -46,8 +46,8 @@
                 <h2 class="mb-2 font-semibold">Keputusan</h2>
                 <label class="grid gap-2 text-sm"><span>Catatan untuk kelompok <span class="text-muted-foreground">(wajib saat menolak)</span></span><textarea x-model="feedback" rows="3" maxlength="2000" class="rounded-md border bg-background p-3 text-sm" placeholder="Feedback / alasan penolakan..."></textarea></label>
                 <div class="mt-4 flex flex-wrap gap-3">
-                    <x-capstone::button @click="review('APPROVED')" ::disabled="saving"><x-capstone::icon name="CircleCheck" /><span x-text="saving?'Menyimpan...':'Setujui Pengajuan'"></span></x-capstone::button>
-                    <x-capstone::button variant="destructive" @click="review('REJECTED')" ::disabled="saving"><x-capstone::icon name="CircleX" />Tolak Pengajuan</x-capstone::button>
+                    <x-btn @click="review('APPROVED')" x-bind:disabled="saving"><x-capstone::icon name="CircleCheck" /><span x-text="saving?'Menyimpan...':'Setujui Pengajuan'"></span></x-btn>
+                    <x-btn style="danger" @click="review('REJECTED')" x-bind:disabled="saving"><x-capstone::icon name="CircleX" />Tolak Pengajuan</x-btn>
                 </div>
             </section>
             <p x-show="!editable && reviewStatus" class="rounded-lg border border-border bg-accent p-4 text-sm" x-text="reviewStatus==='APPROVED'?'Pengajuan sudah disetujui dan terkunci.':(reviewStatus==='REJECTED'?'Pengajuan ditolak — menunggu perbaikan dari kelompok.':'Pengajuan tidak dapat direview pada status kelompok saat ini.')"></p>

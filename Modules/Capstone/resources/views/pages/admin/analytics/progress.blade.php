@@ -7,7 +7,7 @@
             <h1 class="text-2xl font-bold tracking-tight text-foreground">Progres Kelompok</h1>
             <p class="mt-1 text-sm text-muted-foreground">Pantau progres setiap kelompok beserta status fase pada periode berjalan.</p>
         </div>
-        <button type="button" @click="exportCsv()" :disabled="loading || saving" class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#1E2A5A] px-4 text-sm font-medium text-white shadow-xs hover:bg-[#16204a] disabled:opacity-40"><x-capstone::icon name="Download" class="size-4" />Ekspor CSV</button>
+        <button type="button" @click="exportCsv()" :disabled="loading || saving" class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-medium text-white shadow-xs hover:bg-primary/90 disabled:opacity-40"><x-capstone::icon name="Download" class="size-4" />Ekspor CSV</button>
     </div>
     @include('capstone::pages.admin.shared.toolbar')
     @include('capstone::partials.loading')
@@ -18,7 +18,7 @@
         <div class="mt-4 overflow-x-auto">
             <table class="w-full min-w-[860px] text-left text-sm">
                 <thead>
-                    <tr class="bg-[#F8F9FB] text-[13px] font-medium text-[#666D80]">
+                    <tr class="bg-muted text-[13px] font-medium text-muted-foreground">
                         <th class="px-4 py-3 font-medium">No</th>
                         <th class="px-4 py-3 font-medium">Kelompok / Judul</th>
                         <th class="px-4 py-3 font-medium">Periode</th>
@@ -37,9 +37,9 @@
                             <td class="whitespace-nowrap px-4 py-4 text-foreground" x-text="item.period?.name"></td>
                             <td class="px-4 py-4 tabular-nums text-foreground" x-text="item.members_count"></td>
                             <td class="whitespace-nowrap px-4 py-4"><span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600" x-text="item.status"></span></td>
-                            <td class="min-w-36 px-4 py-4"><div class="mb-1.5 text-[13px] tabular-nums text-foreground" x-text="percent(item)+'%'"></div><div class="h-2 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full bg-[#1E2A5A]" :style="'width:'+percent(item)+'%'"></div></div></td>
-                            <td class="px-4 py-4"><div class="flex flex-wrap gap-1.5"><template x-for="phase in item.progress?.phases || []" :key="phase.phase"><span :title="phase.status" class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs" :class="phase.status==='completed'?'border-emerald-200 bg-emerald-50 text-emerald-700':phase.status==='locked'?'border-slate-200 text-slate-500':'border-[#1E2A5A]/20 bg-[#1E2A5A]/5 text-[#1E2A5A]'" x-text="phase.phase"></span></template></div></td>
-                            <td class="px-5 py-4 text-right"><button type="button" @click="openRowMenu($event,item)" aria-label="Aksi" aria-haspopup="menu" class="rounded-md p-1.5 text-[#666D80] hover:bg-muted"><x-capstone::icon name="Ellipsis" class="size-5" /></button></td>
+                            <td class="min-w-36 px-4 py-4"><div class="mb-1.5 text-[13px] tabular-nums text-foreground" x-text="percent(item)+'%'"></div><div class="h-2 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full bg-primary" :style="'width:'+percent(item)+'%'"></div></div></td>
+                            <td class="px-4 py-4"><div class="flex flex-wrap gap-1.5"><template x-for="phase in item.progress?.phases || []" :key="phase.phase"><span :title="phase.status" class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs" :class="phase.status==='completed'?'border-emerald-200 bg-emerald-50 text-emerald-700':phase.status==='locked'?'border-slate-200 text-slate-500':'border-primary/20 bg-primary/5 text-[#1E2A5A]'" x-text="phase.phase"></span></template></div></td>
+                            <td class="px-5 py-4 text-right"><button type="button" @click="openRowMenu($event,item)" aria-label="Aksi" aria-haspopup="menu" class="rounded-md p-1.5 text-muted-foreground hover:bg-muted"><x-capstone::icon name="Ellipsis" class="size-5" /></button></td>
                         </tr>
                     </template>
                 </tbody>
@@ -48,9 +48,9 @@
         </div>
         <div x-show="filtered.length" x-cloak class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
             <div class="flex items-center gap-3">
-                <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
+                <label class="inline-flex items-center gap-0 overflow-visible rounded-lg border border-input bg-white text-[13px]">
                     <span class="px-2.5 text-muted-foreground">Per halaman</span>
-                    <select x-model.number="pageSize" @change="page=1" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none"><option>10</option><option>25</option><option>50</option></select>
+                    <x-capstone::select-menu x-model.number="pageSize" @select-menu-change.window="page=1" :options="[10,25,50]" size="sm" borderless dropup aria-label="Baris per halaman" class="min-w-20" />
                 </label>
                 <span class="text-foreground"><span x-text="'Menampilkan '+showingFrom+' sampai '+showingTo+' dari '+filtered.length+' data'"></span></span>
             </div>
@@ -59,7 +59,7 @@
                 <template x-for="(n,i) in pageNumbers" :key="n">
                     <span class="flex items-center gap-1.5">
                         <span x-show="i>0 && n-pageNumbers[i-1]>1" class="px-1 text-muted-foreground">...</span>
-                        <button type="button" @click="goPage(n)" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="page===n?'border-[#1E2A5A] bg-[#1E2A5A] font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
+                        <button type="button" @click="goPage(n)" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="page===n?'border-primary bg-primary font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
                     </span>
                 </template>
                 <button type="button" @click="goPage(page+1)" :disabled="page>=pageCount" aria-label="Halaman berikutnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronRight" class="size-4" /></button>

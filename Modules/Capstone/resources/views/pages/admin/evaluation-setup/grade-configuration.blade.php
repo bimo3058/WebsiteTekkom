@@ -9,12 +9,12 @@
         </div>
         <label class="inline-flex items-center gap-2 rounded-lg border border-input bg-white px-4 py-2 text-sm font-semibold shadow-xs">
             <span class="sr-only">Periode</span>
-            <select x-model="periodId" @change="load()" :disabled="saving" aria-label="Pilih periode" class="bg-transparent font-semibold outline-none">
-                <option value="" disabled x-show="!periodId">Pilih periode</option>
+            <x-capstone::select-menu x-model="periodId" @select-menu-change.window="load()" :options="[]" placeholder="Pilih periode" aria-label="Pilih periode" disabled-when="saving">
+                
                 <template x-for="period in periods" :key="period.id">
-                    <option :value="String(period.id)" x-text="period.name" :selected="String(period.id)===String(periodId)"></option>
+                    <button type="button" role="option" @click="pick(String(period.id), period.name)" :aria-selected="(String(selectedValue) === String(String(period.id))).toString()" class="flex w-full items-center justify-between gap-2 rounded-radius px-2 py-1.5 text-sm hover:bg-surface-alt" :class="String(selectedValue) === String(String(period.id)) ? 'bg-primary/10 font-medium' : ''"><span class="truncate" x-text="period.name"></span><span x-show="String(selectedValue) === String(String(period.id))" class="text-primary"><x-capstone::icon name="Check" size="14" /></span></button>
                 </template>
-            </select>
+            </x-capstone::select-menu>
             <x-capstone::icon name="ChevronDown" class="size-4 text-muted-foreground" />
         </label>
     </div>
@@ -60,8 +60,8 @@
         <div class="grid gap-4 px-5 pt-4 lg:grid-cols-3">
             @foreach(['pdc1'=>'PDC 1','pdc2'=>'PDC 2','ta'=>'Tugas Akhir'] as $phase=>$label)
             <div x-show="phaseFilter===''||phaseFilter==='{{ $phase }}'" class="overflow-hidden rounded-xl border border-border">
-                <div class="flex items-center justify-between gap-2 bg-[#F8F9FB] px-4 py-3">
-                    <h3 class="text-[13px] font-semibold text-[#666D80]">{{ $label }}</h3>
+                <div class="flex items-center justify-between gap-2 bg-muted px-4 py-3">
+                    <h3 class="text-[13px] font-semibold text-muted-foreground">{{ $label }}</h3>
                     <p class="text-xs font-medium" :class="Math.abs(total('{{ $phase }}')-100)<0.001?'text-emerald-600':'text-red-600'" x-text="'Total: '+total('{{ $phase }}')+'%'"></p>
                 </div>
                 <div class="divide-y divide-border">
@@ -87,7 +87,7 @@
             <p x-show="valid" class="text-sm text-muted-foreground">Semua fase berjumlah 100%.</p>
             <div class="flex items-center gap-2.5">
                 <button type="button" @click="document.getElementById('reset-grades').showModal()" :disabled="saving" class="inline-flex h-9 items-center rounded-lg border border-input bg-white px-4 text-sm font-semibold shadow-xs hover:bg-accent disabled:opacity-40">Atur Ulang ke default</button>
-                <button type="button" @click="save()" :disabled="saving || !valid" class="inline-flex h-9 items-center rounded-lg bg-[#1E2A5A] px-4 text-sm font-semibold text-white shadow-xs hover:bg-[#16204a] disabled:opacity-40">Simpan</button>
+                <button type="button" @click="save()" :disabled="saving || !valid" class="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-white shadow-xs hover:bg-primary/90 disabled:opacity-40">Simpan</button>
             </div>
         </div>
     </div>
@@ -98,7 +98,7 @@
         <h2 class="text-lg font-semibold">Atur Ulang bobot nilai?</h2>
         <p class="my-4 text-sm text-muted-foreground">Bobot pada periode yang dipilih akan diganti dengan bobot default sistem.</p>
         <div class="flex gap-2.5">
-            <button type="button" @click="reset()" :disabled="saving" class="inline-flex h-9 items-center rounded-lg bg-[#1E2A5A] px-4 text-sm font-semibold text-white hover:bg-[#16204a] disabled:opacity-40">Atur Ulang</button>
+            <button type="button" @click="reset()" :disabled="saving" class="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-40">Atur Ulang</button>
             <button type="button" @click="document.getElementById('reset-grades').close()" class="inline-flex h-9 items-center rounded-lg border border-input bg-white px-4 text-sm font-semibold shadow-xs hover:bg-accent">Batal</button>
         </div>
     </dialog>

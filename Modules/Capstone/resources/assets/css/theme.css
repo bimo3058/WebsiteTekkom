@@ -2,6 +2,9 @@
 @source "../../views";
 @source "../js";
 @source "../../reference/classes.txt";
+@source "../../../../../vendor/ddfsn/blade-components/resources/views";
+@source "../../../../../vendor/ddfsn/blade-components/resources/css/blade-components.css";
+@source "../../../../../vendor/distortedfusion/blade-forms/resources/views";
 @import "./animations.css";
 @import "./shadcn.css";
 
@@ -37,6 +40,21 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-on-primary: var(--primary-foreground);
+  --color-on-secondary: var(--secondary-foreground);
+  --color-surface: var(--background);
+  --color-surface-alt: var(--card);
+  --color-on-surface: var(--foreground);
+  --color-on-surface-strong: var(--foreground);
+  --color-outline: var(--border);
+  --color-outline-strong: var(--input);
+  --color-danger: var(--destructive);
+  --color-on-danger: #ffffff;
+  --color-info: var(--chart-1);
+  --color-on-info: #ffffff;
+  --color-on-success: #ffffff;
+  --color-on-warning: #ffffff;
+  --radius-radius: var(--radius);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);

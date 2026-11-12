@@ -12,44 +12,29 @@
             <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
                 <x-capstone::icon name="Search" class="h-4 w-4" />
             </span>
-            <input x-model.debounce.200ms="search" @input="page = 1" type="search" placeholder="Cari" aria-label="Cari jadwal"
+                <input x-model.debounce.200ms="search" @input="page = 1" type="search" placeholder="Cari..." aria-label="Cari jadwal"
                 class="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#0B266E] focus:outline-none" />
         </label>
-        <div x-data="{ open: false }" class="relative" @click.outside="open = false" @keydown.escape.window="open = false">
-            <button type="button" @click="open = !open" :aria-expanded="open" aria-label="Filter jadwal" title="Filter jadwal"
-                class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700">
-                <x-capstone::icon name="Funnel" class="h-4 w-4" />
-            </button>
-            <div x-show="open" x-cloak class="absolute right-0 top-full z-30 mt-2 w-64 space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-lg">
-                <div>
-                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500" for="sched-filter-period">Periode</label>
-                    <select id="sched-filter-period" x-model="selectedPeriod" class="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm">
-                        <option value="all">Semua Periode</option>
-                        <template x-for="period in periods" :key="period.id">
-                            <option :value="period.id" x-text="period.name + (period.is_active ? ' (Active)' : '')"></option>
-                        </template>
-                    </select>
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500" for="sched-filter-type">Tipe</label>
-                    <select id="sched-filter-type" x-model="typeFilter" @change="page = 1" class="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm">
-                        <option value="all">Semua Tipe</option>
-                        @foreach(['BIMBINGAN', 'SEMPRO', 'EXPO', 'TA_DEFENSE'] as $type)
-                        <option value="{{ $type }}">{{ $type }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500" for="sched-filter-status">Status</label>
-                    <select id="sched-filter-status" x-model="statusFilter" @change="page = 1" class="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm">
-                        <option value="all">Semua Status</option>
-                        @foreach(['PENDING', 'PENDING_APPROVAL', 'SCHEDULED', 'APPROVED', 'COMPLETED', 'REJECTED', 'CANCELLED'] as $status)
-                        <option value="{{ $status }}">{{ $status }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-        </div>
+        <x-capstone::dropdown>
+            <x-slot:trigger>
+                <button type="button" class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700" aria-label="Filter jadwal" title="Filter jadwal">
+                    <x-capstone::icon name="Funnel" class="h-4 w-4" /> Filter
+                </button>
+            </x-slot:trigger>
+            <p class="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Periode</p>
+            <button type="button" @click="selectedPeriod='all';page=1;open=false" class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-slate-50" :class="String(selectedPeriod)==='all'?'font-semibold text-slate-900':'text-slate-500'" role="menuitem"><span>Semua Periode</span><span x-show="String(selectedPeriod)==='all'"><x-capstone::icon name="Check" size="14" /></span></button>
+            <template x-for="period in periods" :key="period.id">
+                <button type="button" @click="selectedPeriod=String(period.id);page=1;open=false" class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-slate-50" :class="String(selectedPeriod)===String(period.id)?'font-semibold text-slate-900':'text-slate-500'" role="menuitem"><span class="truncate" x-text="period.name + (period.is_active ? ' (Aktif)' : '')"></span><span x-show="String(selectedPeriod)===String(period.id)"><x-capstone::icon name="Check" size="14" /></span></button>
+            </template>
+            <p class="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Tipe</p>
+            <template x-for="opt in [{v:'all',l:'Semua Tipe'},{v:'BIMBINGAN',l:'Bimbingan'},{v:'SEMPRO',l:'Sempro'},{v:'EXPO',l:'Expo'},{v:'TA_DEFENSE',l:'Sidang TA'}]" :key="'type-'+opt.v">
+                <button type="button" @click="typeFilter=opt.v;page=1;open=false" class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-slate-50" :class="typeFilter===opt.v?'font-semibold text-slate-900':'text-slate-500'" role="menuitem"><span x-text="opt.l"></span><span x-show="typeFilter===opt.v"><x-capstone::icon name="Check" size="14" /></span></button>
+            </template>
+            <p class="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</p>
+            <template x-for="opt in [{v:'all',l:'Semua Status'},{v:'PENDING',l:'Menunggu'},{v:'PENDING_APPROVAL',l:'Menunggu persetujuan'},{v:'SCHEDULED',l:'Terjadwal'},{v:'APPROVED',l:'Disetujui'},{v:'COMPLETED',l:'Selesai'},{v:'REJECTED',l:'Ditolak'},{v:'CANCELLED',l:'Dibatalkan'}]" :key="'status-'+opt.v">
+                <button type="button" @click="statusFilter=opt.v;page=1;open=false" class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-slate-50" :class="statusFilter===opt.v?'font-semibold text-slate-900':'text-slate-500'" role="menuitem"><span x-text="opt.l"></span><span x-show="statusFilter===opt.v"><x-capstone::icon name="Check" size="14" /></span></button>
+            </template>
+        </x-capstone::dropdown>
         <span class="hidden text-sm font-medium text-slate-500 md:inline" aria-live="polite" x-text="monthLabel"></span>
         <button type="button" @click="move(-1)" aria-label="Bulan Sebelumnya" :title="'Bulan Sebelumnya (' + monthLabel + ')'"
             class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50">

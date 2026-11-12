@@ -20,7 +20,7 @@
             <h2 class="text-base font-semibold text-foreground">Permintaan Gabung Periode</h2>
             <p class="text-sm text-muted-foreground">Tinjau permintaan mahasiswa untuk bergabung ke periode akademik. Mahasiswa yang disetujui dapat membuat atau bergabung ke kelompok.</p>
         </div>
-        <x-capstone::button variant="outline" @click="load()" ::disabled="loading"><x-capstone::icon name="RefreshCw" size="15" />Muat Ulang</x-capstone::button>
+        <x-btn style="outline" @click="load()" x-bind:disabled="loading"><x-capstone::icon name="RefreshCw" size="15" />Muat Ulang</x-btn>
     </div>
 
     @include('capstone::partials.loading')
@@ -35,16 +35,11 @@
                     <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"><x-capstone::icon name="Search" class="size-4" /></span>
                     <input x-model.debounce.300ms="search" @input="filter()" type="search" placeholder="Cari nama / NIM..." aria-label="Cari join request" class="h-9 w-56 rounded-lg border border-input bg-white pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring">
                 </div>
-                <select x-model="status" @change="filter()" aria-label="Filter status" class="h-9 rounded-lg border border-input bg-white px-2.5 text-sm text-muted-foreground outline-none">
-                    <option value="PENDING">Menunggu</option>
-                    <option value="APPROVED">Disetujui</option>
-                    <option value="REJECTED">Ditolak</option>
-                    <option value="all">Semua status</option>
-                </select>
-                <select x-model="periodId" @change="filter()" aria-label="Filter periode" class="h-9 rounded-lg border border-input bg-white px-2.5 text-sm text-muted-foreground outline-none">
-                    <option value="">Semua periode</option>
-                    <template x-for="period in periods" :key="period.id"><option :value="String(period.id)" x-text="period.name"></option></template>
-                </select>
+                <x-capstone::select-menu x-model="status" @select-menu-change.window="filter()" :options="['PENDING'=>'Menunggu','APPROVED'=>'Disetujui','REJECTED'=>'Ditolak','all'=>'Semua status']" placeholder="Filter status" aria-label="Filter status" />
+                <x-capstone::select-menu x-model="periodId" @select-menu-change.window="filter()" :options="[]" placeholder="Semua periode" aria-label="Filter periode">
+                    
+                    <template x-for="period in periods" :key="period.id"><button type="button" role="option" @click="pick(String(period.id), period.name)" :aria-selected="(String(selectedValue) === String(String(period.id))).toString()" class="flex w-full items-center justify-between gap-2 rounded-radius px-2 py-1.5 text-sm hover:bg-surface-alt" :class="String(selectedValue) === String(String(period.id)) ? 'bg-primary/10 font-medium' : ''"><span class="truncate" x-text="period.name"></span><span x-show="String(selectedValue) === String(String(period.id))" class="text-primary"><x-capstone::icon name="Check" size="14" /></span></button></template>
+                </x-capstone::select-menu>
                 <button type="button" @click="reset()" class="inline-flex h-9 items-center rounded-lg border border-input bg-white px-3 text-sm text-muted-foreground shadow-xs hover:bg-accent">Atur Ulang</button>
             </div>
         </div>
@@ -52,7 +47,7 @@
         <div class="mt-4 overflow-x-auto">
             <table class="w-full min-w-[820px] text-left text-sm">
                 <thead>
-                    <tr class="bg-[#F8F9FB] text-[13px] font-medium text-[#666D80]">
+                    <tr class="bg-muted text-[13px] font-medium text-muted-foreground">
                         <th class="px-4 py-3 font-medium">Mahasiswa</th>
                         <th class="px-4 py-3 font-medium">NIM</th>
                         <th class="px-4 py-3 font-medium">Periode</th>
@@ -70,7 +65,7 @@
                             <td class="whitespace-nowrap px-4 py-4"><span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium" :class="statusClass(item.status)" x-text="item.status"></span><p x-show="item.status==='REJECTED' && item.rejection_reason" class="mt-1 max-w-64 whitespace-normal text-xs text-muted-foreground" x-text="item.rejection_reason"></p></td>
                             <td class="whitespace-nowrap px-4 py-4 text-foreground" x-text="shortDate(item.created_at)"></td>
                             <td class="whitespace-nowrap px-5 py-4 text-right">
-                                <button type="button" x-show="canReview(item)" @click="openRowMenu($event,item)" aria-label="Aksi" aria-haspopup="menu" class="rounded-md p-1.5 text-[#666D80] hover:bg-muted"><x-capstone::icon name="Ellipsis" class="size-5" /></button>
+                                <button type="button" x-show="canReview(item)" @click="openRowMenu($event,item)" aria-label="Aksi" aria-haspopup="menu" class="rounded-md p-1.5 text-muted-foreground hover:bg-muted"><x-capstone::icon name="Ellipsis" class="size-5" /></button>
                                 <span x-show="!canReview(item)" class="text-xs text-muted-foreground">Reviewed</span>
                             </td>
                         </tr>
@@ -82,9 +77,9 @@
 
         <div x-show="items.length" x-cloak class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
             <div class="flex items-center gap-3">
-                <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
+                <label class="inline-flex items-center gap-0 overflow-visible rounded-lg border border-input bg-white text-[13px]">
                     <span class="px-2.5 text-muted-foreground">Per halaman</span>
-                    <select x-model.number="pageSize" @change="page=1;load()" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none"><option>10</option><option>25</option><option>50</option></select>
+                    <x-capstone::select-menu x-model.number="pageSize" @select-menu-change.window="page=1;load()" :options="[10,25,50]" size="sm" borderless dropup aria-label="Baris per halaman" class="min-w-20" />
                 </label>
                 <span class="text-foreground"><span x-text="'Menampilkan '+showingFrom+' sampai '+showingTo+' dari '+(pagination.total ?? 0)+' data'"></span></span>
             </div>
@@ -93,7 +88,7 @@
                 <template x-for="(n,i) in pageNumbers" :key="n">
                     <span class="flex items-center gap-1.5">
                         <span x-show="i>0 && n-pageNumbers[i-1]>1" class="px-1 text-muted-foreground">...</span>
-                        <button type="button" @click="gotoPage(n)" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="page===n?'border-[#1E2A5A] bg-[#1E2A5A] font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
+                        <button type="button" @click="gotoPage(n)" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="page===n?'border-primary bg-primary font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
                     </span>
                 </template>
                 <button type="button" @click="gotoPage(page+1)" :disabled="page>=(pagination.last_page||1)" aria-label="Halaman berikutnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronRight" class="size-4" /></button>
@@ -102,13 +97,13 @@
     </div>
 
     <div x-show="openMenuItem" @click.away="closeMenu()" x-cloak :style="menuStyle" style="position: fixed; z-index: 50;" role="menu" class="w-48 rounded-lg border border-border bg-white p-1.5 text-left shadow-md">
-        <button type="button" @click="review(openMenuItem,'approve');closeMenu()" ::disabled="saving" class="block w-full rounded-md px-2 py-1.5 text-left text-sm text-foreground hover:bg-accent">Setujui</button>
-        <button type="button" @click="review(openMenuItem,'reject');closeMenu()" ::disabled="saving" class="block w-full rounded-md px-2 py-1.5 text-left text-sm text-red-600 hover:bg-red-50">Tolak</button>
+        <button type="button" @click="review(openMenuItem,'approve');closeMenu()" x-bind:disabled="saving" class="block w-full rounded-md px-2 py-1.5 text-left text-sm text-foreground hover:bg-accent">Setujui</button>
+        <button type="button" @click="review(openMenuItem,'reject');closeMenu()" x-bind:disabled="saving" class="block w-full rounded-md px-2 py-1.5 text-left text-sm text-red-600 hover:bg-red-50">Tolak</button>
     </div>
     <x-capstone::dialog id="join-review"><h2 class="text-lg font-semibold" x-text="decision==='approve'?'Setujui Join Request':'Tolak Join Request'"></h2><p class="my-4 text-sm text-muted-foreground" x-text="selected ? studentName(selected)+' · '+studentNim(selected)+' · '+(selected.period?.name || '') : ''"></p><form @submit.prevent="submit()" class="space-y-4">
         <p x-show="decision==='approve'" class="text-sm">Setujui permintaan ini? Mahasiswa dapat membuat atau bergabung ke kelompok pada periode ini.</p>
         <div x-show="decision==='reject'" class="space-y-2"><label for="rejection-reason" class="text-sm font-medium">Alasan Penolakan</label><textarea id="rejection-reason" x-model="reason" :required="decision==='reject'" maxlength="1000" class="min-h-24 w-full rounded-md border bg-background p-3 text-sm" placeholder="Explain why this request is being rejected..."></textarea></div>
-        <p class="text-sm text-destructive" role="alert" x-text="errors.root"></p><div class="flex justify-end gap-2"><x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button><x-capstone::button type="submit" ::disabled="saving || (decision==='reject' && !reason.trim())"><span x-text="saving?'Menyimpan...':decision==='approve'?'Setujui':'Tolak'"></span></x-capstone::button></div>
+        <p class="text-sm text-destructive" role="alert" x-text="errors.root"></p><div class="flex justify-end gap-2"><x-btn style="outline" @click="$el.closest('dialog').close()">Batal</x-btn><x-btn type="submit" x-bind:disabled="saving || (decision==='reject' && !reason.trim())"><span x-text="saving?'Menyimpan...':decision==='approve'?'Setujui':'Tolak'"></span></x-btn></div>
     </form></x-capstone::dialog>
     </div>
 
@@ -118,7 +113,7 @@
             <h2 class="text-base font-semibold text-foreground">Pendaftaran Sidang TA</h2>
             <p class="text-sm text-muted-foreground">Tinjau permintaan mahasiswa untuk masuk ke tahap unggah dokumen TA. Mahasiswa yang disetujui dapat mengunggah dokumen TA yang disyaratkan.</p>
         </div>
-        <x-capstone::button variant="outline" @click="load()" ::disabled="loading"><x-capstone::icon name="RefreshCw" size="15" />Muat Ulang</x-capstone::button>
+        <x-btn style="outline" @click="load()" x-bind:disabled="loading"><x-capstone::icon name="RefreshCw" size="15" />Muat Ulang</x-btn>
     </div>
 
     @include('capstone::partials.loading')
@@ -133,16 +128,11 @@
                     <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"><x-capstone::icon name="Search" class="size-4" /></span>
                     <input x-model.debounce.300ms="search" @input="filter()" type="search" placeholder="Cari nama / NIM..." aria-label="Cari pendaftaran sidang" class="h-9 w-56 rounded-lg border border-input bg-white pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring">
                 </div>
-                <select x-model="status" @change="filter()" aria-label="Filter status" class="h-9 rounded-lg border border-input bg-white px-2.5 text-sm text-muted-foreground outline-none">
-                    <option value="PENDING">Menunggu</option>
-                    <option value="APPROVED">Disetujui</option>
-                    <option value="REJECTED">Ditolak</option>
-                    <option value="all">Semua status</option>
-                </select>
-                <select x-model="periodId" @change="filter()" aria-label="Filter periode" class="h-9 rounded-lg border border-input bg-white px-2.5 text-sm text-muted-foreground outline-none">
-                    <option value="">Semua periode</option>
-                    <template x-for="period in periods" :key="period.id"><option :value="String(period.id)" x-text="period.name"></option></template>
-                </select>
+                <x-capstone::select-menu x-model="status" @select-menu-change.window="filter()" :options="['PENDING'=>'Menunggu','APPROVED'=>'Disetujui','REJECTED'=>'Ditolak','all'=>'Semua status']" placeholder="Filter status" aria-label="Filter status" />
+                <x-capstone::select-menu x-model="periodId" @select-menu-change.window="filter()" :options="[]" placeholder="Semua periode" aria-label="Filter periode">
+                    
+                    <template x-for="period in periods" :key="period.id"><button type="button" role="option" @click="pick(String(period.id), period.name)" :aria-selected="(String(selectedValue) === String(String(period.id))).toString()" class="flex w-full items-center justify-between gap-2 rounded-radius px-2 py-1.5 text-sm hover:bg-surface-alt" :class="String(selectedValue) === String(String(period.id)) ? 'bg-primary/10 font-medium' : ''"><span class="truncate" x-text="period.name"></span><span x-show="String(selectedValue) === String(String(period.id))" class="text-primary"><x-capstone::icon name="Check" size="14" /></span></button></template>
+                </x-capstone::select-menu>
                 <button type="button" @click="reset()" class="inline-flex h-9 items-center rounded-lg border border-input bg-white px-3 text-sm text-muted-foreground shadow-xs hover:bg-accent">Atur Ulang</button>
             </div>
         </div>
@@ -150,7 +140,7 @@
         <div class="mt-4 overflow-x-auto">
             <table class="w-full min-w-[860px] text-left text-sm">
                 <thead>
-                    <tr class="bg-[#F8F9FB] text-[13px] font-medium text-[#666D80]">
+                    <tr class="bg-muted text-[13px] font-medium text-muted-foreground">
                         <th class="px-4 py-3 font-medium">Mahasiswa</th>
                         <th class="px-4 py-3 font-medium">NIM</th>
                         <th class="px-4 py-3 font-medium">Grup</th>
@@ -170,7 +160,7 @@
                             <td class="whitespace-nowrap px-4 py-4"><span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium" :class="statusClass(item.status)" x-text="item.status"></span><p x-show="item.status==='REJECTED' && item.rejection_reason" class="mt-1 max-w-64 whitespace-normal text-xs text-muted-foreground" x-text="item.rejection_reason"></p></td>
                             <td class="whitespace-nowrap px-4 py-4 text-foreground" x-text="shortDate(item.created_at)"></td>
                             <td class="whitespace-nowrap px-5 py-4 text-right">
-                                <button type="button" x-show="canReview(item)" @click="openRowMenu($event,item)" aria-label="Aksi" aria-haspopup="menu" class="rounded-md p-1.5 text-[#666D80] hover:bg-muted"><x-capstone::icon name="Ellipsis" class="size-5" /></button>
+                                <button type="button" x-show="canReview(item)" @click="openRowMenu($event,item)" aria-label="Aksi" aria-haspopup="menu" class="rounded-md p-1.5 text-muted-foreground hover:bg-muted"><x-capstone::icon name="Ellipsis" class="size-5" /></button>
                                 <span x-show="!canReview(item)" class="text-xs text-muted-foreground">Reviewed</span>
                             </td>
                         </tr>
@@ -182,9 +172,9 @@
 
         <div x-show="items.length" x-cloak class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
             <div class="flex items-center gap-3">
-                <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
+                <label class="inline-flex items-center gap-0 overflow-visible rounded-lg border border-input bg-white text-[13px]">
                     <span class="px-2.5 text-muted-foreground">Per halaman</span>
-                    <select x-model.number="pageSize" @change="page=1;load()" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none"><option>10</option><option>25</option><option>50</option></select>
+                    <x-capstone::select-menu x-model.number="pageSize" @select-menu-change.window="page=1;load()" :options="[10,25,50]" size="sm" borderless dropup aria-label="Baris per halaman" class="min-w-20" />
                 </label>
                 <span class="text-foreground"><span x-text="'Menampilkan '+showingFrom+' sampai '+showingTo+' dari '+(pagination.total ?? 0)+' data'"></span></span>
             </div>
@@ -193,7 +183,7 @@
                 <template x-for="(n,i) in pageNumbers" :key="n">
                     <span class="flex items-center gap-1.5">
                         <span x-show="i>0 && n-pageNumbers[i-1]>1" class="px-1 text-muted-foreground">...</span>
-                        <button type="button" @click="gotoPage(n)" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="page===n?'border-[#1E2A5A] bg-[#1E2A5A] font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
+                        <button type="button" @click="gotoPage(n)" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="page===n?'border-primary bg-primary font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
                     </span>
                 </template>
                 <button type="button" @click="gotoPage(page+1)" :disabled="page>=(pagination.last_page||1)" aria-label="Halaman berikutnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronRight" class="size-4" /></button>
@@ -202,13 +192,13 @@
     </div>
 
     <div x-show="openMenuItem" @click.away="closeMenu()" x-cloak :style="menuStyle" style="position: fixed; z-index: 50;" role="menu" class="w-48 rounded-lg border border-border bg-white p-1.5 text-left shadow-md">
-        <button type="button" @click="review(openMenuItem,'approve');closeMenu()" ::disabled="saving" class="block w-full rounded-md px-2 py-1.5 text-left text-sm text-foreground hover:bg-accent">Setujui</button>
-        <button type="button" @click="review(openMenuItem,'reject');closeMenu()" ::disabled="saving" class="block w-full rounded-md px-2 py-1.5 text-left text-sm text-red-600 hover:bg-red-50">Tolak</button>
+        <button type="button" @click="review(openMenuItem,'approve');closeMenu()" x-bind:disabled="saving" class="block w-full rounded-md px-2 py-1.5 text-left text-sm text-foreground hover:bg-accent">Setujui</button>
+        <button type="button" @click="review(openMenuItem,'reject');closeMenu()" x-bind:disabled="saving" class="block w-full rounded-md px-2 py-1.5 text-left text-sm text-red-600 hover:bg-red-50">Tolak</button>
     </div>
     <x-capstone::dialog id="sidang-review"><h2 class="text-lg font-semibold" x-text="decision==='approve'?'Setujui Sidang TA Registration':'Tolak Sidang TA Registration'"></h2><p class="my-4 text-sm text-muted-foreground" x-text="selected ? studentName(selected)+' · '+studentNim(selected)+' · '+groupName(selected) : ''"></p><form @submit.prevent="submit()" class="space-y-4">
         <p x-show="decision==='approve'" class="text-sm">Setujui permintaan ini? Mahasiswa dapat mengunggah dokumen TA yang disyaratkan.</p>
         <div x-show="decision==='reject'" class="space-y-2"><label for="sidang-rejection-reason" class="text-sm font-medium">Alasan Penolakan</label><textarea id="sidang-rejection-reason" x-model="reason" :required="decision==='reject'" maxlength="1000" class="min-h-24 w-full rounded-md border bg-background p-3 text-sm" placeholder="Explain why this request is being rejected..."></textarea></div>
-        <p class="text-sm text-destructive" role="alert" x-text="errors.root"></p><div class="flex justify-end gap-2"><x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button><x-capstone::button type="submit" ::disabled="saving || (decision==='reject' && !reason.trim())"><span x-text="saving?'Menyimpan...':decision==='approve'?'Setujui':'Tolak'"></span></x-capstone::button></div>
+        <p class="text-sm text-destructive" role="alert" x-text="errors.root"></p><div class="flex justify-end gap-2"><x-btn style="outline" @click="$el.closest('dialog').close()">Batal</x-btn><x-btn type="submit" x-bind:disabled="saving || (decision==='reject' && !reason.trim())"><span x-text="saving?'Menyimpan...':decision==='approve'?'Setujui':'Tolak'"></span></x-btn></div>
     </form></x-capstone::dialog>
     </div>
 </div>

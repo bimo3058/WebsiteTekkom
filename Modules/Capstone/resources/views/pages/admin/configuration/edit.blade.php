@@ -4,10 +4,10 @@
 @section('content')
 <div x-data="adminAssessmentConfig({{ $peer ? 'true' : 'false' }},true)" class="space-y-5">
     <div class="flex flex-wrap items-center justify-between gap-3">
-        <a :href="url('/admin/period-assessment-config')+'?period_id='+encodeURIComponent(periodId||'')" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-input bg-white px-3.5 text-sm font-medium text-[#666D80] shadow-xs hover:bg-accent">
+        <a :href="url('/admin/period-assessment-config')+'?period_id='+encodeURIComponent(periodId||'')" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-input bg-white px-3.5 text-sm font-medium text-muted-foreground shadow-xs hover:bg-accent">
             <x-capstone::icon name="ChevronLeft" class="size-4" />Kembali
         </a>
-        <button type="button" @click="save()" :disabled="saving || period?.is_finalized" class="inline-flex h-9 items-center rounded-lg bg-[#1E2A5A] px-5 text-sm font-semibold text-white shadow-xs hover:bg-[#091958] disabled:opacity-50">Simpan</button>
+        <button type="button" @click="save()" :disabled="saving || period?.is_finalized" class="inline-flex h-9 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-white shadow-xs hover:bg-primary/90 disabled:opacity-50">Simpan</button>
     </div>
 
     <div>
@@ -20,14 +20,14 @@
 
     <div x-show="!loading && !error && periodId" x-cloak class="overflow-hidden rounded-xl border border-border bg-white shadow-xs">
         <div class="border-b border-border px-6 py-5">
-            <label for="copy-period" class="text-sm font-medium text-[#666D80]">Salin Penilaian</label>
+            <label for="copy-period" class="text-sm font-medium text-muted-foreground">Salin Penilaian</label>
             <div class="relative mt-2 max-w-sm">
-                <select id="copy-period" x-model="copyFrom" @change="if(copyFrom)copy()" :disabled="saving || period?.is_finalized" class="h-11 w-full appearance-none rounded-xl border border-input bg-white px-4 pr-10 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-ring">
-                    <option value="">Pilih sumber periode</option>
+                <x-capstone::select-menu x-model="copyFrom" @select-menu-change.window="if(copyFrom)copy()" :options="[]" placeholder="Pilih sumber periode" aria-label="Pilih..." disabled-when="saving || period?.is_finalized">
+                    
                     <template x-for="p in periods.filter(p=>String(p.id)!==String(periodId))" :key="p.id">
-                        <option :value="p.id" x-text="p.name"></option>
+                        <button type="button" role="option" @click="pick(p.id, p.name)" :aria-selected="(String(selectedValue) === String(p.id)).toString()" class="flex w-full items-center justify-between gap-2 rounded-radius px-2 py-1.5 text-sm hover:bg-surface-alt" :class="String(selectedValue) === String(p.id) ? 'bg-primary/10 font-medium' : ''"><span class="truncate" x-text="p.name"></span><span x-show="String(selectedValue) === String(p.id)" class="text-primary"><x-capstone::icon name="Check" size="14" /></span></button>
                     </template>
-                </select>
+                </x-capstone::select-menu>
                 <span class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground"><x-capstone::icon name="ChevronDown" class="size-4" /></span>
             </div>
             <p class="mt-2 text-[13px] text-muted-foreground">Salin seluruh konfigurasi penilaian dari periode lain.</p>
@@ -37,7 +37,7 @@
             <div class="space-y-5">
                 <div>
                     <h2 class="text-lg font-semibold">Kumpulan Komponen Penilaian</h2>
-                    <p class="mt-1 text-sm leading-relaxed text-[#666D80]">Pilih komponen yang akan digunakan dalam <span class="uppercase" x-text="type.replaceAll('_',' ')"></span> untuk periode yang dipilih.</p>
+                    <p class="mt-1 text-sm leading-relaxed text-muted-foreground">Pilih komponen yang akan digunakan dalam <span class="uppercase" x-text="type.replaceAll('_',' ')"></span> untuk periode yang dipilih.</p>
                 </div>
                 <div class="rounded-xl border border-border bg-white p-5">
                     <h3 class="text-base font-semibold">Ringkasan</h3>
@@ -55,7 +55,7 @@
                     <div class="mt-3 overflow-hidden rounded-lg border border-border">
                         <table class="w-full text-left text-sm">
                             <thead>
-                                <tr class="bg-[#F8F9FB] text-[13px] text-[#666D80]">
+                                <tr class="bg-muted text-[13px] text-muted-foreground">
                                     <th class="px-3.5 py-2.5 font-medium">Kode</th>
                                     <th class="px-3.5 py-2.5 text-right font-medium">Bobot</th>
                                 </tr>
@@ -89,7 +89,7 @@
                     <div class="flex flex-wrap items-center gap-2.5">
                         <div class="relative">
                             <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"><x-capstone::icon name="Search" class="size-4" /></span>
-                            <input type="search" x-model="search" @input="templatePage=1" placeholder="Cari" aria-label="Cari komponen" class="h-9 w-56 rounded-lg border border-input bg-white pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring">
+                            <input type="search" x-model="search" @input="templatePage=1" placeholder="Cari..." aria-label="Cari komponen" class="h-9 w-56 rounded-lg border border-input bg-white pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring">
                         </div>
                         <div class="relative">
                             <button type="button" @click="filterMenu=!filterMenu;sortMenu=false" class="inline-flex h-9 items-center gap-2 rounded-lg border border-input bg-white px-3.5 text-sm text-muted-foreground shadow-xs hover:bg-accent">
@@ -122,7 +122,7 @@
                 <div class="mt-4 overflow-x-auto">
                     <table class="w-full min-w-[560px] text-left text-sm">
                         <thead>
-                            <tr class="bg-[#F8F9FB] text-[13px] font-medium text-[#666D80]">
+                            <tr class="bg-muted text-[13px] font-medium text-muted-foreground">
                                 <th class="w-10 px-4 py-3"></th>
                                 <th class="px-2 py-3 font-medium">Kode</th>
                                 <th class="px-4 py-3 font-medium">Deskripsi</th>
@@ -149,11 +149,9 @@
 
                 <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
                     <div class="flex items-center gap-3">
-                        <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
+                        <label class="inline-flex items-center gap-0 overflow-visible rounded-lg border border-input bg-white text-[13px]">
                             <span class="px-2.5 text-muted-foreground">Per halaman</span>
-                            <select x-model.number="templatePageSize" @change="templatePage=1" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none">
-                                <option>10</option><option>25</option><option>50</option>
-                            </select>
+                            <x-capstone::select-menu x-model.number="templatePageSize" @select-menu-change.window="templatePage=1" :options="[10,25,50]" size="sm" borderless dropup aria-label="Baris per halaman" class="min-w-20" />
                         </label>
                         <span class="text-foreground" x-text="'Menampilkan '+((filteredTemplates.length?((Math.min(templatePage,templatePageCount)-1)*Number(templatePageSize)+1):0))+' sampai '+((Math.min(templatePage,templatePageCount)-1)*Number(templatePageSize)+templateVisible.length)+' dari '+filteredTemplates.length+' data'"></span>
                     </div>
@@ -162,7 +160,7 @@
                         <template x-for="(n,i) in templateNumbers" :key="n">
                             <span class="flex items-center gap-1.5">
                                 <span x-show="i>0 && n-templateNumbers[i-1]>1" class="px-1 text-muted-foreground">...</span>
-                                <button type="button" @click="templatePage=n" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="Math.min(templatePage,templatePageCount)===n?'border-[#1E2A5A] bg-[#1E2A5A] font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
+                                <button type="button" @click="templatePage=n" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="Math.min(templatePage,templatePageCount)===n?'border-[#1E2A5A] bg-primary font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
                             </span>
                         </template>
                         <button type="button" @click="templatePage=Math.min(templatePageCount,Math.min(templatePage,templatePageCount)+1)" :disabled="templatePage>=templatePageCount" aria-label="Halaman berikutnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronRight" class="size-4" /></button>

@@ -1,7 +1,14 @@
 import Alpine from 'alpinejs';
+import focus from '@alpinejs/focus';
+import collapse from '@alpinejs/collapse';
+import mask from '@alpinejs/mask';
+import '@phosphor-icons/web/regular';
 import {api, context, notify, url, date, get, rows, unwrap, download, getPendingRequests} from './api.js';
 import {registerPages} from './pages.js';
 window.Capstone = {api,context,notify,url,date,get,rows,unwrap,download};
+Alpine.plugin(focus);
+Alpine.plugin(collapse);
+Alpine.plugin(mask);
 Alpine.data('capstoneShell',()=>({
     collapsed:false,mobileSidebar:false,unread:0,notices:[],pendingRequests:0,
     init(){

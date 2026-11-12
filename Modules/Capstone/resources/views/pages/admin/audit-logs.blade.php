@@ -7,7 +7,7 @@
             <h1 class="text-2xl font-bold tracking-tight text-foreground">Audit Log</h1>
             <p class="mt-1 text-sm text-muted-foreground">Jejak aktivitas admin termasuk penghapusan kelompok dan alasannya.</p>
         </div>
-        <x-capstone::button variant="outline" @click="load()" ::disabled="loading"><x-capstone::icon name="RefreshCw" size="15" />Muat Ulang</x-capstone::button>
+        <x-btn style="outline" @click="load()" x-bind:disabled="loading"><x-capstone::icon name="RefreshCw" size="15" />Muat Ulang</x-btn>
     </div>
 
     @include('capstone::partials.loading')
@@ -22,14 +22,14 @@
                     <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"><x-capstone::icon name="Search" class="size-4" /></span>
                     <input x-model.debounce.300ms="search" @input="page=1;load()" type="search" placeholder="Cari aksi / payload..." aria-label="Cari audit log" class="h-9 w-56 rounded-lg border border-input bg-white pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring">
                 </div>
-                <select x-model="action" @change="filter()" aria-label="Filter aksi" class="h-9 rounded-lg border border-input bg-white px-2.5 text-sm text-muted-foreground outline-none">
-                    <option value="">Semua aksi</option>
-                    <template x-for="a in actionTypes" :key="a"><option :value="a" x-text="a"></option></template>
-                </select>
-                <select x-model="periodId" @change="filter()" aria-label="Filter periode" class="h-9 rounded-lg border border-input bg-white px-2.5 text-sm text-muted-foreground outline-none">
-                    <option value="">Semua periode</option>
-                    <template x-for="period in periods" :key="period.id"><option :value="String(period.id)" x-text="period.name"></option></template>
-                </select>
+                <x-capstone::select-menu x-model="action" @select-menu-change.window="filter()" :options="[]" placeholder="Semua aksi" aria-label="Filter aksi">
+                    
+                    <template x-for="a in actionTypes" :key="a"><button type="button" role="option" @click="pick(a, a)" :aria-selected="(String(selectedValue) === String(a)).toString()" class="flex w-full items-center justify-between gap-2 rounded-radius px-2 py-1.5 text-sm hover:bg-surface-alt" :class="String(selectedValue) === String(a) ? 'bg-primary/10 font-medium' : ''"><span class="truncate" x-text="a"></span><span x-show="String(selectedValue) === String(a)" class="text-primary"><x-capstone::icon name="Check" size="14" /></span></button></template>
+                </x-capstone::select-menu>
+                <x-capstone::select-menu x-model="periodId" @select-menu-change.window="filter()" :options="[]" placeholder="Semua periode" aria-label="Filter periode">
+                    
+                    <template x-for="period in periods" :key="period.id"><button type="button" role="option" @click="pick(String(period.id), period.name)" :aria-selected="(String(selectedValue) === String(String(period.id))).toString()" class="flex w-full items-center justify-between gap-2 rounded-radius px-2 py-1.5 text-sm hover:bg-surface-alt" :class="String(selectedValue) === String(String(period.id)) ? 'bg-primary/10 font-medium' : ''"><span class="truncate" x-text="period.name"></span><span x-show="String(selectedValue) === String(String(period.id))" class="text-primary"><x-capstone::icon name="Check" size="14" /></span></button></template>
+                </x-capstone::select-menu>
                 <label class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-input bg-white px-2.5 text-sm text-muted-foreground">Dari <input type="date" x-model="dateFrom" @change="filter()" class="bg-transparent text-foreground outline-none"></label>
                 <label class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-input bg-white px-2.5 text-sm text-muted-foreground">Sampai <input type="date" x-model="dateTo" @change="filter()" class="bg-transparent text-foreground outline-none"></label>
                 <button type="button" @click="reset()" class="inline-flex h-9 items-center rounded-lg border border-input bg-white px-3 text-sm text-muted-foreground shadow-xs hover:bg-accent">Atur Ulang</button>
@@ -39,7 +39,7 @@
         <div class="mt-4 overflow-x-auto">
             <table class="w-full min-w-[820px] text-left text-sm">
                 <thead>
-                    <tr class="bg-[#F8F9FB] text-[13px] font-medium text-[#666D80]">
+                    <tr class="bg-muted text-[13px] font-medium text-muted-foreground">
                         <th class="px-4 py-3 font-medium">Waktu</th>
                         <th class="px-4 py-3 font-medium">Aksi</th>
                         <th class="px-4 py-3 font-medium">Target</th>
@@ -57,7 +57,7 @@
                             <td class="px-4 py-4 text-foreground" x-text="actorName(log)"></td>
                             <td class="max-w-72 px-4 py-4 text-muted-foreground" x-text="log.payload?.reason || log.payload?.group_id ? ('Grup #'+(log.payload?.group_id ?? log.target_id)) : '—'"></td>
                             <td class="px-5 py-4 text-right">
-                                <button type="button" @click="openRowMenu($event,log)" aria-label="Aksi" aria-haspopup="menu" class="rounded-md p-1.5 text-[#666D80] hover:bg-muted"><x-capstone::icon name="Ellipsis" class="size-5" /></button>
+                                <button type="button" @click="openRowMenu($event,log)" aria-label="Aksi" aria-haspopup="menu" class="rounded-md p-1.5 text-muted-foreground hover:bg-muted"><x-capstone::icon name="Ellipsis" class="size-5" /></button>
                             </td>
                         </tr>
                         <tr x-show="expanded===log.id" x-cloak class="bg-muted/30">
@@ -84,9 +84,9 @@
         </div>
         <div x-show="items.length" x-cloak class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
             <div class="flex items-center gap-3">
-                <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
+                <label class="inline-flex items-center gap-0 overflow-visible rounded-lg border border-input bg-white text-[13px]">
                     <span class="px-2.5 text-muted-foreground">Per halaman</span>
-                    <select x-model.number="pageSize" @change="page=1;load()" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none"><option>10</option><option>25</option><option>50</option></select>
+                    <x-capstone::select-menu x-model.number="pageSize" @select-menu-change.window="page=1;load()" :options="[10,25,50]" size="sm" borderless dropup aria-label="Baris per halaman" class="min-w-20" />
                 </label>
                 <span class="text-foreground"><span x-text="'Menampilkan '+showingFrom+' sampai '+showingTo+' dari '+(pagination.total ?? 0)+' data'"></span></span>
             </div>
@@ -95,7 +95,7 @@
                 <template x-for="(n,i) in pageNumbers" :key="n">
                     <span class="flex items-center gap-1.5">
                         <span x-show="i>0 && n-pageNumbers[i-1]>1" class="px-1 text-muted-foreground">...</span>
-                        <button type="button" @click="gotoPage(n)" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="page===n?'border-[#1E2A5A] bg-[#1E2A5A] font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
+                        <button type="button" @click="gotoPage(n)" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="page===n?'border-primary bg-primary font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
                     </span>
                 </template>
                 <button type="button" @click="gotoPage(page+1)" :disabled="page>=(pagination.last_page||1)" aria-label="Halaman berikutnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronRight" class="size-4" /></button>

@@ -1,4 +1,10 @@
 @import './theme.css';
+@import '../../../../../vendor/ddfsn/blade-components/resources/css/blade-components.css';
+
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+    cursor: pointer;
+}
 
 [x-cloak] { display: none !important; }
 

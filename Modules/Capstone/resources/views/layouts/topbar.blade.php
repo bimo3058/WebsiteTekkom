@@ -7,26 +7,26 @@
     $initials = mb_strtoupper(mb_substr($nameParts[0], 0, 1).(count($nameParts)>1 ? mb_substr(end($nameParts), 0, 1) : ''));
 @endphp
 <header class="sitkom-topbar-capstone">
-    <button type="button" @click="mobileSidebar = !mobileSidebar" aria-label="Buka menu" class="md:hidden"><x-capstone::icon name="Menu" /></button>
-    <nav aria-label="breadcrumb"><ol class="sitkom-crumb"><li>SICATA</li>@if($breadcrumb)<li class="sitkom-crumb-sep">/</li><li><b>{{ $breadcrumb }}</b></li>@endif</ol></nav>
+    <button type="button" @click="mobileSidebar = !mobileSidebar" :aria-expanded="mobileSidebar.toString()" aria-controls="capstone-sidebar-nav" aria-label="Buka menu" class="md:hidden inline-flex size-9 items-center justify-center rounded-radius text-on-surface hover:bg-surface-alt"><x-capstone::icon name="Menu" size="20" /></button>
+    <x-capstone::breadcrumb :current="$breadcrumb" />
     <div class="sitkom-topbar-right">
-        <x-ui.button variant="outline" size="icon" as="a" href="{{ url('/capstone/notifications') }}" aria-label="Notifikasi" title="Notifikasi" style="width:34px;height:34px;border-radius:8px;position:relative;"><x-capstone::icon name="Bell" class="h-5 w-5" /><span x-show="unread > 0" x-text="unread > 99 ? '99+' : unread" class="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#DF1C41] px-1 text-[10px] font-bold leading-none text-white"></span></x-ui.button>
-        <x-ui.dropdown width="56">
+        <x-btn style="outline" size="icon" href="{{ \Modules\Capstone\Support\CapstoneUrl::to('/notifications') }}" aria-label="Notifikasi" title="Notifikasi" class="w-[34px] h-[34px] rounded-[8px] relative"><x-capstone::icon name="Bell" size="20" /><span x-show="unread > 0" x-text="unread > 99 ? '99+' : unread" class="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold leading-none text-on-danger"></span></x-btn>
+        <x-capstone::dropdown width="56">
             <x-slot:trigger>
                 <span class="sitkom-topbar-user">
                     @if(!empty($actor['avatar_url']))
-                        <x-ui.avatar :src="$actor['avatar_url']" alt="" size="sm" />
+                        <x-capstone::avatar :src="$actor['avatar_url']" alt="" size="sm" />
                     @else
-                        <span class="sitkom-topbar-avatar">{{ $initials }}</span>
+                        <x-capstone::avatar size="sm">{{ $initials }}</x-capstone::avatar>
                     @endif
                     <span class="sitkom-topbar-meta"><span class="sitkom-topbar-name">{{ $actor['name'] ?? 'User' }}</span><span class="sitkom-topbar-role">{{ ucfirst($activeRole ?? 'User') }}</span></span>
                 </span>
             </x-slot:trigger>
-            <div class="border-b border-[#F0F1F4] px-3 py-2.5"><p class="truncate text-[12px] font-semibold text-[#0D0D12]">{{ $actor['name'] ?? '' }}</p><p class="truncate text-[11px] text-[#808897]">{{ $actor['email'] ?? '' }}</p></div>
-            <x-ui.dropdown-item as="a" href="{{ url('/capstone/profile') }}"><x-capstone::icon name="User" />Profil</x-ui.dropdown-item>
-            @if(in_array('admin', $actor['roles'] ?? []))<x-capstone::feature-link href="/admin/settings" class="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"><x-capstone::icon name="Settings" />Pengaturan</x-capstone::feature-link>@endif
-            <x-ui.separator class="my-1" />
-            <form method="POST" action="{{ route('capstone.logout') }}">@csrf<x-ui.dropdown-item type="submit" class="capstone-logout-item text-[#DF1C41]"><x-capstone::icon name="LogOut" />Logout</x-ui.dropdown-item></form>
-        </x-ui.dropdown>
+            <div class="border-b border-outline px-3 py-2.5"><p class="truncate text-[12px] font-semibold text-on-surface-strong">{{ $actor['name'] ?? '' }}</p><p class="truncate text-[11px] text-on-surface/60">{{ $actor['email'] ?? '' }}</p></div>
+            <a href="{{ \Modules\Capstone\Support\CapstoneUrl::to('/profile') }}" class="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-radius px-2 py-1.5 text-sm outline-none transition-colors hover:bg-surface-alt hover:text-on-surface"><x-capstone::icon name="User" size="16" />Profil</a>
+            @if(in_array('admin', $actor['roles'] ?? []))<x-capstone::feature-link href="/admin/settings" class="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-radius px-2 py-1.5 text-sm outline-none transition-colors hover:bg-surface-alt hover:text-on-surface"><x-capstone::icon name="Settings" size="16" />Pengaturan</x-capstone::feature-link>@endif
+            <x-separator class="my-1" />
+            <form method="POST" action="{{ route('capstone.logout') }}">@csrf<button type="submit" class="capstone-logout-item relative flex w-full cursor-pointer select-none items-center gap-2 rounded-radius px-2 py-1.5 text-sm text-danger outline-none transition-colors hover:bg-danger/10"><x-capstone::icon name="LogOut" size="16" />Logout</button></form>
+        </x-capstone::dropdown>
     </div>
 </header>

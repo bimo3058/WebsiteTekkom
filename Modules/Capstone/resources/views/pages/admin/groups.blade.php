@@ -14,37 +14,30 @@
         <div class="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-100 p-3">
             <h2 class="text-sm font-bold text-foreground">Total Kelompok</h2>
             <div class="flex items-center gap-2">
-                <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500">
+                <label class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500">
                     <x-capstone::icon name="Search" size="15" />
-                    <input x-model.debounce.300ms="search" @input="page=1" type="search" placeholder="Cari" class="w-28 bg-transparent outline-none placeholder:text-slate-400 sm:w-44" aria-label="Cari kelompok">
+                    <input x-model.debounce.300ms="search" @input="page=1" type="search" placeholder="Cari..." class="w-28 bg-transparent outline-none placeholder:text-slate-400 sm:w-44" aria-label="Cari kelompok">
                 </label>
-                <span x-data="{open:false}" @click.outside="open=false" @keydown.escape.window="open=false" class="relative">
-                    <button type="button" @click="open=!open" :aria-expanded="open" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500 hover:bg-slate-50">
-                        <x-capstone::icon name="ListFilter" size="15" /> Filter
-                    </button>
-                    <span x-show="open" x-cloak class="absolute right-0 z-20 mt-1 w-56 rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
-                        <label class="mb-2 block text-xs font-medium text-slate-500">Periode
-                            <select x-model="periodId" @change="page=1;loadAll()" class="mt-1 w-full rounded-md border border-slate-200 bg-transparent px-2 py-1.5 text-[13px] text-slate-700 outline-none">
-                                <option value="">Semua periode</option>
-                                <template x-for="period in periods" :key="period.id"><option :value="String(period.id)" x-text="period.name"></option></template>
-                            </select>
-                        </label>
-                        <label class="block text-xs font-medium text-slate-500">Status
-                            <select x-model="status" @change="page=1;loadAll()" class="mt-1 w-full rounded-md border border-slate-200 bg-transparent px-2 py-1.5 text-[13px] text-slate-700 outline-none">
-                                <option value="">Semua status</option>
-                                <template x-for="s in ['FORMING','FORMING_SOLO','READY_FOR_BIDDING','TITLE_PROPOSED','TITLE_APPROVED','READY_FOR_FINALIZATION','KELOMPOK_FINAL','PDC1_ACTIVE','READY_FOR_SEMPRO','SEMPRO_DONE','PDC2_ACTIVE','EXPO_REGISTERED','READY_FOR_TA_INDIVIDUAL','CLOSED','DISSOLVED']"><option :value="s" x-text="s.replace(/_/g,' ')"></option></template>
-                            </select>
-                        </label>
-                    </span>
-                </span>
-                <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500" title="Urutkan">
+                <x-capstone::dropdown>
+                    <x-slot:trigger>
+                        <button type="button" class="inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 px-3.5 text-[13px] text-slate-500 hover:bg-slate-50" aria-label="Filter kelompok">
+                            <x-capstone::icon name="ListFilter" size="15" /> Filter
+                        </button>
+                    </x-slot:trigger>
+                    <p class="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Periode</p>
+                    <button type="button" @click="periodId='all';page=1;loadAll();open=false" class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-slate-50" :class="String(periodId)==='all'?'font-semibold text-slate-900':'text-slate-500'" role="menuitem"><span>Semua periode</span><span x-show="String(periodId)==='all'"><x-capstone::icon name="Check" size="14" /></span></button>
+                    <template x-for="period in periods" :key="period.id">
+                        <button type="button" @click="periodId=String(period.id);page=1;loadAll();open=false" class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-slate-50" :class="String(periodId)===String(period.id)?'font-semibold text-slate-900':'text-slate-500'" role="menuitem"><span class="truncate" x-text="period.name"></span><span x-show="String(periodId)===String(period.id)"><x-capstone::icon name="Check" size="14" /></span></button>
+                    </template>
+                    <p class="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</p>
+                    <button type="button" @click="status='all';page=1;loadAll();open=false" class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-slate-50" :class="status==='all'?'font-semibold text-slate-900':'text-slate-500'" role="menuitem"><span>Semua status</span><span x-show="status==='all'"><x-capstone::icon name="Check" size="14" /></span></button>
+                    <template x-for="s in ['FORMING','FORMING_SOLO','READY_FOR_BIDDING','TITLE_PROPOSED','TITLE_APPROVED','READY_FOR_FINALIZATION','KELOMPOK_FINAL','PDC1_ACTIVE','READY_FOR_SEMPRO','SEMPRO_DONE','PDC2_ACTIVE','EXPO_REGISTERED','READY_FOR_TA_INDIVIDUAL','CLOSED','DISSOLVED']" :key="s">
+                        <button type="button" @click="status=s;page=1;loadAll();open=false" class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-slate-50" :class="status===s?'font-semibold text-slate-900':'text-slate-500'" role="menuitem"><span class="truncate" x-text="s.replace(/_/g,' ')"></span><span x-show="status===s"><x-capstone::icon name="Check" size="14" /></span></button>
+                    </template>
+                </x-capstone::dropdown>
+                <label class="inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500" title="Urutkan">
                     <x-capstone::icon name="ArrowUpDown" size="15" />
-                    <select x-model="sortBy" @change="page=1" class="max-w-24 bg-transparent outline-none" aria-label="Urutkan kelompok">
-                        <option value="">Urutkan</option>
-                        <option value="">Terbaru</option>
-                        <option value="code">Kode</option>
-                        <option value="status">Status</option>
-                    </select>
+                    <x-capstone::select-menu borderless x-model="sortBy" @select-menu-change.window="page=1" :options="['all'=>'Terbaru','code'=>'Kode','status'=>'Status']" placeholder="Urutkan" aria-label="Urutkan kelompok" size="sm" class="max-w-28 border-0 shadow-none" />
                 </label>
             </div>
         </div>
@@ -119,22 +112,7 @@
             </table>
         </div>
 
-        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 p-3 text-[13px]">
-            <div class="flex items-center gap-2 text-slate-500">
-                <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1">Per halaman
-                    <select x-model.number="pageSize" @change="page=1" class="bg-transparent font-semibold text-slate-700 outline-none" aria-label="Baris per halaman"><option>10</option><option>25</option><option>50</option></select>
-                </label>
-                <span x-text="'Menampilkan '+groupFrom+' sampai '+groupTo+' dari '+groupTotal+' data'"></span>
-            </div>
-            <div class="flex items-center gap-1">
-                <button type="button" @click="page=Math.max(1,groupPage-1)" :disabled="groupPage<=1" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman sebelumnya"><x-capstone::icon name="ChevronLeft" size="15" /></button>
-                <template x-for="(p,i) in groupPageList" :key="i+'-'+p">
-                    <button type="button" x-show="p!=='…'" @click="page=p" class="min-w-8 rounded-lg border px-2 py-1.5 text-xs font-semibold" :class="p===groupPage ? 'border-primary bg-primary text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-50'" x-text="p"></button>
-                    <span x-show="p==='…'" class="px-1 text-xs text-slate-400">...</span>
-                </template>
-                <button type="button" @click="page=Math.min(groupLastPage,groupPage+1)" :disabled="groupPage>=groupLastPage" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman berikutnya"><x-capstone::icon name="ChevronRight" size="15" /></button>
-            </div>
-        </div>
+        @include('capstone::partials.table-footer', ['page' => 'groupPage', 'pageCount' => 'groupLastPage', 'total' => 'groupTotal', 'from' => 'groupFrom', 'to' => 'groupTo', 'pageList' => 'groupPageList', 'prevAction' => 'page=Math.max(1,groupPage-1)', 'nextAction' => 'page=Math.min(groupLastPage,groupPage+1)', 'goAction' => 'page=p'])
     </div>
 
     <x-capstone::dialog id="group-rename-title" title="Ubah Judul Capstone" description="Hanya teks judul yang diubah. Status kelompok tidak berubah.">
@@ -142,8 +120,8 @@
             <p class="text-sm text-slate-600">Kelompok <span class="font-semibold text-foreground" x-text="renameTarget ? (renameTarget.code || ('Kelompok '+renameTarget.id)) : ''"></span></p>
             <input x-model="renameText" type="text" maxlength="255" class="w-full rounded-lg border border-slate-200 p-3 text-sm" placeholder="Tulis judul baru..." aria-label="Judul baru">
             <div class="flex justify-end gap-2">
-                <x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button>
-                <x-capstone::button @click="sendRename()" ::disabled="saving || !renameText.trim() || renameText.trim() === (renameTarget?.title?.title || '')">Simpan</x-capstone::button>
+                <x-btn style="outline" @click="$el.closest('dialog').close()">Batal</x-btn>
+                <x-btn @click="sendRename()" x-bind:disabled="saving || !renameText.trim() || renameText.trim() === (renameTarget?.title?.title || '')">Simpan</x-btn>
             </div>
         </div>
     </x-capstone::dialog>

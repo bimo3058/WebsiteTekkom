@@ -16,8 +16,8 @@ export function workspace(features = {}) {
         inPeriod(id){return this.selectedPeriod==='all' || String(id)===String(this.selectedPeriod);},
         get pageCount(){return Math.max(1,Math.ceil(this.filtered.length/this.pageSize));},
         get visible(){return this.filtered.slice((Math.min(this.page,this.pageCount)-1)*this.pageSize,Math.min(this.page,this.pageCount)*this.pageSize);},
-        open(id){document.getElementById(id).showModal();},
-        close(id){document.getElementById(id).close();},
+        open(id){const d=document.getElementById(id);if(d&&!d.open)d.showModal();},
+        close(id){const d=document.getElementById(id);if(d&&d.open)d.close();},
         async mutate(path,body,method='PUT',dialog=null){
             if(this.saving)return false;
             this.saving=true;this.errors={};

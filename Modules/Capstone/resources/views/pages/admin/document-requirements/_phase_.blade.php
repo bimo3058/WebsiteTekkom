@@ -8,7 +8,7 @@
 <div class="space-y-5" x-data="documentRequirements(@js($phase))">
     <div class="flex items-center justify-between gap-4">
         <a :href="phaseUrl()" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-input bg-white px-3.5 text-sm font-semibold text-muted-foreground shadow-xs hover:bg-accent"><x-capstone::icon name="ChevronLeft" class="size-4" />Kembali</a>
-        <button type="button" @click="save()" :disabled="!editable" class="inline-flex h-9 items-center gap-2 rounded-lg bg-[#1E2A5A] px-4 text-sm font-semibold text-white shadow-xs hover:bg-[#16204a] disabled:opacity-40"><x-capstone::icon name="Loader2" x-show="saving" class="size-4 animate-spin" />Simpan</button>
+        <button type="button" @click="save()" :disabled="!editable" class="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white shadow-xs hover:bg-primary/90 disabled:opacity-40"><x-capstone::icon name="Loader2" x-show="saving" class="size-4 animate-spin" />Simpan</button>
     </div>
 
     <div>
@@ -25,12 +25,12 @@
             <p class="mt-1 text-sm text-muted-foreground" x-text="'Kelola jenis dokumen untuk '+labels[phase]+'.'"></p>
             <div class="mt-4">
                 <label for="phase-period" class="text-sm font-medium text-muted-foreground">Periode</label>
-                <select id="phase-period" x-model="selectedPeriod" @change="load()" :disabled="saving" class="mt-1 h-9 w-full rounded-lg border border-input bg-white px-3 text-sm font-medium outline-none focus:border-ring">
-                    <option value="" disabled>Pilih periode</option>
+                <x-capstone::select-menu x-model="selectedPeriod" @select-menu-change.window="load()" :options="[]" placeholder="Pilih periode" aria-label="Pilih..." disabled-when="saving">
+                    
                     <template x-for="period in periods" :key="period.id">
-                        <option :value="String(period.id)" x-text="period.name+(period.is_active ? ' (Aktif)' : '')"></option>
+                        <button type="button" role="option" @click="pick(String(period.id), period.name+(period.is_active ? ' (Aktif)' : ''))" :aria-selected="(String(selectedValue) === String(String(period.id))).toString()" class="flex w-full items-center justify-between gap-2 rounded-radius px-2 py-1.5 text-sm hover:bg-surface-alt" :class="String(selectedValue) === String(String(period.id)) ? 'bg-primary/10 font-medium' : ''"><span class="truncate" x-text="period.name+(period.is_active ? ' (Aktif)' : '')"></span><span x-show="String(selectedValue) === String(String(period.id))" class="text-primary"><x-capstone::icon name="Check" size="14" /></span></button>
                     </template>
-                </select>
+                </x-capstone::select-menu>
             </div>
             <div class="mt-4 border-t border-border pt-3">
                 <div class="flex items-center justify-between"><span class="text-sm text-muted-foreground">Total Dokumen</span><span class="text-lg font-semibold" x-text="items.length"></span></div>
@@ -41,12 +41,12 @@
         <div class="min-w-0 overflow-hidden rounded-xl border border-border">
             <div class="flex items-center justify-between gap-3 px-4 py-3">
                 <h3 class="text-base font-semibold">Tipe Dokumen</h3>
-                <button type="button" @click="add()" :disabled="!editable || !newName.trim()" class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#1E2A5A] px-4 text-sm font-semibold text-white shadow-xs hover:bg-[#16204a] disabled:opacity-40"><x-capstone::icon name="Plus" class="size-4" />Tambah</button>
+                <button type="button" @click="add()" :disabled="!editable || !newName.trim()" class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-white shadow-xs hover:bg-primary/90 disabled:opacity-40"><x-capstone::icon name="Plus" class="size-4" />Tambah</button>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[560px] text-left text-sm">
                     <thead>
-                        <tr class="bg-[#F8F9FB] text-[13px] font-medium text-[#666D80]">
+                        <tr class="bg-muted text-[13px] font-medium text-muted-foreground">
                             <th class="w-12 px-4 py-3 font-medium">Wajib</th>
                             <th class="px-4 py-3 font-medium">Nama Dokumen</th>
                             <th class="px-4 py-3 font-medium">Deskripsi</th>

@@ -3,7 +3,7 @@
 @section('content')
 <div x-data="lecturerGroups" class="space-y-6">
     <div class="flex flex-col justify-between gap-4 md:flex-row md:items-center"><div><h1 class="text-3xl font-bold tracking-tight">Kelompok Bimbingan</h1><p class="text-muted-foreground">Pantau kemajuan kelompok bimbingan Anda.</p></div>@include('capstone::pages.dosen.shared.period')</div>
-    <x-capstone::input type="search" x-model.debounce.200ms="search" @input="page=1" placeholder="Cari kelompok, judul, atau mahasiswa..." aria-label="Cari kelompok" class="max-w-sm" />
+    <input type="search" x-model.debounce.200ms="search" @input="page=1" placeholder="Cari kelompok, judul, atau mahasiswa..." aria-label="Cari kelompok" class="file:text-on-surface placeholder:text-on-surface/50 selection:bg-primary selection:text-on-primary border-outline h-9 w-full min-w-0 rounded-radius border bg-surface px-3 py-1 text-sm text-on-surface shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 max-w-sm" />
     @include('capstone::partials.loading')
     <div x-show="!loading && !error" x-cloak class="space-y-4">
         <p x-show="!filtered.length" class="rounded-xl border border-dashed p-12 text-center text-muted-foreground">Tidak Ada Kelompok. Anda saat ini tidak membimbing kelompok yang cocok.</p>

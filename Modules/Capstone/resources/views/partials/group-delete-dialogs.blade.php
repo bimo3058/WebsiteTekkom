@@ -5,8 +5,8 @@
             <textarea x-model="deleteReason" rows="3" maxlength="1000" class="w-full rounded-lg border border-slate-200 p-3 text-sm" placeholder="Alasan penghapusan (wajib, min. 10 karakter)..." aria-label="Alasan penghapusan"></textarea>
             <p class="text-xs text-slate-400" x-text="deleteReason.trim().length+'/1000 (min. 10 karakter)'"></p>
             <div class="flex justify-end gap-2">
-                <x-capstone::button variant="outline" @click="closeDelete()">Batal</x-capstone::button>
-                <x-capstone::button variant="destructive" @click="confirmDelete()" ::disabled="saving || !deleteReasonValid">Lanjut</x-capstone::button>
+                <x-btn style="outline" @click="closeDelete()">Batal</x-btn>
+                <x-btn style="danger" @click="confirmDelete()" x-bind:disabled="saving || !deleteReasonValid">Lanjut</x-btn>
             </div>
         </div>
     </x-capstone::dialog>
@@ -19,8 +19,8 @@
                 <p class="mt-1 text-slate-800" x-text="deleteReason"></p>
             </div>
             <div class="flex justify-end gap-2">
-                <x-capstone::button variant="outline" @click="backToDeleteReason()">Kembali</x-capstone::button>
-                <x-capstone::button variant="destructive" @click="sendDelete()" ::disabled="saving">Ya, Hapus Permanen</x-capstone::button>
+                <x-btn style="outline" @click="backToDeleteReason()">Kembali</x-btn>
+                <x-btn style="danger" @click="sendDelete()" x-bind:disabled="saving">Ya, Hapus Permanen</x-btn>
             </div>
         </div>
     </x-capstone::dialog>

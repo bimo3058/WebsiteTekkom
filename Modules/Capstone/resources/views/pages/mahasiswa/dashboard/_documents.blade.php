@@ -1,9 +1,9 @@
-<x-capstone::card class="min-w-0 gap-8 rounded-2xl border-slate-200 bg-white shadow-sm">
+<x-card class="min-w-0 gap-8 rounded-2xl border-slate-200 bg-white shadow-sm">
     <div class="flex items-center justify-between gap-4 px-6">
         <h3 class="flex items-center gap-2 text-base font-medium text-slate-900">
             <x-capstone::icon name="FileText" class="size-4" />Unggah Dokumen
         </h3>
-        <x-capstone::feature-link href="/mahasiswa/documents" class="shrink-0 text-xs text-primary hover:underline">Lihat Semua</x-capstone::feature-link>
+        <x-capstone::feature-link href="{{ \Modules\Capstone\Support\CapstoneUrl::to('/mahasiswa/documents') }}" class="shrink-0 text-xs text-primary hover:underline">Lihat Semua</x-capstone::feature-link>
     </div>
     <div class="px-6">
         <p x-show="!dashboardDocuments.length" class="py-8 text-center text-sm text-slate-500">Belum ada dokumen yang perlu diunggah untuk kelompokmu.</p>
@@ -41,4 +41,4 @@
             </div>
         </div>
     </div>
-</x-capstone::card>
+</x-card>

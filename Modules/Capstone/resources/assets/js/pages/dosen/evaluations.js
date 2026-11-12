@@ -66,15 +66,20 @@ export function lecturerEvaluationForm(supervisor=false,ta=false){
         get scoreRows(){return this.students.flatMap(student=>this.components.map(component=>{const key=component.id+'_'+student.id;return {[supervisor?'period_component_id':'component_id']:component.id,student_id:student.id,score:this.scores[key]===''?null:Number(this.scores[key]),notes:this.notes[key]||''};}));},
         get complete(){return this.students.length>0&&this.components.length>0&&this.scoreRows.every(s=>s.score!==null&&Number.isFinite(s.score)&&s.score>=this.minimum&&s.score<=100);},
         total(studentId){const totalWeight=this.components.reduce((sum,c)=>sum+Number(c.weight||0),0);if(!totalWeight)return '0.00';return (this.components.reduce((sum,c)=>sum+Number(this.scores[c.id+'_'+studentId]||0)*Number(c.weight||0),0)/totalWeight).toFixed(2);},
+        get averageScore(){if(!this.students.length)return 0;return this.students.reduce((sum,s)=>sum+Number(this.total(s.id)),0)/this.students.length;},
+        get derivedResult(){return this.averageScore>=60?'PASS':'FAIL';},
+        get derivedLabel(){return this.derivedResult==='PASS'?'Lulus (≥60)':'Tidak Lulus (<60)';},
         async submit(){
             if(this.saving||this.viewOnly)return;
-            if(!this.complete||(!supervisor&&!['PASS','FAIL'].includes(this.result))){this.errors={root:'Complete all scores and select the examination result.'};return;}
+            if(!this.complete){this.errors={root:'Complete all scores (1–100).'};return;}
+            const effectiveResult=supervisor?null:this.derivedResult;
+            if(!supervisor)this.result=effectiveResult;
             this.saving=true;this.errors={};
             try{
                 if(supervisor)await api('/dosen/supervisor-evaluation',{method:'POST',body:{group_id:this.data.group.id,evaluation_type:this.type,scores:this.scoreRows}});
                 else{
                     const endpoint=this.type==='TA_DEFENSE'?'ta-defense':'sempro';
-                    await api('/dosen/'+endpoint+'/'+this.data.schedule.id+'/evaluate',{method:'POST',body:{rubric_json:{scores:this.scores,notes:this.notes},score:this.students.reduce((sum,s)=>sum+Number(this.total(s.id)),0)/this.students.length,result:this.result}});
+                    await api('/dosen/'+endpoint+'/'+this.data.schedule.id+'/evaluate',{method:'POST',body:{rubric_json:{scores:this.scores,notes:this.notes},score:this.averageScore,result:effectiveResult}});
                 }
                 notify('Evaluation saved');await this.load();if(supervisor)this.viewOnly=true;
             }catch(e){this.errors={...e.errors,root:e.message};notify(e.message,true);}finally{this.saving=false;}

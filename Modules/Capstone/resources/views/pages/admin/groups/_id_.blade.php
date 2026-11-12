@@ -8,8 +8,8 @@
 
     <div x-show="!loading && !error && group" x-cloak class="space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <x-capstone::button href="/admin/groups" variant="outline" class="text-slate-500"><x-capstone::icon name="ChevronLeft" size="16" /> Kembali</x-capstone::button>
-            <x-capstone::button variant="destructive" @click="openDelete()"><x-capstone::icon name="Trash2" size="16" /> Hapus Grup</x-capstone::button>
+            <x-btn href="{{ \Modules\Capstone\Support\CapstoneUrl::to('/admin/groups') }}" style="outline" class="text-slate-500"><x-capstone::icon name="ChevronLeft" size="16" /> Kembali</x-btn>
+            <x-btn style="danger" @click="openDelete()"><x-capstone::icon name="Trash2" size="16" /> Hapus Grup</x-btn>
         </div>
 
         <h1 class="text-2xl font-bold tracking-tight text-foreground" x-text="group.code || ('Kelompok '+group.id)"></h1>
@@ -55,7 +55,7 @@
                 </div>
                 <div x-show="selectedMembers.length" class="grid grid-cols-[130px_1fr] items-center gap-3">
                     <span></span>
-                    <span><x-capstone::button size="sm" @click="openMessage()"><x-capstone::icon name="Send" size="14" /> Pesan (<span x-text="selectedMembers.length"></span>)</x-capstone::button></span>
+                    <span><x-btn size="sm" @click="openMessage()"><x-capstone::icon name="Send" size="14" /> Pesan (<span x-text="selectedMembers.length"></span>)</x-btn></span>
                 </div>
                 <div x-show="(group.flagged_members||[]).length" class="grid grid-cols-[130px_1fr] items-start gap-3">
                     <p class="pt-1 text-sm text-red-500">Flagged</p>
@@ -151,8 +151,8 @@
             <p class="text-sm text-slate-500">Kepada <span class="font-semibold text-slate-800" x-text="selectedMembers.length+' anggota'"></span></p>
             <textarea x-model="messageText" rows="4" maxlength="1000" class="w-full rounded-lg border border-slate-200 p-3 text-sm" placeholder="Tulis pesan..." aria-label="Isi pesan"></textarea>
             <div class="flex justify-end gap-2">
-                <x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button>
-                <x-capstone::button @click="sendMessage()" ::disabled="saving || !messageText.trim()">Kirim</x-capstone::button>
+                <x-btn style="outline" @click="$el.closest('dialog').close()">Batal</x-btn>
+                <x-btn @click="sendMessage()" x-bind:disabled="saving || !messageText.trim()">Kirim</x-btn>
             </div>
         </div>
     </x-capstone::dialog>
@@ -163,8 +163,8 @@
             <p class="rounded-lg border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">Mahasiswa akan dikeluarkan dari kelompok dan periode. Nilai yang sudah ada tetap tersimpan. Tindakan ini dapat dibatalkan lewat Unflag.</p>
             <textarea x-model="flagReason" rows="3" maxlength="1000" class="w-full rounded-lg border border-slate-200 p-3 text-sm" placeholder="Alasan flag (wajib)..." aria-label="Alasan flag"></textarea>
             <div class="flex justify-end gap-2">
-                <x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button>
-                <x-capstone::button variant="destructive" @click="sendFlag()" ::disabled="saving || !flagReason.trim()">Flag</x-capstone::button>
+                <x-btn style="outline" @click="$el.closest('dialog').close()">Batal</x-btn>
+                <x-btn style="danger" @click="sendFlag()" x-bind:disabled="saving || !flagReason.trim()">Flag</x-btn>
             </div>
         </div>
     </x-capstone::dialog>
@@ -173,8 +173,8 @@
         <div class="mt-4 space-y-4">
             <p class="text-sm text-slate-600">Kembalikan <span class="font-semibold text-foreground" x-text="unflagTarget ? memberName(unflagTarget) : ''"></span> ke status aktif? Mahasiswa perlu bergabung kembali ke kelompok.</p>
             <div class="flex justify-end gap-2">
-                <x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button>
-                <x-capstone::button @click="sendUnflag()" ::disabled="saving">Kembalikan</x-capstone::button>
+                <x-btn style="outline" @click="$el.closest('dialog').close()">Batal</x-btn>
+                <x-btn @click="sendUnflag()" x-bind:disabled="saving">Kembalikan</x-btn>
             </div>
         </div>
     </x-capstone::dialog>
@@ -184,8 +184,8 @@
             <p class="text-sm text-slate-600">Kelompok <span class="font-semibold text-foreground" x-text="renameTarget ? (renameTarget.code || ('Kelompok '+renameTarget.id)) : ''"></span></p>
             <input x-model="renameText" type="text" maxlength="255" class="w-full rounded-lg border border-slate-200 p-3 text-sm" placeholder="Tulis judul baru..." aria-label="Judul baru">
             <div class="flex justify-end gap-2">
-                <x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button>
-                <x-capstone::button @click="sendRename()" ::disabled="saving || !renameText.trim() || renameText.trim() === (renameTarget?.title?.title || '')">Simpan</x-capstone::button>
+                <x-btn style="outline" @click="$el.closest('dialog').close()">Batal</x-btn>
+                <x-btn @click="sendRename()" x-bind:disabled="saving || !renameText.trim() || renameText.trim() === (renameTarget?.title?.title || '')">Simpan</x-btn>
             </div>
         </div>
     </x-capstone::dialog>

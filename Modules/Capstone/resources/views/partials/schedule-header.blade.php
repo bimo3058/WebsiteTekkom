@@ -14,7 +14,7 @@
     @if($activeRole === 'admin')
     <div x-data="{ open: false }" class="relative shrink-0" @click.outside="open = false" @keydown.escape.window="open = false">
         <button type="button" @click="open = !open" :aria-expanded="open" aria-haspopup="menu"
-            class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0B266E] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#091958]">
+            class="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary/90">
             Buat Jadwal
             <x-capstone::icon name="ChevronDown" class="h-4 w-4" />
         </button>
@@ -36,7 +36,7 @@
     @elseif($activeRole === 'dosen')
     <div x-data="{ open: false }" class="relative shrink-0" @click.outside="open = false" @keydown.escape.window="open = false">
         <button type="button" @click="open = !open" :aria-expanded="open" aria-haspopup="menu"
-            class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0B266E] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#091958]">
+            class="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary/90">
             Buat Jadwal
             <x-capstone::icon name="ChevronDown" class="h-4 w-4" />
         </button>

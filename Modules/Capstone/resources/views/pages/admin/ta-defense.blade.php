@@ -10,15 +10,15 @@
         <div class="flex flex-wrap items-center gap-2.5">
             <label class="inline-flex items-center gap-2 rounded-lg border border-input bg-white px-4 py-2 text-sm font-semibold shadow-xs">
                 <span class="sr-only">Periode</span>
-                <select x-model="selectedPeriod" @change="page=1;load()" aria-label="Pilih periode" class="bg-transparent font-semibold outline-none">
-                    <option value="all">Semua periode</option>
+                <x-capstone::select-menu x-model="selectedPeriod" @select-menu-change.window="page=1;load()" :options="['all'=>'Semua periode']" placeholder="Pilih periode" aria-label="Pilih periode">
+                    
                     <template x-for="period in periods" :key="period.id">
-                        <option :value="String(period.id)" x-text="period.name+(period.is_active?' (aktif)':'')"></option>
+                        <button type="button" role="option" @click="pick(String(period.id), period.name+(period.is_active?' (aktif)':''))" :aria-selected="(String(selectedValue) === String(String(period.id))).toString()" class="flex w-full items-center justify-between gap-2 rounded-radius px-2 py-1.5 text-sm hover:bg-surface-alt" :class="String(selectedValue) === String(String(period.id)) ? 'bg-primary/10 font-medium' : ''"><span class="truncate" x-text="period.name+(period.is_active?' (aktif)':'')"></span><span x-show="String(selectedValue) === String(String(period.id))" class="text-primary"><x-capstone::icon name="Check" size="14" /></span></button>
                     </template>
-                </select>
+                </x-capstone::select-menu>
                 <x-capstone::icon name="ChevronDown" class="size-4 text-muted-foreground" />
             </label>
-            <button type="button" @click="open()" ::disabled="!selectedPeriod || loading" class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1E2A5A] px-4 text-sm font-semibold text-white shadow-xs hover:bg-[#16204a] disabled:opacity-40"><x-capstone::icon name="Plus" class="size-4" />Jadwalkan Sidang TA</button>
+            <button type="button" @click="open()" x-bind:disabled="!selectedPeriod || loading" class="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white shadow-xs hover:bg-primary/90 disabled:opacity-40"><x-capstone::icon name="Plus" class="size-4" />Jadwalkan Sidang TA</button>
         </div>
     </div>
 
@@ -74,6 +74,6 @@
     </div>
     <p x-show="error" x-text="error" class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"></p>
     @include('capstone::pages.admin.ta-defense.form')
-    <x-capstone::dialog id="admin-ta-cancel" title="Batalkan Jadwal" description="Apakah Anda yakin ingin membatalkan jadwal sidang TA ini? Tindakan ini tidak dapat dibatalkan."><div class="py-4 text-sm space-y-1"><p x-text="students(cancelling || {})[0]?.name || ''"></p><p class="text-muted-foreground" x-text="date(cancelling?.date)"></p></div><div class="flex justify-end gap-2"><x-capstone::button variant="outline" @click="document.getElementById('admin-ta-cancel').close()">Pertahankan Jadwal</x-capstone::button><x-capstone::button variant="destructive" @click="cancel" ::disabled="saving">Batalkan Jadwal</x-capstone::button></div></x-capstone::dialog>
+    <x-capstone::dialog id="admin-ta-cancel" title="Batalkan Jadwal" description="Apakah Anda yakin ingin membatalkan jadwal sidang TA ini? Tindakan ini tidak dapat dibatalkan."><div class="py-4 text-sm space-y-1"><p x-text="students(cancelling || {})[0]?.name || ''"></p><p class="text-muted-foreground" x-text="date(cancelling?.date)"></p></div><div class="flex justify-end gap-2"><x-btn style="outline" @click="document.getElementById('admin-ta-cancel').close()">Pertahankan Jadwal</x-btn><x-btn style="danger" @click="cancel" x-bind:disabled="saving">Batalkan Jadwal</x-btn></div></x-capstone::dialog>
 </div>
 @endsection

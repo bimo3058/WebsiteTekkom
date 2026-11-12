@@ -39,7 +39,7 @@ export function registerDocuments(Alpine){
                 await api('/mahasiswa/documents',{method:'POST',body});document.getElementById('document-upload').close();notify('Document uploaded successfully');await this.load();
             }catch(e){this.errors=e.errors||{};notify(e.message,true);if(e.status===403)await this.load();}finally{this.saving=false;}
         },
-        async downloadDocument(doc){try{const blob=await api(`/mahasiswa/documents/${doc.id}/download`,{blob:true});const extension=(doc.file_path || '').split('.').pop();download(blob,`document-${doc.id}.${['pdf','doc','docx'].includes(extension)?extension:'pdf'}`);}catch(e){notify(e.message,true);}},
+        async downloadDocument(doc,version=null){try{const target=version ?? doc.version;const qs=target ? `?version=${encodeURIComponent(target)}` : '';const blob=await api(`/mahasiswa/documents/${doc.id}/download${qs}`,{blob:true});const raw=(doc.original_name || doc.file_name || '').split('/').pop();const fallbackExt=((doc.file_path || '').split('.').pop() || 'pdf').split('?')[0];const hasExt=/\.[A-Za-z0-9]{2,5}$/.test(raw || '');const base=raw || `document-${doc.id}.${['pdf','doc','docx'].includes(fallbackExt)?fallbackExt:'pdf'}`;const prefix=String(doc.document_type || '').replace(/[^A-Za-z0-9\-]/g,'');const filename=prefix && !base.startsWith(prefix+'_') && !base.startsWith(prefix+'-') ? `${prefix}_${base}` : (hasExt ? base : `${base}.${['pdf','doc','docx'].includes(fallbackExt)?fallbackExt:'pdf'}`);download(blob,filename);}catch(e){notify(e.message,true);}},
         openFeedback(doc){
             if(!doc?.feedback)return;
             this.feedbackDoc=doc;

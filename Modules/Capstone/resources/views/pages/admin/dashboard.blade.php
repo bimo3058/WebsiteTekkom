@@ -4,15 +4,17 @@
 <div x-data="capstoneDashboard" class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold tracking-tight text-foreground">Dashboard</h1>
-        <label class="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-slate-700 shadow-sm">
-            <span class="text-slate-400"><x-capstone::icon name="Calendar" size="16" /></span>
-            <select x-model="selectedPeriod" @change="reloadAdmin()" class="bg-transparent font-semibold outline-none" aria-label="Semester">
-                <option value="all">Semua Semester</option>
+        <div class="relative inline-flex items-center text-sm font-medium">
+            <span class="pointer-events-none absolute left-3 text-slate-400"><x-capstone::icon name="CalendarBlank" size="16" /></span>
+            <x-capstone::select-menu name="period" x-model="selectedPeriod" @select-menu-change.window="reloadAdmin()" :options="['all' => 'Semua Semester']" placeholder="Semua Semester" aria-label="Semester" class="min-w-44 pl-9">
                 <template x-for="period in periods" :key="period.id">
-                    <option :value="String(period.id)" x-text="period.name"></option>
+                    <button type="button" role="option" :aria-selected="(String(period.id) === selectedValue).toString()" @click="pick(period.id, period.name)" class="flex w-full items-center justify-between gap-2 rounded-radius px-2 py-1.5 text-sm hover:bg-surface-alt" :class="String(period.id) === selectedValue ? 'bg-primary/10 font-medium' : ''">
+                        <span class="truncate" x-text="period.name"></span>
+                        <span x-show="String(period.id) === selectedValue" class="text-primary"><x-capstone::icon name="Check" size="14" /></span>
+                    </button>
                 </template>
-            </select>
-        </label>
+            </x-capstone::select-menu>
+        </div>
     </div>
 
     @include('capstone::partials.loading')
@@ -67,29 +69,15 @@
                     <div class="flex items-center gap-2">
                         <label class="inline-flex min-w-0 items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500">
                             <x-capstone::icon name="Search" size="15" />
-                            <input x-model.debounce.300ms="jadwalSearch" @input="tablePage=1" type="search" placeholder="Cari" class="w-36 bg-transparent outline-none placeholder:text-slate-400" aria-label="Cari jadwal">
+                            <input x-model.debounce.300ms="jadwalSearch" @input="tablePage=1" type="search" placeholder="Cari..." class="w-36 bg-transparent outline-none placeholder:text-slate-400" aria-label="Cari jadwal">
                         </label>
-                        <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500" title="Filter tipe">
-                            <x-capstone::icon name="ListFilter" size="15" />
-                            <select x-model="typeFilter" @change="tablePage=1" class="bg-transparent text-slate-600 outline-none" aria-label="Filter tipe jadwal">
-                                <option value="all">Semua</option>
-                                <option value="BIMBINGAN">Bimbingan</option>
-                                <option value="SEMPRO">Sempro</option>
-                                <option value="EXPO">Expo</option>
-                                <option value="TA_DEFENSE">Sidang TA</option>
-                            </select>
-                        </label>
-                        <label class="hidden items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500 sm:inline-flex" title="Filter status">
-                            <select x-model="statusFilter" @change="tablePage=1" class="bg-transparent text-slate-600 outline-none" aria-label="Filter status jadwal">
-                                <option value="all">Semua Status</option>
-                                <option value="PENDING">Menunggu</option>
-                                <option value="SCHEDULED">Terjadwal</option>
-                                <option value="APPROVED">Disetujui</option>
-                                <option value="COMPLETED">Selesai</option>
-                                <option value="REJECTED">Ditolak</option>
-                                <option value="CANCELLED">Dibatalkan</option>
-                            </select>
-                        </label>
+                        <div class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1 text-[13px]" title="Filter tipe">
+                            <span class="text-slate-500"><x-capstone::icon name="Funnel" size="15" /></span>
+                            <x-capstone::select-menu borderless x-model="typeFilter" @select-menu-change.window="tablePage=1" :options="['all'=>'Semua','BIMBINGAN'=>'Bimbingan','SEMPRO'=>'Sempro','EXPO'=>'Expo','TA_DEFENSE'=>'Sidang TA']" placeholder="Semua" aria-label="Filter tipe jadwal" size="sm" class="min-w-28 border-0 shadow-none" />
+                        </div>
+                        <div class="hidden items-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1 text-[13px] sm:inline-flex" title="Filter status">
+                            <x-capstone::select-menu borderless x-model="statusFilter" @select-menu-change.window="tablePage=1" :options="['all'=>'Semua Status','PENDING'=>'Menunggu','SCHEDULED'=>'Terjadwal','APPROVED'=>'Disetujui','COMPLETED'=>'Selesai','REJECTED'=>'Ditolak','CANCELLED'=>'Dibatalkan']" placeholder="Semua Status" aria-label="Filter status jadwal" size="sm" class="min-w-32 border-0 shadow-none" />
+                        </div>
                     </div>
                 </div>
 
@@ -152,7 +140,7 @@
                     <div class="flex flex-wrap items-center justify-between gap-3 px-1 pt-3 text-[13px] text-slate-500">
                         <span x-text="jadwalRows.length+' jadwal'"></span>
                         <div class="flex items-center gap-2">
-                            <label class="inline-flex items-center gap-1.5">Rows <select x-model.number="tablePerPage" @change="tablePage=1" class="rounded-md border border-slate-200 px-1.5 py-1"><option>10</option><option>20</option><option>50</option></select></label>
+                            <label class="inline-flex items-center gap-1.5">Rows <x-capstone::select-menu x-model.number="tablePerPage" @select-menu-change.window="tablePage=1" :options="[10,25,50]" size="sm" dropup placeholder="10" aria-label="Baris per halaman" class="min-w-20" /></label>
                             <span x-text="'Halaman '+jadwalCurrentPage+' dari '+jadwalTotalPages"></span>
                             <button type="button" @click="tablePage=Math.max(1,jadwalCurrentPage-1)" :disabled="jadwalCurrentPage<=1" class="rounded-md border border-slate-200 p-1.5 disabled:opacity-40" aria-label="Halaman sebelumnya"><x-capstone::icon name="ChevronLeft" size="15" /></button>
                             <button type="button" @click="tablePage=Math.min(jadwalTotalPages,jadwalCurrentPage+1)" :disabled="jadwalCurrentPage>=jadwalTotalPages" class="rounded-md border border-slate-200 p-1.5 disabled:opacity-40" aria-label="Halaman berikutnya"><x-capstone::icon name="ChevronRight" size="15" /></button>
@@ -196,30 +184,17 @@
                     <div class="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-100 p-3">
                         <h3 class="text-sm font-bold text-foreground">Tabel Kelompok</h3>
                         <div class="flex items-center gap-2">
-                            <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500">
+                            <label class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500">
                                 <x-capstone::icon name="Search" size="15" />
-                                <input x-model.debounce.300ms="groupSearch" @input="groupPage=1" type="search" placeholder="Cari" class="w-28 bg-transparent outline-none placeholder:text-slate-400 sm:w-36" aria-label="Cari kelompok">
+                                <input x-model.debounce.300ms="groupSearch" @input="groupPage=1" type="search" placeholder="Cari..." class="w-28 bg-transparent outline-none placeholder:text-slate-400 sm:w-36" aria-label="Cari kelompok">
                             </label>
-                            <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500" title="Filter status">
+                            <label class="inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500" title="Filter status">
                                 <x-capstone::icon name="ListFilter" size="15" />
-                                <select x-model="groupStatus" @change="groupPage=1" class="max-w-24 bg-transparent outline-none" aria-label="Filter status group">
-                                    <option value="">Filter</option>
-                                    <option value="FORMING">Forming</option>
-                                    <option value="FORMING_SOLO">Forming Solo</option>
-                                    <option value="READY_FOR_BIDDING">Bidding</option>
-                                    <option value="READY_FOR_FINALIZATION">Finalisasi</option>
-                                    <option value="PDC1_ACTIVE">PDC1</option>
-                                    <option value="PDC2_ACTIVE">PDC2</option>
-                                </select>
+                                <x-capstone::select-menu borderless x-model="groupStatus" @select-menu-change.window="groupPage=1" :options="['FORMING'=>'Forming','FORMING_SOLO'=>'Forming Solo','READY_FOR_BIDDING'=>'Bidding','READY_FOR_FINALIZATION'=>'Finalisasi','PDC1_ACTIVE'=>'PDC1','PDC2_ACTIVE'=>'PDC2']" placeholder="Filter" aria-label="Filter status group" size="sm" class="min-w-24 border-0 shadow-none" />
                             </label>
-                            <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500" title="Urutkan">
+                            <label class="inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500" title="Urutkan">
                                 <x-capstone::icon name="ArrowUpDown" size="15" />
-                                <select x-model="groupSort" @change="groupPage=1" class="max-w-24 bg-transparent outline-none" aria-label="Urutkan kelompok">
-                                    <option value="newest">Urutkan</option>
-                                    <option value="newest">Terbaru</option>
-                                    <option value="code">Kode</option>
-                                    <option value="status">Status</option>
-                                </select>
+                                <x-capstone::select-menu borderless x-model="groupSort" @select-menu-change.window="groupPage=1" :options="['all'=>'Urutkan','newest'=>'Terbaru','code'=>'Kode','status'=>'Status']" placeholder="Urutkan kelompok" aria-label="Urutkan kelompok" size="sm" class="max-w-28 border-0 shadow-none" />
                             </label>
                         </div>
                     </div>
@@ -273,43 +248,28 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 p-3 text-[13px]">
-                        <div class="flex items-center gap-2 text-slate-500">
-                            <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1">Per halaman
-                                <select x-model.number="groupPerPage" @change="groupPage=1" class="bg-transparent font-semibold text-slate-700 outline-none" aria-label="Baris per halaman"><option>3</option><option>10</option><option>25</option><option>50</option></select>
-                            </label>
-                            <span x-text="'Menampilkan '+groupFrom+' sampai '+groupTo+' dari '+groupTotal+' data'"></span>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <button type="button" @click="groupPage=Math.max(1,groupPage-1)" :disabled="groupPage<=1" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman sebelumnya"><x-capstone::icon name="ChevronLeft" size="15" /></button>
-                            <template x-for="(p,i) in groupPageList" :key="i+'-'+p">
-                                <button type="button" x-show="p!=='…'" @click="groupPage=p" class="min-w-8 rounded-lg border px-2 py-1.5 text-xs font-semibold" :class="p===groupPage ? 'border-primary bg-primary text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-50'" x-text="p"></button>
-                                <span x-show="p==='…'" class="px-1 text-xs text-slate-400">...</span>
-                            </template>
-                            <button type="button" @click="groupPage=Math.min(groupLastPage,groupPage+1)" :disabled="groupPage>=groupLastPage" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman berikutnya"><x-capstone::icon name="ChevronRight" size="15" /></button>
-                        </div>
-                    </div>
+                    @include('capstone::partials.table-footer', ['page' => 'groupPage', 'pageCount' => 'groupLastPage', 'total' => 'groupTotal', 'from' => 'groupFrom', 'to' => 'groupTo', 'pageList' => 'groupPageList'])
                 </div>
 
                 <div class="rounded-xl border border-border bg-card p-3 shadow-sm">
                     <h3 class="px-1 pb-2.5 text-sm font-bold text-foreground">Akses Cepat</h3>
                     <div class="grid grid-cols-2 gap-2.5">
-                        <x-capstone::feature-link href="/admin/finalization" class="rounded-xl border border-slate-200 p-3.5 transition-colors hover:border-emerald-300 hover:bg-emerald-50/40">
+                        <x-capstone::feature-link href="{{ \Modules\Capstone\Support\CapstoneUrl::to('/admin/finalization') }}" class="rounded-xl border border-slate-200 p-3.5 transition-colors hover:border-emerald-300 hover:bg-emerald-50/40">
                             <span class="flex h-7 w-7 items-center justify-center text-emerald-500"><x-capstone::icon name="CircleCheck" size="22" /></span>
                             <p class="mt-2.5 text-[13px] font-bold text-slate-800">Finalisasi</p>
                             <p class="mt-0.5 text-xs text-slate-400">Finalisasi Kelompok</p>
                         </x-capstone::feature-link>
-                        <x-capstone::feature-link href="/admin/groups" class="rounded-xl border border-slate-200 p-3.5 transition-colors hover:border-amber-300 hover:bg-amber-50/40">
+                        <x-capstone::feature-link href="{{ \Modules\Capstone\Support\CapstoneUrl::to('/admin/groups') }}" class="rounded-xl border border-slate-200 p-3.5 transition-colors hover:border-amber-300 hover:bg-amber-50/40">
                             <span class="flex h-7 w-7 items-center justify-center text-amber-400"><x-capstone::icon name="Users" size="22" /></span>
                             <p class="mt-2.5 text-[13px] font-bold text-slate-800">Kelola Kelompok</p>
                             <p class="mt-0.5 text-xs text-slate-400">Setting Kelompok</p>
                         </x-capstone::feature-link>
-                        <x-capstone::feature-link href="/admin/periods" class="rounded-xl border border-slate-200 p-3.5 transition-colors hover:border-slate-400 hover:bg-slate-50">
+                        <x-capstone::feature-link href="{{ \Modules\Capstone\Support\CapstoneUrl::to('/admin/periods') }}" class="rounded-xl border border-slate-200 p-3.5 transition-colors hover:border-slate-400 hover:bg-slate-50">
                             <span class="flex h-7 w-7 items-center justify-center text-slate-700"><x-capstone::icon name="LayoutDashboard" size="22" /></span>
                             <p class="mt-2.5 text-[13px] font-bold text-slate-800">Kelola Periode</p>
                             <p class="mt-0.5 text-xs text-slate-400">Periode</p>
                         </x-capstone::feature-link>
-                        <x-capstone::feature-link href="/admin/schedule" class="rounded-xl border border-slate-200 p-3.5 transition-colors hover:border-primary/30 hover:bg-accent/40">
+                        <x-capstone::feature-link href="{{ \Modules\Capstone\Support\CapstoneUrl::to('/admin/schedule') }}" class="rounded-xl border border-slate-200 p-3.5 transition-colors hover:border-primary/30 hover:bg-accent/40">
                             <span class="flex h-7 w-7 items-center justify-center text-primary"><x-capstone::icon name="Calendar" size="22" /></span>
                             <p class="mt-2.5 text-[13px] font-bold text-slate-800">Jadwal</p>
                             <p class="mt-0.5 text-xs text-slate-400">Lihat Jadwal</p>
@@ -327,8 +287,8 @@
             <label for="dashboard-reason" class="text-sm font-medium">Alasan Penolakan</label>
             <textarea id="dashboard-reason" x-model="reason" required maxlength="1000" class="min-h-24 w-full rounded-md border p-3 text-sm" placeholder="Alasan..."></textarea>
             <div class="flex justify-end gap-2">
-                <x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button>
-                <x-capstone::button type="submit" variant="destructive" ::disabled="saving || !reason.trim()">Tolak</x-capstone::button>
+                <x-btn style="outline" @click="$el.closest('dialog').close()">Batal</x-btn>
+                <x-btn type="submit" style="danger" x-bind:disabled="saving || !reason.trim()">Tolak</x-btn>
             </div>
         </form>
     </x-capstone::dialog>

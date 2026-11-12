@@ -9,7 +9,7 @@
     <template x-if="user && !loading && !error">
         <div class="space-y-5">
             <div>
-                <x-capstone::button href="/admin/users" variant="outline" class="text-slate-500"><x-capstone::icon name="ChevronLeft" size="16" /> Kembali</x-capstone::button>
+                <x-btn href="{{ \Modules\Capstone\Support\CapstoneUrl::to('/admin/users') }}" style="outline" class="text-slate-500"><x-capstone::icon name="ChevronLeft" size="16" /> Kembali</x-btn>
             </div>
 
             <div class="flex items-center gap-4">

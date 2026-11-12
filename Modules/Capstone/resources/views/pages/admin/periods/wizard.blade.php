@@ -4,8 +4,8 @@
         <div class="h-px bg-gray-100"></div>
         <div class="flex items-center justify-between gap-3">
             <button type="button" @click="backToList()" class="inline-flex h-10 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-600 hover:bg-gray-50"><x-capstone::icon name="ChevronLeft" class="h-4 w-4" />Kembali</button>
-            <button type="button" x-show="step<5" @click="next()" :disabled="saving || copying || (step===1 && !hasTemplates)" class="inline-flex h-10 items-center rounded-lg bg-[#1E2A5A] px-6 text-sm font-medium text-white hover:bg-[#162040] disabled:opacity-50">Lanjut</button>
-            <button type="button" x-show="step===5" @click="save()" :disabled="!editable" class="inline-flex h-10 items-center rounded-lg bg-[#1E2A5A] px-6 text-sm font-medium text-white hover:bg-[#162040] disabled:opacity-50" x-text="saving ? 'Menyimpan...' : 'Simpan'"></button>
+            <button type="button" x-show="step<5" @click="next()" :disabled="saving || copying || (step===1 && !hasTemplates)" class="inline-flex h-10 items-center rounded-lg bg-primary px-6 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50">Lanjut</button>
+            <button type="button" x-show="step===5" @click="save()" :disabled="!editable" class="inline-flex h-10 items-center rounded-lg bg-primary px-6 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50" x-text="saving ? 'Menyimpan...' : 'Simpan'"></button>
         </div>
         <div>
             <h1 class="text-2xl font-bold text-gray-900">{{ $periodId ? 'Ubah Periode' : 'Tambah Periode Baru' }}</h1>
@@ -40,8 +40,8 @@
                 </form>
                 <div x-show="step===1" class="flex items-center justify-between gap-3 rounded-b-2xl border-t border-gray-100 px-6 py-4">
                     <button type="button" @click="step===1 ? prevType() : back()" :disabled="saving || copying" class="inline-flex h-10 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"><x-capstone::icon name="ChevronLeft" class="h-4 w-4" />Kembali</button>
-                    <button type="button" x-show="step<5" @click="step===1 ? nextType() : next()" :disabled="saving || copying || (step===1 && !hasTemplates)" class="inline-flex h-10 items-center rounded-lg bg-[#1E2A5A] px-6 text-sm font-medium text-white hover:bg-[#162040] disabled:opacity-50">Lanjut</button>
-                    <button type="button" x-show="step===5" @click="save()" :disabled="!editable" class="inline-flex h-10 items-center rounded-lg bg-[#1E2A5A] px-6 text-sm font-medium text-white hover:bg-[#162040] disabled:opacity-50" x-text="saving ? 'Menyimpan...' : 'Simpan'"></button>
+                    <button type="button" x-show="step<5" @click="step===1 ? nextType() : next()" :disabled="saving || copying || (step===1 && !hasTemplates)" class="inline-flex h-10 items-center rounded-lg bg-primary px-6 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50">Lanjut</button>
+                    <button type="button" x-show="step===5" @click="save()" :disabled="!editable" class="inline-flex h-10 items-center rounded-lg bg-primary px-6 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50" x-text="saving ? 'Menyimpan...' : 'Simpan'"></button>
                 </div>
             </div>
         </div>

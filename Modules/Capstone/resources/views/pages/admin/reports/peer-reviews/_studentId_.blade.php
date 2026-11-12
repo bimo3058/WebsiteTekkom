@@ -22,7 +22,7 @@
                         <p class="text-sm text-muted-foreground" x-text="(peerDetail.reviewee.nim || '-')+' · '+peerDetail.reviewee.group_name"></p>
                     </div>
                     <div class="flex items-center gap-3">
-                        <span x-show="peerDetail.overall.status==='DINILAI'" class="inline-flex items-center rounded-full bg-[#1E2A5A] px-2.5 py-0.5 text-[11px] font-semibold text-white">Dinilai</span>
+                        <span x-show="peerDetail.overall.status==='DINILAI'" class="inline-flex items-center rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-semibold text-white">Dinilai</span>
                         <span x-show="peerDetail.overall.status!=='DINILAI'" class="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">Belum dinilai</span>
                         <div class="text-right">
                             <p class="text-2xl font-bold" :class="scoreClass(peerDetail.overall.avg_score)" x-text="fmtScore(peerDetail.overall.avg_score)"></p>

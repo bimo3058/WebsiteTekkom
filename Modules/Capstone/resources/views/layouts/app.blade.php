@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="{{ url('/capstone/assets/images/UNDIPOfficial.png') }}">
     <link rel="stylesheet" href="{{ url('/capstone/assets/build/app.css') }}?v={{ filemtime(module_path('Capstone', 'public/build/app.css')) }}">
+    @ddfsnStyles
     <script type="application/json" id="capstone-context">{!! json_encode(['actor'=>$actor ?? null,'role'=>$activeRole ?? null,'path'=>$pagePath ?? '/','params'=>$pageParams ?? [],'base'=>url('/capstone'),'api'=>url('/capstone/session/capstone')], JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_UNESCAPED_UNICODE) !!}</script>
     <script defer src="{{ url('/capstone/assets/build/app.js') }}?v={{ filemtime(module_path('Capstone', 'public/build/app.js')) }}"></script>
     <x-mobile-navigation-assets />
@@ -48,6 +49,7 @@
     </template>
 </div>
 @stack('scripts')
+    @ddfsnScripts
     <x-mobile-navigation />
 </body>
 </html>

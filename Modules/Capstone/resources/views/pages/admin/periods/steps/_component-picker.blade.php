@@ -25,26 +25,15 @@
                 <h4 class="mr-auto text-base font-bold text-gray-900">Pilih Komponen</h4>
                 <div class="relative">
                     <x-capstone::icon name="Search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                    <input x-model="search" @input="onSearch()" type="search" placeholder="Cari" aria-label="Cari komponen" class="h-10 w-56 rounded-lg border border-gray-200 pl-9 pr-3 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#1E2A5A]" />
+                    <input x-model="search" @input="onSearch()" type="search" placeholder="Cari..." aria-label="Cari komponen" class="h-10 w-56 rounded-lg border border-gray-200 pl-9 pr-3 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#1E2A5A]" />
                 </div>
                 <div class="relative">
                     <x-capstone::icon name="ListFilter" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-                    <select x-model="filter" @change="page=1" aria-label="Filter komponen" class="h-10 appearance-none rounded-lg border border-gray-200 bg-white pl-9 pr-8 text-sm text-gray-600 outline-none focus:border-[#1E2A5A]">
-                        <option value="all">Filter</option>
-                        <option value="high">Bobot ≥ 50%</option>
-                        <option value="mid">Bobot 20–49%</option>
-                        <option value="low">Bobot &lt; 20%</option>
-                    </select>
+                    <x-capstone::select-menu x-model="filter" @select-menu-change.window="page=1" :options="['all'=>'Filter','high'=>'Bobot ≥ 50%','mid'=>'Bobot 20–49%','low'=>'Bobot &lt; 20%']" placeholder="Filter komponen" aria-label="Filter komponen" />
                 </div>
                 <div class="relative">
                     <x-capstone::icon name="ArrowUpDown" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-                    <select x-model="sortBy" @change="page=1" aria-label="Urutkan komponen" class="h-10 appearance-none rounded-lg border border-gray-200 bg-white pl-9 pr-8 text-sm text-gray-600 outline-none focus:border-[#1E2A5A]">
-                        <option value="default">Urutkan</option>
-                        <option value="kode">Kode A–Z</option>
-                        <option value="nama">Nama A–Z</option>
-                        <option value="bobot_desc">Bobot terbesar</option>
-                        <option value="bobot_asc">Bobot terkecil</option>
-                    </select>
+                    <x-capstone::select-menu x-model="sortBy" @select-menu-change.window="page=1" :options="['default'=>'Urutkan','kode'=>'Kode A–Z','nama'=>'Nama A–Z','bobot_desc'=>'Bobot terbesar','bobot_asc'=>'Bobot terkecil']" placeholder="Urutkan komponen" aria-label="Urutkan komponen" />
                 </div>
             </div>
             <table class="w-full text-sm">
@@ -61,13 +50,13 @@
             </table>
             <div class="flex flex-wrap items-center gap-3 border-t border-gray-100 px-4 py-3 text-sm">
                 <span class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1 text-gray-600">Per halaman
-                    <select x-model.number="perPage" @change="setPerPage(perPage)" aria-label="Baris per halaman" class="bg-transparent outline-none"><option :value="10">10</option><option :value="20">20</option><option :value="50">50</option></select>
+                    <x-capstone::select-menu x-model.number="perPage" @select-menu-change.window="setPerPage(perPage)" :options="[10,25,50]" size="sm" borderless dropup aria-label="Baris per halaman" class="min-w-20" />
                 </span>
                 <span class="mx-auto text-gray-800">Menampilkan <span x-text="pageFrom"></span> sampai <span x-text="pageTo"></span> dari <span x-text="totalResults"></span> data</span>
                 <span class="inline-flex items-center gap-1">
                     <button type="button" @click="prevPage()" :disabled="page<=1" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40" aria-label="Halaman sebelumnya"><x-capstone::icon name="ChevronLeft" class="h-4 w-4" /></button>
                     <template x-for="(n, i) in pageNumbers" :key="i">
-                        <button type="button" @click="goPage(n)" :disabled="n==='...'" class="inline-flex h-8 min-w-8 items-center justify-center rounded-lg border px-2 text-gray-700" :class="n===page ? 'border-[#1E2A5A] bg-[#1E2A5A] text-white' : 'border-gray-200 hover:bg-gray-50'" x-text="n"></button>
+                        <button type="button" @click="goPage(n)" :disabled="n==='...'" class="inline-flex h-8 min-w-8 items-center justify-center rounded-lg border px-2 text-gray-700" :class="n===page ? 'border-[#1E2A5A] bg-primary text-white' : 'border-gray-200 hover:bg-gray-50'" x-text="n"></button>
                     </template>
                     <button type="button" @click="nextPage()" :disabled="page>=totalPages" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40" aria-label="Halaman berikutnya"><x-capstone::icon name="ChevronRight" class="h-4 w-4" /></button>
                 </span>

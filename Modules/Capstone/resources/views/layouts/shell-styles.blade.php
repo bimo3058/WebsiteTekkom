@@ -1,7 +1,7 @@
-{{-- Capstone shell styles — ported from resources/views/components/sidebar.blade.php
-     (<style> block) + resources/views/components/sidebar-link.blade.php (sb-item).
-     Scoped under .sitkom-shell-capstone so host vars are never clobbered.
-     Dark values reuse Modules/Capstone theme.css tokens via var(). --}}
+{{-- Capstone shell styles — PenguinUI sidebar skeleton + SITKOM metrics.
+     Scoped under .sitkom-shell-capstone. Surface/primary tokens come from
+     Modules/Capstone theme.css (PenguinUI Modern aliases). Phosphor icons
+     render as <i class="ph ..."> (see x-capstone::icon), sized via font-size. --}}
 <style>
 .sitkom-shell-capstone {
     --c-primary: #0B266E;
@@ -114,10 +114,10 @@
     font-family: inherit; transition: background .12s, color .12s;
     white-space: nowrap; overflow: hidden; width: 100%; text-align: left;
 }
-.sb-item svg { width: 16px; height: 16px; color: var(--c-fg-muted); flex-shrink: 0; }
+.sb-item svg, .sb-item i.ph { width: 16px; height: 16px; font-size: 16px; color: var(--c-fg-muted); flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
 .sb-item:hover { background: var(--c-bg); }
 .sb-item.is-active { background: var(--c-primary-subtle); color: var(--c-primary); font-weight: 600; }
-.sb-item.is-active svg { color: var(--c-primary); }
+.sb-item.is-active svg, .sb-item.is-active i.ph { color: var(--c-primary); }
 .sb-item-pill {
     position: absolute; left: 0; top: 50%; transform: translateY(-50%);
     width: 3px; height: 20px; background: var(--c-primary);
@@ -146,7 +146,7 @@
 .sb-subitem:hover { background: var(--c-bg); }
 .sb-subitem.is-active { background: var(--c-primary-subtle); color: var(--c-primary); font-weight: 600; }
 .sb-subitem.is-disabled { opacity: .45; cursor: default; pointer-events: none; }
-.sb-link-danger, .sb-link-danger svg { color: var(--c-error); }
+.sb-link-danger, .sb-link-danger svg, .sb-link-danger i.ph { color: var(--c-error); }
 .sb-link-danger:hover { background: var(--c-error-subtle); }
 
 /* ── Topbar ── */

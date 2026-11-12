@@ -76,8 +76,8 @@ export function registerDashboards(Alpine) {
         canApprove(event){return context.role==='admin' && ['SEMPRO','EXPO','TA_DEFENSE'].includes(event?.type) && ['PENDING','PENDING_APPROVAL'].includes(event?.status);},
         move(direction){const next=new Date(this.year,this.month+direction,1);this.year=next.getFullYear();this.month=next.getMonth();},
         today(){const now=new Date();this.year=now.getFullYear();this.month=now.getMonth();this.selectedDate=localDateKey(now);},
-        detail(event){this.selected=event;document.getElementById('schedule-detail')?.showModal();},
-        openDay(day){this.selectedDate=typeof day === 'string' ? day : day.key;document.getElementById('schedule-day')?.showModal();},
+        detail(event){this.selected=event;const d=document.getElementById('schedule-detail');if(d&&!d.open)d.showModal();},
+        openDay(day){this.selectedDate=typeof day === 'string' ? day : day.key;const d=document.getElementById('schedule-day');if(d&&!d.open)d.showModal();},
         async approve(event){
             if(!this.canApprove(event)||this.saving)return;
             this.saving=true;
@@ -86,10 +86,10 @@ export function registerDashboards(Alpine) {
                     examiner_1_id:event.examiner_1_id||event.examiner1?.id,examiner_2_id:event.examiner_2_id||event.examiner2?.id};
                 const endpoint=event.type==='TA_DEFENSE'?`/admin/ta-defense-schedules/${event._id}`:`/admin/${event.type.toLowerCase()}/schedules/${event._id}/approve`;
                 if(event.type==='TA_DEFENSE')body.status='SCHEDULED';
-                await api(endpoint,{method:'PUT',body});notify('Schedule approved!');document.getElementById('schedule-detail')?.close();await this.loadAdminSchedules();
+                await api(endpoint,{method:'PUT',body});notify('Schedule approved!');const sd=document.getElementById('schedule-detail');if(sd&&sd.open)sd.close();await this.loadAdminSchedules();
             }catch(e){notify(e.message,true);}finally{this.saving=false;}
         },
-        reject(event){if(!this.canApprove(event))return;this.rejecting=event;this.reason='';document.getElementById('schedule-reject')?.showModal();},
+        reject(event){if(!this.canApprove(event))return;this.rejecting=event;this.reason='';const d=document.getElementById('schedule-reject');if(d&&!d.open)d.showModal();},
         async submitRejection(){
             if(!this.reason.trim()||this.saving||!this.rejecting)return;
             this.saving=true;
@@ -97,7 +97,7 @@ export function registerDashboards(Alpine) {
                 const event=this.rejecting;
                 const endpoint=event.type==='TA_DEFENSE'?`/admin/ta-defense-schedules/${event._id}/cancel`:`/admin/${event.type.toLowerCase()}/schedules/${event._id}/reject`;
                 await api(endpoint,{method:'PUT',body:{rejection_reason:this.reason.trim()}});
-                document.getElementById('schedule-reject')?.close();document.getElementById('schedule-detail')?.close();notify('Schedule request rejected.');await this.loadAdminSchedules();
+                const sr=document.getElementById('schedule-reject');if(sr&&sr.open)sr.close();const sd2=document.getElementById('schedule-detail');if(sd2&&sd2.open)sd2.close();notify('Schedule request rejected.');await this.loadAdminSchedules();
             }catch(e){notify(e.message,true);}finally{this.saving=false;}
         },
         ketuaName(item){const members=item.members || [];const leader=members.find(m=>m.is_leader) || members[0];return leader?.student?.name || leader?.student?.user?.name || '—';},
@@ -236,7 +236,7 @@ export function registerDashboards(Alpine) {
         get days(){return calendarDays(this.year,this.month,1);},
         move(direction){const next=new Date(this.year,this.month+direction,1);this.month=next.getMonth();this.year=next.getFullYear();},
         eventsFor(day,events){return (events || []).filter(e=>localDateKey(e.date || e.scheduled_at)===day.key);},
-        openDay(day){this.selectedDate=day.key;document.getElementById('schedule-day')?.showModal();},
+        openDay(day){this.selectedDate=day.key;const d=document.getElementById('schedule-day');if(d&&!d.open)d.showModal();},
         dayList(){return this.eventsFor({key:this.selectedDate},this.schedules || []).sort((a,b)=>(a.start_time||'').localeCompare(b.start_time||''));},
         dayTitle(){return new Date(this.selectedDate+'T12:00:00').toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});},
         typeLabel(type){return eventLabels[type] || type;},

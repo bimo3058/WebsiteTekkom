@@ -56,7 +56,7 @@ export function schedulePage() {
         statusLabel(status){return {COMPLETED:'Selesai',DONE:'Selesai',SCHEDULED:'Terjadwal',APPROVED:'Disetujui',PENDING:'Menunggu',PENDING_APPROVAL:'Menunggu',REJECTED:'Ditolak',CANCELLED:'Dibatalkan'}[status] || (status || 'Menunggu');},
         dateId(value){const key=localDateKey(value);if(!key)return '-';const months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];const [y,m,d]=key.split('-').map(Number);return `${d} ${months[m-1]} ${y}`;},
         timeShort(value){return (value || '').slice(0,5).replace(':', '.') || '-';},
-        groupCode(event){return event.group?.code || event.group?.title?.title || '-';},
+        groupCode(event){if(event.type==='EXPO')return event.group?.code || '—';return event.group?.code || event.group?.title?.title || '-';},
         memberNames(event){const fromGroup=(event.group?.members || []).map(m=>m.student?.name).filter(Boolean);if(fromGroup.length)return fromGroup;const single=this.students(event);return single ? [single] : [];},
         initials(name){return String(name || '').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase() || '?';},
         avatarBg(name){const palette=['#0B266E','#B45309','#047857','#475569','#7C3AED','#0E7490'];let hash=0;for(const ch of String(name || '?'))hash=(hash*31+ch.charCodeAt(0))>>>0;return palette[hash%palette.length];},
@@ -64,35 +64,35 @@ export function schedulePage() {
         get showingTo(){return Math.min(this.currentPage*this.perPage,this.tableRows.length);},
         get pageList(){const total=this.totalPages,current=this.currentPage;if(total<=7)return Array.from({length:total},(_,i)=>i+1);const keep=new Set([1,2,current-1,current,current+1,total-1,total].filter(p=>p>=1&&p<=total));const sorted=[...keep].sort((a,b)=>a-b);const out=[];let prev=0;for(const p of sorted){if(p-prev>1)out.push('…');out.push(p);prev=p;}return out;},
         goto(p){this.page=Math.min(Math.max(1,p),this.totalPages);},
-        openDay(key){this.selectedDate=key;document.getElementById('schedule-day').showModal();},
+        openDay(key){this.selectedDate=key;const d=document.getElementById('schedule-day');if(d&&!d.open)d.showModal();},
         time(event){const start=(event.start_time||'').slice(0,5),end=(event.end_time||'').slice(0,5);return start ? start+(end?' — '+end:'') : 'Time not set';},
-        title(event){return event.name || event.student_name || event.group?.title?.title || this.label(event.type);},
+        title(event){if(event.type==='EXPO')return event.name || this.label(event.type);return event.name || event.student_name || event.group?.title?.title || this.label(event.type);},
         students(event){return event.students?.map(s=>s.name).join(', ') || event.student_name || '';},
         examiners(event){return event.examiners?.map(e=>e.name || e.examiner?.name).filter(Boolean).join(', ') || [event.examiner1?.name,event.examiner2?.name].filter(Boolean).join(', ');},
         canApprove(event){return context.role==='admin' && ['SEMPRO','EXPO','TA_DEFENSE'].includes(event?.type) && ['PENDING','PENDING_APPROVAL'].includes(event?.status);},
         canEdit(event){return context.role==='dosen' && event?.type==='BIMBINGAN';},
         move(direction){const next=new Date(this.year,this.month+direction,1);this.year=next.getFullYear();this.month=next.getMonth();},
         today(){const now=new Date();this.year=now.getFullYear();this.month=now.getMonth();this.selectedDate=localDateKey(now);},
-        detail(event){this.selected=event;document.getElementById('schedule-detail').showModal();},
+        detail(event){this.selected=event;const d=document.getElementById('schedule-detail');if(d&&!d.open)d.showModal();},
         edit(event=null){
             if(context.role!=='dosen'||(event&&!this.canEdit(event)))return;
             this.editing=event;this.errors={};
             this.form={group_id:String(event?.group_id||''),type:'BIMBINGAN',date:event?localDateKey(event.date):this.selectedDate,
                 start_time:(event?.start_time||'').slice(0,5),end_time:(event?.end_time||'').slice(0,5),room:event?.room||'',mode:event?.mode||'offline',notes:event?.notes||''};
-            document.getElementById('schedule-form').showModal();
+            const sf=document.getElementById('schedule-form');if(sf&&!sf.open)sf.showModal();
         },
         async save(){
             if(this.saving)return;
             this.saving=true;this.errors={};
             try{await api('/schedules'+(this.editing?'/'+this.editing._id:''),{method:this.editing?'PUT':'POST',body:this.form});
-                document.getElementById('schedule-form').close();notify('Schedule saved');await this.load();
+                const sf2=document.getElementById('schedule-form');if(sf2&&sf2.open)sf2.close();notify('Schedule saved');await this.load();
             }catch(e){this.errors=e.errors||{};notify(e.message,true);}finally{this.saving=false;}
         },
-        confirmDelete(event){if(!this.canEdit(event))return;this.deleting=event;document.getElementById('schedule-delete').showModal();},
+        confirmDelete(event){if(!this.canEdit(event))return;this.deleting=event;const d=document.getElementById('schedule-delete');if(d&&!d.open)d.showModal();},
         async remove(){
             if(!this.deleting||this.saving)return;
             this.saving=true;
-            try{await api('/schedules/'+this.deleting._id,{method:'DELETE'});document.getElementById('schedule-delete').close();this.deleting=null;notify('Schedule deleted');await this.load();}
+            try{await api('/schedules/'+this.deleting._id,{method:'DELETE'});const d=document.getElementById('schedule-delete');if(d&&d.open)d.close();this.deleting=null;notify('Schedule deleted');await this.load();}
             catch(e){notify(e.message,true);}finally{this.saving=false;}
         },
         async approve(event){
@@ -103,10 +103,10 @@ export function schedulePage() {
                     examiner_1_id:event.examiner_1_id||event.examiner1?.id,examiner_2_id:event.examiner_2_id||event.examiner2?.id};
                 const endpoint=event.type==='TA_DEFENSE'?`/admin/ta-defense-schedules/${event._id}`:`/admin/${event.type.toLowerCase()}/schedules/${event._id}/approve`;
                 if(event.type==='TA_DEFENSE')body.status='SCHEDULED';
-                await api(endpoint,{method:'PUT',body});notify('Schedule approved!');document.getElementById('schedule-detail').close();await this.load();
+                await api(endpoint,{method:'PUT',body});notify('Schedule approved!');const sd=document.getElementById('schedule-detail');if(sd&&sd.open)sd.close();await this.load();
             }catch(e){notify(e.message,true);}finally{this.saving=false;}
         },
-        reject(event){if(!this.canApprove(event))return;this.rejecting=event;this.reason='';document.getElementById('schedule-reject').showModal();},
+        reject(event){if(!this.canApprove(event))return;this.rejecting=event;this.reason='';const d=document.getElementById('schedule-reject');if(d&&!d.open)d.showModal();},
         async submitRejection(){
             if(!this.reason.trim()||this.saving||!this.rejecting)return;
             this.saving=true;
@@ -114,7 +114,7 @@ export function schedulePage() {
                 const event=this.rejecting;
                 const endpoint=event.type==='TA_DEFENSE'?`/admin/ta-defense-schedules/${event._id}/cancel`:`/admin/${event.type.toLowerCase()}/schedules/${event._id}/reject`;
                 await api(endpoint,{method:'PUT',body:{rejection_reason:this.reason.trim()}});
-                document.getElementById('schedule-reject').close();document.getElementById('schedule-detail').close();notify('Schedule request rejected.');await this.load();
+                const sr=document.getElementById('schedule-reject');if(sr&&sr.open)sr.close();const sd2=document.getElementById('schedule-detail');if(sd2&&sd2.open)sd2.close();notify('Schedule request rejected.');await this.load();
             }catch(e){notify(e.message,true);}finally{this.saving=false;}
         },
         exportCsv(all=false){
