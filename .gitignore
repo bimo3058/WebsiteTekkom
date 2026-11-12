@@ -43,7 +43,7 @@ AI_*.md
 .cursor/
 .copilot/
 /Modules/BankSoal/Skills
-*.md
+# *.md
 !Modules/Capstone/PERFORMANCE.md
 *.sql
 *.gz

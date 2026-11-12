@@ -11,7 +11,9 @@
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "*",
+        "ddfsn/blade-components": "*",
         "dedoc/scramble": "*",
+        "distortedfusion/blade-forms": "*",
         "laravel/framework": "^12.0",
         "laravel/pulse": "*",
         "laravel/sanctum": "*",

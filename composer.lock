@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1ddd9ae786897ab3bf356197054510a8",
+    "content-hash": "6b5df4be4ec26f183444d3fa68da91ee",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -82,6 +82,156 @@
                 }
             ],
             "time": "2026-02-21T08:51:10+00:00"
+        },
+        {
+            "name": "blade-ui-kit/blade-heroicons",
+            "version": "2.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/driesvints/blade-heroicons.git",
+                "reference": "66fa8ba09dba12e0cdb410b8cb94f3b890eca440"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/driesvints/blade-heroicons/zipball/66fa8ba09dba12e0cdb410b8cb94f3b890eca440",
+                "reference": "66fa8ba09dba12e0cdb410b8cb94f3b890eca440",
+                "shasum": ""
+            },
+            "require": {
+                "blade-ui-kit/blade-icons": "^1.6",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0|^11.0",
+                "phpunit/phpunit": "^9.0|^10.5|^11.0|^12.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "BladeUI\\Heroicons\\BladeHeroiconsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "BladeUI\\Heroicons\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Dries Vints",
+                    "homepage": "https://driesvints.com"
+                }
+            ],
+            "description": "A package to easily make use of Heroicons in your Laravel Blade views.",
+            "homepage": "https://github.com/driesvints/blade-heroicons",
+            "keywords": [
+                "Heroicons",
+                "blade",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/driesvints/blade-heroicons/issues",
+                "source": "https://github.com/driesvints/blade-heroicons/tree/2.7.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/sponsors/driesvints",
+                    "type": "github"
+                },
+                {
+                    "url": "https://www.paypal.com/paypalme/driesvints",
+                    "type": "paypal"
+                }
+            ],
+            "time": "2026-03-16T13:00:23+00:00"
+        },
+        {
+            "name": "blade-ui-kit/blade-icons",
+            "version": "1.11.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/driesvints/blade-icons.git",
+                "reference": "9a6e9f0cd96f482d01d4c5c32166119c59e514fc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/driesvints/blade-icons/zipball/9a6e9f0cd96f482d01d4c5c32166119c59e514fc",
+                "reference": "9a6e9f0cd96f482d01d4c5c32166119c59e514fc",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "^12.0|^13.0",
+                "illuminate/filesystem": "^12.0|^13.0",
+                "illuminate/support": "^12.0|^13.0",
+                "illuminate/view": "^12.0|^13.0",
+                "php": "^8.2",
+                "symfony/console": "^7.0|^8.0",
+                "symfony/finder": "^7.0|^8.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "^1.5.1",
+                "orchestra/testbench": "^10.0|^11.0",
+                "phpunit/phpunit": "^11.0"
+            },
+            "bin": [
+                "bin/blade-icons-generate"
+            ],
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "BladeUI\\Icons\\BladeIconsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/helpers.php"
+                ],
+                "psr-4": {
+                    "BladeUI\\Icons\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Dries Vints",
+                    "homepage": "https://driesvints.com"
+                }
+            ],
+            "description": "A package to easily make use of icons in your Laravel Blade views.",
+            "homepage": "https://github.com/driesvints/blade-icons",
+            "keywords": [
+                "blade",
+                "icons",
+                "laravel",
+                "svg"
+            ],
+            "support": {
+                "issues": "https://github.com/driesvints/blade-icons/issues",
+                "source": "https://github.com/driesvints/blade-icons"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/sponsors/driesvints",
+                    "type": "github"
+                },
+                {
+                    "url": "https://www.paypal.com/paypalme/driesvints",
+                    "type": "paypal"
+                }
+            ],
+            "time": "2026-11-09T12:00:40+00:00"
         },
         {
             "name": "brick/math",
@@ -371,6 +521,74 @@
             "time": "2025-08-20T19:15:30+00:00"
         },
         {
+            "name": "ddfsn/blade-components",
+            "version": "1.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/distortedfusion/blade-components.git",
+                "reference": "dd94f8b50343b03184e3fe9eafc1e2439fea332a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/distortedfusion/blade-components/zipball/dd94f8b50343b03184e3fe9eafc1e2439fea332a",
+                "reference": "dd94f8b50343b03184e3fe9eafc1e2439fea332a",
+                "shasum": ""
+            },
+            "require": {
+                "blade-ui-kit/blade-heroicons": "^2.6",
+                "illuminate/routing": "*",
+                "illuminate/support": "*",
+                "php": "^8.0",
+                "symfony/http-kernel": "^6.2|^7.0|^8.0"
+            },
+            "conflict": {
+                "distortedfusion/blade-colors": "*"
+            },
+            "require-dev": {
+                "distortedfusion/php-cs-fixer-config": "^2.1"
+            },
+            "suggest": {
+                "distortedfusion/blade-forms": "A collection of reusable form components, complementary to blade components."
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "DistortedFusion\\BladeComponents\\LayoutServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "DistortedFusion\\BladeComponents\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kevin Dierkx",
+                    "email": "kevin@distortedfusion.com"
+                }
+            ],
+            "description": "Blade Components is a hand-crafted, UI component library for building consistent web experiences in Laravel apps.",
+            "keywords": [
+                "blade",
+                "components",
+                "ddfsn",
+                "distortedfusion",
+                "laravel",
+                "tailwind"
+            ],
+            "support": {
+                "issues": "https://github.com/distortedfusion/blade-components/issues",
+                "source": "https://github.com/distortedfusion/blade-components/tree/1.7.0"
+            },
+            "time": "2026-11-11T10:31:42+00:00"
+        },
+        {
             "name": "dedoc/scramble",
             "version": "v0.13.45",
             "source": {
@@ -525,6 +743,64 @@
                 "source": "https://github.com/dflydev/dflydev-dot-access-data/tree/v3.0.3"
             },
             "time": "2024-07-08T12:26:09+00:00"
+        },
+        {
+            "name": "distortedfusion/blade-forms",
+            "version": "3.0.18",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/distortedfusion/blade-forms.git",
+                "reference": "d5e0197c34059e8b0c2431da46b7c197057daf5c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/distortedfusion/blade-forms/zipball/d5e0197c34059e8b0c2431da46b7c197057daf5c",
+                "reference": "d5e0197c34059e8b0c2431da46b7c197057daf5c",
+                "shasum": ""
+            },
+            "require": {
+                "ddfsn/blade-components": "*",
+                "illuminate/support": "*",
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "distortedfusion/php-cs-fixer-config": "^2.1"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "DistortedFusion\\BladeForms\\BladeFormsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "DistortedFusion\\BladeForms\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kevin Dierkx",
+                    "email": "kevin@distortedfusion.com"
+                }
+            ],
+            "description": "Laravel Blade Form Components.",
+            "keywords": [
+                "Forms",
+                "distortedfusion",
+                "laravel",
+                "tailwind"
+            ],
+            "support": {
+                "issues": "https://github.com/distortedfusion/blade-forms/issues",
+                "source": "https://github.com/distortedfusion/blade-forms/tree/3.0.18"
+            },
+            "time": "2026-08-23T20:41:46+00:00"
         },
         {
             "name": "doctrine/inflector",
@@ -11405,5 +11681,5 @@
         "php": "^8.2"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }
