@@ -122,6 +122,7 @@ use Modules\Capstone\Services\GroupStateMachine;
 use Modules\Capstone\Services\IndividualTaWorkflow;
 use Modules\Capstone\Services\NotificationService;
 use Modules\Capstone\Services\SchedulingService;
+use Modules\Capstone\Services\SupervisorEvaluationService;
 use Modules\Capstone\Support\BladeFeatureAccess;
 use Modules\Capstone\Support\CapstoneActor;
 use Modules\Capstone\Support\CapstoneUrl;
@@ -1955,12 +1956,93 @@ class BladeCalendarAccessTest extends TestCase
         $score = ExpoSelfEvaluation::first();
         $this->assertSame($student->student->id, $score->student_id);
         $this->assertSame(0, ExpoScore::count());
+        // Atomic Pengajuan EXPO: scores alone stay draft (NULL), so a second
+        // save is allowed and withdrawal is still locked only after submit.
+        // Detail must stay editable until the document completes the pengajuan.
+        $this->assertSame(201, $controller->evaluate($request, $event)->getStatusCode());
+        $draftDetail = $controller->detail($request, $event)->getData(true);
+        $this->assertNull($draftDetail['group_evaluation']['review_status']);
+        $this->assertTrue($draftDetail['can_submit']);
+        $this->assertTrue($draftDetail['can_upload_document']);
+        // Completing the missing document flips to SUBMITTED and locks.
+        if (! Schema::hasColumn('capstone_expo_student_documents', 'feedback')) {
+            Schema::table('capstone_expo_student_documents', function (Blueprint $t) {
+                $t->text('feedback')->nullable();
+            });
+        }
+        $storage = \Mockery::mock(DocumentStorageService::class);
+        $storage->shouldReceive('store')->once()->andReturn('expo/poster.pdf');
+        $docRequest = $this->formRequestFor(UploadExpoDocumentRequest::class, $student, 'POST', [], [], ['file' => UploadedFile::fake()->create('poster.pdf', 1, 'application/pdf')]);
+        $this->assertSame(201, $controller->document($docRequest, $event, $storage)->getStatusCode());
         $this->assertSame(403, $controller->evaluate($request, $event)->getStatusCode());
         $detail = $controller->detail($request, $event)->getData(true);
         $this->assertSame('85.00', $detail['my_scores'][0]['score']);
         $this->assertTrue($detail['members'][0]['has_submitted_evaluation']);
+        $this->assertSame('SUBMITTED', $detail['group_evaluation']['review_status']);
         $this->expectException(\InvalidArgumentException::class);
         app(ExpoService::class)->withdrawGroupFromEvent($event->id, $group->id, $student->id);
+    }
+
+    public function test_expo_document_first_stays_editable_until_scores_complete(): void
+    {
+        $student = $this->actor('mahasiswa');
+        [$group,$event,$component] = $this->expoFixture($student);
+        app(ExpoService::class)->registerGroupToEvent($event->id, $group->id, $student->id);
+        if (! Schema::hasColumn('capstone_expo_student_documents', 'feedback')) {
+            Schema::table('capstone_expo_student_documents', function (Blueprint $t) {
+                $t->text('feedback')->nullable();
+            });
+        }
+        $controller = new ExpoStudentController;
+        $storage = \Mockery::mock(DocumentStorageService::class);
+        $storage->shouldReceive('store')->twice()->andReturn('expo/poster.pdf', 'expo/poster-v2.pdf');
+        $storage->shouldReceive('delete')->once()->with('expo/poster.pdf');
+        $docRequest = $this->formRequestFor(UploadExpoDocumentRequest::class, $student, 'POST', [], [], ['file' => UploadedFile::fake()->create('poster.pdf', 1, 'application/pdf')]);
+        // Document-first must NOT flip to SUBMITTED: scores stay editable.
+        $this->assertSame(201, $controller->document($docRequest, $event, $storage)->getStatusCode());
+        $this->assertSame(null, DB::table('capstone_expo_registrations')->where('group_id', $group->id)->value('review_status'));
+        $detail = $controller->detail($this->requestFor($student, '/'), $event)->getData(true);
+        $this->assertTrue($detail['can_submit']);
+        $this->assertTrue($detail['can_upload_document']);
+        $this->assertFalse($detail['group_evaluation']['submitted']);
+        // Draft document is replaceable before scores are complete.
+        $replaceRequest = $this->formRequestFor(UploadExpoDocumentRequest::class, $student, 'POST', [], [], ['file' => UploadedFile::fake()->create('poster-v2.pdf', 1, 'application/pdf')]);
+        $this->assertSame(201, $controller->document($replaceRequest, $event, $storage)->getStatusCode());
+        $this->assertSame(null, DB::table('capstone_expo_registrations')->where('group_id', $group->id)->value('review_status'));
+        // Completing scores flips to SUBMITTED and locks both sides.
+        $scoreRequest = $this->formRequestFor(SubmitExpoScoresRequest::class, $student, 'POST', ['scores' => [['period_component_id' => $component, 'score' => 80]]]);
+        $this->assertSame(201, $controller->evaluate($scoreRequest, $event)->getStatusCode());
+        $this->assertSame('SUBMITTED', DB::table('capstone_expo_registrations')->where('group_id', $group->id)->value('review_status'));
+        $this->assertSame(403, $controller->evaluate($scoreRequest, $event)->getStatusCode());
+        $lockedStorage = \Mockery::mock(DocumentStorageService::class);
+        $lockedStorage->shouldNotReceive('store');
+        $lockedRequest = $this->formRequestFor(UploadExpoDocumentRequest::class, $student, 'POST', [], [], ['file' => UploadedFile::fake()->create('poster-v3.pdf', 1, 'application/pdf')]);
+        $this->assertSame(403, $controller->document($lockedRequest, $event, $lockedStorage)->getStatusCode());
+    }
+
+    public function test_review_expo_requires_both_scores_and_document(): void
+    {
+        $dosen = $this->actor('dosen');
+        $student = $this->actor('mahasiswa');
+        [$group, $registrationId, $component] = $this->expoReviewFixture($dosen, $student, $this->actor('mahasiswa'));
+        DB::table('capstone_expo_registrations')->where('id', $registrationId)->update(['review_status' => 'SUBMITTED']);
+        // Fixture has both: reviewer can proceed to approve (no missing error).
+        // Remove documents -> must report missing document, not silently approve.
+        $docIds = DB::table('capstone_expo_student_documents')->where('expo_registration_id', $registrationId)->pluck('id')->all();
+        DB::table('capstone_expo_student_documents')->where('expo_registration_id', $registrationId)->delete();
+        $result = app(SupervisorEvaluationService::class)->reviewExpoRegistration($group->id, ['status' => 'APPROVED'], $dosen->lecturer->id, $dosen->id);
+        $this->assertSame(422, $result['code']);
+        $this->assertStringContainsString('document', strtolower($result['error']));
+        // Restore a document but remove scores -> must report missing self-evaluation.
+        foreach ($docIds as $id) {
+            // Re-create minimal document rows (ids change, registration link kept).
+            ExpoStudentDocument::create(['expo_registration_id' => $registrationId, 'group_id' => $group->id, 'student_id' => $student->student->id, 'file_path' => 'expo/doc.pdf', 'storage_location' => 'supabase', 'original_name' => 'poster.pdf', 'status' => 'SUBMITTED']);
+            break;
+        }
+        DB::table('capstone_expo_self_evaluations')->where('expo_registration_id', $registrationId)->delete();
+        $result = app(SupervisorEvaluationService::class)->reviewExpoRegistration($group->id, ['status' => 'APPROVED'], $dosen->lecturer->id, $dosen->id);
+        $this->assertSame(422, $result['code']);
+        $this->assertStringContainsString('self-evaluation', strtolower($result['error']));
     }
 
     public function test_unregistered_student_cannot_read_expo_detail(): void
@@ -2147,7 +2229,7 @@ class BladeCalendarAccessTest extends TestCase
         $this->actingAs($dosen);
         $student = $this->actor('mahasiswa');
         $group = $this->group($student, null, 'PDC2_ACTIVE');
-        $controller = new SupervisorEvaluationController;
+        $controller = app(SupervisorEvaluationController::class);
 
         // EXPO is rejected at the type gate (400) before any supervision check.
         $expo = $controller->form($this->requestFor($dosen, '/', 'GET', ['type' => 'EXPO']), $group->id);
@@ -2257,7 +2339,7 @@ class BladeCalendarAccessTest extends TestCase
         DB::table('capstone_expo_registrations')->where('id', $registrationId)->update(['review_status' => 'SUBMITTED']);
         $this->actingAs($dosen);
 
-        $response = (new SupervisorEvaluationController)->expoReview($this->requestFor($dosen, '/', 'GET'), $group->id);
+        $response = app(SupervisorEvaluationController::class)->expoReview($this->requestFor($dosen, '/', 'GET'), $group->id);
 
         $this->assertSame(200, $response->getStatusCode());
         $data = $response->getData(true)['data'];
@@ -2278,7 +2360,7 @@ class BladeCalendarAccessTest extends TestCase
         DB::table('capstone_expo_registrations')->where('id', $registrationId)->update(['review_status' => 'SUBMITTED']);
         $outsider = $this->actor('dosen');
         $this->actingAs($outsider);
-        $controller = new SupervisorEvaluationController;
+        $controller = app(SupervisorEvaluationController::class);
 
         $this->assertSame(403, $controller->expoReview($this->requestFor($outsider, '/', 'GET'), $group->id)->getStatusCode());
         $this->assertSame(403, $controller->reviewExpo($this->requestFor($outsider, '/', 'POST', ['status' => 'APPROVED']), $group->id)->getStatusCode());
@@ -2292,7 +2374,7 @@ class BladeCalendarAccessTest extends TestCase
         $this->actingAs($dosen);
 
         // The fixture starts with a NULL review status: nothing to review.
-        $response = (new SupervisorEvaluationController)->reviewExpo($this->requestFor($dosen, '/', 'POST', ['status' => 'APPROVED']), $group->id);
+        $response = app(SupervisorEvaluationController::class)->reviewExpo($this->requestFor($dosen, '/', 'POST', ['status' => 'APPROVED']), $group->id);
 
         $this->assertSame(409, $response->getStatusCode());
     }
@@ -2305,7 +2387,7 @@ class BladeCalendarAccessTest extends TestCase
         $this->actingAs($dosen);
 
         try {
-            (new SupervisorEvaluationController)->reviewExpo($this->requestFor($dosen, '/', 'POST', ['status' => 'REJECTED']), $group->id);
+            app(SupervisorEvaluationController::class)->reviewExpo($this->requestFor($dosen, '/', 'POST', ['status' => 'REJECTED']), $group->id);
             $this->fail('Expected ValidationException was not thrown.');
         } catch (ValidationException $e) {
             $this->assertArrayHasKey('feedback', $e->errors());
@@ -2323,7 +2405,7 @@ class BladeCalendarAccessTest extends TestCase
         DB::table('capstone_expo_registrations')->where('id', $registrationId)->update(['review_status' => 'SUBMITTED']);
         $this->actingAs($dosen);
 
-        $response = (new SupervisorEvaluationController)->reviewExpo(
+        $response = app(SupervisorEvaluationController::class)->reviewExpo(
             $this->requestFor($dosen, '/', 'POST', ['status' => 'APPROVED', 'feedback' => 'Siap tampil']),
             $group->id
         );
@@ -2331,7 +2413,8 @@ class BladeCalendarAccessTest extends TestCase
         $this->assertSame(200, $response->getStatusCode());
         $registration = DB::table('capstone_expo_registrations')->where('id', $registrationId)->first();
         $this->assertSame('APPROVED', $registration->review_status);
-        $this->assertSame($dosen->id, $registration->reviewed_by);
+        $this->assertSame($dosen->id, (int) $registration->reviewed_by);
+        $this->assertNotSame($dosen->lecturer->id, (int) $registration->reviewed_by);
         $this->assertNotNull($registration->reviewed_at);
         $this->assertEqualsCanonicalizing([$first->id, $second->id], Notification::pluck('user_id')->all());
         // Documents are still SUBMITTED, so the stage itself stays open.
@@ -2346,7 +2429,7 @@ class BladeCalendarAccessTest extends TestCase
         DB::table('capstone_expo_registrations')->where('id', $registrationId)->update(['review_status' => 'SUBMITTED']);
         $this->actingAs($dosen);
 
-        $response = (new SupervisorEvaluationController)->reviewExpo(
+        $response = app(SupervisorEvaluationController::class)->reviewExpo(
             $this->requestFor($dosen, '/', 'POST', ['status' => 'REJECTED', 'feedback' => 'Perbaiki poster']),
             $group->id
         );

@@ -183,7 +183,7 @@
           "icon": "ClipboardCheck"
         },
         {
-          "title": "Daftar Expo",
+          "title": "Expo",
           "url": "/mahasiswa/expo",
           "icon": "Presentation"
         }
@@ -246,7 +246,7 @@
     },
     {
       "title": "Jadwal & Tinjauan",
-      "icon": "FileCheck",
+      "icon": "CalendarCheck",
       "items": [
         {
           "title": "Jadwal Saya",

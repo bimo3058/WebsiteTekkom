@@ -170,7 +170,8 @@ class DocumentStorageService
 
         if ($existingDoc) {
             // Archive the current file into history before replacing it, then
-            // bump the version. Old files stay downloadable via ?version=N.
+            // bump the version. History rows are retained for audit but only
+            // the latest version is downloadable.
             $existingDoc->versions()->create([
                 'version' => (int) $existingDoc->version,
                 'file_path' => $existingDoc->file_path,

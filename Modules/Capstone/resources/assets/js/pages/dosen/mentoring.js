@@ -20,7 +20,8 @@ export function lecturerDocuments(taOnly=false){
         get grouped(){const groups=new Map();for(const doc of this.visible){if(!groups.has(doc.group_id))groups.set(doc.group_id,{id:doc.group_id,group:doc.group,documents:[]});groups.get(doc.group_id).documents.push(doc);}return [...groups.values()];},
         review(doc){this.selected=doc;this.feedback=doc.feedback||'';this.reviewStatus=['APPROVED','REVISE','REJECTED'].includes(doc.status)?doc.status:'APPROVED';this.errors={};this.open('document-review');},
         async submit(){if(this.selected)await this.mutate('/dosen/documents/'+this.selected.id,{status:this.reviewStatus,feedback:this.feedback},'PUT','document-review');},
-        async downloadDocument(doc){if(this.downloading)return;this.downloading=doc.id;try{download(await api('/dosen/documents/'+doc.id+'/download',{blob:true}),doc.file_name||`${doc.phase}-v${doc.version}.pdf`);}catch(e){notify(e.message,true);}finally{this.downloading=null;}},
+        async downloadDocument(doc){if(this.downloading)return;this.downloading=doc.id;try{download(await api('/dosen/documents/'+doc.id+'/download',{blob:true}),this.downloadFilename(doc));}catch(e){notify(e.message,true);}finally{this.downloading=null;}},
+        downloadFilename(doc){const slug=s=>{s=String(s ?? '').trim().replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,'');return s || 'document';};const allowed=['pdf','doc','docx','ppt','pptx'];const extOf=name=>{const m=String(name || '').match(/\.([A-Za-z0-9]{2,5})$/);return m ? m[1].toLowerCase() : '';};let ext=extOf(doc.original_name);if(!allowed.includes(ext))ext=extOf((doc.file_path || '').split('?')[0]);if(!allowed.includes(ext))ext='pdf';return `${slug(doc.document_type)}_v${doc.version}.${ext}`;},
     });
 }
 

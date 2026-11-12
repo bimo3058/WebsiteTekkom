@@ -82,7 +82,8 @@ class ExpoStudentController extends Controller
             'can_upload_document' => $registration->allowsSubmission()
                 && (! $document
                     || $registration->review_status === 'REJECTED'
-                    || in_array($document->status, ['REVISE', 'REJECTED'], true)),
+                    || in_array($document->status, ['REVISE', 'REJECTED'], true)
+                    || ($registration->review_status === null && $document->status !== 'APPROVED')),
             // Backward-compatible aliases (legacy per-member keys) so the
             // Next.js client keeps rendering the group's submission.
             'my_scores' => $groupScoresPayload,
@@ -93,6 +94,8 @@ class ExpoStudentController extends Controller
     /**
      * Submit the group self-evaluation (representative member). Immutable
      * while under supervisor review; reopenable after a rejection.
+     * Atomic Pengajuan EXPO: review_status becomes SUBMITTED only when
+     * both scores and document exist; otherwise stays draft (NULL).
      */
     public function evaluate(SubmitExpoScoresRequest $request, ExpoEvent $expoEvent)
     {
@@ -123,7 +126,16 @@ class ExpoStudentController extends Controller
                     'score' => $score['score'], 'notes' => $score['notes'] ?? null,
                 ]);
             }
-            $registration->update(['review_status' => 'SUBMITTED', 'review_feedback' => null]);
+            // Atomic Pengajuan EXPO: SUBMITTED only when both scores and
+            // document exist. Scores alone keep review_status NULL (draft)
+            // so the document stays uploadable; a REJECTED registration
+            // re-scored without a document resets to draft.
+            $hasDocument = ExpoStudentDocument::where('expo_registration_id', $registration->id)->exists();
+            if ($hasDocument) {
+                $registration->update(['review_status' => 'SUBMITTED', 'review_feedback' => null]);
+            } elseif ($registration->review_status !== null) {
+                $registration->update(['review_status' => null, 'review_feedback' => null]);
+            }
 
             return response()->json(['message' => 'Self-evaluation kelompok berhasil disimpan.'], 201);
         });
@@ -134,8 +146,9 @@ class ExpoStudentController extends Controller
 
     /**
      * Upload the group's EXPO document (representative member). One document
-     * per registration; replaceable after a REVISE/REJECTED review or a
-     * rejected supervisor submission.
+     * per registration; replaceable while draft (NULL), after a
+     * REVISE/REJECTED review or a rejected supervisor submission.
+     * Atomic Pengajuan EXPO: document alone never marks SUBMITTED.
      */
     public function document(UploadExpoDocumentRequest $request, ExpoEvent $expoEvent, DocumentStorageService $storage)
     {
@@ -148,8 +161,13 @@ class ExpoStudentController extends Controller
                 return response()->json(['message' => 'Dokumen EXPO sudah disetujui dosbing dan tidak dapat diganti.'], 403);
             }
             $existing = ExpoStudentDocument::where('expo_registration_id', $registration->id)->first();
+            // Draft (review_status NULL) stays replaceable so the
+            // representative can fix the file before scores are complete,
+            // unless the existing document was already APPROVED.
+            // Locked once both artifacts are SUBMITTED; reopened on REJECTED.
             $replaceable = $registration->review_status === 'REJECTED'
-                || ($existing && in_array($existing->status, ['REVISE', 'REJECTED'], true));
+                || ($existing && in_array($existing->status, ['REVISE', 'REJECTED'], true))
+                || ($registration->review_status === null && (! $existing || $existing->status !== 'APPROVED'));
             if ($existing && ! $replaceable) {
                 return response()->json(['message' => 'Dokumen EXPO sudah diunggah.'], 403);
             }
@@ -163,8 +181,15 @@ class ExpoStudentController extends Controller
                     $existing->delete();
                 }
                 $document = ExpoStudentDocument::create(['expo_registration_id' => $registration->id, 'group_id' => $registration->group_id, 'student_id' => $studentId, 'file_path' => $path, 'storage_location' => 'supabase', 'original_name' => $request->file('file')->getClientOriginalName(), 'status' => 'SUBMITTED']);
-                if ($registration->review_status !== 'SUBMITTED') {
-                    $registration->update(['review_status' => 'SUBMITTED', 'review_feedback' => null]);
+                // Atomic Pengajuan EXPO: document alone never flips NULL to
+                // SUBMITTED. Only mark ready-for-review when scores exist.
+                $hasScores = ExpoSelfEvaluation::where('expo_registration_id', $registration->id)->exists();
+                if ($hasScores) {
+                    if ($registration->review_status !== 'SUBMITTED') {
+                        $registration->update(['review_status' => 'SUBMITTED', 'review_feedback' => null]);
+                    }
+                } elseif ($registration->review_status === 'REJECTED') {
+                    $registration->update(['review_status' => null, 'review_feedback' => null]);
                 }
             } catch (\Throwable $e) {
                 $storage->delete($path);

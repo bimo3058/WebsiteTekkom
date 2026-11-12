@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Schema;
 use Modules\Capstone\Evaluations\SupervisorEvaluationPresenter;
 use Modules\Capstone\Models\ExpoRegistration;
 use Modules\Capstone\Models\ExpoSelfEvaluation;
+use Modules\Capstone\Models\ExpoStudentDocument;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\Supervision;
@@ -40,9 +41,11 @@ class SupervisorEvaluationService
      * and re-upload the document.
      *
      * @param  array<string, mixed>  $validated  Validated review data.
+     * @param  int  $lecturerId  lecturers.id for the supervision check.
+     * @param  int|null  $userId  users.id for reviewed_by (FK to users).
      * @return array<string, mixed> Payload or ['error' => ..., 'code' => ...].
      */
-    public function reviewExpoRegistration(int $groupId, array $validated, int $lecturerId): array
+    public function reviewExpoRegistration(int $groupId, array $validated, int $lecturerId, ?int $userId = null): array
     {
         $supervision = Supervision::where('group_id', $groupId)
             ->where('supervisor_id', $lecturerId)
@@ -59,7 +62,7 @@ class SupervisorEvaluationService
             return ['error' => $window['reason'] ?? 'The EXPO submission cannot be reviewed in the current group status.', 'code' => 403];
         }
 
-        $result = DB::transaction(function () use ($groupId, $validated, $lecturerId) {
+        $result = DB::transaction(function () use ($groupId, $validated, $lecturerId, $userId) {
             $registration = ExpoRegistration::where('group_id', $groupId)
                 ->where('status', 'REGISTERED')
                 ->orderByDesc('id')
@@ -78,10 +81,14 @@ class SupervisorEvaluationService
                 return ['error' => 'The representative has not submitted a self-evaluation yet.', 'code' => 422];
             }
 
+            if (! ExpoStudentDocument::where('expo_registration_id', $registration->id)->exists()) {
+                return ['error' => 'The group has not uploaded the EXPO document yet.', 'code' => 422];
+            }
+
             $registration->update([
                 'review_status' => $validated['status'],
                 'review_feedback' => $validated['feedback'] ?? null,
-                'reviewed_by' => $lecturerId,
+                'reviewed_by' => $userId,
                 'reviewed_at' => now(),
             ]);
 

@@ -6,7 +6,7 @@
     $map = [
         'LayoutDashboard' => 'squares-four', 'SquaresFour' => 'squares-four',
         'Calendar' => 'calendar-blank', 'CalendarIcon' => 'calendar-blank', 'CalendarBlank' => 'calendar-blank',
-        'CalendarPlus' => 'calendar-plus',
+        'CalendarPlus' => 'calendar-plus', 'CalendarCheck' => 'calendar-check',
         'ChevronLeft' => 'caret-left', 'CaretLeft' => 'caret-left',
         'ChevronRight' => 'caret-right', 'CaretRight' => 'caret-right',
         'ChevronDown' => 'caret-down', 'CaretDown' => 'caret-down',
@@ -17,7 +17,7 @@
         'LogOut' => 'sign-out', 'SignOut' => 'sign-out',
         'Settings' => 'gear', 'Gear' => 'gear', 'House' => 'house',
         'Users' => 'users', 'GraduationCap' => 'graduation-cap',
-        'FileText' => 'file-text', 'FileCheck' => 'file-check', 'File' => 'file',
+        'FileText' => 'file-text', 'FileCheck' => 'checks', 'File' => 'file',
         'BookOpen' => 'book-open',
         'Gavel' => 'gavel', 'Presentation' => 'presentation-chart', 'PresentationChart' => 'presentation-chart',
         'Star' => 'star', 'ClipboardCheck' => 'clipboard-text', 'ClipboardText' => 'clipboard-text',

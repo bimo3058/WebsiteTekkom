@@ -23,6 +23,8 @@ class CachedPostgresConnection extends PostgresConnection
 
     private bool $pendingCacheInvalidation = false;
 
+    private ?string $timeoutFingerprint = null;
+
     public function select($query, $bindings = [], $useReadPdo = true)
     {
         if ($this->isWriteReturningQuery($query)) {
@@ -57,6 +59,8 @@ class CachedPostgresConnection extends PostgresConnection
             return parent::select($query, $bindings, $useReadPdo);
         }
 
+        $this->ensureTimeouts();
+
         $rows = parent::select($query, $bindings, $useReadPdo);
         $this->recordCacheResult('miss');
 
@@ -79,6 +83,8 @@ class CachedPostgresConnection extends PostgresConnection
 
     public function statement($query, $bindings = [])
     {
+        $this->ensureTimeouts();
+
         $result = parent::statement($query, $bindings);
 
         if ($result && ! $this->pretending()) {
@@ -90,6 +96,8 @@ class CachedPostgresConnection extends PostgresConnection
 
     public function affectingStatement($query, $bindings = [])
     {
+        $this->ensureTimeouts();
+
         $affected = parent::affectingStatement($query, $bindings);
 
         if ($affected > 0 && ! $this->pretending()) {
@@ -101,6 +109,8 @@ class CachedPostgresConnection extends PostgresConnection
 
     public function unprepared($query)
     {
+        $this->ensureTimeouts();
+
         $result = parent::unprepared($query);
 
         if ($result && ! $this->pretending()) {
@@ -167,6 +177,68 @@ class CachedPostgresConnection extends PostgresConnection
         }
 
         return parent::fireConnectionEvent($event);
+    }
+
+    /**
+     * Enforce fail-fast Postgres timeouts so a stalled pooler/lock surfaces
+     * as a catchable QueryException instead of a PHP max-execution fatal.
+     */
+    private function ensureTimeouts(): void
+    {
+        if ($this->pretending()) {
+            return;
+        }
+
+        if ($this->getDriverName() !== 'pgsql') {
+            return;
+        }
+
+        try {
+            $pdo = $this->getPdo();
+        } catch (Throwable) {
+            return;
+        }
+
+        $fingerprint = spl_object_hash($pdo);
+        if ($this->timeoutFingerprint === $fingerprint) {
+            return;
+        }
+
+        try {
+            $readPdo = $this->getReadPdo();
+            if ($readPdo !== $pdo) {
+                $readPdo->exec("SET statement_timeout = '{$this->timeoutSetting('statement_timeout', '5s')}'");
+                $readPdo->exec("SET lock_timeout = '{$this->timeoutSetting('lock_timeout', '5s')}'");
+            }
+        } catch (Throwable) {
+            // Read PDO is optional; write PDO enforcement below is what matters.
+        }
+
+        try {
+            $pdo->exec("SET statement_timeout = '{$this->timeoutSetting('statement_timeout', '5s')}'");
+            $pdo->exec("SET lock_timeout = '{$this->timeoutSetting('lock_timeout', '5s')}'");
+            $pdo->exec("SET idle_in_transaction_session_timeout = '{$this->timeoutSetting('idle_in_transaction_session_timeout', '10s')}'");
+
+            $this->timeoutFingerprint = $fingerprint;
+        } catch (Throwable) {
+            // Fail-open: the original query must still run. PHP's
+            // max_execution_time remains as the backstop.
+        }
+    }
+
+    private function timeoutSetting(string $key, string $default): string
+    {
+        $value = $this->getConfig($key);
+        if ($value === null) {
+            $value = config("database.connections.{$this->getName()}.{$key}", $default);
+        }
+
+        $value = trim((string) $value);
+        if (! preg_match('/^\d+(ms|s|min|h)?$/', $value)) {
+            return $default;
+        }
+
+        return str_replace("'", '', $value);
     }
 
     private function shouldCache(string $query): bool

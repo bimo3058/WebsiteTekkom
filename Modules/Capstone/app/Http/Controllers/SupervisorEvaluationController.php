@@ -296,9 +296,10 @@ class SupervisorEvaluationController extends Controller
      */
     public function reviewExpo(ReviewExpoRequest $request, int $groupId): JsonResponse
     {
-        $lecturer = CapstoneActor::lecturer(Auth::user());
+        $user = Auth::user();
+        $lecturer = CapstoneActor::lecturer($user);
 
-        $result = $this->evaluations->reviewExpoRegistration($groupId, $request->validated(), $lecturer->id);
+        $result = $this->evaluations->reviewExpoRegistration($groupId, $request->validated(), $lecturer->id, $user->id);
 
         if (isset($result['error'])) {
             return $this->errorResponse($result['error'], $result['code']);

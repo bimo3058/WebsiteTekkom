@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use App\Models\User;
 
 class SetUsersOffline extends Command
 {
@@ -25,17 +25,27 @@ class SetUsersOffline extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $threshold = now()->subMinutes(User::ONLINE_TIMEOUT_MINUTES);
 
-        $affected = DB::table('users')
+        $affected = 0;
+
+        User::query()
             ->where('is_online', true)
             ->where(function ($query) use ($threshold) {
                 $query->whereNull('last_seen_at')->orWhere('last_seen_at', '<', $threshold);
             })
-            ->update(['is_online' => false]);
+            ->orderBy('id')
+            ->chunkById(500, function ($users) use (&$affected) {
+                $affected += DB::table('users')
+                    ->whereIn('id', $users->pluck('id')->all())
+                    ->where('is_online', true)
+                    ->update(['is_online' => false]);
+            });
 
         $this->info("Marked {$affected} users as offline.");
+
+        return self::SUCCESS;
     }
 }

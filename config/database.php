@@ -110,6 +110,9 @@ return [
                 PDO::ATTR_EMULATE_PREPARES => true,
             ],
             'prepare' => false,
+            'statement_timeout' => env('DB_STATEMENT_TIMEOUT', '5s'),
+            'lock_timeout' => env('DB_LOCK_TIMEOUT', '5s'),
+            'idle_in_transaction_session_timeout' => env('DB_IDLE_TX_TIMEOUT', '10s'),
         ],
 
         'sqlsrv' => [

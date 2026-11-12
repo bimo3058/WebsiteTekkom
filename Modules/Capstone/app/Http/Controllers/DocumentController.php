@@ -203,7 +203,7 @@ class DocumentController extends Controller
             }
             $documents = Document::where('group_id', $groupMember->group_id)
                 ->where(fn ($query) => $query->where('phase', '!=', IndividualTaWorkflow::DOCUMENT_PHASE)->orWhere('student_id', CapstoneActor::student($user)->id))
-                ->with(['student', 'versions'])
+                ->with(['student'])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -212,7 +212,7 @@ class DocumentController extends Controller
 
         if ($role === 'dosen') {
             $lecturerId = CapstoneActor::lecturer($user)->id;
-            $query = Document::with(['student', 'group.title', 'versions']);
+            $query = Document::with(['student', 'group.title']);
             $supervisedGroupIds = Group::supervisedBy($lecturerId)->pluck('id');
 
             $query->whereIn('group_id', $supervisedGroupIds);
@@ -369,41 +369,55 @@ class DocumentController extends Controller
 
         abort_unless($allowed, 403);
 
+        // Latest-only downloads: history rows are retained for audit but never served.
         $requestedVersion = $request->query('version');
+        abort_if($requestedVersion !== null && (int) $requestedVersion !== (int) $document->version, 404, 'Document version not found');
         $filePath = $document->file_path;
         $originalName = $document->original_name;
-        if ($requestedVersion !== null && (int) $requestedVersion !== (int) $document->version) {
-            $historical = $document->versions()->where('version', (int) $requestedVersion)->first();
-            abort_if($historical === null, 404, 'Document version not found');
-            $filePath = $historical->file_path;
-            $originalName = $historical->original_name;
-        }
 
         $file = $this->documentStorage->get($filePath);
         abort_unless($file, 404, 'File not found');
 
+        $document->loadMissing('group:id,code');
+
         return response($file['content'], 200, [
             'Content-Type' => $file['mime_type'],
-            'Content-Disposition' => 'attachment; filename="'.$this->downloadFilename($document->document_type, $originalName, $filePath).'"',
+            'Content-Disposition' => 'attachment; filename="'.$this->downloadFilename($document->document_type, $originalName, $filePath, (int) $document->version, $role === 'admin' ? $document->group?->code : null).'"',
         ]);
     }
 
     /**
-     * Build the download filename so it follows the given document naming
-     * (e.g. document_type C-100): `{TYPE}_{original}` with a safe fallback
-     * for legacy rows without an original name.
+     * Build the download filename as `{slug(document_type)}_v{version}[_{group}].{ext}`,
+     * e.g. `Absen_Kehadiran_Pengunjung_v3.pdf`. The group suffix is only used
+     * for admin downloads to avoid collisions when many groups' files land in
+     * one folder. Extension is preserved from the original upload.
      */
-    private function downloadFilename(?string $type, ?string $originalName, string $filePath): string
+    private function downloadFilename(?string $type, ?string $originalName, string $filePath, int $version, ?string $groupCode = null): string
     {
-        $base = $originalName ?: basename($filePath);
-        $base = str_replace(['"', "\r", "\n"], '', $base);
-        $prefix = $type ? preg_replace('/[^A-Za-z0-9\-]+/', '', (string) $type) : '';
+        $slug = static function (?string $value): string {
+            $value = trim((string) $value);
+            $value = (string) preg_replace('/[^A-Za-z0-9]+/', '_', $value);
+            $value = trim($value, '_');
 
-        if ($prefix !== '' && ! str_starts_with($base, $prefix.'_') && ! str_starts_with($base, $prefix.'-')) {
-            return $prefix.'_'.$base;
+            return $value !== '' ? $value : 'document';
+        };
+
+        $allowed = ['pdf', 'doc', 'docx', 'ppt', 'pptx'];
+        $ext = null;
+        foreach ([$originalName, explode('?', $filePath)[0]] as $candidate) {
+            if (is_string($candidate) && preg_match('/\.([A-Za-z0-9]{2,5})$/', $candidate, $matches) && in_array(strtolower($matches[1]), $allowed, true)) {
+                $ext = strtolower($matches[1]);
+                break;
+            }
+        }
+        $ext ??= 'pdf';
+
+        $base = $slug($type).'_v'.((int) $version);
+        if ($groupCode !== null && $groupCode !== '') {
+            $base .= '_'.$slug($groupCode);
         }
 
-        return $base;
+        return str_replace(['"', "\r", "\n"], '', $base.'.'.$ext);
     }
 
     /**

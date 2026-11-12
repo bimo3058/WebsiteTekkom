@@ -25,6 +25,14 @@ class UpdateUserOnlineStatus
      */
     public function terminate(Request $request, Response $response): void
     {
+        if (app()->runningInConsole() && ! app()->runningUnitTests()) {
+            return;
+        }
+
+        if ($this->isSkippedPath($request)) {
+            return;
+        }
+
         $userId = $request->user()?->getAuthIdentifier();
 
         if (! $userId) {
@@ -36,5 +44,22 @@ class UpdateUserOnlineStatus
         } catch (Throwable $exception) {
             report($exception);
         }
+    }
+
+    private function isSkippedPath(Request $request): bool
+    {
+        $path = trim($request->path(), '/');
+
+        if ($path === '' || $path === 'up') {
+            return true;
+        }
+
+        foreach (['telescope', 'pulse', 'livewire', '_ignition'] as $prefix) {
+            if ($path === $prefix || str_starts_with($path, $prefix.'/')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

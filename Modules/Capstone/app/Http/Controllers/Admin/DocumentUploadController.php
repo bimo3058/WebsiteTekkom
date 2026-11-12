@@ -181,7 +181,7 @@ class DocumentUploadController extends Controller
                 $document = Document::with(['group', 'student'])->find($id);
                 if ($document) {
                     $filePath = $document->file_path;
-                    $originalName = $this->prefixedName($document->document_type, $document->original_name ?? basename($filePath));
+                    $originalName = $this->buildDownloadName($document->document_type, $document->original_name ?? basename($filePath), $filePath, (int) $document->version, $document->group?->code);
                 }
                 break;
 
@@ -217,6 +217,38 @@ class DocumentUploadController extends Controller
             'Content-Type' => $fileData['mime_type'],
             'Content-Disposition' => 'attachment; filename="'.$originalName.'"',
         ]);
+    }
+
+    /**
+     * Build the admin download filename as `{slug(type)}_v{version}_{group}.{ext}`.
+     * The group suffix avoids collisions when many groups' files land in one folder.
+     */
+    private function buildDownloadName(?string $type, string $originalName, string $filePath, int $version, ?string $groupCode = null): string
+    {
+        $slug = static function (?string $value): string {
+            $value = trim((string) $value);
+            $value = (string) preg_replace('/[^A-Za-z0-9]+/', '_', $value);
+            $value = trim($value, '_');
+
+            return $value !== '' ? $value : 'document';
+        };
+
+        $allowed = ['pdf', 'doc', 'docx', 'ppt', 'pptx'];
+        $ext = null;
+        foreach ([$originalName, explode('?', $filePath)[0]] as $candidate) {
+            if (is_string($candidate) && preg_match('/\.([A-Za-z0-9]{2,5})$/', $candidate, $matches) && in_array(strtolower($matches[1]), $allowed, true)) {
+                $ext = strtolower($matches[1]);
+                break;
+            }
+        }
+        $ext ??= 'pdf';
+
+        $base = $slug($type).'_v'.((int) $version);
+        if ($groupCode !== null && $groupCode !== '') {
+            $base .= '_'.$slug($groupCode);
+        }
+
+        return str_replace(['"', "\r", "\n"], '', $base.'.'.$ext);
     }
 
     private function prefixedName(?string $type, string $base): string
