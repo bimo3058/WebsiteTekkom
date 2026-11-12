@@ -33,6 +33,8 @@ composer.json
 composer.lock
 bootstrap/providers.php
 /scratch
+.opencode/
+Modules/Capstone/test-results/
 
 # AI assistant files
 .claude/
