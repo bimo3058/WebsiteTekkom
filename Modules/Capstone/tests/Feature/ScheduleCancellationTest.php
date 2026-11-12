@@ -15,6 +15,7 @@ use Modules\Capstone\Http\Controllers\SeminarDashboardController;
 use Modules\Capstone\Http\Controllers\SemproController;
 use Modules\Capstone\Http\Controllers\TaDefenseController;
 use Modules\Capstone\Http\Controllers\TaDefenseScheduleController;
+use Modules\Capstone\Http\Requests\Scheduling\CalendarIndexRequest;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\SeminarSchedule;
 use Modules\Capstone\Models\TaDefenseSchedule;
@@ -521,8 +522,13 @@ class ScheduleCancellationTest extends TestCase
 
     private function requestAs(User $user): Request
     {
-        $request = Request::create('/x', 'GET');
+        // CalendarController::index now requires the FormRequest subclass;
+        // it extends plain Request so other call sites keep working.
+        $request = CalendarIndexRequest::create('/x', 'GET');
+        $request->setContainer(app());
+        $request->setRedirector(app('redirect'));
         $request->setUserResolver(fn () => $user);
+        $request->validateResolved();
 
         return $request;
     }

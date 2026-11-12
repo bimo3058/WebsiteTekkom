@@ -200,10 +200,10 @@ class ExaminerEvaluationTest extends TestCase
         $this->assertSame('PASS', SeminarEvaluation::find($f['eval1'])->result);
         $this->assertSame('SCHEDULED', DB::table('capstone_seminar_schedules')->where('id', $f['scheduleId'])->value('status'));
 
-        $out = $this->service()->submitSeminarEvaluation($f['eval1'], ['scores' => ['1_7' => 60], 'notes' => []], 60.0, 'FAIL', 1);
+        $out = $this->service()->submitSeminarEvaluation($f['eval1'], ['scores' => ['1_7' => 50], 'notes' => []], 50.0, 'FAIL', 1);
 
         $this->assertTrue($out['updated']);
-        $this->assertSame(60.0, (float) SeminarEvaluation::find($f['eval1'])->score);
+        $this->assertSame(50.0, (float) SeminarEvaluation::find($f['eval1'])->score);
         $this->assertSame('FAIL', SeminarEvaluation::find($f['eval1'])->result);
     }
 
@@ -212,7 +212,7 @@ class ExaminerEvaluationTest extends TestCase
         $f = $this->seedSemproFixture();
 
         $this->service()->submitSeminarEvaluation($f['eval1'], ['scores' => []], 80.0, 'PASS', 1);
-        $out = $this->service()->submitSeminarEvaluation($f['eval2'], ['scores' => []], 70.0, 'FAIL', 1);
+        $out = $this->service()->submitSeminarEvaluation($f['eval2'], ['scores' => []], 50.0, 'FAIL', 1);
 
         $this->assertTrue($out['all_submitted']);
         $this->assertSame('COMPLETED', DB::table('capstone_seminar_schedules')->where('id', $f['scheduleId'])->value('status'));
@@ -227,14 +227,14 @@ class ExaminerEvaluationTest extends TestCase
     {
         $f = $this->seedSemproFixture();
 
-        $this->service()->submitSeminarEvaluation($f['eval1'], ['scores' => []], 80.0, 'FAIL', 1);
-        $this->service()->submitSeminarEvaluation($f['eval2'], ['scores' => []], 70.0, 'FAIL', 1);
+        $this->service()->submitSeminarEvaluation($f['eval1'], ['scores' => []], 50.0, 'FAIL', 1);
+        $this->service()->submitSeminarEvaluation($f['eval2'], ['scores' => []], 55.0, 'FAIL', 1);
         $auditCount = DB::table('capstone_audit_logs')->count();
 
-        $out = $this->service()->submitSeminarEvaluation($f['eval1'], ['scores' => ['1_7' => 85]], 85.0, 'FAIL', 1);
+        $out = $this->service()->submitSeminarEvaluation($f['eval1'], ['scores' => ['1_7' => 45]], 45.0, 'FAIL', 1);
 
         $this->assertTrue($out['updated']);
-        $this->assertSame(85.0, (float) SeminarEvaluation::find($f['eval1'])->score);
+        $this->assertSame(45.0, (float) SeminarEvaluation::find($f['eval1'])->score);
         $this->assertSame('COMPLETED', DB::table('capstone_seminar_schedules')->where('id', $f['scheduleId'])->value('status'));
         $this->assertSame($auditCount, DB::table('capstone_audit_logs')->count());
     }

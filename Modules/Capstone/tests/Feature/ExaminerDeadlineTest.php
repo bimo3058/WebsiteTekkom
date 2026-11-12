@@ -5,8 +5,8 @@ namespace Modules\Capstone\Tests\Feature;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Modules\Capstone\Evaluations\SupervisorEvaluationPresenter;
 use Modules\Capstone\Http\Controllers\SeminarDashboardController;
-use Modules\Capstone\Http\Controllers\SupervisorEvaluationController;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\SeminarEvaluation;
 use Modules\Capstone\Models\SeminarSchedule;
@@ -216,15 +216,15 @@ class ExaminerDeadlineTest extends TestCase
 
     public function test_supervisor_soft_deadline_persists_and_seeds_from_expo(): void
     {
-        $controller = new SupervisorEvaluationController;
+        $presenter = new SupervisorEvaluationPresenter;
         $group = Group::create(['period_id' => 1, 'code' => 'GRP-SOFT', 'status' => 'PDC2_ACTIVE']);
 
         DB::table('capstone_seminar_schedules')->insert([
             'group_id' => $group->id, 'type' => 'EXPO', 'date' => '2026-08-01', 'status' => 'COMPLETED',
         ]);
 
-        $first = $this->invoke($controller, 'resolveSoftDeadline', [$group, 'NILAI_DOSEN']);
-        $second = $this->invoke($controller, 'resolveSoftDeadline', [Group::find($group->id), 'NILAI_DOSEN']);
+        $first = $presenter->resolveSoftDeadline($group, 'NILAI_DOSEN');
+        $second = $presenter->resolveSoftDeadline(Group::find($group->id), 'NILAI_DOSEN');
 
         $this->assertSame('2026-08-03 00:00:00', $first);
         $this->assertSame($first, $second);
@@ -233,10 +233,10 @@ class ExaminerDeadlineTest extends TestCase
 
     public function test_supervisor_soft_deadline_falls_back_to_seven_days_without_expo(): void
     {
-        $controller = new SupervisorEvaluationController;
+        $presenter = new SupervisorEvaluationPresenter;
         $group = Group::create(['period_id' => 1, 'code' => 'GRP-SOFT2', 'status' => 'PDC2_ACTIVE']);
 
-        $deadline = $this->invoke($controller, 'resolveSoftDeadline', [$group, 'NILAI_DOSEN']);
+        $deadline = $presenter->resolveSoftDeadline($group, 'NILAI_DOSEN');
 
         $this->assertSame(date('Y-m-d', strtotime('+7 days')), date('Y-m-d', strtotime($deadline)));
         $this->assertNotNull(Group::find($group->id)->nilai_dosen_deadline);

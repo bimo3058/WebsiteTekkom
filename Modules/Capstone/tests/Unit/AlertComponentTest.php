@@ -5,58 +5,43 @@ namespace Modules\Capstone\Tests\Unit;
 use Illuminate\Support\Facades\Blade;
 use Tests\TestCase;
 
-/** Render test for the extended x-capstone::alert variants. */
+/** Render test for the library x-alert (blade-components, no prefix). */
 class AlertComponentTest extends TestCase
 {
-    public function test_warning_variant_uses_amber_scale_and_alert_role(): void
+    public function test_warning_style_announces_alert_with_title_and_body(): void
     {
-        $html = Blade::render('<x-capstone::alert variant="warning" title="Locked">Body text</x-capstone::alert>');
+        $html = Blade::render('<x-alert style="warning" title="Locked">Body text</x-alert>');
 
         $this->assertStringContainsString('role="alert"', $html);
-        $this->assertStringContainsString('border-amber-500', $html);
-        $this->assertStringContainsString('bg-amber-50', $html);
-        $this->assertStringContainsString('text-amber-700', $html);
-        $this->assertStringContainsString('<h3', $html);
         $this->assertStringContainsString('Locked', $html);
         $this->assertStringContainsString('Body text', $html);
-        $this->assertStringContainsString('<svg', $html);
     }
 
-    public function test_success_and_info_variants_use_their_scales(): void
+    public function test_styles_render_distinct_markup(): void
     {
-        $success = Blade::render('<x-capstone::alert variant="success" title="Done">Ok</x-capstone::alert>');
-        $this->assertStringContainsString('border-emerald-500', $success);
-        $this->assertStringContainsString('bg-emerald-50', $success);
+        $warning = Blade::render('<x-alert style="warning" title="W">x</x-alert>');
+        $success = Blade::render('<x-alert style="success" title="S">x</x-alert>');
+        $info = Blade::render('<x-alert style="info" title="I">x</x-alert>');
+        $danger = Blade::render('<x-alert style="danger" title="D">x</x-alert>');
 
-        $info = Blade::render('<x-capstone::alert variant="info" title="Note">Hi</x-capstone::alert>');
-        $this->assertStringContainsString('border-sky-500', $info);
-        $this->assertStringContainsString('bg-sky-50', $info);
-    }
-
-    public function test_destructive_variant_keeps_original_styling(): void
-    {
-        $html = Blade::render('<x-capstone::alert variant="destructive" title="Blocked">No</x-capstone::alert>');
-
-        $this->assertStringContainsString('text-destructive', $html);
-        $this->assertStringContainsString('border-destructive/50', $html);
+        $this->assertNotSame($warning, $success);
+        $this->assertNotSame($warning, $info);
+        $this->assertNotSame($warning, $danger);
     }
 
     public function test_role_and_extra_attributes_forward_to_root(): void
     {
-        $html = Blade::render('<x-capstone::alert variant="warning" role="status" x-show="finalized" x-cloak>Done</x-capstone::alert>');
+        $html = Blade::render('<x-alert style="warning" role="status" x-show="finalized" x-cloak>Done</x-alert>');
 
         $this->assertStringContainsString('role="status"', $html);
         $this->assertStringContainsString('x-show="finalized"', $html);
         $this->assertStringContainsString('x-cloak', $html);
-        // No title: no h3 emitted.
-        $this->assertStringNotContainsString('<h3', $html);
     }
 
-    public function test_explicit_icon_wins_over_variant_default(): void
+    public function test_default_heroicon_renders_for_style(): void
     {
-        $html = Blade::render('<x-capstone::alert variant="warning" icon="UserCheck">Body</x-capstone::alert>');
+        $html = Blade::render('<x-alert style="warning" title="W">Body</x-alert>');
 
         $this->assertStringContainsString('<svg', $html);
-        $this->assertStringContainsString('text-amber-600', $html);
     }
 }

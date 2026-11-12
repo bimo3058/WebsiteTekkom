@@ -125,9 +125,26 @@ class ExpoSelfEvalGradesTest extends TestCase
             $t->unsignedBigInteger('reviewer_id');
             $t->unsignedBigInteger('reviewee_id');
             $t->unsignedBigInteger('indicator_id')->nullable();
-            $t->decimal('score', 5, 2);
+            $t->unsignedBigInteger('period_indicator_id')->nullable();
+            $t->decimal('score', 5, 2)->nullable();
+            $t->decimal('raw_score', 5, 2)->nullable();
             $t->text('comment')->nullable();
             $t->boolean('is_final_submission')->default(false);
+            $t->timestamps();
+        });
+        Schema::create('capstone_peer_review_indicator_templates', function (Blueprint $t) {
+            $t->id();
+            $t->string('name');
+            $t->text('description')->nullable();
+            $t->decimal('weight', 5, 2);
+            $t->boolean('is_active')->default(true);
+            $t->timestamps();
+        });
+        Schema::create('capstone_period_peer_review_indicators', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('period_id');
+            $t->unsignedBigInteger('template_id');
+            $t->integer('sort_order')->default(0);
             $t->timestamps();
         });
     }
@@ -226,5 +243,56 @@ class ExpoSelfEvalGradesTest extends TestCase
         $result = (new GradeCalculationService)->calculatePDC2ForStudent($otherStudentId, $groupId);
 
         $this->assertTrue($result === null || ($result['components']['EXPO']['score'] ?? null) === null);
+    }
+
+    /**
+     * Seed one NILAI_DOSEN score (weight 100) plus one peer review
+     * (raw_score 4 → converted 100) for the group.
+     */
+    private function seedGroupGradesWithPeerReview(int $groupId, int $periodId, int $studentId): void
+    {
+        $templateId = DB::table('capstone_assessment_component_templates')->insertGetId(['code' => 'ND-1', 'name' => 'Penguasaan', 'weight' => 100]);
+        $componentId = DB::table('capstone_period_assessment_components')->insertGetId(['period_id' => $periodId, 'template_id' => $templateId, 'type' => 'NILAI_DOSEN']);
+        DB::table('capstone_nilai_dosen_scores')->insert(['component_id' => null, 'period_component_id' => $componentId, 'evaluator_id' => 7, 'group_id' => $groupId, 'student_id' => $studentId, 'score' => 80]);
+
+        $peerTemplateId = DB::table('capstone_peer_review_indicator_templates')->insertGetId(['name' => 'Kerja sama', 'weight' => 100]);
+        $indicatorId = DB::table('capstone_period_peer_review_indicators')->insertGetId(['period_id' => $periodId, 'template_id' => $peerTemplateId]);
+        DB::table('capstone_peer_reviews')->insert(['group_id' => $groupId, 'reviewer_id' => $studentId, 'reviewee_id' => $studentId, 'period_indicator_id' => $indicatorId, 'raw_score' => 4, 'score' => 100, 'is_final_submission' => true]);
+    }
+
+    public function test_group_pdc2_includes_pooled_peer_review_component(): void
+    {
+        [$studentId, $groupId] = $this->seedGroupWithApprovedSelfEvaluation();
+        $periodId = (int) DB::table('capstone_groups')->where('id', $groupId)->value('period_id');
+        $this->seedGroupGradesWithPeerReview($groupId, $periodId, $studentId);
+
+        $result = (new GradeCalculationService)->calculatePDC2($groupId);
+
+        $this->assertNotNull($result);
+        $this->assertArrayHasKey('PEER_REVIEW', $result['components']);
+        // NILAI_DOSEN 80, EXPO 84, PEER_REVIEW 100 → (80 + 84 + 100) / 3.
+        $this->assertSame(3, $result['component_count']);
+        $this->assertSame('PARTIAL', $result['status']);
+        $this->assertEqualsWithDelta(100.0, $result['components']['PEER_REVIEW']['score'], 0.01);
+        $this->assertEqualsWithDelta(88.0, $result['grade'], 0.01);
+    }
+
+    public function test_group_pdc2_without_peer_data_matches_legacy_shape(): void
+    {
+        [$studentId, $groupId] = $this->seedGroupWithApprovedSelfEvaluation();
+        $periodId = (int) DB::table('capstone_groups')->where('id', $groupId)->value('period_id');
+
+        $templateId = DB::table('capstone_assessment_component_templates')->insertGetId(['code' => 'ND-1', 'name' => 'Penguasaan', 'weight' => 100]);
+        $componentId = DB::table('capstone_period_assessment_components')->insertGetId(['period_id' => $periodId, 'template_id' => $templateId, 'type' => 'NILAI_DOSEN']);
+        DB::table('capstone_nilai_dosen_scores')->insert(['component_id' => null, 'period_component_id' => $componentId, 'evaluator_id' => 7, 'group_id' => $groupId, 'student_id' => $studentId, 'score' => 80]);
+
+        $result = (new GradeCalculationService)->calculatePDC2($groupId);
+
+        $this->assertNotNull($result);
+        $this->assertSame(['NILAI_DOSEN', 'MILESTONE', 'EXPO', 'PEER_REVIEW'], array_keys($result['components']));
+        $this->assertNull($result['components']['MILESTONE']['score']);
+        $this->assertNull($result['components']['PEER_REVIEW']['score']);
+        // (80 + 84) / 2 — numerically identical to the pre-unification value.
+        $this->assertEqualsWithDelta(82.0, $result['grade'], 0.01);
     }
 }

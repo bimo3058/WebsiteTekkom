@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Modules\Capstone\Http\Controllers\ExpoEventController;
+use Modules\Capstone\Http\Requests\Expo\StoreExpoEventRequest;
+use Modules\Capstone\Http\Requests\Expo\UpdateExpoEventRequest;
 use Modules\Capstone\Models\Document;
 use Modules\Capstone\Models\ExpoEvent;
 use Modules\Capstone\Models\ExpoRegistration;
@@ -309,8 +311,12 @@ class ExpoCrossPeriodTest extends TestCase
 
     private function writeRequest(User $user, array $params, string $method = 'POST'): Request
     {
-        $request = Request::create('/x', $method, $params);
+        $class = $method === 'PUT' ? UpdateExpoEventRequest::class : StoreExpoEventRequest::class;
+        $request = $class::create('/x', $method, $params);
+        $request->setContainer(app());
+        $request->setRedirector(app('redirect'));
         $request->setUserResolver(fn () => $user);
+        $request->validateResolved();
 
         return $request;
     }

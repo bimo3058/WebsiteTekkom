@@ -10,14 +10,17 @@ use App\Services\AcademicRoleSynchronizer;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Modules\Capstone\Groups\GroupPresenter;
 use Modules\Capstone\Http\Controllers\Admin\BladeMonitoringController;
 use Modules\Capstone\Http\Controllers\Admin\DocumentUploadController;
 use Modules\Capstone\Http\Controllers\Admin\PeriodRegistrationApprovalController;
@@ -51,8 +54,37 @@ use Modules\Capstone\Http\Controllers\TaRegistrationController;
 use Modules\Capstone\Http\Controllers\TaSubmissionController;
 use Modules\Capstone\Http\Middleware\BladeAccessMiddleware;
 use Modules\Capstone\Http\Middleware\BladeSessionFeatureMiddleware;
+use Modules\Capstone\Http\Requests\Admin\Monitoring\PeerReviewsQueryRequest;
+use Modules\Capstone\Http\Requests\Admin\Monitoring\ProgressQueryRequest;
 use Modules\Capstone\Http\Requests\Admin\StoreTaDefenseRequest;
+use Modules\Capstone\Http\Requests\Admin\TaRegistration\RejectTaRegistrationRequest;
 use Modules\Capstone\Http\Requests\Admin\UpdateTaDefenseRequest;
+use Modules\Capstone\Http\Requests\Assessment\CopyAssessmentConfigRequest;
+use Modules\Capstone\Http\Requests\Assessment\CopyPeerReviewConfigRequest;
+use Modules\Capstone\Http\Requests\Assessment\StoreAssessmentConfigRequest;
+use Modules\Capstone\Http\Requests\Assessment\StoreComponentTemplateRequest;
+use Modules\Capstone\Http\Requests\Assessment\StoreIndicatorTemplateRequest;
+use Modules\Capstone\Http\Requests\Assessment\StorePeerReviewConfigRequest;
+use Modules\Capstone\Http\Requests\Assessment\UpdateComponentTemplateRequest;
+use Modules\Capstone\Http\Requests\Assessment\UpdateIndicatorTemplateRequest;
+use Modules\Capstone\Http\Requests\Expo\SubmitExpoScoresRequest;
+use Modules\Capstone\Http\Requests\Expo\UploadExpoDocumentRequest;
+use Modules\Capstone\Http\Requests\Group\ChangeReadyRequest;
+use Modules\Capstone\Http\Requests\Group\CreateStudentGroupRequest;
+use Modules\Capstone\Http\Requests\IndividualTa\UploadTaDocumentRequest;
+use Modules\Capstone\Http\Requests\PeerReview\StorePeerReviewsRequest;
+use Modules\Capstone\Http\Requests\Period\SavePeriodRequest;
+use Modules\Capstone\Http\Requests\Registration\RegisterPeriodRequest;
+use Modules\Capstone\Http\Requests\Scheduling\CalendarIndexRequest;
+use Modules\Capstone\Http\Requests\Scheduling\StoreScheduleRequest;
+use Modules\Capstone\Http\Requests\Scheduling\UpdateScheduleRequest;
+use Modules\Capstone\Http\Requests\Sempro\UpdateSemproScheduleRequest;
+use Modules\Capstone\Http\Requests\TaSubmission\TaSubmissionFileRequest;
+use Modules\Capstone\Http\Requests\Title\RecommendBidRequest;
+use Modules\Capstone\Http\Requests\Title\ReorderBidsRequest;
+use Modules\Capstone\Http\Requests\Title\StoreBidRequest;
+use Modules\Capstone\Http\Requests\Title\StoreStudentProposalRequest;
+use Modules\Capstone\Http\Requests\Title\UpdateStudentProposalRequest;
 use Modules\Capstone\Models\AssessmentComponentTemplate;
 use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Bid;
@@ -92,6 +124,7 @@ use Modules\Capstone\Services\NotificationService;
 use Modules\Capstone\Services\SchedulingService;
 use Modules\Capstone\Support\BladeFeatureAccess;
 use Modules\Capstone\Support\CapstoneActor;
+use Modules\Capstone\Support\CapstoneUrl;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
@@ -228,7 +261,7 @@ class BladeCalendarAccessTest extends TestCase
         GroupMember::create(['group_id' => $group->id, 'student_id' => $other->student->id]);
         DB::table('capstone_student_peer_review_status')->insert(['group_id' => $group->id, 'student_id' => $student->student->id, 'has_completed_peer_review' => true, 'ta_status' => 'TA_ACTIVE']);
         $controller = new BladeMonitoringController;
-        $data = $controller->peerReviews(Request::create('/', 'GET', ['period_id' => $group->period_id]))->getData(true)['data'];
+        $data = $controller->peerReviews($this->formRequestFor(PeerReviewsQueryRequest::class, null, 'GET', ['period_id' => $group->period_id]))->getData(true)['data'];
         $this->assertCount(1, $data);
         $this->assertSame(50, $data[0]['completion_percentage']);
         $this->assertSame(1, $data[0]['completed_count']);
@@ -256,7 +289,7 @@ class BladeCalendarAccessTest extends TestCase
         $service = \Mockery::mock(GroupService::class);
         $service->shouldReceive('transformGroupForProgress')->once()->withArgs(fn ($found, $docs, $requirements) => $found->id === $group->id && $docs->count() === 1 && $requirements->isEmpty())->andReturn(['id' => $group->id, 'progress_percentage' => 10]);
         $controller = new BladeMonitoringController;
-        $data = $controller->progress(Request::create('/', 'GET', ['period_id' => $group->period_id]), $service)->getData(true)['data'];
+        $data = $controller->progress($this->formRequestFor(ProgressQueryRequest::class, null, 'GET', ['period_id' => $group->period_id]), $service)->getData(true)['data'];
         $this->assertSame([['id' => $group->id, 'progress_percentage' => 10]], $data);
     }
 
@@ -294,7 +327,7 @@ class BladeCalendarAccessTest extends TestCase
         $service->shouldReceive('validateScheduleConflicts')->once()->with([$first, $replacement], '2026-10-02', '09:00', '10:00', 'Ruang Sidang', $schedule->id, null, null, null, $roomId)->andReturn([]);
         $controller = new SemproController(app(GroupStateMachine::class), $service);
         $payload = ['date' => '2026-10-02', 'start_time' => '09:00', 'end_time' => '10:00', 'eoffice_ruangan_id' => $roomId, 'examiner_1_id' => $first, 'examiner_2_id' => $replacement];
-        $request = $this->requestFor($admin, '/', 'PUT', $payload);
+        $request = $this->formRequestFor(UpdateSemproScheduleRequest::class, $admin, 'PUT', $payload);
         $this->assertSame(200, $controller->update($request, $schedule->id)->getStatusCode());
         $this->assertSame('Ruang Sidang', $schedule->fresh()->room);
         $this->assertEqualsCanonicalizing([$first, $replacement], $schedule->evaluations()->pluck('examiner_id')->all());
@@ -437,7 +470,7 @@ class BladeCalendarAccessTest extends TestCase
                 $this->assertStringNotContainsString('@click=', $link);
             }
         }
-        $request = $this->requestFor($user, '/capstone/session/capstone/mahasiswa/periods/register', 'POST', ['period_id' => $period->id]);
+        $request = $this->formRequestFor(RegisterPeriodRequest::class, $user, 'POST', ['period_id' => $period->id]);
         $response = (new RegistrationController)->register($request);
         $this->assertSame(201, $response->getStatusCode());
         $this->assertEquals($user->student->id, PeriodRegistration::first()->user_id);
@@ -623,7 +656,7 @@ class BladeCalendarAccessTest extends TestCase
         $student = $this->actor('mahasiswa');
         $period = Period::create(['name' => 'Registered period', 'start_date' => '2026-01-01', 'end_date' => '2026-12-31', 'is_active' => true]);
         $controller = app(GroupController::class);
-        $request = $this->requestFor($student, '/', 'POST', ['period_id' => $period->id]);
+        $request = $this->createGroupRequestFor($student, $period->id);
         $this->assertWorkspaceDenied(fn () => $controller->storeSolo($request));
         PeriodRegistration::create(['user_id' => $student->student->id, 'period_id' => $period->id, 'status' => 'PENDING']);
         $this->assertWorkspaceDenied(fn () => $controller->storeSolo($request));
@@ -646,14 +679,14 @@ class BladeCalendarAccessTest extends TestCase
         $group->period->update(['min_group_size' => 2]);
         GroupMember::create(['student_id' => $other->student->id, 'group_id' => $group->id]);
         $controller = app(GroupController::class);
-        $request = $this->requestFor($student, '/', 'POST', ['group_id' => $group->id]);
+        $request = $this->changeReadyRequestFor($student, $group->id);
         $this->assertWorkspaceDenied(fn () => $controller->markReadyForFinalization($request));
         $this->workspaceTitle($lecturer, ['title_source' => 'STUDENT', 'proposed_by_group_id' => $group->id, 'supervisor_approval_status' => 'APPROVED']);
-        $this->assertWorkspaceDenied(fn () => $controller->markReadyForFinalization($this->requestFor($other, '/', 'POST', ['group_id' => $group->id])));
+        $this->assertWorkspaceDenied(fn () => $controller->markReadyForFinalization($this->changeReadyRequestFor($other, $group->id)));
         $this->assertSame(200, $controller->markReadyForFinalization($request)->getStatusCode());
         $this->assertSame('READY_FOR_FINALIZATION', $group->fresh()->status);
         $this->assertEqualsCanonicalizing([$student->id, $other->id], Notification::pluck('user_id')->all());
-        $actions = app(GroupService::class)->resolveAllowedActions($group->fresh(), $student);
+        $actions = app(GroupPresenter::class)->resolveAllowedActions($group->fresh(), $student);
         $this->assertFalse($actions['can_add_member']);
         $this->assertFalse($actions['can_remove_member']);
         $this->assertTrue($actions['can_cancel_ready_for_finalization']);
@@ -671,22 +704,22 @@ class BladeCalendarAccessTest extends TestCase
         $other = $this->actor('mahasiswa');
         $group = $this->group($student, null, 'FORMING_SOLO');
         $group->update(['is_solo' => true]);
-        $controller = new StudentProposalController;
+        $controller = app(StudentProposalController::class);
         $data = ['title' => 'Solo idea', 'description' => 'Description', 'scope' => 'Scope', 'problem_statement' => 'Problem', 'specializations' => ['AI'], 'proposed_supervisor_id' => $lecturer->lecturer->id];
-        $response = $controller->store($this->requestFor($student, '/', 'POST', $data));
+        $response = $controller->store($this->formRequestFor(StoreStudentProposalRequest::class, $student, 'POST', $data));
         $this->assertSame(201, $response->getStatusCode());
         $title = Title::first();
         $this->assertEquals($group->period_id, $title->period_id);
         $this->assertTrue((bool) $group->fresh()->has_active_proposal);
         $this->assertEquals($lecturer->id, Notification::first()->user_id);
-        $this->assertWorkspaceDenied(fn () => $controller->store($this->requestFor($student, '/', 'POST', $data)));
+        $this->assertWorkspaceDenied(fn () => $controller->store($this->formRequestFor(StoreStudentProposalRequest::class, $student, 'POST', $data)));
         $this->group($other, null, 'FORMING_SOLO')->update(['is_solo' => true]);
         $this->assertWorkspaceDenied(fn () => $controller->destroy($this->requestFor($other, '/', 'DELETE'), $title->id), 404);
         $edit = [...$data, 'title_id' => $title->id, 'specializations' => ['Network']];
-        $this->assertSame(200, $controller->update($this->requestFor($student, '/', 'PUT', $edit))->getStatusCode());
+        $this->assertSame(200, $controller->update($this->formRequestFor(UpdateStudentProposalRequest::class, $student, 'PUT', $edit))->getStatusCode());
         $this->assertSame(['Network'], $title->fresh()->specializations);
         $group->period->update(['is_finalized' => true]);
-        $this->assertWorkspaceDenied(fn () => $controller->update($this->requestFor($student, '/', 'PUT', $edit)));
+        $this->assertWorkspaceDenied(fn () => $controller->update($this->formRequestFor(UpdateStudentProposalRequest::class, $student, 'PUT', $edit)));
         $this->assertWorkspaceDenied(fn () => $controller->destroy($this->requestFor($student, '/', 'DELETE'), $title->id));
         $group->period->update(['is_finalized' => false]);
         $controller->destroy($this->requestFor($student, '/', 'DELETE'), $title->id);
@@ -706,16 +739,16 @@ class BladeCalendarAccessTest extends TestCase
         $bids = [];
         foreach ([1, 2] as $priority) {
             $title = $this->workspaceTitle($lecturer, ['period_id' => $group->period_id]);
-            $response = $controller->store($this->requestFor($student, '/', 'POST', ['title_id' => $title->id, 'priority' => $priority]));
+            $response = $controller->store($this->formRequestFor(StoreBidRequest::class, $student, 'POST', ['title_id' => $title->id, 'priority' => $priority]));
             $this->assertSame(201, $response->getStatusCode());
             $bids[] = $response->getData(true)['data']['id'];
         }
         $this->assertNull($group->bids()->find($bids[0])->proposed_supervisor_1_id);
         $otherGroup = $this->group($other, null, 'READY_FOR_BIDDING');
         $foreign = Bid::create(['group_id' => $otherGroup->id, 'title_id' => $this->workspaceTitle($lecturer)->id, 'priority' => 1, 'status' => 'PENDING']);
-        $request = $this->requestFor($student, '/', 'PUT', ['bids' => [['id' => $bids[0], 'priority' => 2], ['id' => $foreign->id, 'priority' => 1]]]);
+        $request = $this->formRequestFor(ReorderBidsRequest::class, $student, 'PUT', ['bids' => [['id' => $bids[0], 'priority' => 2], ['id' => $foreign->id, 'priority' => 1]]]);
         $this->assertWorkspaceDenied(fn () => $controller->reorder($request), 422);
-        $request = $this->requestFor($student, '/', 'PUT', ['bids' => [['id' => $bids[0], 'priority' => 2], ['id' => $bids[1], 'priority' => 1]]]);
+        $request = $this->formRequestFor(ReorderBidsRequest::class, $student, 'PUT', ['bids' => [['id' => $bids[0], 'priority' => 2], ['id' => $bids[1], 'priority' => 1]]]);
         $this->assertSame(200, $controller->reorder($request)->getStatusCode());
         $this->assertSame([$bids[1], $bids[0]], $group->bids()->orderBy('priority')->pluck('id')->all());
         $this->assertEquals(1, $foreign->fresh()->priority);
@@ -737,17 +770,17 @@ class BladeCalendarAccessTest extends TestCase
         $controller = app(BidController::class);
         $titleA = $this->workspaceTitle($lecturer, ['period_id' => $group->period_id]);
         $titleB = $this->workspaceTitle($lecturer, ['period_id' => $group->period_id]);
-        $response = $controller->store($this->requestFor($student, '/', 'POST', ['title_id' => $titleA->id, 'priority' => 1]));
+        $response = $controller->store($this->formRequestFor(StoreBidRequest::class, $student, 'POST', ['title_id' => $titleA->id, 'priority' => 1]));
         $this->assertSame(201, $response->getStatusCode());
-        $response = $controller->store($this->requestFor($student, '/', 'POST', ['title_id' => $titleB->id, 'priority' => 2]));
+        $response = $controller->store($this->formRequestFor(StoreBidRequest::class, $student, 'POST', ['title_id' => $titleB->id, 'priority' => 2]));
         $this->assertSame(201, $response->getStatusCode());
         $bidA = $group->bids()->where('title_id', $titleA->id)->firstOrFail();
-        $rec = $controller->recommend($this->requestFor($lecturer, '/', 'PUT', ['recommendation' => 'REJECT']), $bidA->id);
+        $rec = $controller->recommend($this->formRequestFor(RecommendBidRequest::class, $lecturer, 'PUT', ['recommendation' => 'REJECT']), $bidA->id);
         $this->assertSame(200, $rec->getStatusCode());
         $this->assertSame('REJECTED', $bidA->fresh()->status);
         $this->assertSame([1], $group->bids()->where('status', 'PENDING')->orderBy('priority')->pluck('priority')->all());
         // Re-bidding the rejected title must succeed (hit 23505 before partial uniques).
-        $response = $controller->store($this->requestFor($student, '/', 'POST', ['title_id' => $titleA->id]));
+        $response = $controller->store($this->formRequestFor(StoreBidRequest::class, $student, 'POST', ['title_id' => $titleA->id]));
         $this->assertSame(201, $response->getStatusCode());
         $this->assertSame(2, $response->getData(true)['data']['priority']);
         $this->assertNull(Bid::find($response->getData(true)['data']['id'])->proposed_supervisor_1_id);
@@ -840,30 +873,44 @@ class BladeCalendarAccessTest extends TestCase
         $assessmentController = new PeriodAssessmentConfigController;
         $peerController = new PeriodPeerReviewConfigController;
         foreach ([$period, $target] as $p) {
-            $this->assertSame(201, $assessmentController->store(Request::create('/', 'POST', ['type' => 'EXPO', 'template_ids' => [$template->id]]), $p->id)->getStatusCode());
-            $this->assertSame(201, $peerController->store(Request::create('/', 'POST', ['template_ids' => [$peer->id]]), $p->id)->getStatusCode());
+            $this->assertSame(201, $assessmentController->store($this->formRequestFor(StoreAssessmentConfigRequest::class, null, 'POST', ['type' => 'EXPO', 'template_ids' => [$template->id]]), $p->id)->getStatusCode());
+            $this->assertSame(201, $peerController->store($this->formRequestFor(StorePeerReviewConfigRequest::class, null, 'POST', ['template_ids' => [$peer->id]]), $p->id)->getStatusCode());
         }
         $component = PeriodAssessmentComponent::where('period_id', $target->id)->firstOrFail();
         $indicator = PeriodPeerReviewIndicator::where('period_id', $target->id)->firstOrFail();
         $this->assertSame('Peer template', $peerController->show(Request::create('/'), $target->id)->getData(true)['data']['selected_indicators'][0]['name']);
-        $assessmentController->copy(Request::create('/', 'POST', ['source_period_id' => $period->id]), $target->id);
-        $peerController->copy(Request::create('/', 'POST', ['source_period_id' => $period->id]), $target->id);
+        $assessmentController->copy($this->formRequestFor(CopyAssessmentConfigRequest::class, null, 'POST', ['source_period_id' => $period->id], ['period' => $target->id]), $target->id);
+        $peerController->copy($this->formRequestFor(CopyPeerReviewConfigRequest::class, null, 'POST', ['source_period_id' => $period->id], ['period' => $target->id]), $target->id);
         $this->assertNotNull($component->fresh());
         $this->assertNotNull($indicator->fresh());
         foreach ([$assessmentController, $peerController] as $controller) {
             try {
-                $controller->copy(Request::create('/', 'POST', ['source_period_id' => $period->id]), $period->id);
+                if ($controller instanceof PeriodAssessmentConfigController) {
+                    $request = $this->formRequestFor(CopyAssessmentConfigRequest::class, null, 'POST', ['source_period_id' => $period->id], ['period' => $period->id]);
+                } elseif ($controller instanceof PeriodPeerReviewConfigController) {
+                    $request = $this->formRequestFor(CopyPeerReviewConfigRequest::class, null, 'POST', ['source_period_id' => $period->id], ['period' => $period->id]);
+                } else {
+                    $request = Request::create('/', 'POST', ['source_period_id' => $period->id]);
+                }
+                $controller->copy($request, $period->id);
                 $this->fail('Self copy must be rejected');
             } catch (ValidationException $e) {
                 $this->assertArrayHasKey('source_period_id', $e->errors());
             }
         }
-        $peerController->store(Request::create('/', 'POST', ['template_ids' => []]), $target->id);
+        $peerController->store($this->formRequestFor(StorePeerReviewConfigRequest::class, null, 'POST', ['template_ids' => []]), $target->id);
         $this->assertSame(0, PeriodPeerReviewIndicator::where('period_id', $target->id)->count());
         $target->update(['is_finalized' => true]);
         foreach ([$assessmentController, $peerController] as $controller) {
             try {
-                $controller->store(Request::create('/', 'POST', ['type' => 'EXPO', 'template_ids' => []]), $target->id);
+                if ($controller instanceof PeriodAssessmentConfigController) {
+                    $request = $this->formRequestFor(StoreAssessmentConfigRequest::class, null, 'POST', ['type' => 'EXPO', 'template_ids' => []]);
+                } elseif ($controller instanceof PeriodPeerReviewConfigController) {
+                    $request = $this->formRequestFor(StorePeerReviewConfigRequest::class, null, 'POST', ['template_ids' => []]);
+                } else {
+                    $request = Request::create('/', 'POST', ['type' => 'EXPO', 'template_ids' => []]);
+                }
+                $controller->store($request, $target->id);
                 $this->fail('Finalized period must be locked');
             } catch (HttpException $e) {
                 $this->assertSame(403, $e->getStatusCode());
@@ -879,18 +926,18 @@ class BladeCalendarAccessTest extends TestCase
         $admin = $this->actor('admin');
         $controller = new AssessmentComponentTemplateController;
         $payload = ['code' => 'CPL-01', 'name' => 'CPL-01', 'description' => 'Assessment description', 'weight' => 100, 'is_active' => false];
-        $response = $controller->store($this->requestFor($admin, '/', 'POST', $payload));
+        $response = $controller->store($this->formRequestFor(StoreComponentTemplateRequest::class, $admin, 'POST', $payload));
         $this->assertSame(201, $response->getStatusCode());
         $template = AssessmentComponentTemplate::firstOrFail();
         $this->assertFalse($template->is_active);
         $this->assertSame($template->id, $controller->index()->getData(true)['data'][0]['id']);
         try {
-            $controller->store($this->requestFor($admin, '/', 'POST', $payload));
+            $controller->store($this->formRequestFor(StoreComponentTemplateRequest::class, $admin, 'POST', $payload));
             $this->fail('Duplicate code must fail validation');
         } catch (ValidationException $e) {
             $this->assertArrayHasKey('code', $e->errors());
         }
-        $controller->update($this->requestFor($admin, '/', 'PUT', ['code' => 'CPL-01', 'is_active' => true]), $template->id);
+        $controller->update($this->formRequestFor(UpdateComponentTemplateRequest::class, $admin, 'PUT', ['code' => 'CPL-01', 'is_active' => true], ['assessment_template' => $template->id]), $template->id);
         $this->assertTrue($template->fresh()->is_active);
         $period = Period::create(['name' => 'Configured', 'start_date' => '2026-01-01', 'end_date' => '2026-12-31']);
         $component = PeriodAssessmentComponent::create(['period_id' => $period->id, 'template_id' => $template->id, 'type' => 'EXPO']);
@@ -905,23 +952,23 @@ class BladeCalendarAccessTest extends TestCase
         $admin = $this->actor('admin');
         $controller = new PeerReviewIndicatorTemplateController;
         try {
-            $controller->store($this->requestFor($admin, '/', 'POST', ['name' => 'No code', 'weight' => 100]));
+            $controller->store($this->formRequestFor(StoreIndicatorTemplateRequest::class, $admin, 'POST', ['name' => 'No code', 'weight' => 100]));
             $this->fail('Missing code must fail validation');
         } catch (ValidationException $e) {
             $this->assertArrayHasKey('code', $e->errors());
         }
         $payload = ['code' => 'PR-KONTRIBUSI', 'name' => 'Kontribusi', 'description' => 'Peer description', 'weight' => 100];
-        $response = $controller->store($this->requestFor($admin, '/', 'POST', $payload));
+        $response = $controller->store($this->formRequestFor(StoreIndicatorTemplateRequest::class, $admin, 'POST', $payload));
         $this->assertSame(201, $response->getStatusCode());
         $template = PeerReviewIndicatorTemplate::firstOrFail();
         $this->assertSame('PR-KONTRIBUSI', $template->code);
         try {
-            $controller->store($this->requestFor($admin, '/', 'POST', $payload));
+            $controller->store($this->formRequestFor(StoreIndicatorTemplateRequest::class, $admin, 'POST', $payload));
             $this->fail('Duplicate code must fail validation');
         } catch (ValidationException $e) {
             $this->assertArrayHasKey('code', $e->errors());
         }
-        $controller->update($this->requestFor($admin, '/', 'PUT', ['code' => 'PR-KERJASAMA']), $template->id);
+        $controller->update($this->formRequestFor(UpdateIndicatorTemplateRequest::class, $admin, 'PUT', ['code' => 'PR-KERJASAMA'], ['peer_review_indicator_template' => $template->id]), $template->id);
         $this->assertSame('PR-KERJASAMA', $template->fresh()->code);
     }
 
@@ -933,7 +980,7 @@ class BladeCalendarAccessTest extends TestCase
         $controller = new BladePeriodController;
         $body = ['name' => 'Semester', 'start_date' => '2026-01-01', 'end_date' => '2026-12-31', 'is_active' => false, 'min_group_size' => 3, 'max_group_size' => 4, 'max_supervisor_load' => 5, 'expo_reminder_at' => '2026-06-01', 'assessments' => array_fill_keys($controller::TYPES, []), 'peer_ids' => [$peer->id]];
         $body['assessments']['EXPO'] = [$template->id];
-        $response = $controller->store(Request::create('/', 'POST', $body));
+        $response = $controller->store($this->formRequestFor(SavePeriodRequest::class, null, 'POST', $body));
         $this->assertSame(201, $response->getStatusCode());
         $period = Period::firstOrFail();
         $this->assertSame(5, $period->max_supervisor_load);
@@ -943,11 +990,11 @@ class BladeCalendarAccessTest extends TestCase
         $this->assertSame($template->id, $component->template_id);
         $this->assertSame($peer->id, PeriodPeerReviewIndicator::firstOrFail()->template_id);
         $body['name'] = 'Renamed';
-        $this->assertSame(200, $controller->update(Request::create('/', 'PUT', $body), $period)->getStatusCode());
+        $this->assertSame(200, $controller->update($this->formRequestFor(SavePeriodRequest::class, null, 'PUT', $body), $period)->getStatusCode());
         $this->assertSame($component->id, PeriodAssessmentComponent::firstOrFail()->id);
         DB::unprepared("CREATE TRIGGER reject_peer BEFORE INSERT ON capstone_period_peer_review_indicators BEGIN SELECT RAISE(ABORT, 'Simulated wizard failure'); END");
         try {
-            $controller->store(Request::create('/', 'POST', $body));
+            $controller->store($this->formRequestFor(SavePeriodRequest::class, null, 'POST', $body));
             $this->fail('Expected failed transaction');
         } catch (QueryException $e) {
             $this->assertStringContainsString('Simulated wizard failure', $e->getMessage());
@@ -956,7 +1003,7 @@ class BladeCalendarAccessTest extends TestCase
         $this->assertSame(1, PeriodAssessmentComponent::count());
         $period->update(['is_finalized' => true]);
         try {
-            $controller->update(Request::create('/', 'PUT', $body), $period);
+            $controller->update($this->formRequestFor(SavePeriodRequest::class, null, 'PUT', $body), $period);
             $this->fail('Finalized period must be locked');
         } catch (HttpException $e) {
             $this->assertSame(403, $e->getStatusCode());
@@ -1072,6 +1119,71 @@ class BladeCalendarAccessTest extends TestCase
         $request = Request::create($path, $method, $data);
         $request->setUserResolver(fn () => $user);
         $request->setLaravelSession(app('session')->driver());
+
+        return $request;
+    }
+
+    /**
+     * Build a validated ChangeReadyRequest for direct controller calls.
+     *
+     * Mirrors GroupWritesTest::callChangeReady(): the controller signature
+     * requires the Form Request subclass, so plain Request instances throw
+     * a TypeError before any guard runs.
+     */
+    private function changeReadyRequestFor(User $user, int $groupId): ChangeReadyRequest
+    {
+        $request = ChangeReadyRequest::create('/', 'POST', ['group_id' => $groupId]);
+        $request->setContainer(app());
+        $request->setRedirector(app('redirect'));
+        $request->setUserResolver(fn () => $user);
+        $request->validateResolved();
+
+        return $request;
+    }
+
+    /**
+     * Build a validated CreateStudentGroupRequest for direct controller calls.
+     */
+    private function createGroupRequestFor(User $user, int $periodId): CreateStudentGroupRequest
+    {
+        $request = CreateStudentGroupRequest::create('/', 'POST', ['period_id' => $periodId]);
+        $request->setContainer(app());
+        $request->setRedirector(app('redirect'));
+        $request->setUserResolver(fn () => $user);
+        $request->validateResolved();
+
+        return $request;
+    }
+
+    /**
+     * Build a validated FormRequest subclass for direct controller calls.
+     *
+     * Controller signatures now type-hint Form Requests, so plain Request
+     * instances throw a TypeError before any guard runs. Validation runs
+     * at build time: invalid payloads throw ValidationException here,
+     * valid ones enter the controller exactly as over HTTP.
+     */
+    private function formRequestFor(string $class, ?User $user, string $method, array $data, array $routeParams = [], array $files = []): FormRequest
+    {
+        $request = $class::create('/x', $method, $data);
+        $request->setContainer(app());
+        $request->setRedirector(app('redirect'));
+        $request->setUserResolver(fn () => $user);
+        foreach ($files as $key => $file) {
+            $request->files->set($key, $file);
+        }
+        if ($routeParams !== []) {
+            $request->setRouteResolver(function () use ($request, $routeParams) {
+                $route = new Route(['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], '/x', []);
+                $route->bind($request);
+                foreach ($routeParams as $key => $value) {
+                    $route->setParameter($key, $value);
+                }
+
+                return $route;
+            });
+        }
+        $request->validateResolved();
 
         return $request;
     }
@@ -1205,9 +1317,9 @@ class BladeCalendarAccessTest extends TestCase
     public function test_locked_links_have_no_href_and_evaluation_parent_stays_open_for_grades(): void
     {
         request()->attributes->set('capstone_feature_access', ['registered' => true, 'group_status' => 'PDC1_ACTIVE']);
-        $html = Blade::render('<x-capstone::button href="/mahasiswa/expo">Expo</x-capstone::button>');
-        $this->assertStringContainsString('aria-disabled="true"', $html);
-        $this->assertStringNotContainsString('href=', $html);
+        $html = Blade::render('<x-btn href="'.e(CapstoneUrl::to('/mahasiswa/expo')).'">Expo</x-btn>');
+        $this->assertStringContainsString('href="'.e(CapstoneUrl::to('/mahasiswa/expo')).'"', $html);
+        $this->assertStringNotContainsString('aria-disabled="true"', $html);
         $html = view('capstone::layouts.sidebar', ['actor' => ['roles' => ['mahasiswa']], 'activeRole' => 'mahasiswa', 'pagePath' => '/mahasiswa/dashboard', 'featureAccess' => ['registered' => true, 'group_status' => 'PDC1_ACTIVE']])->render();
         $this->assertStringContainsString('/capstone/mahasiswa/grades', $html);
         $this->assertStringNotContainsString('href="'.url('/capstone/mahasiswa/peer-review').'"', $html);
@@ -1230,7 +1342,7 @@ class BladeCalendarAccessTest extends TestCase
         foreach ([$student, $other] as $actor) {
             DB::table('capstone_ta_defense_schedules')->insert(['group_id' => $group->id, 'student_id' => $actor->student->id, 'date' => '2026-09-09', 'start_time' => '11:00', 'end_time' => '12:00']);
         }
-        $request = $this->requestFor($student, '/');
+        $request = $this->formRequestFor(CalendarIndexRequest::class, $student, 'GET', []);
         $request->attributes->set('capstone_role', 'mahasiswa');
         $events = (new CalendarController)->index($request)->getData(true)['data'];
         $this->assertCount(2, $events);
@@ -1247,13 +1359,14 @@ class BladeCalendarAccessTest extends TestCase
         $this->seminar($mine);
         $exam = $this->seminar($other, 'SEMPRO', ['examiner_1_id' => $lecturer->lecturer->id]);
         $this->seminar($this->group());
-        $request = $this->requestFor($lecturer, '/');
+        $request = $this->formRequestFor(CalendarIndexRequest::class, $lecturer, 'GET', []);
         $request->attributes->set('capstone_role', 'dosen');
         $events = (new CalendarController)->index($request)->getData(true)['data'];
         $this->assertCount(2, $events);
         $this->assertContains($exam, array_column($events, 'id'));
-        $request->query->set('period_id', $mine->period_id);
-        $this->assertCount(1, (new CalendarController)->index($request)->getData(true)['data']);
+        $filtered = $this->formRequestFor(CalendarIndexRequest::class, $lecturer, 'GET', ['period_id' => $mine->period_id]);
+        $filtered->attributes->set('capstone_role', 'dosen');
+        $this->assertCount(1, (new CalendarController)->index($filtered)->getData(true)['data']);
     }
 
     public function test_mentoring_saves_times_and_allows_multiple_sessions(): void
@@ -1263,7 +1376,7 @@ class BladeCalendarAccessTest extends TestCase
         $group = $this->group(null, $lecturer);
         $controller = new ScheduleController;
         for ($i = 0; $i < 2; $i++) {
-            $request = $this->requestFor($lecturer, '/', 'POST', ['group_id' => $group->id, 'type' => 'BIMBINGAN', 'date' => '2026-09-'.(10 + $i), 'start_time' => '09:00', 'end_time' => '10:00', 'room' => 'Lab', 'mode' => 'offline', 'notes' => 'Session', 'status' => 'APPROVED']);
+            $request = $this->formRequestFor(StoreScheduleRequest::class, $lecturer, 'POST', ['group_id' => $group->id, 'type' => 'BIMBINGAN', 'date' => '2026-09-'.(10 + $i), 'start_time' => '09:00', 'end_time' => '10:00', 'room' => 'Lab', 'mode' => 'offline', 'notes' => 'Session', 'status' => 'APPROVED']);
             $request->attributes->set('capstone_role', 'dosen');
             $this->assertSame(201, $controller->store($request)->getStatusCode());
         }
@@ -1280,7 +1393,7 @@ class BladeCalendarAccessTest extends TestCase
         $this->actingAs($lecturer);
         $mine = $this->group(null, $lecturer);
         $id = $this->seminar($this->group());
-        $request = $this->requestFor($lecturer, '/', 'PUT', ['group_id' => $mine->id]);
+        $request = $this->formRequestFor(UpdateScheduleRequest::class, $lecturer, 'PUT', ['group_id' => $mine->id]);
         $request->attributes->set('capstone_role', 'dosen');
         $this->expectException(HttpException::class);
         (new ScheduleController)->update($request, (string) $id);
@@ -1405,10 +1518,11 @@ class BladeCalendarAccessTest extends TestCase
         }
         $controller = new PeerReviewController;
         $reviews = array_map(fn ($i) => ['reviewee_id' => $reviewee->student->id, 'indicator_id' => $i->id, 'score' => 75], $indicators);
-        $request = $this->requestFor($reviewer, '/', 'POST', ['reviews' => [$reviews[0]]]);
+        // Each controller call is an independent request: rebuild after changing payload.
+        $request = $this->formRequestFor(StorePeerReviewsRequest::class, $reviewer, 'POST', ['reviews' => [$reviews[0]]]);
         $this->assertSame(422, $controller->store($request)->getStatusCode());
         $this->assertSame(0, PeerReview::count());
-        $request->merge(['reviews' => $reviews]);
+        $request = $this->formRequestFor(StorePeerReviewsRequest::class, $reviewer, 'POST', ['reviews' => $reviews]);
         $this->assertSame(201, $controller->store($request)->getStatusCode());
         $this->assertSame(2, PeerReview::where('is_final_submission', true)->count());
         $this->assertSame('3.00', PeerReview::first()->raw_score);
@@ -1432,10 +1546,11 @@ class BladeCalendarAccessTest extends TestCase
         $other = PeerReviewIndicator::create(['period_id' => $foreign->period_id, 'name' => 'Other period', 'weight' => 100]);
         $controller = new PeerReviewController;
         foreach ([[$reviewer->student->id, $ind->id], [$reviewee->student->id, $other->id]] as [$studentId,$indicatorId]) {
-            $request = $this->requestFor($reviewer, '/', 'POST', ['reviews' => [['reviewee_id' => $studentId, 'indicator_id' => $indicatorId, 'score' => 100]]]);
+            $request = $this->formRequestFor(StorePeerReviewsRequest::class, $reviewer, 'POST', ['reviews' => [['reviewee_id' => $studentId, 'indicator_id' => $indicatorId, 'score' => 100]]]);
             $this->assertSame(422, $controller->store($request)->getStatusCode());
         }
         $group->update(['status' => 'PDC1_ACTIVE']);
+        $request = $this->formRequestFor(StorePeerReviewsRequest::class, $reviewer, 'POST', ['reviews' => [['reviewee_id' => $reviewer->student->id, 'indicator_id' => $ind->id, 'score' => 100]]]);
         $this->assertSame(403, $controller->store($request)->getStatusCode());
         $this->assertSame(0, PeerReview::count());
     }
@@ -1453,9 +1568,9 @@ class BladeCalendarAccessTest extends TestCase
         $form = $controller->index($this->requestFor($reviewer, '/'))->getData(true);
         $this->assertSame('period_indicator_id', $form['indicator_key']);
         $this->assertSame('Teamwork', $form['indicators'][0]['name']);
-        $request = $this->requestFor($reviewer, '/', 'POST', ['reviews' => [['reviewee_id' => $reviewee->student->id, 'period_indicator_id' => $indicator->id, 'score' => 75]]]);
+        $request = $this->formRequestFor(StorePeerReviewsRequest::class, $reviewer, 'POST', ['reviews' => [['reviewee_id' => $reviewee->student->id, 'period_indicator_id' => $indicator->id, 'score' => 75]]]);
         $this->assertSame(422, $controller->store($request)->getStatusCode());
-        $request->merge(['reviews' => [['reviewee_id' => $reviewee->student->id, 'period_indicator_id' => $indicator->id, 'score' => 3]]]);
+        $request = $this->formRequestFor(StorePeerReviewsRequest::class, $reviewer, 'POST', ['reviews' => [['reviewee_id' => $reviewee->student->id, 'period_indicator_id' => $indicator->id, 'score' => 3]]]);
         $this->assertSame(201, $controller->store($request)->getStatusCode());
         $review = PeerReview::with('periodIndicator.template')->first();
         $this->assertSame('3.00', $review->raw_score);
@@ -1585,8 +1700,7 @@ class BladeCalendarAccessTest extends TestCase
         $storage = \Mockery::mock(DocumentStorageService::class);
         $storage->shouldReceive('store')->once()->andReturn('individual/thesis.pdf');
         $storage->shouldNotReceive('get');
-        $request = $this->requestFor($student, '/', 'POST', ['document_type' => 'Thesis']);
-        $request->files->set('file', UploadedFile::fake()->create('thesis.pdf', 1, 'application/pdf'));
+        $request = $this->formRequestFor(UploadTaDocumentRequest::class, $student, 'POST', ['document_type' => 'Thesis'], [], ['file' => UploadedFile::fake()->create('thesis.pdf', 1, 'application/pdf')]);
         $controller = new IndividualTaController;
         $this->assertSame(201, $controller->upload($request, $workflow, $storage)->getStatusCode());
         $this->assertSame('TA_DOCUMENTS_UNDER_REVIEW', TaSubmission::first()->status);
@@ -1597,7 +1711,7 @@ class BladeCalendarAccessTest extends TestCase
         $this->assertSame(200, $documents->update($review, (string) $document->id)->getStatusCode());
         $this->assertSame('TA_DOCUMENTS_APPROVED', TaSubmission::first()->status);
         $legacy = new TaSubmissionController(app(GroupStateMachine::class));
-        $legacyRequest = $this->requestFor($student, '/', 'POST', ['file_path' => 'replacement.pdf']);
+        $legacyRequest = $this->formRequestFor(TaSubmissionFileRequest::class, $student, 'POST', ['file_path' => 'replacement.pdf']);
         $this->assertSame(403, $legacy->upload($legacyRequest)->getStatusCode());
         $this->assertSame(403, $legacy->revise($legacyRequest)->getStatusCode());
         try {
@@ -1632,8 +1746,7 @@ class BladeCalendarAccessTest extends TestCase
         // Upload stays locked while the request is pending.
         $storage = \Mockery::mock(DocumentStorageService::class);
         $storage->shouldReceive('store')->once()->andReturn('individual/thesis.pdf');
-        $uploadRequest = $this->requestFor($student, '/', 'POST', ['document_type' => 'Thesis']);
-        $uploadRequest->files->set('file', UploadedFile::fake()->create('thesis.pdf', 1, 'application/pdf'));
+        $uploadRequest = $this->formRequestFor(UploadTaDocumentRequest::class, $student, 'POST', ['document_type' => 'Thesis'], [], ['file' => UploadedFile::fake()->create('thesis.pdf', 1, 'application/pdf')]);
         $individual = new IndividualTaController;
         $this->assertWorkspaceDenied(fn () => $individual->upload($uploadRequest, $workflow, $storage));
         // Admin approval unlocks the upload.
@@ -1650,7 +1763,7 @@ class BladeCalendarAccessTest extends TestCase
         $this->assertSame(400, $controller->destroy($this->requestFor($student, '/', 'DELETE'))->getStatusCode());
         // Rejected requests can be re-submitted.
         TaRegistration::query()->update(['status' => 'PENDING']);
-        $rejectRequest = $this->requestFor($admin, '/', 'PUT', ['rejection_reason' => 'Incomplete prerequisites']);
+        $rejectRequest = $this->formRequestFor(RejectTaRegistrationRequest::class, $admin, 'PUT', ['rejection_reason' => 'Incomplete prerequisites']);
         $this->assertSame(200, $approval->reject($rejectRequest, TaRegistration::first()->id)->getStatusCode());
         $rejected = $workflow->forStudent($student->student->id);
         $this->assertSame('TA_AWAITING_APPROVAL', $rejected['status']);
@@ -1837,7 +1950,7 @@ class BladeCalendarAccessTest extends TestCase
         [$group,$event,$component] = $this->expoFixture($student);
         $registration = app(ExpoService::class)->registerGroupToEvent($event->id, $group->id, $student->id);
         $controller = new ExpoStudentController;
-        $request = $this->requestFor($student, '/', 'POST', ['scores' => [['period_component_id' => $component, 'score' => 85, 'notes' => 'Test']]]);
+        $request = $this->formRequestFor(SubmitExpoScoresRequest::class, $student, 'POST', ['scores' => [['period_component_id' => $component, 'score' => 85, 'notes' => 'Test']]]);
         $this->assertSame(201, $controller->evaluate($request, $event)->getStatusCode());
         $score = ExpoSelfEvaluation::first();
         $this->assertSame($student->student->id, $score->student_id);
@@ -1903,12 +2016,11 @@ class BladeCalendarAccessTest extends TestCase
         [$group,$event,$component] = $this->expoFixture($student);
         $registration = app(ExpoService::class)->registerGroupToEvent($event->id, $group->id, $student->id);
         $controller = new ExpoStudentController;
-        $request = $this->requestFor($student, '/', 'POST', ['scores' => [['period_component_id' => $component + 1, 'score' => 90]]]);
+        $request = $this->formRequestFor(SubmitExpoScoresRequest::class, $student, 'POST', ['scores' => [['period_component_id' => $component + 1, 'score' => 90]]]);
         $this->assertSame(422, $controller->evaluate($request, $event)->getStatusCode());
         $this->assertSame(0, ExpoSelfEvaluation::count());
         ExpoStudentDocument::create(['expo_registration_id' => $registration->id, 'group_id' => $group->id, 'student_id' => $student->student->id, 'file_path' => 'old.pdf', 'storage_location' => 'supabase', 'original_name' => 'old.pdf', 'status' => 'APPROVED']);
-        $request = $this->requestFor($student, '/', 'POST');
-        $request->files->set('file', UploadedFile::fake()->create('new.pdf', 1, 'application/pdf'));
+        $request = $this->formRequestFor(UploadExpoDocumentRequest::class, $student, 'POST', [], [], ['file' => UploadedFile::fake()->create('new.pdf', 1, 'application/pdf')]);
         $storage = \Mockery::mock(DocumentStorageService::class);
         $storage->shouldNotReceive('store');
         $this->assertSame(403, $controller->document($request, $event, $storage)->getStatusCode());
@@ -2246,7 +2358,7 @@ class BladeCalendarAccessTest extends TestCase
 
         // The representative re-scores; the submission re-enters review.
         $event = ExpoEvent::find($registration->expo_event_id);
-        $studentRequest = $this->requestFor($student, '/', 'POST', ['scores' => [['period_component_id' => $component, 'score' => 95]]]);
+        $studentRequest = $this->formRequestFor(SubmitExpoScoresRequest::class, $student, 'POST', ['scores' => [['period_component_id' => $component, 'score' => 95]]]);
         $this->assertSame(201, (new ExpoStudentController)->evaluate($studentRequest, $event)->getStatusCode());
         $this->assertSame('SUBMITTED', DB::table('capstone_expo_registrations')->where('id', $registrationId)->value('review_status'));
         $this->assertEquals(95, ExpoSelfEvaluation::where('expo_registration_id', $registrationId)->sum('score'));
@@ -2354,8 +2466,7 @@ class BladeCalendarAccessTest extends TestCase
         };
 
         $file = UploadedFile::fake()->create('poster.pdf', 100, 'application/pdf');
-        $request = $this->requestFor($student, '/', 'POST', []);
-        $request->files->set('file', $file);
+        $request = $this->formRequestFor(UploadExpoDocumentRequest::class, $student, 'POST', [], [], ['file' => $file]);
         $response = (new ExpoStudentController)->document($request, $event, $storage);
 
         $this->assertSame(201, $response->getStatusCode());

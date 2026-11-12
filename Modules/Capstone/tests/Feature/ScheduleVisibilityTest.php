@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Modules\Capstone\Http\Controllers\CalendarController;
 use Modules\Capstone\Http\Controllers\SeminarDashboardController;
+use Modules\Capstone\Http\Requests\Scheduling\CalendarIndexRequest;
 use Modules\Capstone\Models\ExpoEvent;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\SeminarSchedule;
@@ -319,8 +320,7 @@ class ScheduleVisibilityTest extends TestCase
             'group_id' => $groupB->id, 'type' => 'SEMPRO', 'date' => '2026-10-01', 'status' => 'SCHEDULED',
         ]);
 
-        $request = Request::create('/x', 'GET', ['period_id' => $period1]);
-        $request->setUserResolver(fn () => $admin);
+        $request = $this->requestAs($admin, ['period_id' => $period1]);
         $ids = array_column((new CalendarController)->index($request)->getData(true)['data'], 'id');
         $this->assertContains($foreignExpo->id, $ids, 'period filter hid a cross-period expo');
         $this->assertNotContains($foreignSempro->id, $ids);
@@ -363,8 +363,7 @@ class ScheduleVisibilityTest extends TestCase
         $admin = $this->makeUser('Admin Master Filter');
         $this->giveRole($admin, 'superadmin');
 
-        $request = Request::create('/x', 'GET', ['period_id' => $period1]);
-        $request->setUserResolver(fn () => $admin);
+        $request = $this->requestAs($admin, ['period_id' => $period1]);
         $ids = array_column((new CalendarController)->index($request)->getData(true)['data'], 'id');
         $this->assertContains('expo_event_'.$global->id, $ids);
         $this->assertContains('expo_event_'.$ownPeriod->id, $ids);
@@ -457,10 +456,15 @@ class ScheduleVisibilityTest extends TestCase
         ]);
     }
 
-    private function requestAs(User $user): Request
+    private function requestAs(User $user, array $data = []): Request
     {
-        $request = Request::create('/x', 'GET');
+        // CalendarController::index now requires the FormRequest subclass;
+        // it extends plain Request so dashboard call sites keep working.
+        $request = CalendarIndexRequest::create('/x', 'GET', $data);
+        $request->setContainer(app());
+        $request->setRedirector(app('redirect'));
         $request->setUserResolver(fn () => $user);
+        $request->validateResolved();
 
         return $request;
     }
