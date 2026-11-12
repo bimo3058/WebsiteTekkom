@@ -61,6 +61,7 @@
     <span class="mp-badge neutral sm">{{ $praktikans->total() }} praktikan</span>
 </div>
 
+<x-eoffice::manajemen-praktikum.ui.practicum-schedule :praktikum="$praktikum" role="dosen" />
 <div class="mp-card" style="overflow:visible">
     <x-eoffice::manajemen-praktikum.ui.participants-header :search="$search ?? ''" :praktikum="$praktikum" />
     @php

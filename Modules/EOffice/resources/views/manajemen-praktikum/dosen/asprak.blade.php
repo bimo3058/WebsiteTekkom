@@ -79,6 +79,7 @@
 
 
 
+<x-eoffice::manajemen-praktikum.ui.practicum-schedule :praktikum="$praktikum" role="dosen" />
 <div class="mp-card flex-shrink-0">
     <div class="mp-card-header">
         <span class="mp-card-title">Daftar Asisten</span>

@@ -315,15 +315,8 @@
                                             :value="berkasType === 'pdf' ? 'Upload File (.pdf)' : 'Input Link'" disabled
                                             style="background: #F9FAFB; color: #808897; border-style: dashed; padding-right: 36px;">
                                         <button type="button" @click="removeBerkas()"
-                                            class="absolute right-1 top-1/2 -translate-y-1/2 text-[#DF1C41] hover:bg-[#FFF5F5] p-1.5 rounded-[6px] transition-colors"
-                                            title="Hapus Berkas">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                                <polyline points="3 6 5 6 21 6" />
-                                                <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                                                <path d="M10 11v6M14 11v6" />
-                                            </svg>
-                                        </button>
+                                            class="mp-delete-button absolute right-1 top-1/2 -translate-y-1/2 text-[#DF1C41] hover:bg-[#FFF5F5] p-1.5 rounded-[6px] transition-colors"
+                                            title="Hapus Berkas" aria-label="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                     </div>
                                     <template x-if="berkasDesc">
                                         <p class="text-[11px] text-[#666D80] mt-1" x-text="berkasDesc"></p>

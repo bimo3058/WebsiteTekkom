@@ -1,7 +1,7 @@
 <template x-teleport="body">
-    <div x-show="showCancelConfirm" x-cloak x-transition.opacity @keydown.escape.window="showCancelConfirm=false"
+    <div class="mp-confirm-special" x-show="showCancelConfirm" x-cloak x-transition.opacity.duration.200ms @keydown.escape.window="showCancelConfirm=false"
         @click.self="showCancelConfirm=false" style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45)">
-        <section role="dialog" aria-modal="true" aria-label="Batalkan Publikasi Nilai"
+        <section class="mp-special-danger" role="dialog" aria-modal="true" aria-label="Batalkan Publikasi Nilai"
             style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:480px;max-width:calc(100vw - 40px);max-height:calc(100dvh - 40px);overflow:auto;background:white;border-radius:14px;text-align:left">
             <div style="padding:20px 22px;border-bottom:1px solid #DFE1E7;font-weight:700;font-size:16px">Batalkan Publikasi Nilai</div>
             <div style="padding:20px 22px;font-size:13px;color:#666D80;line-height:1.6">

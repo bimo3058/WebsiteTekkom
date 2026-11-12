@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Materi / file yang diunggah asprak ke modul.
  *
- * Tabel: eo_prak_materi_modul
+ * Tabel: materi_modul
  */
 class MateriModul extends Model
 {

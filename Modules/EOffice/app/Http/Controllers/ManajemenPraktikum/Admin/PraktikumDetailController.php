@@ -48,12 +48,21 @@ class PraktikumDetailController extends Controller
         // ── Total Modul ────────────────────────────────────────────────────
         $totalModul = Modul::where('praktikum_id', $id)->count();
 
+        $canAddParticipants = $praktikum->status === 'aktif' && $praktikum->is_active !== false
+            && ! app(\Modules\EOffice\Services\PracticumGroupingLock::class)->isLocked($praktikum->id);
+        $studentOptions = $canAddParticipants ? \Modules\EOffice\Services\ManajemenPraktikum\ActiveStudent::apply(\App\Models\User::with('student'))
+            ->whereNotIn('id', DaftarPraktikan::where('praktikum_id', $id)->select('user_id'))
+            ->orderBy('name')->get()->map(fn ($user) => ['value' => (string) $user->id,
+                'label' => $user->name.' · '.$user->student->student_number.' · '.$user->email])->all() : [];
+
         return view('eoffice::manajemen-praktikum.admin.praktikum-detail', compact(
             'praktikum',
             'praktikans',
             'aspraks',
             'totalModul',
-            'search'
+            'search',
+            'canAddParticipants',
+            'studentOptions'
         ));
     }
 }

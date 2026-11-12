@@ -134,14 +134,8 @@
                       onsubmit="return confirm('Hapus mata kuliah {{ addslashes($mk->nama) }}?')" class="inline">
                     @csrf @method('DELETE')
                     <button type="submit"
-                            class="flex items-center justify-center w-8 h-8 rounded-lg border border-[#FADAE1] bg-[#FFF5F5] text-[#DF1C41] hover:bg-[#FEE2E2] transition-colors"
-                            title="Hapus Mata Kuliah">
-                        <span>Hapus Mata Kuliah</span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-                            <path d="M10 11v6M14 11v6"/>
-                        </svg>
-                    </button>
+                            class="mp-delete-button flex items-center justify-center w-8 h-8 rounded-lg border border-[#FADAE1] bg-[#FFF5F5] text-[#DF1C41] hover:bg-[#FEE2E2] transition-colors"
+                            title="Hapus Mata Kuliah" aria-label="Hapus Mata Kuliah"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                 </form>
                 </x-eoffice::manajemen-praktikum.ui.action-menu>
             </div>

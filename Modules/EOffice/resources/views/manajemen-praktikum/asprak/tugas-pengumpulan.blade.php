@@ -1,7 +1,7 @@
 @php
     $jenisTugasMap = [
         'tugas_pendahuluan' => 'Tugas Pendahuluan',
-        'laporan' => 'Laporan',
+        'laporan' => $tugas->modul?->praktikum?->laporanLabel() ?? 'Laporan',
         'responsi' => 'Responsi',
         'tugas_pengganti' => 'Tugas Pengganti'
     ];
@@ -359,7 +359,7 @@
 
                                 {{-- Kirim Revisi --}}
                                 <td style="padding:12px 16px;vertical-align:middle;">
-                                    @if($st === 'acc' || $st === 'belum_kumpul')
+                                    @if(($st === 'acc' || $st === 'belum_kumpul') && !$p?->file_revisi_asprak)
                                         <span style="font-size:12px;color:#999;">&ndash;</span>
                                     @else
                                         <div style="display:flex;flex-direction:column;gap:6px;align-items:stretch;">

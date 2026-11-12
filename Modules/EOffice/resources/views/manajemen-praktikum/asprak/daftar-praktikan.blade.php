@@ -14,6 +14,7 @@
             <x-eoffice::manajemen-praktikum.asprak-header :praktikum="$praktikum" activeTab="praktikan" />
         @endif
 
+<x-eoffice::manajemen-praktikum.ui.practicum-schedule :praktikum="$praktikum" role="asprak" />
 <div class="mp-card" style="overflow:visible">
     <x-eoffice::manajemen-praktikum.ui.participants-header :search="$search ?? ''" :praktikum="$praktikum" />
     @php

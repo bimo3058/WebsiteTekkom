@@ -14,7 +14,7 @@ class PengumumanController extends Controller
         $praktikum = DashboardController::resolvePraktikum();
 
         $pengumuman = $praktikum
-            ? Pengumuman::where('praktikum_id', $praktikum->id)->orderByDesc('created_at')->get()
+            ? Pengumuman::where('praktikum_id', $praktikum->id)->pinnedFirst()->orderByDesc('created_at')->get()
             : collect();
 
         return view('eoffice::manajemen-praktikum.koordinator.pengumuman', compact('praktikum', 'pengumuman'));

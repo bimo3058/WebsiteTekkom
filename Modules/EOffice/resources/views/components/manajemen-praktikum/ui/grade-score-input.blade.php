@@ -1,8 +1,8 @@
 @props(['model'=>"''",'unavailable'=>false,'wide'=>false,'label'=>'Nilai','disabled'=>false,'required'=>false,'integer'=>false])
-<input {{ $attributes }} type="text" inputmode="decimal" class="mp-input mp-grade-score" aria-label="{{ $label }}" placeholder="0–100" autocomplete="off"
+<input {{ $attributes }} type="text" inputmode="decimal" data-grade-integer="{{ $integer ? '1' : '0' }}" class="mp-input mp-grade-score" aria-label="{{ $label }}" placeholder="0–100" autocomplete="off"
     @if($unavailable) value="—" @else
     :value="{{ $integer ? "(String($model ?? '') === '' ? '' : Number($model).toFixed(0))" : "String($model ?? '').replace('.',',')" }}"
-    @input="{{ $model }}=$el.value.replace(',','.')"
+    @input="const value=$el.value.replace(',','.'); const valid={{ $integer ? '/^[0-9]{1,3}$/' : '/^[0-9]{1,3}([.][0-9]{0,2})?$/' }}.test(value) &amp;&amp; Number(value)&gt;=0 &amp;&amp; Number(value)&lt;=100; {{ $model }}=valid?value:''; if(!valid)$el.value='';"
     @mousedown.stop
     x-effect="$el.setCustomValidity(String({{ $model }} ?? '')==='' || (/^\d{1,3}(\.\d{0,2})?$/.test(String({{ $model }} ?? '')) &amp;&amp; Number({{ $model }})&lt;=100) ? '' : 'Masukkan nilai 0–100, maksimal dua angka desimal.')"
     @endif

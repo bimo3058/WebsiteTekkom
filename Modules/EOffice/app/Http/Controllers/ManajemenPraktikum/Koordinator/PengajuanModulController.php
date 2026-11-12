@@ -112,6 +112,14 @@ class PengajuanModulController extends Controller
         return back()->with('success', 'Pengajuan modul berhasil dikirim kepada dosen.');
     }
 
+    public function usePrevious(Request $request, PengajuanModul $pengajuan)
+    {
+        $this->pastikanMilikKoordinator($pengajuan);
+        $request->validate(['external_approval_confirmed'=>'required|accepted']);
+        $this->service->pakaiModulTetap($pengajuan,auth()->id());
+        return back()->with('success','Modul periode sebelumnya berhasil digunakan tanpa perubahan.');
+    }
+
     public function cancel(PengajuanModul $pengajuan)
     {
         $this->pastikanMilikKoordinator($pengajuan);

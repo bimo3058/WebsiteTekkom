@@ -13,6 +13,8 @@ class PermissionAssigner
         'admin_banksoal' => ['banksoal'],
         'admin_capstone' => ['capstone'],
         'admin_eoffice' => ['eoffice'],
+        'admin_praktikum' => ['eoffice'],
+        'koordinator_cerc' => ['eoffice'],
         'admin_kemahasiswaan' => ['kemahasiswaan'],
         'dosen' => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
         'mahasiswa' => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
@@ -39,6 +41,11 @@ class PermissionAssigner
             $assignAllPermissions = false;
 
             foreach ($roleNames as $roleName) {
+                if (in_array($roleName, ['admin_praktikum', 'koordinator_cerc'], true)) {
+                    $permissionNames[] = 'eoffice.view';
+
+                    continue;
+                }
                 $modules = self::ROLE_MODULE_MAPPING[$roleName] ?? [];
 
                 if (empty($modules)) {
@@ -86,8 +93,14 @@ class PermissionAssigner
     {
         $roleNames = $user->roles()->pluck('name')->toArray();
         $modules = [];
+        $restrictedPermissions = [];
 
         foreach ($roleNames as $roleName) {
+            if (in_array($roleName, ['admin_praktikum', 'koordinator_cerc'], true)) {
+                $restrictedPermissions[] = 'eoffice.view';
+
+                continue;
+            }
             $mapped = self::ROLE_MODULE_MAPPING[$roleName] ?? [];
             if (in_array('all', $mapped)) {
                 $modules = ['all'];
@@ -99,7 +112,7 @@ class PermissionAssigner
         if (in_array('all', $modules)) {
             $expected = Permission::all()->pluck('name')->toArray();
         } else {
-            $expected = [];
+            $expected = $restrictedPermissions;
             foreach (array_unique($modules) as $module) {
                 foreach (self::ACTIONS as $action) {
                     $expected[] = "{$module}.{$action}";

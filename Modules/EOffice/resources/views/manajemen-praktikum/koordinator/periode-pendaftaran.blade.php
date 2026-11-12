@@ -220,7 +220,7 @@
                                 <form method="POST" action="{{ route('eoffice.manprak.koordinator.periode-pendaftaran.destroy', $p->id) }}"
                                       onsubmit="return confirm('Hapus periode ini?')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="mp-btn neutral xs">Hapus</button>
+                                    <button type="submit" class="mp-delete-button mp-btn neutral xs" aria-label="Hapus" title="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                 </form>
                                 </x-eoffice::manajemen-praktikum.ui.action-menu>
                             @else

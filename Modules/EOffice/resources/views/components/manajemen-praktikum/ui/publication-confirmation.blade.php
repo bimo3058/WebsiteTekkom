@@ -1,6 +1,6 @@
 @props(['role'])
 <template x-teleport="body">
-    <div x-show="showPublicationConfirm" x-cloak x-transition.opacity.duration.200ms
+    <div class="mp-confirm-special" x-show="showPublicationConfirm" x-cloak x-transition.opacity.duration.200ms
         @keydown.escape.window="if(!publicationSubmitting) showPublicationConfirm=false"
         style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px">
         <div role="dialog" aria-modal="true" aria-label="Konfirmasi Publikasi Nilai"

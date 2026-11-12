@@ -23,10 +23,13 @@ class Notifikasi extends Model
         'judul',
         'pesan',
         'is_read',
+        'practicum_role',
+        'practicum_target',
     ];
 
     protected $casts = [
         'is_read' => 'boolean',
+        'practicum_target' => 'array',
     ];
 
     // ── Relationships ──────────────────────────────────────────────────────────

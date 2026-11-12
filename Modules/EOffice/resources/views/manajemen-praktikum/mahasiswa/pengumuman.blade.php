@@ -15,6 +15,13 @@
 
         @if($praktikum)
 
+            <style>.mp-student-announcement{scroll-margin-top:24px;min-width:0;max-width:100%;overflow-wrap:anywhere}.mp-student-announcement:focus{outline:none}.mp-student-announcement:target:not(.mp-highlight-dismissed){outline:2px solid #0B266E;outline-offset:2px}</style>
+            <script>
+                document.addEventListener('pointerdown',function(){
+                    const target=document.querySelector('.mp-student-announcement:target');
+                    if(target)target.classList.add('mp-highlight-dismissed');
+                });
+            </script>
             {{-- Daftar Pengumuman --}}
             <div style="display:flex; flex-direction:column; gap:16px;">
                 @forelse($pengumumans as $pg)
@@ -24,7 +31,7 @@
                         $avColors = ['sky', 'navy', 'green', 'yellow', 'violet'];
                         $avColor = $avColors[crc32($pg->user?->email ?? '') % count($avColors)];
                     @endphp
-                    <div style="border:1px solid #DFE1E7; background:#fff; border-radius:14px; padding:15px 24px; position:relative; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition:all 0.2s ease;"
+                    <div id="pengumuman-{{ $pg->id }}" class="mp-student-announcement" tabindex="-1" style="border:1px solid #DFE1E7; background:#fff; border-radius:14px; padding:15px 24px; position:relative; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition:all 0.2s ease;"
                         onmouseover="this.style.boxShadow='0 4px 14px rgba(17,24,39,0.05)';"
                         onmouseout="this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)';">
 
@@ -54,8 +61,9 @@
                         <div style="margin:10px 0 0 0;">
                             <h3 style="font-size:15px; font-weight:700; color:#111827; margin:0 0 4px 0; line-height:1.4; padding:0;">
                                 {{ $pg->judul }}
+                                <x-eoffice::manajemen-praktikum.ui.announcement-pin-badge :announcement="$pg" />
                             </h3>
-                            <p style="font-size:13px; color:#374151; margin:0; padding:0; line-height:1.6; white-space:pre-line;">{{ $pg->konten }}</p>
+                            <p class="mp-announcement-copy" style="font-size:13px; color:#374151; margin:0; padding:0; line-height:1.6; white-space:pre-line;">{{ $pg->konten }}</p>
                         </div>
 
                         {{-- Lampiran --}}

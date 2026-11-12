@@ -63,7 +63,7 @@
                     <td class="mp-column-no" x-text="4 + Object.keys(visible).filter(key=>Number(key)<={{ $slot }} &amp;&amp; visible[key]).length"></td>
                     <td><input class="mp-input mp-column-name" name="tambahan[{{ $slot }}][nama]" value="{{ old('tambahan.'.$slot.'.nama',$extras->get('tambahan_'.$slot)['nama'] ?? '') }}" maxlength="60" placeholder="Contoh: Form Data" @readonly($locked) :required="visible[{{ $slot }}]" aria-label="Nama kolom tambahan {{ $slot }}" x-ref="extraName{{ $slot }}"></td>
                     <td><div class="mp-column-weight-group"><input class="mp-input mp-column-weight" type="number" name="tambahan[{{ $slot }}][bobot]" value="{{ old('tambahan.'.$slot.'.bobot',$extras->get('tambahan_'.$slot)['bobot'] ?? '') }}" min="1" max="100" step="1" :required="visible[{{ $slot }}]" aria-label="Bobot kolom tambahan {{ $slot }}"><span>%</span></div></td>
-                    <td style="text-align:center"><button type="button" class="mp-btn error sm" @disabled($locked) title="{{ $locked ? 'Susunan kolom penilaian dikunci.' : 'Hapus kolom penilaian' }}" @click="visible[{{ $slot }}]=false;$el.closest('tr').querySelectorAll('input').forEach(input=>input.value='');refreshTotal()">Hapus</button></td>
+                    <td style="text-align:center"><button type="button" class="mp-delete-button mp-btn error sm" @disabled($locked) title="{{ $locked ? 'Susunan kolom penilaian dikunci.' : 'Hapus kolom penilaian' }}" @click="visible[{{ $slot }}]=false;$el.closest('tr').querySelectorAll('input').forEach(input=>input.value='');refreshTotal()" aria-label="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button></td>
                 </tr>
             @endforeach
             </tbody>

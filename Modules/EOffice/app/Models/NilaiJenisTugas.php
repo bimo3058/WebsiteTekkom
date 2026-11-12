@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
  * Ini adalah sumber kebenaran tunggal untuk nilai Tugas Pendahuluan,
  * Praktikum, Laporan, dan Responsi — independen dari keberadaan form tugas.
  *
- * Tabel: eo_prak_nilai_jenis_tugas
+ * Tabel: nilai_jenis_tugas
  */
 class NilaiJenisTugas extends Model
 {

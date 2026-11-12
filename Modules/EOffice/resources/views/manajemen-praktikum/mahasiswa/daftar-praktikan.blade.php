@@ -12,6 +12,7 @@
     @endif
 
     @if($terdaftarDi)
+<x-eoffice::manajemen-praktikum.ui.practicum-schedule :praktikum="$terdaftarDi" role="mahasiswa" />
 <div class="mp-card" style="overflow:visible">
     <x-eoffice::manajemen-praktikum.ui.participants-header :search="$search ?? ''" :praktikum="$terdaftarDi" />
     @php

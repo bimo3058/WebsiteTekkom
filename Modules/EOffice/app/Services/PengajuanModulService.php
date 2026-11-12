@@ -10,6 +10,37 @@ use Modules\EOffice\Models\Praktikum;
 
 class PengajuanModulService
 {
+    public function pakaiModulTetap(PengajuanModul $pengajuan, int $koordinatorId): void
+    {
+        DB::transaction(function () use ($pengajuan,$koordinatorId) {
+            $pengajuan=PengajuanModul::lockForUpdate()->findOrFail($pengajuan->id);
+            $praktikum=Praktikum::lockForUpdate()->findOrFail($pengajuan->praktikum_id);
+            abort_unless((int)$praktikum->koor_id===$koordinatorId && $praktikum->is_active,403);
+            $this->pastikanBelumBerjalan($praktikum);
+            if ($pengajuan->status!=='draft' || !$pengajuan->praktikum_sumber_id || $pengajuan->praktikum_sumber_id===$praktikum->id || $praktikum->modul()->exists()) {
+                throw ValidationException::withMessages(['pengajuan'=>'Modul lama hanya dapat digunakan dari draft awal sebelum modul aktif tersedia.']);
+            }
+            $source=$this->praktikumSebelumnya($praktikum);
+            if (!$source || $source->id!==$pengajuan->praktikum_sumber_id) throw ValidationException::withMessages(['pengajuan'=>'Sumber modul telah berubah. Susun ulang draft terlebih dahulu.']);
+            $modules=$source->modul()->orderBy('urutan')->lockForUpdate()->get();
+            $items=$pengajuan->items()->lockForUpdate()->get();
+            if ($modules->isEmpty() || $modules->count()!==$items->count() || $items->pluck('modul_sumber_id')->unique()->count()!==$modules->count()) {
+                throw ValidationException::withMessages(['pengajuan'=>'Seluruh modul lama harus digunakan tanpa perubahan.']);
+            }
+            foreach ($modules as $module) {
+                $item=$items->first(fn($item)=>(string)$item->modul_sumber_id===(string)$module->id);
+                if (!$item || $item->aksi!=='tetap' || $item->nama_baru!==$module->nama || (int)$item->urutan_baru!==(int)$module->urutan) {
+                    throw ValidationException::withMessages(['pengajuan'=>'Draft telah diubah. Gunakan pengajuan persetujuan dosen untuk perubahan modul.']);
+                }
+            }
+            foreach ($modules as $module) Modul::create(['praktikum_id'=>$praktikum->id,'modul_sumber_id'=>$module->id,'pengajuan_modul_id'=>$pengajuan->id,'nama'=>$module->nama,'urutan'=>$module->urutan]);
+            $pengajuan->update(['status'=>'disetujui','diajukan_oleh'=>$koordinatorId,'diajukan_at'=>now(),'direview_oleh'=>null,'direview_at'=>null,
+                'catatan_pengajuan'=>'Modul periode sebelumnya digunakan tanpa perubahan. Koordinator mengonfirmasi persetujuan dosen diperoleh di luar sistem.',
+                'catatan_reviewer'=>null]);
+            $praktikum->update(['status_pelaksanaan'=>'siap_berjalan']);
+        });
+    }
+
     public function buatDraft(Praktikum $praktikum, int $userId): PengajuanModul
     {
         $this->pastikanBelumBerjalan($praktikum);

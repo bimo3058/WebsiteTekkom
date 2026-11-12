@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Pendaftaran mahasiswa sebagai praktikan (verifikasi Cetak IRS oleh koor).
  *
- * Tabel: eo_prak_pendaftaran_praktikan
+ * Tabel: pendaftaran_praktikan
  * status: pending | approved | rejected
  */
 class PendaftaranPraktikan extends Model
