@@ -1,8 +1,0 @@
-node_modules
-.next
-out
-*.lock
-bun.lock
-coverage
-playwright-report
-test-results
