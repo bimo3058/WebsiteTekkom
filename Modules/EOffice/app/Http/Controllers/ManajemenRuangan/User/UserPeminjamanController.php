@@ -328,7 +328,7 @@ class UserPeminjamanController extends Controller
         $batasHMinBooking = (int) (Pengaturan::where('key', 'batas_h_min_booking')->value('value') ?? 0);
 
         $user = auth()->user();
-        $nim = $user->student->student_number ?? $user->lecturer->employee_number ?? explode('@', $user->email)[0];
+        $nim = $user->student?->student_number ?? $user->lecturer?->employee_number ?? $user->external_id ?? '-';
         
         // Ambil nomor kontak dari profil pengguna jika tersedia
         $phone = '';
