@@ -739,6 +739,8 @@
                 suggestions: [],
                 showSuggestions: false,
                 conflictsList: [],
+                hasHardConflict: false,
+                hasPendingConflict: false,
                 isCheckingCollision: false,
                 collisionTimeout: null,
                 get formattedTanggalIndo() {
@@ -768,6 +770,8 @@
                 checkCollision() {
                     if (!this.ruangan_id || !this.tanggal || !this.jam || !this.jam_selesai || this.isInvalidTimeRange) {
                         this.conflictsList = [];
+                        this.hasHardConflict = false;
+                        this.hasPendingConflict = false;
                         this.isCheckingCollision = false;
                         return;
                     }
@@ -779,6 +783,8 @@
                             let res = await fetch(url);
                             let data = await res.json();
                             this.conflictsList = data.conflicts_list || [];
+                            this.hasHardConflict = data.has_hard_conflict || false;
+                            this.hasPendingConflict = data.has_pending_conflict || false;
                         } catch (e) {
                             console.error('Collision check error:', e);
                         } finally {
@@ -824,6 +830,8 @@
                 suggestions = [];
                 showSuggestions = false;
                 conflictsList = [];
+                hasHardConflict = false;
+                hasPendingConflict = false;
                 $nextTick(() => checkCollision());
             " x-init="
                 $watch('searchQuery', value => { if(nim && !value.includes(nim)) nim = ''; });
@@ -1126,8 +1134,8 @@
                                         sebagai rekap susulan (privilege Admin).
                                     </div>
 
-                                    {{-- Kotak Peringatan Bentrok Peminjaman Manual (Hard Block) --}}
-                                    <div x-show="conflictsList.length > 0" x-cloak
+                                    {{-- Kotak Peringatan Bentrok Keras (Jadwal Internal / Peminjaman Disetujui) --}}
+                                    <div x-show="hasHardConflict" x-cloak
                                         class="mt-3 p-3.5 bg-red-50 border border-red-200 rounded-xl flex flex-col gap-2 text-red-700 text-xs">
                                         <div class="font-bold flex items-center gap-2">
                                             <svg class="w-4 h-4 shrink-0 text-red-600" fill="none" stroke="currentColor"
@@ -1136,10 +1144,10 @@
                                                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
                                                 </path>
                                             </svg>
-                                            <span>Gagal Menyimpan! Terdapat Jadwal yang Beririsan di Ruangan Ini:</span>
+                                            <span>Gagal Menyimpan! Terdapat Jadwal Pasti / Disetujui di Ruangan Ini:</span>
                                         </div>
                                         <div class="flex flex-col gap-1.5 mt-1">
-                                            <template x-for="(c, idx) in conflictsList" :key="idx">
+                                            <template x-for="(c, idx) in conflictsList.filter(item => item.status !== 'menunggu')" :key="idx">
                                                 <div class="flex items-start gap-2">
                                                     <span
                                                         class="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0"></span>
@@ -1151,6 +1159,37 @@
                                                     </span>
                                                 </div>
                                             </template>
+                                        </div>
+                                    </div>
+
+                                    {{-- Kotak Peringatan Bentrok Antrean Menunggu (Auto-Reject Cascade) --}}
+                                    <div x-show="hasPendingConflict && !hasHardConflict" x-cloak
+                                        class="mt-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex flex-col gap-2 text-amber-800 text-xs">
+                                        <div class="font-bold flex items-center gap-2">
+                                            <svg class="w-4 h-4 shrink-0 text-amber-600" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                                                </path>
+                                            </svg>
+                                            <span>Perhatian! Terdapat Antrean Mahasiswa Menunggu di Jam Ini:</span>
+                                        </div>
+                                        <div class="flex flex-col gap-1.5 mt-1">
+                                            <template x-for="(c, idx) in conflictsList.filter(item => item.status === 'menunggu')" :key="idx">
+                                                <div class="flex items-start gap-2">
+                                                    <span
+                                                        class="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0"></span>
+                                                    <span class="leading-relaxed">
+                                                        <span class="font-bold"
+                                                            x-text="'[' + c.tipe + '] ' + c.nama"></span>
+                                                        <span class="text-amber-700/80 ml-1 font-medium"
+                                                            x-text="'(' + c.waktu + ')'"></span>
+                                                    </span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <div class="mt-1 text-[11px] text-amber-700 italic font-medium">
+                                            *Jika Anda menyimpan booking ekspres ini, permohonan antrean di atas akan otomatis ditolak oleh sistem (Auto-Reject Cascade).
                                         </div>
                                     </div>
 
@@ -1229,8 +1268,8 @@
                                         Batal
                                     </button>
                                     <button type="submit"
-                                        :disabled="isInvalidTimeRange || isCheckingCollision || (modeAction === 'dosen' && conflictsList.length > 0)"
-                                        :class="(isInvalidTimeRange || isCheckingCollision || (modeAction === 'dosen' && conflictsList.length > 0)) ? 'opacity-50 cursor-not-allowed bg-slate-400 shadow-none' : 'bg-[#0B266E] hover:bg-[#091F5E] shadow-lg shadow-[#0B266E]/20 cursor-pointer'"
+                                        :disabled="isInvalidTimeRange || isCheckingCollision || (modeAction === 'dosen' && hasHardConflict)"
+                                        :class="(isInvalidTimeRange || isCheckingCollision || (modeAction === 'dosen' && hasHardConflict)) ? 'opacity-50 cursor-not-allowed bg-slate-400 shadow-none' : 'bg-[#0B266E] hover:bg-[#091F5E] shadow-lg shadow-[#0B266E]/20 cursor-pointer'"
                                         class="px-6 py-2.5 text-sm font-semibold text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 transition-all text-center flex items-center justify-center">
                                         Simpan
                                     </button>
@@ -1245,8 +1284,8 @@
                                 Batal
                             </button>
                             <button type="submit" form="expressBookingForm"
-                                :disabled="isInvalidTimeRange || isCheckingCollision || (modeAction === 'dosen' && conflictsList.length > 0)"
-                                :class="(isInvalidTimeRange || isCheckingCollision || (modeAction === 'dosen' && conflictsList.length > 0)) ? 'opacity-50 cursor-not-allowed bg-slate-400 shadow-none' : 'bg-[#0B266E] hover:bg-[#091F5E] shadow-lg shadow-[#0B266E]/20 cursor-pointer'"
+                                :disabled="isInvalidTimeRange || isCheckingCollision || (modeAction === 'dosen' && hasHardConflict)"
+                                :class="(isInvalidTimeRange || isCheckingCollision || (modeAction === 'dosen' && hasHardConflict)) ? 'opacity-50 cursor-not-allowed bg-slate-400 shadow-none' : 'bg-[#0B266E] hover:bg-[#091F5E] shadow-lg shadow-[#0B266E]/20 cursor-pointer'"
                                 class="px-6 py-2.5 text-sm font-semibold text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 transition-all text-center flex items-center justify-center">
                                 Simpan
                             </button>
