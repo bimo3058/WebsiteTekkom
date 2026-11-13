@@ -240,7 +240,7 @@
 
     {{-- Table --}}
     <div style="overflow-x:auto;">
-        <table style="width:100%; border-collapse:collapse; min-width:780px;">
+        <table style="width:100%; border-collapse:collapse; min-width:900px;">
             <thead>
                 <tr style="border-bottom:1px solid var(--c-border); background:#FAFAFA;">
                     <th style="padding:11px 16px; width:44px; text-align:left;">
@@ -252,6 +252,7 @@
                     <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Modul</th>
                     <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Permissions</th>
                     <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Status</th>
+                    <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Akses SSO</th>
                     <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Action</th>
                 </tr>
             </thead>
@@ -356,6 +357,25 @@
                     {{-- Status --}}
                     <td style="padding:12px 16px;">
                         <x-ui.status-badge :status="$isSuspended ? 'suspended' : 'active'" />
+                    </td>
+
+                    {{-- Akses SSO terpisah dari Active/Suspended dan role --}}
+                    <td style="padding:10px 12px; min-width:155px;">
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <span style="display:inline-flex; align-items:center; gap:5px; padding:4px 8px; border-radius:9999px; font-size:10px; font-weight:700; white-space:nowrap; color:{{ $user->sso_enabled ? '#047857' : '#64748B' }}; background:{{ $user->sso_enabled ? '#ECFDF5' : '#F1F5F9' }};">
+                                <span style="width:6px;height:6px;border-radius:50%;background:currentColor"></span>
+                                {{ $user->sso_enabled ? 'Enabled' : 'Disabled' }}
+                            </span>
+                            <form method="POST" action="{{ route('superadmin.users.sso-access.update', $user) }}"
+                                  onsubmit="return confirm('{{ $user->sso_enabled ? 'Nonaktifkan' : 'Aktifkan' }} akses SSO untuk {{ addslashes($user->name) }}?{{ $user->sso_enabled ? ' Sesi aktif akan diakhiri.' : '' }}')">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="enabled" value="{{ $user->sso_enabled ? '0' : '1' }}">
+                                <button type="submit" style="padding:4px 8px; border:1px solid var(--c-border); border-radius:6px; background:#fff; color:{{ $user->sso_enabled ? '#B42318' : 'var(--c-primary)' }}; font-size:10px; font-weight:600; cursor:pointer; font-family:inherit;">
+                                    {{ $user->sso_enabled ? 'Nonaktifkan' : 'Aktifkan' }}
+                                </button>
+                            </form>
+                        </div>
                     </td>
 
                     {{-- Action --}}

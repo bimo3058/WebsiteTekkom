@@ -385,6 +385,16 @@
 
         $maxGambar = $maxGambar ?? 5;
         $sisaSlot  = max(0, $maxGambar - $existingGambar->count());
+
+        // Tujuan tombol Kembali/Batal: halaman Status Verifikasi (tab yang sama) bila
+        // edit dibuka dari sana, selain itu detail pengumuman. Nilai query dibatasi
+        // daftar putih supaya tidak bisa dipakai untuk mengarahkan ke URL lain.
+        $statusRiwayat = in_array(request('status'), ['all', 'pending', 'approved', 'rejected', 'cancelled'], true)
+            ? request('status')
+            : 'all';
+        $urlKembali = request('dari') === 'riwayat-verifikasi'
+            ? route('manajemenmahasiswa.pengumuman.riwayat.verifikasi', ['status' => $statusRiwayat])
+            : route('manajemenmahasiswa.pengumuman.show', $pengumuman->id);
     @endphp
 
     <div class="dash-wrap">
@@ -397,7 +407,7 @@
                     badge="Modul Mahasiswa"
                     subtitle="Perbarui isi pengumuman yang telah dibuat">
                     <x-slot:actions>
-                        <a href="{{ route('manajemenmahasiswa.pengumuman.show', $pengumuman->id) }}" class="mk-btn mk-btn--secondary">
+                        <a href="{{ $urlKembali }}" class="mk-btn mk-btn--secondary">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                 stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -681,7 +691,7 @@
 
                     {{-- ── Actions ───────────────────────────────── --}}
                     <div class="form-actions">
-                        <a href="{{ route('manajemenmahasiswa.pengumuman.show', $pengumuman->id) }}" class="mk-btn mk-btn--secondary">Batal</a>
+                        <a href="{{ $urlKembali }}" class="mk-btn mk-btn--secondary">Batal</a>
 
                         <div class="fa-spacer"></div>
 

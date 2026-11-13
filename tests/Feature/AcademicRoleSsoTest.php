@@ -115,253 +115,90 @@ class AcademicRoleSsoTest extends TestCase
         $this->assertFalse($user->fresh()->hasRole('dosen'));
     }
 
-    public function test_student_sso_callback_creates_profile_and_assigns_mahasiswa_immediately(): void
+    public function test_sso_rejects_unknown_account_without_creating_it(): void
     {
         $response = $this->signInWithMicrosoft([
-            'id' => 'microsoft-student-1',
-            'name' => 'Student SSO',
-            'email' => 'STUDENT@STUDENTS.UNDIP.AC.ID',
-            'surname' => '23120029',
-            'onPremisesSamAccountName' => '21120123120029',
-        ]);
-
-        $response->assertRedirect(route('dashboard'));
-
-        $user = User::where('email', 'student@students.undip.ac.id')->firstOrFail();
-
-        $this->assertDatabaseHas('students', [
-            'user_id' => $user->id,
-            'student_number' => '21120123120029',
-        ]);
-        $this->assertTrue(
-            $user->roles()
-                ->where('roles.name', 'mahasiswa')
-                ->where('roles.module', 'global')
-                ->exists()
-        );
-    }
-
-    public function test_lecturer_sso_callback_creates_profile_and_assigns_dosen_immediately(): void
-    {
-        $response = $this->signInWithMicrosoft([
-            'id' => 'microsoft-lecturer-1',
-            'name' => 'Lecturer SSO',
-            'email' => 'lecturer@lecturer.undip.ac.id',
-            'surname' => 'Lecturer',
-            'employeeId' => '198001012006041001',
-        ]);
-
-        $response->assertRedirect(route('dashboard'));
-
-        $user = User::where('email', 'lecturer@lecturer.undip.ac.id')->firstOrFail();
-
-        $this->assertDatabaseHas('lecturers', [
-            'user_id' => $user->id,
-            'employee_number' => '198001012006041001',
-        ]);
-        $this->assertTrue(
-            $user->roles()
-                ->where('roles.name', 'dosen')
-                ->where('roles.module', 'global')
-                ->exists()
-        );
-    }
-
-    public function test_warm_sso_login_skips_identity_role_and_avatar_resynchronization(): void
-    {
-        $lastSynced = now()->subMinute()->startOfSecond();
-        $ssoData = [
-            'id' => 'microsoft-warm-student',
-            'email' => 'warm@students.undip.ac.id',
-            'name' => 'Warm Student',
-        ];
-        $user = User::create([
-            'external_id' => $ssoData['id'],
-            'name' => $ssoData['name'],
-            'email' => $ssoData['email'],
-            'password' => bcrypt('not-used-for-sso'),
-            'sso_data' => $ssoData,
-            'last_synced_from_sso' => $lastSynced,
-            'avatar_url' => 'https://cdn.example.test/avatar.jpg',
-        ]);
-        Student::create([
-            'user_id' => $user->id,
-            'student_number' => '21120123120031',
-            'cohort_year' => 2023,
-        ]);
-        app(AcademicRoleSynchronizer::class)->sync($user);
-        app(AcademicRoleSynchronizer::class)->markSynced($user);
-
-        $response = $this->signInWithMicrosoft([
-            'id' => $ssoData['id'],
-            'name' => $ssoData['name'],
-            'email' => strtoupper($ssoData['email']),
-            'onPremisesSamAccountName' => '21120123120031',
-        ]);
-
-        $response->assertRedirect(route('dashboard'));
-        $this->assertTrue($user->fresh()->last_synced_from_sso->equalTo($lastSynced));
-        Http::assertNothingSent();
-    }
-
-    public function test_sso_claims_the_matching_neon_student_without_creating_a_duplicate(): void
-    {
-        $legacyUser = User::create([
-            'external_id' => 'neon:user:501',
-            'name' => '  Budi   Santoso ',
-            'email' => 'neon-user-501@example.invalid',
-            'password' => bcrypt('legacy-password'),
-        ]);
-        $student = Student::create([
-            'user_id' => $legacyUser->id,
-            'student_number' => 'legacy-501',
-            'cohort_year' => 2023,
-        ]);
-        $originalUserId = $legacyUser->id;
-        $originalStudentId = $student->id;
-
-        $response = $this->signInWithMicrosoft([
-            'id' => 'microsoft-budi-501',
-            'name' => 'budi santoso',
-            'email' => 'budi.santoso@students.undip.ac.id',
-            'onPremisesSamAccountName' => '21120123120051',
-        ]);
-
-        $response->assertRedirect(route('dashboard'));
-        $this->assertDatabaseCount('users', 1);
-        $this->assertDatabaseHas('users', [
-            'id' => $originalUserId,
-            'external_id' => 'microsoft-budi-501',
-            'email' => 'budi.santoso@students.undip.ac.id',
-        ]);
-        $this->assertDatabaseHas('students', [
-            'id' => $originalStudentId,
-            'user_id' => $originalUserId,
-            'student_number' => '21120123120051',
-        ]);
-    }
-
-    public function test_sso_claims_a_neon_student_by_nim_when_the_display_name_changed(): void
-    {
-        $legacyUser = User::create([
-            'external_id' => 'neon:user:502',
-            'name' => 'Legacy Display Name',
-            'email' => 'neon-user-502@example.invalid',
-            'password' => bcrypt('legacy-password'),
-        ]);
-        Student::create([
-            'user_id' => $legacyUser->id,
-            'student_number' => '21120123120052',
-            'cohort_year' => 2023,
-        ]);
-
-        $response = $this->signInWithMicrosoft([
-            'id' => 'microsoft-student-502',
-            'name' => 'Current Display Name',
-            'email' => 'current.name@students.undip.ac.id',
-            'onPremisesSamAccountName' => '21120123120052',
-        ]);
-
-        $response->assertRedirect(route('dashboard'));
-        $this->assertDatabaseCount('users', 1);
-        $this->assertDatabaseHas('users', [
-            'id' => $legacyUser->id,
-            'external_id' => 'microsoft-student-502',
-            'name' => 'Current Display Name',
-        ]);
-    }
-
-    public function test_sso_claims_the_matching_neon_lecturer_without_replacing_its_profile(): void
-    {
-        $legacyUser = User::create([
-            'external_id' => 'neon:user:505',
-            'name' => 'Dosen Legacy',
-            'email' => 'neon-user-505@example.invalid',
-            'password' => bcrypt('legacy-password'),
-        ]);
-        $lecturer = Lecturer::create([
-            'user_id' => $legacyUser->id,
-            'employee_number' => '198001012006041005',
-        ]);
-
-        $response = $this->signInWithMicrosoft([
-            'id' => 'microsoft-lecturer-505',
-            'name' => 'Nama Dosen SSO',
-            'email' => 'nama.dosen@lecturer.undip.ac.id',
-            'employeeId' => '198001012006041005',
-        ]);
-
-        $response->assertRedirect(route('dashboard'));
-        $this->assertDatabaseCount('users', 1);
-        $this->assertDatabaseHas('users', [
-            'id' => $legacyUser->id,
-            'external_id' => 'microsoft-lecturer-505',
-            'name' => 'Nama Dosen SSO',
-        ]);
-        $this->assertDatabaseHas('lecturers', [
-            'id' => $lecturer->id,
-            'user_id' => $legacyUser->id,
-            'employee_number' => '198001012006041005',
-        ]);
-    }
-
-    public function test_lecturer_sso_replaces_a_legacy_actor_number_with_the_real_employee_number(): void
-    {
-        $legacyUser = User::create([
-            'external_id' => 'neon:user:506',
-            'name' => 'Dosen Aktor Legacy',
-            'email' => 'neon-user-506@example.invalid',
-            'password' => bcrypt('legacy-password'),
-        ]);
-        $lecturer = Lecturer::create([
-            'user_id' => $legacyUser->id,
-            'employee_number' => Lecturer::LEGACY_CAPSTONE_ACTOR_PREFIX.$legacyUser->id,
-        ]);
-
-        $response = $this->signInWithMicrosoft([
-            'id' => 'microsoft-lecturer-506',
-            'name' => 'Dosen Aktor Legacy',
-            'email' => 'dosen.aktor@lecturer.undip.ac.id',
-            'employeeId' => '198001012006041006',
-        ]);
-
-        $response->assertRedirect(route('dashboard'));
-        $this->assertDatabaseHas('lecturers', [
-            'id' => $lecturer->id,
-            'user_id' => $legacyUser->id,
-            'employee_number' => '198001012006041006',
-        ]);
-        $this->assertTrue($legacyUser->fresh()->hasRole('dosen'));
-    }
-
-    public function test_sso_does_not_create_or_claim_an_account_when_the_imported_name_is_ambiguous(): void
-    {
-        foreach ([503, 504] as $legacyId) {
-            $user = User::create([
-                'external_id' => "neon:user:{$legacyId}",
-                'name' => 'Nama Mahasiswa Sama',
-                'email' => "neon-user-{$legacyId}@example.invalid",
-                'password' => bcrypt('legacy-password'),
-            ]);
-            Student::create([
-                'user_id' => $user->id,
-                'student_number' => "legacy-{$legacyId}",
-                'cohort_year' => 2023,
-            ]);
-        }
-
-        $response = $this->signInWithMicrosoft([
-            'id' => 'microsoft-ambiguous-student',
-            'name' => 'Nama Mahasiswa Sama',
-            'email' => 'ambiguous@students.undip.ac.id',
-            'onPremisesSamAccountName' => '21120123129999',
+            'id' => 'microsoft-unknown-1', 'name' => 'Unknown',
+            'email' => 'unknown@students.undip.ac.id',
         ]);
 
         $response->assertRedirect(route('login'));
         $response->assertSessionHasErrors('email');
-        $this->assertDatabaseCount('users', 2);
-        $this->assertDatabaseMissing('users', [
-            'external_id' => 'microsoft-ambiguous-student',
+        $this->assertDatabaseMissing('users', ['email' => 'unknown@students.undip.ac.id']);
+        $this->assertGuest();
+    }
+
+    public function test_sso_requires_enabled_account_and_rejects_suspended_user(): void
+    {
+        $user = $this->newUser('disabled@students.undip.ac.id');
+        $response = $this->signInWithMicrosoft([
+            'id' => 'microsoft-disabled-1', 'name' => 'Disabled', 'email' => $user->email,
+        ]);
+
+        $response->assertRedirect(route('login', ['sso_error' => 'no_access']));
+        $response->assertSessionHas('sso_access_error', 'Anda tidak memiliki akses ke sistem, silahkan hubungi admin.');
+        $this->get(route('login', ['sso_error' => 'no_access']))
+            ->assertOk()
+            ->assertSee('Anda tidak memiliki akses ke sistem, silahkan hubungi admin.');
+        $this->assertDatabaseMissing('user_sso_identities', ['object_id' => 'microsoft-disabled-1']);
+
+        $user->forceFill(['sso_enabled' => true])->save();
+        $user->update(['suspended_at' => now()]);
+        $response = $this->signInWithMicrosoft([
+            'id' => 'microsoft-suspended-1', 'name' => 'Suspended', 'email' => $user->email,
+        ]);
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHasErrors('email');
+        $this->assertGuest();
+    }
+
+    public function test_allowed_sso_links_verified_identity_without_changing_roles_or_password(): void
+    {
+        $user = $this->newUser('student@students.undip.ac.id');
+        $user->forceFill(['sso_enabled' => true, 'avatar_url' => 'https://cdn.example.test/avatar.jpg'])->save();
+        $password = $user->getRawOriginal('password');
+        $role = Role::firstOrCreate([
+            'name' => 'mahasiswa', 'module' => 'global',
+        ], ['guard_name' => 'web', 'is_academic' => true]);
+        $user->assignRole($role);
+
+        $response = $this->signInWithMicrosoft([
+            'id' => 'microsoft-student-1', 'name' => 'Student SSO', 'email' => strtoupper($user->email),
+        ]);
+
+        $response->assertRedirect(route('dashboard'));
+        $this->assertDatabaseHas('user_sso_identities', [
+            'user_id' => $user->id,
+            'tenant_id' => '11111111-1111-1111-1111-111111111111',
+            'object_id' => 'microsoft-student-1',
+        ]);
+        $this->assertSame($password, $user->fresh()->getRawOriginal('password'));
+        $this->assertTrue($user->fresh()->hasRole('mahasiswa'));
+        $this->assertSame(1, User::count());
+    }
+
+    public function test_linked_identity_survives_microsoft_email_change(): void
+    {
+        $user = $this->newUser('old@students.undip.ac.id');
+        $user->forceFill(['sso_enabled' => true, 'avatar_url' => 'https://cdn.example.test/avatar.jpg'])->save();
+        $role = Role::firstOrCreate([
+            'name' => 'mahasiswa', 'module' => 'global',
+        ], ['guard_name' => 'web', 'is_academic' => true]);
+        $user->assignRole($role);
+        $user->ssoIdentity()->create([
+            'provider' => 'microsoft',
+            'tenant_id' => '11111111-1111-1111-1111-111111111111',
+            'object_id' => 'microsoft-student-email-change',
+            'email' => $user->email,
+        ]);
+
+        $this->signInWithMicrosoft([
+            'id' => 'microsoft-student-email-change', 'name' => 'Student', 'email' => 'new@students.undip.ac.id',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertSame('old@students.undip.ac.id', $user->fresh()->email);
+        $this->assertDatabaseHas('user_sso_identities', [
+            'user_id' => $user->id, 'object_id' => 'microsoft-student-email-change', 'email' => 'new@students.undip.ac.id',
         ]);
     }
 

@@ -133,6 +133,17 @@
                 </div>
             </div>
 
+            <div class="w-36">
+                <label class="block mb-1.5" style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--c-fg-muted);">Akses SSO</label>
+                <select name="sso_status" onchange="this.form.submit()"
+                        class="w-full h-8 px-2 rounded-lg text-xs outline-none"
+                        style="background:#fff; border:1px solid #D0D5DD; color:var(--c-fg); font-family:inherit;">
+                    <option value="all" @selected(request('sso_status', 'all') === 'all')>Semua</option>
+                    <option value="enabled" @selected(request('sso_status') === 'enabled')>SSO Enabled</option>
+                    <option value="disabled" @selected(request('sso_status') === 'disabled')>SSO Disabled</option>
+                </select>
+            </div>
+
             {{-- 4. Filter Button --}}
             <div class="relative z-30">
                 <button type="submit"

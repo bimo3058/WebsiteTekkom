@@ -1,4 +1,5 @@
 <x-manajemenmahasiswa::layouts.admin>
+    @include('manajemenmahasiswa::pengumuman._pin-notif')
 
     @push('styles')
     <style>
@@ -327,7 +328,7 @@
                                             </span>
                                         @endif
                                         <span class="pengumuman-card-date">
-                                            {{ $item->created_at->translatedFormat('d F Y') }}
+                                            {{ $item->created_at->locale('id')->translatedFormat('d F Y') }}
                                         </span>
                                     </div>
                                 </div>

@@ -34,12 +34,12 @@ export function registerDashboards(Alpine) {
             if(current>=last-1)return [1,'…',last-2,last-1,last];
             return [1,'…',current,'…',last];
         },
-        documentStatus(status){return {missing:'Belum Upload',SUBMITTED:'Terkirim',APPROVED:'Disetujui',REJECTED:'Perlu Revisi',DRAFT:'Draft'}[status] || status;},
-        documentStatusClass(status){return {missing:'border-red-200 bg-red-50 text-red-600',SUBMITTED:'border-blue-200 bg-blue-50 text-blue-600',APPROVED:'border-emerald-200 bg-emerald-50 text-emerald-700',REJECTED:'border-amber-200 bg-amber-50 text-amber-700'}[status] || 'border-slate-200 bg-slate-50 text-slate-600';},
+        documentStatus(status){return {missing:'Belum Upload',SUBMITTED:'Terkirim',APPROVED:'Disetujui',REVISE:'Perlu Revisi',REJECTED:'Ditolak',DRAFT:'Draft'}[status] || status;},
+        documentStatusClass(status){return {missing:'border-red-200 bg-red-50 text-red-600',SUBMITTED:'border-blue-200 bg-blue-50 text-blue-600',APPROVED:'border-emerald-200 bg-emerald-50 text-emerald-700',REVISE:'border-amber-200 bg-amber-50 text-amber-700',REJECTED:'border-red-200 bg-red-50 text-red-600'}[status] || 'border-slate-200 bg-slate-50 text-slate-600';},
         documentHref(doc){return url('/mahasiswa/documents')+'?phase='+encodeURIComponent(doc.phase)+'&type='+encodeURIComponent(doc.type)+(doc.latest_document?.id ? '&document='+encodeURIComponent(doc.latest_document.id) : '');},
         get activePeriodsCount(){return this.data.active_periods_count ?? (this.data.active_periods || []).length ?? 0;},
         get pendingApproval(){return this.data.pending_approval ?? this.data.pending_finalization ?? 0;},
-        get filteredSchedules(){return this.schedules.filter(s=>this.selectedPeriod==='all' || String(s.period_id || s.group?.period_id)===String(this.selectedPeriod));},
+        get filteredSchedules(){return this.schedules.filter(s=>this.selectedPeriod==='all' || (s.is_master && s.period_id==null) || String(s.period_id || s.group?.period_id)===String(this.selectedPeriod));},
         get jadwalFiltered(){
             const term=this.jadwalSearch.toLocaleLowerCase();
             return this.filteredSchedules.filter(s=>(this.typeFilter==='all'||s.type===this.typeFilter) && (this.statusFilter==='all'||s.status===this.statusFilter)
@@ -69,7 +69,7 @@ export function registerDashboards(Alpine) {
         label(type){return eventLabels[type] || type;},
         statusColor(status){return ['APPROVED','SCHEDULED'].includes(status) ? 'bg-green-100 text-green-700' : ['COMPLETED','DONE'].includes(status) ? 'bg-blue-100 text-blue-700' : ['REJECTED','CANCELLED'].includes(status) ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700';},
         time(event){const start=(event.start_time||'').slice(0,5),end=(event.end_time||'').slice(0,5);return start ? start+(end?' — '+end:'') : 'Time not set';},
-        title(event){return event.student_name || event.group?.title?.title || this.label(event.type);},
+        title(event){return event.name || event.student_name || event.group?.title?.title || this.label(event.type);},
         students(event){return event.students?.map(s=>s.name).join(', ') || event.student_name || '';},
         examiners(event){return event.examiners?.map(e=>e.name || e.examiner?.name).filter(Boolean).join(', ') || [event.examiner1?.name,event.examiner2?.name].filter(Boolean).join(', ');},
         safeLink(link){try{const u=new URL(link);return ['http:','https:'].includes(u.protocol)?u.href:'#';}catch{return '#';}},
@@ -112,7 +112,7 @@ export function registerDashboards(Alpine) {
         groupStatusClass(status){return ['FORMING','FORMING_SOLO','READY_FOR_BIDDING'].includes(status) ? 'bg-red-50 text-red-600 border border-red-200' : ['READY_FOR_FINALIZATION','TITLE_APPROVED'].includes(status) ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200';},
         groupStatusLabel(item){return item.status_label || (item.status || '').charAt(0)+(item.status || '').slice(1).toLowerCase().replace(/_/g,' ') || 'Unknown';},
         initials(name){return String(name || '?').trim().split(/\s+/).slice(0,2).map(w=>w.charAt(0).toUpperCase()).join('');},
-        phaseLabel(code){return {PDC1:'PDC 1',SEMPRO:'Seminar Proposal',PDC2:'PDC 2',TA_DRAFT:'TA Draft',TA:'Sidang TA',EXPO:'Expo',SIDANG:'Sidang TA'}[code] || code || '—';},
+        phaseLabel(code){return {PDC1:'PDC 1',SEMPRO:'Seminar Proposal',PDC2:'PDC 2',TA_DRAFT:'TA Draft',TA:'TA Draft',EXPO:'Expo',SIDANG:'Sidang TA'}[code] || code || '—';},
         memberDisplayName(member){return member?.student?.name || member?.student?.user?.name || '—';},
         async refreshMahasiswa(){this.loading=true;this.error='';try{
             const result=await Promise.allSettled([api('/mahasiswa/dashboard'),api('/mahasiswa/group'),api('/mahasiswa/all-schedules'),api('/mahasiswa/workflow')]);

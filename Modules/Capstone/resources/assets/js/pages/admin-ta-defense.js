@@ -7,7 +7,7 @@ async function allRows(path){
     return items;
 }
 export function adminTaDefensePage(){return {
-    loading:true,error:'',schedules:[],periods:[],lecturers:[],eofficeRooms:[],eligible:[],selectedPeriod:'all',statusFilter:'ALL',search:'',sortKey:'date',sortDirection:1,page:1,perPage:10,expanded:[],editing:null,form:{student_ids:[]},errors:{},formError:'',eligibleLoading:false,saving:false,cancelling:null,requestId:0,date,url,today:localDateKey(new Date()),
+    loading:true,error:'',schedules:[],periods:[],lecturers:[],eofficeRooms:[],eligible:[],selectedPeriod:'all',statusFilter:'ALL',search:'',sortKey:'date',sortDirection:1,filterMenu:false,sortMenu:false,sortOption:'date-asc',openMenuItem:null,menuStyle:{},page:1,perPage:10,expanded:[],editing:null,form:{student_ids:[]},errors:{},formError:'',eligibleLoading:false,saving:false,cancelling:null,requestId:0,date,url,today:localDateKey(new Date()),
     async init(){await this.load();},
     async load(){const request=++this.requestId;this.loading=true;this.error='';try{const results=await Promise.all([allRows('/admin/ta-defense-schedules?period_id='+encodeURIComponent(this.selectedPeriod)),this.periods.length?this.periods:api('/admin/periods').then(rows),this.lecturers.length?this.lecturers:allRows('/admin/users?role=dosen'),this.eofficeRooms.length?this.eofficeRooms:api('/locations/eoffice-rooms').then(rows)]);if(request!==this.requestId)return;[this.schedules,this.periods,this.lecturers,this.eofficeRooms]=results;}catch(e){if(request===this.requestId)this.error=e.message;}finally{if(request===this.requestId)this.loading=false;}},
     students(schedule){return schedule.students?.length?schedule.students:(schedule.student?[schedule.student]:[]);},
@@ -17,7 +17,15 @@ export function adminTaDefensePage(){return {
     get currentPage(){return Math.min(this.page,this.totalPages);},
     get visible(){return this.filtered.slice((this.currentPage-1)*Number(this.perPage),this.currentPage*Number(this.perPage));},
     sort(key){this.sortDirection=this.sortKey===key?-this.sortDirection:1;this.sortKey=key;},
+    setSort(v){this.sortOption=v;this.sortMenu=false;this.page=1;const map={'date-asc':['date',1],'date-desc':['date',-1],'name-az':['name',1],'name-za':['name',-1],'status':['status',1]};const m=map[v]||['date',1];this.sortKey=m[0];this.sortDirection=m[1];},
+    statusBadgeClass(status){return status==='SCHEDULED'?'bg-[#F9ECCB] text-[#956321]':status==='DONE'?'bg-[#DDF2EE] text-[#287F6E]':'bg-slate-100 text-slate-600';},
+    get showingFrom(){return this.filtered.length?(this.currentPage-1)*Number(this.perPage)+1:0;},
+    get showingTo(){return Math.min(this.currentPage*Number(this.perPage),this.filtered.length);},
+    get pageNumbers(){const total=this.totalPages;const current=this.currentPage;const pages=new Set([1,2,current-1,current,current+1,total-1,total].filter(n=>n>=1&&n<=total));return [...pages].sort((a,b)=>a-b);},
+    goPage(n){n=Math.min(Math.max(1,n),this.totalPages);if(n!==this.page)this.page=n;},
     toggle(id){this.expanded=this.expanded.includes(id)?this.expanded.filter(value=>value!==id):[...this.expanded,id];},
+    openRowMenu(event,item){if(this.openMenuItem&&this.openMenuItem.id===item.id){this.closeMenu();return;}this.openMenuItem=item;const rect=(event?.currentTarget||event?.target)?.getBoundingClientRect?.();if(!rect)return;const menuWidth=192;const menuHeight=160;let left=rect.right-menuWidth;left=Math.max(8,Math.min(left,window.innerWidth-menuWidth-8));let top=rect.bottom+4;if(top+menuHeight>window.innerHeight-8)top=Math.max(8,rect.top-menuHeight-4);this.menuStyle={left:left+'px',top:top+'px'};},
+    closeMenu(){this.openMenuItem=null;},
     statusLabel:status=>({SCHEDULED:'Scheduled',DONE:'Completed',CANCELLED:'Cancelled'})[status] || status,
     get selectedGroup(){return this.eligible.find(g=>String(g.id)===String(this.form.group_id));},
     get members(){return this.selectedGroup?.members || [];},

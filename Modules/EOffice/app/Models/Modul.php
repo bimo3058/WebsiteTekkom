@@ -8,11 +8,11 @@ use Illuminate\Support\Str;
 /**
  * Modul / pertemuan dalam satu Praktikum.
  *
- * Tabel: modul_praktikum
+ * Tabel: eo_prak_modul_praktikum
  */
 class Modul extends Model
 {
-    protected $table = 'modul_praktikum';
+    protected $table = 'eo_prak_modul_praktikum';
 
     protected $fillable = [
         'praktikum_id',

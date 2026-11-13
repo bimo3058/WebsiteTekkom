@@ -15,6 +15,7 @@ export default defineConfig({
             publicDirectory: '../../public',
             buildDirectory: 'build-eoffice',
             input: [
+                __dirname + '/resources/assets/sass/app.scss',
                 __dirname + '/resources/assets/js/app.js'
             ],
             refresh: true,
@@ -51,5 +52,6 @@ export default defineConfig({
 
 
 //export const paths = [
+//    'Modules/EOffice/resources/assets/sass/app.scss',
 //    'Modules/EOffice/resources/assets/js/app.js',
 //];

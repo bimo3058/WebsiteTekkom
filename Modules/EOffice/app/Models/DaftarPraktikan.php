@@ -9,13 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Mahasiswa yang terdaftar di praktikum.
  *
- * Tabel: daftar_praktikan
+ * Tabel: eo_prak_daftar_praktikan
  */
 class DaftarPraktikan extends Model
 {
     use HasUuids;
 
-    protected $table = 'daftar_praktikan';
+    protected $table = 'eo_prak_daftar_praktikan';
 
     protected $fillable = [
         'praktikum_id',

@@ -56,7 +56,7 @@
                                         Penting
                                     </span>
                                 @endif
-                                <span>{{ $tglItem->translatedFormat('d M Y') }}</span>
+                                <span>{{ $tglItem->locale('id')->translatedFormat('d M Y') }}</span>
                             </div>
                         </div>
                     </a>

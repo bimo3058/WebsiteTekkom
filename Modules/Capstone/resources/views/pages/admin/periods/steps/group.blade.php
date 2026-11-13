@@ -1,1 +1,25 @@
-<div class="mx-auto max-w-2xl space-y-8"><div class="flex items-start gap-3 border-b pb-4"><div class="rounded-lg bg-blue-50 p-2"><x-capstone::icon name="Users" class="h-5 w-5 text-blue-600" /></div><div><h2 class="text-lg font-semibold text-gray-900">Konfigurasi Group</h2><p class="text-sm text-gray-500">Atur batasan jumlah anggota group dan beban dosen</p></div></div><div class="space-y-6"><div class="grid grid-cols-2 gap-6"><x-capstone::field name="min_group_size" label="Minimal Jumlah Anggota" type="number" min="1" max="10" class="h-11" required /><x-capstone::field name="max_group_size" label="Maximal Jumlah Anggota" type="number" min="1" max="10" class="h-11" required /></div><x-capstone::field name="max_supervisor_load" label="Maximal Dosen Pembimbing (group/dosen)" type="number" min="1" max="50" class="h-11" required /><div class="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4"><x-capstone::icon name="UserCheck" class="mt-0.5 h-5 w-5 text-amber-600" /><div class="space-y-1"><p class="text-sm font-medium text-amber-900">Informasi Beban Dosen</p><p class="text-sm text-amber-700">Maximal Dosen Pembimbing menentukan jumlah maksimal group yang dapat dibimbing oleh satu dosen dalam periode ini. Ini membantu menjaga keseimbangan beban mengajar dan memastikan kualitas bimbingan yang optimal.</p></div></div></div></div>
+<div class="grid grid-cols-1 gap-5 p-6 sm:p-8 lg:grid-cols-[280px_1fr]">
+    <div>
+        <h2 class="text-base font-bold text-gray-900">Konfigurasi Kelompok</h2>
+        <p class="mt-1 text-sm text-gray-500">Beban supervisi maksimum adalah jumlah maksimal kelompok yang dapat dibimbing oleh seorang dosen pada periode ini.</p>
+    </div>
+    <div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+                <label for="field-min_group_size" class="text-sm text-gray-600">Minimal Jumlah Anggota <span class="text-red-500">*</span></label>
+                <input id="field-min_group_size" type="number" min="1" max="10" x-model="form.min_group_size" placeholder="Masukkan min anggota" class="mt-2 h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#1E2A5A]" />
+                <p class="mt-1 text-sm text-red-600" x-show="errors['min_group_size']" x-text="errors['min_group_size']?.[0]"></p>
+            </div>
+            <div>
+                <label for="field-max_group_size" class="text-sm text-gray-600">Maximal Jumlah Anggota <span class="text-red-500">*</span></label>
+                <input id="field-max_group_size" type="number" min="1" max="10" x-model="form.max_group_size" placeholder="Masukkan max anggota" class="mt-2 h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#1E2A5A]" />
+                <p class="mt-1 text-sm text-red-600" x-show="errors['max_group_size']" x-text="errors['max_group_size']?.[0]"></p>
+            </div>
+        </div>
+        <div class="mt-4">
+            <label for="field-max_supervisor_load" class="text-sm text-gray-600">Maximal Dosen Pembimbing <span class="text-red-500">*</span></label>
+            <input id="field-max_supervisor_load" type="number" min="1" max="50" x-model="form.max_supervisor_load" placeholder="Masukkan max dosbing" class="mt-2 h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:border-[#1E2A5A]" />
+            <p class="mt-1 text-sm text-red-600" x-show="errors['max_supervisor_load']" x-text="errors['max_supervisor_load']?.[0]"></p>
+        </div>
+    </div>
+</div>

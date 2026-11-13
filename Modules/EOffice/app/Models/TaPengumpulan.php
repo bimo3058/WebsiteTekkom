@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class TaPengumpulan extends Model
 {
     use HasUuids;
-    protected $table = 'eo_ta_pengumpulan';
+    protected $table = 'eo_prak_ta_pengumpulan';
     protected $guarded = [];
     protected $casts = ['riwayat' => 'array', 'deadline_revisi' => 'datetime'];
 

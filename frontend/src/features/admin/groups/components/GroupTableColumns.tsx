@@ -19,6 +19,7 @@ import {
   Calendar,
   Trash2,
   MoreHorizontal,
+  Pencil,
 } from "lucide-react";
 import { getStatusLabel, canDeleteGroup, reasonMap } from "../lib/utils";
 import type { Group, PeriodOption } from "../types";
@@ -26,11 +27,13 @@ import type { Group, PeriodOption } from "../types";
 interface UseGroupColumnsProps {
   periods: PeriodOption[];
   onDelete: (group: Group) => void;
+  onRenameTitle: (group: Group) => void;
 }
 
 export function useGroupColumns({
   periods,
   onDelete,
+  onRenameTitle,
 }: UseGroupColumnsProps): DataTableColumn<Group>[] {
   return [
     { key: "no", header: "No", width: "w-12" },
@@ -77,14 +80,27 @@ export function useGroupColumns({
       sortable: true,
       render: (group) => (
         <div className="max-w-[200px]">
-          <div
-            className="text-sm font-medium line-clamp-2"
-            title={group.title?.title || "No title assigned"}
-          >
-            {group.title?.title || (
-              <span className="text-muted-foreground italic">
-                No title assigned
-              </span>
+          <div className="flex items-start gap-1">
+            <div
+              className="text-sm font-medium line-clamp-2 flex-1"
+              title={group.title?.title || "No title assigned"}
+            >
+              {group.title?.title || (
+                <span className="text-muted-foreground italic">
+                  No title assigned
+                </span>
+              )}
+            </div>
+            {group.title && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
+                title="Edit title"
+                onClick={() => onRenameTitle(group)}
+              >
+                <Pencil className="h-3 w-3" />
+              </Button>
             )}
           </div>
           <div className="text-[10px] text-muted-foreground uppercase mt-0.5">
@@ -162,6 +178,12 @@ export function useGroupColumns({
                   View Schedule
                 </Link>
               </DropdownMenuItem>
+              {group.title && (
+                <DropdownMenuItem onClick={() => onRenameTitle(group)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit Title
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               {canDeleteGroup(group, periods) ? (
                 <DropdownMenuItem

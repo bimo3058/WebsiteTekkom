@@ -13,71 +13,47 @@
         const moduleLinks = menu.querySelector('[data-mobile-module-links]');
         const body = document.body;
         body.dataset.mobileShell = '';
-        // Keep the dialog outside Alpine shells with transforms or overflow clipping.
-        body.append(backdrop, menu);
-        let opened = false, returnFocus = button;
-        const closeButton = menu.querySelector('[data-mobile-close]');
-        const backgroundStates = new Map();
+        if (!menu.id) menu.id = 'mobile-module-menu';
+        button.setAttribute('aria-controls', menu.id);
+        let opened = false, returnFocus = button, snapshots = [];
+        const originalInert = menu.inert;
+        const originalRole = menu.getAttribute('role');
+        const originalTabindex = menu.getAttribute('tabindex');
+        // Capstone hides the explicit close button; backdrop tap, Escape, or navigation still closes the menu.
+        const hideCloseButton = !!document.querySelector('.sitkom-shell-capstone');
+        let closeButton = null;
+        if (!hideCloseButton) {
+            closeButton = document.createElement('button');
+            closeButton.type = 'button';
+            closeButton.className = 'mobile-navigation-close';
+            closeButton.dataset.mobileClose = '';
+            closeButton.innerHTML = '<span>Tutup menu</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';
+            menu.prepend(closeButton);
+        }
+        // Focus target when the menu opens: the close button, or the menu itself when hidden (Capstone).
+        const closeFocusTarget = closeButton || menu;
 
-        function buildModuleMenu() {
-            moduleLinks.replaceChildren();
-            if (!sidebar) return;
-            const seen = new Set();
-            const accountUrls = new Set([...menu.querySelectorAll('a[href]')].map(link => link.href));
-            // The server-rendered navigation is the role authority. Never infer access
-            // from a role name or manufacture module URLs in the browser.
-            sidebar.querySelectorAll('a').forEach(source => {
-                if (source.querySelector('img') && !source.closest('nav')) return;
-                const href = source.getAttribute('href');
-                const disabled = source.matches('[aria-disabled="true"],.is-disabled,.pointer-events-none')
-                    || !!source.closest('[aria-disabled="true"],.is-disabled,.pointer-events-none')
-                    || getComputedStyle(source).pointerEvents === 'none';
-                if (!disabled && (!href || href === '#' || !['http:', 'https:'].includes(source.protocol))) return;
-                if (source.closest('form') || (!disabled && accountUrls.has(source.href))) return;
-                const labelNode = source.querySelector('.sb-item-label,.nav-text,.nav-label')
-                    || [...source.querySelectorAll('span:not([aria-hidden]):not([x-text])')].find(el => el.textContent.trim());
-                const label = (labelNode?.textContent || source.textContent || source.getAttribute('aria-label') || source.title).trim().replace(/\s+/g, ' ');
-                const pathRole = href ? new URL(source.href).pathname.match(/\/capstone\/(admin|dosen|mahasiswa)\//)?.[1] : null;
-                const roleSection = source.closest('section[aria-label]')?.getAttribute('aria-label')
-                    || (pathRole && menu.querySelectorAll('.mobile-menu-roles > span').length > 1 ? pathRole[0].toUpperCase() + pathRole.slice(1) : '');
-                const key = `${href}|${label}|${roleSection}`;
-                if (!label || seen.has(key)) return;
-                seen.add(key);
-                const link = document.createElement('a');
-                if (disabled) {
-                    link.setAttribute('aria-disabled', 'true');
-                    link.setAttribute('role', 'link');
-                    if (source.title) link.title = source.title;
-                } else {
-                    link.href = source.href;
-                    if (source.target) link.target = source.target;
-                    if (source.rel) link.rel = source.rel;
-                    if (source.hasAttribute('download')) link.setAttribute('download', source.getAttribute('download'));
-                    if (source.getAttribute('aria-current') === 'page' || source.matches('.is-active,.active,.bg-sidebar-accent') || source.href === location.href) link.setAttribute('aria-current', 'page');
+        // Use the original rendered sidebar: permission gates and disabled links are never copied or replaced.
+        function states() {
+            if (!sidebar || !window.Alpine) return [];
+            const result = [];
+            for (let el = sidebar; el; el = el.parentElement) {
+                for (const state of el._x_dataStack || []) {
+                    if (result.some(item => item.state === state)) continue;
+                    const values = {};
+                    for (const key of ['sidebarOpen', 'mobileSidebar', 'collapsed', 'sidebarCollapsed']) {
+                        if (Object.prototype.hasOwnProperty.call(state, key) && typeof state[key] === 'boolean') values[key] = state[key];
+                    }
+                    if (el.classList.contains('sitkom-shell') && typeof state.open === 'boolean') values.open = state.open;
+                    if (Object.keys(values).length) result.push({state, values});
                 }
-                const icon = source.querySelector('svg');
-                if (icon) {
-                    const copy = icon.cloneNode(true);
-                    // Icons must not carry Alpine bindings, IDs, or desktop-only styling.
-                    [copy, ...copy.querySelectorAll('*')].forEach(el => {
-                        [...el.attributes].forEach(attr => {
-                            if (/^(x-|:|@|on)/.test(attr.name) || ['id', 'class', 'style'].includes(attr.name)) el.removeAttribute(attr.name);
-                        });
-                    });
-                    copy.setAttribute('aria-hidden', 'true');
-                    link.append(copy);
-                }
-                const text = document.createElement('span');
-                text.textContent = label;
-                if (roleSection) {
-                    const role = document.createElement('small');
-                    role.textContent = roleSection.replace(/^Menu\s+/, '');
-                    text.append(role);
-                }
-                link.append(text);
-                moduleLinks.append(link);
-            });
-            menu.querySelector('[data-mobile-module-section]').hidden = !moduleLinks.children.length;
+            }
+            return result;
+        }
+        function expand(value) {
+            for (const {state, values} of states()) {
+                for (const key of Object.keys(values)) state[key] = key === 'collapsed' || key === 'sidebarCollapsed' ? false : value;
+            }
         }
         function focusable() {
             return [...menu.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex="0"]')]
@@ -100,9 +76,9 @@
             button.setAttribute('aria-expanded', 'true');
             backdrop.hidden = false;
             body.classList.add('mobile-navigation-is-open');
-            closeButton.focus({preventScroll:true});
-            menu.getBoundingClientRect(); // Commit the starting position before sliding upward.
-            requestAnimationFrame(() => { if (opened) menu.classList.add('mobile-navigation-open'); });
+            closeFocusTarget.focus({preventScroll:true});
+            const focusMenu = () => requestAnimationFrame(() => { if (opened) closeFocusTarget.focus(); });
+            if (window.Alpine) window.Alpine.nextTick(focusMenu); else focusMenu();
         }
         function closeMenu(restoreFocus = true) {
             opened = false;
@@ -166,12 +142,9 @@
         mobile.addEventListener('change', viewportChanged);
         button.addEventListener('click', () => opened ? closeMenu() : openMenu());
         backdrop.addEventListener('click', () => closeMenu());
-        closeButton.addEventListener('click', () => closeMenu());
-        menu.addEventListener('click', event => {
-            if (event.target.closest('a[href]:not([aria-disabled="true"])')) closeMenu(false);
-        });
+        if (closeButton) closeButton.addEventListener('click', () => closeMenu());
         menu.addEventListener('transitionend', () => {
-            if (opened && !menu.contains(document.activeElement)) closeButton.focus({preventScroll:true});
+            if (opened && !menu.contains(document.activeElement)) closeFocusTarget.focus({preventScroll:true});
         });
         document.addEventListener('keydown', event => {
             if (!opened) return;
@@ -183,7 +156,7 @@
             }
         }, true);
         document.addEventListener('focusin', event => {
-            if (opened && !menu.contains(event.target)) closeButton.focus();
+            if (opened && !menu.contains(event.target)) closeFocusTarget.focus();
         });
         document.addEventListener('click', event => {
             if (!mobile.matches || !sidebar) return;

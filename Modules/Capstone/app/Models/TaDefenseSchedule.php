@@ -2,16 +2,21 @@
 
 namespace Modules\Capstone\Models;
 
-use App\Models\Student;
 use App\Models\Lecturer;
+use App\Models\Student;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Schema;
+use Modules\Capstone\Support\EvaluationDeadline;
+use Modules\EOffice\Models\Peminjaman;
+use Modules\EOffice\Models\Ruangan;
 
 class TaDefenseSchedule extends Model
 {
     protected $table = 'capstone_ta_defense_schedules';
+
     protected $fillable = [
         'student_id',
         'group_id',
@@ -37,6 +42,27 @@ class TaDefenseSchedule extends Model
         'date' => 'date',
         'evaluation_deadline' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        // Same convention as seminar schedules: default the examiner
+        // evaluation deadline to schedule date + 2 days, follow date
+        // edits, never override an explicit value.
+        static::saving(function (self $schedule) {
+            if (! Schema::hasColumn('capstone_ta_defense_schedules', 'evaluation_deadline')) {
+                return;
+            }
+
+            if (! $schedule->date) {
+                return;
+            }
+
+            if (EvaluationDeadline::storedDeadline($schedule) === null
+                || ($schedule->isDirty('date') && ! $schedule->isDirty('evaluation_deadline'))) {
+                $schedule->evaluation_deadline = EvaluationDeadline::fromDate($schedule->date);
+            }
+        });
+    }
 
     public function student(): BelongsTo
     {
@@ -81,12 +107,12 @@ class TaDefenseSchedule extends Model
 
     public function eofficeRoom(): BelongsTo
     {
-        return $this->belongsTo(\Modules\EOffice\Models\Ruangan::class, 'eoffice_ruangan_id');
+        return $this->belongsTo(Ruangan::class, 'eoffice_ruangan_id');
     }
 
     public function eofficeBooking(): BelongsTo
     {
-        return $this->belongsTo(\Modules\EOffice\Models\Peminjaman::class, 'eoffice_peminjaman_id');
+        return $this->belongsTo(Peminjaman::class, 'eoffice_peminjaman_id');
     }
 
     public function evaluations(): HasMany

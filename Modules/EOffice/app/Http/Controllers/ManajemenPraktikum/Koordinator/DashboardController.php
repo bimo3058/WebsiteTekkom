@@ -168,7 +168,7 @@ class DashboardController extends Controller
      */
     public function switchPraktikum(Request $request)
     {
-        $request->validate(['praktikum_id' => 'required|uuid|exists:eo_praktikum,id']);
+        $request->validate(['praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id']);
 
         $user = self::authenticatedUser();
         $praktikum = Praktikum::where('id', $request->praktikum_id)
@@ -340,7 +340,7 @@ class DashboardController extends Controller
     {
         $request->validate([
             'file'         => 'required|file|max:5120',
-            'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
+            'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
         ]);
 
         // Validasi ekstensi manual (lebih fleksibel dari mimes)
@@ -478,7 +478,7 @@ class DashboardController extends Controller
                 continue;
             }
 
-            // Cari di daftar_praktikan — hanya update yang SUDAH terdaftar
+            // Cari di eo_prak_daftar_praktikan — hanya update yang SUDAH terdaftar
             $dp = DaftarPraktikan::where('praktikum_id', $praktikum->id)
                 ->where('user_id', $targetUser->id)
                 ->first();
@@ -560,7 +560,7 @@ class DashboardController extends Controller
     public function updatePlotSettings(Request $request)
     {
         $request->validate([
-            'praktikum_id'    => 'required|uuid|exists:eo_praktikum,id',
+            'praktikum_id'    => 'required|uuid|exists:eo_prak_praktikum,id',
             'jumlah_kelompok' => 'required|integer|min:1|max:100',
             'jumlah_shift'    => 'required|integer|min:1|max:20|lte:jumlah_kelompok',
             'method'          => 'required|in:urutan_sistem,acak,manual',
@@ -604,7 +604,7 @@ class DashboardController extends Controller
     public function autoPlot(Request $request)
     {
         $request->validate([
-            'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
+            'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
             'method'       => 'required|in:urutan_sistem,acak',
         ]);
 
@@ -648,7 +648,7 @@ class DashboardController extends Controller
     public function applyPlot(Request $request)
     {
         $request->validate([
-            'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
+            'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
         ]);
 
         $userId = self::authenticatedUser()->id;
@@ -697,7 +697,7 @@ class DashboardController extends Controller
     public function discardPlotDraft(Request $request)
     {
         $request->validate([
-            'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
+            'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
         ]);
 
         Praktikum::where('id', $request->praktikum_id)
@@ -714,7 +714,7 @@ class DashboardController extends Controller
     public function resetPlot(Request $request)
     {
         $request->validate([
-            'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
+            'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
         ]);
 
         $user = self::authenticatedUser();
@@ -746,7 +746,7 @@ class DashboardController extends Controller
     public function updatePlot(Request $request)
     {
         $request->validate([
-            'dp_id'    => 'required|uuid|exists:daftar_praktikan,id',
+            'dp_id'    => 'required|uuid|exists:eo_prak_daftar_praktikan,id',
             'kelompok' => 'nullable|string|max:50',
             'shift'    => 'nullable|string|max:50',
         ]);
@@ -794,11 +794,11 @@ class DashboardController extends Controller
     public function saveGroupMembers(Request $request)
     {
         $request->validate([
-            'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
+            'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
             'kelompok'     => 'required|string|max:50',
             'shift'        => 'required|string|max:50',
             'members'      => 'nullable|array',
-            'members.*'    => 'uuid|exists:daftar_praktikan,id',
+            'members.*'    => 'uuid|exists:eo_prak_daftar_praktikan,id',
         ]);
 
         $user = self::authenticatedUser();

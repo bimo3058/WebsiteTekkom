@@ -15,7 +15,7 @@ class Praktikum extends Model
 {
     use HasUuids, SoftDeletes;
 
-    protected $table = 'eo_praktikum';
+    protected $table = 'eo_prak_praktikum';
 
     public function laporanLabel(): string
     {
@@ -143,7 +143,7 @@ class Praktikum extends Model
 
     public function dosens()
     {
-        return $this->belongsToMany(User::class, 'eo_praktikum_dosen', 'praktikum_id', 'dosen_id');
+        return $this->belongsToMany(User::class, 'eo_prak_praktikum_dosen', 'praktikum_id', 'dosen_id');
     }
 
     /**

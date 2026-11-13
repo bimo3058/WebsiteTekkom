@@ -1,4 +1,5 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
+    @include('manajemenmahasiswa::pengumuman._pin-notif')
 
     @push('styles')
         @include('manajemenmahasiswa::pengumuman._detail-styles')
@@ -120,7 +121,7 @@
                                     </div>
                                     <div style="min-width:0;">
                                         <p class="dt-info-label">Dipublikasikan</p>
-                                        <p class="dt-info-value">{{ $tanggal->translatedFormat('d F Y') }} · {{ $tanggal->format('H:i') }} WIB</p>
+                                        <p class="dt-info-value">{{ $tanggal->locale('id')->translatedFormat('d F Y') }} · {{ $tanggal->format('H:i') }} WIB</p>
                                     </div>
                                 </div>
 

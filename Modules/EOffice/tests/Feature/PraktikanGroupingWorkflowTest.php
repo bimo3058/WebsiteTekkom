@@ -35,7 +35,7 @@ class PraktikanGroupingWorkflowTest extends TestCase
             $table->softDeletes();
             $table->timestamps();
         });
-        Schema::create('eo_praktikum', function (Blueprint $table) {
+        Schema::create('eo_prak_praktikum', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('nama');
             $table->unsignedBigInteger('koor_id');
@@ -47,7 +47,7 @@ class PraktikanGroupingWorkflowTest extends TestCase
             $table->softDeletes();
             $table->timestamps();
         });
-        Schema::create('daftar_praktikan', function (Blueprint $table) {
+        Schema::create('eo_prak_daftar_praktikan', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('praktikum_id');
             $table->unsignedBigInteger('user_id');
@@ -62,13 +62,13 @@ class PraktikanGroupingWorkflowTest extends TestCase
             ['id' => 2, 'name' => 'Praktikan Satu', 'email' => 'p1@example.test'],
             ['id' => 3, 'name' => 'Praktikan Dua', 'email' => 'p2@example.test'],
         ]);
-        DB::table('eo_praktikum')->insert([
+        DB::table('eo_prak_praktikum')->insert([
             'id' => self::PRAKTIKUM_ID,
             'nama' => 'Praktikum Test',
             'koor_id' => 1,
             'status' => 'aktif',
         ]);
-        DB::table('daftar_praktikan')->insert([
+        DB::table('eo_prak_daftar_praktikan')->insert([
             ['id' => '0199f002-0000-7000-8000-000000000001', 'praktikum_id' => self::PRAKTIKUM_ID, 'user_id' => 2],
             ['id' => '0199f002-0000-7000-8000-000000000002', 'praktikum_id' => self::PRAKTIKUM_ID, 'user_id' => 3],
         ]);
@@ -90,21 +90,21 @@ class PraktikanGroupingWorkflowTest extends TestCase
             'method' => 'urutan_sistem',
         ]));
 
-        $this->assertSame(0, DB::table('daftar_praktikan')->whereNotNull('kelompok')->count());
+        $this->assertSame(0, DB::table('eo_prak_daftar_praktikan')->whereNotNull('kelompok')->count());
         $this->assertNotNull(Praktikum::findOrFail(self::PRAKTIKUM_ID)->draft_pembagian);
 
         $controller->applyPlot(Request::create('/apply', 'POST', [
             'praktikum_id' => self::PRAKTIKUM_ID,
         ]));
 
-        $this->assertSame(['1', '2'], DB::table('daftar_praktikan')->orderBy('user_id')->pluck('kelompok')->all());
-        $this->assertSame(['1', '2'], DB::table('daftar_praktikan')->orderBy('user_id')->pluck('shift')->all());
+        $this->assertSame(['1', '2'], DB::table('eo_prak_daftar_praktikan')->orderBy('user_id')->pluck('kelompok')->all());
+        $this->assertSame(['1', '2'], DB::table('eo_prak_daftar_praktikan')->orderBy('user_id')->pluck('shift')->all());
         $this->assertNull(Praktikum::findOrFail(self::PRAKTIKUM_ID)->draft_pembagian);
     }
 
     public function test_discarding_draft_keeps_active_grouping_unchanged(): void
     {
-        DB::table('daftar_praktikan')->where('user_id', 2)->update(['kelompok' => 'Lama', 'shift' => 'Pagi']);
+        DB::table('eo_prak_daftar_praktikan')->where('user_id', 2)->update(['kelompok' => 'Lama', 'shift' => 'Pagi']);
         $controller = new DashboardController(
             $this->createMock(KoorPraktikumService::class),
             new PraktikanGroupingService,
@@ -120,7 +120,7 @@ class PraktikanGroupingWorkflowTest extends TestCase
             'praktikum_id' => self::PRAKTIKUM_ID,
         ]));
 
-        $praktikan = DB::table('daftar_praktikan')->where('user_id', 2)->first();
+        $praktikan = DB::table('eo_prak_daftar_praktikan')->where('user_id', 2)->first();
         $this->assertSame('Lama', $praktikan->kelompok);
         $this->assertSame('Pagi', $praktikan->shift);
         $this->assertNull(Praktikum::findOrFail(self::PRAKTIKUM_ID)->draft_pembagian);
@@ -128,13 +128,13 @@ class PraktikanGroupingWorkflowTest extends TestCase
 
     public function test_editing_an_active_group_automatically_creates_a_new_draft(): void
     {
-        DB::table('eo_praktikum')->where('id', self::PRAKTIKUM_ID)->update([
+        DB::table('eo_prak_praktikum')->where('id', self::PRAKTIKUM_ID)->update([
             'jumlah_kelompok' => 2,
             'jumlah_shift' => 2,
             'metode_pembagian' => 'manual',
         ]);
-        DB::table('daftar_praktikan')->where('user_id', 2)->update(['kelompok' => '1', 'shift' => '1']);
-        DB::table('daftar_praktikan')->where('user_id', 3)->update(['kelompok' => '2', 'shift' => '2']);
+        DB::table('eo_prak_daftar_praktikan')->where('user_id', 2)->update(['kelompok' => '1', 'shift' => '1']);
+        DB::table('eo_prak_daftar_praktikan')->where('user_id', 3)->update(['kelompok' => '2', 'shift' => '2']);
         $controller = new DashboardController(
             $this->createMock(KoorPraktikumService::class),
             new PraktikanGroupingService,
@@ -150,7 +150,7 @@ class PraktikanGroupingWorkflowTest extends TestCase
             ],
         ]));
 
-        $this->assertSame(['1', '2'], DB::table('daftar_praktikan')->orderBy('user_id')->pluck('kelompok')->all());
+        $this->assertSame(['1', '2'], DB::table('eo_prak_daftar_praktikan')->orderBy('user_id')->pluck('kelompok')->all());
         $draft = Praktikum::findOrFail(self::PRAKTIKUM_ID)->draft_pembagian;
         $this->assertSame('1', $draft['assignments']['0199f002-0000-7000-8000-000000000001']);
         $this->assertSame('1', $draft['assignments']['0199f002-0000-7000-8000-000000000002']);

@@ -90,9 +90,9 @@ class CapstoneDemoSeeder extends Seeder
         }
 
         foreach ([
-            ['name' => 'Kontribusi', 'weight' => 40, 'sort_order' => 1],
-            ['name' => 'Kolaborasi', 'weight' => 30, 'sort_order' => 2],
-            ['name' => 'Komunikasi', 'weight' => 30, 'sort_order' => 3],
+            ['code' => 'KONTRIBUSI', 'name' => 'Kontribusi', 'weight' => 40, 'sort_order' => 1],
+            ['code' => 'KOLABORASI', 'name' => 'Kolaborasi', 'weight' => 30, 'sort_order' => 2],
+            ['code' => 'KOMUNIKASI', 'name' => 'Komunikasi', 'weight' => 30, 'sort_order' => 3],
         ] as $indicator) {
             $template = PeerReviewIndicatorTemplate::updateOrCreate(
                 ['name' => $indicator['name']],

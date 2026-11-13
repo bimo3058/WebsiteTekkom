@@ -350,7 +350,7 @@
                                     </span>
                                     <span class="request-meta-item">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                        {{ $req->created_at->diffForHumans() }}
+                                        {{ $req->created_at->locale('id')->diffForHumans() }}
                                     </span>
                                     @if(($hanyaPantau ?? false) && $req->verifier)
                                         <span class="request-meta-item" title="Verifikator">
@@ -388,7 +388,7 @@
                         @if($req->catatan_verifikator)
                             <div class="verifikator-catatan">
                                 <strong>{{ $milikSendiri ? 'Catatan Anda' : 'Catatan verifikator' }}:</strong> {{ $req->catatan_verifikator }}
-                                <br><small>Diproses: {{ $req->verified_at?->diffForHumans() }}</small>
+                                <br><small>Diproses: {{ $req->verified_at?->locale('id')->diffForHumans() }}</small>
                             </div>
                         @endif
 
