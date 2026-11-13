@@ -159,17 +159,16 @@ class PengelolaKegiatanService
      */
     public function pesanTolak(Kegiatan $kegiatan): string
     {
-        // Ketua Himpunan tidak pernah ditolak (KegiatanPolicy::KETUA_SEMUA).
-        // Pimpinan bidang/unit hanya ditolak untuk kegiatan di luar bidang/unitnya.
+        // Sejak S-82 KABID dkk. & KAHIM tidak mengedit: mereka meninjau.
         if (Auth::user()?->hasAnyRole(KegiatanPolicy::JABATAN_KETUA)) {
-            return 'Kegiatan ini bukan milik bidang/unit Anda, jadi hanya bisa dilihat.';
+            return 'Data kegiatan diisi ketua pelaksana. Anda memantau dan meninjaunya; bila ada yang salah, kembalikan dengan catatan.';
         }
 
-        $pemilik = $this->pemilikId($kegiatan) !== null ? $kegiatan->creator : null;
+        $ketua = $kegiatan->ketuaPelaksana?->user?->name;
 
-        return 'Anda bukan pengelola kegiatan ini. Minta '
-            . ($pemilik ? "pembuatnya ({$pemilik->name}) atau " : '')
-            . 'admin menambahkan Anda di bagian Akses Kelola.';
+        return 'Anda bukan ketua pelaksana atau pengelola kegiatan ini. Minta '
+            . ($ketua ? "ketua pelaksananya ({$ketua}) " : 'ketua pelaksananya ')
+            . 'menambahkan Anda di bagian Akses Kelola.';
     }
 
     /**

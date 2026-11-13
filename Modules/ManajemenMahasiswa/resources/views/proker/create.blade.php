@@ -5,27 +5,28 @@
 @include('manajemenmahasiswa::partials.kegiatan-form._styles')
 
 {{--
-    Rencana Proker — Buat.
-    Form memakai partial bersama dengan Pelaksanaan Kegiatan.
-    $showDokumentasi = false → kartu Foto tidak dirender (dokumentasi acara, diisi di
-    Pelaksanaan). $showDokumen = true → Dokumen Rencana (proposal, RAB, surat) yang
-    ikut disalin ke Pelaksanaan saat diajukan (S-49).
+    Rencana Proker — Buat (form ringkas, S-82 11 Nov 2026).
+    KABID dkk. hanya mengisi Judul, Kategori (S-85: centang Kegiatan Prodi bila bekerja
+    sama dengan prodi), Bidang/Unit, dan Ketua Pelaksana; selebihnya diisi
+    ketua pelaksana lewat form Edit, lalu ia mengirimnya untuk ditinjau. Partial form
+    tetap sama dengan Edit & Pelaksanaan ($ringkas menyembunyikan kartu lain).
 --}}
 @include('manajemenmahasiswa::partials.kegiatan-form._fields', [
     'showDokumentasi' => false,
-    'showDokumen'     => true,
+    'showDokumen'     => false,
     'tahapRencana'    => true,
+    'ringkas'         => true,
     'formAction'      => route('manajemenmahasiswa.proker.store'),
     'formMethod'      => 'POST',
     'backUrl'         => route('manajemenmahasiswa.proker.index'),
     'headerTitle'     => 'Buat Rencana Proker',
-    'headerSubtitle'  => 'Cukup isi Judul dan Bidang/Unit untuk menyimpan draft (Kegiatan Prodi saja boleh tanpa Bidang/Unit). Kolom bertanda <span style="color:var(--c-error);">*</span> lainnya wajib dilengkapi sebelum proker diajukan ke Pelaksanaan Kegiatan.',
+    'headerSubtitle'  => 'Isi judul, kategori, bidang/unit, dan tunjuk ketua pelaksana. Ketua pelaksana yang melengkapi data proker lalu mengirimnya untuk Anda tinjau.',
     'submitLabel'     => 'Simpan',
 ])
 
 @include('manajemenmahasiswa::partials.kegiatan-form._scripts', [
     'showDokumentasi' => false,
-    'showDokumen'     => true,
+    'showDokumen'     => false,
 ])
 
 </x-manajemenmahasiswa::layouts.mahasiswa>

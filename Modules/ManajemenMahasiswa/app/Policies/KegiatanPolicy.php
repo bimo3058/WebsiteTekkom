@@ -47,15 +47,14 @@ class KegiatanPolicy
     ];
 
     /**
-     * Boleh MENGEDIT dan MENGHAPUS semua kegiatan di ketiga subbab: Ketua Himpunan
-     * sebagai penanggung jawab utama himpunan — mis. data proker salah menjelang
-     * acara sementara ketua bidangnya berhalangan, pembuatnya sudah lulus/berganti
-     * periode, atau proker bidang batal.
+     * Boleh MENINJAU dan MENGHAPUS semua kegiatan di ketiga subbab: Ketua Himpunan
+     * sebagai penanggung jawab utama himpunan — mis. proker bidang batal, atau
+     * KABID-nya berhalangan meninjau.
      *
      * Hak hapus dibuka 30 Okt 2026 (keputusan Surya, S-67), membatalkan larangan
      * 28 Sep 2026 (S-21). Disadari: hapus itu permanen (banner, surat, foto &
      * dokumen di storage ikut hilang, tanpa tempat sampah) dan tanpa audit log.
-     * Akses Kelola tetap milik pembuat & admin (aturAkses()).
+     * Hak MENGEDIT dicabut 11 Nov 2026 (S-82): KAHIM/WAKAHIM pengawas seperti KABID.
      *
      * WAKAHIM disetarakan dengan KAHIM (2 Nov 2026).
      */
@@ -193,41 +192,66 @@ class KegiatanPolicy
     }
 
     /**
-     * Edit & simpan, termasuk Ajukan Proker dan Unggah ke Arsip (keduanya
-     * mengubah status kegiatan). Hanya admin, KAHIM/WAKAHIM, pembuat, pimpinan
-     * bidang/unit pemilik kegiatan, dan staff himpunan yang ditambahkan di Akses
-     * Kelola.
+     * MENGISI DATA kegiatan (form edit) di ketiga subbab: ketua pelaksana dan staff
+     * yang ia tambahkan di Akses Kelola, ditambah admin sebagai penyelamat.
      *
-     * KABID, WAKABID, KANIT, dan WAKANIT setara (2 Nov 2026): masing-masing boleh
-     * mengelola kegiatan bidang/unitnya walau dibuat pimpinan lain di bidang yang
-     * sama. Selain admin dan KAHIM/WAKAHIM, semua jalur terkunci ke bidang/unit
-     * pemegangnya lewat view().
+     * Sejak S-82 (11 Nov 2026, keputusan Surya atas masukan Arlo): KABID, WAKABID,
+     * KANIT, WAKANIT, KAHIM, dan WAKAHIM hanya mendelegasikan. Mereka membuat proker
+     * dan menunjuk ketua pelaksana, lalu memantau dan meninjau (tinjau()); data yang
+     * salah diperbaiki ketua pelaksana. Ini menggantikan hak edit KETUA_SEMUA dan
+     * pimpinan bidang (S-67) serta larangan staff mengedit Arsip (S-75): ketua
+     * pelaksana kini juga yang memperbaiki data di Laporan & Arsip.
      *
-     * Staff (Ketua Pelaksana & Akses Kelola) hanya sampai Pelaksanaan: route edit
-     * Laporan & Arsip tidak memuat staff_himpunan, jadi setelah diarsipkan hanya
-     * otoritas lebih tinggi yang bisa mengedit (S-75).
+     * Ketua Pelaksana tidak perlu dicantumkan di Akses Kelola (29 Okt 2026); haknya
+     * dihitung dari ketua_pelaksana_id, jadi begitu diganti, akses orang sebelumnya
+     * ikut lepas. Keduanya harus lolos bisaJadiPengelola() (staff, bukan pimpinan).
      *
-     * Ketua Pelaksana otomatis dianggap pengelola tanpa perlu dicantumkan di Akses
-     * Kelola (keputusan Surya, 29 Okt 2026), dengan syarat yang sama persis:
-     * hanya edit, dan hanya bila akunnya lolos bisaJadiPengelola() + route `role:`.
-     * Tidak ada baris pengelola yang disimpan, jadi begitu ketua pelaksana diganti,
-     * akses orang sebelumnya ikut lepas.
+     * Kunci selama ditinjau (Menunggu Tinjauan) ditegakkan di controller, bukan di sini.
      */
     public function update(User $user, Kegiatan $kegiatan): bool
+    {
+        if ($user->hasAnyRole(self::PENGELOLA_SEMUA)) {
+            return true;
+        }
+
+        return $this->view($user, $kegiatan)
+            && self::bisaJadiPengelola($user)
+            && ($this->ketuaPelaksana($user, $kegiatan)
+                || $kegiatan->pengelola()->whereKey($user->getKey())->exists());
+    }
+
+    /**
+     * MENINJAU (S-82): menyetujui kiriman ketua pelaksana — Rencana diteruskan ke
+     * Pelaksanaan, Pelaksanaan diunggah ke Arsip — atau mengembalikannya dengan
+     * catatan. Admin, KAHIM/WAKAHIM (semua bidang), pembuat proker, dan pimpinan
+     * bidang/unit pemegangnya. Sama dengan pemegang hak edit sebelum S-82, minus staff.
+     */
+    public function tinjau(User $user, Kegiatan $kegiatan): bool
     {
         if ($user->hasAnyRole([...self::PENGELOLA_SEMUA, ...self::KETUA_SEMUA])) {
             return true;
         }
 
-        if (!$this->view($user, $kegiatan)) {
-            return false;
-        }
+        return $this->view($user, $kegiatan)
+            && ($this->pemilik($user, $kegiatan) || $this->pimpinanBidangnya($user, $kegiatan));
+    }
 
-        return $this->pemilik($user, $kegiatan)
-            || $this->pimpinanBidangnya($user, $kegiatan)
-            || (self::bisaJadiPengelola($user)
-                && ($this->ketuaPelaksana($user, $kegiatan)
-                    || $kegiatan->pengelola()->whereKey($user->getKey())->exists()));
+    /** Menekan "Kirim untuk Ditinjau" — hanya ketua pelaksana kegiatan itu (S-82). */
+    public function kirimTinjauan(User $user, Kegiatan $kegiatan): bool
+    {
+        return $this->view($user, $kegiatan)
+            && self::bisaJadiPengelola($user)
+            && $this->ketuaPelaksana($user, $kegiatan);
+    }
+
+    /**
+     * Mengganti ketua pelaksana di Rencana & Pelaksanaan (S-82): satu-satunya isian
+     * yang masih bisa diubah KABID setelah proker dibuat (salah pilih, ketua mundur).
+     * Pemegangnya sama dengan peninjau. Ketua pelaksana tidak bisa mengganti dirinya.
+     */
+    public function gantiKetua(User $user, Kegiatan $kegiatan): bool
+    {
+        return $this->tinjau($user, $kegiatan);
     }
 
     private function ketuaPelaksana(User $user, Kegiatan $kegiatan): bool
@@ -252,8 +276,10 @@ class KegiatanPolicy
     }
 
     /**
-     * Mengubah daftar pengelola (bagian "Akses Kelola" di form). Pengelola yang
-     * ditunjuk tidak bisa menunjuk orang lain lagi.
+     * Mengubah daftar pengelola (bagian "Akses Kelola" di form): admin dan ketua
+     * pelaksana (S-82) — ketua pelaksana yang mengatur siapa staff sebidang yang ikut
+     * membantu mengisi. Pengelola yang ditunjuk tidak bisa menunjuk orang lain lagi.
+     * KABID/KAHIM tidak lagi membuka form edit, jadi tidak mengatur akses.
      */
     public function aturAkses(User $user, Kegiatan $kegiatan): bool
     {
@@ -262,7 +288,8 @@ class KegiatanPolicy
         }
 
         return $this->view($user, $kegiatan)
-            && ($this->pemilik($user, $kegiatan) || $this->pimpinanBidangnya($user, $kegiatan));
+            && self::bisaJadiPengelola($user)
+            && $this->ketuaPelaksana($user, $kegiatan);
     }
 
     private function pemilik(User $user, Kegiatan $kegiatan): bool

@@ -9,15 +9,55 @@
      "Ajukan Proker" di Rencana Proker (status internalnya tetap `disetujui`). --}}
 <x-manajemenmahasiswa::ui.page-header bordered
     title="Pelaksanaan Kegiatan"
-    subtitle="Proker yang sudah diajukan — sesuaikan datanya dengan realisasi, lalu unggah ke Laporan & Arsip" />
+    subtitle="Proker yang sudah diajukan — sesuaikan datanya dengan realisasi, lalu unggah ke Laporan & Arsip">
+</x-manajemenmahasiswa::ui.page-header>
 
 <x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
 
 @include('manajemenmahasiswa::partials.kegiatan-list._filter', [
     'action'      => route('manajemenmahasiswa.pelaksanaan.index'),
     'placeholder' => 'Cari judul atau deskripsi kegiatan...',
+    'filterTinjauan' => true,
 ])
 
+@php
+    $adaFilterLain = collect(request()->only(['search', 'bidang', 'tahun', 'periode', 'dari', 'sampai']))
+        ->filter(fn ($v) => is_string($v) && filled($v) && $v !== 'semua')->isNotEmpty();
+@endphp
+
+@if($kelompok)
+    {{-- Tanpa filter status tinjauan (S-86): satu baris per status + "View all →" --}}
+    @if(collect($kelompok)->sum('total') === 0 && !$adaFilterLain)
+        <div class="empty-state">
+            <div style="display:flex;justify-content:center;margin-bottom:12px;color:var(--c-border);"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line><path d="m9 16 2 2 4-4"></path></svg></div>
+            <h5>Belum ada proker yang siap dilaksanakan</h5>
+            <p>Proker yang sudah diajukan dari Rencana Proker akan muncul di sini</p>
+            <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="mk-btn mk-btn--primary mt-2">
+                Lihat Rencana Proker
+            </a>
+        </div>
+    @else
+        @foreach($kelompok as $kunci => $baris)
+            @include('manajemenmahasiswa::partials.kegiatan-list._kelompok-status', [
+                'judul'      => $baris['label'],
+                'total'      => $baris['total'],
+                'items'      => $baris['items'],
+                'tautan'     => request()->fullUrlWithQuery(['tinjauan' => $kunci, 'page' => null]),
+                'teksTautan' => 'View all →',
+                'routeShow'  => 'manajemenmahasiswa.pelaksanaan.show',
+                'opsiKartu'  => ['tandaiTanpaBidang' => true, 'tampilTinjauan' => true],
+                'teksKosong' => 'Belum ada kegiatan dengan status ini.',
+            ])
+        @endforeach
+    @endif
+@else
+    {{-- Mode tersaring: kepala status aktif + grid berpagination --}}
+    @include('manajemenmahasiswa::partials.kegiatan-list._kelompok-status', [
+        'judul'      => $statusAktif['label'],
+        'total'      => $pelaksanaanList->total(),
+        'tautan'     => request()->fullUrlWithQuery(['tinjauan' => null, 'page' => null]),
+        'teksTautan' => '← Semua status',
+    ])
 @if($pelaksanaanList->count() > 0)
     <div class="row g-4">
         @foreach($pelaksanaanList as $item)
@@ -26,6 +66,7 @@
                     'item' => $item,
                     'href' => route('manajemenmahasiswa.pelaksanaan.show', $item->id),
                     'tandaiTanpaBidang' => true,
+                    'tampilTinjauan' => true,
                 ])
             </div>
         @endforeach
@@ -46,6 +87,7 @@
             Lihat Rencana Proker
         </a>
     </div>
+@endif
 @endif
 
 </x-manajemenmahasiswa::layouts.mahasiswa>

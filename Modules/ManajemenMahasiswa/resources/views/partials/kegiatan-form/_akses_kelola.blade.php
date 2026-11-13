@@ -1,10 +1,10 @@
 {{--
     Bagian "Akses Kelola" — siapa saja, selain pemilik, yang boleh mengubah
     kegiatan ini. Dipakai Rencana Proker (create & edit) dan Pelaksanaan (edit), lewat
-    _fields.blade.php. Tidak ada di Laporan & Arsip: setelah diarsipkan staff tidak bisa
-    mengedit lagi, hanya otoritas lebih tinggi (S-75, route edit Arsip).
+    _fields.blade.php. Tidak ada di Laporan & Arsip (form arsip terpisah); pengelola
+    yang sudah tercatat tetap terbawa saat diarsipkan.
 
-    Hanya dirender untuk pemilik kegiatan & override (KegiatanPolicy::aturAkses).
+    Hanya dirender untuk ketua pelaksana & admin (KegiatanPolicy::aturAkses, S-82).
     Pengelola biasa tidak melihatnya, dan server mengabaikan input ini darinya
     (PengelolaKegiatanService::sync).
 
@@ -35,10 +35,9 @@
     <input type="hidden" name="akses_kelola_dikirim" value="1">
 
     <p style="font-size: 13px; color: var(--c-fg-muted); margin-bottom: 14px;">
-        Pembuat: <strong style="color: var(--c-fg-sec);">{{ $namaPembuat }}</strong>.
-        Admin dan Ketua Himpunan otomatis bisa mengedit dan menghapus semua kegiatan.
-        Ketua Pelaksana otomatis ikut mengelola.
-        Tambahkan staff himpunan lain dari bidang/unit yang sama yang boleh ikut mengubah kegiatan ini.
+        Dibuat oleh <strong style="color: var(--c-fg-sec);">{{ $namaPembuat }}</strong>, yang memantau dan meninjau proker ini.
+        Ketua Pelaksana mengisi data dan mengirimnya untuk ditinjau; admin juga bisa mengedit.
+        Tambahkan staff himpunan lain dari bidang/unit yang sama yang boleh membantu mengisi.
     </p>
 
     <label class="form-label-custom" for="pengelolaSearchInput">

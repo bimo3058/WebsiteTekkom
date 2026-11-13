@@ -270,9 +270,14 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::get('/', [ProkerController::class, 'index'])->name('index');
             Route::get('/{id}', [ProkerController::class, 'show'])->name('show')->where('id', '[0-9]+');
 
+            // Cek jadwal/ruangan dari form (S-81). Proker bidang lain hanya judul, bidang,
+            // tanggal, jam, lokasi (keputusan Surya 10 Nov 2026). Halaman kalender proker
+            // dicabut 11 Nov 2026: ketersediaan ruangan dilihat di kalender EOffice.
+            Route::get('/cek-jadwal', [ProkerController::class, 'cekJadwal'])->name('cek-jadwal');
+
             // GET ke endpoint aksi (PATCH-only) — mis. user mengetik URL .../ajukan
             // langsung di browser — kembalikan 403 ramah, bukan halaman debug 405.
-            Route::get('/{id}/ajukan', fn () => abort(403))->where('id', '[0-9]+');
+            Route::get('/{id}/{aksi}', fn () => abort(403))->where(['id' => '[0-9]+', 'aksi' => 'ajukan|kirim|tolak|ketua']);
 
             // Buat proker — hanya ketua hanya ketua & admin. admin kemahasiswaan. staff_himpunan TIDAK boleh membuat,
             // hanya melengkapi/mengedit proker yang sudah dibuat ketua.
@@ -282,20 +287,25 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 Route::post('/', [ProkerController::class, 'store'])->name('store');
             });
 
-            // Edit proker — ketua, admin kemahasiswaan, dan staff_himpunan (pengurus himpunan
-            // melengkapi rencana yang dibuat ketua). GPM, Kadep & DPM view-only.
-            Route::middleware('role:ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|wakil_ketua_bidang|ketua_unit|wakil_ketua_unit|staff_himpunan|admin_kemahasiswaan|superadmin')
+            // Edit proker — ketua pelaksana & Akses Kelola (staff_himpunan) dan admin (S-82,
+            // 11 Nov 2026): KABID/WAKABID/KANIT/WAKANIT dan KAHIM/WAKAHIM hanya mendelegasikan
+            // lalu meninjau. GPM, Kadep & DPM view-only. Proker MANA: KegiatanPolicy::update.
+            Route::middleware('role:staff_himpunan|admin_kemahasiswaan|superadmin')
                 ->group(function () {
                 Route::get('/{id}/edit', [ProkerController::class, 'edit'])->name('edit')->where('id', '[0-9]+');
                 Route::put('/{id}', [ProkerController::class, 'update'])->name('update')->where('id', '[0-9]+');
+                // Ketua pelaksana mengirim rencana untuk ditinjau (KegiatanPolicy::kirimTinjauan).
+                Route::patch('/{id}/kirim', [ProkerController::class, 'kirim'])->name('kirim')->where('id', '[0-9]+');
             });
 
-            // Ajukan ke tahap Pelaksanaan — ketua + admin (admin_kemahasiswaan setara superadmin,
-            // S-66), sinkron dengan whitelist di ProkerController::ajukan(). Bukan tahap
-            // persetujuan admin. DPM = pembina himpunan: memantau saja.
+            // Peninjau — KABID dkk., KAHIM/WAKAHIM, admin (S-82): "Setujui & Teruskan ke
+            // Pelaksanaan" (route lama `ajukan`), tolak dengan catatan, ganti ketua pelaksana.
+            // DPM = pembina himpunan: memantau saja. Proker MANA: KegiatanPolicy::tinjau.
             Route::middleware('role:superadmin|admin_kemahasiswaan|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|wakil_ketua_bidang|ketua_unit|wakil_ketua_unit')
                 ->group(function () {
                 Route::patch('/{id}/ajukan', [ProkerController::class, 'ajukan'])->name('ajukan')->where('id', '[0-9]+');
+                Route::post('/{id}/tolak', [ProkerController::class, 'tolak'])->name('tolak')->where('id', '[0-9]+');
+                Route::patch('/{id}/ketua', [ProkerController::class, 'gantiKetua'])->name('ketua')->where('id', '[0-9]+');
             });
 
             // Hapus — admin kemahasiswaan & pengurus inti himpunan (GPM, Kadep & DPM view-only)
@@ -319,14 +329,24 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
             // GET ke endpoint aksi (POST-only) — mis. user mengetik URL .../publish
             // langsung di browser — kembalikan 403 ramah, bukan halaman debug 405.
-            Route::get('/{id}/publish', fn () => abort(403))->where('id', '[0-9]+');
+            Route::get('/{id}/{aksi}', fn () => abort(403))->where(['id' => '[0-9]+', 'aksi' => 'publish|kirim|tolak|ketua']);
 
-            // Edit & publish — GPM, Kadep & DPM hanya lihat (view-only)
-            Route::middleware('role:ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|wakil_ketua_bidang|ketua_unit|wakil_ketua_unit|staff_himpunan|admin_kemahasiswaan|superadmin')
+            // Edit & kirim untuk ditinjau — ketua pelaksana & Akses Kelola (staff) dan admin
+            // (S-82). GPM, Kadep & DPM hanya lihat (view-only).
+            Route::middleware('role:staff_himpunan|admin_kemahasiswaan|superadmin')
                 ->group(function () {
                 Route::get('/{id}/edit', [PelaksanaanController::class, 'edit'])->name('edit')->where('id', '[0-9]+');
                 Route::put('/{id}', [PelaksanaanController::class, 'update'])->name('update')->where('id', '[0-9]+');
+                Route::patch('/{id}/kirim', [PelaksanaanController::class, 'kirim'])->name('kirim')->where('id', '[0-9]+');
+            });
+
+            // Peninjau (S-82) — "Setujui & Unggah ke Arsip" (route `publish`), tolak dengan
+            // catatan, ganti ketua pelaksana. Kegiatan MANA: KegiatanPolicy::tinjau.
+            Route::middleware('role:superadmin|admin_kemahasiswaan|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|wakil_ketua_bidang|ketua_unit|wakil_ketua_unit')
+                ->group(function () {
                 Route::post('/{id}/publish', [PelaksanaanController::class, 'publishToArsip'])->name('publish')->where('id', '[0-9]+');
+                Route::post('/{id}/tolak', [PelaksanaanController::class, 'tolak'])->name('tolak')->where('id', '[0-9]+');
+                Route::patch('/{id}/ketua', [PelaksanaanController::class, 'gantiKetua'])->name('ketua')->where('id', '[0-9]+');
             });
 
             // Hapus — admin kemahasiswaan, superadmin, dan ketua-ketua himpunan (GPM, Kadep & DPM view-only)
@@ -342,6 +362,12 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::get('/', [KegiatanController::class, 'index'])->name('index');
             Route::get('/{id}', [KegiatanController::class, 'show'])->name('show')->where('id', '[0-9]+');
 
+            // Ekspor rekap realisasi Excel/PDF (S-78). Memuat anggaran, jadi role-nya sama dengan
+            // KegiatanPolicy::LIHAT_INTERNAL (controller memeriksa ulang). Harus di atas route
+            // /{slug} di akhir grup, yang menelan segmen huruf seperti "ekspor".
+            Route::get('/ekspor', [KegiatanController::class, 'ekspor'])->name('ekspor')
+                ->middleware('role:superadmin|admin_kemahasiswaan|dpm|gpm|ketua_departemen|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|wakil_ketua_bidang|ketua_unit|wakil_ketua_unit|staff_himpunan');
+
             // Tambah Kegiatan — hanya role kurasi admin kemahasiswaan di luar alur himpunan.
             // Role himpunan wajib lewat alur Proker → Pelaksanaan → publish; DPM = pembina view-only.
             Route::middleware('role:admin_kemahasiswaan|superadmin')->group(function () {
@@ -349,12 +375,17 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 Route::post('/', [KegiatanController::class, 'store'])->name('store');
             });
 
-            // Edit & Hapus — ketua + admin kemahasiswaan (GPM, Kadep, DPM & staff_himpunan TIDAK termasuk)
-            // Batasi {id} ke numerik (selaras grup Proker & Pelaksanaan) agar segmen non-numerik
-            // tidak jatuh ke route PUT/DELETE ini dan memunculkan 405.
-            Route::middleware('role:ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|wakil_ketua_bidang|ketua_unit|wakil_ketua_unit|admin_kemahasiswaan|superadmin')->group(function () {
+            // Edit — ketua pelaksana & Akses Kelola (staff_himpunan) dan admin (S-82, 11 Nov 2026,
+            // membatalkan S-75: kesalahan data arsip diperbaiki ketua pelaksana). KABID/KAHIM
+            // pengawas. Batasi {id} ke numerik (selaras grup Proker & Pelaksanaan) agar segmen
+            // non-numerik tidak jatuh ke route PUT/DELETE ini dan memunculkan 405.
+            Route::middleware('role:staff_himpunan|admin_kemahasiswaan|superadmin')->group(function () {
                 Route::get('/{id}/edit', [KegiatanController::class, 'edit'])->name('edit')->where('id', '[0-9]+');
                 Route::put('/{id}', [KegiatanController::class, 'update'])->name('update')->where('id', '[0-9]+');
+            });
+
+            // Hapus — ketua + admin kemahasiswaan (GPM, Kadep, DPM & staff_himpunan TIDAK termasuk)
+            Route::middleware('role:ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|wakil_ketua_bidang|ketua_unit|wakil_ketua_unit|admin_kemahasiswaan|superadmin')->group(function () {
                 Route::delete('/{id}', [KegiatanController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
             });
 

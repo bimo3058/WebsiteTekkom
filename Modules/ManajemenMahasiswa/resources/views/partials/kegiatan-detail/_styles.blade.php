@@ -3,6 +3,18 @@
     .btn-back { width: 40px; height: 40px; border-radius: 50%; background: var(--c-surface); border: 1px solid var(--c-border); display: flex; align-items: center; justify-content: center; text-decoration: none; color: var(--c-fg-sec); font-size: 18px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); transition: all 0.2s; flex-shrink: 0; }
     .btn-back:hover { background: var(--c-surface-muted); border-color: var(--c-border-strong); color: var(--c-fg); }
 
+    /* ── Tombol header di layar sempit ──
+       Komponen page-header membuat blok tombol tidak menyusut (flex-shrink: 0). Dengan
+       tombol Tolak dengan catatan + Setujui (S-82), di 375px barisnya melebar sampai
+       ±560px dan halaman bisa digeser ke samping. Di halaman detail kegiatan saja,
+       blok tombol dibuat selebar layar dan boleh membungkus, rata kiri di bawah judul. */
+    @media (max-width: 767px) {
+        .mm-page-header__actions { flex: 1 1 100%; min-width: 0; }
+        .mm-page-header__actions > * { min-width: 0; max-width: 100%; align-items: flex-start !important; }
+        .mm-page-header__actions .justify-content-end { justify-content: flex-start !important; }
+        .mm-page-header__actions .text-end { text-align: left !important; }
+    }
+
     /* ── Banner ── */
     .detail-banner { width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; margin-bottom: 24px; background: linear-gradient(135deg, var(--c-primary-subtle) 0%, var(--c-primary-shadow) 100%); display: flex; align-items: center; justify-content: center; }
     .detail-banner img { width: 100%; height: 100%; object-fit: cover; }
@@ -22,6 +34,12 @@
     .meta-item-label { font-size: 11px; font-weight: 700; color: var(--c-fg-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
     .meta-item-value { font-size: 14px; font-weight: 600; color: var(--c-fg); display: flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
     .meta-item-value svg { flex-shrink: 0; }
+    .meta-item-anda { font-weight: 500; color: var(--c-fg-muted); }
+    .meta-item-sub { margin: 4px 0 0 20px; font-size: 12.5px; font-weight: 500; color: var(--c-fg-sec); }
+    /* Tombol kecil di dalam kartu meta, mis. "Ganti" ketua pelaksana (S-82) */
+    .meta-item-aksi { margin-left: auto; flex: none; padding: 2px 10px; border: 1px solid var(--c-border); border-radius: 6px; background: var(--c-surface); color: var(--c-fg-sec); font-size: 12px; font-weight: 600; line-height: 1.5; cursor: pointer; transition: border-color .15s, color .15s; }
+    .meta-item-aksi:hover { border-color: var(--c-primary-border); color: var(--c-primary); }
+    .meta-item-aksi:focus-visible { outline: 2px solid var(--c-primary); outline-offset: 2px; }
 
     /* ── Description ── */
     .detail-description { font-size: 14px; color: var(--c-fg-sec); line-height: 1.75; white-space: pre-line; }

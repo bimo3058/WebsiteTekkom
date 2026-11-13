@@ -15,9 +15,12 @@ use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
 use Modules\ManajemenMahasiswa\Policies\KegiatanPolicy;
 use Modules\ManajemenMahasiswa\Services\PengelolaKegiatanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
+use Modules\ManajemenMahasiswa\Services\TinjauanKegiatanService;
 use Modules\ManajemenMahasiswa\Support\PeriodeKepengurusan;
 use Modules\ManajemenMahasiswa\Support\PerPage;
 use Modules\ManajemenMahasiswa\Support\RoleHimpunan;
+use Modules\ManajemenMahasiswa\Support\SumberDana;
+use Modules\ManajemenMahasiswa\Services\JadwalRuanganService;
 
 class PelaksanaanController extends Controller
 {
@@ -26,10 +29,24 @@ class PelaksanaanController extends Controller
     /** Sama dengan form Laporan & Arsip — diatur di KegiatanController::MAKS_DOKUMEN. */
     private const MAKS_DOKUMEN = KegiatanController::MAKS_DOKUMEN;
 
+    /**
+     * Peninjau (S-82): menyetujui kiriman ketua pelaksana lewat "Setujui & Unggah ke
+     * Arsip", mengembalikan dengan catatan, mengganti ketua pelaksana, menghapus.
+     * Kegiatan MANA diputuskan KegiatanPolicy::tinjau/delete. Sinkron dengan route.
+     */
+    private const ROLE_TINJAU = [
+        'superadmin', 'admin_kemahasiswaan',
+        ...RoleHimpunan::INTI, ...RoleHimpunan::PIMPINAN_BIDANG,
+    ];
+
+    /** Membuka form edit (S-82): ketua pelaksana & Akses Kelola, serta admin. */
+    private const ROLE_EDIT = ['superadmin', 'admin_kemahasiswaan', RoleHimpunan::STAFF];
+
     public function __construct(
         private RepoMulmedService $repoMulmedService,
         private SupabaseStorage $supabase,
-        private PengelolaKegiatanService $pengelolaService
+        private PengelolaKegiatanService $pengelolaService,
+        private TinjauanKegiatanService $tinjauan
     ) {}
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -92,6 +109,12 @@ class PelaksanaanController extends Controller
             $query->filterPeriode((int) $request->periode);
         }
 
+        // Filter rentang tanggal (S-81) — sama dengan Rencana Proker & Laporan/Arsip.
+        [$dari, $sampai] = Kegiatan::rentangDariRequest($request);
+        if ($dari || $sampai) {
+            $query->filterRentang($dari, $sampai);
+        }
+
         // Search judul + deskripsi
         // Dibungkus closure supaya orWhere tidak "membocorkan" filter bidang/tahun di atas.
         if ($request->filled('search')) {
@@ -102,12 +125,35 @@ class PelaksanaanController extends Controller
             });
         }
 
-        $pelaksanaanList = $query->paginate(PerPage::resolve($request, PerPage::KARTU, 12));
+        // Filter status tinjauan (S-82) — juga tujuan tautan lonceng notifikasi.
+        // Tanpa filter ini (S-86): satu baris per status, maks 4 kartu, plus "View all →".
+        $tinjauan        = (string) $request->input('tinjauan');
+        // Peninjau: "Menunggu Tinjauan" di atas; staff/ketua pelaksana: "Menunggu Dilengkapi".
+        $peninjauTinjau  = $roles->intersect(self::ROLE_TINJAU)->isNotEmpty();
+        $urutanTinjauan  = Kegiatan::urutkanUntukPeninjau(Kegiatan::TINJAUAN_LABELS, $peninjauTinjau);
+        $pelaksanaanList = null;
+        $kelompok        = null;
+        $statusAktif     = null;
 
+        if (array_key_exists($tinjauan, Kegiatan::TINJAUAN_LABELS)) {
+            $statusAktif     = ['kunci' => $tinjauan, 'label' => Kegiatan::TINJAUAN_LABELS[$tinjauan]];
+            $pelaksanaanList = $query->tinjauan($tinjauan)
+                ->paginate(PerPage::resolve($request, PerPage::KARTU, 12));
+        } else {
+            $kelompok = [];
+            foreach ($urutanTinjauan as $kunci => $label) {
+                $q = (clone $query)->tinjauan($kunci);
+                $kelompok[$kunci] = [
+                    'label' => $label,
+                    'total' => (clone $q)->count(),
+                    'items' => $q->take(4)->get(),
+                ];
+            }
+        }
 
         return view('manajemenmahasiswa::pelaksanaan.index', compact(
-            'pelaksanaanList', 'bidangList', 'tahunList', 'adaTanpaTahun', 'periodeList',
-            'isAdmin', 'isPengurus', 'canManage', 'bidangTerkunci'
+            'pelaksanaanList', 'kelompok', 'statusAktif', 'bidangList', 'tahunList', 'adaTanpaTahun', 'periodeList',
+            'isAdmin', 'isPengurus', 'canManage', 'bidangTerkunci', 'peninjauTinjau'
         ));
     }
 
@@ -140,38 +186,38 @@ class PelaksanaanController extends Controller
         $roles   = $user->roles->pluck('name');
         $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
         $isPengurus = $roles->intersect(['pengurus_himpunan', ...RoleHimpunan::POSISI])->isNotEmpty();
-        $canManage = $roles->intersect(['superadmin', 'admin_kemahasiswaan'])->isNotEmpty() || $isPengurus; // GPM, Kadep & DPM view-only
         // Anggaran & Dokumen hanya untuk role pengelola & pemantau (KegiatanPolicy::LIHAT_INTERNAL).
         $canViewRestricted = $user->hasAnyRole(KegiatanPolicy::LIHAT_INTERNAL);
-        // Hanya role tertentu yang boleh menekan "Unggah ke Arsip"
-        // (staff_himpunan TIDAK termasuk, dosen DPM/GPM juga tidak — hanya pengurus inti + admin)
-        $canArsip = $roles->intersect([
-            'superadmin', 'admin_kemahasiswaan',
-            ...RoleHimpunan::INTI, ...RoleHimpunan::PIMPINAN_BIDANG,
-        ])->isNotEmpty();
 
-        // Hak hapus pelaksanaan: admin + ketua-ketua himpunan (GPM, Kadep & DPM view-only)
-        $canDelete = $roles->intersect([
-            'superadmin', 'admin_kemahasiswaan',
-            ...RoleHimpunan::INTI, ...RoleHimpunan::PIMPINAN_BIDANG,
-        ])->isNotEmpty();
-
-        // Lapis kedua di belakang role: kegiatan hanya boleh diubah pemiliknya,
-        // pengelola yang ia tunjuk, atau override (KegiatanPolicy).
-        $bolehUbah = Gate::allows('update', $proker);
-        $pesanBukanPengelola = $canManage && !$bolehUbah
+        // Alur tinjau (S-82), sama dengan Rencana Proker: ketua pelaksana & Akses Kelola
+        // mengisi realisasi lalu ketua pelaksana mengirim; KABID dkk. menyetujui (unggah
+        // ke Arsip) atau mengembalikan dengan catatan. GPM, Kadep & DPM view-only.
+        $berjalan   = $proker->status === Kegiatan::STATUS_DISETUJUI;
+        $ditinjau   = $proker->sedang_ditinjau;
+        $bolehUbah  = Gate::allows('update', $proker);
+        $roleEdit   = $roles->intersect(self::ROLE_EDIT)->isNotEmpty();
+        $roleTinjau = $roles->intersect(self::ROLE_TINJAU)->isNotEmpty();
+        $canManage  = $roleEdit && $bolehUbah && $berjalan && !$ditinjau;
+        $canTinjau  = $berjalan && $roleTinjau && Gate::allows('tinjau', $proker);
+        $canArsip   = $canTinjau && $ditinjau;
+        $canTolak   = $canTinjau && $ditinjau;
+        $canGantiKetua = $canTinjau && Gate::allows('gantiKetua', $proker);
+        $canKirim   = $berjalan && !$ditinjau && Gate::allows('kirimTinjauan', $proker);
+        $canDelete  = $berjalan && $roleTinjau && Gate::allows('delete', $proker);
+        $pesanBukanPengelola = $berjalan && $roleEdit && !$bolehUbah && !$canTinjau
             ? $this->pengelolaService->pesanTolak($proker)
             : null;
-        $canManage = $canManage && $bolehUbah;
-        $canArsip  = $canArsip && $bolehUbah;
-        $canDelete = $canDelete && Gate::allows('delete', $proker);
+        $kurangArsip = $this->kurangSyaratArsip($proker);
+        $calonKetua  = $canGantiKetua ? $this->tinjauan->calonKetua($proker) : collect();
+        $proker->loadMissing('catatan.penulis', 'catatan.pemerbaiki');
 
         $images    = $proker->repoMulmed ? $proker->repoMulmed->where('tipe_file', 'image') : collect();
         $documents = $proker->repoMulmed ? $proker->repoMulmed->where('tipe_file', 'document') : collect();
 
         return view('manajemenmahasiswa::pelaksanaan.show', compact(
             'proker', 'isAdmin', 'isPengurus', 'canManage', 'canArsip', 'canDelete',
-            'canViewRestricted', 'images', 'documents', 'pesanBukanPengelola'
+            'canViewRestricted', 'images', 'documents', 'pesanBukanPengelola',
+            'canTolak', 'canKirim', 'canGantiKetua', 'calonKetua', 'kurangArsip'
         ));
     }
 
@@ -200,10 +246,13 @@ class PelaksanaanController extends Controller
         $roles   = $user->roles->pluck('name');
         $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
         $isPengurus = $roles->intersect(['pengurus_himpunan', ...RoleHimpunan::POSISI])->isNotEmpty();
-        $canManage = $roles->intersect(['superadmin', 'admin_kemahasiswaan'])->isNotEmpty() || $isPengurus; // GPM, Kadep & DPM view-only
+        $canManage = $roles->intersect(self::ROLE_EDIT)->isNotEmpty(); // KABID/KAHIM pengawas (S-82); GPM, Kadep & DPM view-only
 
         if (!$canManage) {
             abort(403, 'Akses ditolak.');
+        }
+        if ($tolak = $this->tolakBilaSedangDitinjau($proker)) {
+            return $tolak;
         }
         if ($tolak = $this->tolakBilaBukanPengelola($proker)) {
             return $tolak;
@@ -239,6 +288,8 @@ class PelaksanaanController extends Controller
         ) + [
             'wajibDariRencana' => $this->wajibDariRencana($proker),
             'kunciDariRencana' => true,
+            // Ketua pelaksana ditunjuk KABID; hanya peninjau/admin yang menggantinya (S-82).
+            'ketuaTerkunci'    => Gate::denies('gantiKetua', $proker),
         ] + RoleHimpunan::dataFormKegiatan($user) + $this->pengelolaService->dataForm($proker));
     }
 
@@ -287,14 +338,23 @@ class PelaksanaanController extends Controller
             return $tolak;
         }
         Gate::authorize('view', $proker);
+        if ($tolak = $this->tolakBilaSedangDitinjau($proker)) {
+            return $tolak;
+        }
         if ($tolak = $this->tolakBilaBukanPengelola($proker)) {
             return $tolak;
+        }
+
+        // Ketua pelaksana tidak bisa mengganti dirinya lewat form (S-82).
+        if (Gate::denies('gantiKetua', $proker)) {
+            $request->merge(['ketua_pelaksana_id' => $proker->ketua_pelaksana_id]);
         }
 
         // Banner salinan Rencana Proker terkunci (S-61).
         $this->repoMulmedService->tolakUbahBannerRencana($request, $proker);
 
         RoleHimpunan::kunciIsianKegiatan($request, Auth::user());
+        $jadwal = app(JadwalRuanganService::class);
 
         // Bidang/unit WAJIB untuk setiap kegiatan, termasuk Kegiatan Prodi
         // (2 Nov 2026) — sama dengan Rencana Proker. Visibilitas kegiatan ditentukan
@@ -334,9 +394,10 @@ class PelaksanaanController extends Controller
             'jam_selesai'               => $jamSelesaiRules,
             // Lokasi, ketua pelaksana, dan anggaran sudah wajib sejak Ajukan Proker; di tahap
             // Pelaksanaan boleh diubah sesuai realisasi tetapi tidak boleh dikosongkan lagi.
-            'lokasi'                    => 'required|string|max:150',
+            // Ruangan kampus (EOffice) ATAU lokasi teks bebas (S-81).
+            'lokasi'                    => 'required_without:ruangan_id|nullable|string|max:150',
+            'ruangan_id'                => $jadwal->aturanRuangan(),
             'target_peserta'            => $aturan('target_peserta', 'integer|min:1'),
-            'anggaran'                  => 'required|numeric|min:0|max:9999999999999',
             'ketua_pelaksana_id'        => ['required', 'exists:students,id', KegiatanPolicy::aturanKetuaSebidang($proker, (int) collect($request->input('bidang_id'))->first() ?: null)],
             'dosen_pendamping_ids'      => $aturan('dosen_pendamping_ids', 'array'),
             'dosen_pendamping_ids.*'    => 'exists:lecturers,id',
@@ -353,15 +414,15 @@ class PelaksanaanController extends Controller
             'dokumen_kegiatan.*'        => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:' . KegiatanController::MAKS_UKURAN_DOKUMEN_KB,
             'hapus_file'                => 'nullable|array',
             'hapus_file.*'              => 'integer|exists:mk_repo_mulmed,id',
-        ], [
+            // Realisasi anggaran wajib dirinci per sumber dana (S-80).
+        ] + SumberDana::aturan(true), [
             // Pesan bawaan Laravel masih berbahasa Inggris dan menyebut nama kolom mentah.
             'bidang_id.required'             => 'Bidang/unit pemegang proker wajib dipilih.',
             'bidang_id.min'                  => 'Bidang/unit pemegang proker wajib dipilih.',
             'bidang_id.max'                  => 'Pilih satu bidang saja — satu proker dipegang satu bidang himpunan.',
             'bidang_id.*.in'                 => RoleHimpunan::PESAN_BIDANG_TERKUNCI,
             'tanggal_mulai.required'         => 'Tanggal mulai wajib diisi. Kegiatan yang sudah masuk tahap pelaksanaan harus punya tanggal pasti supaya bisa muncul di filter Tahun dan diarsipkan.',
-            'lokasi.required'                => 'Lokasi wajib diisi — tuliskan lokasi sebenarnya kegiatan berlangsung.',
-            'anggaran.required'              => 'Anggaran wajib diisi — isi sesuai realisasi, atau 0 bila kegiatan tanpa biaya.',
+            'lokasi.required_without'        => 'Lokasi wajib diisi — pilih ruangan kampus atau tuliskan lokasi sebenarnya kegiatan berlangsung.',
             'ketua_pelaksana_id.required'    => 'Ketua pelaksana wajib dipilih.',
             'ketua_pelaksana_id.in'          => KegiatanPolicy::PESAN_KETUA_SEBIDANG,
             'tanggal_selesai.after_or_equal' => 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.',
@@ -374,7 +435,7 @@ class PelaksanaanController extends Controller
             'target_peserta.required'        => $pesanRencana('Peserta'),
             'dosen_pendamping_ids.required'  => $pesanRencana('Dosen pendamping (minimal 1)'),
             'panitia_ids.required'           => $pesanRencana('Panitia (minimal 1)'),
-        ] + KegiatanController::pesanValidasiDokumen());
+        ] + SumberDana::pesan() + KegiatanController::pesanValidasiDokumen());
 
         // Dokumen salinan Rencana Proker tidak boleh dihapus di sini (S-59).
         $this->repoMulmedService->tolakHapusDokumenRencana($request, $proker);
@@ -382,8 +443,9 @@ class PelaksanaanController extends Controller
         $this->repoMulmedService->pastikanKuota($request, $proker, self::MAKS_FILE, self::MAKS_DOKUMEN);
         $this->repoMulmedService->pastikanJenisDokumen($request, $proker, false, true);
 
-        // Update data utama
-        $proker->update([
+        // Update data utama — lokasi dari ruangan EOffice/teks (S-81), anggaran = jumlah
+        // sumber dana (S-80).
+        $proker->update($jadwal->kolomLokasi($validated) + SumberDana::kolom($validated, $proker) + [
             'judul'              => $validated['judul'],
             'deskripsi'          => $validated['deskripsi'],
             'tanggal_mulai'      => $validated['tanggal_mulai'],
@@ -394,9 +456,7 @@ class PelaksanaanController extends Controller
             'tanggal_selesai'    => $validated['tanggal_selesai'] ?? null,
             'jam_mulai'          => $validated['jam_mulai'] ?? null,
             'jam_selesai'        => $validated['jam_selesai'] ?? null,
-            'lokasi'             => $validated['lokasi'] ?? null,
             'target_peserta'     => $validated['target_peserta'] ?? null,
-            'anggaran'           => $validated['anggaran'] ?? null,
             'ketua_pelaksana_id' => $validated['ketua_pelaksana_id'] ?? null,
             // Penanda bahwa data pelaksanaan sudah pernah diperbarui — ini yang
             // membuka tombol "Unggah ke Arsip" di halaman detail. Naik saat form
@@ -473,30 +533,20 @@ class PelaksanaanController extends Controller
 
         return redirect()
             ->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
-            ->with('success', 'Data pelaksanaan berhasil diperbarui.');
+            ->with('success', 'Data pelaksanaan berhasil diperbarui. Bila realisasinya sudah lengkap, tekan "Kirim untuk Ditinjau".');
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // Publish ke Arsip — pindahkan kegiatan ke subbab 3 (status = selesai)
     // ─────────────────────────────────────────────────────────────────────────
 
+    /**
+     * Peninjau menyetujui kiriman ketua pelaksana — "Setujui & Unggah ke Arsip" (S-82).
+     * Syarat arsip (banner, foto, lokasi, ketua, anggaran, sudah diedit) tetap dicek
+     * di sini; ketua pelaksana sudah ditagih syarat yang sama sebelum boleh mengirim.
+     */
     public function publishToArsip($id)
     {
-        // Proteksi backend: sinkron dengan route middleware + $canArsip di show()
-        // GPM & DPM adalah view-only — TIDAK boleh melakukan arsip
-        $allowedRoles = [
-            'superadmin', 'admin_kemahasiswaan',
-            ...RoleHimpunan::INTI, ...RoleHimpunan::PIMPINAN_BIDANG,
-        ];
-        $userRoles = Auth::user()->roles->pluck('name');
-        $canArsip = $userRoles->intersect($allowedRoles)->isNotEmpty();
-
-        if (!$canArsip) {
-            return redirect()
-                ->back()
-                ->with('error', 'Anda tidak memiliki izin untuk mengunggah kegiatan ke arsip.');
-        }
-
         // Dicari by id dulu, status diperiksa sesudahnya. Kalau findOrFail langsung
         // dibatasi STATUS_DISETUJUI, permintaan publish kedua — klik ganda pada modal,
         // atau tombol Back lalu klik lagi — melempar ModelNotFoundException dan user
@@ -516,57 +566,151 @@ class PelaksanaanController extends Controller
                 ->with('error', 'Hanya kegiatan yang berada di tahap Pelaksanaan yang bisa diunggah ke arsip.');
         }
 
-        // Mengunggah ke arsip = mengubah status kegiatan, jadi butuh hak ubah atas kegiatan ini.
-        if ($tolak = $this->tolakBilaBukanPengelola($proker)) {
+        // Hanya peninjau kegiatan ini (KABID dkk., KAHIM, admin), saat Menunggu Tinjauan.
+        if ($tolak = $this->tolakBilaBukanPeninjau($proker)) {
             return $tolak;
         }
 
-        if (!$proker->is_pelaksanaan_updated) {
-            return redirect()
-                ->back()
-                ->with('error', 'Silakan edit/update data pelaksanaan kegiatan terlebih dahulu sebelum mengunggah ke arsip.');
-        }
-
-        // Banner wajib diisi sebelum kegiatan boleh diunggah ke arsip (subbab 3).
-        if (empty($proker->banner)) {
-            return redirect()
-                ->back()
-                ->with('error', 'Banner kegiatan wajib diunggah terlebih dahulu sebelum mengunggah ke arsip.');
-        }
-
-        // Lokasi, ketua pelaksana, dan anggaran juga dicek di sini (bukan hanya di form) supaya
-        // kegiatan lama yang formnya sudah pernah disimpan sebelum aturan ini tetap tertahan.
-        $kurang = [];
-        if (blank($proker->lokasi)) {
-            $kurang[] = 'lokasi';
-        }
-        if (empty($proker->ketua_pelaksana_id)) {
-            $kurang[] = 'ketua pelaksana';
-        }
-        if ($proker->anggaran === null) {
-            $kurang[] = 'anggaran';
-        }
+        // Dicek ulang di sini (bukan hanya sebelum Kirim) supaya kegiatan lama yang
+        // formnya disimpan sebelum aturan ini tetap tertahan.
+        $kurang = $this->kurangSyaratArsip($proker);
         if ($kurang) {
             return redirect()
-                ->back()
-                ->with('error', 'Lengkapi dulu data pelaksanaan sebelum mengunggah ke arsip: ' . implode(', ', $kurang) . '.');
+                ->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
+                ->with('error', 'Belum bisa diunggah ke arsip. Lengkapi dulu: ' . implode(', ', $kurang) . '. Kembalikan ke ketua pelaksana dengan catatan agar ia melengkapinya.');
         }
 
-        // Foto dokumentasi wajib ada: arsip kegiatan harus punya bukti kegiatan sudah berlangsung.
-        if (!$proker->repoMulmed()->where('tipe_file', 'image')->exists()) {
-            return redirect()
-                ->back()
-                ->with('error', 'Minimal satu foto kegiatan wajib diunggah terlebih dahulu sebelum mengunggah ke arsip.');
-        }
-
-        $proker->update(['status' => Kegiatan::STATUS_SELESAI]);
+        $proker->update(['status' => Kegiatan::STATUS_SELESAI, 'status_tinjauan' => null]);
 
         // Konsisten dengan alur subbab 1 → 2 (ajukan() yang mengarahkan ke
         // pelaksanaan.index): setelah unggah ke arsip, arahkan ke daftar
         // subbab 3 (Laporan & Arsip), bukan kembali ke detail pelaksanaan.
         return redirect()
             ->route('manajemenmahasiswa.kegiatan.index')
-            ->with('success', 'Kegiatan berhasil diunggah ke Laporan & Arsip.');
+            ->with('success', 'Laporan pelaksanaan disetujui dan kegiatan diunggah ke Laporan & Arsip.');
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Alur tinjau ketua pelaksana ↔ KABID (S-82) — sama dengan Rencana Proker
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Ketua pelaksana mengirim realisasi yang sudah lengkap → Menunggu Tinjauan. */
+    public function kirim($id)
+    {
+        $proker = Kegiatan::findOrFail($id);
+        Gate::authorize('view', $proker);
+
+        if ($tolak = $this->tolakBilaStatusTakSesuai($proker, [Kegiatan::STATUS_DISETUJUI])) {
+            return $tolak;
+        }
+        if (Gate::denies('kirimTinjauan', $proker)) {
+            return redirect()->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
+                ->with('error', 'Hanya ketua pelaksana kegiatan ini yang bisa mengirimnya untuk ditinjau.');
+        }
+
+        $kurang = $this->kurangSyaratArsip($proker);
+        if ($kurang) {
+            return redirect()->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
+                ->with('error', 'Data pelaksanaan belum lengkap. Lengkapi dulu: ' . implode(', ', $kurang) . '.');
+        }
+
+        try {
+            $this->tinjauan->kirim($proker, Auth::user());
+        } catch (\DomainException $e) {
+            return redirect()->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
+            ->with('success', 'Laporan pelaksanaan dikirim untuk ditinjau. Data dikunci sampai KABID menyetujui (diunggah ke Arsip) atau mengembalikannya dengan catatan.');
+    }
+
+    /** Peninjau mengembalikan kiriman dengan catatan → Perlu Perbaikan. */
+    public function tolak(Request $request, $id)
+    {
+        $proker = Kegiatan::findOrFail($id);
+        Gate::authorize('view', $proker);
+
+        if ($tolak = $this->tolakBilaBukanPeninjau($proker)) {
+            return $tolak;
+        }
+
+        $data = $request->validate(TinjauanKegiatanService::ATURAN_CATATAN, TinjauanKegiatanService::PESAN_CATATAN);
+
+        try {
+            $this->tinjauan->tolak($proker, Auth::user(), $data['isi']);
+        } catch (\DomainException $e) {
+            return redirect()->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
+            ->with('success', 'Laporan pelaksanaan dikembalikan ke ketua pelaksana dengan catatan. Statusnya kini Perlu Perbaikan.');
+    }
+
+    /** KABID dkk. mengganti ketua pelaksana (S-82). */
+    public function gantiKetua(Request $request, $id)
+    {
+        $proker = Kegiatan::with('bidangs')->findOrFail($id);
+        Gate::authorize('view', $proker);
+
+        if ($tolak = $this->tolakBilaBukanPeninjau($proker, false)) {
+            return $tolak;
+        }
+
+        $nama = $this->tinjauan->gantiKetuaDariRequest($request, $proker);
+
+        return redirect()->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
+            ->with('success', "Ketua pelaksana diganti menjadi {$nama}. Ia kini yang mengisi dan mengirim laporan pelaksanaan ini.");
+    }
+
+    /**
+     * Syarat sebelum dikirim ketua pelaksana maupun diunggah ke Arsip: data sudah
+     * pernah diedit, banner, lokasi, ketua pelaksana, anggaran, dan minimal 1 foto.
+     *
+     * @return list<string> label syarat yang belum terpenuhi
+     */
+    private function kurangSyaratArsip(Kegiatan $proker): array
+    {
+        return array_keys(array_filter([
+            'data pelaksanaan (simpan form Edit minimal sekali)' => !$proker->is_pelaksanaan_updated,
+            'banner'          => empty($proker->banner),
+            'lokasi'          => blank($proker->lokasi),
+            'ketua pelaksana' => empty($proker->ketua_pelaksana_id),
+            'anggaran'        => $proker->anggaran === null,
+            // Arsip kegiatan harus punya bukti kegiatan sudah berlangsung.
+            'minimal 1 foto kegiatan' => !$proker->repoMulmed()->where('tipe_file', 'image')->exists(),
+        ]));
+    }
+
+    /** Data dikunci selama Menunggu Tinjauan (S-82), termasuk untuk admin. */
+    private function tolakBilaSedangDitinjau(Kegiatan $proker): ?RedirectResponse
+    {
+        if (!$proker->sedang_ditinjau) {
+            return null;
+        }
+
+        return redirect()
+            ->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
+            ->with('error', 'Laporan pelaksanaan ini sedang ditinjau, jadi datanya dikunci sampai disetujui atau dikembalikan dengan catatan.');
+    }
+
+    /** Hanya peninjau kegiatan ini, di tahap Pelaksanaan, dan (bila diminta) saat Menunggu Tinjauan. */
+    private function tolakBilaBukanPeninjau(Kegiatan $proker, bool $harusDitinjau = true): ?RedirectResponse
+    {
+        if ($tolak = $this->tolakBilaStatusTakSesuai($proker, [Kegiatan::STATUS_DISETUJUI])) {
+            return $tolak;
+        }
+
+        $ke = redirect()->route('manajemenmahasiswa.pelaksanaan.show', $proker->id);
+
+        if (Auth::user()->roles->pluck('name')->intersect(self::ROLE_TINJAU)->isEmpty()
+            || Gate::denies('tinjau', $proker)) {
+            return $ke->with('error', 'Anda tidak berhak meninjau kegiatan ini.');
+        }
+        if ($harusDitinjau && !$proker->sedang_ditinjau) {
+            return $ke->with('error', 'Laporan pelaksanaan ini belum dikirim ketua pelaksana untuk ditinjau.');
+        }
+
+        return null;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -631,13 +775,12 @@ class PelaksanaanController extends Controller
      *
      * Dua alasan:
      *
-     * 1. Wewenang. Halaman Pelaksanaan boleh diakses staff_himpunan, sedangkan
-     *    Laporan & Arsip TIDAK. Selama edit()/update() masih menerima status
-     *    'selesai', staff_himpunan bisa membuka /pelaksanaan/{id}/edit untuk
-     *    kegiatan yang sudah diarsipkan dan mengubah judul, tanggal, anggaran,
-     *    bahkan menghapus foto & dokumen arsipnya — persis yang dilarang lewat
-     *    /kegiatan/{id}/edit. Karena itu edit & update dibatasi ke 'disetujui'
-     *    saja; kegiatan yang sudah diarsipkan diubah dari subbab Arsip.
+     * 1. Wewenang. Kegiatan yang sudah diarsipkan punya aturan edit sendiri di
+     *    subbab Arsip (form, validasi, hak per role). Selama edit()/update() di sini
+     *    masih menerima status 'selesai', aturan itu bisa dilewati lewat
+     *    /pelaksanaan/{id}/edit. Karena itu edit & update dibatasi ke 'disetujui'
+     *    saja; kegiatan yang sudah diarsipkan diubah dari subbab Arsip (sejak S-82
+     *    oleh ketua pelaksananya atau admin).
      *
      * 2. Pesan, bukan halaman error. findOrFail yang dibatasi status melempar
      *    ModelNotFoundException untuk id yang statusnya belum/sudah lewat tahap

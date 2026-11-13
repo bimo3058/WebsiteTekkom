@@ -24,6 +24,10 @@
       $ketuaWajib, $panitiaWajib, $dosenWajib  (opsional) tampilkan tanda *; di Rencana
                           Proker artinya "wajib sebelum diajukan" (ProkerController::SYARAT_AJUKAN),
                           di Pelaksanaan "terisi di rencana, tak boleh dikosongkan" (S-59)
+      $ketuaTerkunci      (opsional, S-82) Ketua Pelaksana tampil tanpa bisa diganti: ditunjuk
+                          KABID, hanya peninjau/admin yang menggantinya. Server ikut mengabaikan
+                          isiannya (ProkerController/PelaksanaanController/KegiatanController::update)
+      $hanyaKetua         (opsional, S-82) hanya Ketua Pelaksana — form Buat Proker ringkas
 --}}
 @include('manajemenmahasiswa::partials.kegiatan-form._pilih-assets')
 
@@ -51,7 +55,9 @@
         'bidangId'  => (string) ($bidangPengurus[$mhs->user_id] ?? ''),
         'tersimpan' => (int) $mhs->id === (int) ($ketuaTersimpan ?? 0),
     ])->values();
-    $saringKetua = $ketuaSebidang ? ['bidangAsal' => array_map('strval', $bidangAsal ?? [])] : null;
+    $ketuaTerkunci = $ketuaTerkunci ?? false;
+    // Saat terkunci daftar tidak disaring bidang, supaya ketua tersimpan tidak terlepas.
+    $saringKetua = $ketuaSebidang && !$ketuaTerkunci ? ['bidangAsal' => array_map('strval', $bidangAsal ?? [])] : null;
 
     $opsiDosen = $dosenList->map(fn ($dosen) => [
         'id'   => $dosen->id,
@@ -81,6 +87,15 @@
                        ? { userId: String(k.userId), nama: k.nama, akses: k.akses }
                        : { userId: '', nama: '', akses: false })">
         <label class="form-label-custom" for="ketuaPelaksanaSearch">Ketua Pelaksana @if($ketuaWajib ?? false)<span class="required">*</span>@endif</label>
+        @if($ketuaTerkunci)
+            {{-- Hidden input tetap dikirim agar form identik; server memakai nilai tersimpan. --}}
+            <input type="hidden" name="ketua_pelaksana_id" :value="nilaiKirim">
+            <div class="form-control form-control-custom d-flex align-items-center gap-2" style="background:var(--c-bg-subtle, #F6F8FA);cursor:not-allowed;" id="ketuaPelaksanaSearch">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;color:var(--c-fg-muted);" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span x-text="namaTerpilih || 'Belum ditunjuk'"></span>
+            </div>
+            <div class="checkbox-hint">Ditunjuk oleh KABID. Untuk mengganti ketua pelaksana, hubungi KABID — ia bisa menggantinya dari halaman detail.</div>
+        @else
         <div class="search-select-wrapper" :class="{ 'ada-pilihan': nilaiKirim }" @click.outside="tutup()">
             <input type="hidden" name="ketua_pelaksana_id" id="ketuaPelaksanaId" :value="nilaiKirim">
             <input type="text" class="form-control form-control-custom" id="ketuaPelaksanaSearch"
@@ -124,9 +139,12 @@
                 @endif
             </div>
         </div>
-        <div class="checkbox-hint">{{ $ketuaSebidang ? 'Hanya staff himpunan dari bidang/unit pemegang proker.' : 'Hanya staff himpunan.' }} Ketua Pelaksana otomatis bisa mengedit kegiatan ini.</div>
+        <div class="checkbox-hint">{{ $ketuaSebidang ? 'Hanya staff himpunan dari bidang/unit pemegang proker.' : 'Hanya staff himpunan.' }} Ketua Pelaksana yang mengisi data kegiatan ini dan mengirimnya untuk ditinjau.</div>
+        @endif
     </div>
 </div>
+
+@unless($hanyaKetua ?? false)
 
 {{-- ── Dosen Pendamping (pilih banyak + peran), sejajar dengan Panitia ── --}}
 <div class="mb-3 mk-pilih" x-data="mkPilihBanyak(@js($opsiDosen), @js($dosenTerpilih->pluck('id')->values()))">
@@ -281,3 +299,4 @@
         </template>
     </div>
 </div>
+@endunless

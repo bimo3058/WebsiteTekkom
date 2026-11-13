@@ -34,18 +34,31 @@ class Kegiatan extends Model
         'surat_proker',
         'surat_proker_original',
         'anggaran',
+        // Rincian anggaran per sumber dana (S-80); `anggaran` = jumlah ketiganya.
+        'dana_departemen',
+        'kas_himpunan',
+        'kas_bidang',
+        // Ruangan kampus dari master EOffice (S-81); null = luar kampus/daring.
+        'ruangan_id',
         'penanggung_jawab',
         'ketua_pelaksana_id',
         'target_peserta',
         'status',
+        // Alur tinjau ketua pelaksana ↔ KABID (S-82); lihat konstanta TINJAU_*.
+        'status_tinjauan',
+        'dikirim_tinjau_at',
         'rencana_id',
         'is_pelaksanaan_updated',
     ];
 
     protected $casts = [
+        'dikirim_tinjau_at'      => 'datetime',
         'tanggal_mulai'          => 'date',
         'tanggal_selesai'        => 'date',
         'anggaran'               => 'decimal:2',
+        'dana_departemen'        => 'decimal:2',
+        'kas_himpunan'           => 'decimal:2',
+        'kas_bidang'             => 'decimal:2',
         'is_pelaksanaan_updated' => 'boolean',
     ];
 
@@ -117,13 +130,18 @@ class Kegiatan extends Model
     ];
 
     /**
-     * Pilihan filter Tahap Rencana (29 Okt 2026): label sama dengan badge, tanpa
-     * "Tidak terlaksana" dan tanpa "Semua Tahap" — filter dikosongkan lewat Reset.
+     * Pilihan filter "Status Rencana" (11 Nov 2026): tahap dan status tinjauan digabung
+     * jadi satu dropdown. "Di Rencana Proker" tidak lagi jadi pilihan sendiri karena
+     * sudah terwakili tiga status tinjauan (rencana yang masih di tahap ini selalu
+     * berada di salah satunya). Tanpa "Tidak terlaksana" dan tanpa "Semua" — filter
+     * dikosongkan lewat Reset. Kunci = nilai ?status_rencana=.
      */
     const TAHAP_FILTER_LABELS = [
-        'draft'       => 'Di Rencana Proker',
-        'pelaksanaan' => 'Di Pelaksanaan Kegiatan',
-        'arsip'       => 'Di Laporan & Arsip',
+        self::TINJAU_DILENGKAPI => 'Menunggu Dilengkapi',
+        self::TINJAU_DITINJAU   => 'Menunggu Tinjauan',
+        self::TINJAU_PERBAIKAN  => 'Perlu Perbaikan',
+        'pelaksanaan'           => 'Di Pelaksanaan Kegiatan',
+        'arsip'                 => 'Di Laporan & Arsip',
     ];
 
     /** Warna badge tahap — kelas .mm-status--{nada} di partials/sitkom-ui. */
@@ -132,6 +150,45 @@ class Kegiatan extends Model
         'pelaksanaan'      => 'sky',
         'arsip'            => 'success',
         'tidak_terlaksana' => 'error',
+    ];
+
+    // ── Alur tinjau (S-82, 11 Nov 2026) ────────────────────────────────────
+    // KABID membuat proker dan menunjuk ketua pelaksana, lalu hanya memantau. Ketua
+    // pelaksana mengisi dan mengirim; KABID menyetujui (rencana diteruskan ke
+    // Pelaksanaan, pelaksanaan diunggah ke Arsip) atau mengembalikan dengan catatan.
+    // Berlaku pada baris berstatus draft (Rencana) dan disetujui (Pelaksanaan).
+    const TINJAU_DILENGKAPI = 'dilengkapi';
+    const TINJAU_DITINJAU   = 'ditinjau';
+    const TINJAU_PERBAIKAN  = 'perbaikan';
+
+    /** Status baris yang memakai alur tinjau. */
+    const STATUS_BERTINJAU = [self::STATUS_DRAFT, self::STATUS_DISETUJUI];
+
+    const TINJAUAN_LABELS = [
+        self::TINJAU_DILENGKAPI => 'Menunggu Dilengkapi',
+        self::TINJAU_DITINJAU   => 'Menunggu Tinjauan',
+        self::TINJAU_PERBAIKAN  => 'Perlu Perbaikan',
+    ];
+
+    /**
+     * Urutan bagian/filter status untuk peninjau (KABID dkk., KAHIM, admin): "Menunggu
+     * Tinjauan" naik ke paling atas karena itu yang perlu mereka kerjakan. Staff /
+     * ketua pelaksana memakai urutan asli (Menunggu Dilengkapi di atas).
+     */
+    public static function urutkanUntukPeninjau(array $labels, bool $peninjau): array
+    {
+        if (! $peninjau || ! isset($labels[self::TINJAU_DITINJAU])) {
+            return $labels;
+        }
+
+        return [self::TINJAU_DITINJAU => $labels[self::TINJAU_DITINJAU]] + $labels;
+    }
+
+    /** Warna badge — kelas .mm-status--{nada} di partials/sitkom-ui. */
+    const TINJAUAN_NADA = [
+        self::TINJAU_DILENGKAPI => 'warning',
+        self::TINJAU_DITINJAU   => 'sky',
+        self::TINJAU_PERBAIKAN  => 'error',
     ];
 
     /** Status yang sudah disetujui / dalam proses pelaksanaan (Subbab 2) */
@@ -253,6 +310,21 @@ class Kegiatan extends Model
     public function repoMulmed(): HasMany
     {
         return $this->hasMany(RepoMulmed::class, 'kegiatan_id');
+    }
+
+    /**
+     * Catatan penolakan KABID dkk. pada rencana (S-79), terbaru dulu. Hanya dipakai
+     * saat rencana dikembalikan ke staff untuk diperbaiki.
+     */
+    public function catatan(): HasMany
+    {
+        return $this->hasMany(KegiatanCatatan::class, 'kegiatan_id')->latest()->latest('id');
+    }
+
+    /** Catatan yang belum ditandai "sudah diperbaiki" → badge "Perlu perbaikan". */
+    public function catatanTerbuka(): HasMany
+    {
+        return $this->hasMany(KegiatanCatatan::class, 'kegiatan_id')->whereNull('diperbaiki_at');
     }
 
     /**
@@ -445,6 +517,48 @@ class Kegiatan extends Model
         return range($periode->max(), $periode->min());
     }
 
+    /**
+     * Filter rentang tanggal (S-81): kegiatan yang berlangsung di dalam rentang itu,
+     * termasuk yang mulai sebelum `dari` tetapi masih berjalan. Tanggal kosong =
+     * tanpa batas di sisi itu. Kegiatan tanpa tanggal mulai tidak ikut.
+     */
+    public function scopeFilterRentang($query, ?string $dari, ?string $sampai)
+    {
+        return $query
+            ->whereNotNull('tanggal_mulai')
+            ->when($sampai, fn ($q) => $q->whereDate('tanggal_mulai', '<=', $sampai))
+            ->when($dari, fn ($q) => $q->where(fn ($w) => $w
+                ->whereDate('tanggal_selesai', '>=', $dari)
+                ->orWhere(fn ($t) => $t->whereNull('tanggal_selesai')->whereDate('tanggal_mulai', '>=', $dari))));
+    }
+
+    /**
+     * Ambil rentang tanggal yang sah dari request filter (`dari`, `sampai`, format
+     * Y-m-d). Nilai rusak diabaikan; bila terbalik, ditukar.
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
+    public static function rentangDariRequest(\Illuminate\Http\Request $request): array
+    {
+        $tgl = function ($v) {
+            if (!is_string($v) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $v)) {
+                return null;
+            }
+            try {
+                return \Carbon\Carbon::createFromFormat('Y-m-d', $v)->toDateString();
+            } catch (\Throwable) {
+                return null;
+            }
+        };
+        $dari   = $tgl($request->query('dari'));
+        $sampai = $tgl($request->query('sampai'));
+        if ($dari && $sampai && $dari > $sampai) {
+            [$dari, $sampai] = [$sampai, $dari];
+        }
+
+        return [$dari, $sampai];
+    }
+
     public function scopeByKategori($query, int $kategoriId)
     {
         return $query->whereHas('kategoris', fn($q) => $q->where('mk_kategori_kegiatan.id', $kategoriId));
@@ -529,7 +643,45 @@ class Kegiatan extends Model
         };
     }
 
+    /**
+     * Status tinjauan yang berlaku (kunci TINJAUAN_LABELS), atau null bila baris ini
+     * tidak sedang dalam alur tinjau (rencana yang sudah diteruskan, arsip). Baris
+     * lama yang kolomnya masih kosong dianggap Menunggu Dilengkapi.
+     */
+    public function getTahapTinjauanAttribute(): ?string
+    {
+        if (!in_array($this->status, self::STATUS_BERTINJAU, true)) {
+            return null;
+        }
+
+        return array_key_exists((string) $this->status_tinjauan, self::TINJAUAN_LABELS)
+            ? $this->status_tinjauan
+            : self::TINJAU_DILENGKAPI;
+    }
+
+    /** Data dikunci selama KABID meninjau (S-82). */
+    public function getSedangDitinjauAttribute(): bool
+    {
+        return $this->tahap_tinjauan === self::TINJAU_DITINJAU;
+    }
+
     // ── Scopes ────────────────────────────────────────────────────────────────
+
+    /**
+     * Saring per status tinjauan (?tinjauan= di daftar Rencana & Pelaksanaan, dan
+     * tautan lonceng notifikasi). Baris lama berkolom kosong ikut "dilengkapi".
+     */
+    public function scopeTinjauan($query, string $kunci)
+    {
+        if (!array_key_exists($kunci, self::TINJAUAN_LABELS)) {
+            return $query;
+        }
+
+        return $query->whereIn('status', self::STATUS_BERTINJAU)
+            ->where(fn ($q) => $kunci === self::TINJAU_DILENGKAPI
+                ? $q->where('status_tinjauan', $kunci)->orWhereNull('status_tinjauan')
+                : $q->where('status_tinjauan', $kunci));
+    }
 
     public function scopePerencanaan($query)
     {
@@ -553,6 +705,11 @@ class Kegiatan extends Model
     public function scopeTahapRencana($query, string $tahap)
     {
         $diajukan = fn ($q) => $q->where('status', self::STATUS_DIAJUKAN);
+
+        // Tiga status tinjauan hanya berlaku untuk rencana yang masih berstatus draft.
+        if (array_key_exists($tahap, self::TINJAUAN_LABELS)) {
+            return $query->where('status', self::STATUS_DRAFT)->tinjauan($tahap);
+        }
 
         return match ($tahap) {
             'draft'            => $query->where('status', self::STATUS_DRAFT),

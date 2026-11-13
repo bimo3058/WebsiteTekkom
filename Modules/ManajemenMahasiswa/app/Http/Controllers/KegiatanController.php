@@ -17,11 +17,16 @@ use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
 use Modules\ManajemenMahasiswa\Models\KegiatanPeserta;
 use Modules\ManajemenMahasiswa\Policies\KegiatanPolicy;
 use Modules\ManajemenMahasiswa\Services\PengelolaKegiatanService;
+use Modules\ManajemenMahasiswa\Services\RekapRealisasiService;
 use Modules\ManajemenMahasiswa\Services\RencanaProkerService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
+use Modules\ManajemenMahasiswa\Exports\RekapRealisasiExport;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
 use Modules\ManajemenMahasiswa\Support\PeriodeKepengurusan;
 use Modules\ManajemenMahasiswa\Support\PerPage;
 use Modules\ManajemenMahasiswa\Support\RoleHimpunan;
+use Modules\ManajemenMahasiswa\Support\SumberDana;
 
 class KegiatanController extends Controller
 {
@@ -93,9 +98,98 @@ class KegiatanController extends Controller
         $periodeList   = Kegiatan::daftarPeriode(Kegiatan::STATUS_SELESAI);
 
         // Relasi yang dibutuhkan kartu bersama (kegiatan-list/_kartu) — sama di ketiga subbab.
-        $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'dosenPendampings.user'])
-            ->where('status', Kegiatan::STATUS_SELESAI)
+        $query = $this->queryArsip($request)
+            ->with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'dosenPendampings.user'])
             ->orderBy('created_at', 'desc');
+
+        $kegiatan = $query->paginate(PerPage::resolve($request, PerPage::KARTU, 12));
+
+        // Cek apakah user adalah admin/pengurus (untuk tombol Tambah)
+        $user  = Auth::user();
+        $roles = $user->roles->pluck('name');
+        // GPM, Kadep & DPM view-only — tidak masuk daftar pengelola (hanya bisa lihat)
+        $isAdmin = $roles->intersect([
+            'superadmin', 'admin_kemahasiswaan',
+            'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'wakil_ketua_bidang', 'ketua_unit', 'wakil_ketua_unit',
+        ])->isNotEmpty();
+
+        // Tombol "Tambah Kegiatan" (create langsung ke arsip) hanya untuk role kurasi admin
+        // di luar alur himpunan — role himpunan wajib lewat Proker → Pelaksanaan → publish.
+        // DPM = pembina view-only, tidak menambah kegiatan.
+        $canTambahKegiatan = $roles->intersect([
+            'superadmin', 'admin_kemahasiswaan',
+        ])->isNotEmpty();
+
+        // Tombol "Ekspor" rekap realisasi (S-78) memuat anggaran, jadi hanya untuk role
+        // yang boleh melihat anggaran di detail Arsip (KegiatanPolicy::LIHAT_INTERNAL).
+        $canEkspor = $user->hasAnyRole(KegiatanPolicy::LIHAT_INTERNAL);
+
+        return view('manajemenmahasiswa::kegiatan.index', compact(
+            'kegiatan',
+            'bidangList',
+            'tahunList',
+            'adaTanpaTahun',
+            'periodeList',
+            'isAdmin',
+            'canTambahKegiatan',
+            'canEkspor',
+        ));
+    }
+
+    /**
+     * Ekspor rekap realisasi Laporan & Arsip ke Excel atau PDF (S-78).
+     *
+     * Usulan stakeholder Pak Maman (10 Nov 2026): siklus anggaran himpunan punya
+     * bagian realisasi, jadi rekapnya bisa diunduh untuk evaluasi. Isinya mengikuti
+     * filter yang sedang aktif di daftar (bidang, tahun, periode, kata kunci) —
+     * semua halaman, bukan hanya halaman yang tampil.
+     *
+     * Akses = KegiatanPolicy::LIHAT_INTERNAL (route + pemeriksaan di sini), sama dengan
+     * yang boleh melihat anggaran di detail Arsip. Arsip sendiri terbuka untuk semua
+     * bidang, jadi rekap juga mencakup semua bidang yang cocok dengan filter.
+     */
+    public function ekspor(Request $request, RekapRealisasiService $rekap)
+    {
+        $user = Auth::user();
+        abort_unless($user->hasAnyRole(KegiatanPolicy::LIHAT_INTERNAL), 403);
+
+        $kegiatan = $this->queryArsip($request)
+            ->with(['bidang', 'bidangs', 'kategoris', 'ketuaPelaksana.user', 'rencana'])
+            // Kronologis supaya mudah dibaca sebagai laporan; yang belum bertanggal di akhir.
+            ->orderByRaw('tanggal_mulai IS NULL')
+            ->orderBy('tanggal_mulai')
+            ->orderBy('judul')
+            ->get();
+
+        $data = $rekap->susun($kegiatan, $this->keteranganFilter($request));
+        $diunduh = 'Diunduh ' . now()->locale('id')->translatedFormat('j F Y, H.i') . ' WIB oleh ' . $user->name;
+        $namaBerkas = 'Rekap-Realisasi-Kegiatan-' . now()->format('Y-m-d');
+
+        if ($request->query('format') === 'pdf') {
+            // barryvdh/laravel-dompdf ada di composer.lock, tetapi vendor lokal bisa belum
+            // disinkronkan (10 Nov 2026) — beri pesan, bukan halaman galat 500.
+            if (!class_exists(Pdf::class)) {
+                return redirect()
+                    ->route('manajemenmahasiswa.kegiatan.index', $request->except('format'))
+                    ->with('error', 'Ekspor PDF belum tersedia di server ini karena paket PDF (dompdf) belum terpasang. Gunakan ekspor Excel, atau minta pengelola server menjalankan composer install.');
+            }
+
+            return Pdf::loadView('manajemenmahasiswa::kegiatan.ekspor-pdf', $data + ['diunduh' => $diunduh])
+                ->setPaper('a4', 'landscape')
+                ->download($namaBerkas . '.pdf');
+        }
+
+        return Excel::download(new RekapRealisasiExport($data, $diunduh), $namaBerkas . '.xlsx');
+    }
+
+    /**
+     * Kegiatan Arsip (status selesai) yang cocok dengan filter daftar. Dipakai daftar
+     * Laporan & Arsip dan ekspor rekap (S-78) supaya isi berkas sama dengan yang
+     * terlihat di layar.
+     */
+    private function queryArsip(Request $request)
+    {
+        $query = Kegiatan::where('status', Kegiatan::STATUS_SELESAI);
 
         // Filter by bidang or prodi
         if ($request->filled('bidang') && $request->bidang !== 'semua') {
@@ -129,6 +223,12 @@ class KegiatanController extends Controller
             $query->filterPeriode((int) $request->periode);
         }
 
+        // Filter rentang tanggal (S-81) — sama dengan Rencana Proker & Pelaksanaan.
+        [$dari, $sampai] = Kegiatan::rentangDariRequest($request);
+        if ($dari || $sampai) {
+            $query->filterRentang($dari, $sampai);
+        }
+
         // Search by judul + deskripsi
         // Dibungkus closure supaya orWhere tidak "membocorkan" filter bidang/tahun di atas.
         if ($request->filled('search')) {
@@ -139,33 +239,39 @@ class KegiatanController extends Controller
             });
         }
 
-        $kegiatan = $query->paginate(PerPage::resolve($request, PerPage::KARTU, 12));
+        return $query;
+    }
 
-        // Cek apakah user adalah admin/pengurus (untuk tombol Tambah)
-        $user  = Auth::user();
-        $roles = $user->roles->pluck('name');
-        // GPM, Kadep & DPM view-only — tidak masuk daftar pengelola (hanya bisa lihat)
-        $isAdmin = $roles->intersect([
-            'superadmin', 'admin_kemahasiswaan',
-            'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'wakil_ketua_bidang', 'ketua_unit', 'wakil_ketua_unit',
-        ])->isNotEmpty();
+    /**
+     * Keterangan filter untuk kepala berkas ekspor, mis. "Bidang Ristek · Periode
+     * 2025/2026 · Kata kunci "recreation"". Nilai yang tak dikenal diabaikan, sama
+     * seperti queryArsip().
+     */
+    private function keteranganFilter(Request $request): string
+    {
+        $bagian = [];
 
-        // Tombol "Tambah Kegiatan" (create langsung ke arsip) hanya untuk role kurasi admin
-        // di luar alur himpunan — role himpunan wajib lewat Proker → Pelaksanaan → publish.
-        // DPM = pembina view-only, tidak menambah kegiatan.
-        $canTambahKegiatan = $roles->intersect([
-            'superadmin', 'admin_kemahasiswaan',
-        ])->isNotEmpty();
+        if ($request->filled('bidang') && $request->bidang !== 'semua') {
+            $bagian[] = $request->bidang === 'prodi'
+                ? 'Bidang Prodi'
+                : 'Bidang ' . ((is_numeric($request->bidang) ? Bidang::find($request->bidang)?->nama_bidang : null) ?? '—');
+        }
+        if ($request->filled('tahun') && $request->tahun !== 'semua') {
+            $bagian[] = $request->tahun === Kegiatan::FILTER_TANPA_TAHUN ? 'Belum ada tanggal' : 'Tahun ' . $request->tahun;
+        }
+        if (PeriodeKepengurusan::ada($request->periode)) {
+            $bagian[] = 'Periode ' . PeriodeKepengurusan::label((int) $request->periode);
+        }
+        [$dari, $sampai] = Kegiatan::rentangDariRequest($request);
+        if ($dari || $sampai) {
+            $f = fn ($t) => $t ? \Carbon\Carbon::parse($t)->locale('id')->translatedFormat('j M Y') : '…';
+            $bagian[] = 'Tanggal ' . $f($dari) . ' – ' . $f($sampai);
+        }
+        if ($request->filled('search')) {
+            $bagian[] = 'Kata kunci "' . $request->search . '"';
+        }
 
-        return view('manajemenmahasiswa::kegiatan.index', compact(
-            'kegiatan',
-            'bidangList',
-            'tahunList',
-            'adaTanpaTahun',
-            'periodeList',
-            'isAdmin',
-            'canTambahKegiatan',
-        ));
+        return $bagian ? implode(' · ', $bagian) : 'Semua kegiatan di Laporan & Arsip';
     }
 
     /**
@@ -188,17 +294,20 @@ class KegiatanController extends Controller
             return $tolak;
         }
 
-        // Tombol Edit/Hapus: role pengelola (sinkron dengan route edit/destroy) DAN
-        // memang pengelola kegiatan ini (KegiatanPolicy). GPM, Kadep & DPM view-only.
+        // Tombol Edit/Hapus: role (sinkron dengan route edit/destroy) DAN memang berhak
+        // atas kegiatan ini (KegiatanPolicy). Sejak S-82 (11 Nov 2026) yang mengedit
+        // arsip = ketua pelaksana & Akses Kelola (staff) dan admin; KABID dkk. dan
+        // KAHIM/WAKAHIM pengawas, tetapi tetap boleh menghapus. GPM, Kadep & DPM view-only.
         $user  = Auth::user();
         $roles = $user->roles->pluck('name');
-        $roleKelola = $roles->intersect([
+        $roleEdit  = $roles->intersect(['superadmin', 'admin_kemahasiswaan', RoleHimpunan::STAFF])->isNotEmpty();
+        $roleHapus = $roles->intersect([
             'superadmin', 'admin_kemahasiswaan',
-            'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'wakil_ketua_bidang', 'ketua_unit', 'wakil_ketua_unit',
+            ...RoleHimpunan::INTI, ...RoleHimpunan::PIMPINAN_BIDANG,
         ])->isNotEmpty();
-        $canEdit   = $roleKelola && Gate::allows('update', $kegiatan);
-        $canDelete = $roleKelola && Gate::allows('delete', $kegiatan);
-        $pesanBukanPengelola = $roleKelola && !$canEdit
+        $canEdit   = $roleEdit && Gate::allows('update', $kegiatan);
+        $canDelete = $roleHapus && Gate::allows('delete', $kegiatan);
+        $pesanBukanPengelola = $roleEdit && !$canEdit
             ? $this->pengelolaService->pesanTolak($kegiatan)
             : null;
 
@@ -263,7 +372,6 @@ class KegiatanController extends Controller
             'lokasi'              => 'nullable|string|max:150',
             // Banner wajib diisi saat menambah kegiatan langsung ke Laporan & Arsip (subbab 3).
             'banner'              => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
-            'anggaran'            => 'nullable|numeric|min:0|max:9999999999999',
             'ketua_pelaksana_id'  => ['nullable', 'exists:students,id', KegiatanPolicy::aturanKetuaPelaksana()],
             'dosen_pendamping_ids'   => 'nullable|array',
             'dosen_pendamping_ids.*' => 'exists:lecturers,id',
@@ -278,7 +386,7 @@ class KegiatanController extends Controller
             'foto_kegiatan.*'     => 'image|mimes:jpg,jpeg,png,webp|max:5120',
             'dokumen_kegiatan'    => 'nullable|array|max:' . self::MAKS_DOKUMEN,
             'dokumen_kegiatan.*'  => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:' . self::MAKS_UKURAN_DOKUMEN_KB,
-        ], $this->pesanValidasi());
+        ] + SumberDana::aturan(false), $this->pesanValidasi() + SumberDana::pesan());
         $this->repoMulmedService->pastikanJenisDokumen($request, null, false);
 
         $validated['status'] = 'selesai';
@@ -318,6 +426,9 @@ class KegiatanController extends Controller
 
         // Remove non-kegiatan fields before creating
         unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan'], $validated['panitia_ids'], $validated['panitia_peran'], $validated['dosen_pendamping_ids'], $validated['dosen_peran']);
+
+        // Anggaran dirinci per sumber dana (S-80); `anggaran` = jumlahnya.
+        $validated = SumberDana::kolom($validated) + $validated;
 
         $kegiatan = Kegiatan::create($validated);
 
@@ -362,7 +473,10 @@ class KegiatanController extends Controller
             'kategoriList',
             'mahasiswaList',
             'dosenList',
-        ) + RoleHimpunan::dataFormKegiatan(Auth::user()));
+        ) + [
+            // Ketua pelaksana yang mengedit arsipnya tidak bisa mengganti dirinya (S-82).
+            'ketuaTerkunci' => !Auth::user()->hasAnyRole(KegiatanPolicy::PENGELOLA_SEMUA),
+        ] + RoleHimpunan::dataFormKegiatan(Auth::user()));
     }
 
     /**
@@ -385,6 +499,11 @@ class KegiatanController extends Controller
         // KABID dkk. tidak bisa memindahkan arsip ke bidang lain (S-74).
         RoleHimpunan::kunciIsianKegiatan($request, Auth::user());
 
+        // Ketua pelaksana yang mengedit arsipnya tidak bisa mengganti dirinya (S-82).
+        if (!Auth::user()->hasAnyRole(KegiatanPolicy::PENGELOLA_SEMUA)) {
+            $request->merge(['ketua_pelaksana_id' => $kegiatan->ketua_pelaksana_id]);
+        }
+
         $jam = $this->aturanJam($request);
 
         // Check if all selected kategori are "Kegiatan Prodi" (bidang not needed)
@@ -405,7 +524,6 @@ class KegiatanController extends Controller
             // dihapus lewat tombol Hapus, unggahan baru diwajibkan; selain itu boleh
             // dikosongkan (banner lama dipertahankan).
             'banner'              => ($kegiatan->banner && !$request->boolean('hapus_banner') ? 'nullable' : 'required') . '|image|mimes:jpg,jpeg,png,webp|max:5120',
-            'anggaran'            => 'nullable|numeric|min:0|max:9999999999999',
             'ketua_pelaksana_id'  => ['nullable', 'exists:students,id', KegiatanPolicy::aturanKetuaPelaksana($kegiatan)],
             'dosen_pendamping_ids'   => 'nullable|array',
             'dosen_pendamping_ids.*' => 'exists:lecturers,id',
@@ -422,7 +540,7 @@ class KegiatanController extends Controller
             'dokumen_kegiatan.*'  => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:' . self::MAKS_UKURAN_DOKUMEN_KB,
             'hapus_file'          => 'nullable|array',
             'hapus_file.*'        => 'integer|exists:mk_repo_mulmed,id',
-        ], $this->pesanValidasi());
+        ] + SumberDana::aturan(false), $this->pesanValidasi() + SumberDana::pesan());
 
         // Batas 10 file berlaku untuk TOTAL yang tersimpan, bukan per sekali simpan.
         // Dokumen salinan Rencana Proker terkunci juga di Arsip (S-60); yang diunggah
@@ -475,6 +593,9 @@ class KegiatanController extends Controller
 
         // Remove non-kegiatan fields before updating
         unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan'], $validated['hapus_file'], $validated['panitia_ids'], $validated['panitia_peran'], $validated['dosen_pendamping_ids'], $validated['dosen_peran']);
+
+        // Anggaran dirinci per sumber dana (S-80); anggaran lama tanpa rincian dipertahankan.
+        $validated = SumberDana::kolom($validated, $kegiatan) + $validated;
 
         $kegiatan->update($validated);
 

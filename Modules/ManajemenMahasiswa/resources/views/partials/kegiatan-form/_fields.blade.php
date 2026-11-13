@@ -46,6 +46,9 @@
     // (PelaksanaanController::wajibDariRencana, S-59). Kosong untuk Rencana & kegiatan lama.
     $wajibDariRencana = $wajibDariRencana ?? [];
     $wajibRencana     = fn (string $isian) => in_array($isian, $wajibDariRencana, true);
+    // Form Buat Proker ringkas (S-82): KABID dkk. hanya mengisi Judul, Kategori (S-85),
+    // Bidang/Unit, dan Ketua Pelaksana; sisanya diisi ketua pelaksana.
+    $ringkas = $ringkas ?? false;
 @endphp
 
 <!-- Header -->
@@ -80,7 +83,9 @@
         </div>
 
         <div class="row g-3 mb-3">
-            <div class="col-md-6">
+            {{-- Kategori tetap tampil di form ringkas (S-85, 11 Nov 2026): KABID dkk. bisa
+                 langsung menandai proker himpunan yang bekerja sama dengan prodi. --}}
+            <div class="{{ $ringkas ? 'col-12' : 'col-md-6' }}">
                 <label class="form-label-custom">Kategori <span class="required">*</span></label>
                 <div class="checkbox-card-group" id="kategoriGroup">
                     @foreach($kategoriList as $kategori)
@@ -121,13 +126,12 @@
                     ? $bidangList->whereIn('id', $idsBidangTersimpan)->pluck('nama_bidang')->implode(', ')
                     : null;
             @endphp
-            <div class="col-md-6" id="bidangFieldWrapper">
+            <div class="{{ $ringkas ? 'col-12' : 'col-md-6' }}" id="bidangFieldWrapper">
                 {{-- Wajib untuk semua proker, termasuk Kegiatan Prodi (2 Nov 2026): proker
-                     hanya terlihat oleh bidang/unit pemegangnya. --}}
+                     hanya terlihat oleh bidang/unit pemegangnya. Sejak S-82 juga wajib saat
+                     menyimpan draft, karena ketua pelaksana harus staff sebidang. --}}
                 <label class="form-label-custom">Bidang / Unit <span class="required" id="bidangRequired">*</span></label>
-                {{-- data-kosong-prodi: draft Rencana boleh tanpa bidang bila hanya Kegiatan Prodi (S-73). --}}
-                <div class="checkbox-card-group" id="bidangGroup" role="radiogroup" aria-label="Bidang/unit pemegang proker"
-                     @if($tahapRencana && !$bidangTerkunci) data-kosong-prodi="1" @endif>
+                <div class="checkbox-card-group" id="bidangGroup" role="radiogroup" aria-label="Bidang/unit pemegang proker">
                     @foreach($bidangList as $bidang)
                         @php $bidangMilik = $bidangTerkunci && (int) $bidang->id === $bidangMilikId; @endphp
                         <label @class(['checkbox-card', 'terkunci' => $bidangMilik, 'disabled' => $bidangTerkunci && !$bidangMilik]) id="bidangCard{{ $bidang->id }}">
@@ -148,7 +152,7 @@
                         @if($bidangTerkunci)
                             Terisi otomatis dari bidang/unit Anda dan tidak bisa diubah.
                         @elseif($tahapRencana)
-                            Pilih satu bidang/unit yang memegang proker ini. Draft Kegiatan Prodi saja boleh dikosongkan dulu, tetapi wajib diisi sebelum diajukan.
+                            Pilih satu bidang/unit yang memegang proker ini. Ketua pelaksana dipilih dari staff bidang/unit ini.
                         @else
                             Pilih satu bidang/unit yang memegang proker ini
                         @endif
@@ -163,6 +167,7 @@
             </div>
         </div>
 
+        @unless($ringkas)
         <div class="mb-3">
             <label class="form-label-custom">Deskripsi <span class="required">*</span></label>
             <textarea name="deskripsi" id="deskripsiInput" class="form-control form-control-custom"
@@ -173,9 +178,27 @@
                 <span style="font-size:11px;color:var(--c-fg-muted);font-weight:500;"><span id="deskripsiCount">0</span>/3000 karakter</span>
             </div>
         </div>
+        @endunless
 
     </div>
 
+    @if($ringkas)
+    <!-- Ketua Pelaksana (form ringkas, S-82) -->
+    <div class="form-card">
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Ketua Pelaksana</div>
+        <p style="font-size: 13px; color: var(--c-fg-muted); margin: -4px 0 12px;">Ketua pelaksana mendapat notifikasi untuk melengkapi seluruh data proker, lalu mengirimnya untuk Anda tinjau.</p>
+        @include('manajemenmahasiswa::partials.kegiatan-form._personel', [
+            'ketuaId'         => old('ketua_pelaksana_id'),
+            'ketuaTersimpan'  => null,
+            'ketuaSebidang'   => true,
+            'bidangAsal'      => [],
+            'dosenTerpilih'   => collect(),
+            'panitiaTerpilih' => collect(),
+            'ketuaWajib'      => true,
+            'hanyaKetua'      => true,
+        ])
+    </div>
+    @else
     <!-- Waktu & Lokasi -->
     <div class="form-card">
         <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg> Waktu & Lokasi</div>
@@ -188,7 +211,8 @@
                        @unless($tahapRencana) required @endunless>
             </div>
             <div class="col-md-3">
-                <label class="form-label-custom">Jam Mulai @if($wajibRencana('jam_mulai'))<span class="required">*</span>@endif</label>
+                {{-- Jam wajib sebelum Ajukan sejak S-81 (sinkron dengan peminjaman ruang EOffice) --}}
+                <label class="form-label-custom">Jam Mulai @if($tahapRencana || $wajibRencana('jam_mulai'))<span class="required">*</span>@endif</label>
                 <input type="time" name="jam_mulai" class="form-control form-control-custom"
                        value="{{ old('jam_mulai', $proker->jam_mulai_formatted) }}" @if($wajibRencana('jam_mulai')) required @endif>
             </div>
@@ -198,20 +222,14 @@
                        value="{{ old('tanggal_selesai', $proker->tanggal_selesai?->format('Y-m-d')) }}" @if($wajibRencana('tanggal_selesai')) required @endif>
             </div>
             <div class="col-md-3">
-                <label class="form-label-custom">Jam Selesai @if($wajibRencana('jam_selesai'))<span class="required">*</span>@endif</label>
+                <label class="form-label-custom">Jam Selesai @if($tahapRencana || $wajibRencana('jam_selesai'))<span class="required">*</span>@endif</label>
                 <input type="time" name="jam_selesai" class="form-control form-control-custom"
                        value="{{ old('jam_selesai', $proker->jam_selesai_formatted) }}" @if($wajibRencana('jam_selesai')) required @endif>
             </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label-custom">Lokasi @if($tandaWajib)<span class="required">*</span>@endif</label>
-            <input type="text" name="lokasi" class="form-control form-control-custom"
-                   value="{{ old('lokasi', $proker->lokasi) }}" id="lokasiInput" maxlength="150"
-                   @if($wajibRealisasi) required placeholder="Lokasi sebenarnya kegiatan berlangsung" @endif
-                   oninput="updateCharCount('lokasiInput','lokasiCount',150)">
-            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="lokasiCount">0</span>/150 karakter</div>
-        </div>
+        {{-- Ruangan kampus (EOffice) atau luar kampus/daring + cek bentrok (S-81) --}}
+        @include('manajemenmahasiswa::partials.kegiatan-form._lokasi-jadwal')
     </div>
 
     <!-- Personel -->
@@ -231,6 +249,7 @@
             'ketuaWajib'       => $tandaWajib,
             'panitiaWajib'     => $tahapRencana || $wajibRencana('panitia_ids'),
             'dosenWajib'       => $wajibRencana('dosen_pendamping_ids'),
+            'ketuaTerkunci'    => $ketuaTerkunci ?? false,
         ])
     </div>
 
@@ -247,28 +266,13 @@
                 <input type="number" name="target_peserta" class="form-control form-control-custom"
                        value="{{ old('target_peserta', $proker->target_peserta) }}" min="1" @if($wajibRencana('target_peserta')) required @endif>
             </div>
-            <div class="col-md-6">
-                @php
-                    // Cast `decimal:2` membuat anggaran keluar sebagai "2999000.00" dan itulah
-                    // yang tampil mentah di kolom angka. Ekor desimalnya dibuang supaya user
-                    // melihat 2999000, bukan 2999000.00.
-                    $anggaranValue = old('anggaran', $proker->anggaran);
-                    if (is_string($anggaranValue) && str_contains($anggaranValue, '.')) {
-                        $anggaranValue = rtrim(rtrim($anggaranValue, '0'), '.');
-                    }
-                @endphp
-                <label class="form-label-custom">Anggaran (Rp) @if($tandaWajib)<span class="required">*</span>@endif</label>
-                {{--
-                    step="any", BUKAN step="1000". Dengan step="1000" browser diam-diam
-                    menolak angka yang bukan kelipatan seribu (mis. 750500): tombol Simpan
-                    seolah tidak berfungsi dan yang muncul cuma gelembung bawaan browser,
-                    tanpa satu pun keterangan di form bahwa anggaran harus kelipatan 1000.
-                --}}
-                <input type="number" name="anggaran" class="form-control form-control-custom"
-                       value="{{ $anggaranValue }}" min="0" max="9999999999999" step="any"
-                       @if($wajibRealisasi) required placeholder="Anggaran yang terpakai (isi 0 bila tanpa biaya)" @endif>
-            </div>
         </div>
+        {{-- Anggaran dirinci per sumber dana (S-80); total = kolom `anggaran`. --}}
+        @include('manajemenmahasiswa::partials.kegiatan-form._sumber-dana', [
+            'kegiatan'   => $proker,
+            'tandaWajib' => $tandaWajib,
+            'realisasi'  => $wajibRealisasi,
+        ])
     </div>
 
     <!-- Banner -->
@@ -332,6 +336,7 @@
     <!-- Hidden inputs for file deletion -->
     <div id="deleteFileInputs"></div>
     @endif
+    @endif {{-- /$ringkas --}}
 
     <!-- Action Buttons -->
     <div class="d-flex gap-3 justify-content-end mt-2">

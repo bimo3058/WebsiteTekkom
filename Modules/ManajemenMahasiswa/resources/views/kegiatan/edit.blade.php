@@ -732,6 +732,7 @@
         @include('manajemenmahasiswa::partials.kegiatan-form._personel', [
             'ketuaId'          => old('ketua_pelaksana_id', $kegiatan->ketua_pelaksana_id),
             'ketuaTersimpan'   => $kegiatan->ketua_pelaksana_id,
+            'ketuaTerkunci'    => $ketuaTerkunci ?? false,
             'dosenTerpilih'    => $existingDosen,
             'panitiaTerpilih'  => $existingPanitia,
             'panitiaPeranLama' => $panitiaPeranLama,
@@ -748,22 +749,10 @@
                 <input type="number" name="target_peserta" class="form-control form-control-custom"
                        value="{{ old('target_peserta', $kegiatan->target_peserta) }}" min="1">
             </div>
-            <div class="col-md-6">
-                <label class="form-label-custom">Anggaran (Rp)</label>
-                @php
-                    // Cast `decimal:2` membuat anggaran keluar sebagai "2000000.00"; ekor
-                    // desimalnya dibuang supaya kolom angka tidak menampilkan ".00".
-                    $anggaranValue = old('anggaran', $kegiatan->anggaran);
-                    if (is_string($anggaranValue) && str_contains($anggaranValue, '.')) {
-                        $anggaranValue = rtrim(rtrim($anggaranValue, '0'), '.');
-                    }
-                @endphp
-                {{-- step="any": step="1000" membuat browser diam-diam menolak angka yang
-                     bukan kelipatan seribu (mis. 750500) tanpa keterangan apa pun di form. --}}
-                <input type="number" name="anggaran" class="form-control form-control-custom"
-                       value="{{ $anggaranValue }}" min="0" max="9999999999999" step="any">
-            </div>
         </div>
+        {{-- Anggaran per sumber dana (S-80); anggaran lama tanpa rincian tetap tersimpan
+             bila semua sumber dikosongkan. --}}
+        @include('manajemenmahasiswa::partials.kegiatan-form._sumber-dana', ['kegiatan' => $kegiatan, 'realisasi' => true])
     </div>
 
     <!-- Banner -->

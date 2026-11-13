@@ -20,9 +20,19 @@
     $tahapList         = $tahapList ?? null;
     $filterBidangAktif = request()->filled('bidang') && request('bidang') !== 'semua';
     $filterTahunAktif  = request()->filled('tahun') && request('tahun') !== 'semua';
-    $filterTahapAktif  = $tahapList && request()->filled('status_rencana') && array_key_exists(request('status_rencana'), $tahapList);
+    // Rencana Proker: tahap + status tinjauan digabung (?status_rencana=; ?tinjauan= alias
+    // dari tautan notifikasi). Pelaksanaan hanya punya status tinjauan, tanpa tahap.
+    $statusRencanaDipilih = (string) (request('status_rencana') ?: request('tinjauan'));
+    $filterTahapAktif  = $tahapList && array_key_exists($statusRencanaDipilih, $tahapList);
     $filterPeriodeAktif = \Modules\ManajemenMahasiswa\Support\PeriodeKepengurusan::ada(request('periode'));
-    $adaFilterPanel    = $filterBidangAktif || $filterPeriodeAktif || $filterTahunAktif || $filterTahapAktif;
+    // Status tinjauan (S-82) — Rencana Proker & Pelaksanaan; tujuan tautan lonceng notifikasi.
+    // Dimatikan bila $tahapList ada: di Rencana Proker status tinjauan sudah ikut dropdown tahap.
+    $tinjauanList       = (($filterTinjauan ?? false) && !$tahapList) ? \Modules\ManajemenMahasiswa\Models\Kegiatan::urutkanUntukPeninjau(\Modules\ManajemenMahasiswa\Models\Kegiatan::TINJAUAN_LABELS, (bool) ($peninjauTinjau ?? false)) : null;
+    $filterTinjauanAktif = $tinjauanList && array_key_exists((string) request('tinjauan'), $tinjauanList);
+    // Rentang tanggal (S-81)
+    [$rentangDari, $rentangSampai] = \Modules\ManajemenMahasiswa\Models\Kegiatan::rentangDariRequest(request());
+    $filterRentangAktif = $rentangDari || $rentangSampai;
+    $adaFilterPanel    = $filterBidangAktif || $filterPeriodeAktif || $filterTahunAktif || $filterTahapAktif || $filterRentangAktif || $filterTinjauanAktif;
     $adaFilterApaPun   = $adaFilterPanel || request()->filled('search');
     $tanpaTahun        = \Modules\ManajemenMahasiswa\Models\Kegiatan::FILTER_TANPA_TAHUN;
 @endphp
@@ -104,13 +114,35 @@
                             </x-manajemenmahasiswa::ui.select>
                         </div>
 
+                        {{-- Rentang tanggal (S-81): kegiatan yang berlangsung di dalam rentang ini --}}
+                        <div>
+                            <label class="filter-pop-label" for="filterDari">Rentang Tanggal</label>
+                            <div style="display:flex;gap:6px;align-items:center;">
+                                <input type="date" name="dari" id="filterDari" value="{{ $rentangDari }}" class="form-control form-control-custom" style="height:36px;font-size:13px;" aria-label="Dari tanggal">
+                                <span style="color:var(--c-fg-muted);font-size:12px;">–</span>
+                                <input type="date" name="sampai" id="filterSampai" value="{{ $rentangSampai }}" class="form-control form-control-custom" style="height:36px;font-size:13px;" aria-label="Sampai tanggal">
+                            </div>
+                        </div>
+
                         @if($tahapList)
                             <div>
-                                <label class="filter-pop-label" for="filterTahap">Tahap Rencana</label>
+                                <label class="filter-pop-label" for="filterTahap">Status Rencana</label>
                                 <x-manajemenmahasiswa::ui.select name="status_rencana" id="filterTahap">
-                                    <option value="" disabled hidden {{ $filterTahapAktif ? '' : 'selected' }}>Pilih tahap</option>
+                                    <option value="" disabled hidden {{ $filterTahapAktif ? '' : 'selected' }}>Pilih status</option>
                                     @foreach($tahapList as $kunci => $label)
-                                        <option value="{{ $kunci }}" {{ request('status_rencana') === $kunci ? 'selected' : '' }}>{{ $label }}</option>
+                                        <option value="{{ $kunci }}" {{ $statusRencanaDipilih === $kunci ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </x-manajemenmahasiswa::ui.select>
+                            </div>
+                        @endif
+
+                        @if($tinjauanList)
+                            <div>
+                                <label class="filter-pop-label" for="filterTinjauan">Status Tinjauan</label>
+                                <x-manajemenmahasiswa::ui.select name="tinjauan" id="filterTinjauan">
+                                    <option value="" {{ $filterTinjauanAktif ? '' : 'selected' }}>Semua Status</option>
+                                    @foreach($tinjauanList as $kunci => $label)
+                                        <option value="{{ $kunci }}" {{ request('tinjauan') === $kunci ? 'selected' : '' }}>{{ $label }}</option>
                                     @endforeach
                                 </x-manajemenmahasiswa::ui.select>
                             </div>
@@ -125,6 +157,25 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Pengalih Kartu / Daftar (S-87) — hanya bila halaman mengirim $tampilan
+                 (Rencana Proker, admin saja). Pilihan disimpan di sesi oleh controller. --}}
+            @isset($tampilan)
+                <div class="mk-tampilan" role="group" aria-label="Mode tampilan">
+                    <a href="{{ request()->fullUrlWithQuery(['tampilan' => 'kartu']) }}"
+                       class="mk-tampilan__btn {{ $tampilan === 'kartu' ? 'is-aktif' : '' }}"
+                       title="Tampilan kartu" aria-pressed="{{ $tampilan === 'kartu' ? 'true' : 'false' }}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                        <span class="mk-tampilan__label">Kartu</span>
+                    </a>
+                    <a href="{{ request()->fullUrlWithQuery(['tampilan' => 'daftar']) }}"
+                       class="mk-tampilan__btn {{ $tampilan === 'daftar' ? 'is-aktif' : '' }}"
+                       title="Tampilan daftar" aria-pressed="{{ $tampilan === 'daftar' ? 'true' : 'false' }}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+                        <span class="mk-tampilan__label">Daftar</span>
+                    </a>
+                </div>
+            @endisset
         </div>
     </div>
 </form>

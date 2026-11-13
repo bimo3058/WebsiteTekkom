@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\RepoMulmed;
+use Modules\ManajemenMahasiswa\Support\SumberDana;
 
 /**
  * Rencana Proker berdiri sendiri (S-49).
@@ -60,6 +61,11 @@ class RencanaProkerService
                     || Kegiatan::where('rencana_id', $rencana->id)->exists()) {
                     throw new \DomainException('Rencana proker ini sudah diajukan.');
                 }
+                // Hanya kiriman ketua pelaksana yang bisa disetujui (S-82). Bila ketua
+                // pelaksana keburu ditolak/dikembalikan di tab lain, jangan diteruskan.
+                if (!$terkini->sedang_ditinjau) {
+                    throw new \DomainException('Rencana ini belum dikirim ketua pelaksana untuk ditinjau, jadi belum bisa diteruskan ke Pelaksanaan.');
+                }
 
                 // replicate() ikut menyalin relasi yang sudah dimuat; dikosongkan supaya
                 // salinan tidak membawa koleksi milik rencana di memori.
@@ -69,6 +75,10 @@ class RencanaProkerService
                     'rencana_id'             => $rencana->id,
                     'banner'                 => $bannerBaru,
                     'is_pelaksanaan_updated' => false,
+                    // Pelaksanaan memulai alur tinjau sendiri (S-82): ketua pelaksana
+                    // mengisi realisasi, lalu KABID meninjau sebelum diunggah ke Arsip.
+                    'status_tinjauan'        => Kegiatan::TINJAU_DILENGKAPI,
+                    'dikirim_tinjau_at'      => null,
                 ]);
                 $salinan->save();
 
@@ -99,7 +109,7 @@ class RencanaProkerService
                     ]);
                 }
 
-                $rencana->update(['status' => Kegiatan::STATUS_DIAJUKAN]);
+                $rencana->update(['status' => Kegiatan::STATUS_DIAJUKAN, 'status_tinjauan' => null]);
 
                 return $salinan;
             });
@@ -136,6 +146,7 @@ class RencanaProkerService
             $this->barisTeks('Lokasi', $this->teksBebas($rencana->lokasi), $this->teksBebas($salinan->lokasi)),
             $this->barisPeserta($rencana, $salinan),
             $this->barisAnggaran($rencana, $salinan),
+            ...$this->barisSumberDana($rencana, $salinan),
             $this->barisTeks('Ketua Pelaksana', $this->namaKetua($rencana), $this->namaKetua($salinan), 'Berganti'),
             $this->barisOrang('Dosen Pendamping', $rencana->dosenPendampings, $salinan->dosenPendampings, 'dosen', true),
             $this->barisOrang('Panitia', $rencana->panitia, $salinan->panitia, 'orang', false),
@@ -221,6 +232,34 @@ class RencanaProkerService
         $baris = $this->baris('Anggaran', $teks($r), $p === null ? null : $teks($p) . ' terpakai', $teks($r) === $teks($p));
         if (!$baris['sesuai'] && $r !== null && $p !== null) {
             $baris['keterangan'] = ($p < $r ? 'Hemat ' : 'Lebih ') . $teks(abs($r - $p));
+        }
+
+        return $baris;
+    }
+
+    /**
+     * Baris per sumber dana (S-80) — hanya bila salah satu sisi sudah dirinci, supaya
+     * kegiatan lama tetap 8 isian seperti S-70.
+     */
+    private function barisSumberDana(Kegiatan $rencana, Kegiatan $salinan): array
+    {
+        if (!SumberDana::terisi($rencana) && !SumberDana::terisi($salinan)) {
+            return [];
+        }
+
+        $teks = fn ($n) => $n === null ? null : 'Rp ' . number_format((float) $n, 0, ',', '.');
+        $baris = [];
+        foreach (SumberDana::KOLOM as $kolom => $label) {
+            $r = $rencana->{$kolom};
+            $p = $salinan->{$kolom};
+            if ($r === null && $p === null) {
+                continue;
+            }
+            $b = $this->baris('  · ' . $label, $teks($r), $teks($p), $teks($r) === $teks($p));
+            if (!$b['sesuai'] && $r !== null && $p !== null) {
+                $b['keterangan'] = ((float) $p < (float) $r ? 'Hemat ' : 'Lebih ') . $teks(abs((float) $r - (float) $p));
+            }
+            $baris[] = $b;
         }
 
         return $baris;

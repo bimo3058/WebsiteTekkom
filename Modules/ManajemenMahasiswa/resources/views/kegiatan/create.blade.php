@@ -691,14 +691,9 @@
                 <input type="number" name="target_peserta" class="form-control form-control-custom"
                        placeholder="Jumlah peserta" value="{{ old('target_peserta') }}" min="1">
             </div>
-            <div class="col-md-6">
-                <label class="form-label-custom">Anggaran (Rp)</label>
-                {{-- step="any": step="1000" membuat browser diam-diam menolak angka yang
-                     bukan kelipatan seribu (mis. 750500) tanpa keterangan apa pun di form. --}}
-                <input type="number" name="anggaran" class="form-control form-control-custom"
-                       placeholder="Contoh: 5000000" value="{{ old('anggaran') }}" min="0" max="9999999999999" step="any">
-            </div>
         </div>
+        {{-- Anggaran per sumber dana (S-80) --}}
+        @include('manajemenmahasiswa::partials.kegiatan-form._sumber-dana', ['kegiatan' => null, 'realisasi' => true])
     </div>
 
     <!-- Banner -->

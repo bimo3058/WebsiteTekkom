@@ -27,9 +27,61 @@
     'action'      => route('manajemenmahasiswa.proker.index'),
     'placeholder' => 'Cari judul atau deskripsi rencana proker...',
     'tahapList'   => $tahapList,
+    'filterTinjauan' => true,
 ])
 
-@if($prokerList->count() > 0)
+@php
+    $opsiKartuProker = ['tampilTahap' => true, 'tandaiTanpaBidang' => true];
+    // Empty state lama hanya bila semua baris kosong DAN tak ada filter/pencarian apa pun.
+    $adaFilterLain = collect(request()->only(['search', 'bidang', 'tahun', 'periode', 'dari', 'sampai']))
+        ->filter(fn ($v) => is_string($v) && filled($v) && $v !== 'semua')->isNotEmpty();
+@endphp
+
+@if($kelompok)
+    {{-- Tanpa filter status (S-86): satu baris per status + "View all →" --}}
+    @if(collect($kelompok)->sum('total') === 0 && !$adaFilterLain)
+        <div class="empty-state">
+            <div style="display:flex;justify-content:center;margin-bottom:12px;color:var(--c-border);"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></div>
+            <h5>Belum ada rencana proker</h5>
+            <p>Rencana program kerja yang dibuat akan muncul di sini</p>
+            @if($canManage)
+                <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-btn mk-btn--primary mt-2">+ Buat Proker Pertama</a>
+            @endif
+        </div>
+    @else
+        @foreach($kelompok as $kunci => $baris)
+            @include('manajemenmahasiswa::partials.kegiatan-list._kelompok-status', [
+                'judul'      => $baris['label'],
+                'total'      => $baris['total'],
+                'items'      => $baris['items'],
+                'tautan'     => request()->fullUrlWithQuery(['status_rencana' => $kunci, 'tinjauan' => null, 'page' => null]),
+                'teksTautan' => 'View all →',
+                'routeShow'  => 'manajemenmahasiswa.proker.show',
+                'opsiKartu'  => $opsiKartuProker,
+                'tampilan'   => $tampilan ?? 'kartu',
+            ])
+        @endforeach
+    @endif
+@else
+    {{-- Mode tersaring: kepala status aktif + grid berpagination --}}
+    @include('manajemenmahasiswa::partials.kegiatan-list._kelompok-status', [
+        'judul'      => $statusAktif['label'],
+        'total'      => $prokerList->total(),
+        'tautan'     => request()->fullUrlWithQuery(['status_rencana' => null, 'tinjauan' => null, 'page' => null]),
+        'teksTautan' => '← Semua status',
+    ])
+@if($prokerList->count() > 0 && ($tampilan ?? 'kartu') === 'daftar')
+    @include('manajemenmahasiswa::partials.kegiatan-list._daftar', [
+        'items'     => $prokerList,
+        'routeShow' => 'manajemenmahasiswa.proker.show',
+        'opsiKartu' => $opsiKartuProker,
+    ])
+    @include('manajemenmahasiswa::partials.table-footer', [
+        'paginator'      => $prokerList,
+        'perPageOptions' => \Modules\ManajemenMahasiswa\Support\PerPage::KARTU,
+        'standalone'     => true,
+    ])
+@elseif($prokerList->count() > 0)
     <div class="row g-4">
         @foreach($prokerList as $proker)
             <div class="col-md-6 col-lg-4 col-xxl-3">
@@ -58,6 +110,7 @@
             <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-btn mk-btn--primary mt-2">+ Buat Proker Pertama</a>
         @endif
     </div>
+@endif
 @endif
 
 </x-manajemenmahasiswa::layouts.mahasiswa>
