@@ -12,7 +12,7 @@
 
         {{-- Panel Superadmin Controls Admin --}}
         @if(auth()->user()->hasRole('superadmin'))
-            <div class="mp-card" style="border-radius: 12px; width: 100%; border: 1px solid #E2E8F0;">
+            <div class="mp-card" style="border-radius: 14px; width: 100%; border: 1px solid #E2E8F0;">
                 <div class="mp-card-header" style="background: #FAFBFC;">
                     <h3 class="mp-card-title" style="font-size: 14px; display: flex; align-items: center; gap: 8px;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
@@ -61,7 +61,7 @@
                             @endforeach
                         </div>
                     </div>
-                    <div style="padding: 16px 24px; border-top:1px solid #E2E8F0; background:#fff; text-align:right;">
+                    <div style="padding: 16px 24px; border-top:1px solid #E2E8F0; background:#fff; text-align:right; border-radius: 0 0 14px 14px;">
                         <button type="submit" class="mp-btn primary"
                             style="padding: 10px 24px; font-size: 13px; border-radius: 8px;">Simpan Akses Admin</button>
                     </div>
@@ -71,7 +71,7 @@
 
 
         {{-- Panel Tampilan Mahasiswa / Umum --}}
-        <div class="mp-card" style="border-radius: 12px; width: 100%; border: 1px solid #E2E8F0;">
+        <div class="mp-card" style="border-radius: 14px; width: 100%; border: 1px solid #E2E8F0;">
             <div class="mp-card-header" style="background: #FAFBFC;">
                 <h3 class="mp-card-title" style="font-size: 14px; display: flex; align-items: center; gap: 8px;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
@@ -114,7 +114,7 @@
                         @endforeach
                     </div>
                 </div>
-                <div style="padding: 16px 24px; border-top:1px solid #E2E8F0; background:#fff; text-align:right;">
+                <div style="padding: 16px 24px; border-top:1px solid #E2E8F0; background:#fff; text-align:right; border-radius: 0 0 14px 14px;">
                     <button type="submit" class="mp-btn primary"
                         style="background:#059669; box-shadow:0 2px 6px rgba(5, 150, 105, .22); padding: 10px 24px; font-size: 13px; border-radius: 8px;">Simpan
                         Akses Mahasiswa</button>

@@ -10,7 +10,7 @@
     <div style="display: flex; gap: 24px; margin-top: 24px; align-items: flex-start; flex-wrap: wrap;">
 
         {{-- Panel Kiri: Jam Operasional --}}
-        <div class="mp-card" style="flex: 1; min-width: 300px; max-width: 400px; border-radius: 12px;">
+        <div class="mp-card" style="flex: 1; min-width: 300px; max-width: 400px; border-radius: 14px;">
             <div class="mp-card-header" style="background: #FAFBFC;">
                 <h3 class="mp-card-title" style="font-size: 14px;">Jam Operasional</h3>
             </div>
@@ -55,7 +55,7 @@
                         </label>
                     </div>
                 </div>
-                <div style="padding: 16px 24px; border-top:1px solid #E5E7EB; background:#fff; text-align:right;">
+                <div style="padding: 16px 24px; border-top:1px solid #E5E7EB; background:#fff; text-align:right; border-radius: 0 0 14px 14px;">
                     <button type="submit" class="mp-btn primary cursor-pointer"
                         style="padding: 10px 24px; font-size: 13px; border-radius: 8px;">Simpan Perubahan</button>
                 </div>
@@ -63,7 +63,7 @@
         </div>
 
         {{-- Panel Kanan: Blackout Dates --}}
-        <div class="mp-card" style="flex: 2; min-width: 400px; border-radius: 12px;">
+        <div class="mp-card" style="flex: 2; min-width: 400px; border-radius: 14px;">
             <div class="mp-card-header" style="background: #FAFBFC;">
                 <h3 class="mp-card-title" style="font-size: 14px;">Tanggal Merah</h3>
             </div>
