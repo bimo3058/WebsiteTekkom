@@ -207,13 +207,46 @@ class SupabaseStorage
     }
 
     /**
+     * Cek keberadaan object tanpa mengunduh isinya.
+     */
+    public function exists(string $path, ?string $bucket = null): bool
+    {
+        $targetBucket = $bucket ?? $this->bucket;
+
+        try {
+            $response = Http::timeout(15)
+                ->withToken($this->key)
+                ->head($this->objectUrl($targetBucket, $path));
+
+            // Sebagian proxy menolak HEAD; ulangi dengan GET satu byte.
+            if (in_array($response->status(), [405, 501], true)) {
+                return Http::timeout(15)
+                    ->withToken($this->key)
+                    ->withHeaders(['Range' => 'bytes=0-0'])
+                    ->get($this->objectUrl($targetBucket, $path))
+                    ->successful();
+            }
+
+            return $response->successful();
+        } catch (\Throwable $exception) {
+            Log::error('Supabase exists exception', [
+                'bucket' => $targetBucket,
+                'path' => $path,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
      * Pindahkan object di dalam bucket yang sama (rename path/file).
      */
     public function move(string $fromPath, string $toPath, ?string $bucket = null): bool
     {
         $targetBucket = $bucket ?? $this->bucket;
 
-        $response = Http::withHeaders([
+        $response = Http::timeout(30)->withHeaders([
             'Authorization' => 'Bearer ' . $this->key,
             'Content-Type'  => 'application/json',
         ])->post($this->url . '/storage/v1/object/move', [

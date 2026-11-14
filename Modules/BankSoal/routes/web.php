@@ -301,9 +301,11 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
         });
 
         // RPS Dosen Delete
+        // Catatan: route penghapusan RPS yang sudah diajukan sudah dihilangkan.
+        // Hanya draft (belum diajukan) yang masih dapat dihapus.
         Route::prefix('rps')->name('banksoal.rps.')->group(function () {
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
-                Route::delete('/{rpsId}', [DosenRpsController::class, 'destroy'])->name('destroy');
+                Route::delete('/draft/{draftId}', [DosenRpsController::class, 'deleteDraft'])->name('delete-draft');
             });
         });
 

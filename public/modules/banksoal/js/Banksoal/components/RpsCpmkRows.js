@@ -38,6 +38,7 @@ class RpsCpmkRows {
             this.ensureAtLeastOneRow();
             this.refreshAllPreviews();
             this.updateCpmkFormState();
+            this.validateDuplicates();
         }
 
         window.BanksoalRpsUploadForm = this;
@@ -84,14 +85,26 @@ class RpsCpmkRows {
                 if (row) {
                     this.updatePreview(row);
                     this.updateCpmkFormState();
+                    this.validateDuplicates(container);
                 }
             };
 
             container.onchange = (event) => {
                 const row = event.target.closest("[data-cpmk-row]");
                 if (row) {
+                    const target = event.target;
+                    if (target.matches('[data-cpmk-cpl-select], .cpl-select-input')) {
+                        const kodeIn = row.querySelector('input[name*="[kode]"]');
+                        if (kodeIn && !kodeIn.value.trim()) {
+                            const nextVal = this.getNextKodeForCpl(container, target.value);
+                            if (nextVal) {
+                                kodeIn.value = nextVal;
+                            }
+                        }
+                    }
                     this.updatePreview(row);
                     this.updateCpmkFormState();
+                    this.validateDuplicates(container);
                 }
             };
         });
@@ -138,6 +151,7 @@ class RpsCpmkRows {
             container.querySelectorAll("[data-cpmk-row]").forEach(row => this.renderCplSelect(row));
         });
         this.updateCpmkFormState();
+        this.validateDuplicates();
     }
 
     renderCplSelect(row) {
@@ -198,6 +212,7 @@ class RpsCpmkRows {
         this.renderCplSelect(row);
         this.updatePreview(row);
         this.updateCpmkFormState();
+        this.validateDuplicates(container);
 
         return row;
     }
@@ -252,12 +267,14 @@ class RpsCpmkRows {
             });
             this.updatePreview(row);
             this.updateCpmkFormState();
+            this.validateDuplicates(container);
             return;
         }
 
         row.remove();
         this.refreshAllPreviews();
         this.updateCpmkFormState();
+        this.validateDuplicates(container);
     }
 
     refreshAllPreviews() {
@@ -292,8 +309,18 @@ class RpsCpmkRows {
             return;
         }
 
+        // Identitas CPMK mengikuti nomor CPL: CPMK {nomor CPL}.{kode baris}
+        const cplSelect = row.querySelector("[data-cpmk-cpl-select], .cpl-select-input");
+        const cplText =
+            cplSelect && cplSelect.selectedIndex >= 0 && cplSelect.options[cplSelect.selectedIndex]
+                ? cplSelect.options[cplSelect.selectedIndex].textContent.trim()
+                : "";
+        const cplMatch = cplText.match(/\d+/);
+        const cplNum = cplMatch ? String(parseInt(cplMatch[0], 10)) : "";
+        const kodeLabel = cplNum && kode ? `${cplNum}.${kode}` : kode || "...";
+
         const parts = [
-            `CPMK ${kode || "..."}`,
+            `CPMK ${kodeLabel}`,
             "-",
             "Mahasiswa mampu",
             kkoLabel ? `(KKO ${kkoLabel})` : "(KKO ...)",
@@ -450,7 +477,115 @@ class RpsCpmkRows {
             btn.disabled = false;
         });
     }
+
+    getNextKodeForCpl(container, cplVal) {
+        if (!container || !cplVal) return "";
+        const rows = container.querySelectorAll("[data-cpmk-row]");
+        let maxNum = 0;
+        rows.forEach(r => {
+            const sel = r.querySelector("[data-cpmk-cpl-select], .cpl-select-input");
+            const cVal = sel ? (sel.value || sel.dataset.selectedValue || "") : "";
+            if (String(cVal) === String(cplVal)) {
+                const kodeIn = r.querySelector('input[name*="[kode]"]');
+                const val = parseInt(kodeIn?.value?.trim(), 10);
+                if (!isNaN(val) && val > maxNum) {
+                    maxNum = val;
+                }
+            }
+        });
+        return maxNum > 0 ? String(maxNum + 1) : "1";
+    }
+
+    validateDuplicates(targetContainer = null) {
+        const containers = targetContainer ? [targetContainer] : this.rowContainers;
+        let isOverallValid = true;
+
+        containers.forEach(container => {
+            if (!container) return;
+            const rows = Array.from(container.querySelectorAll("[data-cpmk-row]"));
+
+            // Clear previous duplicate errors
+            rows.forEach(row => {
+                const cplSelect = row.querySelector("[data-cpmk-cpl-select], .cpl-select-input");
+                const kodeInput = row.querySelector('input[name*="[kode]"]');
+                const warns = row.querySelectorAll('.cpmk-duplicate-warning');
+                warns.forEach(w => w.remove());
+
+                if (cplSelect) {
+                    cplSelect.style.borderColor = "";
+                    cplSelect.style.backgroundColor = "";
+                    cplSelect.classList.remove("is-invalid");
+                }
+                if (kodeInput) {
+                    kodeInput.style.borderColor = "";
+                    kodeInput.style.backgroundColor = "";
+                    kodeInput.classList.remove("is-invalid");
+                    kodeInput.setCustomValidity("");
+                }
+            });
+
+            // Group by CPL and Kode CPMK
+            const groups = new Map();
+            rows.forEach(row => {
+                const cplSelect = row.querySelector("[data-cpmk-cpl-select], .cpl-select-input");
+                const kodeInput = row.querySelector('input[name*="[kode]"]');
+                const cplVal = (cplSelect?.value || cplSelect?.dataset?.selectedValue || "").trim();
+                let cplText = "";
+                if (cplSelect && cplSelect.selectedIndex >= 0 && cplSelect.options[cplSelect.selectedIndex]) {
+                    cplText = cplSelect.options[cplSelect.selectedIndex].textContent.trim();
+                }
+                if (!cplText) cplText = cplVal ? `CPL ${cplVal}` : "CPL";
+                const kodeVal = (kodeInput?.value || "").trim();
+
+                if (cplVal && kodeVal) {
+                    const key = `${cplVal}___${kodeVal.toLowerCase()}`;
+                    if (!groups.has(key)) {
+                        groups.set(key, []);
+                    }
+                    groups.get(key).push({ row, cplSelect, kodeInput, cplText, kodeVal });
+                }
+            });
+
+            // Mark duplicated pairs
+            groups.forEach((items) => {
+                if (items.length > 1) {
+                    isOverallValid = false;
+                    items.forEach(({ row, cplSelect, kodeInput, cplText, kodeVal }) => {
+                        if (cplSelect) {
+                            cplSelect.style.borderColor = "#ef4444";
+                            cplSelect.style.backgroundColor = "#fef2f2";
+                            cplSelect.classList.add("is-invalid");
+                        }
+                        if (kodeInput) {
+                            kodeInput.style.borderColor = "#ef4444";
+                            kodeInput.style.backgroundColor = "#fef2f2";
+                            kodeInput.classList.add("is-invalid");
+                            kodeInput.setCustomValidity(`Kombinasi ${cplText} dan Kode CPMK ${kodeVal} sudah digunakan pada baris lain.`);
+
+                            const colDiv = kodeInput.parentElement ? kodeInput.parentElement.parentElement : row;
+                            if (colDiv && !colDiv.querySelector('.cpmk-duplicate-warning')) {
+                                const warn = document.createElement("div");
+                                warn.className = "cpmk-duplicate-warning";
+                                warn.style.cssText = "color:#ef4444;font-size:11px;font-weight:600;margin-top:4px;display:flex;align-items:center;gap:4px;line-height:1.2;";
+                                warn.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Duplikat (${cplText} & CPMK ${kodeVal})`;
+                                colDiv.appendChild(warn);
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        return isOverallValid;
+    }
 }
+
+window.validateCpmkDuplicates = function(container) {
+    if (window._rpsCpmkInstance) {
+        return window._rpsCpmkInstance.validateDuplicates(container);
+    }
+    return true;
+};
 
 function initRpsCpmk() {
     if (window._rpsCpmkInstance) return;

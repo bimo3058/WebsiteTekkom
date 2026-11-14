@@ -45,13 +45,15 @@
         <!-- Row 1: Mata Kuliah & Dosen Lain -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="form-group-compact">
-                <label class="form-label form-label-required">Mata Kuliah</label>
-                <select name="mata_kuliah_id" id="mkSelect" class="form-control compact-control" required {{ !$isUploadOpen ? 'disabled' : '' }}>
-                    <option value="" disabled selected>Pilih Mata Kuliah</option>
-                    @foreach ($mataKuliahs as $mk)
-                        <option value="{{ $mk->id }}">{{ $mk->kode }} - {{ $mk->nama }} ({{ $mk->sks }} SKS)</option>
-                    @endforeach
-                </select>
+                <label for="mkSelect-trigger" class="form-label form-label-required">Mata Kuliah</label>
+                <x-banksoal::ui.alpine-select id="mkSelect" label="Mata Kuliah">
+                    <select name="mata_kuliah_id" id="mkSelect" class="form-control compact-control" required {{ !$isUploadOpen ? 'disabled' : '' }}>
+                        <option value="" disabled selected>Pilih Mata Kuliah</option>
+                        @foreach ($mataKuliahs as $mk)
+                            <option value="{{ $mk->id }}">{{ $mk->kode }} - {{ $mk->nama }} ({{ $mk->sks }} SKS)</option>
+                        @endforeach
+                    </select>
+                </x-banksoal::ui.alpine-select>
             </div>
 
             <div class="form-group-compact">

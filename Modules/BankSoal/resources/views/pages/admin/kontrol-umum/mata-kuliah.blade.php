@@ -1189,7 +1189,7 @@
 
             Swal.fire({
                 title: 'Hapus Mata Kuliah?',
-                text: `Apakah Anda yakin ingin menghapus "${mk.nama}"?`,
+                text: `Mata kuliah "${mk.nama}" akan disembunyikan dari daftar. Riwayat RPS dan bank soal yang sudah memakainya tetap tersimpan.`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
@@ -1221,7 +1221,7 @@
                 if (result.isConfirmed) {
                     allMataKuliah = allMataKuliah.filter((item) => Number(item.id) !== Number(id));
                     applyMataKuliahFilters(true);
-                    showSuccess('Mata kuliah berhasil dihapus');
+                    showSuccess('Mata kuliah berhasil dihapus dan disembunyikan dari daftar');
                 }
             });
         }
@@ -1383,6 +1383,8 @@
                     showSuccess(result.message);
                 } catch (error) {
                     showError(toFriendlyMessage(error.message, 'Gagal sinkronisasi semester'));
+                } finally {
+                    Swal.close();
                 }
             });
         }
@@ -1514,7 +1516,7 @@
         async function deleteCpl(id, kode) {
             Swal.fire({
                 title: 'Hapus CPL?',
-                text: `Apakah Anda yakin ingin menghapus "${kode}"?`,
+                text: `CPL "${kode}" akan disembunyikan dari daftar. Riwayat RPS dan bank soal yang sudah memakainya tetap tersimpan.`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
@@ -1540,7 +1542,7 @@
                 if (result.isConfirmed) {
                     allCpl = allCpl.filter((item) => Number(item.id) !== Number(id));
                     applyCplFilters(true);
-                    showSuccess('CPL berhasil dihapus');
+                    showSuccess('CPL berhasil dihapus dan disembunyikan dari daftar');
                 }
             });
         }

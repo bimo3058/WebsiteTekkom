@@ -31,9 +31,16 @@ class HasilReviewRps extends Model
         return $this->belongsTo(RpsDetail::class, 'rps_detail_id');
     }
 
+    /**
+     * Parameter yang dinilai.
+     *
+     * withTrashed() dipakai supaya histori penilaian tetap utuh: parameter yang
+     * "dihapus" (soft delete) hanya disembunyikan dari daftar/form frontend, bukan
+     * menghilangkan bobot pada review yang sudah tersimpan.
+     */
     public function parameter(): BelongsTo
     {
-        return $this->belongsTo(Parameter::class, 'parameter_id');
+        return $this->belongsTo(Parameter::class, 'parameter_id')->withTrashed();
     }
 
     // -------------------------------------------------------------------------

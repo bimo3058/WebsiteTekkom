@@ -3,9 +3,12 @@
 namespace Modules\BankSoal\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Cpl extends Model
 {
+    use SoftDeletes;
+
     protected $table    = 'bs_cpl';
     protected $fillable = ['kode', 'deskripsi'];
     public $timestamps = false;

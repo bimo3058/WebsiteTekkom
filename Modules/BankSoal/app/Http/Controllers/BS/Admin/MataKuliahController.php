@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Modules\BankSoal\Models\MataKuliah;
 use Modules\BankSoal\Services\MataKuliahService;
+use Modules\BankSoal\Support\MasterDataUpsert;
 use Maatwebsite\Excel\Facades\Excel;
 use Modules\BankSoal\Exports\MataKuliahTemplateExport;
 use Modules\BankSoal\Imports\MataKuliahImport;
@@ -59,6 +60,10 @@ class MataKuliahController extends Controller
 
     /**
      * Store new Mata Kuliah
+     *
+     * Data ditulis hanya kalau belum ada baris dengan isi yang sama persis.
+     * Kalau seluruh field sama, sistem menampilkan data yang sudah tersimpan
+     * (dipulihkan bila sebelumnya dihapus) tanpa membuat baris ganda.
      */
     public function store(Request $request): JsonResponse
     {
@@ -70,11 +75,22 @@ class MataKuliahController extends Controller
         );
 
         try {
-            $mataKuliah = $this->mataKuliahService->create($validated);
+            $result = $this->mataKuliahService->storeIdentical($validated);
+
+            if (!$result['created']) {
+                return response()->json([
+                    'success' => true,
+                    'created' => false,
+                    'message' => MasterDataUpsert::existingMessage('mata kuliah', $result['restored']),
+                    'data'    => $result['mata_kuliah'],
+                ]);
+            }
+
             return response()->json([
                 'success' => true,
+                'created' => true,
                 'message' => 'Mata Kuliah berhasil ditambahkan',
-                'data' => $mataKuliah
+                'data'    => $result['mata_kuliah']
             ], 201);
         } catch (\Exception $e) {
             return response()->json([

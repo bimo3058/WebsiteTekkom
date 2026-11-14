@@ -160,7 +160,8 @@
                                         <button type="button"
                                                 class="delete-draft-btn menu-delete"
                                                 data-draft-id="{{ $item->draft_id }}"
-                                                data-mk="{{ e($item->mataKuliah?->nama ?? 'Draft RPS') }}">
+                                                data-mk="{{ e($item->mataKuliah?->nama ?? 'Draft RPS') }}"
+                                                data-destroy-url="{{ route('banksoal.rps.dosen.delete-draft', $item->draft_id) }}">
                                             Hapus Draft
                                         </button>
 
@@ -177,8 +178,9 @@
 
                                         @php
                                             $isUploader = $uploaderId == Auth::id();
-                                            $canEdit    = $isUploader && in_array($item->status->value, ['diajukan', 'revisi']);
-                                            $canDelete  = $isUploader && in_array($item->status->value, ['diajukan']);
+                                            // Tombol Edit terkunci kecuali RPS berstatus Revisi
+                                            $isRevisi   = $item->status->value === 'revisi';
+                                            $canEdit    = $isUploader && $isRevisi;
                                         @endphp
 
                                         @if($canEdit)
@@ -187,23 +189,9 @@
                                             </a>
                                         @else
                                             <button type="button" class="cursor-not-allowed text-slate-400" disabled
-                                                    title="{{ !$isUploader ? 'Hanya pengunggah yang dapat mengubah RPS ini' : 'RPS tidak dapat diedit dengan status ' . $item->status->label() }}">
+                                                    title="{{ !$isUploader ? 'Hanya pengunggah yang dapat mengubah RPS ini' : 'Tombol edit terkunci. RPS hanya dapat diedit saat berstatus Revisi.' }}">
+                                                <i class="fas fa-lock" aria-hidden="true"></i>
                                                 Edit
-                                            </button>
-                                        @endif
-
-                                        @if($canDelete)
-                                            <button type="button"
-                                                    class="delete-rps-btn menu-delete"
-                                                    data-id="{{ $item->id }}"
-                                                    data-mk="{{ e($item->mataKuliah?->nama ?? 'RPS') }}"
-                                                    data-destroy-url="{{ route('banksoal.rps.dosen.destroy', $item->id) }}">
-                                                Hapus
-                                            </button>
-                                        @else
-                                            <button type="button" class="cursor-not-allowed text-slate-400" disabled
-                                                    title="{{ !$isUploader ? 'Hanya pengunggah yang dapat menghapus RPS ini' : 'RPS tidak dapat dihapus dengan status ' . $item->status->label() }}">
-                                                Hapus
                                             </button>
                                         @endif
                                     @endif

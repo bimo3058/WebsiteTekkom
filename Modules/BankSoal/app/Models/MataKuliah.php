@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MataKuliah extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'bs_mata_kuliah';
 
@@ -32,12 +33,12 @@ class MataKuliah extends Model
 
     public static function validationRules(?int $id = null): array
     {
-        $uniqueKode = $id ? "unique:bs_mata_kuliah,kode,{$id}" : 'unique:bs_mata_kuliah,kode';
-        $uniqueNama = $id ? "unique:bs_mata_kuliah,nama,{$id}" : 'unique:bs_mata_kuliah,nama';
-
+        // Identitas data master ditentukan oleh keseluruhan field (lihat
+        // Modules\BankSoal\Support\MasterDataUpsert), bukan unik per kolom.
+        // Jadi kode/nama yang sama dengan 1 field berbeda tetap dianggap data baru.
         return [
-            'kode'     => "required|string|max:50|{$uniqueKode}",
-            'nama'     => "required|string|max:255|{$uniqueNama}",
+            'kode'     => 'required|string|max:50',
+            'nama'     => 'required|string|max:255',
             'sks'      => 'required|integer|min:1|max:3',
             'semester' => 'required|integer|min:1|max:8',
             'is_active'=> 'boolean',
@@ -47,8 +48,10 @@ class MataKuliah extends Model
     public static function validationMessages(): array
     {
         return [
-            'kode.unique' => 'Kode mata kuliah sudah terdaftar. Gunakan kode lain.',
-            'nama.unique' => 'Nama mata kuliah sudah terdaftar. Gunakan nama lain.',
+            'kode.required'     => 'Kode mata kuliah wajib diisi.',
+            'nama.required'     => 'Nama mata kuliah wajib diisi.',
+            'sks.required'      => 'SKS wajib diisi.',
+            'semester.required' => 'Semester wajib diisi.',
         ];
     }
 

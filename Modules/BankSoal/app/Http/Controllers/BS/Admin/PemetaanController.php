@@ -104,6 +104,7 @@ class PemetaanController extends Controller
         $rawRows = DB::table('bs_mata_kuliah as mk')
             ->leftJoin('bs_mata_kuliah_cpl as map', 'mk.id', '=', 'map.mk_id')
             ->leftJoin('bs_cpl as cpl', 'cpl.id', '=', 'map.cpl_id')
+            ->whereNull('cpl.deleted_at') // CPL yang dihapus disembunyikan dari pemetaan
             ->select(
                 'mk.id as mk_id',
                 'mk.kode as mk_kode',
@@ -318,6 +319,7 @@ class PemetaanController extends Controller
         $rawRows = DB::table('bs_cpl as cpl')
             ->leftJoin('bs_mata_kuliah_cpl as map', 'cpl.id', '=', 'map.cpl_id')
             ->leftJoin('bs_mata_kuliah as mk', 'mk.id', '=', 'map.mk_id')
+            ->whereNull('mk.deleted_at') // MK yang dihapus disembunyikan dari pemetaan
             ->select('cpl.id as cpl_id', 'cpl.kode as cpl_kode', 'mk.id as mk_id', 'mk.kode as mk_kode', 'mk.nama as mk_nama')
             ->orderBy('cpl.kode')
             ->orderBy('mk.nama')
@@ -408,6 +410,7 @@ class PemetaanController extends Controller
             ->join('lecturers as l', 'l.user_id', '=', 'u.id')
             ->leftJoin('bs_dosen_pengampu_mk as map', 'u.id', '=', 'map.user_id')
             ->leftJoin('bs_mata_kuliah as mk', 'mk.id', '=', 'map.mk_id')
+            ->whereNull('mk.deleted_at') // MK yang dihapus disembunyikan dari pemetaan
             ->select('u.id as user_id', 'u.name as dosen_nama', 'map.id as map_id', 'mk.id as mk_id', 'mk.kode as mk_kode', 'mk.nama as mk_nama')
             ->orderBy('u.name')
             ->orderBy('mk.nama')
