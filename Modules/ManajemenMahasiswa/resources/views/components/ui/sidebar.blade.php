@@ -134,22 +134,65 @@
             flex-shrink: 0;
         }
 
+        /* Submenu bergaya SICATA (Modules/Capstone .sb-sublist/.sb-subitem): garis pemandu
+           vertikal di kiri, item 28px rata kiri, aktif = latar lembut + pil navy.
+           Ditulis di sini (bukan di layout) karena style ini dimuat paling akhir,
+           jadi menimpa aturan .sidebar-dropdown-menu/.sub-item di ketiga layout. */
         .sidebar-dropdown-menu {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            margin: 0 14px;
+            padding: 0 0 0 10px;
+            border-left: 1px solid var(--c-border, #DFE1E7);
         }
 
         .sidebar-dropdown.open .sidebar-dropdown-menu {
             max-height: 300px;
+            padding-top: 2px;
+            padding-bottom: 4px;
         }
 
         .sidebar-dropdown.open .dropdown-arrow {
             transform: rotate(180deg);
         }
 
-        .sub-item {
-            padding-left: 38px !important;
+        .sidebar .sidebar-dropdown .sub-item {
+            height: 28px;
+            flex-shrink: 0;
+            margin: 0;
+            padding: 0 8px !important;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        /* Induk dropdown tidak di-highlight saat sidebar terbuka — penanda aktif cukup di
+           sub-item. Saat diciutkan sub-item tersembunyi, jadi highlight induk dipertahankan. */
+        body:not(.sidebar-collapsed) .sidebar .sidebar-dropdown-toggle.active {
+            background: transparent;
+            color: var(--c-fg-sec, #353849);
+            font-weight: 500;
+        }
+
+        body:not(.sidebar-collapsed) .sidebar .sidebar-dropdown-toggle.active:hover {
+            background: var(--c-bg, #F6F8FA);
+            color: var(--c-fg, #0D0D12);
+        }
+
+        body:not(.sidebar-collapsed) .sidebar .sidebar-dropdown-toggle.active::before {
+            display: none;
+        }
+
+        body:not(.sidebar-collapsed) .sidebar .sidebar-dropdown-toggle.active svg {
+            color: var(--c-fg-muted, #666D80);
+        }
+
+        .sidebar .sidebar-dropdown .sub-item .nav-label {
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .sidebar-collapsed .sb-section-label,
@@ -425,6 +468,8 @@
                 </div>
             </div>
         @endif
+
+        <div x-show="sidebarOpen" class="sb-section-label">Komunikasi & Layanan</div>
 
         @php
             $forumDropdownActive = request()->routeIs('manajemenmahasiswa.forum.*');
