@@ -42,6 +42,7 @@
             .dots-wrap {
                 position: relative;
                 display: inline-block;
+                line-height: 1;
             }
 
             .btn-dots {
@@ -50,61 +51,79 @@
                 justify-content: center;
                 width: 32px;
                 height: 32px;
+                padding: 0;
+                border: 0;
                 border-radius: 8px;
-                border: 1px solid var(--slate-200);
-                background: #fff;
+                background: transparent;
                 font-size: 18px;
+                line-height: 1;
                 cursor: pointer;
                 color: #64748b;
-                transition: all 0.15s;
+                transition: color 0.2s;
             }
 
             .btn-dots:hover {
-                border-color: var(--primary-blue);
+                border: 0;
                 color: var(--primary-blue);
-                background: #f0f4ff;
+                background: transparent;
             }
 
             .dots-menu {
                 display: none;
                 position: absolute;
                 right: 0;
-                top: 100%;
+                top: calc(100% + 5px);
                 background: #fff;
-                border: 1px solid var(--slate-200);
+                border: 1px solid #e2e8f0;
                 border-radius: 12px;
-                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-                min-width: 180px;
-                z-index: 50;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+                min-width: 160px;
+                z-index: 100;
                 overflow: hidden;
-                margin-top: 8px;
+                padding: 4px;
             }
 
             .dots-menu.open {
                 display: block;
+                animation: menuFadeIn 0.2s ease-out;
+            }
+
+            @keyframes menuFadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
             }
 
             .dots-menu a,
             .dots-menu button {
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                justify-content: flex-start;
                 width: 100%;
-                padding: 12px 16px;
+                padding: 10px 12px;
+                margin: 0;
                 background: none;
                 border: none;
-                border-bottom: 1px solid #f1f5f9;
+                border-radius: 8px;
                 font-size: 13px;
-                font-weight: 600;
+                font-weight: 500;
+                line-height: 1.2;
                 color: var(--slate-700);
                 cursor: pointer;
                 text-align: left;
-                transition: background 0.2s;
+                text-decoration: none;
+                transition: all 0.15s;
             }
 
             .dots-menu a:hover:not(:disabled),
             .dots-menu button:hover:not(:disabled) {
-                background: #f8fafc;
+                background: #f1f5f9;
                 color: var(--primary-blue);
             }
 
@@ -115,20 +134,13 @@
                 opacity: 0.7;
             }
 
-            .dots-menu a:disabled svg,
-            .dots-menu button:disabled svg,
-            .dots-menu a:disabled i,
-            .dots-menu button:disabled i {
-                opacity: 0.6;
-            }
-
             .dots-menu .menu-delete:not(:disabled) {
                 color: var(--danger-red);
             }
 
             .dots-menu .menu-delete:hover:not(:disabled) {
-                background: #fff1f2;
-                color: var(--danger-red);
+                background: #fef2f2;
+                color: #dc2626;
             }
         </style>
     @endpush
@@ -221,16 +233,15 @@
                                 </td>
                                 <td class="px-6 py-5 text-center">
                                     <div class="dots-wrap" id="dots-{{ $param->id }}">
-                                        <button class="btn-dots" onclick="toggleMenu({{ $param->id }}, event)">
-                                            <i class="fas fa-ellipsis-v text-xs"></i>
-                                        </button>
+                                        <button type="button" class="btn-dots" aria-label="Aksi"
+                                            onclick="toggleMenu({{ $param->id }}, event)">&#8942;</button>
                                         <div class="dots-menu" id="menu-{{ $param->id }}">
                                             <a href="{{ route('banksoal.soal.gpm.parameter.edit', $param->id) }}">
-                                                <i class="fas fa-edit w-4 text-blue-500"></i> Edit Parameter
+                                                Edit
                                             </a>
-                                            <button class="menu-delete"
+                                            <button type="button" class="menu-delete"
                                                 onclick="deleteParameter({{ $param->id }}, '{{ addslashes($param->aspek) }}')">
-                                                <i class="fas fa-trash-alt w-4"></i> Hapus
+                                                Hapus
                                             </button>
                                         </div>
                                     </div>

@@ -76,8 +76,8 @@
                     @foreach ($rpsItems as $item)
                         <tr class="table-row expanded-row" data-group="{{ $mkId }}" data-year="{{ $item->tahun_ajaran }}" style="display:none; background-color: #f9fafb;">
                             <td class="px-6 py-3"></td>
-                            <td colspan="4">
-                                <div class="py-2 px-4 bg-slate-50 rounded-lg">
+                            <td colspan="5" class="px-6 py-3">
+                                <div class="py-1">
                                     <div class="grid grid-cols-5 gap-4 text-sm">
                                         <div>
                                             <p class="text-xs text-slate-500 font-semibold">Tanggal Disetujui</p>

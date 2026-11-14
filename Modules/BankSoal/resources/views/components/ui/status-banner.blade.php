@@ -1,49 +1,173 @@
-<!-- Status Banner Component - untuk menampilkan periode aktif -->
+@php
+    $bannerTone = ! $activePeriode
+        ? 'is-closed'
+        : ($isUploadOpen ? 'is-open' : 'is-closed');
+@endphp
+
+<style>
+    .bs-period-banner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border: 1px solid #FEDF89;
+        border-radius: 12px;
+        background: #FFFAEB;
+        color: #93370D;
+    }
+
+    .bs-period-banner.is-open {
+        border-color: #ABEFC6;
+        background: #ECFDF3;
+        color: #054F31;
+    }
+
+    .bs-period-banner.is-closed {
+        border-color: #FECDCA;
+        background: #FEF3F2;
+        color: #912018;
+    }
+
+    .bs-period-banner.is-warning {
+        border-color: #FEDF89;
+        background: #FFFAEB;
+        color: #93370D;
+    }
+
+    .bs-period-banner-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #FEF0C7;
+        color: #B54708;
+        font-size: 14px;
+    }
+
+    .bs-period-banner.is-open .bs-period-banner-icon {
+        background: #D1FADF;
+        color: #067647;
+    }
+
+    .bs-period-banner.is-closed .bs-period-banner-icon {
+        background: #FEE4E2;
+        color: #B42318;
+    }
+
+    .bs-period-banner-copy {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .bs-period-banner-title {
+        display: block;
+        font-size: 12.5px;
+        font-weight: 700;
+    }
+
+    .bs-period-banner-copy p {
+        margin-top: 3px;
+        font-size: 12.5px;
+        line-height: 1.7;
+        overflow-wrap: anywhere;
+    }
+
+    .bs-period-banner-copy button.bs-period-banner-more {
+        font-weight: 700;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        background: none;
+        border: 0;
+        padding: 0;
+        color: inherit;
+        cursor: pointer;
+    }
+
+    .bs-period-banner-badge {
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #FEF0C7;
+        color: #B54708;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .bs-period-banner.is-open .bs-period-banner-badge {
+        background: #D1FADF;
+        color: #067647;
+    }
+
+    .bs-period-banner.is-closed .bs-period-banner-badge {
+        background: #FEE4E2;
+        color: #B42318;
+    }
+
+    @media (max-width: 767px) {
+        .bs-period-banner {
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        .bs-period-banner-badge {
+            margin-left: 44px;
+        }
+    }
+</style>
+
 @if($activePeriode)
-    <div class="mb-8 status-banner {{ $isUploadOpen ? 'status-banner-success' : 'status-banner-danger' }}">
-        <div class="flex gap-2 items-start">
+    <div class="bs-period-banner {{ $bannerTone }}" role="status">
+        <span class="bs-period-banner-icon">
+            <i class="fas {{ $isUploadOpen ? 'fa-calendar-check' : 'fa-calendar-xmark' }}" aria-hidden="true"></i>
+        </span>
+        <div class="bs-period-banner-copy">
             @if($isUploadOpen)
-                <i class="fas fa-calendar-check text-2xl text-green-600"></i>
-            @else
-                <i class="fas fa-calendar-times text-2xl text-red-600"></i>
-            @endif
-            <div>
-                @if($isUploadOpen)
-                    <h3 class="font-bold text-slate-800 mb-1 text-lg">{{ $activePeriode->judul }}</h3>
-                    <p class="text-slate-600 text-sm">
-                        Batas akhir pengunggahan RPS untuk Semester <strong>{{ $activePeriode->semester }}
-                            {{ $activePeriode->tahun_ajaran }}</strong> adalah
-                        <strong>{{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->locale('id')->translatedFormat('d F Y, H:i') }}
-                            WIB</strong>.
-                @else
-                        <h3 class="text-white-600 font-semibold block mt-2">Sesi unggah saat ini sedang ditutup.</h3>
-                    @endif
+                <span class="bs-period-banner-title">{{ $activePeriode->judul }}</span>
+                <p>
+                    Batas akhir pengunggahan RPS Semester
+                    <strong>{{ $activePeriode->semester }} {{ $activePeriode->tahun_ajaran }}</strong>
+                    adalah
+                    <strong>{{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->locale('id')->translatedFormat('d F Y, H:i') }} WIB</strong>.
                 </p>
-            </div>
+            @else
+                <span class="bs-period-banner-title">Sesi Unggah RPS Ditutup</span>
+                <p>
+                    Pengunggahan RPS Semester
+                    <strong>{{ $activePeriode->semester }} {{ $activePeriode->tahun_ajaran }}</strong>
+                    sudah ditutup. Dokumen yang sudah diajukan tetap dapat dipantau di riwayat pengajuan.
+                </p>
+            @endif
         </div>
+        @unless($isUploadOpen)
+            <span class="bs-period-banner-badge">Ditutup</span>
+        @endunless
     </div>
 
     @if($tenggatH7 && count($unsubmittedMk) > 0)
-        <div class="mb-0 alert alert-warning">
-            <i class="fas fa-exclamation-triangle text-lg shrink-0"></i>
-            <div>
-                <p class="text-sm">
-                    <strong>
-                        Waktu tersisa {{ $daysLeft }}
-                        @if(isset($isHourFormat) && $isHourFormat)
-                            jam!
-                        @else
-                            hari!
-                        @endif
-                    </strong>
-                </p>
+        <div class="bs-period-banner is-warning" role="alert">
+            <span class="bs-period-banner-icon"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></span>
+            <div class="bs-period-banner-copy">
+                <span class="bs-period-banner-title">
+                    Waktu tersisa {{ $daysLeft }}
+                    @if(isset($isHourFormat) && $isHourFormat)
+                        jam!
+                    @else
+                        hari!
+                    @endif
+                </span>
                 <div x-data="{
-                                            items: {{ json_encode($unsubmittedMk) }},
-                                            limit: 5,
-                                            get visibleItems() { return this.items.slice(0, this.limit); },
-                                            get remaining() { return this.items.length - this.limit; }
-                                        }">
-                    <p class="text-sm">Anda belum mengunggah RPS untuk:
+                                    items: {{ json_encode($unsubmittedMk) }},
+                                    limit: 5,
+                                    get visibleItems() { return this.items.slice(0, this.limit); },
+                                    get remaining() { return this.items.length - this.limit; }
+                                }">
+                    <p>Anda belum mengunggah RPS untuk:
                         <strong>
                             <template x-for="(mk, index) in visibleItems" :key="index">
                                 <span>
@@ -51,8 +175,7 @@
                                     </span>
                                 </span>
                             </template>
-                            <button type="button" x-show="remaining > 0" @click="limit += 5"
-                                class="text-amber-700 hover:text-amber-900 underline font-bold cursor-pointer"
+                            <button type="button" x-show="remaining > 0" @click="limit += 5" class="bs-period-banner-more"
                                 x-text="'+' + remaining"></button>
                         </strong>
                     </p>
@@ -61,20 +184,12 @@
         </div>
     @endif
 @else
-    <div
-        class="mb-8 p-6 bg-white border-l-4 border-yellow-400 rounded-lg flex items-center justify-between gap-4 shadow-sm">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-calendar-xmark text-yellow-600 text-lg"></i>
-            </div>
-            <div>
-                <h3 class="font-bold text-slate-900 text-base">Belum Ada Jadwal Pengajuan</h3>
-                <p class="text-sm text-slate-600">Tidak ada sesi pengajuan RPS yang ditambahkan saat ini</p>
-            </div>
+    <div class="bs-period-banner is-closed" role="status">
+        <span class="bs-period-banner-icon"><i class="fas fa-calendar-xmark" aria-hidden="true"></i></span>
+        <div class="bs-period-banner-copy">
+            <span class="bs-period-banner-title">Belum Ada Jadwal Pengajuan</span>
+            <p>Tidak ada sesi pengajuan RPS yang ditambahkan saat ini.</p>
         </div>
-        <span
-            class="inline-flex items-center gap-2 px-3 py-1 text-xs font-semibold text-yellow-700 bg-yellow-100 rounded-full whitespace-nowrap flex-shrink-0">
-            <i class="fas fa-exclamation-circle"></i> Belum Aktif
-        </span>
+        <span class="bs-period-banner-badge">Belum Aktif</span>
     </div>
 @endif

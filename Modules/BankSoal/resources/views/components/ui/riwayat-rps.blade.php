@@ -134,8 +134,67 @@
                         <td class="table-cell">{{ $tanggal }}</td>
 
                         <td class="table-cell">
-                            <div>
-                                <span class="text-sm font-medium text-slate-700">{{ $uploaderName }}</span>
+                            @php
+                                $pengunggah = collect($item->dosens ?? [])
+                                    ->pluck('name')
+                                    ->filter()
+                                    ->values();
+
+                                if ($pengunggah->isEmpty() && ! empty($uploaderName)) {
+                                    $pengunggah = collect([$uploaderName]);
+                                }
+
+                                // Pembuat RPS tampil lebih dulu, anggota lain menyusul.
+                                if (! empty($uploaderName)) {
+                                    $pengunggah = $pengunggah
+                                        ->sortBy(fn ($nama) => $nama === $uploaderName ? 0 : 1)
+                                        ->values();
+                                }
+
+                                $pengunggahUtama = $pengunggah->first() ?? 'Tidak diketahui';
+                                $pengunggahLain = max($pengunggah->count() - 1, 0);
+                                $pengunggahLabel = \Illuminate\Support\Str::limit($pengunggahUtama, 15);
+                            @endphp
+
+                            <div class="flex items-center gap-2"
+                                x-data="{
+                                    open: false,
+                                    top: 0,
+                                    left: 0,
+                                    above: false,
+                                    show(event) {
+                                        const rect = event.currentTarget.getBoundingClientRect();
+                                        const lebar = 260;
+                                        this.left = Math.max(12, Math.min(rect.left, window.innerWidth - lebar - 12));
+                                        this.above = (window.innerHeight - rect.bottom) < 220 && rect.top > 220;
+                                        this.top = this.above ? rect.top - 6 : rect.bottom + 6;
+                                        this.open = true;
+                                    },
+                                }">
+                                <div class="rps-uploader">
+                                    <button type="button" class="rps-uploader-trigger"
+                                        @click.stop="open ? open = false : show($event)"
+                                        :aria-expanded="open.toString()"
+                                        title="{{ $pengunggah->implode(', ') }}">
+                                        <span>{{ $pengunggahLabel }}</span>@if($pengunggahLain > 0)<span class="rps-uploader-more">, +{{ $pengunggahLain }}</span>@endif
+                                    </button>
+
+                                    {{-- Teleport ke body supaya tooltip tidak terpotong overflow tabel --}}
+                                    <template x-teleport="body">
+                                        <div class="rps-uploader-popover is-floating" x-show="open" x-cloak
+                                            x-transition.opacity.duration.120ms @click.outside="open = false"
+                                            @keydown.escape.window="open = false" role="tooltip"
+                                            :style="`top: ${top}px; left: ${left}px; transform: ${above ? 'translateY(-100%)' : 'none'};`">
+                                            <p class="rps-uploader-popover-title">Dosen pengunggah</p>
+                                            <ul>
+                                                @foreach($pengunggah as $nama)
+                                                    <li>{{ $nama }}</li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </template>
+                                </div>
+
                                 @if($uploaderId == Auth::id())
                                     <span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Anda</span>
                                 @endif
@@ -220,3 +279,92 @@
         </div>
     @endif
 </div>
+
+<style>
+    /* ── Kolom pengunggah: nama dipotong 15 karakter + tooltip ── */
+    .rps-uploader {
+        position: relative;
+        min-width: 0;
+    }
+
+    .rps-uploader-trigger {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 2px;
+        max-width: 190px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        font-size: 13px;
+        font-weight: 500;
+        color: #334155;
+        text-align: left;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+    .rps-uploader-trigger:hover {
+        color: #0b266e;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
+    .rps-uploader-more {
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .rps-uploader-trigger:hover .rps-uploader-more {
+        color: inherit;
+    }
+
+    .rps-uploader-popover {
+        min-width: 180px;
+        max-width: 260px;
+        padding: 10px 12px;
+        border: 1px solid #E4E7EC;
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 12px 24px -12px rgba(15, 23, 42, 0.35);
+    }
+
+    /* Teleport ke body: posisi fixed supaya tidak terpotong overflow tabel */
+    .rps-uploader-popover.is-floating {
+        position: fixed;
+        z-index: 9999;
+    }
+
+    .rps-uploader-popover[x-cloak] {
+        display: none !important;
+    }
+
+    .rps-uploader-popover-title {
+        margin: 0 0 6px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #94a3b8;
+    }
+
+    .rps-uploader-popover ul {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-size: 12px;
+        color: #334155;
+    }
+
+    .rps-uploader-popover li {
+        overflow-wrap: anywhere;
+    }
+
+    .rps-uploader-popover li + li {
+        padding-top: 4px;
+        border-top: 1px solid #f1f5f9;
+    }
+</style>
+

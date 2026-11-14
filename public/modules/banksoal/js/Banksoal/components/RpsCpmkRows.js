@@ -421,21 +421,28 @@ class RpsCpmkRows {
                         ? "Tidak ada CPL yang terpetakan dengan Mata Kuliah ini"
                         : "Pilih CPL";
                 }
+                // Baris CPMK pada form upload dokumen dibiarkan terbuka:
+                // field kode/KKO/objek/konteks bisa diisi tanpa memilih CPL dulu.
+                const isUploadRow = !row.closest("#cpmkRowsGenerator");
+                const gateByCpl = !isUploadRow;
+                const lockByCpl = gateByCpl && !isCplSelected;
+                const cplHint = lockByCpl ? "Pilih CPL terlebih dahulu" : "";
+
                 if (kodeInput) {
-                    kodeInput.disabled = !isCplSelected;
-                    kodeInput.title = !isCplSelected ? "Pilih CPL terlebih dahulu" : "";
+                    kodeInput.disabled = lockByCpl;
+                    kodeInput.title = cplHint;
                 }
                 if (kkoSelect) {
-                    kkoSelect.disabled = !isCplSelected;
-                    kkoSelect.title = !isCplSelected ? "Pilih CPL terlebih dahulu" : "";
+                    kkoSelect.disabled = lockByCpl;
+                    kkoSelect.title = cplHint;
                 }
                 if (objekInput) {
-                    objekInput.disabled = !isCplSelected;
-                    objekInput.title = !isCplSelected ? "Pilih CPL terlebih dahulu" : "";
+                    objekInput.disabled = lockByCpl;
+                    objekInput.title = cplHint;
                 }
                 if (konteksInput) {
-                    konteksInput.disabled = !isCplSelected;
-                    konteksInput.title = !isCplSelected ? "Pilih CPL terlebih dahulu" : "";
+                    konteksInput.disabled = lockByCpl;
+                    konteksInput.title = cplHint;
                 }
                 if (removeBtn) {
                     const parentContainer = row.closest('[data-cpmk-rows], #cpmkRows, #cpmkRowsGenerator');
