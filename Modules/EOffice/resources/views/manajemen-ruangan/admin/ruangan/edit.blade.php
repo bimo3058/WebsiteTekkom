@@ -50,8 +50,9 @@
                             <input type="text" name="kategori" x-model="selected" class="absolute w-0 h-0 opacity-0 pointer-events-none" required tabindex="-1">
                         
                             <button type="button" @click="open = !open" 
-                                class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2 text-[13px] focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[38px] cursor-pointer">
-                                <span x-text="selectedLabel" :class="selected ? 'text-[#0D0D12]' : 'text-gray-400'"></span>
+                                class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[38px] cursor-pointer"
+                                style="font-size: 12px;">
+                                <span x-text="selectedLabel" :class="selected ? 'text-[#0D0D12]' : 'text-[#9CA3AF]'" style="font-size: 12px;"></span>
                                 <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
@@ -68,8 +69,9 @@
                                 <div class="p-1 flex flex-col">
                                     <template x-for="option in options" :key="option">
                                         <button type="button" @click="selected = option; open = false"
-                                            class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                            :class="selected === option ? 'bg-[#EFF6FF] text-[#0B266E] font-bold' : 'text-gray-700 hover:bg-gray-50'">
+                                            class="w-full text-left px-3 py-2 mt-0.5 font-medium rounded-md transition-colors"
+                                            :class="selected === option ? 'bg-[#EFF6FF] text-[#0B266E] font-bold' : 'text-gray-700 hover:bg-gray-50'"
+                                            style="font-size: 12px;">
                                             <span x-text="option"></span>
                                         </button>
                                     </template>

@@ -744,12 +744,18 @@
             padding: 8px 12px;
             border: 1px solid var(--c-border);
             border-radius: 8px;
-            font-size: 13px;
+            font-size: 12px;
             color: var(--c-fg);
             font-family: 'Inter Tight', sans-serif;
             outline: none;
             transition: border-color .15s, box-shadow .15s;
             background: #fff;
+        }
+
+        .mp-input::placeholder {
+            color: #9CA3AF;
+            font-size: 12px;
+            font-family: 'Inter Tight', sans-serif;
         }
 
         .mp-input:focus {
