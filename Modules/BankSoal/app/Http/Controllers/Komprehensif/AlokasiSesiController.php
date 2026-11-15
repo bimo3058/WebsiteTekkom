@@ -9,15 +9,18 @@ use Modules\BankSoal\Enums\PendaftaranStatus;
 use Modules\BankSoal\Models\Komprehensif\JadwalUjian;
 use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
 use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
+use Modules\BankSoal\Services\Komprehensif\PendaftaranService;
 
 class AlokasiSesiController extends Controller
 {
+    public function __construct(private PendaftaranService $pendaftaranService) {}
+
     public function index(Request $request)
     {
         $periodes = PeriodeUjian::orderBy('created_at', 'desc')->get();
 
         // Default ke periode aktif jika tidak ada filter di URL
-        if (!$request->filled('periode_id')) {
+        if (! $request->filled('periode_id')) {
             $activePeriodeId = $periodes->firstWhere('status', 'aktif')?->id ?? $periodes->first()?->id;
             if ($activePeriodeId) {
                 return redirect()->route('banksoal.pendaftaran.alokasi-sesi.index', ['periode_id' => $activePeriodeId]);
@@ -25,7 +28,7 @@ class AlokasiSesiController extends Controller
         }
 
         $selectedPeriodeId = $request->query('periode_id');
-        
+
         $jadwals = collect();
         $pendaftars = collect();
         $selectedPeriode = null;
@@ -45,7 +48,7 @@ class AlokasiSesiController extends Controller
                 ->orderBy('tanggal_ujian')
                 ->orderBy('waktu_mulai')
                 ->get();
-                
+
             // Ambil mahasiswa yang status pendaftarannya approved
             $pendaftars = PendaftarUjian::with(['mahasiswa', 'jadwal'])
                 ->where('periode_ujian_id', $selectedPeriodeId)
@@ -61,11 +64,19 @@ class AlokasiSesiController extends Controller
     {
         $request->validate([
             'pendaftar_ids' => 'required|array|min:1',
-            'jadwal_id' => 'required|exists:bs_jadwal_ujians,id'
+            'jadwal_id' => 'required|exists:bs_jadwal_ujians,id',
         ], [
             'pendaftar_ids.required' => 'Pilih minimal satu mahasiswa untuk dialokasikan.',
-            'jadwal_id.required' => 'Anda harus memilih sesi ujian tujuan.'
+            'jadwal_id.required' => 'Anda harus memilih sesi ujian tujuan.',
         ]);
+
+        $passed = PendaftarUjian::whereIn('id', $request->pendaftar_ids)
+            ->get(['id', 'mahasiswa_id'])
+            ->filter(fn (PendaftarUjian $pendaftar) => $this->pendaftaranService->hasPassed($pendaftar->mahasiswa_id));
+
+        if ($passed->isNotEmpty()) {
+            return back()->with('error', 'Alokasi dibatalkan: ada mahasiswa yang sudah dinyatakan lulus ujian komprehensif.');
+        }
 
         return DB::transaction(function () use ($request) {
             $jadwal = JadwalUjian::lockForUpdate()->findOrFail($request->jadwal_id);
@@ -75,31 +86,31 @@ class AlokasiSesiController extends Controller
             $newAssigneesCount = PendaftarUjian::whereIn('id', $request->pendaftar_ids)
                 ->where(function ($q) use ($jadwal) {
                     $q->whereNull('jadwal_ujian_id')
-                      ->orWhere('jadwal_ujian_id', '!=', $jadwal->id);
+                        ->orWhere('jadwal_ujian_id', '!=', $jadwal->id);
                 })->count();
 
             if (($currentFilled + $newAssigneesCount) > $jadwal->kuota) {
-                return back()->with('error', "Gagal! Sesi '{$jadwal->nama_sesi}' hanya memiliki sisa " . ($jadwal->kuota - $currentFilled) . " kuota.");
+                return back()->with('error', "Gagal! Sesi '{$jadwal->nama_sesi}' hanya memiliki sisa ".($jadwal->kuota - $currentFilled).' kuota.');
             }
 
             PendaftarUjian::whereIn('id', $request->pendaftar_ids)->update([
-                'jadwal_ujian_id' => $jadwal->id
+                'jadwal_ujian_id' => $jadwal->id,
             ]);
 
-            return back()->with('success', 'Berhasil! Peserta telah sukses dialokasikan ke Sesi: ' . $jadwal->nama_sesi);
+            return back()->with('success', 'Berhasil! Peserta telah sukses dialokasikan ke Sesi: '.$jadwal->nama_sesi);
         });
     }
 
     public function remove(Request $request)
     {
         $request->validate([
-            'pendaftar_ids' => 'required|array|min:1'
+            'pendaftar_ids' => 'required|array|min:1',
         ], [
-            'pendaftar_ids.required' => 'Pilih minimal satu mahasiswa untuk dicabut sesinya.'
+            'pendaftar_ids.required' => 'Pilih minimal satu mahasiswa untuk dicabut sesinya.',
         ]);
 
         PendaftarUjian::whereIn('id', $request->pendaftar_ids)->update([
-            'jadwal_ujian_id' => null
+            'jadwal_ujian_id' => null,
         ]);
 
         return back()->with('success', 'Berhasil! Peserta telah dicabut dari sesi ujian terkait.');

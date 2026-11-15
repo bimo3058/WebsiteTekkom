@@ -1,11 +1,11 @@
 <x-banksoal::layouts.dosen-admin :bank-soal="true">
     @section('breadcrumbs')
-        <span class="text-slate-800 font-semibold">Blind Review</span>
+        <span class="text-slate-800 font-semibold">Review Antar Dosen Pengampu</span>
     @endsection
 
     <x-banksoal::ui.bank-soal-page>
     <x-slot:header>
-    <x-banksoal::ui.page-header title="Blind Review Soal" subtitle="Tinjau soal dari dosen lain, dan pantau status review soal Anda.">
+    <x-banksoal::ui.page-header title="Review Antar Dosen Pengampu" subtitle="Tinjau soal ujian dari dosen pengampu pada mata kuliah yang sama, dan pantau status review soal Anda.">
         <x-slot:actions>
             <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
                 <i class="fas fa-arrow-left"></i> Kembali ke Bank Soal
@@ -148,7 +148,7 @@
                     @empty
                         <div class="p-10 text-center text-slate-500">
                             <i class="fas fa-inbox text-3xl text-slate-300 mb-2"></i>
-                            <p>Tidak ada tugas blind review untuk saat ini.</p>
+                            <p>Tidak ada tugas review antar dosen pengampu untuk saat ini.</p>
                         </div>
                     @endforelse
                 </div>

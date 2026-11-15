@@ -4,6 +4,10 @@ namespace Modules\BankSoal\Http\Requests\Komprehensif;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @property int $jawaban_id
+ * @property int $opsi_terpilih
+ */
 class SaveAnswerRequest extends FormRequest
 {
     /**
@@ -17,7 +21,7 @@ class SaveAnswerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'jawaban_id'    => ['required', 'integer', 'exists:bs_kompre_jawaban,id'],
+            'jawaban_id' => ['required', 'integer', 'exists:bs_kompre_jawaban,id'],
             'opsi_terpilih' => ['required', 'integer', 'exists:bs_jawaban,id'],
         ];
     }
@@ -25,10 +29,10 @@ class SaveAnswerRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'jawaban_id.required'    => 'ID jawaban wajib disertakan.',
-            'jawaban_id.exists'      => 'Data jawaban tidak ditemukan.',
+            'jawaban_id.required' => 'ID jawaban wajib disertakan.',
+            'jawaban_id.exists' => 'Data jawaban tidak ditemukan.',
             'opsi_terpilih.required' => 'Pilihan opsi wajib disertakan.',
-            'opsi_terpilih.exists'   => 'Opsi jawaban tidak ditemukan.',
+            'opsi_terpilih.exists' => 'Opsi jawaban tidak ditemukan.',
         ];
     }
 }

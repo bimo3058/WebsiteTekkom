@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Modules\BankSoal\Console\Commands\AutoApproveBlindReview;
+use Modules\BankSoal\Console\Commands\BackfillKompreResults;
+use Modules\BankSoal\Console\Commands\GenerateKompreFilledTemplates;
+use Modules\BankSoal\Console\Commands\SetLegacyPassword;
 use Modules\BankSoal\Models\Komprehensif\KompreSession;
 use Modules\BankSoal\Policies\KompreSessionPolicy;
 use Nwidart\Modules\Traits\PathNamespace;
@@ -68,7 +72,10 @@ class BankSoalServiceProvider extends ServiceProvider
     protected function registerCommands(): void
     {
         $this->commands([
-            \Modules\BankSoal\Console\Commands\AutoApproveBlindReview::class,
+            AutoApproveBlindReview::class,
+            BackfillKompreResults::class,
+            GenerateKompreFilledTemplates::class,
+            SetLegacyPassword::class,
         ]);
     }
 
@@ -155,7 +162,7 @@ class BankSoalServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(array_merge($this->getPublishableViewPaths(), [$sourcePath]), $this->nameLower);
 
-        Blade::componentNamespace(config('modules.namespace').'\\' . $this->name . '\\View\\Components', $this->nameLower);
+        Blade::componentNamespace(config('modules.namespace').'\\'.$this->name.'\\View\\Components', $this->nameLower);
     }
 
     /**

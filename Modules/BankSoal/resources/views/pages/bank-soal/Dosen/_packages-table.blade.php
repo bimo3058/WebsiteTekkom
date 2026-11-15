@@ -67,7 +67,7 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4">
-                                <span class="font-semibold text-slate-900">{{ $pkg->jumlah_soal }}</span> Set
+                                <span class="font-semibold text-slate-900">{{ $pkg->jumlah_soal }}</span> Soal
                             </td>
                             <td class="px-6 py-4">
                                 <x-ui.action-menu align="right">

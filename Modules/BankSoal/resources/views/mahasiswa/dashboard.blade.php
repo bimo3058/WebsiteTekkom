@@ -108,7 +108,7 @@
             @if(isset($finishedSession) && $finishedSession)
                 @php
                     $skor = $finishedSession->score ?? 0;
-                    $lulus = $skor >= 60;
+                    $lulus = (bool) ($finishedSession->lulus ?? false);
                 @endphp
                 <!-- STATE: EXAM FINISHED — pola stepper + 2 kartu -->
                 <div class="flex flex-col gap-4 w-full">
@@ -153,12 +153,6 @@
                     {{-- Kartu hasil full-width --}}
                         @if($lulus)
                         <div class="bg-[#DDF2EE]/60 border border-[#40C4AA]/40 rounded-[12px] p-5 sm:p-6 flex flex-col w-full">
-                            <div class="flex items-center gap-3 mb-3">
-                                <span class="w-8 h-8 rounded-full bg-[#40C4AA]/20 flex items-center justify-center shrink-0" aria-hidden="true">
-                                    <svg class="w-4 h-4 text-[#287F6E]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                                </span>
-                                <h2 class="text-[18px] font-semibold text-[#174E43] tracking-tight">Lulus</h2>
-                            </div>
                             <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                             <div class="flex items-start gap-10 sm:gap-16">
                                 <div>
@@ -170,9 +164,9 @@
                                     <p class="text-[12px] font-normal text-[#666D80] mt-1">Status</p>
                                 </div>
                             </div>
-                            <a href="{{ route('komprehensif.mahasiswa.riwayat') }}"
+                            <a href="{{ route('komprehensif.mahasiswa.riwayat.detail', $finishedSession->id) }}"
                                 class="inline-flex sm:ml-auto self-start sm:self-center items-center justify-center px-5 py-2.5 bg-[#2A3A7C] hover:bg-[#2A3A7C]/90 text-white font-semibold text-[13px] text-center transition-colors rounded-lg">
-                                Lihat Riwayat Ujian
+                                Lihat Detail
                             </a>
                             </div>
                         </div>
@@ -188,9 +182,9 @@
                                     <p class="text-[12px] font-normal text-[#666D80] mt-1">Status</p>
                                 </div>
                             </div>
-                            <a href="{{ route('komprehensif.mahasiswa.riwayat') }}"
+                            <a href="{{ route('komprehensif.mahasiswa.riwayat.detail', $finishedSession->id) }}"
                                 class="inline-flex sm:ml-auto self-start sm:self-center items-center justify-center px-5 py-2.5 bg-[#2A3A7C] hover:bg-[#2A3A7C]/90 text-white font-semibold text-[13px] text-center transition-colors rounded-lg">
-                                Lihat Riwayat Ujian
+                                Lihat Detail
                             </a>
                         </div>
                         @endif
@@ -270,7 +264,7 @@
                             </div>
                             @if($isUjianBerlangsung)
                                 <p class="text-[14px] font-normal text-[#353849] leading-relaxed mt-3">
-                                    Sesi ujian komprehensif Anda telah dibuka. Silakan masukkan <strong>Token Ujian (6 Digit)</strong> yang diberikan oleh pengawas ruangan untuk memulai pengerjaan soal.
+                                    Sesi ujian komprehensif Anda telah dibuka. Silakan masukkan <strong>Token Ujian</strong> yang diberikan oleh pengawas ruangan untuk memulai pengerjaan soal.
                                 </p>
                             @else
                                 <p class="text-[14px] font-normal text-[#353849] leading-relaxed mt-3">
@@ -403,7 +397,7 @@
                                         <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex items-center gap-3">
                                             <button type="button" @click="confirmModal = false" class="flex-1 px-4 py-2.5 text-[13px] font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm rounded-xl focus:outline-none transition-colors cursor-pointer">Batal</button>
                                             <button type="button" :disabled="starting" @click="starting = true; $refs.examForm.submit()" class="flex-1 w-full px-4 py-2.5 text-[13px] font-semibold text-white bg-primary hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm rounded-xl focus:outline-none transition-all cursor-pointer">
-                                                Ya, Mulai
+                                                Mulai
                                             </button>
                                         </div>
                                     </div>
@@ -420,7 +414,11 @@
                                 <li>Peserta wajib hadir 15 menit sebelum ujian dimulai. Peserta yang terlambat hadir tidak diperkenankan mengikuti ujian.</li>
                                 <li>Peserta dimohon membawa Kartu Tanda Mahasiswa (KTM). Peserta yang tidak dapat membuktikan identitasnya tidak diperbolehkan mengikuti ujian.</li>
                                 <li>Ujian bersifat buku tertutup dengan format 100 soal pilihan ganda.</li>
-                                <li>Peserta dinyatakan lulus jika memperoleh skor total &ge; 60.</li>
+                                @if($passingSettings['passing_rule'] === 'total_min')
+                                    <li>Peserta dinyatakan lulus jika nilai total minimal {{ (int) $passingSettings['total_min_score'] }}.</li>
+                                @else
+                                    <li>Peserta dinyatakan lulus jika setiap CPL memperoleh nilai minimal {{ (int) $passingSettings['cpl_min_score'] }}.</li>
+                                @endif
                                 <li>Ketentuan lain mengikuti aturan Tata Tertib Ujian Departemen Teknik Komputer.</li>
                             </ol>
                         </div>
@@ -594,7 +592,7 @@
                                 <h2 class="text-[18px] font-semibold text-[#710E21] tracking-tight">Pendaftaran Ditolak</h2>
                             </div>
                             <p class="text-[14px] font-normal text-[#710E21] leading-relaxed mt-3">
-                                Pendaftaran Anda tidak disetujui.
+                                Pendaftaran Anda tidak disetujui. Anda dapat mendaftar kembali pada periode ujian komprehensif berikutnya.
                             </p>
                             @if(!empty($pendaftar->catatan_admin))
                                 <div class="mt-4 bg-white border border-[#DFE1E6] rounded-lg p-4">
@@ -816,41 +814,172 @@
                         </div>
                     </div>
                 @elseif(now()->lt(\Carbon\Carbon::parse($activePeriode->tanggal_mulai)->startOfDay()))
-                    <!-- STATE: NOT YET OPEN -->
-                    <div class="flex flex-col border border-slate-300 bg-white rounded-2xl shadow-sm overflow-hidden">
-                        <div class="p-8 sm:p-10 flex flex-col items-start h-full">
-                            <span
-                                class="inline-flex items-center px-3 py-1 bg-slate-100 text-slate-600 text-[11px] font-bold tracking-widest uppercase border border-slate-200  rounded-full mb-6">Belum
-                                Dibuka</span>
-                            <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-4">Menunggu Jadwal Buka</h3>
-                            <p class="text-base text-slate-600 leading-relaxed mb-10 max-w-xl">
-                                Registrasi ujian komprehensif <strong>{{ $activePeriode->nama_periode }}</strong> baru dapat
-                                diakses mulai tanggal <strong
-                                    class="text-slate-900">{{ \Carbon\Carbon::parse($activePeriode->tanggal_mulai)->translatedFormat('d F Y') }}</strong>.
-                            </p>
-                            <button type="button" onclick="window.location.reload()"
-                                class="py-3 px-6 bg-white border border-slate-300 text-slate-700 font-bold text-sm tracking-widest uppercase hover:bg-slate-100 hover:text-white transition-colors rounded-xl">
-                                Cek Status Terbaru
-                            </button>
+                    <!-- STATE: NOT YET OPEN — pola stepper + 2 kartu -->
+                    <div class="flex flex-col gap-4 w-full">
+                        {{-- Stepper 5 tahap: 1 aktif --}}
+                        <ol class="bg-white border border-[#DFE1E6] rounded-[12px] px-6 py-5 flex items-start w-full" aria-label="Tahapan ujian komprehensif">
+                            <li class="flex-1 flex flex-col min-w-0" aria-current="step">
+                                <div class="flex items-center w-full">
+                                    <span class="w-8 h-8 rounded-full border-[1.5px] border-[#2A3A7C] text-[#2A3A7C] text-[13px] font-semibold flex items-center justify-center bg-white shrink-0">1</span>
+                                    <span class="flex-1 h-[2px] bg-[#DFE1E6] mx-2 sm:mx-3 rounded-full" aria-hidden="true"></span>
+                                </div>
+                                <span class="text-[13px] font-semibold text-[#2A3A7C] whitespace-nowrap mt-2">Pendaftaran</span>
+                            </li>
+                            <li class="flex-1 flex flex-col min-w-0">
+                                <div class="flex items-center w-full">
+                                    <span class="w-8 h-8 rounded-full border-[1.5px] border-[#DFE1E6] text-[#A4ABB8] text-[13px] font-medium flex items-center justify-center bg-white shrink-0">2</span>
+                                    <span class="flex-1 h-[2px] bg-[#DFE1E6] mx-2 sm:mx-3 rounded-full" aria-hidden="true"></span>
+                                </div>
+                                <span class="text-[13px] font-normal text-[#666D80] whitespace-nowrap mt-2">Verifikasi</span>
+                            </li>
+                            <li class="flex-1 flex flex-col min-w-0">
+                                <div class="flex items-center w-full">
+                                    <span class="w-8 h-8 rounded-full border-[1.5px] border-[#DFE1E6] text-[#A4ABB8] text-[13px] font-medium flex items-center justify-center bg-white shrink-0">3</span>
+                                    <span class="flex-1 h-[2px] bg-[#DFE1E6] mx-2 sm:mx-3 rounded-full" aria-hidden="true"></span>
+                                </div>
+                                <span class="text-[13px] font-normal text-[#666D80] whitespace-nowrap mt-2">Jadwal dan token</span>
+                            </li>
+                            <li class="flex-1 flex flex-col min-w-0">
+                                <div class="flex items-center w-full">
+                                    <span class="w-8 h-8 rounded-full border-[1.5px] border-[#DFE1E6] text-[#A4ABB8] text-[13px] font-medium flex items-center justify-center bg-white shrink-0">4</span>
+                                    <span class="flex-1 h-[2px] bg-[#DFE1E6] mx-2 sm:mx-3 rounded-full" aria-hidden="true"></span>
+                                </div>
+                                <span class="text-[13px] font-normal text-[#666D80] whitespace-nowrap mt-2">Ujian</span>
+                            </li>
+                            <li class="flex-none flex flex-col min-w-0">
+                                <div class="flex items-center">
+                                    <span class="w-8 h-8 rounded-full border-[1.5px] border-[#DFE1E6] text-[#A4ABB8] text-[13px] font-medium flex items-center justify-center bg-white shrink-0">5</span>
+                                </div>
+                                <span class="text-[13px] font-normal text-[#666D80] whitespace-nowrap mt-2">Hasil</span>
+                            </li>
+                        </ol>
+
+                        {{-- Grid konten 2:1 --}}
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full items-start">
+                            <div class="lg:col-span-2 bg-white border border-[#DFE1E6] rounded-[12px] p-7 flex flex-col gap-4">
+                                <div class="flex items-center gap-3.5">
+                                    <span class="w-11 h-11 rounded-full bg-[#E8EBF3] text-[#4A5168] flex items-center justify-center shrink-0" aria-hidden="true">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                    </span>
+                                    <h2 class="text-[22px] font-semibold text-[#0D0D12] leading-tight tracking-tight">Menunggu Jadwal Buka</h2>
+                                </div>
+                                <p class="text-[14px] font-normal text-[#4A5168] leading-relaxed max-w-[56ch]">
+                                    Registrasi ujian komprehensif periode {{ $activePeriode->nama_periode }} baru dapat diakses mulai {{ \Carbon\Carbon::parse($activePeriode->tanggal_mulai)->translatedFormat('l, d F Y') }}.
+                                </p>
+                            </div>
+                            <div class="bg-white border border-[#DFE1E6] rounded-[12px] p-5 sm:p-6">
+                                <h3 class="text-[14px] font-semibold text-[#0D0D12] mb-3 leading-snug">Periode {{ $activePeriode->nama_periode }}</h3>
+                                <dl class="flex flex-col gap-2.5 text-[13px] leading-relaxed">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <dt class="font-normal text-[#666D80] shrink-0">Pendaftaran</dt>
+                                        <dd class="font-medium text-[#0D0D12] text-right">{{ \Carbon\Carbon::parse($activePeriode->tanggal_mulai)->translatedFormat('d M') }} – {{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->translatedFormat('d M Y') }}</dd>
+                                    </div>
+                                    <div class="flex items-start justify-between gap-3">
+                                        <dt class="font-normal text-[#666D80] shrink-0">Pelaksanaan Ujian</dt>
+                                        <dd class="font-medium text-[#0D0D12] text-right">
+                                            @if($activePeriode->tanggal_mulai_ujian && $activePeriode->tanggal_selesai_ujian)
+                                                {{ \Carbon\Carbon::parse($activePeriode->tanggal_mulai_ujian)->translatedFormat('d M') }} – {{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai_ujian)->translatedFormat('d M Y') }}
+                                            @else
+                                                -
+                                            @endif
+                                        </dd>
+                                    </div>
+                                    <div class="flex items-start justify-between gap-3">
+                                        <dt class="font-normal text-[#666D80] shrink-0">Kuota</dt>
+                                        <dd class="font-medium text-[#0D0D12] text-right">
+                                            @if($activePeriode->kuota_peserta)
+                                                {{ $kuotaTerisi ?? 0 }}/{{ $activePeriode->kuota_peserta }}
+                                            @else
+                                                Tanpa batas kuota
+                                            @endif
+                                        </dd>
+                                    </div>
+                                </dl>
+                            </div>
                         </div>
                     </div>
                 @elseif(now()->gt(\Carbon\Carbon::parse($activePeriode->tanggal_selesai)->endOfDay()))
-                    <!-- STATE: CLOSED BUT ACTIVE -->
-                    <div class="flex flex-col border border-slate-300 bg-white rounded-2xl shadow-sm overflow-hidden">
-                        <div class="p-8 sm:p-10 flex flex-col items-start h-full">
-                            <span
-                                class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 text-[11px] font-bold tracking-widest uppercase border border-red-200  rounded-full mb-6">Waktu Habis</span>
-                            <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-4">Masa Pendaftaran Berakhir</h3>
-                            <p class="text-base text-slate-600 leading-relaxed mb-10 max-w-xl">
-                                Batas waktu pendaftaran Ujian Komprehensif untuk periode <strong>{{ $activePeriode->nama_periode }}</strong>
-                                telah berakhir pada <strong>{{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->translatedFormat('d F Y') }}</strong>. 
-                                Anda tidak dapat melakukan pendaftaran lagi pada periode ini. Silakan pantau halaman ini secara berkala untuk periode berikutnya.
-                            </p>
-                            <div class="mt-auto w-full">
-                                <button disabled
-                                    class="py-3 px-6 bg-slate-100 border border-slate-200 text-slate-400 font-bold text-sm tracking-widest uppercase cursor-not-allowed rounded-xl">
-                                    Pendaftaran Ditutup
-                                </button>
+                    <!-- STATE: CLOSED BUT ACTIVE — pola stepper + 2 kartu -->
+                    <div class="flex flex-col gap-4 w-full">
+                        {{-- Stepper 5 tahap: 1 aktif --}}
+                        <ol class="bg-white border border-[#DFE1E6] rounded-[12px] px-6 py-5 flex items-start w-full" aria-label="Tahapan ujian komprehensif">
+                            <li class="flex-1 flex flex-col min-w-0" aria-current="step">
+                                <div class="flex items-center w-full">
+                                    <span class="w-8 h-8 rounded-full border-[1.5px] border-[#2A3A7C] text-[#2A3A7C] text-[13px] font-semibold flex items-center justify-center bg-white shrink-0">1</span>
+                                    <span class="flex-1 h-[2px] bg-[#DFE1E6] mx-2 sm:mx-3 rounded-full" aria-hidden="true"></span>
+                                </div>
+                                <span class="text-[13px] font-semibold text-[#2A3A7C] whitespace-nowrap mt-2">Pendaftaran</span>
+                            </li>
+                            <li class="flex-1 flex flex-col min-w-0">
+                                <div class="flex items-center w-full">
+                                    <span class="w-8 h-8 rounded-full border-[1.5px] border-[#DFE1E6] text-[#A4ABB8] text-[13px] font-medium flex items-center justify-center bg-white shrink-0">2</span>
+                                    <span class="flex-1 h-[2px] bg-[#DFE1E6] mx-2 sm:mx-3 rounded-full" aria-hidden="true"></span>
+                                </div>
+                                <span class="text-[13px] font-normal text-[#666D80] whitespace-nowrap mt-2">Verifikasi</span>
+                            </li>
+                            <li class="flex-1 flex flex-col min-w-0">
+                                <div class="flex items-center w-full">
+                                    <span class="w-8 h-8 rounded-full border-[1.5px] border-[#DFE1E6] text-[#A4ABB8] text-[13px] font-medium flex items-center justify-center bg-white shrink-0">3</span>
+                                    <span class="flex-1 h-[2px] bg-[#DFE1E6] mx-2 sm:mx-3 rounded-full" aria-hidden="true"></span>
+                                </div>
+                                <span class="text-[13px] font-normal text-[#666D80] whitespace-nowrap mt-2">Jadwal dan token</span>
+                            </li>
+                            <li class="flex-1 flex flex-col min-w-0">
+                                <div class="flex items-center w-full">
+                                    <span class="w-8 h-8 rounded-full border-[1.5px] border-[#DFE1E6] text-[#A4ABB8] text-[13px] font-medium flex items-center justify-center bg-white shrink-0">4</span>
+                                    <span class="flex-1 h-[2px] bg-[#DFE1E6] mx-2 sm:mx-3 rounded-full" aria-hidden="true"></span>
+                                </div>
+                                <span class="text-[13px] font-normal text-[#666D80] whitespace-nowrap mt-2">Ujian</span>
+                            </li>
+                            <li class="flex-none flex flex-col min-w-0">
+                                <div class="flex items-center">
+                                    <span class="w-8 h-8 rounded-full border-[1.5px] border-[#DFE1E6] text-[#A4ABB8] text-[13px] font-medium flex items-center justify-center bg-white shrink-0">5</span>
+                                </div>
+                                <span class="text-[13px] font-normal text-[#666D80] whitespace-nowrap mt-2">Hasil</span>
+                            </li>
+                        </ol>
+
+                        {{-- Grid konten 2:1 --}}
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full items-start">
+                            <div class="lg:col-span-2 bg-white border border-[#DFE1E6] rounded-[12px] p-7 flex flex-col gap-4">
+                                <div class="flex items-center gap-3.5">
+                                    <span class="w-11 h-11 rounded-full bg-[#E8EBF3] text-[#4A5168] flex items-center justify-center shrink-0" aria-hidden="true">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                    </span>
+                                    <h2 class="text-[22px] font-semibold text-[#0D0D12] leading-tight tracking-tight">Waktu pendaftaran habis</h2>
+                                </div>
+                                <p class="text-[14px] font-normal text-[#4A5168] leading-relaxed max-w-[56ch]">
+                                    Pendaftaran Ujian Komprehensif periode {{ $activePeriode->nama_periode }} ditutup pada {{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->translatedFormat('l, d F Y') }}.
+                                </p>
+                            </div>
+                            <div class="bg-white border border-[#DFE1E6] rounded-[12px] p-5 sm:p-6">
+                                <h3 class="text-[14px] font-semibold text-[#0D0D12] mb-3 leading-snug">Periode {{ $activePeriode->nama_periode }}</h3>
+                                <dl class="flex flex-col gap-2.5 text-[13px] leading-relaxed">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <dt class="font-normal text-[#666D80] shrink-0">Pendaftaran</dt>
+                                        <dd class="font-medium text-[#0D0D12] text-right">{{ \Carbon\Carbon::parse($activePeriode->tanggal_mulai)->translatedFormat('d M') }} – {{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->translatedFormat('d M Y') }}</dd>
+                                    </div>
+                                    <div class="flex items-start justify-between gap-3">
+                                        <dt class="font-normal text-[#666D80] shrink-0">Pelaksanaan Ujian</dt>
+                                        <dd class="font-medium text-[#0D0D12] text-right">
+                                            @if($activePeriode->tanggal_mulai_ujian && $activePeriode->tanggal_selesai_ujian)
+                                                {{ \Carbon\Carbon::parse($activePeriode->tanggal_mulai_ujian)->translatedFormat('d M') }} – {{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai_ujian)->translatedFormat('d M Y') }}
+                                            @else
+                                                -
+                                            @endif
+                                        </dd>
+                                    </div>
+                                    <div class="flex items-start justify-between gap-3">
+                                        <dt class="font-normal text-[#666D80] shrink-0">Kuota</dt>
+                                        <dd class="font-medium text-[#0D0D12] text-right">
+                                            @if($activePeriode->kuota_peserta)
+                                                {{ $kuotaTerisi ?? 0 }}/{{ $activePeriode->kuota_peserta }}
+                                            @else
+                                                Tanpa batas kuota
+                                            @endif
+                                        </dd>
+                                    </div>
+                                </dl>
                             </div>
                         </div>
                     </div>

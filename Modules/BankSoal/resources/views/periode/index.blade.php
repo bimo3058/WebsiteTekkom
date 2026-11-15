@@ -7,7 +7,7 @@
 @endsection
 
 <x-banksoal::layouts.admin>
-    {{-- Style Box Wrap khas SITKOM (Mengadopsi Dashboard Admin Bank Soal) --}}
+
     <style>
         .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
 
@@ -109,7 +109,7 @@
                 </div>
 
                 <button @click="openModal = true"
-                    class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 transition-colors rounded-lg px-4 py-2.5 text-white font-medium text-[13px] shadow-sm cursor-pointer">
+                    class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 cursor-pointer transition-colors rounded-lg px-4 py-2.5 text-white font-medium text-[13px] shadow-sm">
                     <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
@@ -260,7 +260,7 @@
                                         <!-- Hapus -->
                                         <button type="button" @click="createOptions.splice(idx, 1)"
                                             x-show="createOptions.length > 1"
-                                            class="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100">
+                                            class="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-[#95122B] hover:bg-[#FADAE1] transition-colors opacity-0 group-hover:opacity-100">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M6 18L18 6M6 6l12 12" />
@@ -297,10 +297,9 @@
                         class="px-5 py-2 border border-gray-300 text-gray-700 font-medium text-[13px] bg-white rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
                         Batal
                     </button>
-                    <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formPeriodeBaru').submit()" :disabled="isSubmitting"
-                        class="px-5 py-2 bg-primary hover:bg-primary/90 text-white font-medium text-[13px] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 cursor-pointer">
-                        <svg x-show="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                        <span x-text="isSubmitting ? 'Memproses...' : 'Simpan Periode'"></span>
+                    <button type="button" onclick="document.getElementById('formPeriodeBaru').submit()"
+                        class="px-5 py-2 bg-primary hover:bg-primary/90 text-white font-medium text-[13px] rounded-lg transition-colors cursor-pointer">
+                        Simpan Periode
                     </button>
                 </div>
             </div>
@@ -439,7 +438,7 @@
                                         <!-- Hapus -->
                                         <button type="button" @click="editOptions.splice(idx, 1)"
                                             x-show="editOptions.length > 1"
-                                            class="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100">
+                                            class="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-[#95122B] hover:bg-[#FADAE1] transition-colors opacity-0 group-hover:opacity-100">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M6 18L18 6M6 6l12 12" />
@@ -477,40 +476,15 @@
                         class="px-5 py-2 border border-gray-300 text-gray-700 font-medium text-[13px] bg-white rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
                         Batal
                     </button>
-                    <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formEditPeriode').submit()" :disabled="isSubmitting"
-                        class="px-5 py-2 bg-primary hover:bg-primary/90 text-white font-medium text-[13px] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 cursor-pointer">
-                        <svg x-show="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                        <span x-text="isSubmitting ? 'Memproses...' : 'Simpan Perubahan'"></span>
+                    <button type="button" onclick="document.getElementById('formEditPeriode').submit()"
+                        class="px-5 py-2 bg-primary hover:bg-primary/90 text-white font-medium text-[13px] rounded-lg transition-colors cursor-pointer">
+                        Simpan Perubahan
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Modal Popup: Konfirmasi -->
-        <div x-show="confirmModal" tabindex="-1" class="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6" style="display: none;" x-cloak>
-            <div x-show="confirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" @click="closeConfirm()"></div>
-
-            <div x-show="confirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative w-full max-w-sm bg-white rounded-2xl shadow-xl flex flex-col overflow-hidden max-h-full">
-                
-                <div class="px-6 pt-6 pb-4 text-center">
-                    <div :class="'w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ' + confirmIconBg">
-                        <svg :class="'w-7 h-7 ' + confirmIconColor" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    </div>
-                    <h3 class="text-[16px] font-semibold text-gray-900 tracking-tight mb-2" x-text="confirmTitle"></h3>
-                    <p class="text-[13px] text-gray-500 leading-relaxed" x-text="confirmText"></p>
-                </div>
-
-                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex items-center gap-3">
-                    <button type="button" @click="closeConfirm()" class="flex-1 px-4 py-2 text-[13px] font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:shadow-md active:scale-95 rounded-lg transition-all cursor-pointer">Batal</button>
-                    <form :action="confirmAction" method="POST" class="flex-1 m-0">
-                        @csrf
-                        <input type="hidden" name="_method" :value="confirmMethod">
-                        <button type="submit" :class="'w-full px-4 py-2 text-[13px] font-medium text-white rounded-lg transition-all border border-transparent hover:shadow-md active:scale-95 cursor-pointer ' + confirmBtnColor" x-text="confirmBtnText">
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
+        <x-banksoal::ui.confirm-dialog />
     </div>
 
     {{-- Register Alpine component BEFORE Alpine processes x-data --}}
@@ -535,26 +509,27 @@
                         confirmAction: '',
                         confirmMethod: 'POST',
                         confirmTitle: '',
-                        confirmText: '',
-                        confirmBtnColor: '',
-                        confirmIconColor: '',
-                        confirmIconBg: '',
-                        confirmBtnText: 'Ya, Lanjutkan',
+                        confirmMessage: '',
+                        confirmVariant: 'primary',
+                        confirmConfirmText: '',
+                        isConfirmSubmitting: false,
 
-                        isSubmitting: false,
-
-                        openConfirm: function(action, method, title, text, btnColor, iconColor, iconBg, btnText) {
-                            this.confirmAction = action;
-                            this.confirmMethod = method;
-                            this.confirmTitle = title;
-                            this.confirmText = text;
-                            this.confirmBtnColor = btnColor;
-                            this.confirmIconColor = iconColor;
-                            this.confirmIconBg = iconBg;
-                            this.confirmBtnText = btnText || 'Ya, Lanjutkan';
+                        openConfirm: function(options) {
+                            this.confirmAction = options.action ?? '';
+                            this.confirmMethod = options.method ?? 'POST';
+                            this.confirmTitle = options.title ?? '';
+                            this.confirmMessage = options.message ?? '';
+                            this.confirmVariant = options.variant ?? 'primary';
+                            this.confirmConfirmText = options.confirmText ?? '';
+                            this.isConfirmSubmitting = false;
                             this.confirmModal = true;
+                            this.$nextTick(() => {
+                                var btn = this.$refs.confirmActionBtn;
+                                if (btn) btn.focus();
+                            });
                         },
                         closeConfirm: function() {
+                            if (this.isConfirmSubmitting) return;
                             this.confirmModal = false;
                         },
 

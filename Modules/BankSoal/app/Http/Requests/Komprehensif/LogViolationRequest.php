@@ -4,6 +4,10 @@ namespace Modules\BankSoal\Http\Requests\Komprehensif;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @property string $event_type
+ * @property string|null $description
+ */
 class LogViolationRequest extends FormRequest
 {
     public function authorize(): bool
@@ -14,7 +18,7 @@ class LogViolationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'event_type'  => ['required', 'string', 'max:100'],
+            'event_type' => ['required', 'string', 'max:100'],
             'description' => ['nullable', 'string', 'max:1000'],
         ];
     }
@@ -23,8 +27,8 @@ class LogViolationRequest extends FormRequest
     {
         return [
             'event_type.required' => 'Tipe kejadian wajib disertakan.',
-            'event_type.max'      => 'Tipe kejadian maksimal 100 karakter.',
-            'description.max'     => 'Deskripsi maksimal 1000 karakter.',
+            'event_type.max' => 'Tipe kejadian maksimal 100 karakter.',
+            'description.max' => 'Deskripsi maksimal 1000 karakter.',
         ];
     }
 }

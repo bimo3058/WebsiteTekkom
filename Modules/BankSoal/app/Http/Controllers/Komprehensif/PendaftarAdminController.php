@@ -6,16 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Modules\BankSoal\Enums\PendaftaranStatus;
 use Modules\BankSoal\Http\Requests\Komprehensif\BulkPendaftarRequest;
 use Modules\BankSoal\Http\Requests\Komprehensif\StoreAdminPendaftarRequest;
 use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
 use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
+use Modules\BankSoal\Services\Komprehensif\PendaftaranService;
 use Modules\BankSoal\Support\SemesterCalculator;
 
 class PendaftarAdminController extends Controller
 {
+    public function __construct(private PendaftaranService $pendaftaranService) {}
+
     /**
      * Tampilkan daftar pendaftar ujian dengan filter periode, status, dan pencarian.
      */
@@ -24,7 +30,7 @@ class PendaftarAdminController extends Controller
         $periodes = PeriodeUjian::orderBy('created_at', 'desc')->get();
 
         // Default ke periode aktif jika tidak ada filter di URL
-        if (!$request->filled('periode_id')) {
+        if (! $request->filled('periode_id')) {
             $activePeriodeId = $periodes->firstWhere('status', 'aktif')?->id ?? $periodes->first()?->id;
             if ($activePeriodeId) {
                 return redirect()->route('banksoal.pendaftaran.index', ['periode_id' => $activePeriodeId]);
@@ -90,7 +96,7 @@ class PendaftarAdminController extends Controller
     public function store(StoreAdminPendaftarRequest $request)
     {
         try {
-            return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+            return DB::transaction(function () use ($request) {
                 // Lock + cek duplikat atomik — cegah race double-click
                 $exists = PendaftarUjian::where('periode_ujian_id', $request->periode_ujian_id)
                     ->where('nim', $request->nim)
@@ -98,18 +104,24 @@ class PendaftarAdminController extends Controller
                     ->exists();
 
                 if ($exists) {
-                    throw \Illuminate\Validation\ValidationException::withMessages(
+                    throw ValidationException::withMessages(
                         ['nim' => 'Mahasiswa dengan NIM ini sudah terdaftar pada periode ujian tersebut.']
                     )->errorBag('pendaftar');
                 }
 
                 $student = Student::with('user')->where('student_number', $request->nim)->first();
 
-                if (!$student || !$student->user) {
+                if (! $student || ! $student->user) {
                     return back()->withErrors(['nim' => 'Mahasiswa dengan NIM tersebut belum terdaftar di sistem.'], 'pendaftar')->withInput();
                 }
 
                 $mahasiswa = $student->user;
+
+                if ($this->pendaftaranService->hasPassed($mahasiswa->id)) {
+                    return back()
+                        ->withErrors(['nim' => 'Mahasiswa ini sudah dinyatakan lulus ujian komprehensif.'], 'pendaftar')
+                        ->withInput();
+                }
 
                 PendaftarUjian::create([
                     'periode_ujian_id' => $request->periode_ujian_id,
@@ -127,9 +139,9 @@ class PendaftarAdminController extends Controller
 
                 return back()->with('success', 'Peserta berhasil ditambahkan.');
             });
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             throw $e;
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             // Fallback DB unique violation (race lolos validasi)
             if (str_contains($e->getMessage(), 'uniq_pendaftar') || $e->getCode() === '23505') {
                 return back()->withErrors(['nim' => 'Mahasiswa dengan NIM ini sudah terdaftar pada periode ujian tersebut.'], 'pendaftar')->withInput();
@@ -151,6 +163,10 @@ class PendaftarAdminController extends Controller
 
         $pendaftar = PendaftarUjian::findOrFail($id);
 
+        if ($this->pendaftaranService->hasPassed($pendaftar->mahasiswa_id)) {
+            return back()->with('error', 'Mahasiswa ini sudah dinyatakan lulus ujian komprehensif.');
+        }
+
         $pendaftar->update([
             'status_pendaftaran' => PendaftaranStatus::Approved->value,
             'catatan_admin' => $request->catatan_admin,
@@ -165,11 +181,27 @@ class PendaftarAdminController extends Controller
      */
     public function bulkApprove(BulkPendaftarRequest $request)
     {
-        $updated = PendaftarUjian::whereIn('id', $request->ids)
+        $pendaftars = PendaftarUjian::whereIn('id', $request->ids)
             ->where('status_pendaftaran', '!=', PendaftaranStatus::Approved->value)
-            ->update(['status_pendaftaran' => PendaftaranStatus::Approved->value]);
+            ->get();
 
-        return back()->with('success', "{$updated} pendaftar berhasil disetujui.");
+        $eligible = $pendaftars->reject(
+            fn (PendaftarUjian $pendaftar) => $this->pendaftaranService->hasPassed($pendaftar->mahasiswa_id)
+        );
+
+        $updated = $eligible->isEmpty()
+            ? 0
+            : PendaftarUjian::whereIn('id', $eligible->pluck('id'))
+                ->update(['status_pendaftaran' => PendaftaranStatus::Approved->value]);
+
+        $skipped = $pendaftars->count() - $updated;
+        $message = "{$updated} pendaftar berhasil disetujui.";
+
+        if ($skipped > 0) {
+            $message .= " {$skipped} mahasiswa sudah lulus dan dilewati.";
+        }
+
+        return back()->with('success', $message);
     }
 
     /**
@@ -197,7 +229,7 @@ class PendaftarAdminController extends Controller
 
     /**
      * Tolak & Hapus pendaftar (gabungan reject + soft-delete).
-     * 
+     *
      * Guard:
      * - Tidak bisa hapus jika status sudah 'approved'
      * - Cabut alokasi sesi sebelum soft-delete
@@ -230,14 +262,14 @@ class PendaftarAdminController extends Controller
     {
         $nim = $request->query('nim');
 
-        if (!$nim) {
+        if (! $nim) {
             return response()->json(['found' => false, 'message' => 'NIM tidak boleh kosong.']);
         }
 
         // Cari dari tabel students beserta data user-nya
         $student = Student::with('user')->where('student_number', $nim)->first();
 
-        if (!$student || !$student->user) {
+        if (! $student || ! $student->user) {
             return response()->json(['found' => false, 'message' => 'Mahasiswa dengan NIM tersebut tidak ditemukan di sistem.']);
         }
 
@@ -245,9 +277,9 @@ class PendaftarAdminController extends Controller
         $semester = SemesterCalculator::fromCohortYear((int) $student->cohort_year, 7);
 
         return response()->json([
-            'found'    => true,
-            'nama'     => $student->user->name,
-            'nim'      => $student->student_number,
+            'found' => true,
+            'nama' => $student->user->name,
+            'nim' => $student->student_number,
             'semester' => $semester,
         ]);
     }
