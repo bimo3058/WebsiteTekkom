@@ -145,7 +145,8 @@ class NotifikasiTugasService
      * Tugas alur tinjau Rencana Proker & Pelaksanaan (S-82, 11 Nov 2026).
      *
      *  • Ketua pelaksana: proker yang menunggu ia lengkapi (Menunggu Dilengkapi) atau
-     *    perbaiki (Perlu Perbaikan) — muncul begitu KABID membuat proker / menolak.
+     *    perbaiki (Menunggu Dilengkapi + catatan terbuka, S-91) — muncul begitu KABID
+     *    membuat proker / menolak.
      *  • Peninjau: kiriman Menunggu Tinjauan di bidang/unitnya (KABID, WAKABID, KANIT,
      *    WAKANIT) atau proker yang ia buat sendiri (KAHIM/admin yang membuat proker).
      *    KAHIM tidak diberi tahu semua bidang supaya loncengnya tidak banjir; ia tetap
@@ -166,13 +167,16 @@ class NotifikasiTugasService
 
         if ($user->hasRole(KegiatanPolicy::ROLE_KETUA_PELAKSANA) && KegiatanPolicy::bisaJadiPengelola($user)) {
             foreach ($tahap as $t) {
+                // S-91: "dikembalikan" = Menunggu Dilengkapi yang punya catatan terbuka.
+                // Dihitung lewat whereHas/whereDoesntHave (satu query hitung, tanpa N+1).
                 foreach ([
-                    Kegiatan::TINJAU_PERBAIKAN  => ['Perbaiki ', 'dikembalikan KABID dengan catatan', 'danger'],
-                    Kegiatan::TINJAU_DILENGKAPI => ['Lengkapi ', 'menunggu Anda lengkapi lalu kirim untuk ditinjau', 'warning'],
-                ] as $kunci => [$awalan, $desc, $nada]) {
-                    $q = Kegiatan::where('status', $t['status'])->tinjauan($kunci)
+                    'dikembalikan' => ['Perbaiki ', 'dikembalikan KABID dengan catatan', 'danger', true],
+                    'dilengkapi'   => ['Lengkapi ', 'menunggu Anda lengkapi lalu kirim untuk ditinjau', 'warning', false],
+                ] as $kunci => [$awalan, $desc, $nada, $adaCatatan]) {
+                    $q = Kegiatan::where('status', $t['status'])->tinjauan(Kegiatan::TINJAU_DILENGKAPI)
                         ->whereHas('ketuaPelaksana', fn ($s) => $s->where('user_id', $user->id));
-                    $tugas[] = $this->tugasDari($q, "tinjau-{$t['route']}-{$kunci}", $awalan . $t['nama'], "{$t['jenis']} {$desc}", $nada, $t['route'], $kunci);
+                    $adaCatatan ? $q->whereHas('catatanTerbuka') : $q->whereDoesntHave('catatanTerbuka');
+                    $tugas[] = $this->tugasDari($q, "tinjau-{$t['route']}-{$kunci}", $awalan . $t['nama'], "{$t['jenis']} {$desc}", $nada, $t['route'], Kegiatan::TINJAU_DILENGKAPI);
                 }
             }
         }

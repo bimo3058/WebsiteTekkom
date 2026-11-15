@@ -18,7 +18,7 @@
             @csrf
             <div class="mk-tolak-kotak__kepala">
                 <h3 id="judulTolak">Kembalikan ke ketua pelaksana</h3>
-                <p>Status berubah menjadi Perlu Perbaikan dan {{ $namaKetua ?? 'ketua pelaksana' }} mendapat notifikasi untuk memperbaikinya.</p>
+                <p>Status kembali ke Menunggu Dilengkapi dan {{ $namaKetua ?? 'ketua pelaksana' }} mendapat notifikasi untuk memperbaikinya sesuai catatan.</p>
             </div>
             <div class="mk-tolak-kotak__isi">
                 <label class="form-label-custom" for="isiTolak">Yang perlu diperbaiki <span class="required">*</span></label>

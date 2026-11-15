@@ -7,7 +7,9 @@
     Variabel: $proker, $cekJadwal (array{bentrok, ruangan, tanpaJam} dari ProkerController).
 --}}
 @php
-    $ruanganBermasalah = $cekJadwal['ruangan'] && $cekJadwal['ruangan']['status'] !== 'tersedia';
+    // S-88, 15 Nov 2026: ruangan yang sudah dipinjam Ketua Pelaksana bukan masalah.
+    $ruanganBermasalah = $cekJadwal['ruangan'] && ! in_array($cekJadwal['ruangan']['status'], ['tersedia', 'dipinjam_ketua'], true);
+    $ruanganDipinjam   = $cekJadwal['ruangan'] && $cekJadwal['ruangan']['status'] === 'dipinjam_ketua';
 @endphp
 
 @if($cekJadwal['bentrok'] || $cekJadwal['tanpaJam'] || $ruanganBermasalah)
@@ -47,9 +49,18 @@
         <p class="mk-bentrok__catatan">Proker bidang lain hanya terlihat judul, bidang, jam &amp; lokasinya.</p>
     @endif
 </div>
+@endif
+
+@if($ruanganDipinjam)
+<div class="mk-ruang-ok">
+    <span class="mm-status mm-status--success">Ruangan sudah dipinjam</span>
+    <span><b>{{ $cekJadwal['ruangan']['nama'] }}:</b> {{ $cekJadwal['ruangan']['alasan'] }}</span>
+</div>
+@endif
 
 @once
 <style>
+    .mk-ruang-ok { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; font-size: 12px; color: var(--c-fg-sec, #475467); }
     .mk-bentrok--detail { margin-top: 14px; }
     /* Oranye #F79009 di atas krem hanya ±2:1; judul di kartu putih memakai kuning tua token warning */
     .mk-bentrok--detail .mk-bentrok__judul { color: var(--c-warning); font-weight: 700; white-space: nowrap; }
@@ -58,4 +69,3 @@
     .mk-bentrok__catatan { margin: 8px 0 0; font-size: 12px; color: var(--c-fg-muted, #667085); }
 </style>
 @endonce
-@endif

@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * Peninjau (KABID/WAKABID/KANIT/WAKANIT, KAHIM/WAKAHIM, admin) mengembalikan kiriman
  * ketua pelaksana — Rencana Proker maupun laporan Pelaksanaan — dengan catatan; status
- * tinjauan menjadi Perlu Perbaikan. Catatan terbuka otomatis ditutup (diperbaiki_at,
+ * tinjauan kembali ke Menunggu Dilengkapi (S-91, 15 Nov 2026; status Perlu Perbaikan
+ * digabung) dan catatan terbuka menjadi penanda "dikembalikan". Catatan terbuka otomatis ditutup (diperbaiki_at,
  * diperbaiki_oleh) saat ketua pelaksana mengirim ulang (TinjauanKegiatanService::kirim).
  * Rencana dan salinan Pelaksanaan-nya baris berbeda, jadi catatannya terpisah.
  */

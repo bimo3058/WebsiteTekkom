@@ -17,7 +17,7 @@
         foreach ($cekJadwal['bentrok'] as $b) {
             $peringatanAjukan->push(($b['ruang_sama'] ? 'Ruang & waktu sama: ' : 'Waktu beririsan: ') . $b['judul'] . ' (' . $b['bidang'] . ', ' . $b['jam'] . ', ' . $b['lokasi'] . ').');
         }
-        if ($cekJadwal['ruangan'] && $cekJadwal['ruangan']['status'] !== 'tersedia') {
+        if ($cekJadwal['ruangan'] && ! in_array($cekJadwal['ruangan']['status'], ['tersedia', 'dipinjam_ketua'], true)) { // S-88
             $peringatanAjukan->push('Ruangan ' . $cekJadwal['ruangan']['nama'] . ': ' . ($cekJadwal['ruangan']['alasan'] ?? $cekJadwal['ruangan']['status']) . '.');
         }
     }
@@ -54,7 +54,7 @@
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
-                    {{ $proker->tahap_tinjauan === 'perbaikan' ? 'Perbaiki' : 'Edit' }}
+                    {{ $proker->catatanTerbuka()->exists() ? 'Perbaiki' : 'Edit' }}
                 </a>
             @endif
             {{-- $canDelete sudah memuat aturan tahap: draft, atau rencana diajukan tanpa salinan --}}

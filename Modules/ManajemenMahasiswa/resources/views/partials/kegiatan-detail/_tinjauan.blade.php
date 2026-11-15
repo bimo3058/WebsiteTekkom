@@ -26,8 +26,16 @@
     $objek    = $tahap === 'rencana' ? 'rencana proker' : 'laporan pelaksanaan';
     $tombolSetujui = $tahap === 'rencana' ? 'Setujui & Teruskan ke Pelaksanaan' : 'Setujui & Unggah ke Arsip';
     $peninjau = $canSetujui || $canTolak || $canGantiKetua;
+    // S-91 (15 Nov 2026): Perlu Perbaikan digabung ke Menunggu Dilengkapi; "dikembalikan"
+    // = ada catatan terbuka.
+    $dikembalikan = $status === $K::TINJAU_DILENGKAPI && $terbuka->isNotEmpty();
+    $nada = $dikembalikan ? 'error' : ($status ? $K::TINJAUAN_NADA[$status] : null);
 
     $pesan = match (true) {
+        $dikembalikan && $saya
+            => 'Dikembalikan dengan catatan di bawah. Tekan Perbaiki, sesuaikan datanya, lalu tekan Kirim untuk Ditinjau.',
+        $dikembalikan
+            => "Menunggu {$namaKetua} memperbaiki sesuai catatan di bawah, lalu mengirimnya lagi.",
         $status === $K::TINJAU_DILENGKAPI && $saya
             => "Anda ketua pelaksananya. Lengkapi data {$objek} ini lewat tombol Edit, lalu tekan Kirim untuk Ditinjau.",
         $status === $K::TINJAU_DILENGKAPI && $peninjau
@@ -40,20 +48,16 @@
             => 'Sudah Anda kirim. Data dikunci sampai KABID menyetujui atau mengembalikannya dengan catatan.',
         $status === $K::TINJAU_DITINJAU
             => "Sudah dikirim {$namaKetua} dan menunggu tinjauan KABID. Data dikunci selama ditinjau.",
-        $status === $K::TINJAU_PERBAIKAN && $saya
-            => 'Dikembalikan dengan catatan di bawah. Tekan Perbaiki, sesuaikan datanya, lalu kirim lagi untuk ditinjau.',
-        $status === $K::TINJAU_PERBAIKAN
-            => "Menunggu {$namaKetua} memperbaiki sesuai catatan di bawah, lalu mengirimnya lagi.",
         default => null,
     };
 @endphp
 
 @if($status)
-<div class="mk-tinjau mk-tinjau--{{ $K::TINJAUAN_NADA[$status] }}" role="status" aria-label="Status tinjauan">
+<div class="mk-tinjau mk-tinjau--{{ $nada }}" role="status" aria-label="Status tinjauan">
     <span class="mk-tinjau__ikon" aria-hidden="true">
         @if($status === $K::TINJAU_DITINJAU)
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-        @elseif($status === $K::TINJAU_PERBAIKAN)
+        @elseif($dikembalikan)
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
         @else
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
@@ -63,6 +67,9 @@
     <div class="mk-tinjau__badan">
         <div class="mk-tinjau__kepala">
             <span class="mk-tinjau__judul">{{ $K::TINJAUAN_LABELS[$status] }}</span>
+            @if($dikembalikan)
+                <span class="mk-tinjau__waktu">Dikembalikan KABID dengan catatan</span>
+            @endif
             @if($status === $K::TINJAU_DITINJAU && $kegiatan->dikirim_tinjau_at)
                 <span class="mk-tinjau__waktu">Dikirim {{ $kegiatan->dikirim_tinjau_at->locale('id')->translatedFormat('j M Y, H.i') }}</span>
             @endif

@@ -77,6 +77,7 @@ class PelaksanaanController extends Controller
 
         // Relasi yang dibutuhkan kartu bersama (kegiatan-list/_kartu) — sama di ketiga subbab.
         $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'dosenPendampings.user'])
+            ->withCount('catatanTerbuka')
             ->where('status', Kegiatan::STATUS_DISETUJUI)
             ->terlihatOleh($user)
             ->orderBy('created_at', 'desc');
@@ -395,8 +396,8 @@ class PelaksanaanController extends Controller
             // Lokasi, ketua pelaksana, dan anggaran sudah wajib sejak Ajukan Proker; di tahap
             // Pelaksanaan boleh diubah sesuai realisasi tetapi tidak boleh dikosongkan lagi.
             // Ruangan kampus (EOffice) ATAU lokasi teks bebas (S-81).
-            'lokasi'                    => 'required_without:ruangan_id|nullable|string|max:150',
-            'ruangan_id'                => $jadwal->aturanRuangan(),
+            'lokasi'                    => ['required_without:ruangan_id', 'nullable', 'string', 'max:150', $jadwal->aturanLokasiTeks($request, $proker->lokasi)],
+            'ruangan_id'                => array_merge($jadwal->aturanRuangan(), [$jadwal->aturanRuanganKetua($request, $proker->ruangan_id)]), // S-89
             'target_peserta'            => $aturan('target_peserta', 'integer|min:1'),
             'ketua_pelaksana_id'        => ['required', 'exists:students,id', KegiatanPolicy::aturanKetuaSebidang($proker, (int) collect($request->input('bidang_id'))->first() ?: null)],
             'dosen_pendamping_ids'      => $aturan('dosen_pendamping_ids', 'array'),
@@ -624,7 +625,7 @@ class PelaksanaanController extends Controller
             ->with('success', 'Laporan pelaksanaan dikirim untuk ditinjau. Data dikunci sampai KABID menyetujui (diunggah ke Arsip) atau mengembalikannya dengan catatan.');
     }
 
-    /** Peninjau mengembalikan kiriman dengan catatan → Perlu Perbaikan. */
+    /** Peninjau mengembalikan kiriman dengan catatan → kembali ke Menunggu Dilengkapi (S-91). */
     public function tolak(Request $request, $id)
     {
         $proker = Kegiatan::findOrFail($id);
@@ -643,7 +644,7 @@ class PelaksanaanController extends Controller
         }
 
         return redirect()->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
-            ->with('success', 'Laporan pelaksanaan dikembalikan ke ketua pelaksana dengan catatan. Statusnya kini Perlu Perbaikan.');
+            ->with('success', 'Laporan pelaksanaan dikembalikan ke ketua pelaksana dengan catatan. Statusnya kembali ke Menunggu Dilengkapi.');
     }
 
     /** KABID dkk. mengganti ketua pelaksana (S-82). */

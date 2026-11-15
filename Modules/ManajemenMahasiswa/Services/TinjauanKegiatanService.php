@@ -18,8 +18,11 @@ use Modules\ManajemenMahasiswa\Policies\KegiatanPolicy;
  *
  *   KABID membuat proker + menunjuk ketua pelaksana  → Menunggu Dilengkapi
  *   Ketua pelaksana mengisi, menekan "Kirim"          → Menunggu Tinjauan (data dikunci)
- *   KABID menolak dengan catatan                      → Perlu Perbaikan
+ *   KABID menolak dengan catatan                      → Menunggu Dilengkapi (+ catatan terbuka)
  *   Ketua pelaksana memperbaiki, mengirim lagi        → Menunggu Tinjauan
+ *
+ * S-91 (15 Nov 2026): status Perlu Perbaikan digabung ke Menunggu Dilengkapi. Penanda
+ * "dikembalikan" kini berasal dari catatan terbuka (Kegiatan::catatanTerbuka()).
  *   KABID menyetujui → Rencana diteruskan ke Pelaksanaan (RencanaProkerService::ajukan)
  *                      atau Pelaksanaan diunggah ke Arsip (PelaksanaanController).
  *
@@ -68,7 +71,8 @@ class TinjauanKegiatanService
     }
 
     /**
-     * Peninjau mengembalikan kiriman dengan catatan → Perlu Perbaikan.
+     * Peninjau mengembalikan kiriman dengan catatan → kembali ke Menunggu Dilengkapi
+     * (S-91); catatan yang tersimpan terbuka menjadi penanda "dikembalikan".
      *
      * @throws \DomainException bila tidak sedang ditinjau
      */
@@ -86,7 +90,7 @@ class TinjauanKegiatanService
                 'isi'         => trim($isi),
             ]);
 
-            $terkini->update(['status_tinjauan' => Kegiatan::TINJAU_PERBAIKAN]);
+            $terkini->update(['status_tinjauan' => Kegiatan::TINJAU_DILENGKAPI]);
         });
     }
 
