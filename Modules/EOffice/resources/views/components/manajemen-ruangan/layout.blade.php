@@ -808,6 +808,19 @@
             background: #E4DFFD;
             color: #2A3A7C;
         }
+
+        /* Filter Popover Multi-Device Optimization */
+        .mp-filter-popover {
+            max-height: calc(100vh - 180px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        @media (max-width: 639px) {
+            .mp-filter-popover {
+                max-height: none;
+                overflow: visible;
+            }
+        }
     </style>
     <x-mobile-navigation-assets />
 </head>

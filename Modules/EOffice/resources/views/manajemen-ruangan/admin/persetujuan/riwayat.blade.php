@@ -86,10 +86,8 @@
         </div>
     </div>
 
-
-
-    <div class="mp-card" style="margin-top: 0px;"
-        x-data="arsipManager()">
+    <div x-data="arsipManager()" class="flex flex-col">
+        <div class="mp-card" style="margin-top: 0px;">
         
         <!-- Header Actions -->
         <div
@@ -126,10 +124,10 @@
                     <!-- Wrapper for Filter & Sort to sit side-by-side on mobile -->
                     <div class="relative flex flex-row items-stretch gap-2 w-full sm:w-auto shrink-0">
                         {{-- Filter --}}
-                        <div class="static sm:relative flex-1 sm:flex-none" x-data="{ open: false }" @click.outside="open = false">
-                        <button type="button" @click="open = !open" 
+                        <div class="static sm:relative flex-1 sm:flex-none" @click.outside="filterOpen = false">
+                        <button type="button" @click="filterOpen = !filterOpen" 
                             class="flex items-center justify-center w-full sm:w-auto relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer whitespace-nowrap"
-                            :class="open ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-200 text-slate-700 hover:bg-gray-50'">
+                            :class="filterOpen ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-200 text-slate-700 hover:bg-gray-50'">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                             </svg>
@@ -141,14 +139,14 @@
                             @endif
                         </button>
 
-                        <div x-show="open" style="display: none;"
+                        <div x-show="filterOpen" style="display: none;"
                             x-transition:enter="transition ease-out duration-100" 
                             x-transition:enter-start="opacity-0 scale-95" 
                             x-transition:enter-end="opacity-100 scale-100" 
                             x-transition:leave="transition ease-in duration-75" 
                             x-transition:leave-start="opacity-100 scale-100" 
                             x-transition:leave-end="opacity-0 scale-95"
-                            class="absolute left-0 right-0 sm:right-0 sm:left-auto top-full mt-2 origin-top sm:origin-top-right bg-white rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-gray-100 z-50 w-full sm:w-80 max-h-[calc(100vh-190px)] overflow-y-auto">
+                            class="absolute left-0 right-0 sm:right-0 sm:left-auto top-full mt-2 origin-top sm:origin-top-right bg-white rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-gray-100 z-50 w-full sm:w-80 mp-filter-popover">
                             <div class="p-4 space-y-3.5">
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-700 mb-1.5 relative z-10 w-full bg-white">Rentang Waktu</label>
@@ -204,7 +202,7 @@
                                         </div>
                                         
                                         <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
-                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] overflow-hidden" style="display: none;">
+                                            class="absolute left-0 top-full mt-1 origin-top w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] overflow-hidden" style="display: none;">
                                             
                                             {{-- Search input specifically on mobile so keyboard only opens if user wants to search --}}
                                             <div class="p-2 border-b border-gray-100 sm:hidden bg-slate-50">
@@ -274,7 +272,7 @@
                                         </button>
                                         
                                         <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
-                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] overflow-hidden" style="display: none;">
+                                            class="absolute left-0 bottom-full mb-1 origin-bottom w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] overflow-hidden" style="display: none;">
                                             <div class="py-2 px-1">
                                                 <button type="button" @click="selectItem('')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != ''}">Semua Status</button>
                                                 <button type="button" @click="selectItem('disetujui')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'disetujui', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'disetujui'}">Disetujui</button>
@@ -315,7 +313,7 @@
                                         </button>
                                         
                                         <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
-                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] max-h-36 overflow-y-auto" style="display: none;">
+                                            class="absolute left-0 bottom-full mb-1 origin-bottom w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] max-h-36 overflow-y-auto" style="display: none;">
                                             <div class="py-2 px-1">
                                                 <button type="button" @click="selectItem('')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != ''}">Semua Asal</button>
                                                 <button type="button" @click="selectItem('kp')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'kp', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'kp'}">KP</button>
@@ -653,9 +651,9 @@
         </div>
 
         <div
-            class="border-t border-slate-200 bg-white px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 rounded-b-[14px]">
+            class="border-t border-slate-200 bg-white px-4 sm:px-5 py-3 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 rounded-b-[14px]">
             {{-- Left: Per page selector + Showing text --}}
-            <div class="flex items-center gap-2.5 sm:gap-3 text-xs text-slate-500 flex-wrap shrink-0">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-xs text-slate-500 shrink-0">
                 <div class="flex items-center gap-1.5">
                     <span class="font-medium text-slate-500">Per halaman</span>
                     <div x-data="{ 
@@ -704,7 +702,7 @@
                     </div>
                 </div>
 
-                <div class="w-px h-3.5 bg-slate-200"></div>
+                <div class="hidden sm:block w-px h-3.5 bg-slate-200"></div>
 
                 <span class="text-xs text-slate-500 whitespace-nowrap">
                     Menampilkan <strong class="font-bold text-slate-800">{{ $peminjamans->firstItem() ?? 0 }}</strong>
@@ -714,7 +712,7 @@
             </div>
 
             {{-- Right: Page buttons --}}
-            <div class="flex items-center gap-1 sm:gap-1.5">
+            <div class="flex items-center gap-1 sm:gap-1.5 flex-nowrap justify-start lg:justify-end">
                 @if ($peminjamans->onFirstPage())
                     <span
                         class="text-slate-300 cursor-not-allowed w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -1019,6 +1017,12 @@
         </div>
     </div>
 
+    @if($peminjamans->count() <= 3)
+        {{-- Dynamic Mobile Bottom Scroll Buffer: Hanya aktif di HP jika filter dibuka & data sedikit (<= 3 entri) --}}
+        <div x-show="filterOpen" x-cloak class="sm:hidden w-full shrink-0" style="height: 260px; display: none;"></div>
+    @endif
+    </div>
+
     <script>
         const appRuangans = @json($ruangans->map(fn($r) => ['id' => (string)$r->id, 'name' => $r->nama]));
 
@@ -1076,6 +1080,7 @@
 
         function arsipManager() {
             return {
+                filterOpen: false,
                 isDetailOpen: false,
                 detailData: {},
                 isDeleteModalOpen: false,
