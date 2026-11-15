@@ -5,6 +5,7 @@ namespace Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin;
 use App\Http\Controllers\Controller;
 use Modules\EOffice\Models\Ruangan;
 use Modules\EOffice\Models\RuanganFoto;
+use Modules\EOffice\Models\Fasilitas;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -61,7 +62,8 @@ class RuanganController extends Controller
 
     public function create()
     {
-        return view('eoffice::manajemen-ruangan.admin.ruangan.create');
+        $opsiFasilitas = Fasilitas::orderBy('nama_fasilitas')->pluck('nama_fasilitas')->toArray();
+        return view('eoffice::manajemen-ruangan.admin.ruangan.create', compact('opsiFasilitas'));
     }
 
     public function store(Request $request)
@@ -111,7 +113,8 @@ class RuanganController extends Controller
 
     public function edit(Ruangan $ruangan)
     {
-        return view('eoffice::manajemen-ruangan.admin.ruangan.edit', compact('ruangan'));
+        $opsiFasilitas = Fasilitas::orderBy('nama_fasilitas')->pluck('nama_fasilitas')->toArray();
+        return view('eoffice::manajemen-ruangan.admin.ruangan.edit', compact('ruangan', 'opsiFasilitas'));
     }
 
     public function update(Request $request, Ruangan $ruangan)

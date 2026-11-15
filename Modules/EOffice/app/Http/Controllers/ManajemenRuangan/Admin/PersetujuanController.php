@@ -418,7 +418,15 @@ class PersetujuanController extends Controller
                     })->get();
 
                 foreach ($collidingPendings as $cp) {
-                    $autoReason = "Ditolak otomatis oleh sistem: Ruangan dialokasikan untuk peminjaman #{$peminjaman->id} ({$peminjaman->source_label}: {$peminjaman->tujuan}) yang telah disetujui Admin Ruang.";
+                    $ruanganNama = $cp->ruangan ? $cp->ruangan->nama : 'Ruangan';
+                    $tglFormatted = \Carbon\Carbon::parse($cp->tanggal_pinjam)->translatedFormat('d M Y');
+                    $jamMulai = substr($cp->jam_mulai, 0, 5);
+                    $jamSelesai = $cp->jam_selesai ? substr($cp->jam_selesai, 0, 5) : null;
+                    $waktuFormatted = $jamSelesai ? "{$jamMulai} - {$jamSelesai} WIB" : "{$jamMulai} WIB";
+
+                    $autoReason = "Ditolak oleh Admin: Ruangan dialokasikan untuk peminjaman lain yang telah disetujui Admin. Silakan mengajukan permohonan di ruangan atau waktu lain.";
+                    $notifMsg = "Pengajuan peminjaman {$ruanganNama} pada {$tglFormatted} pukul {$waktuFormatted} telah ditolak oleh Admin karena ruangan telah dialokasikan untuk kegiatan lain.";
+
                     $cp->update([
                         'status' => 'ditolak',
                         'alasan_penolakan' => $autoReason,
@@ -430,7 +438,7 @@ class PersetujuanController extends Controller
 
                     // Notifikasi ke user pemohon yang ditolak otomatis
                     if ($cp->user) {
-                        $cp->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($cp, false));
+                        $cp->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($cp, false, $notifMsg));
                     }
                 }
             }
@@ -641,7 +649,7 @@ class PersetujuanController extends Controller
         return response()->json(['conflict' => false, 'conflicts_list' => []]);
     }
     /**
-     * Soft delete arsip peminjaman (hanya superadmin)
+     * Hapus permanen (force delete) arsip peminjaman beserta berkas pendukungnya di Supabase (Khusus Superadmin)
      */
     public function destroy($id)
     {
