@@ -111,7 +111,7 @@
                 </div>
                 <div class="mp-stat-title">Menunggu Approval</div>
             </div>
-            <div class="mp-stat-value" :style="count > 0 ? 'color: #D97706;' : ''" x-text="count">
+            <div class="mp-stat-value" x-text="count">
                 {{ number_format($pendingApproval ?? 0) }}
             </div>
         </a>
