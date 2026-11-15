@@ -122,7 +122,7 @@ class KalenderController extends Controller
             ]);
 
             // Eksekusi "Hukum Mengalah": Batalkan peminjaman mahasiswa yang tertimpa secara tertib
-            $overlappingBookings = Peminjaman::where('ruangan_id', $request->ruangan_id)
+            $overlappingBookings = Peminjaman::with('ruangan')->where('ruangan_id', $request->ruangan_id)
                 ->where('tanggal_pinjam', $request->tanggal)
                 ->whereIn('status', ['menunggu', 'disetujui'])
                 ->where(function ($q) use ($request) {
@@ -132,16 +132,39 @@ class KalenderController extends Controller
                 ->get();
 
             $canceledCount = 0;
+            $kategori = $request->kategori ?: 'Pemeliharaan / Penutupan';
             foreach ($overlappingBookings as $b) {
+                $prevStatus = $b->status;
+                $isApprovedBefore = ($prevStatus === 'disetujui');
+                $newStatus = $isApprovedBefore ? 'dibatalkan' : 'ditolak';
+
+                $ruanganNama = $b->ruangan ? $b->ruangan->nama : 'Ruangan';
+                $tglFormatted = \Carbon\Carbon::parse($b->tanggal_pinjam)->translatedFormat('d M Y');
+                $jamMulai = substr($b->jam_mulai, 0, 5);
+                $jamSelesai = $b->jam_selesai ? substr($b->jam_selesai, 0, 5) : null;
+                $waktuFormatted = $jamSelesai ? "{$jamMulai} - {$jamSelesai} WIB" : "{$jamMulai} WIB";
+
+                if ($isApprovedBefore) {
+                    $alasan = "Dibatalkan oleh Admin: Terjadi perubahan alokasi ruangan mendesak untuk {$kategori}. Hak penggunaan ruangan pada jadwal ini dicabut. Silakan mengajukan jadwal pengganti atau hubungi Admin.";
+                    $notifMsg = "Izin peminjaman {$ruanganNama} pada {$tglFormatted} pukul {$waktuFormatted} yang sebelumnya telah disetujui, terpaksa dibatalkan oleh Admin karena {$kategori}.";
+                } else {
+                    $alasan = "Ditolak oleh Admin: Ruangan dialokasikan untuk {$kategori}. Silakan mengajukan permohonan di ruangan atau waktu lain.";
+                    $notifMsg = "Pengajuan peminjaman {$ruanganNama} pada {$tglFormatted} pukul {$waktuFormatted} telah ditolak oleh Admin karena {$kategori}.";
+                }
+
                 $b->update([
-                    'status' => 'dibatalkan',
-                    'alasan_penolakan' => 'Dibatalkan oleh Sistem: Ruangan diblokir untuk Jadwal Internal/Pemeliharaan (' . $request->keterangan . ')',
+                    'status' => $newStatus,
+                    'alasan_penolakan' => $alasan,
                     'waktu_approval' => now(),
                 ]);
 
                 if ($b->user) {
-                    $b->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($b, true));
+                    $b->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($b, $isApprovedBefore, $notifMsg));
                 }
+
+                // Dispatch Event perubahan status peminjaman untuk modul luar (Praktikum, KP, Capstone)
+                event(new \Modules\EOffice\Events\RoomBookingStatusChanged($b, $newStatus, $prevStatus, $alasan));
+
                 $canceledCount++;
             }
 
@@ -152,11 +175,11 @@ class KalenderController extends Controller
 
             return redirect()->back()->with('success', $msg);
         } else {
-            // Path B: Peminjaman Manual (Hard Collision Guard)
-            if ($collisionData['conflict']) {
+            // Path B: Peminjaman Manual (Hard Collision Guard terhadap Kuliah/Pemeliharaan/Peminjaman Disetujui)
+            if ($collisionData['has_hard_conflict'] ?? $collisionData['conflict']) {
                 return redirect()->back()
                     ->withInput()
-                    ->withErrors(['Bentrok' => 'Gagal menyimpan peminjaman manual! Terdapat jadwal yang beririsan di ruangan dan waktu yang dipilih.']);
+                    ->withErrors(['Bentrok' => 'Gagal menyimpan peminjaman manual! Terdapat jadwal perkuliahan, pemeliharaan, atau peminjaman yang sudah disetujui di ruangan dan waktu yang dipilih.']);
             }
 
             // Resolve User by NIM/NIP or Email first
@@ -192,7 +215,51 @@ class KalenderController extends Controller
             // Kirim notifikasi persetujuan instan kepada user
             $targetUser->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($peminjaman, false));
 
-            return redirect()->back()->with('success', 'Booking Ekspres berhasil dimasukkan atas nama ' . $targetUser->name . ' dan otomatis Disetujui.');
+            // Dispatch Event perubahan status peminjaman untuk modul luar (Praktikum, KP, Capstone)
+            event(new \Modules\EOffice\Events\RoomBookingStatusChanged($peminjaman, 'disetujui', null, 'Booking ekspres disetujui instan oleh Admin Ruang'));
+
+            // AUTO-REJECT CASCADE: Tolak otomatis antrean 'menunggu' lain yang bertabrakan di ruangan & jam yang sama
+            $collidingPendings = Peminjaman::with(['user', 'ruangan'])->where('ruangan_id', $peminjaman->ruangan_id)
+                ->where('tanggal_pinjam', $peminjaman->tanggal_pinjam)
+                ->where('status', 'menunggu')
+                ->where('id', '!=', $peminjaman->id)
+                ->where(function ($q) use ($peminjaman) {
+                    $q->where('jam_mulai', '<', $peminjaman->jam_selesai)
+                        ->where('jam_selesai', '>', $peminjaman->jam_mulai);
+                })->get();
+
+            $autoRejectedCount = 0;
+            $kategoriPrioritas = 'kegiatan prioritas Admin/Dosen';
+            foreach ($collidingPendings as $cp) {
+                $ruanganNama = $cp->ruangan ? $cp->ruangan->nama : 'Ruangan';
+                $tglFormatted = \Carbon\Carbon::parse($cp->tanggal_pinjam)->translatedFormat('d M Y');
+                $jamMulai = substr($cp->jam_mulai, 0, 5);
+                $jamSelesai = $cp->jam_selesai ? substr($cp->jam_selesai, 0, 5) : null;
+                $waktuFormatted = $jamSelesai ? "{$jamMulai} - {$jamSelesai} WIB" : "{$jamMulai} WIB";
+
+                $autoReason = "Ditolak oleh Admin: Ruangan dialokasikan untuk {$kategoriPrioritas}. Silakan mengajukan permohonan di ruangan atau waktu lain.";
+                $notifMsg = "Pengajuan peminjaman {$ruanganNama} pada {$tglFormatted} pukul {$waktuFormatted} telah ditolak oleh Admin karena {$kategoriPrioritas}.";
+
+                $cp->update([
+                    'status' => 'ditolak',
+                    'alasan_penolakan' => $autoReason,
+                    'waktu_approval' => now(),
+                ]);
+
+                event(new \Modules\EOffice\Events\RoomBookingStatusChanged($cp, 'ditolak', 'menunggu', $autoReason));
+
+                if ($cp->user) {
+                    $cp->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($cp, false, $notifMsg));
+                }
+                $autoRejectedCount++;
+            }
+
+            $successMsg = 'Booking Ekspres berhasil dimasukkan atas nama ' . $targetUser->name . ' dan otomatis Disetujui.';
+            if ($autoRejectedCount > 0) {
+                $successMsg .= " Sebanyak {$autoRejectedCount} permohonan mahasiswa berstatus menunggu yang bertabrakan telah ditolak otomatis.";
+            }
+
+            return redirect()->back()->with('success', $successMsg);
         }
     }
 
@@ -202,10 +269,17 @@ class KalenderController extends Controller
     public function getCollisions($ruanganId, $tanggal, $jamMulai, $jamSelesai)
     {
         if (!$ruanganId || !$tanggal || !$jamMulai || !$jamSelesai) {
-            return ['conflict' => false, 'conflicts_list' => []];
+            return [
+                'conflict' => false,
+                'has_hard_conflict' => false,
+                'has_pending_conflict' => false,
+                'conflicts_list' => []
+            ];
         }
 
         $conflictsList = [];
+        $hasHardConflict = false;
+        $hasPendingConflict = false;
 
         // 1. Cek bentrok dengan Jadwal Internal (Akademik & Pemeliharaan / Blokir)
         $dayOfWeek = \Carbon\Carbon::parse($tanggal)->format('N');
@@ -253,16 +327,18 @@ class KalenderController extends Controller
 
             $conflictsList[] = [
                 'tipe' => $tipe,
+                'status' => 'internal',
                 'nama' => $nama,
                 'waktu' => $range,
             ];
+            $hasHardConflict = true;
         }
 
-        // 2. Cek bentrok dengan Peminjaman lain yang telah disetujui
+        // 2. Cek bentrok dengan Peminjaman (Disetujui maupun Antrean Menunggu)
         $peminjamanConflicts = Peminjaman::with('user')
             ->where('ruangan_id', $ruanganId)
             ->where('tanggal_pinjam', $tanggal)
-            ->where('status', 'disetujui')
+            ->whereIn('status', ['disetujui', 'menunggu'])
             ->where(function ($query) use ($jamMulai, $jamSelesai) {
                 $query->where('jam_mulai', '<', $jamSelesai)
                     ->where('jam_selesai', '>', $jamMulai);
@@ -273,8 +349,17 @@ class KalenderController extends Controller
         foreach ($peminjamanConflicts as $p) {
             $userPart = $p->user ? " (Oleh: {$p->user->name})" : "";
             $range = \Carbon\Carbon::parse($p->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($p->jam_selesai)->format('H:i') . ' WIB';
+            $isPending = ($p->status === 'menunggu');
+
+            if ($isPending) {
+                $hasPendingConflict = true;
+            } else {
+                $hasHardConflict = true;
+            }
+
             $conflictsList[] = [
-                'tipe' => 'Peminjaman',
+                'tipe' => 'Peminjaman' . ($isPending ? ' (Menunggu)' : ' (Disetujui)'),
+                'status' => $p->status,
                 'nama' => ($p->tujuan ?: 'Peminjaman Ruangan') . $userPart,
                 'waktu' => $range,
             ];
@@ -282,6 +367,8 @@ class KalenderController extends Controller
 
         return [
             'conflict' => count($conflictsList) > 0,
+            'has_hard_conflict' => $hasHardConflict,
+            'has_pending_conflict' => $hasPendingConflict,
             'conflicts_list' => $conflictsList,
         ];
     }

@@ -77,7 +77,7 @@
                        onkeydown="if(event.key==='Enter') event.preventDefault()">
             </div>
             @if(request()->anyFilled(['search','status_dosen','status','praktikum_id']))
-            <a href="{{ route('eoffice.manprak.admin.pendaftaran-koor.index') }}"
+            <a href="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.pendaftaran-koor.index') }}"
                class="mp-btn secondary md px-4" style="height:38px; text-decoration:none; flex-shrink: 0; display:flex; align-items:center; gap:6px;">
                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                Reset
@@ -146,7 +146,7 @@
                 @if(filled($additionalDocumentName) && $p->berkas_tambahan_path)
                     <div class="font-semibold text-[#353849] mb-1">{{ $additionalDocumentName }}</div>
                     <a class="text-[#0B266E] font-semibold hover:underline" target="_blank" rel="noopener"
-                       href="{{ route('eoffice.manprak.admin.pendaftaran.document', ['type' => 'koor', 'id' => $p->id, 'document' => 'berkas_tambahan_path']) }}">Lihat Berkas</a>
+                       href="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.pendaftaran.document', ['type' => 'koor', 'id' => $p->id, 'document' => 'berkas_tambahan_path']) }}">Lihat Berkas</a>
                 @elseif(filled($additionalDocumentName))
                     <div class="font-semibold text-[#353849] mb-1">{{ $additionalDocumentName }}</div>
                     <span>Tidak mengunggah</span>
@@ -174,19 +174,19 @@
             </div>
             <div class="text-center flex flex-col items-center justify-center gap-2">
                 <x-eoffice::manajemen-praktikum.ui.action-menu>
-                <a class="mp-btn secondary sm" href="{{ route('eoffice.manprak.admin.pendaftaran.show', ['type' => 'koor', 'id' => $p->id]) }}">
+                <a class="mp-btn secondary sm" href="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.pendaftaran.show', ['type' => 'koor', 'id' => $p->id]) }}">
                     <x-eoffice::manajemen-praktikum.ui.icon name="file" /> Detail &amp; Dokumen
                 </a>
-                @if($p->status === 'pending' && $p->status_dosen === 'disetujui')
+                @if(auth()->user()->hasAnyRole(['superadmin','admin_praktikum']) && $p->status === 'pending' && $p->status_dosen === 'disetujui')
                 <div class="flex gap-2 justify-center" x-data="{ alasan: '' }">
-                    <form method="POST" action="{{ route('eoffice.manprak.admin.pendaftaran-koor.approve', $p->id) }}">
+                    <form method="POST" action="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.pendaftaran-koor.approve', $p->id) }}">
                         @csrf
                         <button type="submit" class="mp-btn" style="padding:6px 8px; background:rgba(16, 185, 129, 0.15); color:#10B981;" title="Terima">
                             <span>Terima</span>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         </button>
                     </form>
-                    <form method="POST" action="{{ route('eoffice.manprak.admin.pendaftaran-koor.reject', $p->id) }}">
+                    <form method="POST" action="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.pendaftaran-koor.reject', $p->id) }}">
                         @csrf
                         <input type="hidden" name="alasan_penolakan" :value="alasan">
                         <button type="button" @click="let r = prompt('Alasan Penolakan:'); if(r!==null){ alasan=r; $el.closest('form').submit(); }" class="mp-btn" style="padding:6px 8px; background:rgba(223, 28, 65, 0.15); color:#DF1C41;" title="Tolak">

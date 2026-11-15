@@ -11,6 +11,32 @@ use Tests\TestCase;
 
 class ModuleAssessmentTest extends TestCase
 {
+    public function test_assistant_dashboard_module_labels_work_with_lazy_loading_disabled(): void
+    {
+        Schema::table('eo_prak_praktikum',fn(Blueprint $t)=>$t->integer('matkul_id')->nullable());
+        Schema::create('eo_prak_matkul_praktikum',function(Blueprint $t){$t->id();$t->string('nama');});
+        DB::table('eo_prak_matkul_praktikum')->insert(['id'=>1,'nama'=>'Praktikum Multimedia']);
+        $p=Praktikum::create(['nama'=>'Mulmed','matkul_id'=>1]);
+        foreach(['Modul 1','Modul 2'] as $name)$p->modul()->create(['nama'=>$name]);
+        $previous=\Illuminate\Database\Eloquent\Model::preventsLazyLoading();
+        \Illuminate\Database\Eloquent\Model::preventLazyLoading(true);
+        try {
+            $modules=\Modules\EOffice\Models\Modul::with('praktikum.matkul')->where('praktikum_id',$p->id)->get();
+            $this->assertCount(2,$modules);
+            foreach($modules as $module)$this->assertSame('Lembar Analisis',$module->praktikum->laporanLabel());
+        } finally { \Illuminate\Database\Eloquent\Model::preventLazyLoading($previous); }
+        $source=file_get_contents(base_path('Modules/EOffice/app/Http/Controllers/ManajemenPraktikum/Asprak/DashboardController.php'));
+        $this->assertStringContainsString("'modul.praktikum.matkul'",$source);
+    }
+    public function test_multimedia_report_label_follows_course_even_when_practicum_name_is_custom(): void
+    {
+        $p=new Praktikum(['nama'=>'Praktikum Mulmed Seru']);
+        $p->setRelation('matkul',new \Modules\EOffice\Models\MatkulPraktikum(['nama'=>'Praktikum Multimedia']));
+        $this->assertSame('Lembar Analisis',$p->laporanLabel());
+        $this->assertSame('Lembar Analisis',$p->moduleTaskTypes()['laporan']);
+        $p->setRelation('matkul',new \Modules\EOffice\Models\MatkulPraktikum(['nama'=>'Sistem Digital']));
+        $this->assertSame('Laporan',$p->laporanLabel());
+    }
     use \Tests\Support\RunsLegacyPracticumMigrations;
     protected function setUp(): void
     {

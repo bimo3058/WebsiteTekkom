@@ -26,7 +26,7 @@ class DashboardController extends Controller
                 ->where('user_id', $user->id)->where('role', 'asprak')->whereNull('deleted_at')->first();
         }
 
-        $modulDiampu = ModulAsprak::with(['modul.materi', 'modul.tugas.pengumpulan', 'modul.asprak.user'])
+        $modulDiampu = ModulAsprak::with(['modul.praktikum.matkul', 'modul.materi', 'modul.tugas.pengumpulan', 'modul.asprak.user'])
             ->where('asprak_id', $asprak?->id)
             ->get()
             ->pluck('modul')

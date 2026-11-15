@@ -19,9 +19,7 @@ class GradePolicyController extends Controller
     {
         $policy = $manager->active();
         $history = PracticumGradePolicy::orderByDesc('version')->get();
-        $students = Student::whereIn('user_id', DaftarPraktikan::select('user_id'))->with('user')->orderBy('student_number')->paginate(20);
-
-        return view('eoffice::manajemen-praktikum.admin.grade-policies', compact('policy', 'history', 'students'));
+        return view('eoffice::manajemen-praktikum.admin.grade-policies', compact('policy', 'history'));
     }
 
     public function store(Request $request, GradePolicyManager $manager)

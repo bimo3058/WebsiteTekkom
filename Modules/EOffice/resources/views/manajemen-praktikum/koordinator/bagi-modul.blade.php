@@ -141,7 +141,7 @@
                                                 action="{{ route('eoffice.manprak.koor.bagi-modul.destroy', $d->id) }}"
                                                 onsubmit="return confirm('Hapus distribusi ini?')">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" class="mp-btn destructive sm">Hapus</button>
+                                                <button type="submit" class="mp-delete-button mp-btn destructive sm" aria-label="Hapus" title="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                             </form>
                                         @else
                                             <span style="font-size:11px;color:#808897;">Read-only</span>

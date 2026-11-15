@@ -11,7 +11,7 @@
     </div>
 
     {{-- DEBUG: action URL = {{ route('eoffice.peminjaman.admin.ruangan.update', $ruangan->id) }} --}}
-    <div class="mp-card" style="margin-top: 20px; max-width: 800px;">
+    <div id="ruangan-form-card" class="mp-card" style="margin-top: 0px; max-width: 800px;">
         <form method="POST" id="editForm" action="{{ route('eoffice.peminjaman.admin.ruangan.update', $ruangan->id) }}"
             enctype="multipart/form-data"
             onsubmit="console.log('FORM SUBMIT FIRED - action:', this.action); return true;">
@@ -20,7 +20,7 @@
             <div class="mp-card-body" style="display:flex; flex-direction:column; gap:20px; padding: 24px;">
 
                 <div style="display:flex; gap:16px;">
-                    <div style="flex:1;">
+                    <div style="flex:1; min-width:0;">
                         <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Nama Ruangan
                             <span style="color:red">*</span></label>
                         <input type="text" name="nama" class="mp-input" value="{{ old('nama', $ruangan->nama) }}"
@@ -32,7 +32,7 @@
                 </div>
 
                 <div style="display:flex; gap:16px;">
-                    <div style="flex:1;">
+                    <div style="flex:1; min-width:0;">
                         <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Kategori Ruangan
                             <span style="color:red">*</span></label>
                         <div x-data="{ 
@@ -50,8 +50,9 @@
                             <input type="text" name="kategori" x-model="selected" class="absolute w-0 h-0 opacity-0 pointer-events-none" required tabindex="-1">
                         
                             <button type="button" @click="open = !open" 
-                                class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2 text-[13px] focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[38px] cursor-pointer">
-                                <span x-text="selectedLabel" :class="selected ? 'text-[#0D0D12]' : 'text-gray-400'"></span>
+                                class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[38px] cursor-pointer"
+                                style="font-size: 12px;">
+                                <span x-text="selectedLabel" :class="selected ? 'text-[#0D0D12]' : 'text-[#9CA3AF]'" style="font-size: 12px;"></span>
                                 <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
@@ -68,8 +69,9 @@
                                 <div class="p-1 flex flex-col">
                                     <template x-for="option in options" :key="option">
                                         <button type="button" @click="selected = option; open = false"
-                                            class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                            :class="selected === option ? 'bg-[#EFF6FF] text-[#0B266E] font-bold' : 'text-gray-700 hover:bg-gray-50'">
+                                            class="w-full text-left px-3 py-2 mt-0.5 font-medium rounded-md transition-colors"
+                                            :class="selected === option ? 'bg-[#EFF6FF] text-[#0B266E] font-bold' : 'text-gray-700 hover:bg-gray-50'"
+                                            style="font-size: 12px;">
                                             <span x-text="option"></span>
                                         </button>
                                     </template>
@@ -116,7 +118,6 @@
                         Tersedia</label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
                         @php
-                            $opsiFasilitas = \Modules\EOffice\Models\Fasilitas::orderBy('nama_fasilitas')->pluck('nama_fasilitas')->toArray();
                             $currentFasilitas = is_array($ruangan->fasilitas) ? $ruangan->fasilitas : [];
                         @endphp
                         @foreach($opsiFasilitas as $opsi)
@@ -235,6 +236,8 @@
         </form>
     </div>
 
+    @include('eoffice::manajemen-ruangan.admin.ruangan._form-scroll-guard')
+
     @if($ruangan->fotos && $ruangan->fotos->count() > 0)
         @foreach($ruangan->fotos as $foto)
             <form id="delete-foto-{{ $foto->id }}" method="POST" action="{{ route('eoffice.peminjaman.admin.ruangan.index') }}/foto/{{ $foto->id }}" style="display: none;">
@@ -303,7 +306,8 @@
             toast.style.justifyContent = 'space-between';
             toast.style.borderRadius = '8px';
             toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
-            toast.style.minWidth = '320px';
+            toast.style.width = 'calc(100vw - 24px)';
+            toast.style.maxWidth = '380px';
             toast.style.opacity = '0';
             toast.style.transition = 'opacity 300ms ease, top 300ms ease';
 

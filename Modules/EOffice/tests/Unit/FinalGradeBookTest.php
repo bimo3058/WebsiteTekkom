@@ -32,6 +32,8 @@ class FinalGradeBookTest extends TestCase
         config(['database.connections.final_test' => ['driver' => 'sqlite', 'database' => ':memory:']]);
         DB::setDefaultConnection('final_test');
         DB::purge('final_test');
+        Schema::create('audit_logs',function(Blueprint $t){$t->id();$t->integer('user_id')->nullable();$t->string('module')->nullable();$t->string('action');$t->string('subject_type')->nullable();$t->string('subject_id')->nullable();$t->text('description')->nullable();$t->timestamp('created_at')->nullable();});
+        Schema::create('eo_notifikasi',function(Blueprint $t){$t->id();$t->integer('user_id');$t->string('judul');$t->text('pesan');$t->integer('peminjaman_id')->nullable();$t->boolean('is_read')->default(false);$t->string('practicum_role')->nullable();$t->timestamp('created_at')->nullable();});
         Schema::create('users', function (Blueprint $t) {
             $t->id();
             $t->string('name');
@@ -95,7 +97,7 @@ class FinalGradeBookTest extends TestCase
             $t->id();
             $t->integer('user_id')->nullable();
             $t->string('action');
-            $t->string('subject_type');
+            $t->string('subject_type')->nullable();
             $t->integer('subject_id')->nullable();
             $t->text('description')->nullable();
             $t->json('old_data')->nullable();
@@ -180,7 +182,7 @@ class FinalGradeBookTest extends TestCase
         $controller->updateNilaiJenis(Request::create('/test','POST',['nilai'=>['s2'=>['nilai_jenis'=>0]]]),1);
         $this->assertSame(0.0,(float)DB::table('eo_prak_nilai_jenis_tugas')->where('daftar_praktikan_id','s2')->value('nilai'));
         $this->assertSame(78.0,(float)DB::table('eo_prak_nilai_jenis_tugas')->where('daftar_praktikan_id','s3')->value('nilai'));
-        $this->assertSame('acc',DB::table('eo_prak_pengumpulan_tugas')->where('id',1)->value('status_pengumpulan'));
+        $this->assertSame('revisi',DB::table('eo_prak_pengumpulan_tugas')->where('id',1)->value('status_pengumpulan'));
         try {
             $controller->updateNilaiJenis(Request::create('/test','POST',['nilai'=>['s2'=>['nilai_jenis'=>50],'foreign'=>['nilai_jenis'=>90]]]),1);
             $this->fail('Foreign participant accepted');
@@ -208,7 +210,7 @@ class FinalGradeBookTest extends TestCase
         $controller=$this->moduleSubmissionFixture();
         $controller->beriRevisi(Request::create('/test','POST',['retained_files'=>['revision/old.pdf']]),1);
         $this->assertSame('Old.pdf',json_decode(DB::table('eo_prak_pengumpulan_tugas')->where('id',1)->value('file_revisi_asprak'),true)[0]['original_name']);
-        foreach ([[],['foreign/file.pdf']] as $retained) {
+        foreach ([['foreign/file.pdf']] as $retained) {
             try {
                 $controller->beriRevisi(Request::create('/test','POST',['retained_files'=>$retained]),1);
                 $this->fail('Invalid retained files accepted');
@@ -230,6 +232,18 @@ class FinalGradeBookTest extends TestCase
         $this->assertSame('revisi',DB::table('eo_prak_pengumpulan_tugas')->where('id',1)->value('status_pengumpulan'));
     }
 
+    public function test_removing_all_revision_attachments_cancels_pending_revision_and_keeps_grade(): void
+    {
+        $controller=$this->moduleSubmissionFixture();
+        $before=DB::table('eo_prak_pengumpulan_tugas')->where('id',1)->first();
+        $controller->beriRevisi(Request::create('/test','POST',['retained_files'=>[]]),1);
+        $after=DB::table('eo_prak_pengumpulan_tugas')->where('id',1)->first();
+        $this->assertNull($after->file_revisi_asprak);
+        $this->assertSame($before->nilai,$after->nilai);
+        $this->assertNotSame('revisi',$after->status_pengumpulan);
+        $this->assertSame(1,DB::table('audit_logs')->count());
+    }
+
     public function test_revision_upload_failure_does_not_overwrite_existing_files(): void
     {
         $this->moduleSubmissionFixture();
@@ -247,7 +261,7 @@ class FinalGradeBookTest extends TestCase
         $this->moduleSubmissionFixture();
         $p=\Modules\EOffice\Models\PengumpulanTugas::findOrFail(1);
         $html=view('eoffice::manajemen-praktikum.asprak.module-revision-modal',compact('p'))->render();
-        foreach (['Edit Revisi','Kirim Revisi Kembali','Old.pdf','retained_files[]','Hapus lampiran revisi lama','name="file_revisi[]"'] as $text) $this->assertStringContainsString($text,$html);
+        foreach (['Edit Revisi','Simpan Revisi','Old.pdf','retained_files[]','Hapus lampiran revisi lama','name="file_revisi[]"','Batalkan revisi'] as $text) $this->assertStringContainsString($text,$html);
         $this->assertStringNotContainsString('?download=',$html);
     }
 
@@ -267,7 +281,7 @@ class FinalGradeBookTest extends TestCase
         $source=str_replace('</x-eoffice::manajemen-praktikum.layout>','',$source);
         $source=str_replace(['<x-slot name="header">','</x-slot>'],['<div>','</div>'],$source);
         $html=\Illuminate\Support\Facades\Blade::render($source,compact('tugas','praktikans','pengumpulan','nilaiJenis'));
-        foreach (['>NO</th>','>NAMA MAHASISWA</th>','>NIM</th>','KELOMPOK</th>','>SHIFT</th>','id="moduleSubmissionGrades"','form="moduleSubmissionGrades"',':disabled="!hasChanges || false"','Edit Revisi','Kirim Revisi Kembali','student@example.test'] as $text) $this->assertStringContainsString($text,$html);
+        foreach (['>NO</th>','>NAMA MAHASISWA</th>','>NIM</th>','KELOMPOK</th>','>SHIFT</th>','id="moduleSubmissionGrades"','form="moduleSubmissionGrades"',':disabled="!hasChanges || false"','Edit Revisi','Simpan Revisi','student@example.test'] as $text) $this->assertStringContainsString($text,$html);
         $this->assertStringNotContainsString('?download=',$html);
         $this->assertStringNotContainsString('>NO.</th>',$html);
         $this->assertStringContainsString('Print IRS.pdf',$html);
@@ -726,6 +740,18 @@ class FinalGradeBookTest extends TestCase
             $assets=glob(public_path('build/assets/*.css'));$built=$assets?'<link rel="stylesheet" href="file:///'.str_replace('\\','/',$assets[0]).'">':'';
             file_put_contents(storage_path('framework/testing/final-grade-fixture.html'),'<!doctype html><meta charset="utf-8">'.$built.$css.'<style>[x-cloak]{display:none!important}body{padding:24px}</style><script defer src="file:///'.$alpine.'"></script>'.$html);
         }
+    }
+
+    public function test_policy_page_no_longer_loads_or_renders_student_cohort_verification(): void
+    {
+        $view=app(\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\GradePolicyController::class)
+            ->index(app(GradePolicyManager::class));
+        $this->assertArrayNotHasKey('students',$view->getData());
+        $source=file_get_contents(base_path('Modules/EOffice/resources/views/manajemen-praktikum/admin/grade-policies.blade.php'));
+        $this->assertStringNotContainsString('Verifikasi Angkatan Mahasiswa',$source);
+        $this->assertStringNotContainsString('grade-policies.verify',$source);
+        $this->assertStringContainsString('ui.admin-settings-styles',$source);
+        foreach(['expected_policy','rule.bands.length<=2','rules.length>=20','Simpan Versi Baru'] as $text)$this->assertStringContainsString($text,$source);
     }
 
     public function test_main_save_updates_combined_weights_and_rejects_stale_version(): void

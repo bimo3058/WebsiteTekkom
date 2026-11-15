@@ -154,7 +154,7 @@
                         <form method="POST" action="{{ route('eoffice.manprak.admin.daftar-praktikan.destroy', $p->id) }}"
                               onsubmit="return confirm('Hapus praktikan ini dari daftar?')" style="display:inline;">
                             @csrf @method('DELETE')
-                            <button type="submit" class="mp-btn destructive xs">Hapus</button>
+                            <button type="submit" class="mp-delete-button mp-btn destructive xs" aria-label="Hapus" title="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                         </form>
                     </td>
                 </tr>

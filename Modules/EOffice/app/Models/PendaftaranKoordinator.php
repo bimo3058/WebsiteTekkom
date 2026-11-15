@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Pendaftaran calon Koordinator Praktikum oleh mahasiswa.
- * Tabel: eo_prak_pendaftaran_koordinator
+ * Tabel: pendaftaran_koordinator
  *
  * Flow: Mahasiswa submit → Dosen review (status_dosen) → Admin final approve (status)
  * status_dosen: menunggu | disetujui | ditolak

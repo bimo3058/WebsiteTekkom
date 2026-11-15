@@ -154,6 +154,7 @@
         .mp-account { padding-left: 0; border-left: 0; }
         .mp-app .mp-wrap { padding: 8px; }
         .mp-app .mp-box-body, .mp-header-slot { padding: 16px; }
+        .mp-app .mp-box-body { --mp-list-divider-inset:16px; }
         .mp-app .mp-praktikum-content { --mp-content-inset:16px; }
         .mp-app .mp-page-title { font-size: 20px; }
         .mp-app .mp-page-actions { width: 100%; }

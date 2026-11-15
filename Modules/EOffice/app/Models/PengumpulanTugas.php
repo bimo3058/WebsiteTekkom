@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Pengumpulan tugas oleh mahasiswa.
  *
- * Tabel: eo_prak_pengumpulan_tugas
+ * Tabel: pengumpulan_tugas
  * status_pengumpulan: draft | belum_dicek | revisi | acc
  */
 class PengumpulanTugas extends Model

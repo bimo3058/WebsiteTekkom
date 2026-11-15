@@ -16,6 +16,7 @@ class PendaftaranAsprakController extends Controller
         $query = PendaftaranAsprak::with(['user.student', 'praktikum' => fn($q) => $q->withTrashed()])
             ->orderByDesc('created_at');
 
+        if ($request->routeIs('eoffice.manprak.cerc.*')) $query->whereHas('praktikum',fn($q)=>$q->where('is_active',true));
         if ($status = $request->input('status')) {
             $query->where('status', $status);
         }
@@ -56,6 +57,7 @@ class PendaftaranAsprakController extends Controller
 
     public function approve(Request $request, int $id)
     {
+        abort_unless($request->user()?->hasAnyRole(['superadmin','admin_praktikum']),403);
         $pendaftaran = PendaftaranAsprak::findOrFail($id);
 
         if ($pendaftaran->status !== 'pending') {
@@ -75,7 +77,7 @@ class PendaftaranAsprakController extends Controller
             $user->roles()->syncWithoutDetaching([$roleAsprak->id]);
         }
 
-        // Tambahkan ke eo_prak_asprak_praktikum
+        // Tambahkan ke asprak_praktikum
         \Modules\EOffice\Models\AsprakPraktikum::firstOrCreate([
             'praktikum_id' => $pendaftaran->praktikum_id,
             'user_id'      => $pendaftaran->user_id,
@@ -87,6 +89,7 @@ class PendaftaranAsprakController extends Controller
 
     public function reject(Request $request, int $id)
     {
+        abort_unless($request->user()?->hasAnyRole(['superadmin','admin_praktikum']),403);
         $pendaftaran = PendaftaranAsprak::findOrFail($id);
 
         if ($pendaftaran->status !== 'pending') {

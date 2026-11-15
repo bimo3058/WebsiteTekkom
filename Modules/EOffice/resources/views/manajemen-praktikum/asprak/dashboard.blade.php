@@ -152,6 +152,8 @@
             </div>
         </div>
 
+        <x-eoffice::manajemen-praktikum.ui.practicum-schedule :praktikum="$asprak->praktikum" role="asprak" :dashboard="true" />
+
         {{-- Section: Modul Diampu Header Removed --}}
 
         @if(!isset($modulDiampu) || $modulDiampu->isEmpty())
@@ -218,7 +220,7 @@
                                     </div>
                                     <div style="display:flex; align-items:center;">
                                         {!! $laporan ? $cbCheck : $cbUncheck !!}
-                                        <span style="font-size:13px; color:#353849;">Unggah Form Laporan</span>
+                                        <span style="font-size:13px; color:#353849;">Unggah Form {{ $m->praktikum?->laporanLabel() ?? 'Laporan' }}</span>
                                     </div>
                                     <div style="display:flex; align-items:center;">
                                         {!! $responsi ? $cbCheck : $cbUncheck !!}
@@ -253,7 +255,7 @@
                                     </div>
                                     <div style="display:flex; align-items:center;">
                                         {!! $isDinilai($laporan) ? $cbCheck : $cbUncheck !!}
-                                        <span style="font-size:13px; color:#353849;">Nilai Laporan</span>
+                                        <span style="font-size:13px; color:#353849;">Nilai {{ $m->praktikum?->laporanLabel() ?? 'Laporan' }}</span>
                                     </div>
                                     <div style="display:flex; align-items:center;">
                                         {!! $isDinilai($responsi) ? $cbCheck : $cbUncheck !!}

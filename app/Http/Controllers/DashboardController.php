@@ -26,6 +26,7 @@ class DashboardController extends Controller
         if ($user->hasRole('admin_capstone'))      return redirect()->route('capstone.dashboard');
         if ($user->hasRole('admin_eoffice'))       return redirect()->route('eoffice.dashboard');
         if ($user->hasRole('admin_kemahasiswaan')) return redirect()->route('manajemenmahasiswa.dashboard');
+        if ($user->hasRole('admin_praktikum') && ! $user->hasAnyRole(['mahasiswa', 'dosen', 'gpm', 'pengurus_himpunan', 'alumni', 'dosen_koor', 'dpm', 'ketua_departemen'])) return redirect()->route('eoffice.manprak.admin.dashboard');
 
         $isMahasiswa        = $user->hasRole('mahasiswa');
         $isDosen            = $user->hasRole('dosen') || $user->hasRole('dosen_koor');

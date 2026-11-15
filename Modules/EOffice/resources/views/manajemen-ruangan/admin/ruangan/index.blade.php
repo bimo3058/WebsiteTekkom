@@ -194,7 +194,7 @@
                     <thead>
                         <tr style="border-bottom:1px solid #E2E8F0; background:#FAFAFA;">
                             <th
-                                style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">
+                                style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap; min-width: 180px; max-width: 240px;">
                                 NAMA RUANG</th>
                             <th
                                 style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">
@@ -216,7 +216,7 @@
                     <tbody>
                         @forelse($ruangans as $r)
                             <tr class="mp-tr">
-                                <td style="font-weight: 600;">{{ $r->nama }}</td>
+                                <td style="font-weight: 600; white-space: normal; min-width: 180px; max-width: 240px; line-height: 1.4;">{{ $r->nama }}</td>
                                 <td>{{ $r->lokasi }} <br><span style="font-size:11px; color:#A4ABB8;">Lt.
                                         {{ $r->lantai ?? '-' }}</span></td>
                                 <td>{{ $r->kapasitas }} Orang</td>
@@ -335,7 +335,7 @@
 
             {{-- Pagination --}}
             <div
-                class="border-t border-slate-200 bg-white px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 rounded-b-[12px]">
+                class="border-t border-slate-200 bg-white px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 rounded-b-[14px]">
                 {{-- Left: Per page selector + Showing text --}}
                 <div class="flex items-center gap-2.5 sm:gap-3 text-xs text-slate-500 flex-wrap shrink-0">
                     <div class="flex items-center gap-1.5">

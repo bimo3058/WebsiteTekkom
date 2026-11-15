@@ -49,13 +49,31 @@ class RedirectBasedOnRole
             return $next($request);
         }
 
+        if (! $user->hasRole('superadmin') && $user->hasRole('admin_praktikum')) {
+            // Practicum endpoints are additive; existing roles retain their original routing.
+            if ($request->is('eoffice/manprak/admin*', 'eoffice/manprak/lampiran', 'eoffice/manprak/notifikasi', 'eoffice/manprak/notifikasi/*')) {
+                return $next($request);
+            }
+            $hasOtherRole = $user->roles->contains(fn ($role) => $role->name !== 'admin_praktikum');
+            if (! $hasOtherRole) {
+                $shared = $request->is('profile*', 'logout', 'logout-and-switch', 'auth/microsoft/*', 'sso/*', 'error', 'error/*');
+                if (! $shared && ! $request->is('eoffice/manprak/admin*', 'eoffice/manprak/lampiran')) {
+                    if ($request->is('dashboard', 'eoffice/dashboard', '/')) {
+                        return redirect()->route('eoffice.manprak.admin.dashboard');
+                    }
+                    abort(403, 'Akun Admin Praktikum hanya dapat mengakses administrasi praktikum.');
+                }
+
+                return $next($request);
+            }
+        }
         foreach ($this->excludedPaths as $path) {
             if ($request->is($path)) {
                 return $next($request);
             }
         }
 
-        $roleNames = $user->roles->pluck('name')->map(fn($r) => strtolower($r));
+        $roleNames = $user->roles->pluck('name')->map(fn ($r) => strtolower($r));
 
         // 1. Superadmin — lock ke area /superadmin
         if ($roleNames->contains('superadmin') && $request->is('dashboard')) {
@@ -64,9 +82,9 @@ class RedirectBasedOnRole
 
         // 2. Admin modul — lock ke prefix modul masing-masing
         $adminModuleRoles = [
-            'admin_banksoal'      => ['route' => 'banksoal.dashboard',                     'prefix' => 'api/v1/bank-soal*'],
-            'admin_capstone'      => ['route' => 'capstone.dashboard',                     'prefix' => 'capstone*'],
-            'admin_eoffice'       => ['route' => 'eoffice.dashboard',                      'prefix' => 'eoffice*'],
+            'admin_banksoal' => ['route' => 'banksoal.dashboard',                     'prefix' => 'api/v1/bank-soal*'],
+            'admin_capstone' => ['route' => 'capstone.dashboard',                     'prefix' => 'capstone*'],
+            'admin_eoffice' => ['route' => 'eoffice.dashboard',                      'prefix' => 'eoffice*'],
             'admin_kemahasiswaan' => ['route' => 'manajemenmahasiswa.dashboard',           'prefix' => 'manajemen-mahasiswa*'],
         ];
 
@@ -75,6 +93,7 @@ class RedirectBasedOnRole
                 if (! $request->is($config['prefix'])) {
                     return redirect()->route($config['route']);
                 }
+
                 return $next($request);
             }
         }

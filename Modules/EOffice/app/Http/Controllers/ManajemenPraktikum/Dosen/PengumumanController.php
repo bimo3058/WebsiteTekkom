@@ -24,10 +24,12 @@ class PengumumanController extends Controller
         $praktikumId = $request->input('praktikum_id', $praktikumList->first()?->id);
         $praktikum   = $praktikumList->firstWhere('id', $praktikumId);
 
-        $pengumumans = $praktikumId
+        $pengumumans = $praktikum
             ? Pengumuman::where('praktikum_id', $praktikumId)
                 ->whereNull('tipe_sistem')
+                ->where('is_published',true)
                 ->with(['user', 'praktikum'])
+                ->pinnedFirst()
                 ->orderByDesc('created_at')
                 ->paginate(10)
             : collect();

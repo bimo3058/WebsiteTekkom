@@ -12,7 +12,7 @@
            box-shadow:0 1px 3px rgba(0,0,0,.06); overflow:hidden; display:flex; flex-direction:column; }
 /* Content-sized grid rows keep page-level flex-1 wrappers from compressing cards.
    The bounded body owns vertical scrolling; tables retain their horizontal scroll. */
-.mp-box-body { flex:1 1 0%; min-height:0; min-width:0; overflow:auto; padding:20px 24px;
+.mp-box-body { --mp-list-divider-inset:24px; flex:1 1 0%; min-height:0; min-width:0; overflow:auto; padding:20px 24px;
                display:grid; grid-template-columns:minmax(0,1fr); grid-auto-rows:max-content; align-content:start;
                gap:18px; scrollbar-gutter:stable; scrollbar-width:thin; scrollbar-color:var(--c-border-strong) transparent; }
 .mp-box-body::-webkit-scrollbar { width:5px; }
@@ -29,7 +29,18 @@
                   gap:16px; flex-wrap:wrap; flex-shrink:0; }
 .mp-page-title  { font-size:20px; font-weight:700; color:var(--c-fg); letter-spacing:-0.02em; line-height:1.2; margin:0; }
 .mp-page-sub    { font-size:12px; color:var(--c-fg-muted); margin-top:3px; }
+.mp-announcement-copy { min-width:0;max-width:100%;overflow-wrap:anywhere;white-space:pre-line; }
+.mp-announcement-textarea { line-height:1.6 !important;max-height:calc(16em + 22px) !important;overflow-y:auto !important; }
+.mp-practicum-list-header { position:relative; padding-bottom:20px; }
+.mp-practicum-list-header::after { content:""; position:absolute; bottom:0; left:calc(-1 * var(--mp-list-divider-inset,24px)); right:calc(-1 * var(--mp-list-divider-inset,24px)); border-bottom:1px solid var(--c-border,#DFE1E7); pointer-events:none; }
 .mp-page-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+/* List pages keep the heading outside the independently scrolling card. */
+.mp-app .mp-box-body>.mp-practicum-list-header{margin:0 calc(-1 * var(--mp-list-divider-inset,24px));padding:0 var(--mp-list-divider-inset,24px) 20px;border-bottom:1px solid var(--c-border,#DFE1E7);align-self:stretch}
+.mp-app .mp-box-body>.mp-practicum-list-header::after{display:none}
+@media(min-width:768px){
+    .mp-app .mp-box-body:has(>.mp-practicum-list-header){display:flex;flex-direction:column;overflow:hidden;scrollbar-gutter:auto}
+    .mp-app .mp-box-body:has(>.mp-practicum-list-header)>.mp-card{flex:1 1 0%;min-height:0;min-width:0;overflow:auto;scrollbar-gutter:stable}
+}
 
 /* Badges */
 .mp-badge { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:600;
@@ -66,6 +77,11 @@
 .mp-btn.secondary:hover { background:var(--c-bg); border-color:var(--c-border-strong); }
 .mp-btn.destructive { background:#DF1C41; color:#fff; }
 .mp-btn.destructive:hover { background:#95122B; }
+.mp-delete-button { display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 32px!important;width:32px!important;min-width:32px!important;max-width:32px!important;height:32px!important;min-height:32px!important;padding:0!important;gap:0!important;border:1px solid #FADAE1!important;border-radius:8px!important;background:#FFF5F5!important;color:#DF1C41!important;box-shadow:none!important;cursor:pointer;transition:background-color .15s ease,border-color .15s ease; }
+.mp-delete-button:hover:not(:disabled) { background:#FEE2E2!important;border-color:#F8B4C3!important; }
+.mp-delete-button:focus-visible { outline:2px solid #DF1C41;outline-offset:2px; }
+.mp-delete-button:disabled { opacity:.45;cursor:not-allowed; }
+.mp-delete-button svg { width:14px!important;height:14px!important;flex-shrink:0; }
 .mp-btn.ghost       { background:rgba(11,38,110,.08); color:#0B266E; }
 .mp-btn.ghost:hover { background:rgba(11,38,110,.13); }
 
@@ -156,7 +172,7 @@
 @media (max-width:767px) {
     .mp-wrap { padding:8px 8px 80px; }
     .mp-box  { border-radius:10px; }
-    .mp-box-body { padding:14px; }
+    .mp-box-body { --mp-list-divider-inset:14px; padding:14px; }
     .mp-stats-grid.cols-4 { grid-template-columns:repeat(2,1fr); }
     .mp-stats-grid.cols-3 { grid-template-columns:repeat(2,1fr); }
 }

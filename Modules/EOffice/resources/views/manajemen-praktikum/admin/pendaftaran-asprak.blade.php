@@ -76,7 +76,7 @@
                        onchange="this.form.submit()">
             </div>
             @if(request()->anyFilled(['search','status_koor','status','praktikum_id']))
-            <a href="{{ route('eoffice.manprak.admin.pendaftaran-asprak.index') }}"
+            <a href="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.pendaftaran-asprak.index') }}"
                class="mp-btn secondary md px-4" style="height:35px; text-decoration:none; flex-shrink: 0;">Reset</a>
             @endif
         </form>
@@ -142,7 +142,7 @@
                 @if(filled($additionalDocumentName) && $pend->berkas_tambahan_path)
                     <div class="font-semibold text-[#353849] mb-1">{{ $additionalDocumentName }}</div>
                     <a class="text-[#0B266E] font-semibold hover:underline" target="_blank" rel="noopener"
-                       href="{{ route('eoffice.manprak.admin.pendaftaran.document', ['type' => 'asprak', 'id' => $pend->id, 'document' => 'berkas_tambahan_path']) }}">Lihat Berkas</a>
+                       href="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.pendaftaran.document', ['type' => 'asprak', 'id' => $pend->id, 'document' => 'berkas_tambahan_path']) }}">Lihat Berkas</a>
                 @elseif(filled($additionalDocumentName))
                     <div class="font-semibold text-[#353849] mb-1">{{ $additionalDocumentName }}</div>
                     <span>Tidak mengunggah</span>
@@ -170,19 +170,19 @@
             </div>
             <div class="text-center flex flex-col items-center justify-center gap-2">
                 <x-eoffice::manajemen-praktikum.ui.action-menu>
-                <a class="mp-btn secondary sm" href="{{ route('eoffice.manprak.admin.pendaftaran.show', ['type' => 'asprak', 'id' => $pend->id]) }}">
+                <a class="mp-btn secondary sm" href="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.pendaftaran.show', ['type' => 'asprak', 'id' => $pend->id]) }}">
                     <x-eoffice::manajemen-praktikum.ui.icon name="file" /> Detail &amp; Dokumen
                 </a>
-                @if($pend->status === 'pending' && $pend->status_koor === 'disetujui')
+                @if(auth()->user()->hasAnyRole(['superadmin','admin_praktikum']) && $pend->status === 'pending' && $pend->status_koor === 'disetujui')
                 <div class="flex gap-2 justify-center" x-data="{ alasan: '' }">
-                    <form method="POST" action="{{ route('eoffice.manprak.admin.pendaftaran-asprak.approve', $pend->id) }}">
+                    <form method="POST" action="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.pendaftaran-asprak.approve', $pend->id) }}">
                         @csrf
                         <button type="submit" class="mp-btn" style="padding:6px 8px; background:rgba(16, 185, 129, 0.15); color:#10B981;" title="Terima">
                             <span>Terima</span>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         </button>
                     </form>
-                    <form method="POST" action="{{ route('eoffice.manprak.admin.pendaftaran-asprak.reject', $pend->id) }}">
+                    <form method="POST" action="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.pendaftaran-asprak.reject', $pend->id) }}">
                         @csrf
                         <input type="hidden" name="alasan_penolakan" :value="alasan">
                         <button type="button" @click="let r = prompt('Alasan Penolakan:'); if(r!==null){ alasan=r; $el.closest('form').submit(); }" class="mp-btn" style="padding:6px 8px; background:rgba(223, 28, 65, 0.15); color:#DF1C41;" title="Tolak">

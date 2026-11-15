@@ -30,13 +30,28 @@ class PengumumanController extends Controller
         $praktikum = $praktikumList->firstWhere('id', $praktikumId);
 
         // Query pengumuman hanya untuk praktikum yang dipilih (hanya manual/non-sistem)
-        $pengumumans = $praktikumId
-            ? Pengumuman::where('praktikum_id', $praktikumId)
+        $pengumumans = collect();
+        if ($praktikum) {
+            $query=Pengumuman::where('praktikum_id', $praktikumId)
                 ->whereNull('tipe_sistem')
-                ->with(['user', 'praktikum'])
-                ->orderByDesc('created_at')
-                ->paginate(10)
-            : collect();
+                ->where('is_published',true);
+            $page=max(1,$request->integer('page',1));
+            if ($request->filled('pengumuman_id')) {
+                $request->validate(['pengumuman_id'=>'integer|min:1']);
+                $target=(clone $query)->findOrFail($request->integer('pengumuman_id'));
+                $newer=fn($q)=>$q->where('created_at','>',$target->created_at)
+                    ->orWhere(fn($tie)=>$tie->where('created_at',$target->created_at)->where('id','>',$target->id));
+                $ahead=clone $query;
+                if (\Illuminate\Support\Facades\Schema::hasColumn((new Pengumuman)->getTable(),'pinned_until')) {
+                    if ($target->isPinned()) $ahead->where('pinned_until','>',now())->where($newer);
+                    else $ahead->where(fn($q)=>$q->where('pinned_until','>',now())->orWhere(fn($normal)=>$normal
+                        ->where(fn($unpinned)=>$unpinned->whereNull('pinned_until')->orWhere('pinned_until','<=',now()))->where($newer)));
+                } else $ahead->where($newer);
+                $page=intdiv($ahead->count(),10)+1;
+            }
+            $pengumumans=$query->with(['user','praktikum'])->pinnedFirst()->orderByDesc('created_at')->orderByDesc('id')
+                ->paginate(10,['*'],'page',$page)->appends($request->except(['page','pengumuman_id']));
+        } elseif ($request->filled('pengumuman_id')) abort(404);
 
         return view('eoffice::manajemen-praktikum.mahasiswa.pengumuman', compact(
             'pengumumans',
