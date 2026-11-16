@@ -14,7 +14,7 @@ class EnsureKoorOwnership
         $user = $request->user();
 
         // Superadmin & admin_eoffice boleh bypass scope check
-        if ($user?->hasAnyRole(['superadmin', 'admin_eoffice'])) {
+        if ($user?->hasRole('superadmin')) {
             return $next($request);
         }
 

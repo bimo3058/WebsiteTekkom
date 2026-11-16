@@ -1,5 +1,5 @@
 <x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Daftar Praktikum">
-    <div class="mp-page-header" style="margin-bottom: 24px;">
+    <div class="mp-page-header mp-practicum-list-header">
         <div>
             <h1 class="mp-page-title">Daftar Praktikum</h1>
             <p class="mp-page-sub">Berikut adalah kelas praktikum yang Anda ikuti</p>
@@ -16,7 +16,7 @@
                 <div style="font-size:13px;font-weight:500;color:#666D80;">Anda belum terdaftar di praktikum manapun.</div>
             </div>
         @else
-            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:24px;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:24px;align-items:stretch;">
                 @foreach($daftarPraktikan as $dp)
                     @php $p = $dp->praktikum; @endphp
                     @if($p)
@@ -41,9 +41,9 @@
                             {{-- Badges --}}
                             <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
                                 @if($p->status === 'aktif')
-                                    <span style="font-size:11px; font-weight:600; background:#F1F5F9; color:#475569; padding:4px 10px; border-radius:6px;">Aktif</span>
+                                    <span class="mp-badge success sm"><span class="dot"></span>Aktif</span>
                                 @else
-                                    <span style="font-size:11px; font-weight:600; background:#F1F5F9; color:#64748B; padding:4px 10px; border-radius:6px;">Tutup</span>
+                                    <span class="mp-badge neutral sm">Nonaktif</span>
                                 @endif
                                 <span style="font-size:11px; font-weight:600; background:#EFF6FF; color:#2563EB; padding:4px 10px; border-radius:6px;">Semester {{ $p->semester ?? 'Genap' }}</span>
                             </div>
@@ -52,18 +52,14 @@
                             <h3 style="font-size:16px; font-weight:700; color:#111827; margin:0 0 3px 0; line-height:1.4;">{{ $p->nama }}</h3>
 
                             {{-- Subtitle / Details --}}
-                            @php
-                                $dosenNames = $p->dosens->pluck('name')->implode(', ');
-                            @endphp
-                            <p style="font-size:13px; color:#6B7280; margin:0; line-height:1.5;">
+                            <p style="font-size:13px; color:#6B7280; margin:0; line-height:1.5;display:flex;flex-direction:column;flex:1;">
                                 Tahun Ajaran: {{ $p->tahun_ajaran ?? '-' }}
-                                <br>
-                                Dosen: {{ $dosenNames ?: 'Belum ditunjuk' }}
-                                <br>
-                                {{ $p->daftar_praktikan_count ?? 0 }} Praktikan &bull; {{ $p->asistenPraktikum->unique('user_id')->count() }} Asisten
+                                <x-eoffice::manajemen-praktikum.ui.card-lecturers :lecturers="$p->dosens" />
+                                <span style="display:block;margin-top:auto;padding-top:8px;">{{ $p->daftar_praktikan_count ?? 0 }} Praktikan &bull; {{ $p->asistenPraktikum->unique('user_id')->count() }} Asisten
                                 @if($p->koor_id && $p->asistenPraktikum->contains('user_id', $p->koor_id))
                                     (termasuk koordinator)
                                 @endif
+                                </span>
                             </p>
                         </div>
                     </a>

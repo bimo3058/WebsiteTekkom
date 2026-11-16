@@ -17,6 +17,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PendaftaranKoorCon
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\RegistrationReviewController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\PendaftaranKoorController as DosenController;
 use Modules\EOffice\Models\PendaftaranKoordinator;
+use Modules\EOffice\Models\Praktikum;
 use Modules\EOffice\Services\KoorPraktikumService;
 use Modules\EOffice\Services\NotifikasiService;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -32,7 +33,7 @@ class AdminRegistrationReviewTest extends TestCase
         config(['database.connections.registration_test' => ['driver' => 'sqlite', 'database' => ':memory:'], 'cache.default' => 'array', 'session.driver' => 'array']);
         DB::setDefaultConnection('registration_test');
         foreach ([
-            'users' => ['name', 'email', 'external_id', 'deleted_at'],
+            'users' => ['name', 'email', 'external_id', 'deleted_at', 'suspended_at'],
             'students' => ['user_id', 'student_number'],
             'roles' => ['name', 'module', 'guard_name'],
             'permissions' => ['name', 'guard_name'],
@@ -84,10 +85,11 @@ class AdminRegistrationReviewTest extends TestCase
             ['id' => 2, 'name' => 'Mahasiswa Uji', 'email' => 'mahasiswa@example.test'],
             ['id' => 3, 'name' => 'Dosen Uji', 'email' => 'dosen@example.test'],
         ]);
-        foreach (['admin_eoffice', 'koor_prak', 'asprak', 'mahasiswa', 'dosen', 'superadmin'] as $i => $role) {
+        foreach (['admin_eoffice', 'koor_prak', 'asprak', 'mahasiswa', 'dosen', 'superadmin', 'admin_praktikum', 'koordinator_cerc'] as $i => $role) {
             DB::table('roles')->insert(['id' => $i + 1, 'name' => $role, 'module' => 'eoffice', 'guard_name' => 'web']);
         }
         DB::table('model_has_roles')->insert(['model_id' => 2, 'model_type' => User::class, 'role_id' => 4]);
+        DB::table('students')->insert(['user_id' => 2, 'student_number' => '21120123410136']);
         DB::table('eo_prak_praktikum')->insert(['id' => self::PRAKTIKUM, 'nama' => 'Sistem Digital']);
         DB::table('eo_prak_praktikum_dosen')->insert(['praktikum_id' => self::PRAKTIKUM, 'dosen_id' => 3]);
         DB::table('eo_prak_pendaftaran_koordinator')->insert([
@@ -105,7 +107,7 @@ class AdminRegistrationReviewTest extends TestCase
         parent::tearDown();
     }
 
-    private function requestAs(string $role = 'admin_eoffice', array $input = []): Request
+    private function requestAs(string $role = 'admin_praktikum', array $input = []): Request
     {
         $user = User::findOrFail($role === 'dosen' ? 3 : ($role === 'mahasiswa' ? 2 : 1));
         $user->setRelation('roles', Role::where('name', $role)->get());
@@ -227,7 +229,7 @@ class AdminRegistrationReviewTest extends TestCase
 
     public function test_non_admin_cannot_override_or_access_registration_documents(): void
     {
-        foreach (['dosen', 'mahasiswa'] as $role) {
+        foreach (['dosen', 'mahasiswa', 'admin_eoffice'] as $role) {
             $request = $this->requestAs($role, ['override_dosen' => 1, 'override_reason' => 'Mencoba mengubah persetujuan.']);
             $this->httpError(fn () => $this->controller()->approve($request, 1), 403);
             $controller = new RegistrationReviewController;
@@ -235,6 +237,15 @@ class AdminRegistrationReviewTest extends TestCase
             $this->httpError(fn () => $controller->show($request, 'koor', 1), 403);
             $this->httpError(fn () => $controller->document($request, 'koor', 1, 'transkrip_path', \Mockery::mock(SupabaseStorage::class)), 403);
         }
+    }
+
+    public function test_cerc_cannot_make_final_registration_decisions(): void
+    {
+        $request = $this->requestAs('koordinator_cerc', ['override_dosen' => 1, 'override_reason' => 'Tidak berwenang menyetujui.']);
+        $this->httpError(fn () => $this->controller()->approve($request, 1), 403);
+        $this->httpError(fn () => $this->controller()->reject($request, 1), 403);
+        $this->assertSame('pending', PendaftaranKoordinator::find(1)->status);
+        $this->assertSame(0, DB::table('eo_notifikasi')->count());
     }
 
     public function test_documents_are_served_for_each_registration_type_through_fixed_fields(): void
@@ -351,7 +362,7 @@ class AdminRegistrationReviewTest extends TestCase
             $route = app('router')->getRoutes()->getByName('eoffice.manprak.admin.'.$name);
             $this->assertNotNull($route);
             $this->assertContains('auth', $route->gatherMiddleware());
-            $this->assertContains('role:superadmin|admin_eoffice', $route->gatherMiddleware());
+            $this->assertContains('role:superadmin|admin_praktikum', $route->gatherMiddleware());
         }
     }
 
@@ -405,7 +416,7 @@ class AdminRegistrationReviewTest extends TestCase
         }
 
         (new KoorPraktikumService)->assign(
-            \Modules\EOffice\Models\Praktikum::findOrFail(self::PRAKTIKUM),
+            Praktikum::findOrFail(self::PRAKTIKUM),
             User::findOrFail(2),
         );
 

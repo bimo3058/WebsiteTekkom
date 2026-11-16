@@ -11,6 +11,8 @@
     $revisionOpen=($stage['revisi_aktif']??false) && !empty($stage['revisi_deadline']) && now()->lte($stage['revisi_deadline']);
     $canSubmit=(!$submission || $cancelledSubmission) ? (!$initialLate || $revisionOpen) : $revisionOpen;
     $canSubmit=$canSubmit && (empty($stage['dibuka_pada']) || now()->gte($stage['dibuka_pada']));
+    $canSubmit=$canSubmit && (bool)$praktikum->is_active;
+    $canUnsubmit=$canUnsubmit && (bool)$praktikum->is_active;
     $entries=$submission?->entries() ?? collect();
     $displayEntries=collect($submission?->riwayat??[])->filter(fn($entry)=>in_array($entry['jenis']??null,['pengumpulan','perbaikan']));
 @endphp
@@ -57,6 +59,8 @@
                 <div style="display:flex;justify-content:flex-end"><button type="submit" class="mp-btn primary md">{{ $entries->isNotEmpty() && !$cancelledSubmission ? 'Kumpulkan Revisi' : 'Kumpulkan' }}</button></div>
             </form>
         </section>
+    @elseif(!$praktikum->is_active)
+        <p class="mp-student-stage-section">Praktikum nonaktif. Tugas dan berkas pengumpulan hanya dapat dibaca.</p>
     @elseif(!$submission || $cancelledSubmission || $submission->status==='perlu_perbaikan')
         <p class="mp-student-stage-section">{{ !empty($stage['dibuka_pada']) && now()->lt($stage['dibuka_pada']) ? 'Pengumpulan dibuka pada '.\Illuminate\Support\Carbon::parse($stage['dibuka_pada'])->format('d/m/Y, H:i').'.' : 'Pengumpulan ditutup karena tenggat sudah lewat atau periode revisi tidak aktif.' }}</p>
     @endif

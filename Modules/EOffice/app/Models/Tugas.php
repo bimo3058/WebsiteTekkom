@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Tugas per modul praktikum.
  *
- * Tabel: eo_prak_tugas_praktikum
+ * Tabel: tugas_praktikum
  */
 class Tugas extends Model
 {

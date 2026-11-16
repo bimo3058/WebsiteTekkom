@@ -280,6 +280,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             // tanggal, jam, lokasi (keputusan Surya 10 Nov 2026). Halaman kalender proker
             // dicabut 11 Nov 2026: ketersediaan ruangan dilihat di kalender EOffice.
             Route::get('/cek-jadwal', [ProkerController::class, 'cekJadwal'])->name('cek-jadwal');
+            // S-89: peminjaman ruangan DISETUJUI milik Ketua Pelaksana terpilih (JSON, untuk form).
+            Route::get('/peminjaman-ketua', [ProkerController::class, 'peminjamanKetua'])->name('peminjaman-ketua');
 
             // GET ke endpoint aksi (PATCH-only) — mis. user mengetik URL .../ajukan
             // langsung di browser — kembalikan 403 ramah, bukan halaman debug 405.

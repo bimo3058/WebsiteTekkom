@@ -1,9 +1,9 @@
-<x-eoffice::manajemen-ruangan.layout pageTitle="Dashboard Admin">
+<x-eoffice::manajemen-ruangan.layout pageTitle="Dashboard">
 
     <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div class="min-w-0">
             <h1 class="text-[20px] md:text-[22px] font-bold text-gray-900 tracking-tight">
-                Dashboard Admin Ruangan
+                Dashboard
             </h1>
             <p class="text-[13px] text-gray-500 mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span>Selamat datang kembali, <strong class="font-semibold text-gray-900">{{ auth()->user()->name }}</strong></span>

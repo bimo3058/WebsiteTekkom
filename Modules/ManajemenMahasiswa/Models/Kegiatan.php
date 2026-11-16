@@ -139,7 +139,6 @@ class Kegiatan extends Model
     const TAHAP_FILTER_LABELS = [
         self::TINJAU_DILENGKAPI => 'Menunggu Dilengkapi',
         self::TINJAU_DITINJAU   => 'Menunggu Tinjauan',
-        self::TINJAU_PERBAIKAN  => 'Perlu Perbaikan',
         'pelaksanaan'           => 'Di Pelaksanaan Kegiatan',
         'arsip'                 => 'Di Laporan & Arsip',
     ];
@@ -159,7 +158,9 @@ class Kegiatan extends Model
     // Berlaku pada baris berstatus draft (Rencana) dan disetujui (Pelaksanaan).
     const TINJAU_DILENGKAPI = 'dilengkapi';
     const TINJAU_DITINJAU   = 'ditinjau';
-    const TINJAU_PERBAIKAN  = 'perbaikan';
+    // S-91 (15 Nov 2026): status Perlu Perbaikan digabung ke Menunggu Dilengkapi. Penanda
+    // "dikembalikan KABID" = catatan terbuka (catatanTerbuka()); data lama dimigrasi
+    // lewat 2026_11_15_100000_gabung_perlu_perbaikan_ke_dilengkapi.
 
     /** Status baris yang memakai alur tinjau. */
     const STATUS_BERTINJAU = [self::STATUS_DRAFT, self::STATUS_DISETUJUI];
@@ -167,7 +168,6 @@ class Kegiatan extends Model
     const TINJAUAN_LABELS = [
         self::TINJAU_DILENGKAPI => 'Menunggu Dilengkapi',
         self::TINJAU_DITINJAU   => 'Menunggu Tinjauan',
-        self::TINJAU_PERBAIKAN  => 'Perlu Perbaikan',
     ];
 
     /**
@@ -188,7 +188,6 @@ class Kegiatan extends Model
     const TINJAUAN_NADA = [
         self::TINJAU_DILENGKAPI => 'warning',
         self::TINJAU_DITINJAU   => 'sky',
-        self::TINJAU_PERBAIKAN  => 'error',
     ];
 
     /** Status yang sudah disetujui / dalam proses pelaksanaan (Subbab 2) */

@@ -34,6 +34,19 @@ class DashboardController extends Controller
         return $user;
     }
 
+    private function ensureGroupingEditable(Request $request): void
+    {
+        $id = $request->input('praktikum_id');
+        if ($request->filled('dp_id')) {
+            $request->validate(['dp_id' => 'required|uuid']);
+            $id = DaftarPraktikan::findOrFail($request->input('dp_id'))->praktikum_id;
+        }
+        abort_unless(\Illuminate\Support\Str::isUuid((string) $id), 422);
+        $praktikum = Praktikum::whereKey($id)->where('koor_id', self::authenticatedUser()->id)->firstOrFail();
+        abort_if(app(\Modules\EOffice\Services\PracticumGroupingLock::class)->isLocked($praktikum->id),
+            403, \Modules\EOffice\Services\PracticumGroupingLock::MESSAGE);
+    }
+
     /**
      * Resolve praktikum yang sedang aktif untuk koor ini.
      * Priority: session → praktikum aktif pertama.
@@ -204,7 +217,8 @@ class DashboardController extends Controller
             ->where('praktikum_id', $praktikum?->id)
             ->get();
 
-        $hasDraft = $praktikum?->draft_pembagian !== null;
+        $groupingLocked = $praktikum && app(\Modules\EOffice\Services\PracticumGroupingLock::class)->isLocked($praktikum->id);
+        $hasDraft = ! $groupingLocked && $praktikum?->draft_pembagian !== null;
         $draft = $hasDraft
             ? $this->groupingService->normalize($praktikum->draft_pembagian)
             : $this->groupingService->fromActive($praktikansSemua, $praktikum?->metode_pembagian ?? 'manual');
@@ -235,6 +249,7 @@ class DashboardController extends Controller
             'draftGroups',
             'draftErrors',
             'hasDraft',
+            'groupingLocked',
             'search'
         ));
     }
@@ -338,6 +353,7 @@ class DashboardController extends Controller
      */
     public function importPraktikan(Request $request)
     {
+        $this->ensureGroupingEditable($request);
         $request->validate([
             'file'         => 'required|file|max:5120',
             'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
@@ -478,7 +494,7 @@ class DashboardController extends Controller
                 continue;
             }
 
-            // Cari di eo_prak_daftar_praktikan — hanya update yang SUDAH terdaftar
+            // Cari di daftar_praktikan — hanya update yang SUDAH terdaftar
             $dp = DaftarPraktikan::where('praktikum_id', $praktikum->id)
                 ->where('user_id', $targetUser->id)
                 ->first();
@@ -559,6 +575,7 @@ class DashboardController extends Controller
      */
     public function updatePlotSettings(Request $request)
     {
+        $this->ensureGroupingEditable($request);
         $request->validate([
             'praktikum_id'    => 'required|uuid|exists:eo_prak_praktikum,id',
             'jumlah_kelompok' => 'required|integer|min:1|max:100',
@@ -603,12 +620,36 @@ class DashboardController extends Controller
      */
     public function autoPlot(Request $request)
     {
+        $this->ensureGroupingEditable($request);
         $request->validate([
             'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
             'method'       => 'required|in:urutan_sistem,acak',
+            'remaining_only' => 'sometimes|boolean',
         ]);
 
         $user = self::authenticatedUser();
+        if ($request->boolean('remaining_only')) {
+            try {
+                DB::transaction(function () use ($request, $user) {
+                    $praktikum = Praktikum::whereKey($request->praktikum_id)
+                        ->where('koor_id', $user->id)->lockForUpdate()->firstOrFail();
+                    abort_if($praktikum->status !== 'aktif' || $praktikum->is_active === false, 403, 'Praktikum tidak aktif.');
+                    if ($praktikum->draft_pembagian === null) {
+                        throw new \InvalidArgumentException('Buat draft pembagian terlebih dahulu.');
+                    }
+                    $ids = DaftarPraktikan::where('praktikum_id', $praktikum->id)
+                        ->orderBy('created_at')->orderBy('id')->lockForUpdate()->pluck('id');
+                    $draft = $this->groupingService->fillRemaining(
+                        $praktikum->draft_pembagian, $ids, $request->input('method'),
+                    );
+                    $praktikum->update(['draft_pembagian' => $draft]);
+                });
+            } catch (\InvalidArgumentException $exception) {
+                return back()->with('error', $exception->getMessage());
+            }
+
+            return back()->with('success', 'Sisa praktikan berhasil dibagikan. Penempatan sebelumnya tetap dipertahankan. Periksa draft sebelum diterapkan.');
+        }
         $praktikum = Praktikum::where('id', $request->praktikum_id)
             ->where('koor_id', $user->id)
             ->firstOrFail();
@@ -647,6 +688,7 @@ class DashboardController extends Controller
      */
     public function applyPlot(Request $request)
     {
+        $this->ensureGroupingEditable($request);
         $request->validate([
             'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
         ]);
@@ -696,6 +738,7 @@ class DashboardController extends Controller
      */
     public function discardPlotDraft(Request $request)
     {
+        $this->ensureGroupingEditable($request);
         $request->validate([
             'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
         ]);
@@ -713,6 +756,7 @@ class DashboardController extends Controller
      */
     public function resetPlot(Request $request)
     {
+        $this->ensureGroupingEditable($request);
         $request->validate([
             'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
         ]);
@@ -745,6 +789,7 @@ class DashboardController extends Controller
      */
     public function updatePlot(Request $request)
     {
+        $this->ensureGroupingEditable($request);
         $request->validate([
             'dp_id'    => 'required|uuid|exists:eo_prak_daftar_praktikan,id',
             'kelompok' => 'nullable|string|max:50',
@@ -793,6 +838,7 @@ class DashboardController extends Controller
      */
     public function saveGroupMembers(Request $request)
     {
+        $this->ensureGroupingEditable($request);
         $request->validate([
             'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
             'kelompok'     => 'required|string|max:50',
@@ -843,7 +889,7 @@ class DashboardController extends Controller
                 $draft['assignments'][$praktikanId] = $kelompok;
             }
 
-            $draft['groups'][$groupIndex]['shift'] = $shift;
+            // Editing membership must preserve the shift assigned to this group.
             $lockedPraktikum->update(['draft_pembagian' => $draft]);
 
             return ['success' => true];

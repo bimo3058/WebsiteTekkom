@@ -1,4 +1,7 @@
 <x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$daftarPraktikan?->praktikum" pageTitle="Tugas">
+    @php
+        $archiveReadOnly = $daftarPraktikan && !$daftarPraktikan->praktikum->is_active;
+    @endphp
 
     @if(!$daftarPraktikan)
         <div class="mp-page-header">
@@ -23,7 +26,7 @@
                 $tugasList = $item['tugas'];
             @endphp
             
-            <div x-data="{ modulOpen: false }" style="background: #fff; border: 1px solid var(--c-border); border-radius: 8px; box-shadow:none; overflow: hidden;">
+            <div x-data="{ modulOpen: @js($tugasList->contains(fn($task)=>(string)$task->id===(string)request('tugas_id'))) }" style="background: #fff; border: 1px solid var(--c-border); border-radius: 8px; box-shadow:none; overflow: hidden;">
                 
                 {{-- Card Header: Modul Info --}}
                 <div class="mp-module-card-header" @click="modulOpen = !modulOpen" :style="{boxShadow:modulOpen ? 'inset 0 -1px 0 var(--c-border)' : 'none'}" style="padding: 16px 24px; background: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
@@ -90,7 +93,7 @@
                             }
                         @endphp
                         
-                        <div x-data="{ open: false, showUpload: false }" style="{{ $loop->last ? '' : 'border-bottom:1px solid var(--c-border);' }}">
+                        <div id="{{ $t ? 'tugas-'.$t->id : 'jenis-'.$modul->id.'-'.$type }}" x-data="{ open: @js($t && (string)$t->id===(string)request('tugas_id')), showUpload: false }" x-init="if(open)$nextTick(()=>requestAnimationFrame(()=>$el.scrollIntoView({behavior:'smooth',block:'center'})))" style="scroll-margin-top:24px;{{ $loop->last ? '' : 'border-bottom:1px solid var(--c-border);' }}">
                             
                             {{-- Accordion Header --}}
                             <div @click="open = !open" style="padding: 14px 24px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff; transition: background 0.15s;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
@@ -184,7 +187,7 @@
                                             $firstSub = $pengumpulan ? ($pengumpulan->riwayat->where('is_revision', false)->sortByDesc('created_at')->first() ?? $pengumpulan->riwayat->sortByDesc('created_at')->first()) : null;
                                         @endphp
                                         <div x-data="{
-                                            isEditing: {{ in_array($statusTugas, ['draft', 'belum_kumpul', 'revisi']) ? 'true' : 'false' }},
+                                            isEditing: {{ !$archiveReadOnly && in_array($statusTugas, ['draft', 'belum_kumpul', 'revisi']) ? 'true' : 'false' }},
                                             retainedFiles: @js($isInRevisionFlow && in_array($statusTugas, ['revisi']) ? [] : $submittedFiles),
                                             files: [],
                                             init() {
@@ -264,7 +267,7 @@
                                                         @endif
                                                     </div>
                                                     
-                                                    @if(!$isInRevisionFlow && !$lewatMutlak && !in_array($statusTugas, ['acc']))
+                                                    @if(!$archiveReadOnly && !$isInRevisionFlow && !$lewatMutlak && !in_array($statusTugas, ['acc']))
                                                         <div style="display:flex; justify-content:flex-end; margin-top:12px;">
                                                             @if($statusTugas === 'belum_dicek')
                                                                 <form method="POST" action="{{ route('eoffice.manprak.mahasiswa.tugas.batalkan', $t->id) }}">
@@ -281,7 +284,7 @@
                                             @endif
 
                                             {{-- File Revisi dari Asisten (View Mode) --}}
-                                            @if($isInRevisionFlow && $pengumpulan?->file_revisi_asprak)
+                                            @if($pengumpulan?->file_revisi_asprak)
                                                 <div style="border-top:1px dashed #DFE1E7; margin:16px 0;"></div>
                                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                                                     <h3 style="font-size:14px; font-weight:700; color:#353849;">Revisi Tugas</h3>
@@ -329,7 +332,7 @@
                                                     @endif
                                                 </div>
 
-                                                @if($statusTugas !== 'revisi')
+                                                @if($statusTugas !== 'revisi' || $archiveReadOnly)
                                                     <div x-show="!isEditing" class="mb-4">
                                                         <div style="display:flex;flex-direction:column;gap:5px;">
                                                             @if($pengumpulan && $pengumpulan->files)
@@ -351,7 +354,7 @@
                                                                 @endforeach
                                                             @endif
                                                         </div>
-                                                        @if(!$lewatMutlak && !in_array($statusTugas, ['acc']))
+                                                        @if(!$archiveReadOnly && !$lewatMutlak && !in_array($statusTugas, ['acc']))
                                                             <div style="display:flex; justify-content:flex-end; margin-top:12px;">
                                                                 @if($statusTugas === 'belum_dicek')
                                                                     <form method="POST" action="{{ route('eoffice.manprak.mahasiswa.tugas.batalkan', $t->id) }}">
@@ -369,7 +372,7 @@
                                             @endif
 
                                             {{-- Edit mode: existing files + new upload area --}}
-                                            @if(!$lewatMutlak && !in_array($statusTugas, ['acc']))
+                                            @if(!$archiveReadOnly && !$lewatMutlak && !in_array($statusTugas, ['acc']))
                                                 <div x-show="isEditing" x-cloak class="mb-4">
                                                     <form method="POST" action="{{ in_array($statusTugas, ['belum_kumpul']) ? route('eoffice.manprak.mahasiswa.tugas.kumpul', $t->id) : route('eoffice.manprak.mahasiswa.tugas.kirim-ulang', $t->id) }}" enctype="multipart/form-data">
                                                         @csrf
@@ -404,9 +407,7 @@
                                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
                                                                         <span x-text="file.name" style="font-size:13px;font-weight:500;color:#353849;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
                                                                     </div>
-                                                                    <button type="button" @click="removeRetainedFile(index)" aria-label="Hapus berkas" style="color:#DF1C41;background:none;border:none;padding:4px;cursor:pointer;display:flex;border-radius:4px;">
-                                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                                                                    </button>
+                                                                    <button type="button" @click="removeRetainedFile(index)" aria-label="Hapus berkas" style="color:#DF1C41;background:none;border:none;padding:4px;cursor:pointer;display:flex;border-radius:4px;" class="mp-delete-button" title="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                                                 </div>
                                                             </template>
                                                         </div>

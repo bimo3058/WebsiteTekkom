@@ -1323,7 +1323,7 @@
     </div>
 
     <div
-        class="border-t border-slate-200 bg-white px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 rounded-b-[12px]">
+        class="border-t border-slate-200 bg-white px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 rounded-b-[14px]">
         {{-- Left: Per page selector + Showing text --}}
         <div class="flex items-center gap-2.5 sm:gap-3 text-xs text-slate-500 flex-wrap shrink-0">
             <div class="flex items-center gap-1.5">

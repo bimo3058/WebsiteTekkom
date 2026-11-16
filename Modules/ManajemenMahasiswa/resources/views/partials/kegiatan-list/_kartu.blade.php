@@ -23,14 +23,21 @@
         ->implode(', ');
     $tahap = ($tampilTahap ?? false) ? $item->tahap_rencana : null;
     // Status alur tinjau (S-82) — Rencana (draft) & Pelaksanaan: Menunggu Dilengkapi /
-    // Menunggu Tinjauan / Perlu Perbaikan. Menggantikan badge "Di Rencana Proker" dan
-    // badge "Perlu perbaikan" S-79 di kartu draft.
+    // Menunggu Tinjauan. S-91 (15 Nov 2026): Perlu Perbaikan digabung ke Menunggu Dilengkapi;
+    // penandanya label "Ada catatan KABID" (catatan terbuka). Menggantikan badge
+    // "Di Rencana Proker".
     $tinjauan = (($tampilTahap ?? false) || ($tampilTinjauan ?? false)) ? $item->tahap_tinjauan : null;
 @endphp
 <a href="{{ $href }}" class="kegiatan-card">
     <div class="kegiatan-card-image">
         @if($tinjauan)
-            <span class="mm-status mm-status--{{ \Modules\ManajemenMahasiswa\Models\Kegiatan::TINJAUAN_NADA[$tinjauan] }} kegiatan-card-tahap">{{ \Modules\ManajemenMahasiswa\Models\Kegiatan::TINJAUAN_LABELS[$tinjauan] }}</span>
+            <span class="kegiatan-card-tahap" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;box-shadow:none !important;">
+                <span class="mm-status mm-status--{{ \Modules\ManajemenMahasiswa\Models\Kegiatan::TINJAUAN_NADA[$tinjauan] }}" style="box-shadow:0 1px 4px rgba(13,13,18,.18);">{{ \Modules\ManajemenMahasiswa\Models\Kegiatan::TINJAUAN_LABELS[$tinjauan] }}</span>
+                {{-- S-91: pengganti status Perlu Perbaikan — Menunggu Dilengkapi + catatan terbuka --}}
+                @if($tinjauan === \Modules\ManajemenMahasiswa\Models\Kegiatan::TINJAU_DILENGKAPI && ($item->catatan_terbuka_count ?? 0) > 0)
+                    <span class="mm-status mm-status--error" style="box-shadow:0 1px 4px rgba(13,13,18,.18);" title="Dikembalikan KABID dengan catatan">Ada catatan KABID</span>
+                @endif
+            </span>
         @elseif($tahap)
             <span class="mm-status mm-status--{{ \Modules\ManajemenMahasiswa\Models\Kegiatan::TAHAP_RENCANA_NADA[$tahap] }} kegiatan-card-tahap">{{ \Modules\ManajemenMahasiswa\Models\Kegiatan::TAHAP_RENCANA_LABELS[$tahap] }}</span>
         @endif

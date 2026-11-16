@@ -5,9 +5,9 @@ namespace Modules\EOffice\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Nilai akhir per eo_prak_daftar_praktikan.
+ * Nilai akhir per daftar_praktikan.
  *
- * Tabel: eo_prak_nilai_praktikum
+ * Tabel: nilai_praktikum
  */
 class Nilai extends Model
 {

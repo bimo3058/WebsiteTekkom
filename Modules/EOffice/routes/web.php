@@ -81,7 +81,10 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
     // ════════════════════════════════════════════════════════════════════════
     // MANAJEMEN PRAKTIKUM
     // ════════════════════════════════════════════════════════════════════════
-    Route::prefix('eoffice/manprak')->name('eoffice.manprak.')->group(function () {
+    Route::prefix('eoffice/manprak')->name('eoffice.manprak.')->middleware([\Modules\EOffice\Http\Middleware\PracticumAdministrationBoundary::class, \Modules\EOffice\Http\Middleware\StudentPracticumArchive::class])->group(function () {
+        Route::get('notifikasi', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('notifikasi/dibaca', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\NotificationController::class, 'readAll'])->name('notifications.read-all');
+        Route::post('notifikasi/{id}/dibaca', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\NotificationController::class, 'read'])->whereNumber('id')->name('notifications.read');
         Route::get('/lampiran',\Modules\EOffice\Http\Controllers\ManajemenPraktikum\AttachmentController::class)->middleware('signed')->name('attachment');
         foreach(['koor'=>'koor_prak','dosen'=>'dosen'] as $finalRole=>$finalPermission){
             Route::post($finalRole.'/praktikum/{praktikum}/nilai-keseluruhan',[\Modules\EOffice\Http\Controllers\ManajemenPraktikum\FinalAssessmentController::class,'save'])->middleware('role:'.$finalPermission)->defaults('finalRole',$finalRole)->name($finalRole.'.final.save');
@@ -110,12 +113,18 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
         }
 
         // ── ADMIN ────────────────────────────────────────────────────────────
-        Route::middleware(['role:superadmin|admin_eoffice'])
+        Route::middleware(['role:superadmin|admin_praktikum'])
             ->prefix('admin')->name('admin.')
             ->group(function () {
 
+                Route::get('koordinator-cerc',[\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\CercCoordinatorController::class,'index'])->name('cerc.index');
+                Route::put('koordinator-cerc',[\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\CercCoordinatorController::class,'update'])->name('cerc.update');
+                Route::delete('koordinator-cerc/riwayat',[\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\CercCoordinatorController::class,'destroyHistory'])->name('cerc.history.destroy');
                 Route::get('/dashboard', [AdminManprakDashboard::class, 'index'])
                     ->name('dashboard');
+                Route::get('periode-pelaksanaan',[\Modules\EOffice\Http\Controllers\ManajemenPraktikum\PracticumScheduleController::class,'periods'])->name('schedule-periods.index');
+                Route::post('periode-pelaksanaan',[\Modules\EOffice\Http\Controllers\ManajemenPraktikum\PracticumScheduleController::class,'savePeriod'])->name('schedule-periods.store');
+                Route::put('periode-pelaksanaan/{id}',[\Modules\EOffice\Http\Controllers\ManajemenPraktikum\PracticumScheduleController::class,'savePeriod'])->name('schedule-periods.update');
                 Route::get('skema-predikat',[\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\GradePolicyController::class,'index'])->name('grade-policies.index');
                 Route::post('skema-predikat',[\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\GradePolicyController::class,'store'])->name('grade-policies.store');
                 Route::post('skema-predikat/angkatan/{student}',[\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\GradePolicyController::class,'verify'])->name('grade-policies.verify');
@@ -153,6 +162,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('daftar-praktikan.index');
                 Route::post('daftar-praktikan', [AdminDaftarPraktikanController::class, 'store'])
                     ->name('daftar-praktikan.store');
+                Route::post('praktikum/{id}/hasil-impor/selesai', [AdminDaftarPraktikanController::class, 'completeImport'])
+                    ->name('praktikum.import-complete');
                 Route::delete('daftar-praktikan/{id}', [AdminDaftarPraktikanController::class, 'destroy'])
                     ->name('daftar-praktikan.destroy');
 
@@ -199,6 +210,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
                 // Kelola Role (assign/revoke asprak & koor per praktikum)
                 Route::get('kelola-role', [KelolRoleController::class, 'index'])
+                    ->middleware('role:superadmin')
                     ->name('kelola-role.index');
                 Route::post('kelola-role/assign', [KelolRoleController::class, 'assignRole'])
                     ->name('kelola-role.assign');
@@ -215,6 +227,26 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::post('kelola-role/restore/{id}', [KelolRoleController::class, 'restoreRole'])
                     ->name('kelola-role.restore');
             });
+
+
+        // CERC only manages staffing of active practicums. Room approval remains with room administrators.
+        Route::middleware('role:superadmin|koordinator_cerc')->prefix('cerc')->name('cerc.')->group(function () {
+            Route::get('dashboard',[\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Cerc\DashboardController::class,'index'])->name('dashboard');
+            $schedule=\Modules\EOffice\Http\Controllers\ManajemenPraktikum\PracticumScheduleController::class;
+            Route::get('peminjaman',$schedule.'@index')->name('scheduling.index');
+            Route::get('peminjaman/buat',$schedule.'@create')->name('scheduling.create');
+            Route::get('peminjaman/ketersediaan',$schedule.'@availability')->name('scheduling.availability');
+            Route::post('peminjaman/perubahan',$schedule.'@amendment')->name('scheduling.amendment');
+            Route::get('peminjaman/{id}',$schedule.'@show')->name('scheduling.show');
+            Route::post('peminjaman/{id}/simpan',$schedule.'@save')->name('scheduling.save');
+            Route::post('peminjaman/{id}/kirim',$schedule.'@submit')->name('scheduling.submit');
+            Route::post('peminjaman/{id}/tarik',$schedule.'@withdraw')->name('scheduling.withdraw');
+            Route::get('kelola-role',[KelolRoleController::class,'index'])->name('kelola-role.index');
+            Route::post('kelola-role/assign',[KelolRoleController::class,'assignRole'])->name('kelola-role.assign');
+            Route::delete('kelola-role/{id}',[KelolRoleController::class,'revokeRole'])->name('kelola-role.revoke');
+            Route::post('kelola-role/restore/{id}',[KelolRoleController::class,'restoreRole'])->name('kelola-role.restore');
+            Route::post('kelola-role/revoke-all/{praktikumId}',[KelolRoleController::class,'revokeAll'])->name('kelola-role.revokeAll');
+        });
 
         // ── DOSEN ────────────────────────────────────────────────────────────
         Route::middleware(['role:dosen'])
@@ -298,7 +330,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
         // ── KOORDINATOR ──────────────────────────────────────────────────────
         // koor.owns: pastikan koor hanya bisa akses praktikum miliknya sendiri
         // (eo_praktikum.koor_id = auth()->id()). Admin & superadmin di-bypass.
-        Route::middleware(['role:koor_prak|admin_eoffice|superadmin', 'koor.owns'])
+        Route::middleware(['role:koor_prak|superadmin', 'koor.owns'])
             ->prefix('koor')->name('koor.')
             ->group(function () {
 
@@ -349,6 +381,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('modul.show');
                 Route::post('pengajuan-modul', [KoorPengajuanModulController::class, 'create'])
                     ->name('pengajuan-modul.create');
+                Route::post('pengajuan-modul/{pengajuan}/pakai-modul-tetap', [KoorPengajuanModulController::class, 'usePrevious'])
+                    ->name('pengajuan-modul.use-previous');
                 Route::post('pengajuan-modul/{pengajuan}/item', [KoorPengajuanModulController::class, 'storeItem'])
                     ->name('pengajuan-modul.item.store');
                 Route::put('pengajuan-modul-item/{item}', [KoorPengajuanModulController::class, 'updateItem'])
@@ -405,6 +439,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('pengumuman.index');
                 Route::post('pengumuman', [KoorPengumumanController::class, 'store'])
                     ->name('pengumuman.store');
+                Route::patch('pengumuman/{id}/sematan', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\AnnouncementPinController::class,'update'])
+                    ->defaults('announcementRole','koor')->name('pengumuman.pin');
                 Route::delete('pengumuman/{id}', [KoorPengumumanController::class, 'destroy'])
                     ->name('pengumuman.destroy');
 
@@ -439,7 +475,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
         // ── ASISTEN PRAKTIKUM ────────────────────────────────────────────────
         // asprak.owns: pastikan asprak hanya bisa akses modul yang di-assign
         // kepadanya (modul_asprak.asprak_id). Koor & admin di-bypass.
-        Route::middleware(['role:asprak|koor_prak|admin_eoffice|superadmin', 'asprak.owns'])
+        Route::middleware(['role:asprak|koor_prak|superadmin', 'asprak.owns'])
             ->prefix('asprak')->name('asprak.')
             ->group(function () {
 
@@ -488,6 +524,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('tugas.nilai-jenis');
                 Route::post('tugas/{id}/revisi', [AsprakTugasController::class, 'beriRevisi'])
                     ->name('tugas.revisi');
+                Route::post('tugas/{id}/revisi/batalkan', [AsprakTugasController::class, 'batalkanRevisi'])->name('tugas.revisi.cancel');
 
                 // Asisten melihat modul dan mengelola konten modul yang diampu.
                 Route::get('modul', [AsprakModulController::class, 'index'])
@@ -514,6 +551,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('pengumuman.store');
                 Route::put('pengumuman/{id}', [AsprakPengumumanController::class, 'update'])
                     ->name('pengumuman.update');
+                Route::patch('pengumuman/{id}/sematan', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\AnnouncementPinController::class,'update'])
+                    ->defaults('announcementRole','asprak')->name('pengumuman.pin');
                 Route::delete('pengumuman/{id}', [AsprakPengumumanController::class, 'destroy'])
                     ->name('pengumuman.destroy');
 
@@ -523,7 +562,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             });
 
         // ── MAHASISWA ────────────────────────────────────────────────────────
-        Route::middleware(['role:mahasiswa|asprak|koor_prak|praktikan|admin_eoffice|superadmin'])
+        Route::middleware(['role:mahasiswa|asprak|koor_prak|praktikan|superadmin'])
             ->prefix('mahasiswa')->name('mahasiswa.')
             ->group(function () {
 

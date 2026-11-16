@@ -162,6 +162,45 @@ class PraktikanGroupingService
         return $errors;
     }
 
+    public function fillRemaining(array $draft, Collection $praktikanIds, string $method): array
+    {
+        $draft = $this->normalize($draft);
+        if (! in_array($method, ['urutan_sistem', 'acak'], true)) {
+            throw new \InvalidArgumentException('Pilih metode berurutan atau acak.');
+        }
+        $ids = $praktikanIds->map(fn ($id) => (string) $id)->unique()->values();
+        $names = collect($draft['groups'])->pluck('name')->all();
+        if ($names === [] || collect($draft['groups'])->contains('shift', '')) {
+            throw new \InvalidArgumentException('Buat kelompok dan lengkapi shift terlebih dahulu.');
+        }
+        foreach ($draft['assignments'] as $id => $group) {
+            if (! $ids->contains((string) $id) || ! in_array($group, $names, true)) {
+                throw new \InvalidArgumentException('Draft memuat anggota atau kelompok yang tidak valid. Periksa kembali pembagian manual.');
+            }
+        }
+        $remaining = $ids->diff(array_keys($draft['assignments']))->values();
+        if ($remaining->isEmpty()) {
+            throw new \InvalidArgumentException('Semua praktikan sudah memiliki kelompok.');
+        }
+        if ($ids->count() < count($names)) {
+            throw new \InvalidArgumentException('Jumlah kelompok melebihi jumlah praktikan. Kurangi jumlah kelompok terlebih dahulu.');
+        }
+        if ($method === 'acak') {
+            $remaining = $remaining->shuffle()->values();
+        }
+        $sizes = array_fill_keys($names, 0);
+        foreach ($draft['assignments'] as $group) {
+            $sizes[$group]++;
+        }
+        foreach ($remaining as $id) {
+            $group = (string) array_search(min($sizes), $sizes, true);
+            $draft['assignments'][$id] = $group;
+            $sizes[$group]++;
+        }
+        // Existing placements are deliberately never moved to force equal sizes.
+        return $draft;
+    }
+
     private function shiftForGroup(int $groupNumber, int $groupCount, int $shiftCount): int
     {
         return min($shiftCount, intdiv(($groupNumber - 1) * $shiftCount, $groupCount) + 1);

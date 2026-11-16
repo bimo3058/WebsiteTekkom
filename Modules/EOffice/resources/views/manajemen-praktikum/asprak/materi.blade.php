@@ -142,9 +142,7 @@
                             </div>
                             <button type="button" @click="removeFile(index)" title="Hapus file"
                                     style="background:none;border:none;cursor:pointer;color:#DF1C41;padding:6px;display:flex;align-items:center;justify-content:center;border-radius:6px;"
-                                    onmouseover="this.style.background='#FFF0F2'" onmouseout="this.style.background='none'">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            </button>
+                                    onmouseover="this.style.background='#FFF0F2'" onmouseout="this.style.background='none'" class="mp-delete-button" aria-label="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                         </div>
                     </template>
                 </div>
@@ -226,7 +224,7 @@
                     @if(isset($praktikum) && $praktikum->is_active)
                     <form method="POST" action="{{ route('eoffice.manprak.asprak.materi.destroy', $materi->id) }}" style="display:inline;" onsubmit="return confirm('Hapus materi ini? Tindakan tidak dapat dibatalkan.')">
                         @csrf @method('DELETE')
-                        <button type="submit" class="mp-btn secondary sm" style="color:#DF1C41;">Hapus</button>
+                        <button type="submit" class="mp-delete-button mp-btn secondary sm" style="color:#DF1C41;" aria-label="Hapus" title="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                     </form>
                     @endif
                     @endif

@@ -331,7 +331,7 @@ class ProkerController extends Controller
 
         $ruangan = null;
         if ($proker->ruangan_id) {
-            $status = $this->jadwal->statusRuangan($slot, $proker)[$proker->ruangan_id] ?? null;
+            $status = $this->jadwal->statusRuangan($slot, $proker, $this->jadwal->userKetua($proker))[$proker->ruangan_id] ?? null;
             $info   = $this->jadwal->daftarRuangan()->firstWhere('id', (int) $proker->ruangan_id);
             $ruangan = $status && $info ? $info + $status : null;
         }
@@ -374,7 +374,12 @@ class ProkerController extends Controller
         }
 
         $slot = $this->slotDari($request->only(['tanggal_mulai', 'tanggal_selesai', 'jam_mulai', 'jam_selesai', 'ruangan_id', 'lokasi']));
-        $status = $this->jadwal->statusRuangan($slot, $kecuali);
+        // S-88: peminjaman ketua pelaksana dihitung terpisah. S-89: pakai ketua yang sedang dipilih di form
+        // (belum tentu sudah disimpan), supaya chip status ikut berubah saat ketua diganti.
+        $userKetua = $request->filled('ketua_pelaksana_id')
+            ? $this->jadwal->userDariMahasiswa($request->input('ketua_pelaksana_id'))
+            : $this->jadwal->userKetua($kecuali);
+        $status = $this->jadwal->statusRuangan($slot, $kecuali, $userKetua);
 
         return response()->json([
             'eoffice' => $this->jadwal->tersedia(),
@@ -382,6 +387,19 @@ class ProkerController extends Controller
                 ->map(fn ($r) => $r + ($status[$r['id']] ?? ['status' => 'belum_dicek', 'alasan' => null]))
                 ->values(),
             'bentrok' => $this->jadwal->bentrok($slot, $kecuali),
+        ]);
+    }
+
+    /** Peminjaman ruangan disetujui milik Ketua Pelaksana (students.id) terpilih di form (S-89, JSON). */
+    public function peminjamanKetua(Request $request)
+    {
+        $userId = $this->jadwal->userDariMahasiswa($request->input('ketua_pelaksana_id'));
+
+        return response()->json([
+            'ada_ketua'  => (bool) $userId,
+            // S-90: pintasan "Pinjam ruangan" hanya untuk ketua pelaksana sendiri.
+            'saya_ketua' => $userId !== null && $userId === (int) auth()->id(),
+            'peminjaman' => $this->jadwal->peminjamanKetua($userId)->values(),
         ]);
     }
 
@@ -423,7 +441,7 @@ class ProkerController extends Controller
     }
 
     /**
-     * Peninjau mengembalikan kiriman dengan catatan → Perlu Perbaikan (usulan Pak
+     * Peninjau mengembalikan kiriman dengan catatan → kembali ke Menunggu Dilengkapi (S-91) (usulan Pak
      * Maman L-41, S-79; sejak S-82 hanya saat Menunggu Tinjauan).
      */
     public function tolak(Request $request, $id)
@@ -444,7 +462,7 @@ class ProkerController extends Controller
         }
 
         return redirect()->route('manajemenmahasiswa.proker.show', $proker->id)
-            ->with('success', 'Rencana dikembalikan ke ketua pelaksana dengan catatan. Statusnya kini Perlu Perbaikan.');
+            ->with('success', 'Rencana dikembalikan ke ketua pelaksana dengan catatan. Statusnya kembali ke Menunggu Dilengkapi.');
     }
 
     /** KABID dkk. mengganti ketua pelaksana (S-82) — satu-satunya isian yang masih bisa ia ubah. */
@@ -893,9 +911,9 @@ class ProkerController extends Controller
             // lolos ke query dan memunculkan halaman error saat disimpan.
             'jam_mulai'              => 'nullable|date_format:H:i,H:i:s',
             'jam_selesai'            => $jamSelesaiRules,
-            'lokasi'                 => 'nullable|string|max:150',
+            'lokasi'                 => ['nullable', 'string', 'max:150', $this->jadwal->aturanLokasiTeks($request, $proker?->lokasi)],
             // Ruangan kampus dari master EOffice (S-81); kosong = luar kampus/daring.
-            'ruangan_id'             => $this->jadwal->aturanRuangan(),
+            'ruangan_id'             => array_merge($this->jadwal->aturanRuangan(), [$this->jadwal->aturanRuanganKetua($request, $proker?->ruangan_id)]),
             'target_peserta'         => 'nullable|integer|min:1',
             'ketua_pelaksana_id'     => ['required', 'exists:students,id', KegiatanPolicy::aturanKetuaSebidang($proker, (int) collect($request->input('bidang_id'))->first() ?: null)],
             'dosen_pendamping_ids'   => 'nullable|array',
@@ -926,6 +944,7 @@ class ProkerController extends Controller
             'jam_selesai.date_format'        => 'Jam selesai harus berupa jam yang benar, contoh 15:00.',
             'jam_selesai.after'              => 'Jam selesai harus lebih lambat dari jam mulai. Kalau kegiatannya lintas hari, isi dulu tanggal selesainya.',
             'ruangan_id.integer'             => 'Pilihan ruangan tidak valid.',
+            // (pesan "harus dari peminjaman Ketua Pelaksana" dikirim langsung oleh aturanRuanganKetua, S-89)
             'ketua_pelaksana_id.in'          => KegiatanPolicy::PESAN_KETUA_SEBIDANG,
         ] + SumberDana::pesan() + KegiatanController::pesanValidasiDokumen());
     }
@@ -1015,7 +1034,7 @@ class ProkerController extends Controller
     {
         $kategoriIds = $proker->kategoris->pluck('id')->all();
 
-        return collect(self::SYARAT_AJUKAN)->map(fn($label, $field) => [
+        $daftar = collect(self::SYARAT_AJUKAN)->map(fn($label, $field) => [
             'field'  => $field,
             'label'  => $label,
             'terisi' => match ($field) {
@@ -1031,7 +1050,23 @@ class ProkerController extends Controller
                 'dokumen_rab'      => $this->punyaDokumen($proker, 'rab'),
                 default     => !empty($proker->{$field}),
             },
-        ])->values()->all();
+        ])->values();
+
+        // S-89: ruangan kampus hanya sah bila dipinjam Ketua Pelaksana dan sudah disetujui di
+        // EOffice. Lokasi luar kampus/daring (ruangan_id kosong) tidak terpengaruh.
+        if ($proker->ruangan_id) {
+            $daftar->push([
+                'field'  => 'ruangan_id',
+                'label'  => 'Ruangan belum dipinjam Ketua Pelaksana atau peminjamannya belum disetujui di EOffice',
+                'terisi' => $this->jadwal->peminjamanKetuaCocok(
+                    $this->jadwal->userKetua($proker),
+                    (int) $proker->ruangan_id,
+                    $proker->tanggal_mulai ? \Carbon\Carbon::parse($proker->tanggal_mulai)->toDateString() : null
+                ),
+            ]);
+        }
+
+        return $daftar->all();
     }
 
     private function punyaDokumen(Kegiatan $proker, string $jenis): bool
