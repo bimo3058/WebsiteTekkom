@@ -443,6 +443,11 @@
             ['label'=>'Pelaksanaan', 'val'=>number_format($dpmProker['total_pelaksanaan'] ?? 0), 'bg'=>'#eff6ff', 'color'=>'#2563eb'],
             ['label'=>'Selesai', 'val'=>number_format($dpmProker['total_selesai'] ?? 0), 'bg'=>'#ecfdf5', 'color'=>'#059669'],
         ];
+        // Rencana diajukan yang salinannya sudah dihapus — hanya tampil bila ada, supaya
+        // rincian status tetap menjumlah ke Total Proker.
+        if (($dpmProker['total_diajukan'] ?? 0) > 0) {
+            $dpmProkerKpis[] = ['label'=>'Diajukan (tanpa pelaksanaan)', 'val'=>number_format($dpmProker['total_diajukan']), 'bg'=>'#F6F8FA', 'color'=>'#666D80'];
+        }
     @endphp
     @foreach($dpmProkerKpis as $k)
         <div class="kpi-mini">
@@ -499,10 +504,11 @@
                         $kategoriProker = $proker->kategoris?->pluck('nama_kategori')->filter()->take(2)->implode(', ');
                     @endphp
                     <tr>
-                        <td style="font-weight:600;color:#0D0D12;">{{ $proker->nama_kegiatan ?? '-' }}</td>
+                        {{-- Kolomnya `judul` — dulu memanggil `nama_kegiatan` yang tidak ada, jadi selalu "-" --}}
+                        <td style="font-weight:600;color:#0D0D12;">{{ $proker->judul ?: '-' }}</td>
                         <td>{{ $ketuaProker }}</td>
                         <td>{{ $kategoriProker ?: '-' }}</td>
-                        <td style="color:#808897;">{{ optional($proker->created_at)->format('d M Y') ?? '-' }}</td>
+                        <td style="color:#808897;">{{ $proker->created_at?->locale('id')->translatedFormat('d M Y') ?? '-' }}</td>
                     </tr>
                 @empty
                     <tr class="empty-row"><td colspan="4">Tidak ada draft proker</td></tr>
@@ -531,7 +537,7 @@
         $dpmPelaksanaanKpis = [
             ['label'=>'Bulan Ini', 'val'=>number_format($dpmPelaksanaan['bulan_ini'] ?? 0), 'bg'=>'#eff6ff', 'color'=>'#2563eb'],
             ['label'=>'Berlangsung Hari Ini', 'val'=>number_format($dpmPelaksanaan['berlangsung_hari_ini'] ?? 0), 'bg'=>'#ecfdf5', 'color'=>'#059669'],
-            ['label'=>'Belum Realisasi', 'val'=>number_format($dpmPelaksanaan['belum_realisasi'] ?? 0), 'bg'=>'#fff7ed', 'color'=>'#ea580c'],
+            ['label'=>'Belum Diperbarui Sesuai Realisasi', 'val'=>number_format($dpmPelaksanaan['belum_realisasi'] ?? 0), 'bg'=>'#fff7ed', 'color'=>'#ea580c'],
             ['label'=>'Tanpa Dosen Pendamping', 'val'=>number_format($dpmPelaksanaan['tanpa_dosen_pendamping'] ?? 0), 'bg'=>'#fef2f2', 'color'=>'#dc2626'],
         ];
     @endphp
@@ -553,12 +559,13 @@
         <div class="chart-title">
             <span style="display:inline-flex;width:15px;height:15px;color:#0B266E;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/bar-chart-12.svg'))) !!}</span>
             Rencana vs Realisasi
+            <span class="chart-title-right">{{ number_format($dpmPelaksanaan['realisasi_jumlah_kegiatan'] ?? 0) }} kegiatan</span>
         </div>
         <div class="progress-card">
             <div class="progress-item">
                 <div class="progress-row">
                     <span class="progress-label">Peserta</span>
-                    <span class="progress-count" style="color:#2563eb;">{{ number_format($dpmPelaksanaan['realisasi_peserta'] ?? 0) }} / {{ number_format($dpmPelaksanaan['target_peserta'] ?? 0) }} ({{ $dpmPelaksanaan['rate_peserta'] ?? 0 }}%)</span>
+                    <span class="progress-count" style="color:#2563eb;">{{ number_format($dpmPelaksanaan['realisasi_peserta'] ?? 0, 0, ',', '.') }} / {{ number_format($dpmPelaksanaan['target_peserta'] ?? 0, 0, ',', '.') }} ({{ $dpmPelaksanaan['rate_peserta'] ?? 0 }}%)</span>
                 </div>
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" style="width:{{ min(100, (int) ($dpmPelaksanaan['rate_peserta'] ?? 0)) }}%;background:#2563eb;"></div>
@@ -567,11 +574,14 @@
             <div class="progress-item">
                 <div class="progress-row">
                     <span class="progress-label">Anggaran</span>
-                    <span class="progress-count" style="color:#059669;">Rp {{ number_format($dpmPelaksanaan['anggaran_realisasi'] ?? 0, 0, ',', '.') }} / Rp {{ number_format($dpmPelaksanaan['anggaran_rencana'] ?? 0, 0, ',', '.') }}</span>
+                    <span class="progress-count" style="color:#059669;">Rp {{ number_format($dpmPelaksanaan['anggaran_realisasi'] ?? 0, 0, ',', '.') }} / Rp {{ number_format($dpmPelaksanaan['anggaran_rencana'] ?? 0, 0, ',', '.') }} ({{ $dpmPelaksanaan['rate_anggaran'] ?? 0 }}%)</span>
                 </div>
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" style="width:{{ min(100, (int) ($dpmPelaksanaan['rate_anggaran'] ?? 0)) }}%;background:#059669;"></div>
                 </div>
+            </div>
+            <div style="font-size:11px;color:#808897;">
+                Realisasi (data Pelaksanaan/Arsip) dibanding rencana awal di Rencana Proker, untuk kegiatan yang realisasinya sudah dicatat.
             </div>
         </div>
     </div>
@@ -782,7 +792,7 @@
 <div class="action-grid">
 
     {{-- Pengaduan Baru --}}
-    <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}"
+    <a href="{{ route('manajemenmahasiswa.pengaduan.index', ['status' => 'baru']) }}"
        class="action-card action-card-red {{ $act['pengaduan_baru'] === 0 ? 'zero-state' : '' }}">
         <div class="action-card-top">
             <div class="action-icon action-icon-red">
@@ -791,8 +801,9 @@
         </div>
         <div class="action-num action-num-red">{{ $act['pengaduan_baru'] }}</div>
         <div>
-            <div class="action-label">Pengaduan belum dijawab</div>
-            <div class="action-link-hint">Jawab sekarang →</div>
+            {{-- Sama dengan filter "Baru" di halaman Pengaduan (belum ditandai tercatat) --}}
+            <div class="action-label">Pengaduan belum tercatat</div>
+            <div class="action-link-hint">Tindak lanjuti →</div>
         </div>
     </a>
 
@@ -916,12 +927,16 @@
             <span style="display:inline-flex;width:15px;height:15px;color:#0B266E;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/headphone-01.svg'))) !!}</span>
             Layanan Pengaduan
         </div>
+        {{-- Satu pembungkus isi: aturan `.chart-card > div:not(.chart-title)` memberi padding
+             18px ke tiap div anak langsung kartu, sehingga bar 7px dulu menjadi pil abu
+             besar dan isiannya tak terlihat (tinggi isi 0 karena box-sizing: border-box). --}}
+        <div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:10px;">
             @foreach([
-                ['label'=>'Baru', 'val'=>$ops['pengaduan_baru'] ?? 0, 'color'=>'#dc2626'],
-                ['label'=>'Dibaca', 'val'=>$ops['pengaduan_dibaca'] ?? 0, 'color'=>'#2563eb'],
-                ['label'=>'Didelegasikan', 'val'=>$ops['pengaduan_didelegasikan'] ?? 0, 'color'=>'#d97706'],
-                ['label'=>'Selesai', 'val'=>$ops['pengaduan_selesai'] ?? 0, 'color'=>'#059669'],
+                {{-- Mengikuti status di halaman Pengaduan: Baru (belum/sudah dibaca) & Tercatat --}}
+                ['label'=>'Baru · Belum Dibaca', 'val'=>$ops['pengaduan_belum_dibaca'] ?? 0, 'color'=>'#dc2626'],
+                ['label'=>'Baru · Sudah Dibaca', 'val'=>$ops['pengaduan_dibaca'] ?? 0, 'color'=>'#2563eb'],
+                ['label'=>'Tercatat', 'val'=>$ops['pengaduan_tercatat'] ?? 0, 'color'=>'#059669'],
             ] as $row)
             <div style="padding:12px;border:1px solid #eef2f7;border-radius:12px;background:#fff;">
                 <div style="font-size:20px;font-weight:800;color:{{ $row['color'] }};">{{ number_format($row['val']) }}</div>
@@ -937,7 +952,8 @@
             <div style="width:{{ min(100, $ops['responsivitas_pengaduan'] ?? 0) }}%;height:100%;background:#059669;border-radius:999px;"></div>
         </div>
         <div style="margin-top:10px;font-size:11px;color:#808897;">
-            SLA {{ $ops['sla_hari'] ?? 7 }} hari, {{ number_format($ops['pengaduan_belum_dibaca'] ?? 0) }} pengaduan belum dibaca.
+            {{ number_format($ops['pengaduan_sla_terpenuhi'] ?? 0) }} dari {{ number_format($ops['pengaduan_total'] ?? 0) }} pengaduan ditangani ≤ {{ $ops['sla_hari'] ?? 7 }} hari sejak dibuat.
+        </div>
         </div>
     </div>
 
@@ -974,29 +990,38 @@
         <div class="chart-title">
             <span style="display:inline-flex;width:15px;height:15px;color:#0B266E;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/calendar.svg'))) !!}</span>
             Realisasi Kegiatan
+            <span class="chart-title-right">{{ number_format($ops['realisasi_jumlah_kegiatan'] ?? 0) }} kegiatan tercatat</span>
         </div>
         @php
             $pesertaPct = min(100, $ops['persen_realisasi_peserta'] ?? 0);
             $anggaranPct = min(100, $ops['persen_realisasi_anggaran'] ?? 0);
-        @endphp
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:10px;">
-            @foreach([
+            $statusKegiatanOps = [
                 ['label'=>'Draft', 'val'=>$ops['kegiatan_draft'] ?? 0],
                 ['label'=>'Pelaksanaan', 'val'=>$ops['kegiatan_pelaksanaan'] ?? 0],
                 ['label'=>'Selesai', 'val'=>$ops['kegiatan_selesai'] ?? 0],
-            ] as $row)
+            ];
+            if (($ops['kegiatan_diajukan'] ?? 0) > 0) {
+                array_splice($statusKegiatanOps, 1, 0, [['label'=>'Diajukan', 'val'=>$ops['kegiatan_diajukan']]]);
+            }
+        @endphp
+        {{-- Satu pembungkus isi — lihat catatan di kartu Layanan Pengaduan. --}}
+        <div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:10px;">
+            @foreach($statusKegiatanOps as $row)
             <div style="padding:12px;border:1px solid #eef2f7;border-radius:12px;background:#fff;">
                 <div style="font-size:20px;font-weight:800;color:#0B266E;">{{ number_format($row['val']) }}</div>
                 <div style="font-size:12px;color:#666D80;font-weight:600;">{{ $row['label'] }}</div>
             </div>
             @endforeach
         </div>
-        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;margin-bottom:6px;"><strong>Peserta</strong><span>{{ number_format($ops['realisasi_peserta'] ?? 0) }} / {{ number_format($ops['target_peserta'] ?? 0) }} ({{ $ops['persen_realisasi_peserta'] ?? 0 }}%)</span></div>
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;margin-bottom:6px;"><strong>Peserta</strong><span>{{ number_format($ops['realisasi_peserta'] ?? 0, 0, ',', '.') }} / {{ number_format($ops['target_peserta'] ?? 0, 0, ',', '.') }} ({{ $ops['persen_realisasi_peserta'] ?? 0 }}%)</span></div>
         <div style="height:7px;background:#f3f4f6;border-radius:999px;overflow:hidden;margin-bottom:10px;"><div style="width:{{ $pesertaPct }}%;height:100%;background:#2563eb;border-radius:999px;"></div></div>
-        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;margin-bottom:6px;"><strong>Anggaran</strong><span>Rp {{ number_format($ops['anggaran_realisasi'] ?? 0, 0, ',', '.') }} / Rp {{ number_format($ops['anggaran_rencana'] ?? 0, 0, ',', '.') }}</span></div>
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;margin-bottom:6px;"><strong>Anggaran</strong><span>Rp {{ number_format($ops['anggaran_realisasi'] ?? 0, 0, ',', '.') }} / Rp {{ number_format($ops['anggaran_rencana'] ?? 0, 0, ',', '.') }} ({{ $ops['persen_realisasi_anggaran'] ?? 0 }}%)</span></div>
         <div style="height:7px;background:#f3f4f6;border-radius:999px;overflow:hidden;"><div style="width:{{ $anggaranPct }}%;height:100%;background:#059669;border-radius:999px;"></div></div>
         <div style="margin-top:10px;font-size:11px;color:#808897;">
-            {{ number_format($ops['kegiatan_selesai_belum_realisasi'] ?? 0) }} kegiatan selesai belum lengkap realisasinya.
+            Realisasi (data Pelaksanaan/Arsip) dibanding rencana awal di Rencana Proker.
+            {{ number_format($ops['kegiatan_belum_diperbarui'] ?? 0) }} kegiatan di tahap Pelaksanaan belum diperbarui sesuai realisasi.
+        </div>
         </div>
     </div>
 
@@ -1061,7 +1086,7 @@
     {{-- Kegiatan Berlangsung Hari Ini — monitoring real-time organisasi --}}
     <div class="stat-card {{ $acty['kegiatan_berlangsung'] > 0 ? 'card-clickable' : '' }}"
          @if($acty['kegiatan_berlangsung'] > 0)
-             onclick="window.location.href='{{ route('manajemenmahasiswa.kegiatan.index') }}'"
+             onclick="window.location.href='{{ route('manajemenmahasiswa.pelaksanaan.index') }}'"
          @endif>
         <div class="stat-icon stat-icon-amber">
             <span style="display:inline-flex;width:20px;height:20px;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/clock-02.svg'))) !!}</span>
@@ -1199,17 +1224,19 @@
         </div>
         <div>
             <div class="kpi-mini-val" style="color:#0C4D6E;">{{ $eval['responsivitas'] }}%</div>
-            <div class="kpi-mini-label" title="Persentase pengaduan (non-draft) yang dijawab dalam ≤ {{ $eval['sla_hari'] ?? 7 }} hari sejak dibuat.">Responsivitas Pengaduan (SLA)</div>
-            <div style="font-size:11px;color:#808897;margin-top:2px;">{{ $eval['pengaduan_sla_terpenuhi'] ?? 0 }} dari {{ $eval['pengaduan_total'] ?? 0 }} dijawab ≤ {{ $eval['sla_hari'] ?? 7 }} hari</div>
+            <div class="kpi-mini-label" title="Persentase pengaduan (non-draft) yang ditangani pertama kali (mis. ditandai tercatat) dalam ≤ {{ $eval['sla_hari'] ?? 7 }} hari sejak dibuat.">Responsivitas Pengaduan (SLA)</div>
+            <div style="font-size:11px;color:#808897;margin-top:2px;">{{ $eval['pengaduan_sla_terpenuhi'] ?? 0 }} dari {{ $eval['pengaduan_total'] ?? 0 }} ditangani ≤ {{ $eval['sla_hari'] ?? 7 }} hari</div>
         </div>
     </div>
 </div>
 
-{{-- Tabel kelulusan & DO rate per angkatan --}}
+{{-- Tabel kelulusan per angkatan — dari role mahasiswa/alumni & direktori alumni.
+     Kolom Drop Out dicabut (15 Nov 2026): satu-satunya sumber status DO adalah status
+     kemahasiswaan yang dibekukan sejak S-53 (status resmi di SIAP Undip). --}}
 <div class="chart-card section-gap">
     <div class="chart-title">
         <span style="display:inline-flex;width:15px;height:15px;color:#0B266E;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/bar-chart-11.svg'))) !!}</span>
-        Tingkat Kelulusan &amp; Drop Out per Angkatan
+        Tingkat Kelulusan per Angkatan
     </div>
     <div style="overflow-x:auto;">
         <table class="da-table" style="width:100%;border-collapse:collapse;">
@@ -1219,8 +1246,6 @@
                     <th style="text-align:center;font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Total</th>
                     <th style="text-align:center;font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Lulus</th>
                     <th style="text-align:center;font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">% Kelulusan</th>
-                    <th style="text-align:center;font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Drop Out</th>
-                    <th style="text-align:center;font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">% DO</th>
                 </tr>
             </thead>
             <tbody>
@@ -1236,13 +1261,9 @@
                                 <span style="display:inline-block;min-width:46px;padding:2px 8px;border-radius:50px;font-size:12px;font-weight:700;background:#ecfdf5;color:#059669;">{{ $row['rate_lulus'] }}%</span>
                             @endif
                         </td>
-                        <td style="padding:9px 12px;text-align:center;font-size:13px;color:#dc2626;font-weight:600;">{{ $row['do'] }}</td>
-                        <td style="padding:9px 12px;text-align:center;">
-                            <span style="display:inline-block;min-width:46px;padding:2px 8px;border-radius:50px;font-size:12px;font-weight:700;background:{{ $row['rate_do'] > 0 ? '#fef2f2' : '#f3f4f6' }};color:{{ $row['rate_do'] > 0 ? '#dc2626' : '#808897' }};">{{ $row['rate_do'] }}%</span>
-                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" style="padding:24px;text-align:center;color:#808897;font-size:13px;">Belum ada data angkatan</td></tr>
+                    <tr><td colspan="4" style="padding:24px;text-align:center;color:#808897;font-size:13px;">Belum ada data angkatan</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -1619,7 +1640,7 @@
         <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;margin-bottom:10px;">
             <span style="display:inline-flex;width:18px;height:18px;color:#d97706;flex-shrink:0;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/alert-circle.svg'))) !!}</span>
             <div style="flex:1;font-size:13px;color:#92400e;line-height:1.5;">
-                <strong>{{ $lulus['belum_sinkron'] }}</strong> mahasiswa berstatus lulus belum tersinkron ke direktori alumni.
+                <strong>{{ $lulus['belum_sinkron'] }}</strong> akun alumni belum tercatat di direktori alumni.
             </div>
         </div>
         @else

@@ -21,7 +21,7 @@
                        tidak lagi menggantung di tengah dengan ruang kosong di bawahnya.
 
     Controller wajib memakai PerPage::resolve() dengan daftar yang sama.
---}}
+--}}     
 @if($paginator->total() > 0)
     @php
         $tfOptions    = $perPageOptions ?? \Modules\ManajemenMahasiswa\Support\PerPage::TABEL;

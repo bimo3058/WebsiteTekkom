@@ -92,14 +92,14 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::middleware('role:pengurus_himpunan|staff_himpunan|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|wakil_ketua_bidang|ketua_unit|wakil_ketua_unit|dosen|gpm|admin|admin_kemahasiswaan|superadmin|dpm|ketua_departemen')->group(function () {
                 Route::get('/create', [PengumumanController::class, 'create'])->name('create');
                 Route::post('/drafts', [PengumumanController::class, 'saveDraft'])->name('drafts.store');
-                Route::delete('/drafts/{id}', [PengumumanController::class, 'deleteDraft'])->name('drafts.destroy');
+                Route::delete('/drafts/{id}', [PengumumanController::class, 'deleteDraft'])->name('drafts.destroy')->whereNumber('id');
                 Route::post('/inline-image', [PengumumanController::class, 'uploadInlineImage'])->name('inline.image');
                 Route::post('/', [PengumumanController::class, 'store'])->name('store');
-                Route::get('/{pengumuman}/edit', [PengumumanController::class, 'edit'])->name('edit');
-                Route::put('/{pengumuman}', [PengumumanController::class, 'update'])->name('update');
-                Route::delete('/{pengumuman}', [PengumumanController::class, 'remove'])->name('remove');
-                Route::patch('/{pengumuman}/publish', [PengumumanController::class, 'publish'])->name('publish');
-                Route::delete('/{pengumuman}/lampiran/{lampiran}', [PengumumanController::class, 'removeLampiran'])->name('lampiran.remove');
+                Route::get('/{pengumuman}/edit', [PengumumanController::class, 'edit'])->name('edit')->whereNumber('pengumuman');
+                Route::put('/{pengumuman}', [PengumumanController::class, 'update'])->name('update')->whereNumber('pengumuman');
+                Route::delete('/{pengumuman}', [PengumumanController::class, 'remove'])->name('remove')->whereNumber('pengumuman');
+                Route::patch('/{pengumuman}/publish', [PengumumanController::class, 'publish'])->name('publish')->whereNumber('pengumuman');
+                Route::delete('/{pengumuman}/lampiran/{lampiran}', [PengumumanController::class, 'removeLampiran'])->name('lampiran.remove')->whereNumber(['pengumuman', 'lampiran']);
             });
 
             // Verification Request — staff himpunan yang ingin publish
@@ -110,6 +110,12 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->name('verification.submit')->whereNumber('pengumuman');
                 Route::delete('/{pengumuman}/verification-request', [PengumumanController::class, 'cancelVerificationRequest'])
                     ->name('verification.cancel')->whereNumber('pengumuman');
+
+                // Pengumuman baru milik staff: masih berupa draf sampai pengajuan dikirim.
+                Route::get('/drafts/{draft}/verification-request', [PengumumanController::class, 'draftVerificationRequest'])
+                    ->name('drafts.verification.request')->whereNumber('draft');
+                Route::post('/drafts/{draft}/verification-request', [PengumumanController::class, 'submitDraftVerification'])
+                    ->name('drafts.verification.submit')->whereNumber('draft');
             });
 
             // Riwayat & Status Verifikasi — untuk staff himpunan melihat request yang pernah diajukan
@@ -140,7 +146,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 ->whereNumber('pengumuman');
 
             // Download lampiran — semua role boleh
-            Route::get('/lampiran/{lampiran}/download', [PengumumanController::class, 'downloadLampiran'])->name('lampiran.download');
+            Route::get('/lampiran/{lampiran}/download', [PengumumanController::class, 'downloadLampiran'])->name('lampiran.download')->whereNumber('lampiran');
 
             // Download gambar pengumuman: satu file kalau tunggal, ZIP kalau lebih dari satu
             Route::get('/{pengumuman}/gambar/download', [PengumumanController::class, 'downloadGambar'])
@@ -148,7 +154,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 ->whereNumber('pengumuman');
 
             // Show — semua role boleh (HARUS setelah /create agar tidak konflik)
-            Route::get('/{pengumuman}', [PengumumanController::class, 'show'])->name('show');
+            Route::get('/{pengumuman}', [PengumumanController::class, 'show'])->name('show')->whereNumber('pengumuman');
         });
 
         // ── Layanan Pengaduan ─────────────────────────────────────────────

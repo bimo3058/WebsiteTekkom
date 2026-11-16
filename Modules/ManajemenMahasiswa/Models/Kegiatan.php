@@ -699,6 +699,40 @@ class Kegiatan extends Model
     }
 
     /**
+     * Satu baris per kegiatan — untuk hitungan statistik (Dashboard Analitik).
+     *
+     * Sejak S-49, Ajukan Proker menyalin rencana ke Pelaksanaan: proker yang sudah
+     * diajukan punya DUA baris (rencana berstatus `diajukan` + salinannya). Scope ini
+     * membuang baris rencana yang sudah punya salinan, sehingga tiap proker terhitung
+     * sekali dengan status tahapnya yang terkini (salinan = Pelaksanaan/Arsip).
+     * Rencana `diajukan` yang salinannya sudah dihapus tetap ikut.
+     */
+    public function scopeUnik($query)
+    {
+        return $query->whereDoesntHave('salinan');
+    }
+
+    /**
+     * Kegiatan yang sedang berlangsung pada tanggal tertentu (bawaan: hari ini):
+     * berada di tahap Pelaksanaan dan tanggal_mulai ≤ tanggal ≤ tanggal_selesai.
+     * Tanpa tanggal selesai = kegiatan satu hari, jadi hanya berlangsung pada tanggal
+     * mulainya. Draft/rencana belum dilaksanakan, Arsip (selesai) sudah usai.
+     */
+    public function scopeBerlangsungPada($query, $tanggal = null)
+    {
+        $tanggal = ($tanggal ? \Illuminate\Support\Carbon::parse($tanggal) : now())->toDateString();
+
+        return $query->pelaksanaan()
+            ->whereNotNull('tanggal_mulai')
+            ->whereDate('tanggal_mulai', '<=', $tanggal)
+            ->where(fn ($q) => $q
+                ->whereDate('tanggal_selesai', '>=', $tanggal)
+                ->orWhere(fn ($tanpaSelesai) => $tanpaSelesai
+                    ->whereNull('tanggal_selesai')
+                    ->whereDate('tanggal_mulai', $tanggal)));
+    }
+
+    /**
      * Filter daftar Rencana Proker per tahap (kunci TAHAP_RENCANA_LABELS).
      * Kunci yang tidak dikenal diabaikan.
      */

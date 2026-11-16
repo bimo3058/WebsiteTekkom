@@ -197,7 +197,7 @@
     @php
         $authUser      = Auth::user();
         $canPinGlobal  = $authUser->hasAnyRole(['superadmin','admin','admin_kemahasiswaan']);
-        $isAdminOrKoor = $authUser->roles->pluck('name')->intersect(['superadmin','admin','dosen_koordinator'])->isNotEmpty();
+        $isAdminOrKoor = $authUser->roles->pluck('name')->intersect(\Modules\ManajemenMahasiswa\Models\Pengumuman::ROLE_PENGELOLA_SEMUA)->isNotEmpty();
 
         // Daftar labelnya sekarang dipegang partial _filter-kategori.
         $selectedKategori = request('kategori','semua');

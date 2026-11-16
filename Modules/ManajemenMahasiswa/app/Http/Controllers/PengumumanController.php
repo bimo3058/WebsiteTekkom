@@ -3,10 +3,14 @@
 namespace Modules\ManajemenMahasiswa\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\SupabaseStorage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Modules\ManajemenMahasiswa\Services\PengumumanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
 use Modules\ManajemenMahasiswa\Models\Pengumuman;
@@ -24,6 +28,18 @@ class PengumumanController extends Controller
 
     /** Batas ukuran per berkas (gambar & lampiran) dalam KB, satuan aturan `max:`. */
     private const MAX_UKURAN_KB = 5120;
+
+    /**
+     * Pesan validasi berbahasa Indonesia untuk form buat & edit pengumuman — pesan
+     * bawaan Laravel masih berbahasa Inggris ("The konten field must be at least...").
+     * Batas 50 karakter konten juga dicek di browser (pengumuman-create/-edit).
+     */
+    private const PESAN_VALIDASI = [
+        'judul.required'  => 'Judul pengumuman wajib diisi.',
+        'judul.max'       => 'Judul pengumuman maksimal 255 karakter.',
+        'konten.required' => 'Konten pengumuman wajib diisi.',
+        'konten.min'      => 'Konten pengumuman minimal 50 karakter.',
+    ];
 
     public function __construct(
         private PengumumanService $pengumumanService,
@@ -90,7 +106,7 @@ class PengumumanController extends Controller
 
     //Form buat pengumuman baru.
     //Akses: Admin, Dosen Koordinator, Pengurus Himpunan, GPM
-    public function create()
+    public function create(Request $request)
     {
         $user = Auth::user();
 
@@ -99,9 +115,13 @@ class PengumumanController extends Controller
         // Payload lampiran per draf, dipakai JS saat tombol "Load Draft" ditekan.
         $draftAttachments = $this->draftAttachments($drafts);
 
+        // ?draft=ID → draf itu langsung dimuat ke form (dipakai saat staff batal
+        // memilih verifikator).
+        $drafAktif = $drafts->firstWhere('id', (int) $request->query('draft'));
+
         $maxUkuranMb = intdiv(self::MAX_UKURAN_KB, 1024);
 
-        return view('manajemenmahasiswa::pengumuman.pengumuman-create', compact('drafts', 'draftAttachments', 'maxUkuranMb'));
+        return view('manajemenmahasiswa::pengumuman.pengumuman-create', compact('drafts', 'draftAttachments', 'drafAktif', 'maxUkuranMb'));
     }
 
     /**
@@ -129,16 +149,32 @@ class PengumumanController extends Controller
             throw $e;
         }
 
-        $attributes = [
+        $draft = $this->isiDraf($request, [
             'judul' => $request->input('judul'),
             'kategori' => $request->input('kategori'),
             'target_audience' => $request->input('target_audience'),
             'konten' => $request->input('konten'),
-        ];
+        ]);
 
-        $draft = PengumumanDraft::where('id', $request->input('draft_id'))
-            ->where('user_id', Auth::id())
-            ->first();
+        return response()->json([
+            'success' => true,
+            'draft_id' => $draft->id,
+            'attachments' => $this->draftAttachments(collect([$draft->fresh()]))[$draft->id],
+            'message' => 'Draf berhasil disimpan.'
+        ]);
+    }
+
+    /**
+     * Simpan isi form ke draf milik user (draf `draft_id` bila ada, kalau tidak draf baru)
+     * dan unggah poster/lampiran yang dipilih ke draf itu.
+     *
+     * Dipakai autosave (saveDraft) dan oleh store() untuk staff yang wajib verifikasi:
+     * pengumumannya baru dibuat saat pengajuan dikirim, jadi sampai saat itu isinya
+     * tinggal di fitur Draft — bukan muncul di daftar pengumuman.
+     */
+    private function isiDraf(Request $request, array $attributes): PengumumanDraft
+    {
+        $draft = $this->userDraft($request->input('draft_id'));
 
         if ($draft) {
             $draft->update($attributes);
@@ -146,7 +182,7 @@ class PengumumanController extends Controller
             $draft = PengumumanDraft::create($attributes + ['user_id' => Auth::id()]);
         }
 
-        $judulPengumuman = $request->input('judul') ?: 'Draf pengumuman';
+        $judulPengumuman = $attributes['judul'] ?: 'Draf pengumuman';
 
         // Gambar baru menggantikan seluruh set gambar lama — file lama dihapus
         // agar tidak jadi sampah di storage.
@@ -178,12 +214,7 @@ class PengumumanController extends Controller
             $draft->update(['lampiran_repo_ids' => $lampiranIds]);
         }
 
-        return response()->json([
-            'success' => true,
-            'draft_id' => $draft->id,
-            'attachments' => $this->draftAttachments(collect([$draft->fresh()]))[$draft->id],
-            'message' => 'Draf berhasil disimpan.'
-        ]);
+        return $draft;
     }
 
     /**
@@ -309,18 +340,31 @@ class PengumumanController extends Controller
             'poster' => 'nullable|array|max:' . self::MAX_GAMBAR,
             'poster.*' => 'image|mimes:jpg,jpeg,png|max:' . self::MAX_UKURAN_KB,
             'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:' . self::MAX_UKURAN_KB,
-        ]);
+        ], self::PESAN_VALIDASI);
 
         // Remove poster & lampiran from $validated before creating Pengumuman
         $gambarFiles = $request->file('poster', []);
         unset($validated['poster'], $validated['lampiran']);
 
-        // Staff tanpa bidang/unit tidak punya verifikator yang sah: pengumuman tetap
-        // disimpan, tapi sebagai draft — tidak pernah sempat berstatus published.
-        $diblokirTanpaBidang = $validated['status_publish'] === 'published'
-            && $this->pengumumanService->staffBelumPunyaBidang(Auth::user());
-        if ($diblokirTanpaBidang) {
-            $validated['status_publish'] = Pengumuman::STATUS_DRAFT;
+        // Staff himpunan wajib verifikasi: isinya disimpan ke fitur Draft, dan
+        // pengumuman baru dibuat saat pengajuan dikirim (submitDraftVerification).
+        // Dulu pengumuman dibuat di sini berstatus draft, sehingga bila halaman pilih
+        // verifikator dibatalkan/ditinggalkan, pengumumannya nyangkut di daftar
+        // pengumuman alih-alih di Draft.
+        if ($validated['status_publish'] === 'published'
+            && $this->pengumumanService->requiresApproval(Auth::user())) {
+            $draft = $this->isiDraf($request, Arr::only($validated, ['judul', 'kategori', 'target_audience', 'konten']));
+
+            // Staff tanpa bidang/unit tidak punya verifikator yang sah.
+            if ($this->pengumumanService->staffBelumPunyaBidang(Auth::user())) {
+                return redirect()
+                    ->route('manajemenmahasiswa.pengumuman.create', ['draft' => $draft->id])
+                    ->with('error', 'Pengumuman disimpan di Draft. ' . PengumumanService::PESAN_STAFF_TANPA_BIDANG);
+            }
+
+            return redirect()
+                ->route('manajemenmahasiswa.pengumuman.drafts.verification.request', $draft->id)
+                ->with('info', 'Pilih verifikator untuk mempublikasikan. Selama belum dikirim, pengumuman ini tersimpan di Draft.');
         }
 
         $pengumuman = $this->pengumumanService->create(Auth::id(), $validated);
@@ -364,30 +408,8 @@ class PengumumanController extends Controller
             }
         }
 
-        if ($diblokirTanpaBidang) {
-            $draft?->delete();
-
-            return redirect()
-                ->route('manajemenmahasiswa.pengumuman.show', $pengumuman->id)
-                ->with('error', 'Pengumuman disimpan sebagai draft. ' . PengumumanService::PESAN_STAFF_TANPA_BIDANG);
-        }
-
-        // Publish langsung jika diminta
+        // Publish langsung jika diminta (staff wajib verifikasi sudah dialihkan ke Draft di atas).
         if ($validated['status_publish'] === 'published') {
-            // Staff himpunan wajib verifikasi sebelum publish
-            if ($this->pengumumanService->requiresApproval(Auth::user())) {
-                // Simpan sebagai pending_review, redirect ke halaman verification-request
-                $this->pengumumanService->update($pengumuman->id, [
-                    'status_publish' => 'pending_review',
-                ]);
-
-                $draft?->delete();
-
-                return redirect()
-                    ->route('manajemenmahasiswa.pengumuman.verification.request', $pengumuman->id)
-                    ->with('info', 'Pengumuman berhasil dibuat. Silakan pilih verifikator untuk mempublikasikan.');
-            }
-
             $this->pengumumanService->publish($pengumuman->id);
         }
 
@@ -405,6 +427,7 @@ class PengumumanController extends Controller
     {
         $pengumuman = $this->pengumumanService->findById($id);
         $user = Auth::user();
+        abort_unless($this->bolehLihat($pengumuman, $user), 404);
         $roles = $user->roles->pluck('name');
         $isPersonalPinned = $this->pengumumanService->isPersonalPinned($id, $user->id);
 
@@ -451,6 +474,8 @@ class PengumumanController extends Controller
      */
     public function personalPin(int $id)
     {
+        abort_unless($this->bolehLihat($this->pengumumanService->findById($id), Auth::user()), 404);
+
         $isPinned = $this->pengumumanService->togglePersonalPin($id, Auth::id());
 
         if (request()->expectsJson()) {
@@ -506,7 +531,7 @@ class PengumumanController extends Controller
             'poster' => 'nullable|array|max:' . self::MAX_GAMBAR,
             'poster.*' => 'image|mimes:jpg,jpeg,png|max:' . self::MAX_UKURAN_KB,
             'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:' . self::MAX_UKURAN_KB,
-        ]);
+        ], self::PESAN_VALIDASI);
 
         $gambarBaru = $request->file('poster', []);
         unset($validated['poster'], $validated['lampiran']);
@@ -541,8 +566,11 @@ class PengumumanController extends Controller
             $validated['status_publish'] = $alreadyPublished ? Pengumuman::STATUS_PUBLISHED : Pengumuman::STATUS_DRAFT;
         }
 
+        // Disimpan sebagai draft dulu; status pending_review baru dipasang saat
+        // pengajuan dikirim (requestApproval()). Konten yang sudah terbit lalu diubah
+        // ikut ditarik dari publik sampai disetujui ulang.
         if ($needsVerification) {
-            $validated['status_publish'] = 'pending_review';
+            $validated['status_publish'] = Pengumuman::STATUS_DRAFT;
         }
 
         $this->pengumumanService->update($id, $validated);
@@ -626,10 +654,7 @@ class PengumumanController extends Controller
                 return back()->with('error', PengumumanService::PESAN_STAFF_TANPA_BIDANG);
             }
 
-            $this->pengumumanService->update($id, [
-                'status_publish' => 'pending_review',
-            ]);
-
+            // Status tidak diubah di sini — pending_review dipasang saat pengajuan dikirim.
             return redirect()
                 ->route('manajemenmahasiswa.pengumuman.verification.request', $id)
                 ->with('info', 'Pengumuman perlu diverifikasi sebelum dipublikasikan. Silakan pilih verifikator.');
@@ -647,6 +672,13 @@ class PengumumanController extends Controller
     {
         $pengumuman = $this->pengumumanService->findById($pengumumanId);
         $this->authorizeOwnerOrAdmin($pengumuman->user_id);
+
+        // Berkas wajib milik pengumuman ini — dulu ID berkas mana pun (mis. dokumen
+        // kegiatan) bisa dihapus asal pemohon punya satu pengumuman.
+        abort_unless(
+            RepoMulmed::whereKey($lampiranId)->where('pengumuman_id', $pengumuman->id)->exists(),
+            404
+        );
 
         $this->repoMulmedService->deletePermanent($lampiranId);
 
@@ -672,12 +704,38 @@ class PengumumanController extends Controller
     private function authorizeOwnerOrAdmin(int $ownerId): void
     {
         $user = Auth::user();
-        $roles = $user->roles->pluck('name');
-        $isAdminOrKoor = $roles->intersect(['superadmin', 'admin', 'dosen_koordinator'])->isNotEmpty();
 
-        if ($user->id !== $ownerId && !$isAdminOrKoor) {
+        if ($user->id !== $ownerId && !$user->hasAnyRole(Pengumuman::ROLE_PENGELOLA_SEMUA)) {
             abort(403, 'Anda tidak memiliki akses untuk aksi ini.');
         }
+    }
+
+    /**
+     * Apakah user boleh membuka sebuah pengumuman (detail, unduhan, pin pribadi).
+     *
+     *  - Pemilik & pengelola semua (Pengumuman::ROLE_PENGELOLA_SEMUA): selalu boleh.
+     *  - Belum terbit (draft / menunggu verifikasi): juga verifikator yang dipilih,
+     *    DPM (memproses semua pengajuan), dan KAHIM/WAKAHIM (memantau).
+     *  - Sudah terbit: role internal (pengurus, dosen, GPM, DPM, Kadep) boleh semua;
+     *    mahasiswa/alumni hanya yang target audiensnya untuk mereka — sama dengan
+     *    yang tampil di daftar mereka.
+     */
+    private function bolehLihat(Pengumuman $pengumuman, User $user): bool
+    {
+        if ((int) $pengumuman->user_id === (int) $user->id || $user->hasAnyRole(Pengumuman::ROLE_PENGELOLA_SEMUA)) {
+            return true;
+        }
+
+        if ($pengumuman->status_publish !== Pengumuman::STATUS_PUBLISHED) {
+            return $user->hasAnyRole(['dpm', ...RoleHimpunan::INTI])
+                || $pengumuman->approvalRequests()->where('verifier_id', $user->id)->exists();
+        }
+
+        if ($user->hasAnyRole(['pengurus_himpunan', ...RoleHimpunan::POSISI, 'dosen', 'gpm', 'dpm', 'ketua_departemen'])) {
+            return true;
+        }
+
+        return in_array($pengumuman->target_audience, [Pengumuman::AUDIENCE_ALL, $this->resolveAudience($user->roles->pluck('name'))], true);
     }
 
     /**
@@ -704,7 +762,12 @@ class PengumumanController extends Controller
      */
     public function downloadLampiran(int $lampiran)
     {
-        $file = RepoMulmed::findOrFail($lampiran);
+        // Hanya lampiran pengumuman yang boleh dilihat pengunduh. Dulu ID berkas apa
+        // pun bisa diunduh lewat rute ini, termasuk dokumen kegiatan (proposal, RAB,
+        // LPJ berisi NIM & nomor HP).
+        $file = RepoMulmed::whereNotNull('pengumuman_id')->findOrFail($lampiran);
+        $pengumuman = $this->pengumumanService->findById((int) $file->pengumuman_id);
+        abort_unless($this->bolehLihat($pengumuman, Auth::user()), 404);
 
         return $this->streamBerkas($file);
     }
@@ -719,6 +782,7 @@ class PengumumanController extends Controller
     public function downloadGambar(int $pengumuman)
     {
         $item = $this->pengumumanService->findById($pengumuman);
+        abort_unless($this->bolehLihat($item, Auth::user()), 404);
 
         $gambar = $item->repoMulmed->filter(fn (RepoMulmed $f) => $f->isGambar())->values();
 
@@ -842,11 +906,11 @@ class PengumumanController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk aksi ini.');
         }
 
-        // Hanya pengumuman pending_review yang boleh diajukan
-        if ($pengumuman->status_publish !== 'pending_review') {
+        // Yang diajukan: draft (alur baru) atau pending_review (data lama / ajukan ulang).
+        if (!in_array($pengumuman->status_publish, [Pengumuman::STATUS_DRAFT, Pengumuman::STATUS_PENDING_REVIEW], true)) {
             return redirect()
                 ->route('manajemenmahasiswa.pengumuman.show', $pengumumanId)
-                ->with('info', 'Pengumuman ini tidak dalam status menunggu verifikasi.');
+                ->with('info', 'Pengumuman ini sudah terbit, jadi tidak perlu diajukan verifikasi.');
         }
 
         if ($this->pengumumanService->staffBelumPunyaBidang(Auth::user())) {
@@ -871,6 +935,13 @@ class PengumumanController extends Controller
 
         if ($pengumuman->user_id !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses untuk aksi ini.');
+        }
+
+        // Pengumuman yang sudah terbit tidak diajukan ulang dari sini.
+        if (!in_array($pengumuman->status_publish, [Pengumuman::STATUS_DRAFT, Pengumuman::STATUS_PENDING_REVIEW], true)) {
+            return redirect()
+                ->route('manajemenmahasiswa.pengumuman.show', $pengumumanId)
+                ->with('info', 'Pengumuman ini sudah terbit, jadi tidak perlu diajukan verifikasi.');
         }
 
         if ($this->pengumumanService->staffBelumPunyaBidang(Auth::user())) {
@@ -903,6 +974,115 @@ class PengumumanController extends Controller
         return redirect()
             ->route('manajemenmahasiswa.pengumuman.riwayat.verifikasi')
             ->with('success', 'Pengajuan verifikasi berhasil dikirim. Menunggu persetujuan verifikator.');
+    }
+
+    /**
+     * Halaman pilih verifikator untuk pengumuman BARU milik staff, yang isinya masih
+     * berupa draf (mk_pengumuman_drafts). Batal/Kembali membawa staff ke form Buat
+     * Pengumuman dengan draf itu termuat — pengumumannya tidak pernah muncul di daftar
+     * pengumuman sebelum pengajuan dikirim.
+     */
+    public function draftVerificationRequest(int $draftId)
+    {
+        $draft = $this->userDraft($draftId);
+        abort_unless($draft, 404);
+
+        if ($tolak = $this->tolakAjukanDraf($draft)) {
+            return $tolak;
+        }
+
+        return view('manajemenmahasiswa::pengumuman.pengumuman-verification-request', [
+            'pengumuman'    => $draft,
+            'verifiers'     => $this->pengumumanService->verifikatorUntuk(Auth::user()),
+            'bidangPengaju' => Auth::user()->pengurusBidang?->bidang,
+            'aksiKirim'     => route('manajemenmahasiswa.pengumuman.drafts.verification.submit', $draft->id),
+            'urlBatal'      => route('manajemenmahasiswa.pengumuman.create', ['draft' => $draft->id]),
+            'dariDraf'      => true,
+        ]);
+    }
+
+    /**
+     * Kirim pengajuan verifikasi untuk draf: pengumuman dibuat dari draf, file draf
+     * dipindahkan ke pengumuman, pengajuan dicatat (status pending_review), lalu draf
+     * dihapus — semuanya dalam satu transaksi.
+     */
+    public function submitDraftVerification(Request $request, int $draftId)
+    {
+        $draft = $this->userDraft($draftId);
+        abort_unless($draft, 404);
+
+        if ($tolak = $this->tolakAjukanDraf($draft)) {
+            return $tolak;
+        }
+
+        $idVerifikatorSah = $this->pengumumanService->verifikatorUntuk(Auth::user())->pluck('id')->all();
+        $validated = $request->validate([
+            'verifier_id'   => ['required', 'integer', Rule::in($idVerifikatorSah)],
+            'pesan_pengaju' => 'nullable|string|max:1000',
+        ], [
+            'verifier_id.in' => 'Verifikator harus KABID/WAKABID/KANIT/WAKANIT bidang/unit Anda atau DPM.',
+        ]);
+
+        DB::transaction(function () use ($draft, $validated) {
+            $pengumuman = $this->pengumumanService->create(Auth::id(), [
+                'judul'           => $draft->judul,
+                'konten'          => $draft->konten,
+                'kategori'        => $draft->kategori,
+                'target_audience' => $draft->target_audience,
+                'status_publish'  => Pengumuman::STATUS_DRAFT,
+            ]);
+
+            // Urutan id tetap: gambar pertama (id terkecil) tetap jadi cover.
+            if ($fileIds = $draft->allRepoIds()) {
+                RepoMulmed::whereIn('id', $fileIds)->update(['pengumuman_id' => $pengumuman->id]);
+            }
+
+            $this->pengumumanService->requestApproval(
+                $pengumuman->id,
+                Auth::id(),
+                (int) $validated['verifier_id'],
+                $validated['pesan_pengaju'] ?? null
+            );
+
+            $draft->delete();
+        });
+
+        return redirect()
+            ->route('manajemenmahasiswa.pengumuman.riwayat.verifikasi')
+            ->with('success', 'Pengajuan verifikasi berhasil dikirim. Menunggu persetujuan verifikator.');
+    }
+
+    /**
+     * Alasan sebuah draf belum bisa diajukan verifikasi, sebagai redirect ke form
+     * Buat Pengumuman (draf termuat). Null bila draf boleh diajukan.
+     */
+    private function tolakAjukanDraf(PengumumanDraft $draft): ?\Illuminate\Http\RedirectResponse
+    {
+        $keForm = redirect()->route('manajemenmahasiswa.pengumuman.create', ['draft' => $draft->id]);
+
+        if (!$this->pengumumanService->requiresApproval(Auth::user())) {
+            return $keForm->with('info', 'Akun Anda tidak memerlukan verifikasi. Publikasikan langsung dari form ini.');
+        }
+
+        if ($this->pengumumanService->staffBelumPunyaBidang(Auth::user())) {
+            return $keForm->with('error', 'Pengumuman disimpan di Draft. ' . PengumumanService::PESAN_STAFF_TANPA_BIDANG);
+        }
+
+        // Draf hasil autosave bisa belum lengkap — aturannya sama dengan store().
+        $cek = Validator::make([
+            'judul'           => $draft->judul,
+            'konten'          => $draft->konten,
+            'target_audience' => $draft->target_audience,
+        ], [
+            'judul'           => 'required|string|max:255',
+            'konten'          => 'required|string|min:50',
+            'target_audience' => 'required|in:all,mahasiswa,alumni',
+        ], self::PESAN_VALIDASI + [
+            'target_audience.required' => 'Target audiens wajib dipilih.',
+            'target_audience.in'       => 'Target audiens harus Semua, Mahasiswa, atau Alumni.',
+        ]);
+
+        return $cek->fails() ? $keForm->withErrors($cek) : null;
     }
 
     /**

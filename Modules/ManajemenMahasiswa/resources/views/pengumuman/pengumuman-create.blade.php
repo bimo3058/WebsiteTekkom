@@ -442,6 +442,18 @@
                     <div class="alert-success">{{ session('success') }}</div>
                 @endif
 
+                @if(session('error'))
+                    <div class="alert-danger">{{ session('error') }}</div>
+                @endif
+
+                @if(session('info'))
+                    <div class="alert-success">{{ session('info') }}</div>
+                @endif
+
+                @if($drafAktif && !session('error') && !session('info') && !$errors->any())
+                    <div class="alert-success">Draf "{{ $drafAktif->judul ?: '(Tanpa Judul)' }}" dimuat. Lanjutkan mengedit, lalu tekan Publikasikan untuk memilih verifikator.</div>
+                @endif
+
                 @if($errors->any())
                     <div class="alert-danger">
                         <strong>Terdapat kesalahan pada input:</strong>
@@ -452,6 +464,15 @@
                         </ul>
                     </div>
                 @endif
+
+                {{-- Error konten dari validasi browser (sebelum submit) — tampilannya sama
+                     dengan kotak error dari server di atas. --}}
+                <div class="alert-danger" id="kontenClientAlert" style="display:none;">
+                    <strong>Terdapat kesalahan pada input:</strong>
+                    <ul style="margin: 6px 0 0; padding-left: 18px;">
+                        <li id="kontenClientAlertText"></li>
+                    </ul>
+                </div>
 
                 <form action="{{ route('manajemenmahasiswa.pengumuman.store') }}" method="POST" enctype="multipart/form-data"
                     id="createForm">
@@ -547,7 +568,8 @@
                                     <div class="editor-content" id="editorContent" contenteditable="true">{!! old('konten') !!}</div>
                                 </div>
                                 <textarea name="konten" id="kontenHidden" style="display:none;">{{ old('konten') }}</textarea>
-                                @error('konten') <span class="form-error">{{ $message }}</span> @enderror
+                                @error('konten') <span class="form-error" id="kontenServerError">{{ $message }}</span> @enderror
+                                <span class="form-error" id="kontenClientError" style="display:none;"></span>
                             </div>
 
                         </div>
@@ -991,6 +1013,17 @@
                 }
             }
 
+            // ?draft=ID (mis. staff batal memilih verifikator) → draf itu langsung dimuat.
+            @if($drafAktif)
+                document.addEventListener('DOMContentLoaded', () => loadDraft(
+                    {{ $drafAktif->id }},
+                    @json($drafAktif->judul),
+                    @json($drafAktif->kategori),
+                    @json($drafAktif->target_audience),
+                    @json($drafAktif->konten)
+                ));
+            @endif
+
             // ── Rich Text Editor ──────────────────────────────────────────
             const editor = document.getElementById('editorContent');
             const kontenHidden = document.getElementById('kontenHidden');
@@ -1121,19 +1154,47 @@
             editor.addEventListener('keyup', updateToolbarState);
             editor.addEventListener('mouseup', updateToolbarState);
 
-            // Sync before submit
+            // ── Validasi panjang konten (sama dengan server: min 50 karakter) ──
+            const MIN_KONTEN = 50;
+
+            function panjangKonten() {
+                return editor.textContent.replace(/ /g, ' ').trim().length;
+            }
+
+            function tandaiKonten(pesan) {
+                const wrapper = document.getElementById('editorWrapper');
+                const alertBox = document.getElementById('kontenClientAlert');
+                const inline = document.getElementById('kontenClientError');
+                const serverErr = document.getElementById('kontenServerError');
+
+                wrapper.style.borderColor = pesan ? '#DF1C41' : '';
+                wrapper.style.boxShadow = pesan ? '0 0 0 3px rgba(223,28,65,0.12)' : '';
+                document.getElementById('kontenClientAlertText').textContent = pesan || '';
+                inline.textContent = pesan || '';
+                alertBox.style.display = pesan ? '' : 'none';
+                inline.style.display = pesan ? '' : 'none';
+                if (serverErr && pesan) serverErr.style.display = 'none';
+            }
+
+            // Pesan error hilang sendiri begitu konten sudah cukup panjang.
+            editor.addEventListener('input', function () {
+                if (document.getElementById('kontenClientAlert').style.display !== 'none'
+                    && panjangKonten() >= MIN_KONTEN) {
+                    tandaiKonten(null);
+                }
+            });
+
             document.getElementById('createForm').addEventListener('submit', function (e) {
                 syncEditorContent();
-                const content = kontenHidden.value.replace(/<[^>]*>/g, '').trim();
-                if (content.length < 10) {
+                const panjang = panjangKonten();
+                if (panjang < MIN_KONTEN) {
                     e.preventDefault();
+                    tandaiKonten('Konten pengumuman minimal ' + MIN_KONTEN + ' karakter (saat ini ' + panjang + ' karakter).');
+                    document.getElementById('kontenClientAlert').scrollIntoView({ behavior: 'smooth', block: 'center' });
                     editor.focus();
-                    document.getElementById('editorWrapper').style.borderColor = '#DF1C41';
-                    document.getElementById('editorWrapper').style.boxShadow = '0 0 0 3px rgba(223,28,65,0.12)';
                     return;
                 }
-                document.getElementById('editorWrapper').style.borderColor = '';
-                document.getElementById('editorWrapper').style.boxShadow = '';
+                tandaiKonten(null);
             });
 
             // Initial state
