@@ -19,7 +19,11 @@ use Throwable;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasRoles {
+        hasPermissionTo as private spatieHasPermissionTo;
+        getAllPermissions as private spatieGetAllPermissions;
+    }
 
     public const ONLINE_TIMEOUT_MINUTES = 5;
 
@@ -57,6 +61,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'sso_data' => 'json',
             'last_login' => 'datetime',
+            'local_password_initialized_at' => 'datetime',
             'last_seen_at' => 'datetime',
             'last_synced_from_sso' => 'datetime',
             'suspended_at' => 'datetime',
@@ -185,6 +190,29 @@ class User extends Authenticatable
     public function isAcademic(): bool
     {
         return $this->roles->contains('is_academic', true);
+    }
+
+    public function hasPermissionTo($permission, $guardName = null): bool
+    {
+        // Academic role inheritance must not restore permissions outside an admin's module scope.
+        $roleNames = $this->roles->pluck('name')->all();
+        if (PermissionAssigner::restrictedModules($roleNames) !== null) {
+            $permission = $this->filterPermission($permission, $guardName);
+            if (PermissionAssigner::filterPermissionNames($roleNames, [$permission->name]) === []) {
+                return false;
+            }
+        }
+
+        return $this->spatieHasPermissionTo($permission, $guardName);
+    }
+
+    public function getAllPermissions(): Collection
+    {
+        $roleNames = $this->roles->pluck('name')->all();
+        $permissions = $this->spatieGetAllPermissions();
+        $allowedNames = PermissionAssigner::filterPermissionNames($roleNames, $permissions->pluck('name')->all());
+
+        return $permissions->whereIn('name', $allowedNames)->values();
     }
 
     /*
@@ -319,6 +347,24 @@ class User extends Authenticatable
     | ACCOUNT STATUS & ACTIONS
     |--------------------------------------------------------------------------
     */
+
+    public function needsLocalPasswordChange(): bool
+    {
+        if (array_key_exists('local_password_initialized_at', $this->getAttributes())) {
+            return $this->local_password_initialized_at === null;
+        }
+
+        // An authenticated user cached before the migration lacks the new attribute.
+        return $this->newQuery()->whereKey($this->getKey())->value('local_password_initialized_at') === null;
+    }
+
+    public function hasAdministrativeRole(): bool
+    {
+        return $this->hasAnyRole([
+            'superadmin', 'admin', 'admin_banksoal', 'admin_capstone',
+            'admin_eoffice', 'admin_kemahasiswaan',
+        ]);
+    }
 
     public function isSuspended(): bool
     {

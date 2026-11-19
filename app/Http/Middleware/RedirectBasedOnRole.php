@@ -45,7 +45,7 @@ class RedirectBasedOnRole
 
         $user = auth()->user();
 
-        if ($user->isSuspended()) {
+        if ($user->isSuspended() || $request->routeIs('password.update')) {
             return $next($request);
         }
 

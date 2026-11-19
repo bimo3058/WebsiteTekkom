@@ -3,6 +3,8 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use App\Services\LocalPasswordSession;
+use App\Services\MicrosoftSsoSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -17,6 +19,7 @@ class PasswordUpdateTest extends TestCase
 
         $response = $this
             ->actingAs($user)
+            ->withSession([LocalPasswordSession::KEY => true])
             ->from('/profile')
             ->put('/password', [
                 'current_password' => 'password',
@@ -37,6 +40,7 @@ class PasswordUpdateTest extends TestCase
 
         $response = $this
             ->actingAs($user)
+            ->withSession([LocalPasswordSession::KEY => true])
             ->from('/profile')
             ->put('/password', [
                 'current_password' => 'wrong-password',
@@ -47,5 +51,30 @@ class PasswordUpdateTest extends TestCase
         $response
             ->assertSessionHasErrorsIn('updatePassword', 'current_password')
             ->assertRedirect('/profile');
+    }
+
+    public function test_sso_session_cannot_view_or_submit_the_password_form(): void
+    {
+        $user = User::factory()->create();
+        $tenant = '11111111-1111-1111-1111-111111111111';
+        config(['services.azure.tenant' => $tenant]);
+
+        $this->actingAs($user)->withSession([
+            MicrosoftSsoSession::KEY => ['tenant' => $tenant, 'authenticated_at' => now()->timestamp],
+            LocalPasswordSession::KEY => true,
+        ]);
+
+        $this->get(route('profile.edit', ['tab' => 'password']))
+            ->assertOk()
+            ->assertSee(LocalPasswordSession::CHANGE_LOCKED)
+            ->assertDontSee('id="form-password"', false);
+
+        $this->putJson(route('password.update'), [
+            'current_password' => 'password',
+            'password' => 'replacement-secret-123!',
+            'password_confirmation' => 'replacement-secret-123!',
+        ])->assertForbidden()->assertJsonPath('message', LocalPasswordSession::CHANGE_LOCKED);
+
+        $this->assertTrue(Hash::check('password', $user->fresh()->password));
     }
 }

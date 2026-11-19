@@ -99,7 +99,7 @@ return [
 
     'key' => env('APP_KEY'),
 
-    'spc_login_path' => env('SPC_LOGIN_PATH', 'disabled'),
+    'spc_login_path' => trim((string) env('SPC_LOGIN_PATH', ''), " /\t\n\r") ?: 'admin/login',
 
     'previous_keys' => [
         ...array_filter(

@@ -1,0 +1,282 @@
+[
+    {
+        "operation": {
+            "table": "mk_kemahasiswaan",
+            "sql": "ALTER TABLE public.\"mk_kemahasiswaan\" ADD CONSTRAINT \"mk_kemahasiswaan_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23505]: Unique violation: 7 ERROR:  could not create unique index \"mk_kemahasiswaan_pkey\"\nDETAIL:  Key (id)=(17) is duplicated. (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_kemahasiswaan\" ADD CONSTRAINT \"mk_kemahasiswaan_pkey\" PRIMARY KEY (id))"
+    },
+    {
+        "operation": {
+            "table": "mk_streaks",
+            "sql": "ALTER TABLE public.\"mk_streaks\" ADD CONSTRAINT \"mk_streaks_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23505]: Unique violation: 7 ERROR:  could not create unique index \"mk_streaks_pkey\"\nDETAIL:  Key (id)=(1) is duplicated. (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_streaks\" ADD CONSTRAINT \"mk_streaks_pkey\" PRIMARY KEY (id))"
+    },
+    {
+        "operation": {
+            "table": "mk_xp_logs",
+            "sql": "ALTER TABLE public.\"mk_xp_logs\" ADD CONSTRAINT \"mk_xp_logs_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23505]: Unique violation: 7 ERROR:  could not create unique index \"mk_xp_logs_pkey\"\nDETAIL:  Key (id)=(1) is duplicated. (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_xp_logs\" ADD CONSTRAINT \"mk_xp_logs_pkey\" PRIMARY KEY (id))"
+    },
+    {
+        "operation": {
+            "table": "mk_audit_logs",
+            "sql": "ALTER TABLE public.\"mk_audit_logs\" ADD CONSTRAINT \"mk_audit_logs_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_audit_logs\" violates foreign key constraint \"mk_audit_logs_user_id_foreign\"\nDETAIL:  Key (user_id)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_audit_logs\" ADD CONSTRAINT \"mk_audit_logs_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_comments",
+            "sql": "ALTER TABLE public.\"mk_comments\" ADD CONSTRAINT \"mk_comments_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_comments\" violates foreign key constraint \"mk_comments_user_id_foreign\"\nDETAIL:  Key (user_id)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_comments\" ADD CONSTRAINT \"mk_comments_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_forum_notifications",
+            "sql": "ALTER TABLE public.\"mk_forum_notifications\" ADD CONSTRAINT \"mk_forum_notifications_actor_id_foreign\" FOREIGN KEY (actor_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_forum_notifications\" violates foreign key constraint \"mk_forum_notifications_actor_id_foreign\"\nDETAIL:  Key (actor_id)=(57) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_forum_notifications\" ADD CONSTRAINT \"mk_forum_notifications_actor_id_foreign\" FOREIGN KEY (actor_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_forum_notifications",
+            "sql": "ALTER TABLE public.\"mk_forum_notifications\" ADD CONSTRAINT \"mk_forum_notifications_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_forum_notifications\" violates foreign key constraint \"mk_forum_notifications_user_id_foreign\"\nDETAIL:  Key (user_id)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_forum_notifications\" ADD CONSTRAINT \"mk_forum_notifications_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_forum_reports",
+            "sql": "ALTER TABLE public.\"mk_forum_reports\" ADD CONSTRAINT \"mk_forum_reports_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_forum_reports\" violates foreign key constraint \"mk_forum_reports_user_id_foreign\"\nDETAIL:  Key (user_id)=(10) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_forum_reports\" ADD CONSTRAINT \"mk_forum_reports_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ADD CONSTRAINT \"mk_kegiatan_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_kegiatan\" violates foreign key constraint \"mk_kegiatan_user_id_foreign\"\nDETAIL:  Key (user_id)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_kegiatan\" ADD CONSTRAINT \"mk_kegiatan_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_kemahasiswaan",
+            "sql": "ALTER TABLE public.\"mk_kemahasiswaan\" ADD CONSTRAINT \"mk_kemahasiswaan_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_kemahasiswaan\" violates foreign key constraint \"mk_kemahasiswaan_user_id_foreign\"\nDETAIL:  Key (user_id)=(38) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_kemahasiswaan\" ADD CONSTRAINT \"mk_kemahasiswaan_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ADD CONSTRAINT \"mk_pengaduan_answered_by_foreign\" FOREIGN KEY (answered_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_pengaduan\" violates foreign key constraint \"mk_pengaduan_answered_by_foreign\"\nDETAIL:  Key (answered_by)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_pengaduan\" ADD CONSTRAINT \"mk_pengaduan_answered_by_foreign\" FOREIGN KEY (answered_by) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ADD CONSTRAINT \"mk_pengaduan_closed_by_foreign\" FOREIGN KEY (closed_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_pengaduan\" violates foreign key constraint \"mk_pengaduan_closed_by_foreign\"\nDETAIL:  Key (closed_by)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_pengaduan\" ADD CONSTRAINT \"mk_pengaduan_closed_by_foreign\" FOREIGN KEY (closed_by) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ADD CONSTRAINT \"mk_pengaduan_read_by_foreign\" FOREIGN KEY (read_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_pengaduan\" violates foreign key constraint \"mk_pengaduan_read_by_foreign\"\nDETAIL:  Key (read_by)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_pengaduan\" ADD CONSTRAINT \"mk_pengaduan_read_by_foreign\" FOREIGN KEY (read_by) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ADD CONSTRAINT \"mk_pengaduan_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_pengaduan\" violates foreign key constraint \"mk_pengaduan_user_id_foreign\"\nDETAIL:  Key (user_id)=(6) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_pengaduan\" ADD CONSTRAINT \"mk_pengaduan_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_pengaduan_delegasi",
+            "sql": "ALTER TABLE public.\"mk_pengaduan_delegasi\" ADD CONSTRAINT \"lg_mk_pengaduan_delegasi_delegated_by_foreign\" FOREIGN KEY (delegated_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_pengaduan_delegasi\" violates foreign key constraint \"lg_mk_pengaduan_delegasi_delegated_by_foreign\"\nDETAIL:  Key (delegated_by)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_pengaduan_delegasi\" ADD CONSTRAINT \"lg_mk_pengaduan_delegasi_delegated_by_foreign\" FOREIGN KEY (delegated_by) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_pengaduan_delegasi",
+            "sql": "ALTER TABLE public.\"mk_pengaduan_delegasi\" ADD CONSTRAINT \"lg_mk_pengaduan_delegasi_delegated_to_foreign\" FOREIGN KEY (delegated_to) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_pengaduan_delegasi\" violates foreign key constraint \"lg_mk_pengaduan_delegasi_delegated_to_foreign\"\nDETAIL:  Key (delegated_to)=(9) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_pengaduan_delegasi\" ADD CONSTRAINT \"lg_mk_pengaduan_delegasi_delegated_to_foreign\" FOREIGN KEY (delegated_to) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_pengaduan_log",
+            "sql": "ALTER TABLE public.\"mk_pengaduan_log\" ADD CONSTRAINT \"lg_mk_pengaduan_log_actor_user_id_foreign\" FOREIGN KEY (actor_user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_pengaduan_log\" violates foreign key constraint \"lg_mk_pengaduan_log_actor_user_id_foreign\"\nDETAIL:  Key (actor_user_id)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_pengaduan_log\" ADD CONSTRAINT \"lg_mk_pengaduan_log_actor_user_id_foreign\" FOREIGN KEY (actor_user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_pengumuman",
+            "sql": "ALTER TABLE public.\"mk_pengumuman\" ADD CONSTRAINT \"mk_pengumuman_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_pengumuman\" violates foreign key constraint \"mk_pengumuman_user_id_foreign\"\nDETAIL:  Key (user_id)=(6) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_pengumuman\" ADD CONSTRAINT \"mk_pengumuman_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_pengumuman_approval_requests",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_approval_requests\" ADD CONSTRAINT \"lg_mk_pengumuman_approval_requests_requester_id_foreign\" FOREIGN KEY (requester_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_pengumuman_approval_requests\" violates foreign key constraint \"lg_mk_pengumuman_approval_requests_requester_id_foreign\"\nDETAIL:  Key (requester_id)=(42) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_pengumuman_approval_requests\" ADD CONSTRAINT \"lg_mk_pengumuman_approval_requests_requester_id_foreign\" FOREIGN KEY (requester_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_pengumuman_approval_requests",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_approval_requests\" ADD CONSTRAINT \"lg_mk_pengumuman_approval_requests_verifier_id_foreign\" FOREIGN KEY (verifier_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_pengumuman_approval_requests\" violates foreign key constraint \"lg_mk_pengumuman_approval_requests_verifier_id_foreign\"\nDETAIL:  Key (verifier_id)=(51) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_pengumuman_approval_requests\" ADD CONSTRAINT \"lg_mk_pengumuman_approval_requests_verifier_id_foreign\" FOREIGN KEY (verifier_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_pengumuman_drafts",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_drafts\" ADD CONSTRAINT \"lg_mk_pengumuman_drafts_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_pengumuman_drafts\" violates foreign key constraint \"lg_mk_pengumuman_drafts_user_id_foreign\"\nDETAIL:  Key (user_id)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_pengumuman_drafts\" ADD CONSTRAINT \"lg_mk_pengumuman_drafts_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_pengumuman_personal_pins",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_personal_pins\" ADD CONSTRAINT \"lg_mk_pengumuman_personal_pins_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_pengumuman_personal_pins\" violates foreign key constraint \"lg_mk_pengumuman_personal_pins_user_id_foreign\"\nDETAIL:  Key (user_id)=(51) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_pengumuman_personal_pins\" ADD CONSTRAINT \"lg_mk_pengumuman_personal_pins_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ADD CONSTRAINT \"mk_prestasi_claimed_by_foreign\" FOREIGN KEY (claimed_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_prestasi\" violates foreign key constraint \"mk_prestasi_claimed_by_foreign\"\nDETAIL:  Key (claimed_by)=(43) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_prestasi\" ADD CONSTRAINT \"mk_prestasi_claimed_by_foreign\" FOREIGN KEY (claimed_by) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ADD CONSTRAINT \"mk_prestasi_kemahasiswaan_id_foreign\" FOREIGN KEY (kemahasiswaan_id) REFERENCES public.mk_kemahasiswaan(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[42830]: Invalid foreign key: 7 ERROR:  there is no unique constraint matching given keys for referenced table \"mk_kemahasiswaan\" (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_prestasi\" ADD CONSTRAINT \"mk_prestasi_kemahasiswaan_id_foreign\" FOREIGN KEY (kemahasiswaan_id) REFERENCES public.mk_kemahasiswaan(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ADD CONSTRAINT \"mk_prestasi_reward_reviewed_by_foreign\" FOREIGN KEY (reward_reviewed_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_prestasi\" violates foreign key constraint \"mk_prestasi_reward_reviewed_by_foreign\"\nDETAIL:  Key (reward_reviewed_by)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_prestasi\" ADD CONSTRAINT \"mk_prestasi_reward_reviewed_by_foreign\" FOREIGN KEY (reward_reviewed_by) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ADD CONSTRAINT \"mk_prestasi_verified_by_foreign\" FOREIGN KEY (verified_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_prestasi\" violates foreign key constraint \"mk_prestasi_verified_by_foreign\"\nDETAIL:  Key (verified_by)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_prestasi\" ADD CONSTRAINT \"mk_prestasi_verified_by_foreign\" FOREIGN KEY (verified_by) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_reward_aturan",
+            "sql": "ALTER TABLE public.\"mk_reward_aturan\" ADD CONSTRAINT \"mk_reward_aturan_uploaded_by_foreign\" FOREIGN KEY (uploaded_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_reward_aturan\" violates foreign key constraint \"mk_reward_aturan_uploaded_by_foreign\"\nDETAIL:  Key (uploaded_by)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_reward_aturan\" ADD CONSTRAINT \"mk_reward_aturan_uploaded_by_foreign\" FOREIGN KEY (uploaded_by) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_riwayat_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_riwayat_kegiatan\" ADD CONSTRAINT \"mk_riwayat_kegiatan_verified_by_foreign\" FOREIGN KEY (verified_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_riwayat_kegiatan\" violates foreign key constraint \"mk_riwayat_kegiatan_verified_by_foreign\"\nDETAIL:  Key (verified_by)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_riwayat_kegiatan\" ADD CONSTRAINT \"mk_riwayat_kegiatan_verified_by_foreign\" FOREIGN KEY (verified_by) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_streaks",
+            "sql": "ALTER TABLE public.\"mk_streaks\" ADD CONSTRAINT \"mk_streaks_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_streaks\" violates foreign key constraint \"mk_streaks_user_id_foreign\"\nDETAIL:  Key (user_id)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_streaks\" ADD CONSTRAINT \"mk_streaks_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_thread_drafts",
+            "sql": "ALTER TABLE public.\"mk_thread_drafts\" ADD CONSTRAINT \"mk_thread_drafts_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_thread_drafts\" violates foreign key constraint \"mk_thread_drafts_user_id_foreign\"\nDETAIL:  Key (user_id)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_thread_drafts\" ADD CONSTRAINT \"mk_thread_drafts_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_thread_personal_pins",
+            "sql": "ALTER TABLE public.\"mk_thread_personal_pins\" ADD CONSTRAINT \"mk_thread_personal_pins_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_thread_personal_pins\" violates foreign key constraint \"mk_thread_personal_pins_user_id_foreign\"\nDETAIL:  Key (user_id)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_thread_personal_pins\" ADD CONSTRAINT \"mk_thread_personal_pins_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_thread_poll_votes",
+            "sql": "ALTER TABLE public.\"mk_thread_poll_votes\" ADD CONSTRAINT \"mk_thread_poll_votes_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_thread_poll_votes\" violates foreign key constraint \"mk_thread_poll_votes_user_id_foreign\"\nDETAIL:  Key (user_id)=(54) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_thread_poll_votes\" ADD CONSTRAINT \"mk_thread_poll_votes_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_threads",
+            "sql": "ALTER TABLE public.\"mk_threads\" ADD CONSTRAINT \"mk_threads_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_threads\" violates foreign key constraint \"mk_threads_user_id_foreign\"\nDETAIL:  Key (user_id)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_threads\" ADD CONSTRAINT \"mk_threads_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_votes",
+            "sql": "ALTER TABLE public.\"mk_votes\" ADD CONSTRAINT \"mk_votes_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_votes\" violates foreign key constraint \"mk_votes_user_id_foreign\"\nDETAIL:  Key (user_id)=(54) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_votes\" ADD CONSTRAINT \"mk_votes_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    },
+    {
+        "operation": {
+            "table": "mk_xp_logs",
+            "sql": "ALTER TABLE public.\"mk_xp_logs\" ADD CONSTRAINT \"mk_xp_logs_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        "error": "SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table \"mk_xp_logs\" violates foreign key constraint \"mk_xp_logs_user_id_foreign\"\nDETAIL:  Key (user_id)=(2) is not present in table \"users\". (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_xp_logs\" ADD CONSTRAINT \"mk_xp_logs_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id))"
+    }
+]

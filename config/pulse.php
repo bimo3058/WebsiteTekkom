@@ -168,7 +168,9 @@ return [
 
         Recorders\Servers::class => [
             'server_name' => env('PULSE_SERVER_NAME', gethostname()),
-            'directories' => explode(':', env('PULSE_SERVER_DIRECTORIES', '/')),
+            'directories' => PHP_OS_FAMILY === 'Windows'
+                ? explode(',', env('PULSE_SERVER_DIRECTORIES', base_path()))
+                : explode(':', env('PULSE_SERVER_DIRECTORIES', '/')),
         ],
 
         Recorders\SlowJobs::class => [

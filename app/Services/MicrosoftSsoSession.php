@@ -39,7 +39,7 @@ class MicrosoftSsoSession
     {
         $isSso = $request->session()->has(self::KEY);
         // Also handle browser sessions created before the SSO marker was deployed.
-        $isSso = $isSso || (! empty($request->user()?->getAttributes()['sso_data']) && ! $request->session()->get('auth.local_password', false));
+        $isSso = $isSso || (! empty($request->user()?->getAttributes()['sso_data']) && ! $request->session()->get(LocalPasswordSession::KEY, false));
         $this->clear($request);
         if (! $isSso && ! $switchAccount) {
             return redirect('/');

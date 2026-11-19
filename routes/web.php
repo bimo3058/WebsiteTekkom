@@ -44,19 +44,11 @@ Route::middleware('web')->group(function () {
 
 Route::middleware('guest')->group(function () {
 
-    Route::get('/login', function () {
-        return view('auth.login');
-    })->name('login');
-
     Route::get('/auth/microsoft/redirect', [MicrosoftController::class, 'redirect'])
         ->name('microsoft.redirect');
 
     Route::get('/auth/microsoft/callback', [MicrosoftController::class, 'callback'])
         ->name('microsoft.callback');
-    Route::get('/' . config('app.spc_login_path', 'disabled'), function () {
-        abort_unless(app()->isLocal() || app()->environment('staging'), 403);
-        return view('auth.dev-login');
-    })->name('dev-login');
 });
 
 Route::middleware('auth')->group(function () {

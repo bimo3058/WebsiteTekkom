@@ -30,11 +30,10 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
         background: #fff;
         font-family: 'Inter Tight', system-ui, -apple-system, sans-serif;
         -webkit-font-smoothing: antialiased;
-        overflow: hidden;
+        overflow-y: auto;
     }
 
     /* ── Dot grid background ── */
@@ -81,7 +80,8 @@
     .sk-card {
         position: relative;
         z-index: 1;
-        width: 440px;
+        width: min(440px, calc(100% - 32px));
+        margin: auto;
         background: #fff;
         border-radius: 16px;
         padding: 36px;
@@ -174,9 +174,9 @@
         width: 100%;
         padding: 14px;
         border-radius: 12px;
-        background: var(--c-primary);
-        color: #fff;
-        border: none;
+        background: #fff;
+        color: var(--c-primary);
+        border: 1px solid var(--c-primary-border);
         font-family: inherit;
         font-weight: 700;
         font-size: 15px;
@@ -189,10 +189,10 @@
         gap: 10px;
         text-decoration: none;
     }
-    .sk-btn-sso:hover  { background: var(--c-primary-hover); }
+    .sk-btn-sso:hover  { background: var(--c-primary-subtle); }
     .sk-btn-sso:active { transform: translateY(1px); }
 
-    /* ── Dev form submit button ── */
+    /* ── Form submit button ── */
     .sk-btn-submit {
         width: 100%;
         padding: 14px;
@@ -228,8 +228,6 @@
 
     /* ── Footer ── */
     .sk-footer {
-        position: absolute;
-        bottom: 0; left: 0; right: 0;
         padding: 20px 40px;
         display: flex;
         align-items: center;
@@ -254,7 +252,7 @@
     .sk-footer-links a:hover { color: var(--c-fg-muted); }
 
     @media (max-width: 520px) {
-        .sk-card { width: 100%; margin: 0 16px; padding: 28px 20px; }
+        .sk-card { padding: 28px 20px; }
         .sk-header { padding: 20px 20px; }
         .sk-footer { padding: 16px 20px; flex-direction: column; gap: 8px; text-align: center; }
         .sk-footer-links { justify-content: center; }
@@ -292,10 +290,6 @@
             <div class="sk-alert sk-alert-warning">{{ session('status') }}</div>
         @endif
 
-        @if (session('error'))
-            <div class="sk-alert sk-alert-error" role="alert">{{ session('error') }}</div>
-        @endif
-
         @php
             $ssoErrorMessages = [
                 'no_access' => 'Anda tidak memiliki akses ke sistem, silahkan hubungi admin.',
@@ -309,62 +303,34 @@
         @endif
 
         @if ($errors->any())
-            <div class="sk-alert sk-alert-error">{{ $errors->first() }}</div>
+            <div class="sk-alert sk-alert-error" role="alert">{{ $errors->first() }}</div>
         @endif
 
-        {{-- SSO Button --}}
+        <form method="POST" action="{{ route('login.store') }}">
+            @csrf
+            <div class="sk-field-group">
+                <div class="sk-field">
+                    <label class="sk-label" for="email">Email <span>*</span></label>
+                    <input id="email" class="sk-input" type="email" name="email"
+                           value="{{ old('email') }}" placeholder="nama@undip.ac.id"
+                           required autocomplete="username"/>
+                </div>
+                <div class="sk-field">
+                    <label class="sk-label" for="password">Kata sandi <span>*</span></label>
+                    <input id="password" class="sk-input" type="password" name="password"
+                           required autocomplete="current-password"/>
+                </div>
+                <button type="submit" class="sk-btn-submit">Masuk</button>
+            </div>
+        </form>
+
+        <div class="sk-divider">atau</div>
         <a href="{{ route('microsoft.redirect') }}" class="sk-btn-sso">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="white">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path d="M2 2h8v8H2V2zm10 0h6v6h-6V2zm-10 10h6v6H2v-6zm8 0h6v6h-6v-6z"/>
             </svg>
             Login via SSO UNDIP
         </a>
-
-        <!-- @if (app()->isLocal())
-            {{-- Divider --}}
-            <div class="sk-divider">Development only</div>
-
-            {{-- Dev login form --}}
-            <form method="POST" action="{{ route('login') }}">
-                @csrf
-                <div class="sk-field-group">
-                    <div class="sk-field">
-                        <label class="sk-label" for="email">Email Address <span>*</span></label>
-                        <input
-                            id="email"
-                            class="sk-input"
-                            type="email"
-                            name="email"
-                            value="{{ old('email') }}"
-                            placeholder="nama@undip.ac.id"
-                            required
-                            autofocus
-                            autocomplete="username"
-                        />
-                    </div>
-                    <div class="sk-field">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                            <label class="sk-label" for="password" style="margin-bottom:0;">Password <span>*</span></label>
-                            <a href="{{ route('password.request') }}" style="font-size:12px;font-weight:500;color:var(--c-primary);text-decoration:none;opacity:0.8;transition:opacity 0.15s;"
-                               onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                                Ubah Password
-                            </a>
-                        </div>
-                        <input
-                            id="password"
-                            class="sk-input"
-                            type="password"
-                            name="password"
-                            placeholder="••••••••"
-                            required
-                            autocomplete="current-password"
-                        />
-                    </div>
-                    <button type="submit" class="sk-btn-submit">Login</button>
-                </div>
-            </form>
-        @endif -->
-
     </div>
 
     {{-- Footer --}}
