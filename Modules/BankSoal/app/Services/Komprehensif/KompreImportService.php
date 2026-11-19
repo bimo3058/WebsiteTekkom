@@ -27,7 +27,7 @@ class KompreImportService
     /** @var Collection<int, Cpl> */
     private $cpls;
 
-    public function __construct(private LegacyUserProvisioner $provisioner)
+    public function __construct()
     {
         $this->cpls = collect();
     }
@@ -145,11 +145,11 @@ class KompreImportService
     private function parseFile(string $path): array
     {
         try {
-            return (new TemplateNilaiParser)->parse($path);
-        } catch (\Throwable $templateError) {
+            return (new LegacyRekapParser)->parse($path);
+        } catch (\Throwable $legacyError) {
             try {
-                return (new LegacyRekapParser)->parse($path);
-            } catch (\Throwable $legacyError) {
+                return (new TemplateNilaiParser)->parse($path);
+            } catch (\Throwable $templateError) {
                 return [
                     'type' => 'unknown',
                     'file_name' => basename($path),
@@ -170,7 +170,7 @@ class KompreImportService
         $totals = [
             'rows' => 0,
             'existing_students' => 0,
-            'new_students' => 0,
+            'historical_students' => 0,
             'pass' => 0,
             'fail' => 0,
             'mismatch' => 0,
@@ -240,7 +240,7 @@ class KompreImportService
                     'fail' => $fail,
                     'mismatch' => $mismatch,
                     'existing_students' => count($found),
-                    'new_students' => count($missing),
+                    'historical_students' => count($missing),
                 ];
 
                 $totals['rows'] += count($rows);
@@ -249,7 +249,7 @@ class KompreImportService
                 $totals['fail'] += $fail;
                 $totals['mismatch'] += $mismatch;
                 $totals['existing_students'] += count($found);
-                $totals['new_students'] += count($missing);
+                $totals['historical_students'] += count($missing);
             }
 
             $files[] = [
@@ -395,15 +395,14 @@ class KompreImportService
         array &$result
     ): void {
         try {
-            $provisioned = $this->provisioner->resolve((string) $row['nim'], (string) ($row['nama'] ?? ''));
-            $user = $provisioned['user'];
+            $student = Student::with('user')
+                ->where('student_number', (string) $row['nim'])
+                ->first();
+            $user = $student?->user;
 
-            $result['users_created'] += $provisioned['created_user'] ? 1 : 0;
-            $result['students_created'] += $provisioned['created_student'] ? 1 : 0;
+            $pendaftar = $this->ensurePendaftar($period, $jadwal, $user, $row, $adminId);
 
-            $this->ensurePendaftar($period, $jadwal, $user, $row, $adminId);
-
-            $exists = KompreSession::where('user_id', $user->id)
+            $exists = KompreSession::where('pendaftar_ujian_id', $pendaftar->id)
                 ->where('jadwal_id', $jadwal->id)
                 ->where('status', KompreSessionStatus::Finished)
                 ->exists();
@@ -412,6 +411,12 @@ class KompreImportService
                 $result['skipped']++;
 
                 return;
+            }
+
+            if ($user) {
+                $result['linked_participants']++;
+            } else {
+                $result['historical_participants']++;
             }
 
             $total = round((float) ($row['total'] ?? 0), 2);
@@ -426,7 +431,8 @@ class KompreImportService
             $sessionName = $jadwal->nama_sesi === 'Susulan' ? 'Susulan' : 'Sesi '.$jadwal->nama_sesi;
 
             KompreSession::create([
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
+                'pendaftar_ujian_id' => $pendaftar->id,
                 'jadwal_id' => $jadwal->id,
                 'title' => 'Ujian Komprehensif '.$sessionName,
                 'started_at' => $startedAt,
@@ -547,16 +553,18 @@ class KompreImportService
         return [$jadwal, true];
     }
 
-    private function ensurePendaftar(PeriodeUjian $period, JadwalUjian $jadwal, $user, array $row, int $adminId): void
+    private function ensurePendaftar(PeriodeUjian $period, JadwalUjian $jadwal, $user, array $row, int $adminId): PendaftarUjian
     {
         $pendaftar = PendaftarUjian::withTrashed()
             ->where('periode_ujian_id', $period->id)
             ->where('nim', (string) $row['nim'])
             ->first();
 
+        $nama = trim((string) ($row['nama'] ?? ''));
+
         $payload = [
-            'mahasiswa_id' => $user->id,
-            'nama_lengkap' => $row['nama'] ?? $user->name,
+            'mahasiswa_id' => $user?->id,
+            'nama_lengkap' => $nama !== '' ? $nama : ($user?->name ?? (string) $row['nim']),
             'semester_aktif' => 7,
             'status_pendaftaran' => PendaftaranStatus::Approved->value,
             'jadwal_ujian_id' => $jadwal->id,
@@ -570,10 +578,10 @@ class KompreImportService
             }
             $pendaftar->update($payload);
 
-            return;
+            return $pendaftar;
         }
 
-        PendaftarUjian::create([
+        return PendaftarUjian::create([
             'periode_ujian_id' => $period->id,
             'nim' => (string) $row['nim'],
             ...$payload,
@@ -660,8 +668,8 @@ class KompreImportService
             'skipped' => 0,
             'failed' => 0,
             'mismatch' => 0,
-            'users_created' => 0,
-            'students_created' => 0,
+            'linked_participants' => 0,
+            'historical_participants' => 0,
             'errors' => [],
         ];
     }

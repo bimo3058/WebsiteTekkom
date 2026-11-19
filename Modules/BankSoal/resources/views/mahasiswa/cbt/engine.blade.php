@@ -11,8 +11,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-        rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
     <style>
@@ -21,7 +19,7 @@
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
-            font-family: 'Inter', sans-serif;
+            font-family: "Segoe UI", Arial, sans-serif;
             background-color: #E8EDF5;
         }
 
@@ -222,7 +220,7 @@
     </style>
 </head>
 
-<body class="text-slate-900 overflow-hidden flex items-center justify-center min-h-screen"
+<body class="font-sitkom text-slate-900 overflow-hidden flex items-center justify-center min-h-screen"
     oncontextmenu="return false;">
     <div x-data="cbtEngine()" x-init="initEngine()"
         class="viewport-container bg-white border-x border-[primary]/20 shadow-2xl relative w-full h-full">

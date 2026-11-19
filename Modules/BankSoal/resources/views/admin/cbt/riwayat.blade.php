@@ -1,4 +1,4 @@
-<x-banksoal::layouts.admin>
+<x-banksoal::layouts.admin kompre-font>
     @section('breadcrumbs')
         <a href="#" class="hover:text-primary transition-colors text-gray-500">Ujian Komprehensif</a>
         <span class="mx-2 text-gray-300">/</span>
@@ -361,8 +361,8 @@
                     <tbody class="divide-y divide-gray-100 text-[13px]">
                         @forelse($sessions as $index => $session)
                             @php
-                                $nim       = $session->user?->student?->student_number ?? '—';
-                                $nama      = $session->user?->name ?? '—';
+                                $nim       = $session->nimPeserta();
+                                $nama      = $session->namaPeserta();
                                 $poin      = $session->score;
                                 $lulus     = (bool) ($session->lulus ?? false);
                                 $ujianKe   = $session->ujian_ke ?? '—';
@@ -493,8 +493,6 @@
 
     </div>
 
-        {{-- Disembunyikan sementara (2026-11-11): zona Reset Semua Data Ujian. Hapus guard @if(false) untuk menampilkan kembali. --}}
-        @if(false)
         {{-- ============================================== --}}
         {{-- ZONA BERBAHAYA: Reset Data Ujian              --}}
         {{-- ============================================== --}}
@@ -587,7 +585,6 @@
             </div>
         </div>
         @endcan
-        @endif
 
         </div> {{-- end .dash-box-body --}}
         </div> {{-- end .dash-box --}}

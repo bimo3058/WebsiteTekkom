@@ -1,13 +1,15 @@
 window.kompreImport = function (config) {
     return {
         importOpen: false,
-        importFiles: [],
+        importFile: null,
+        importFileError: null,
         importPreview: null,
         importToken: null,
         importLoading: false,
         importExecuting: false,
         importResult: null,
         importError: null,
+        maxFileSize: 10 * 1024 * 1024,
 
         openImport() {
             this.importOpen = true;
@@ -20,24 +22,73 @@ window.kompreImport = function (config) {
         },
 
         resetImport() {
-            this.importFiles = [];
+            this.importFile = null;
+            this.importFileError = null;
             this.importPreview = null;
             this.importToken = null;
             this.importResult = null;
             this.importError = null;
+
+            if (this.$refs.importFileInput) {
+                this.$refs.importFileInput.value = '';
+            }
+        },
+
+        formatFileSize(bytes) {
+            const mb = bytes / (1024 * 1024);
+
+            if (mb >= 1) {
+                return mb.toFixed(1).replace('.', ',') + ' MB';
+            }
+
+            return (bytes / 1024).toFixed(1).replace('.', ',') + ' KB';
+        },
+
+        validateImportFile(file) {
+            const extension = file.name.split('.').pop().toLowerCase();
+
+            if (!['xlsx', 'xls'].includes(extension)) {
+                return 'Format file harus .xlsx atau .xls.';
+            }
+
+            if (file.size > this.maxFileSize) {
+                return 'File ' + this.formatFileSize(file.size) + ' melebihi batas 10 MB. Pilih file yang lebih kecil.';
+            }
+
+            return null;
         },
 
         onImportFiles(event) {
-            this.importFiles = Array.from(event.target.files || []);
+            const file = event.target.files?.[0] || null;
+
+            this.importFile = file;
+            this.importFileError = file ? this.validateImportFile(file) : null;
             this.importPreview = null;
             this.importToken = null;
             this.importResult = null;
             this.importError = null;
         },
 
+        removeImportFile() {
+            this.importFile = null;
+            this.importFileError = null;
+            this.importPreview = null;
+            this.importToken = null;
+            this.importResult = null;
+            this.importError = null;
+
+            if (this.$refs.importFileInput) {
+                this.$refs.importFileInput.value = '';
+            }
+        },
+
         async previewImport() {
-            if (!this.importFiles.length) {
-                this.importError = 'Pilih minimal satu file terlebih dahulu.';
+            if (!this.importFile) {
+                this.importError = 'Pilih file terlebih dahulu.';
+                return;
+            }
+
+            if (this.importFileError) {
                 return;
             }
 
@@ -45,7 +96,7 @@ window.kompreImport = function (config) {
             this.importError = null;
 
             const form = new FormData();
-            this.importFiles.forEach((file) => form.append('files[]', file));
+            form.append('files[]', this.importFile);
             form.append('_token', config.csrf);
 
             try {

@@ -16,7 +16,6 @@ use Modules\BankSoal\Models\Komprehensif\CheatLog;
 use Modules\BankSoal\Models\Komprehensif\JadwalUjian;
 use Modules\BankSoal\Models\Komprehensif\KompreJawaban;
 use Modules\BankSoal\Models\Komprehensif\KompreSession;
-use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
 use Modules\BankSoal\Services\CbtSessionService;
 
 class CbtEngineController extends Controller
@@ -113,78 +112,6 @@ class CbtEngineController extends Controller
         }
 
         return response()->json(['valid' => true]);
-    }
-
-    /**
-     * Ruang tunggu sebelum ujian dimulai.
-     */
-    public function waitingRoom()
-    {
-        if (! session(self::SESSION_TOKEN_KEY)) {
-            return redirect()->route('komprehensif.mahasiswa.dashboard')
-                ->with('error', 'Silakan masukkan token terlebih dahulu.');
-        }
-
-        // Jika ujian sudah berjalan, langsung lempar ke soal
-        $ongoingSession = KompreSession::where('user_id', Auth::id())
-            ->where('status', 'ongoing')
-            ->first();
-
-        if ($ongoingSession) {
-            return redirect()->route('komprehensif.mahasiswa.engine.run');
-        }
-
-        $pendaftar = PendaftarUjian::where('mahasiswa_id', Auth::id())
-            ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
-            ->first();
-
-        $jadwal = JadwalUjian::find(session(self::SESSION_JADWAL_KEY));
-        $waktuMulai = Carbon::parse($jadwal->tanggal_ujian->format('Y-m-d').' '.$jadwal->waktu_mulai);
-        $canStart = now()->gte($waktuMulai);
-
-        return view('banksoal::mahasiswa.cbt.waiting-room', compact('pendaftar', 'jadwal', 'waktuMulai', 'canStart'));
-    }
-
-    /**
-     * Mulai sesi ujian — hasilkan soal via CbtSessionService.
-     */
-    public function startUjian(Request $request)
-    {
-        if (! session(self::SESSION_TOKEN_KEY) || ! session(self::SESSION_JADWAL_KEY)) {
-            return redirect()->route('komprehensif.mahasiswa.dashboard')
-                ->with('error', 'Sesi tidak valid.');
-        }
-
-        $jadwal = JadwalUjian::findOrFail(session(self::SESSION_JADWAL_KEY));
-        $tanggal = $jadwal->tanggal_ujian->format('Y-m-d');
-        $waktuMulai = Carbon::parse($tanggal.' '.$jadwal->waktu_mulai);
-        $waktuSelesai = Carbon::parse($tanggal.' '.$jadwal->waktu_selesai);
-
-        if (now()->lt($waktuMulai)) {
-            return back()->with('error', 'Waktu ujian belum dimulai.');
-        }
-
-        // ✅ Ketat: tolak jika gate sudah ditutup
-        if (now()->gte($waktuSelesai)) {
-            return back()->with('error', 'Waktu ujian sudah berakhir. Anda tidak dapat memulai ujian.');
-        }
-
-        // Jika sesi sudah ada (misal refresh), lanjutkan
-        $existingSession = KompreSession::where('user_id', Auth::id())
-            ->where('status', 'ongoing')
-            ->first();
-
-        if ($existingSession) {
-            return redirect()->route('komprehensif.mahasiswa.engine.run');
-        }
-
-        try {
-            $this->cbtService->startSession($jadwal, (int) Auth::id());
-
-            return redirect()->route('komprehensif.mahasiswa.engine.run');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Gagal membangkitkan soal ujian: '.$e->getMessage());
-        }
     }
 
     /**

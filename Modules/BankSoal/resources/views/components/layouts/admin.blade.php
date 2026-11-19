@@ -1,4 +1,4 @@
-@props(['kontrolBanksoal' => false, 'rpsPreview' => false])
+@props(['kontrolBanksoal' => false, 'rpsPreview' => false, 'kompreFont' => false])
 @php $managementPage = $kontrolBanksoal || $rpsPreview; @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -10,8 +10,10 @@
     <title>SIBASO: Sistem Informasi Bank Soal</title>
 
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
+    @unless($kompreFont)
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
+    @endunless
 
     <!-- SweetAlert2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
@@ -31,7 +33,7 @@
     @if($rpsPreview)<link href="{{ asset('modules/banksoal/css/rps-preview.css') }}?v={{ filemtime(public_path('modules/banksoal/css/rps-preview.css')) }}" rel="stylesheet">@endif
     <x-mobile-navigation-assets />
 </head>
-<body class="{{ $managementPage ? 'banksoal-management' : '' }} {{ $kontrolBanksoal ? 'bs-admin-control' : '' }} {{ $rpsPreview ? 'bs-rps-preview' : '' }} font-sans antialiased text-slate-900 bg-slate-50 selection:bg-primary selection:text-white">
+<body class="{{ $kompreFont ? 'font-sitkom' : '' }} {{ $managementPage ? 'banksoal-management' : '' }} {{ $kontrolBanksoal ? 'bs-admin-control' : '' }} {{ $rpsPreview ? 'bs-rps-preview' : '' }} font-sans antialiased text-slate-900 bg-slate-50 selection:bg-primary selection:text-white">
     <div x-data="{ sidebarOpen: true }" class="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
         
         <!-- Sidebar Component -->

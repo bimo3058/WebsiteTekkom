@@ -1034,3 +1034,32 @@
         @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
     }
 }
+
+/* Halaman Ujian Komprehensif mengikuti tipografi SICATA. */
+body.font-sitkom,
+body.font-sitkom.font-sans,
+body.font-sitkom .font-sans,
+body.font-sitkom .dash-wrap,
+body.font-sitkom .dash-box {
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+body.font-sitkom :where(
+    input,
+    button,
+    select,
+    textarea,
+    .form-control,
+    .ts-wrapper,
+    .ts-control,
+    .ts-dropdown,
+    .ts-dropdown-content,
+    .ts-dropdown-content .option
+) {
+    font-family: inherit;
+}
+
+body.font-sitkom .ts-control input,
+body.font-sitkom .ts-dropdown-content .option {
+    font-family: inherit;
+}

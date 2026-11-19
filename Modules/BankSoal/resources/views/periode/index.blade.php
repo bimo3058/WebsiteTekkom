@@ -6,7 +6,7 @@
     <span class="text-slate-800 font-semibold">Setup Periode</span>
 @endsection
 
-<x-banksoal::layouts.admin>
+<x-banksoal::layouts.admin kompre-font>
 
     <style>
         .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
