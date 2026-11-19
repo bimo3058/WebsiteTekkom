@@ -44,7 +44,7 @@ class MatkulPraktikumSeeder extends Seeder
             $row['updated_at'] = $now;
         }
 
-        DB::table('eo_matkul_praktikum')->upsert(
+        DB::table('eo_prak_matkul_praktikum')->upsert(
             $data,
             ['kode'],                        // unique key
             ['nama', 'sks', 'semester', 'updated_at']  // update jika sudah ada

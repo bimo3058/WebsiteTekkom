@@ -287,7 +287,6 @@
     // (22 Sep 2026), jadi pintasannya harus tetap disembunyikan di sini juga,
     // kalau tidak klik "Verifikasi →" berujung 403.
     $canAccessVerifikasi = !$isDpm;
-    $useBarDistribusiMahasiswa = $isGpm || $isDpm || $hasSection('admin_operasional');
 
     // Akses data null-safe — sebagian scope (mis. DPM) tidak punya semua section
     $act   = $dashboard['action_items'] ?? [];   // Tier 1
@@ -312,9 +311,6 @@
     // Serapan kerja total dari terdata (hanya jika section alumni ada)
     $totalBekerja = ($alm['per_status_karir']['bekerja'] ?? 0) + ($alm['per_status_karir']['wirausaha'] ?? 0);
     $pctSerapan   = ($alm['total_terdata'] ?? 0) > 0 ? round($totalBekerja / $alm['total_terdata'] * 100) : 0;
-
-    // Total mahasiswa semua status
-    $totalSemuaMhs = ($mhs['total_aktif'] ?? 0) + ($mhs['total_cuti'] ?? 0) + ($mhs['total_do'] ?? 0) + ($mhs['total_pindah'] ?? 0) + ($mhs['total_alumni_status'] ?? 0) + ($mhs['total_wafat'] ?? 0) + ($mhs['total_mangkir'] ?? 0);
 @endphp
 
 {{-- ─── Page Header ─────────────────────────────────────────────── --}}
@@ -447,6 +443,11 @@
             ['label'=>'Pelaksanaan', 'val'=>number_format($dpmProker['total_pelaksanaan'] ?? 0), 'bg'=>'#eff6ff', 'color'=>'#2563eb'],
             ['label'=>'Selesai', 'val'=>number_format($dpmProker['total_selesai'] ?? 0), 'bg'=>'#ecfdf5', 'color'=>'#059669'],
         ];
+        // Rencana diajukan yang salinannya sudah dihapus — hanya tampil bila ada, supaya
+        // rincian status tetap menjumlah ke Total Proker.
+        if (($dpmProker['total_diajukan'] ?? 0) > 0) {
+            $dpmProkerKpis[] = ['label'=>'Diajukan (tanpa pelaksanaan)', 'val'=>number_format($dpmProker['total_diajukan']), 'bg'=>'#F6F8FA', 'color'=>'#666D80'];
+        }
     @endphp
     @foreach($dpmProkerKpis as $k)
         <div class="kpi-mini">
@@ -503,10 +504,11 @@
                         $kategoriProker = $proker->kategoris?->pluck('nama_kategori')->filter()->take(2)->implode(', ');
                     @endphp
                     <tr>
-                        <td style="font-weight:600;color:#0D0D12;">{{ $proker->nama_kegiatan ?? '-' }}</td>
+                        {{-- Kolomnya `judul` — dulu memanggil `nama_kegiatan` yang tidak ada, jadi selalu "-" --}}
+                        <td style="font-weight:600;color:#0D0D12;">{{ $proker->judul ?: '-' }}</td>
                         <td>{{ $ketuaProker }}</td>
                         <td>{{ $kategoriProker ?: '-' }}</td>
-                        <td style="color:#808897;">{{ optional($proker->created_at)->format('d M Y') ?? '-' }}</td>
+                        <td style="color:#808897;">{{ $proker->created_at?->locale('id')->translatedFormat('d M Y') ?? '-' }}</td>
                     </tr>
                 @empty
                     <tr class="empty-row"><td colspan="4">Tidak ada draft proker</td></tr>
@@ -535,7 +537,7 @@
         $dpmPelaksanaanKpis = [
             ['label'=>'Bulan Ini', 'val'=>number_format($dpmPelaksanaan['bulan_ini'] ?? 0), 'bg'=>'#eff6ff', 'color'=>'#2563eb'],
             ['label'=>'Berlangsung Hari Ini', 'val'=>number_format($dpmPelaksanaan['berlangsung_hari_ini'] ?? 0), 'bg'=>'#ecfdf5', 'color'=>'#059669'],
-            ['label'=>'Belum Realisasi', 'val'=>number_format($dpmPelaksanaan['belum_realisasi'] ?? 0), 'bg'=>'#fff7ed', 'color'=>'#ea580c'],
+            ['label'=>'Belum Diperbarui Sesuai Realisasi', 'val'=>number_format($dpmPelaksanaan['belum_realisasi'] ?? 0), 'bg'=>'#fff7ed', 'color'=>'#ea580c'],
             ['label'=>'Tanpa Dosen Pendamping', 'val'=>number_format($dpmPelaksanaan['tanpa_dosen_pendamping'] ?? 0), 'bg'=>'#fef2f2', 'color'=>'#dc2626'],
         ];
     @endphp
@@ -557,12 +559,13 @@
         <div class="chart-title">
             <span style="display:inline-flex;width:15px;height:15px;color:#0B266E;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/bar-chart-12.svg'))) !!}</span>
             Rencana vs Realisasi
+            <span class="chart-title-right">{{ number_format($dpmPelaksanaan['realisasi_jumlah_kegiatan'] ?? 0) }} kegiatan</span>
         </div>
         <div class="progress-card">
             <div class="progress-item">
                 <div class="progress-row">
                     <span class="progress-label">Peserta</span>
-                    <span class="progress-count" style="color:#2563eb;">{{ number_format($dpmPelaksanaan['realisasi_peserta'] ?? 0) }} / {{ number_format($dpmPelaksanaan['target_peserta'] ?? 0) }} ({{ $dpmPelaksanaan['rate_peserta'] ?? 0 }}%)</span>
+                    <span class="progress-count" style="color:#2563eb;">{{ number_format($dpmPelaksanaan['realisasi_peserta'] ?? 0, 0, ',', '.') }} / {{ number_format($dpmPelaksanaan['target_peserta'] ?? 0, 0, ',', '.') }} ({{ $dpmPelaksanaan['rate_peserta'] ?? 0 }}%)</span>
                 </div>
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" style="width:{{ min(100, (int) ($dpmPelaksanaan['rate_peserta'] ?? 0)) }}%;background:#2563eb;"></div>
@@ -571,11 +574,14 @@
             <div class="progress-item">
                 <div class="progress-row">
                     <span class="progress-label">Anggaran</span>
-                    <span class="progress-count" style="color:#059669;">Rp {{ number_format($dpmPelaksanaan['anggaran_realisasi'] ?? 0, 0, ',', '.') }} / Rp {{ number_format($dpmPelaksanaan['anggaran_rencana'] ?? 0, 0, ',', '.') }}</span>
+                    <span class="progress-count" style="color:#059669;">Rp {{ number_format($dpmPelaksanaan['anggaran_realisasi'] ?? 0, 0, ',', '.') }} / Rp {{ number_format($dpmPelaksanaan['anggaran_rencana'] ?? 0, 0, ',', '.') }} ({{ $dpmPelaksanaan['rate_anggaran'] ?? 0 }}%)</span>
                 </div>
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" style="width:{{ min(100, (int) ($dpmPelaksanaan['rate_anggaran'] ?? 0)) }}%;background:#059669;"></div>
                 </div>
+            </div>
+            <div style="font-size:11px;color:#808897;">
+                Realisasi (data Pelaksanaan/Arsip) dibanding rencana awal di Rencana Proker, untuk kegiatan yang realisasinya sudah dicatat.
             </div>
         </div>
     </div>
@@ -786,7 +792,7 @@
 <div class="action-grid">
 
     {{-- Pengaduan Baru --}}
-    <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}"
+    <a href="{{ route('manajemenmahasiswa.pengaduan.index', ['status' => 'baru']) }}"
        class="action-card action-card-red {{ $act['pengaduan_baru'] === 0 ? 'zero-state' : '' }}">
         <div class="action-card-top">
             <div class="action-icon action-icon-red">
@@ -795,8 +801,9 @@
         </div>
         <div class="action-num action-num-red">{{ $act['pengaduan_baru'] }}</div>
         <div>
-            <div class="action-label">Pengaduan belum dijawab</div>
-            <div class="action-link-hint">Jawab sekarang →</div>
+            {{-- Sama dengan filter "Baru" di halaman Pengaduan (belum ditandai tercatat) --}}
+            <div class="action-label">Pengaduan belum tercatat</div>
+            <div class="action-link-hint">Tindak lanjuti →</div>
         </div>
     </a>
 
@@ -830,8 +837,9 @@
         </div>
     </a>
 
-    {{-- Laporan Forum --}}
-    <a href="{{ route('manajemenmahasiswa.forum.index') }}"
+    {{-- Laporan Forum — langsung ke antrean laporannya, bukan ke daftar thread,
+         supaya sejalan dengan kartu aksi lain yang menuju halaman tindakannya. --}}
+    <a href="{{ route('manajemenmahasiswa.forum.reports') }}"
        class="action-card action-card-purple {{ $act['laporan_forum'] === 0 ? 'zero-state' : '' }}">
         <div class="action-card-top">
             <div class="action-icon action-icon-purple">
@@ -919,12 +927,16 @@
             <span style="display:inline-flex;width:15px;height:15px;color:#0B266E;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/headphone-01.svg'))) !!}</span>
             Layanan Pengaduan
         </div>
+        {{-- Satu pembungkus isi: aturan `.chart-card > div:not(.chart-title)` memberi padding
+             18px ke tiap div anak langsung kartu, sehingga bar 7px dulu menjadi pil abu
+             besar dan isiannya tak terlihat (tinggi isi 0 karena box-sizing: border-box). --}}
+        <div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:10px;">
             @foreach([
-                ['label'=>'Baru', 'val'=>$ops['pengaduan_baru'] ?? 0, 'color'=>'#dc2626'],
-                ['label'=>'Dibaca', 'val'=>$ops['pengaduan_dibaca'] ?? 0, 'color'=>'#2563eb'],
-                ['label'=>'Didelegasikan', 'val'=>$ops['pengaduan_didelegasikan'] ?? 0, 'color'=>'#d97706'],
-                ['label'=>'Selesai', 'val'=>$ops['pengaduan_selesai'] ?? 0, 'color'=>'#059669'],
+                {{-- Mengikuti status di halaman Pengaduan: Baru (belum/sudah dibaca) & Tercatat --}}
+                ['label'=>'Baru · Belum Dibaca', 'val'=>$ops['pengaduan_belum_dibaca'] ?? 0, 'color'=>'#dc2626'],
+                ['label'=>'Baru · Sudah Dibaca', 'val'=>$ops['pengaduan_dibaca'] ?? 0, 'color'=>'#2563eb'],
+                ['label'=>'Tercatat', 'val'=>$ops['pengaduan_tercatat'] ?? 0, 'color'=>'#059669'],
             ] as $row)
             <div style="padding:12px;border:1px solid #eef2f7;border-radius:12px;background:#fff;">
                 <div style="font-size:20px;font-weight:800;color:{{ $row['color'] }};">{{ number_format($row['val']) }}</div>
@@ -940,7 +952,8 @@
             <div style="width:{{ min(100, $ops['responsivitas_pengaduan'] ?? 0) }}%;height:100%;background:#059669;border-radius:999px;"></div>
         </div>
         <div style="margin-top:10px;font-size:11px;color:#808897;">
-            SLA {{ $ops['sla_hari'] ?? 7 }} hari, {{ number_format($ops['pengaduan_belum_dibaca'] ?? 0) }} pengaduan belum dibaca.
+            {{ number_format($ops['pengaduan_sla_terpenuhi'] ?? 0) }} dari {{ number_format($ops['pengaduan_total'] ?? 0) }} pengaduan ditangani ≤ {{ $ops['sla_hari'] ?? 7 }} hari sejak dibuat.
+        </div>
         </div>
     </div>
 
@@ -977,29 +990,38 @@
         <div class="chart-title">
             <span style="display:inline-flex;width:15px;height:15px;color:#0B266E;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/calendar.svg'))) !!}</span>
             Realisasi Kegiatan
+            <span class="chart-title-right">{{ number_format($ops['realisasi_jumlah_kegiatan'] ?? 0) }} kegiatan tercatat</span>
         </div>
         @php
             $pesertaPct = min(100, $ops['persen_realisasi_peserta'] ?? 0);
             $anggaranPct = min(100, $ops['persen_realisasi_anggaran'] ?? 0);
-        @endphp
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:10px;">
-            @foreach([
+            $statusKegiatanOps = [
                 ['label'=>'Draft', 'val'=>$ops['kegiatan_draft'] ?? 0],
                 ['label'=>'Pelaksanaan', 'val'=>$ops['kegiatan_pelaksanaan'] ?? 0],
                 ['label'=>'Selesai', 'val'=>$ops['kegiatan_selesai'] ?? 0],
-            ] as $row)
+            ];
+            if (($ops['kegiatan_diajukan'] ?? 0) > 0) {
+                array_splice($statusKegiatanOps, 1, 0, [['label'=>'Diajukan', 'val'=>$ops['kegiatan_diajukan']]]);
+            }
+        @endphp
+        {{-- Satu pembungkus isi — lihat catatan di kartu Layanan Pengaduan. --}}
+        <div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:10px;">
+            @foreach($statusKegiatanOps as $row)
             <div style="padding:12px;border:1px solid #eef2f7;border-radius:12px;background:#fff;">
                 <div style="font-size:20px;font-weight:800;color:#0B266E;">{{ number_format($row['val']) }}</div>
                 <div style="font-size:12px;color:#666D80;font-weight:600;">{{ $row['label'] }}</div>
             </div>
             @endforeach
         </div>
-        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;margin-bottom:6px;"><strong>Peserta</strong><span>{{ number_format($ops['realisasi_peserta'] ?? 0) }} / {{ number_format($ops['target_peserta'] ?? 0) }} ({{ $ops['persen_realisasi_peserta'] ?? 0 }}%)</span></div>
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;margin-bottom:6px;"><strong>Peserta</strong><span>{{ number_format($ops['realisasi_peserta'] ?? 0, 0, ',', '.') }} / {{ number_format($ops['target_peserta'] ?? 0, 0, ',', '.') }} ({{ $ops['persen_realisasi_peserta'] ?? 0 }}%)</span></div>
         <div style="height:7px;background:#f3f4f6;border-radius:999px;overflow:hidden;margin-bottom:10px;"><div style="width:{{ $pesertaPct }}%;height:100%;background:#2563eb;border-radius:999px;"></div></div>
-        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;margin-bottom:6px;"><strong>Anggaran</strong><span>Rp {{ number_format($ops['anggaran_realisasi'] ?? 0, 0, ',', '.') }} / Rp {{ number_format($ops['anggaran_rencana'] ?? 0, 0, ',', '.') }}</span></div>
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;margin-bottom:6px;"><strong>Anggaran</strong><span>Rp {{ number_format($ops['anggaran_realisasi'] ?? 0, 0, ',', '.') }} / Rp {{ number_format($ops['anggaran_rencana'] ?? 0, 0, ',', '.') }} ({{ $ops['persen_realisasi_anggaran'] ?? 0 }}%)</span></div>
         <div style="height:7px;background:#f3f4f6;border-radius:999px;overflow:hidden;"><div style="width:{{ $anggaranPct }}%;height:100%;background:#059669;border-radius:999px;"></div></div>
         <div style="margin-top:10px;font-size:11px;color:#808897;">
-            {{ number_format($ops['kegiatan_selesai_belum_realisasi'] ?? 0) }} kegiatan selesai belum lengkap realisasinya.
+            Realisasi (data Pelaksanaan/Arsip) dibanding rencana awal di Rencana Proker.
+            {{ number_format($ops['kegiatan_belum_diperbarui'] ?? 0) }} kegiatan di tahap Pelaksanaan belum diperbarui sesuai realisasi.
+        </div>
         </div>
     </div>
 
@@ -1064,7 +1086,7 @@
     {{-- Kegiatan Berlangsung Hari Ini — monitoring real-time organisasi --}}
     <div class="stat-card {{ $acty['kegiatan_berlangsung'] > 0 ? 'card-clickable' : '' }}"
          @if($acty['kegiatan_berlangsung'] > 0)
-             onclick="window.location.href='{{ route('manajemenmahasiswa.kegiatan.index') }}'"
+             onclick="window.location.href='{{ route('manajemenmahasiswa.pelaksanaan.index') }}'"
          @endif>
         <div class="stat-icon stat-icon-amber">
             <span style="display:inline-flex;width:20px;height:20px;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/clock-02.svg'))) !!}</span>
@@ -1202,17 +1224,19 @@
         </div>
         <div>
             <div class="kpi-mini-val" style="color:#0C4D6E;">{{ $eval['responsivitas'] }}%</div>
-            <div class="kpi-mini-label" title="Persentase pengaduan (non-draft) yang dijawab dalam ≤ {{ $eval['sla_hari'] ?? 7 }} hari sejak dibuat.">Responsivitas Pengaduan (SLA)</div>
-            <div style="font-size:11px;color:#808897;margin-top:2px;">{{ $eval['pengaduan_sla_terpenuhi'] ?? 0 }} dari {{ $eval['pengaduan_total'] ?? 0 }} dijawab ≤ {{ $eval['sla_hari'] ?? 7 }} hari</div>
+            <div class="kpi-mini-label" title="Persentase pengaduan (non-draft) yang ditangani pertama kali (mis. ditandai tercatat) dalam ≤ {{ $eval['sla_hari'] ?? 7 }} hari sejak dibuat.">Responsivitas Pengaduan (SLA)</div>
+            <div style="font-size:11px;color:#808897;margin-top:2px;">{{ $eval['pengaduan_sla_terpenuhi'] ?? 0 }} dari {{ $eval['pengaduan_total'] ?? 0 }} ditangani ≤ {{ $eval['sla_hari'] ?? 7 }} hari</div>
         </div>
     </div>
 </div>
 
-{{-- Tabel kelulusan & DO rate per angkatan --}}
+{{-- Tabel kelulusan per angkatan — dari role mahasiswa/alumni & direktori alumni.
+     Kolom Drop Out dicabut (15 Nov 2026): satu-satunya sumber status DO adalah status
+     kemahasiswaan yang dibekukan sejak S-53 (status resmi di SIAP Undip). --}}
 <div class="chart-card section-gap">
     <div class="chart-title">
         <span style="display:inline-flex;width:15px;height:15px;color:#0B266E;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/bar-chart-11.svg'))) !!}</span>
-        Tingkat Kelulusan &amp; Drop Out per Angkatan
+        Tingkat Kelulusan per Angkatan
     </div>
     <div style="overflow-x:auto;">
         <table class="da-table" style="width:100%;border-collapse:collapse;">
@@ -1222,8 +1246,6 @@
                     <th style="text-align:center;font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Total</th>
                     <th style="text-align:center;font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Lulus</th>
                     <th style="text-align:center;font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">% Kelulusan</th>
-                    <th style="text-align:center;font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Drop Out</th>
-                    <th style="text-align:center;font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">% DO</th>
                 </tr>
             </thead>
             <tbody>
@@ -1239,13 +1261,9 @@
                                 <span style="display:inline-block;min-width:46px;padding:2px 8px;border-radius:50px;font-size:12px;font-weight:700;background:#ecfdf5;color:#059669;">{{ $row['rate_lulus'] }}%</span>
                             @endif
                         </td>
-                        <td style="padding:9px 12px;text-align:center;font-size:13px;color:#dc2626;font-weight:600;">{{ $row['do'] }}</td>
-                        <td style="padding:9px 12px;text-align:center;">
-                            <span style="display:inline-block;min-width:46px;padding:2px 8px;border-radius:50px;font-size:12px;font-weight:700;background:{{ $row['rate_do'] > 0 ? '#fef2f2' : '#f3f4f6' }};color:{{ $row['rate_do'] > 0 ? '#dc2626' : '#808897' }};">{{ $row['rate_do'] }}%</span>
-                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" style="padding:24px;text-align:center;color:#808897;font-size:13px;">Belum ada data angkatan</td></tr>
+                    <tr><td colspan="4" style="padding:24px;text-align:center;color:#808897;font-size:13px;">Belum ada data angkatan</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -1253,8 +1271,10 @@
 </div>
 </div>{{-- /da-section evaluasi_mutu --}}
 
-{{-- Evaluasi Kegiatan Kemahasiswaan — bahan evaluasi kurikulum/mutu (urutan #4 untuk GPM) --}}
-<div class="da-section" style="order:3;">
+{{-- Evaluasi Kegiatan Kemahasiswaan — bahan evaluasi kurikulum/mutu.
+     Hanya dirender untuk GPM (ikut guard $hasSection('evaluasi_mutu') di atas),
+     jadi angka order-nya tidak perlu bercabang per peran. Urutan #2 untuk GPM. --}}
+<div class="da-section" style="order:2;">
 <div class="section-header section-gap" style="margin-top:6px;">
     <span class="section-label">Evaluasi Kegiatan Kemahasiswaan</span>
     <div class="section-line"></div>
@@ -1362,106 +1382,16 @@
 
 
 {{-- ══════════════════════════════════════════════════════════════════
-     🟡 TIER 3 — MAHASISWA AKTIF (cache 120 detik)
-     Berubah saat admin update status — biasanya mingguan/bulanan.
+     🟡 TIER 3 — MAHASISWA & PRESTASI (cache 120 detik)
+     Angka status mahasiswa (Aktif/Cuti/DO/...), donut "Status Seluruh
+     Mahasiswa", dan grafik "Distribusi Mahasiswa per Angkatan" dihapus
+     (2 Nov 2026) untuk semua role — status mahasiswa tidak lagi diperlukan.
 ══════════════════════════════════════════════════════════════════════ --}}
 @if($hasSection('mahasiswa'))
 <div class="da-section" style="order:{{ $isGpm ? 4 : ($isDpm ? 7 : ($hasSection('admin_operasional') ? 4 : 3)) }};">
 <div class="section-header section-gap">
-    <span class="section-label">Mahasiswa Aktif</span>
+    <span class="section-label">Mahasiswa &amp; Prestasi</span>
     <div class="section-line"></div>
-</div>
-
-<div class="kpi-row">
-    @php
-        $mhsKpis = [
-            ['label'=>'Aktif',        'val'=>$mhs['total_aktif'],           'bg'=>'#eff6ff', 'color'=>'#2563eb', 'status'=>'aktif'],
-            ['label'=>'Cuti',         'val'=>$mhs['total_cuti'],            'bg'=>'#fffbeb', 'color'=>'#d97706', 'status'=>'cuti'],
-            ['label'=>'Drop Out',     'val'=>$mhs['total_do'],              'bg'=>'#fef2f2', 'color'=>'#dc2626', 'status'=>'drop_out'],
-            ['label'=>'Pindah Studi', 'val'=>$mhs['total_pindah'],          'bg'=>'#EEF1F8', 'color'=>'#0B266E', 'status'=>'pindah_studi'],
-            ['label'=>'Mangkir',      'val'=>$mhs['total_mangkir'] ?? 0,   'bg'=>'#D1F0F9', 'color'=>'#0C4D6E', 'status'=>'mangkir'],
-            ['label'=>'Wafat',        'val'=>$mhs['total_wafat'] ?? 0,     'bg'=>'#f0fdf4', 'color'=>'#666D80', 'status'=>'wafat'],
-        ];
-    @endphp
-    @foreach($mhsKpis as $k)
-        <div class="kpi-mini card-clickable"
-             onclick="openDashModal('mahasiswa',{status:'{{ $k['status'] }}'},'Mahasiswa — {{ $k['label'] }}')">
-            <div class="kpi-mini-icon" style="background:{{ $k['bg'] }};color:{{ $k['color'] }};">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            </div>
-            <div>
-                <div class="kpi-mini-val" style="color:{{ $k['color'] }};">{{ number_format($k['val']) }}</div>
-                <div class="kpi-mini-label">{{ $k['label'] }}</div>
-            </div>
-        </div>
-    @endforeach
-</div>
-
-<div class="chart-grid-2">
-    {{-- Donut: Status Seluruh Mahasiswa --}}
-    <div class="chart-card">
-        <div class="chart-title">
-            <span style="display:inline-flex;width:15px;height:15px;color:#0B266E;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/pie-chart-01.svg'))) !!}</span>
-            Status Seluruh Mahasiswa
-            <span class="chart-title-right">Total: {{ number_format($totalSemuaMhs) }}</span>
-        </div>
-        <div class="donut-row">
-            <div class="donut-canvas"><canvas id="chartStatusMhs"></canvas></div>
-            <div class="donut-legend">
-                @php
-                    $mhsStatusItems = [
-                        ['label'=>'Aktif',        'val'=>$mhs['total_aktif'],          'color'=>'#3b82f6'],
-                        ['label'=>'Alumni',       'val'=>$mhs['total_alumni_status'],  'color'=>'#10b981'],
-                        ['label'=>'Cuti',         'val'=>$mhs['total_cuti'],           'color'=>'#f59e0b'],
-                        ['label'=>'Drop Out',     'val'=>$mhs['total_do'],             'color'=>'#ef4444'],
-                        ['label'=>'Pindah',       'val'=>$mhs['total_pindah'],         'color'=>'#5C78B8'],
-                        ['label'=>'Mangkir',      'val'=>$mhs['total_mangkir'] ?? 0,  'color'=>'#0C4D6E'],
-                        ['label'=>'Wafat',        'val'=>$mhs['total_wafat'] ?? 0,    'color'=>'#808897'],
-                    ];
-                @endphp
-                @foreach($mhsStatusItems as $si)
-                    <div class="legend-item">
-                        <div class="legend-dot" style="background:{{ $si['color'] }};"></div>
-                        <span>{{ $si['label'] }}</span>
-                        <span class="legend-val">{{ number_format($si['val']) }}</span>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-
-    {{-- Line: Semua Status Mahasiswa per Angkatan --}}
-    <div class="chart-card">
-        <div class="chart-title">
-            <span style="display:inline-flex;width:15px;height:15px;color:#0B266E;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/line-chart-up-01.svg'))) !!}</span>
-            Distribusi Mahasiswa per Angkatan
-        </div>
-        {{-- Filter Buttons --}}
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" id="angkatanFilters">
-            @php
-                $lineStatuses = [
-                    'aktif'       => ['label'=>'Aktif',        'color'=>'#3b82f6','bg'=>'#eff6ff','border'=>'#bfdbfe'],
-                    'alumni'      => ['label'=>'Alumni',       'color'=>'#10b981','bg'=>'#ecfdf5','border'=>'#a7f3d0'],
-                    'cuti'        => ['label'=>'Cuti',         'color'=>'#f59e0b','bg'=>'#fffbeb','border'=>'#fde68a'],
-                    'mangkir'     => ['label'=>'Mangkir',      'color'=>'#0C4D6E','bg'=>'#D1F0F9','border'=>'#A8DCEE'],
-                    'wafat'       => ['label'=>'Wafat',        'color'=>'#666D80','bg'=>'#F6F8FA','border'=>'#DFE1E7'],
-                    'drop_out'    => ['label'=>'Drop Out',     'color'=>'#ef4444','bg'=>'#fef2f2','border'=>'#fecaca'],
-                    'pindah_studi'=> ['label'=>'Pindah Studi', 'color'=>'#5C78B8','bg'=>'#EEF1F8','border'=>'#5C78B8'],
-                ];
-            @endphp
-            @foreach($lineStatuses as $key => $cfg)
-                <button
-                    class="angkatan-filter-btn active"
-                    data-status="{{ $key }}"
-                    onclick="toggleAngkatanLine('{{ $key }}', this)"
-                    style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:50px;border:1.5px solid {{ $cfg['border'] }};background:{{ $cfg['bg'] }};color:{{ $cfg['color'] }};font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;">
-                    <span style="width:8px;height:8px;border-radius:50%;background:{{ $cfg['color'] }};display:inline-block;flex-shrink:0;"></span>
-                    {{ $cfg['label'] }}
-                </button>
-            @endforeach
-        </div>
-        <div style="position:relative;height:230px;"><canvas id="chartAngkatan"></canvas></div>
-    </div>
 </div>
 
 <div class="chart-grid-2">
@@ -1594,15 +1524,17 @@
         @endif
     </div>
 
-    {{-- Table: Mahasiswa Aktif Terbaru --}}
-    <div class="chart-card" style="overflow-x:auto;padding:22px 20px;">
-        <div class="table-header">
+    {{-- Table: Mahasiswa Aktif Terbaru — header & tabel rata dengan kartu Prestasi
+         di sebelahnya (header 13px/18px + garis bawah, tabel selebar kartu). --}}
+    <div class="chart-card">
+        <div class="table-header" style="padding:13px 18px;">
             <div class="table-title">
                 <span style="display:inline-flex;width:15px;height:15px;color:#0B266E;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/users-01.svg'))) !!}</span>
                 Mahasiswa Aktif Terbaru
             </div>
             <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.index') }}" class="table-link">Lihat Semua →</a>
         </div>
+        <div class="da-table-wrap" style="padding:0;">
         <table class="da-table">
             <thead><tr><th>Mahasiswa</th><th>NIM</th><th>Angkatan</th></tr></thead>
             <tbody>
@@ -1618,6 +1550,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 </div>{{-- /da-section mahasiswa --}}
@@ -1628,7 +1561,7 @@
      ⚠️ EVALUASI CALON DO & LULUSAN PER PERIODE
 ══════════════════════════════════════════════════════════════════════ --}}
 @if($hasSection('calon_do') || $hasSection('lulusan'))
-<div class="da-section" style="order:{{ $isGpm ? 2 : ($isDpm ? 1 : ($hasSection('admin_operasional') ? 5 : 4)) }};">
+<div class="da-section" style="order:{{ $isGpm ? 3 : ($isDpm ? 1 : ($hasSection('admin_operasional') ? 5 : 4)) }};">
 <div class="section-header section-gap">
     <span class="section-label">Pemantauan Akademik</span>
     <div class="section-line"></div>
@@ -1707,7 +1640,7 @@
         <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;margin-bottom:10px;">
             <span style="display:inline-flex;width:18px;height:18px;color:#d97706;flex-shrink:0;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/alert-circle.svg'))) !!}</span>
             <div style="flex:1;font-size:13px;color:#92400e;line-height:1.5;">
-                <strong>{{ $lulus['belum_sinkron'] }}</strong> mahasiswa berstatus lulus belum tersinkron ke direktori alumni.
+                <strong>{{ $lulus['belum_sinkron'] }}</strong> akun alumni belum tercatat di direktori alumni.
             </div>
         </div>
         @else
@@ -1952,30 +1885,6 @@ function mkBar(id, labels, data, color, suffix = '') {
     });
 }
 
-// ── Global variables — harus di luar DOMContentLoaded agar bisa diakses onclick HTML
-let _angkatanChart = null;   // instance Chart.js multi-line angkatan
-
-// FIX Bug #1: toggleAngkatanLine di scope global agar onclick HTML bisa memanggil
-function toggleAngkatanLine(statusKey, btn) {
-    if (!_angkatanChart) return;
-    const dsIndex = _angkatanChart.data.datasets.findIndex(d => d._statusKey === statusKey);
-    if (dsIndex === -1) return;
-
-    const isActive = btn.classList.contains('active');
-    _angkatanChart.data.datasets[dsIndex].hidden = isActive;
-    _angkatanChart.update();
-
-    if (isActive) {
-        btn.classList.remove('active');
-        btn.style.opacity = '0.4';
-        btn.style.textDecoration = 'line-through';
-    } else {
-        btn.classList.add('active');
-        btn.style.opacity = '1';
-        btn.style.textDecoration = 'none';
-    }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
 
     // Tier 2 — Trend Kegiatan (GPM: berdasarkan tanggal pelaksanaan; admin: tanggal input)
@@ -1990,79 +1899,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Tier 3 — Mahasiswa
     @if($hasSection('mahasiswa'))
-    mkDonut('chartStatusMhs',
-        ['Aktif','Alumni','Cuti','Drop Out','Pindah','Mangkir','Wafat'],
-        [{{ $mhs['total_aktif'] }},{{ $mhs['total_alumni_status'] }},{{ $mhs['total_cuti'] }},{{ $mhs['total_do'] }},{{ $mhs['total_pindah'] }},{{ $mhs['total_mangkir'] ?? 0 }},{{ $mhs['total_wafat'] ?? 0 }}],
-        ['#3b82f6','#10b981','#f59e0b','#ef4444','#5C78B8','#0C4D6E','#808897']
-    );
-    // ── Multi-line chart: semua status per angkatan ──────────────────────────
-    @php
-        $angkatanLabels = $mhs['angkatan_list'];
-        $angkatanByStatus = $mhs['per_angkatan_by_status'];
-        $lineDatasets = [
-            ['status'=>'aktif',        'label'=>'Aktif',        'color'=>'59,130,246'],
-            ['status'=>'alumni',       'label'=>'Alumni',       'color'=>'16,185,129'],
-            ['status'=>'cuti',         'label'=>'Cuti',         'color'=>'245,158,11'],
-            ['status'=>'drop_out',     'label'=>'Drop Out',     'color'=>'239,68,68'],
-            ['status'=>'pindah_studi', 'label'=>'Pindah Studi', 'color'=>'111,125,164'],
-            ['status'=>'mangkir',      'label'=>'Mangkir',      'color'=>'168,85,247'],
-            ['status'=>'wafat',        'label'=>'Wafat',        'color'=>'156,163,175'],
-        ];
-    @endphp
-
-    const angkatanChartData = {
-        labels: {!! json_encode($angkatanLabels) !!},
-        datasets: [
-            @foreach($lineDatasets as $ds)
-            {
-                label: '{{ $ds['label'] }}',
-                data: {!! json_encode($angkatanByStatus[$ds['status']] ?? array_fill(0, count($angkatanLabels), 0)) !!},
-                borderColor: 'rgb({{ $ds['color'] }})',
-                backgroundColor: '{{ $useBarDistribusiMahasiswa ? "rgb(".$ds["color"].")" : "rgba(".$ds["color"].", 0.08)" }}',
-                fill: true,
-                tension: 0.35,
-                borderWidth: {{ $useBarDistribusiMahasiswa ? '1' : '2.5' }},
-                stack: 'mhs',
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                pointBackgroundColor: 'rgb({{ $ds['color'] }})',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                _statusKey: '{{ $ds['status'] }}',
-            },
-            @endforeach
-        ],
-    };
-
-    // FIX: assign ke variabel global (dideklarasikan di luar DOMContentLoaded)
-    // sehingga toggleAngkatanLine() bisa mengaksesnya dari scope global
-    _angkatanChart = new Chart(document.getElementById('chartAngkatan'), {
-        type: '{{ $useBarDistribusiMahasiswa ? "bar" : "line" }}',
-        data: angkatanChartData,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            scales: {
-                x: { stacked: {{ $useBarDistribusiMahasiswa ? 'true' : 'false' }}, grid: { display: false }, ticks: { font: { size: 11 } } },
-                y: {
-                    stacked: {{ $useBarDistribusiMahasiswa ? 'true' : 'false' }},
-                    grid: { color: '#f3f4f6' },
-                    ticks: { font: { size: 11 }, stepSize: 1, precision: 0 },
-                    beginAtZero: true,
-                },
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        title: items => 'Angkatan ' + items[0].label,
-                        label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} mahasiswa`,
-                    },
-                },
-            },
-        },
-    });
     @if(($mhs['total_prestasi'] ?? 0) > 0)
     mkDonut('chartPrestasi',
         {!! json_encode(array_map(fn($k) => $tingkatLabels[$k] ?? ucfirst($k), array_keys($mhs['prestasi_per_tingkat'] ?? []))) !!},

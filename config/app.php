@@ -99,6 +99,8 @@ return [
 
     'key' => env('APP_KEY'),
 
+    'spc_login_path' => trim((string) env('SPC_LOGIN_PATH', ''), " /\t\n\r") ?: 'admin/login',
+
     'previous_keys' => [
         ...array_filter(
             explode(',', (string) env('APP_PREVIOUS_KEYS', ''))

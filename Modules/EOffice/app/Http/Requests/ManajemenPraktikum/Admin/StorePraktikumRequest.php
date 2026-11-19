@@ -19,8 +19,8 @@ class StorePraktikumRequest extends FormRequest
             'matkul_id' => [
                 'required',
                 'integer',
-                'exists:eo_matkul_praktikum,id',
-                \Illuminate\Validation\Rule::unique('eo_praktikum', 'matkul_id')->where(function ($query) {
+                'exists:eo_prak_matkul_praktikum,id',
+                \Illuminate\Validation\Rule::unique('eo_prak_praktikum', 'matkul_id')->where(function ($query) {
                     return $query->where('tahun_ajaran', $this->tahun_ajaran)
                         ->where('semester', $this->semester ? ucfirst(strtolower($this->semester)) : null)
                         ->whereNull('deleted_at');

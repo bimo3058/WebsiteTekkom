@@ -10,6 +10,8 @@ class KategoriKegiatan extends Model
 {
     use HasFactory;
 
+    public const NAMA_HIMPUNAN = 'Kegiatan Himpunan';
+
     protected $table = 'mk_kategori_kegiatan';
 
     protected $fillable = [

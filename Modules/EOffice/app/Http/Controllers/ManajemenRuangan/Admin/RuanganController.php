@@ -5,7 +5,9 @@ namespace Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin;
 use App\Http\Controllers\Controller;
 use Modules\EOffice\Models\Ruangan;
 use Modules\EOffice\Models\RuanganFoto;
+use Modules\EOffice\Models\Fasilitas;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class RuanganController extends Controller
 {
@@ -21,13 +23,47 @@ class RuanganController extends Controller
             });
         }
 
-        $ruangans = $query->latest()->paginate($request->input('per_page', 10))->appends($request->query());
-        return view('eoffice::manajemen-ruangan.admin.ruangan.index', compact('ruangans'));
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->status === 'aktif');
+        }
+
+        if ($request->filled('lokasi')) {
+            $query->where('lokasi', $request->lokasi);
+        }
+
+        $sort = $request->input('sort', 'terbaru');
+        switch ($sort) {
+            case 'kapasitas_desc':
+                $query->orderBy('kapasitas', 'desc');
+                break;
+            case 'kapasitas_asc':
+                $query->orderBy('kapasitas', 'asc');
+                break;
+            case 'nama_asc':
+                $query->orderBy('nama', 'asc');
+                break;
+            case 'nama_desc':
+                $query->orderBy('nama', 'desc');
+                break;
+            case 'terlama':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'terbaru':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $ruangans = $query->paginate($request->input('per_page', 10))->appends($request->query());
+        $lokasis = Ruangan::select('lokasi')->distinct()->whereNotNull('lokasi')->where('lokasi', '!=', '')->orderBy('lokasi')->pluck('lokasi');
+
+        return view('eoffice::manajemen-ruangan.admin.ruangan.index', compact('ruangans', 'lokasis'));
     }
 
     public function create()
     {
-        return view('eoffice::manajemen-ruangan.admin.ruangan.create');
+        $opsiFasilitas = Fasilitas::orderBy('nama_fasilitas')->pluck('nama_fasilitas')->toArray();
+        return view('eoffice::manajemen-ruangan.admin.ruangan.create', compact('opsiFasilitas'));
     }
 
     public function store(Request $request)
@@ -37,10 +73,11 @@ class RuanganController extends Controller
             'lokasi' => 'required|string|max:255',
             'lantai' => 'nullable|integer',
             'kapasitas' => 'required|integer|min:0',
+            'kategori' => ['required', Rule::in(Ruangan::ALL_KATEGORI)],
             'fasilitas' => 'nullable|array',
             'fasilitas.*' => 'string',
             'fotos' => 'nullable|array|max:10',
-            'fotos.*' => 'image|mimes:jpeg,png,jpg|max:5120'
+            'fotos.*' => 'image|mimes:jpeg,png,jpg|max:2048'
         ]);
 
         $data = [
@@ -48,6 +85,7 @@ class RuanganController extends Controller
             'lokasi' => $request->lokasi,
             'lantai' => $request->lantai,
             'kapasitas' => $request->kapasitas,
+            'kategori' => $request->kategori,
             'fasilitas' => $request->fasilitas ?? [],
             'is_active' => $request->has('is_active') ? true : false,
         ];
@@ -73,25 +111,24 @@ class RuanganController extends Controller
         return redirect()->route('eoffice.peminjaman.admin.ruangan.index')->with('success', 'Ruangan berhasil ditambahkan.');
     }
 
-    public function edit($id)
+    public function edit(Ruangan $ruangan)
     {
-        $ruangan = Ruangan::findOrFail($id);
-        return view('eoffice::manajemen-ruangan.admin.ruangan.edit', compact('ruangan'));
+        $opsiFasilitas = Fasilitas::orderBy('nama_fasilitas')->pluck('nama_fasilitas')->toArray();
+        return view('eoffice::manajemen-ruangan.admin.ruangan.edit', compact('ruangan', 'opsiFasilitas'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Ruangan $ruangan)
     {
-        $ruangan = Ruangan::findOrFail($id);
-
         $request->validate([
             'nama' => 'required|string|max:255',
             'lokasi' => 'required|string|max:255',
             'lantai' => 'nullable|integer',
             'kapasitas' => 'required|integer|min:0',
+            'kategori' => ['required', Rule::in(Ruangan::ALL_KATEGORI)],
             'fasilitas' => 'nullable|array',
             'fasilitas.*' => 'string',
             'fotos' => 'nullable|array|max:10',
-            'fotos.*' => 'image|mimes:jpeg,png,jpg|max:5120',
+            'fotos.*' => 'image|mimes:jpeg,png,jpg|max:2048',
             'foto_order' => 'nullable|string'
         ]);
 
@@ -100,6 +137,7 @@ class RuanganController extends Controller
             'lokasi' => $request->lokasi,
             'lantai' => $request->lantai,
             'kapasitas' => $request->kapasitas,
+            'kategori' => $request->kategori,
             'fasilitas' => $request->fasilitas ?? [],
             'is_active' => $request->has('is_active') ? true : false,
         ];
@@ -137,9 +175,15 @@ class RuanganController extends Controller
         return redirect()->route('eoffice.peminjaman.admin.ruangan.index')->with('success', 'Detail ruangan berhasil diperbarui.');
     }
 
-    public function destroy($id)
+    public function destroy(Ruangan $ruangan)
     {
-        $ruangan = Ruangan::findOrFail($id);
+        $storage = app(\App\Services\SupabaseStorage::class);
+        foreach ($ruangan->fotos as $foto) {
+            if (!empty($foto->path_foto)) {
+                $storage->delete($foto->path_foto, 'eoffice');
+            }
+        }
+
         $ruangan->delete();
 
         return redirect()->route('eoffice.peminjaman.admin.ruangan.index')->with('success', 'Ruangan berhasil dihapus.');

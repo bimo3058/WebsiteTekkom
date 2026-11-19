@@ -34,39 +34,22 @@
     .verif-table { width: 100%; border-collapse: collapse; min-width: 1100px; }
     /* Header, padding, ukuran huruf, dan warna teks sel disamakan dengan tabel
        Verifikasi Prestasi & Kegiatan (admin.blade.php): isi 13px, header 11px. */
-    .verif-table thead th { font-size: 11px; font-weight: 600; color: var(--c-fg-muted); padding: 11px 16px; text-align: left; background: var(--c-bg); border-bottom: 1px solid var(--c-border); white-space: nowrap; }
+    .verif-table thead th { font-size: 11px; font-weight: 600; color: var(--c-fg-muted); padding: 11px 16px; text-align: left; background: #FAFAFA; border-bottom: 1px solid var(--c-border); white-space: nowrap; }
     .verif-table thead th:first-child { padding: 11px 12px; width: 48px; }
-    .verif-table tbody td { padding: 14px 16px; font-size: 13px; color: var(--c-fg-sec); border-bottom: 1px solid var(--c-border); vertical-align: middle; }
+    .verif-table tbody td { padding: 14px 16px; font-size: 13px; color: var(--c-fg); border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
     .verif-table tbody td:first-child { padding: 14px 12px; color: var(--c-fg-muted); font-weight: 400; }
     .verif-table tbody tr:last-child td { border-bottom: none; }
     .verif-table tbody tr { transition: background .12s; }
     .verif-table tbody tr:hover td { background: #FAFAFA; }
     .verif-table .sel-utama { font-size: 13px; font-weight: 600; color: var(--c-fg); margin: 0; }
-    .verif-table .sel-nama { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
-    .verif-table .sel-judul { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.5; max-width: 300px; }
+    /* Isi sel tidak pernah dipotong ("…"): teks panjang turun ke baris berikutnya */
+    .verif-table .sel-nama { overflow-wrap: break-word; line-height: 1.5; max-width: 160px; }
+    .verif-table .sel-judul { overflow-wrap: break-word; line-height: 1.5; max-width: 300px; }
     .verif-table .sel-nim { font-family: monospace; font-size: 12px; font-weight: 600; color: var(--c-primary); }
     .verif-table .sel-sub { font-size: 11px; color: var(--c-fg-muted); }
 
-    .tingkat-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 50px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
-    /* Navy solid, bukan kuning: kuning sudah jadi warna status "Menunggu Review"
-       di kolom sebelahnya, sehingga keduanya tampak sama. */
-    .tingkat-badge.internasional { background: var(--c-primary); color: #fff; }
-    .tingkat-badge.nasional { background: var(--c-primary-subtle); color: var(--c-primary); }
-    .tingkat-badge.regional { background: var(--c-sky-subtle); color: var(--c-sky); }
-    .tingkat-badge.universitas { background: var(--c-success-subtle); color: var(--c-success); }
-    .tingkat-badge.prodi { background: var(--c-primary-subtle); color: var(--c-primary); }
-
-    .claim-badge { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 50px; display: inline-flex; align-items: center; }
-    .claim-badge.belum { background: var(--c-bg); color: var(--c-fg-muted); }
-    .claim-badge.diajukan { background: var(--c-warning-subtle); color: var(--c-warning); }
-    .claim-badge.disetujui { background: var(--c-success-subtle); color: var(--c-success); }
-    .claim-badge.ditolak { background: var(--c-error-subtle); color: var(--c-error); }
+    /* Badge tingkat, reward, dan status keputusan: partials/sitkom-ui */
     .reward-mini { font-size: 11px; color: var(--c-fg-muted); margin-top: 4px; max-width: 220px; line-height: 1.4; }
-
-    .detail-status-pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 3px 12px; border-radius: 50px; }
-    .detail-status-pill.disetujui { background: var(--c-success-subtle); color: var(--c-success); }
-    .detail-status-pill.ditolak { background: var(--c-error-subtle); color: var(--c-error); }
-    .detail-status-pill.diajukan { background: var(--c-warning-subtle); color: var(--c-warning); }
 
     /* MK pilihan mahasiswa (read-only) */
     .mk-readonly { display: flex; flex-wrap: wrap; gap: 6px; background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 10px; padding: 10px 12px; min-height: 42px; }
@@ -74,17 +57,52 @@
     /* Versi kecil untuk sel tabel. Lebarnya dibatasi supaya klaim 3 MK tidak
        meregangkan kolom lain; daftar utuhnya tetap ada di modal Tinjau. */
     .mk-tag--sm { font-size: 11px; padding: 2px 8px; }
-    .mk-cell { display: flex; flex-wrap: nowrap; gap: 4px; }
+    .mk-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+    .mk-cell-item { display: flex; align-items: center; gap: 8px; }
+    .mk-cell-item .sel-sub { white-space: nowrap; }
     .sel-kosong { color: var(--c-fg-placeholder); }
+
+    /* Lebar minimum kolom nama — di kelas supaya bisa dikecilkan oleh aturan layar sempit */
+    .verif-table .col-mhs { min-width: 160px; }
+    .verif-table .col-judul { min-width: 180px; }
+    .verif-table .col-aksi { text-align: center; width: 72px; }
+
+    /* Layar sempit (laptop ≤ 1680px): tanpa ini tabel selebar ±1330px dan kolom
+       Status + Aksi terdorong keluar layar (harus geser horizontal). Di atas
+       1680px tabel sudah muat, jadi tampilannya tidak diubah sama sekali.
+       Pemadatan: padding sel dikecilkan dan kolom nama dibatasi lebih sempit.
+       Kolom Mata Kuliah TIDAK dipadatkan: nama MK dan tahun ajarannya tetap
+       sejajar dalam satu baris di semua lebar layar (keputusan Surya). */
+    @media (max-width: 1680px) {
+        .verif-table { min-width: 0; }
+        .verif-table thead th,
+        .verif-table tbody td { padding-left: 8px; padding-right: 8px; }
+        .verif-table thead th:first-child,
+        .verif-table tbody td:first-child { padding-left: 12px; padding-right: 4px; width: 40px; }
+        .verif-table .col-mhs { min-width: 90px; }
+        .verif-table .col-judul { min-width: 110px; }
+        .verif-table .sel-nama { max-width: 120px; }
+        .verif-table .sel-judul { max-width: 150px; }
+
+        /* Jaring pengaman: kalau layar lebih sempit lagi dan tabel tetap harus
+           digeser, kolom Aksi menempel di tepi kanan supaya tombol "⋯" tidak
+           pernah hilang dari pandangan. */
+        .verif-table thead th:last-child,
+        .verif-table tbody td:last-child {
+            position: sticky; right: 0;
+            box-shadow: -8px 0 8px -8px rgba(15, 23, 42, .12);
+        }
+        .verif-table thead th:last-child { background: #FAFAFA; }
+        .verif-table tbody td:last-child { background: #fff; }
+        .verif-table tbody tr:hover td:last-child { background: #FAFAFA; }
+        /* Sel yang menempel membentuk lapisan sendiri, jadi sel baris di bawahnya
+           bisa menimpa menu "⋯" yang sedang terbuka. Sel yang sedang aktif
+           (tombol/menunya fokus) dinaikkan di atas yang lain. */
+        .verif-table tbody td:last-child:focus-within { z-index: 5; }
+    }
 
     .empty-state { text-align: center; padding: 60px 24px; color: var(--c-fg-muted); }
     .empty-state .empty-icon { display: flex; justify-content: center; margin-bottom: 12px; color: var(--c-border-strong); }
-
-    .modal-content { border-radius: 18px; border: none; box-shadow: 0 24px 60px rgba(0,0,0,.18); }
-    .modal-header { border-bottom: 1px solid var(--c-border); padding: 18px 22px; }
-    .modal-header .modal-title { font-size: 16px; font-weight: 700; color: var(--c-fg); }
-    .modal-body { padding: 22px; }
-    .modal-footer { border-top: 1px solid var(--c-border); padding: 14px 22px; }
 
     /* Kolom data di sini memuat kuota, mata kuliah, dan penjelasan SK,
        jadi butuh lebih lega daripada halaman Verifikasi Prestasi */
@@ -99,6 +117,7 @@
 
 @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
 @include('manajemenmahasiswa::partials.filter-popover')
+@include('manajemenmahasiswa::partials.sitkom-ui')
 
 <!-- Page Header -->
 <x-manajemenmahasiswa::ui.page-header bordered title="Klaim Prestasi">
@@ -106,30 +125,12 @@
         Tinjau pengajuan klaim prestasi mahasiswa, lalu setujui atau tolak konversinya menjadi nilai mata kuliah sesuai SK FT 774.
     @else
         Pantau pengajuan klaim prestasi mahasiswa untuk dikonversi menjadi nilai mata kuliah sesuai SK FT 774.
-        <span style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:var(--c-primary-subtle); color:var(--c-primary); font-size:11px; font-weight:700; padding:4px 12px; border-radius:50px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            Mode Pemantauan — hanya melihat (tanpa tinjau/setujui/tolak)
-        </span>
     @endif
 </x-manajemenmahasiswa::ui.page-header>
 
 <!-- Flash Messages -->
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-@if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error); font-weight: 500; font-size: 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
+<x-manajemenmahasiswa::ui.flash type="error" :message="session('error')" class="mb-3" />
 
 
 <!-- Stat Cards (status klaim) — ringkasan angka saja, bukan tombol filter -->
@@ -180,14 +181,16 @@
                 <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
                 <input type="text" name="search" class="search-input" placeholder="Cari nama, NIM, prestasi, tingkat..." value="{{ request('search') }}">
             </div>
-            {{-- Status Klaim & Angkatan dikumpulkan dalam satu panel, sama dengan panel
+            {{-- Status Klaim, Angkatan, & Tingkat dikumpulkan dalam satu panel, sama dengan panel
                  "Advanced Filters" tabel Audit Log global (partials/filter-popover).
                  Titik di tombol Filter menyala bila ada dropdown yang sedang menyaring —
                  termasuk "Menunggu Review" yang jadi tampilan bawaan. --}}
             @php
                 $filterRewardAktif   = $reward !== 'semua';
                 $filterAngkatanAktif = filled($angkatan) && $angkatan !== 'semua';
-                $adaFilterApaPun     = $filterAngkatanAktif || request()->filled('search') || $reward !== 'menunggu';
+                $filterTingkatAktif  = $tingkat !== 'semua';
+                $adaFilterApaPun     = $filterAngkatanAktif || $filterTingkatAktif
+                    || request()->filled('search') || $reward !== 'menunggu';
             @endphp
             <div class="filter-pop" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
                 <button type="button" class="filter-pop-btn"
@@ -197,7 +200,7 @@
                         <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
                     </svg>
                     <span style="line-height: 1;">Filter</span>
-                    @if($filterRewardAktif || $filterAngkatanAktif)
+                    @if($filterRewardAktif || $filterAngkatanAktif || $filterTingkatAktif)
                         <span class="filter-pop-dot"></span>
                     @endif
                 </button>
@@ -227,12 +230,24 @@
                             </x-manajemenmahasiswa::ui.select>
                         </div>
 
+                        <!-- Angkatan -->
                         <div>
                             <label class="filter-pop-label" for="filterAngkatan">Angkatan</label>
                             <x-manajemenmahasiswa::ui.select name="angkatan" id="filterAngkatan">
                                 <option value="semua">Semua Angkatan</option>
                                 @foreach($angkatanList as $a)
                                     <option value="{{ $a }}" {{ $angkatan == $a ? 'selected' : '' }}>{{ $a }}</option>
+                                @endforeach
+                            </x-manajemenmahasiswa::ui.select>
+                        </div>
+
+                        <!-- Tingkat -->
+                        <div>
+                            <label class="filter-pop-label" for="filterTingkat">Tingkat</label>
+                            <x-manajemenmahasiswa::ui.select name="tingkat" id="filterTingkat">
+                                <option value="semua">Semua Tingkat</option>
+                                @foreach($tingkatList as $t)
+                                    <option value="{{ $t }}" {{ $tingkat === $t ? 'selected' : '' }}>{{ ucfirst($t) }}</option>
                                 @endforeach
                             </x-manajemenmahasiswa::ui.select>
                         </div>
@@ -260,11 +275,10 @@
                     <th>NIM</th>
                     <th>Nama Prestasi</th>
                     <th>Tingkat</th>
-                    <th>Tahun Ajaran</th>
                     <th>SKS Diklaim</th>
                     <th>Mata Kuliah</th>
                     <th>Status</th>
-                    <th style="text-align: center; width: 120px;">Aksi</th>
+                    <th class="col-aksi">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -304,11 +318,12 @@
                             "penyelenggara"  => $p->reward_penyelenggara_label,
                             "capaian"        => $p->reward_capaian_label,
                             "invention"      => (bool) $p->reward_is_invention,
-                            "tahun_ajaran"   => $p->reward_tahun_ajaran_label,
                             "jml_mk_max"     => $p->reward_jml_mk_max,
                             "sks_max"        => $p->reward_sks_max,
                             "sks_diajukan"   => $p->reward_sks_diajukan,
                             "mk_diajukan"    => $mkRingkas,
+                            // Nama MK + tahun ajaran pengambilannya masing-masing
+                            "mk_list"        => $p->reward_mk_list,
                             "mk_disetujui"   => $p->reward_mk_disetujui,
                             "kuota_terpakai" => $kuotaTerpakai,
                             "kuota_maks"     => $kuotaMaks,
@@ -321,6 +336,11 @@
                             "sk_lawas"       => $p->rewardSkSudahDiganti(),
                             // SK 774 poin 9 — prestasi sebelum SK berlaku
                             "pra_sk"         => $p->rewardSebelumMasaBerlaku(),
+                            // Diajukan lebih dari 1 tahun setelah tanggal prestasi — penanda
+                            // khusus admin; mahasiswa tidak pernah melihatnya.
+                            "terlambat"      => $p->rewardTerlambat(),
+                            "tgl_klaim"      => $p->claimed_at?->translatedFormat('d M Y'),
+                            "batas_akhir"    => $p->rewardBatasAkhir(),
                             "status"         => $p->reward_status,
                             "note"           => $p->reward_note,
                             "reviewer"       => $p->reviewedBy->name ?? null,
@@ -334,17 +354,10 @@
                     @endphp
                     <tr>
                         <td>{{ ($rewardData->currentPage() - 1) * $rewardData->perPage() + $i + 1 }}</td>
-                        <td style="min-width: 160px;"><p class="sel-utama sel-nama">{{ $p->kemahasiswaan->nama ?? '-' }}</p></td>
+                        <td class="col-mhs"><p class="sel-utama sel-nama">{{ $p->kemahasiswaan->nama ?? '-' }}</p></td>
                         <td><span class="sel-nim">{{ $p->kemahasiswaan->nim ?? '-' }}</span></td>
-                        <td style="min-width: 180px;"><p class="sel-utama sel-judul">{{ $p->nama_prestasi }}</p></td>
+                        <td class="col-judul"><p class="sel-utama sel-judul">{{ $p->nama_prestasi }}</p></td>
                         <td><span class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span></td>
-                        <td style="white-space: nowrap;">
-                            @if($p->reward_tahun_ajaran_label)
-                                {{ $p->reward_tahun_ajaran_label }}
-                            @else
-                                <span class="sel-kosong">&ndash;</span>
-                            @endif
-                        </td>
                         <td style="white-space: nowrap;">
                             @if($p->reward_sks_diajukan !== null)
                                 <span style="font-weight: 600; color: var(--c-fg);">{{ $p->reward_sks_diajukan }} SKS</span>
@@ -357,13 +370,14 @@
                         </td>
                         <td>
                             @if(count($mkRingkas))
+                                {{-- Satu baris per MK dengan tahun ajarannya sendiri --}}
                                 <div class="mk-cell">
-                                    @foreach(array_slice($mkRingkas, 0, 2) as $mkNama)
-                                        <span class="mk-tag mk-tag--sm">{{ $mkNama }}</span>
+                                    @foreach($p->reward_mk_list as $mkItem)
+                                        <div class="mk-cell-item">
+                                            <span class="mk-tag mk-tag--sm">{{ $mkItem['nama'] }}</span>
+                                            <span class="sel-sub">{{ $mkItem['ta_label'] ?? '–' }}</span>
+                                        </div>
                                     @endforeach
-                                    @if(count($mkRingkas) > 2)
-                                        <span class="mk-tag mk-tag--sm">+{{ count($mkRingkas) - 2 }}</span>
-                                    @endif
                                 </div>
                             @else
                                 <span class="sel-kosong">&ndash;</span>
@@ -379,14 +393,11 @@
                             @endif
                         </td>
                         <td style="text-align: center;">
-                            <div class="d-flex gap-1 flex-wrap justify-content-center">
-                                {{-- Semua baris memakai tombol & modal yang sama; klaim yang sudah
-                                     diputus tinggal membuka modal itu tanpa panel keputusan. --}}
-                                <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" onclick="openTinjauReward(@js($rewardPayload))">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    Tinjau
-                                </button>
-                            </div>
+                            {{-- Semua baris memakai butir menu & modal yang sama; klaim yang sudah
+                                 diputus tinggal membuka modal itu tanpa panel keputusan. --}}
+                            @include('manajemenmahasiswa::verifikasi.partials.aksi-menu', ['items' => [
+                                ['label' => 'Tinjau', 'fn' => 'openTinjauReward', 'payload' => $rewardPayload],
+                            ]])
                         </td>
                     </tr>
                 @endforeach
@@ -414,13 +425,10 @@
         <div class="modal-content" style="overflow: hidden;">
             <form id="tinjauRewardForm" method="POST">
                 @csrf @method('PATCH')
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" style="color: var(--c-fg);">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px;"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
-                        Tinjau Pengajuan Reward
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+                <x-manajemenmahasiswa::ui.modal-header subtitle="Periksa sertifikat, kuota, dan mata kuliah sebelum memutuskan">
+                    <x-slot:icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></x-slot:icon>
+                    Tinjau Pengajuan Reward
+                </x-manajemenmahasiswa::ui.modal-header>
                 <div class="modal-body" style="padding: 0;">
                     <div class="tp-grid">
                         {{-- Kiri: sertifikat yang jadi dasar konversi nilai --}}
@@ -443,6 +451,10 @@
                                  sudah diganti — keputusannya tetap memakai aturan lama --}}
                             <div id="trSkLawas" class="sk-lawas" style="display: none;"></div>
                             <div id="trPraSk" class="sk-lawas" style="display: none;"></div>
+                            {{-- Klaim diajukan lebih dari 1 tahun setelah tanggal prestasi.
+                                 Hanya peringatan bagi admin — klaim tidak otomatis ditolak,
+                                 karena peninjau berhak menyetujui atau menolaknya. --}}
+                            <div id="trTerlambat" class="sk-lawas" style="display: none;"></div>
                             {{-- Melewati batas SK 774 — diizinkan kebijakan departemen,
                                  tapi fakultas masih mengacu ke SK --}}
                             <div id="trSkBatas" class="sk-lawas" style="display: none;"></div>
@@ -450,20 +462,18 @@
                             {{-- Kotak MK & textarea Catatan berbagi sisa tinggi panel
                                  sama rata, supaya tidak ada satu kotak yang terlalu besar --}}
                             <div style="margin-top: 14px; flex: 1 1 0; display: flex; flex-direction: column; min-height: 90px;">
-                                <label class="form-label fw-bold mb-1" style="font-size: 13px;">
-                                    Mata Kuliah yang Dinaikkan Nilainya
-                                </label>
+                                <label class="form-label-custom">Mata Kuliah</label>
                                 <div id="trMkView" class="mk-readonly" style="flex: 1 1 auto; align-content: flex-start;"></div>
                             </div>
 
                             <div id="trActions" style="flex: 1 1 0; flex-direction: column; padding-top: 18px;">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <label class="form-label fw-bold mb-0" style="font-size: 12px;">Catatan <span style="font-weight: 400; color: var(--c-fg-muted);">(wajib untuk menolak)</span></label>
+                                    <label class="form-label-custom mb-0" for="trNote">Catatan <span style="text-transform: none; letter-spacing: normal; font-weight: 500;">(wajib untuk menolak)</span></label>
                                     <span class="text-muted" style="font-size: 11px;" id="charCount_tr">0 / 300 huruf</span>
                                 </div>
-                                <textarea name="reward_note" id="trNote" class="form-control" rows="3" maxlength="300"
+                                <textarea name="reward_note" id="trNote" class="form-control form-control-custom" rows="3" maxlength="300"
                                           placeholder="Catatan persetujuan / alasan penolakan"
-                                          style="border-radius: 10px; font-size: 13px; flex: 1 1 auto; min-height: 84px; resize: none;"
+                                          style="flex: 1 1 auto; min-height: 84px; resize: none;"
                                           oninput="document.getElementById('charCount_tr').innerText = this.value.length + ' / 300 huruf'; document.getElementById('trError').style.display = 'none';"></textarea>
                                 <div id="trError" style="display: none; font-size: 12px; font-weight: 600; color: var(--c-error); margin-top: 6px;"></div>
                                 <div class="tp-aksi">
@@ -489,9 +499,9 @@
                                             <button type="button" class="alasan-chip" data-alasan="Salah persetujuan">Salah persetujuan</button>
                                             <button type="button" class="alasan-chip" data-alasan="">Lainnya</button>
                                         </div>
-                                        <textarea id="trBatalDetail" class="form-control" rows="2" maxlength="270"
+                                        <textarea id="trBatalDetail" class="form-control form-control-custom" rows="2" maxlength="270"
                                                   placeholder="Keterangan tambahan (wajib bila memilih Lainnya)"
-                                                  style="border-radius: 10px; font-size: 13px; margin-top: 10px; resize: none;"></textarea>
+                                                  style="margin-top: 10px; resize: none;"></textarea>
                                         <div id="trBatalError" style="display: none; font-size: 12px; font-weight: 600; color: var(--c-error); margin-top: 6px;"></div>
                                         <div class="tp-aksi">
                                             <button type="button" id="trBatalKembaliBtn" class="mk-btn mk-btn--secondary">Kembali</button>
@@ -539,7 +549,6 @@ function openTinjauReward(data) {
         ['Prestasi',       data.nama],
         ['Penyelenggara',  data.penyelenggara || '-'],
         ['Capaian',        (data.capaian || '-') + (data.invention ? ' (invention/expo/fair)' : '')],
-        ['Tahun ajaran',   data.tahun_ajaran || '-'],
         ['Maks. konversi', data.jml_mk_max + ' mata kuliah (setara ' + data.sks_max + ' SKS)'],
         ['SKS diklaim',    (data.sks_diajukan === null || data.sks_diajukan === undefined)
                                ? '-'
@@ -572,6 +581,18 @@ function openTinjauReward(data) {
         : '';
     praSkEl.style.display = data.pra_sk ? 'block' : 'none';
 
+    // Klaim diajukan lebih dari 1 tahun setelah tanggal prestasi. Mahasiswa tetap
+    // bisa mengajukan dan tidak diberi tahu; keputusannya sepenuhnya di tangan
+    // admin — boleh disetujui, boleh ditolak.
+    const terlambatEl = document.getElementById('trTerlambat');
+    terlambatEl.textContent = data.terlambat
+        ? 'Klaim ini diajukan' + (data.tgl_klaim ? ' pada ' + data.tgl_klaim : '')
+            + ', lebih dari 1 tahun setelah tanggal prestasi'
+            + (data.batas_akhir ? ' (batas 1 tahun: ' + data.batas_akhir + ')' : '')
+            + '. Anda berhak menyetujui atau menolak klaim ini. Mahasiswa tidak melihat peringatan ini.'
+        : '';
+    terlambatEl.style.display = data.terlambat ? 'block' : 'none';
+
     // Kebijakan departemen lebih longgar dari SK 774 poin 4 & 5 — tidak
     // menghalangi persetujuan, hanya mengingatkan bahwa fakultas bisa menolak.
     const skBatasEl = document.getElementById('trSkBatas');
@@ -581,12 +602,13 @@ function openTinjauReward(data) {
     // MK pilihan mahasiswa — tampil read-only sebagai chip
     const mkView = document.getElementById('trMkView');
     mkView.innerHTML = '';
-    const mks = data.mk_diajukan || [];
+    const mks = data.mk_list || [];
     if (mks.length) {
-        mks.forEach(function (nama) {
+        mks.forEach(function (mk) {
             const tag = document.createElement('span');
             tag.className = 'mk-tag';
-            tag.textContent = nama;
+            // Tahun ajaran pengambilan ikut tampil per MK
+            tag.textContent = mk.nama + (mk.ta_label ? ' — ' + mk.ta_label : '');
             mkView.appendChild(tag);
         });
     } else {
@@ -651,7 +673,7 @@ function trRenderHasil(data) {
     reviewEl.innerHTML = '';
 
     if (data.mk_disetujui) {
-        reviewEl.appendChild(trBarisHasil('MK disetujui: ', data.mk_disetujui, 'var(--c-success)', false));
+        reviewEl.appendChild(trBarisHasil('Mata kuliah disetujui: ', data.mk_disetujui, 'var(--c-success)', false));
     }
     if (data.note) {
         reviewEl.appendChild(trBarisHasil('Catatan: ', data.note, data.status === 'ditolak' ? 'var(--c-error)' : 'var(--c-success)', true));

@@ -202,6 +202,16 @@
         </style>
     @endpush
 
+    @php
+        // Pengumuman baru milik staff masih berupa draf (PengumumanDraft) — controller
+        // mengirim URL kirim/batal sendiri. Alur lama (pengumuman yang sudah ada) memakai
+        // URL bawaan di bawah.
+        $dariDraf  = $dariDraf ?? false;
+        $aksiKirim = $aksiKirim ?? route('manajemenmahasiswa.pengumuman.verification.submit', $pengumuman->id);
+        $urlBatal  = $urlBatal ?? route('manajemenmahasiswa.pengumuman.index');
+        $sudahDiajukan = ($pengumuman->status_publish ?? null) === \Modules\ManajemenMahasiswa\Models\Pengumuman::STATUS_PENDING_REVIEW;
+    @endphp
+
     <div class="dash-wrap">
         <div class="dash-box">
 
@@ -212,7 +222,7 @@
                     badge="Modul Mahasiswa"
                     subtitle="Pengumuman Anda perlu diverifikasi oleh atasan sebelum dapat dipublikasikan">
                     <x-slot:actions>
-                        <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="mk-btn mk-btn--secondary">
+                        <a href="{{ $urlBatal }}" class="mk-btn mk-btn--secondary">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
                             </svg>
@@ -250,7 +260,7 @@
                         <span>Ringkasan Pengumuman</span>
                         <span class="status-badge badge-pending" style="margin-left: auto;">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            Menunggu Verifikasi
+                            {{ $sudahDiajukan ? 'Menunggu Verifikasi' : 'Belum Diajukan' }}
                         </span>
                     </div>
                     <div class="vr-card-body">
@@ -272,7 +282,7 @@
                 </div>
 
                 {{-- ── Form Verifikasi ──────────────────────── --}}
-                <form action="{{ route('manajemenmahasiswa.pengumuman.verification.submit', $pengumuman->id) }}" method="POST" id="verificationForm">
+                <form action="{{ $aksiKirim }}" method="POST" id="verificationForm">
                     @csrf
 
                     <div class="vr-card">
@@ -282,22 +292,49 @@
                         </div>
                         <div class="vr-card-body">
 
+                            @php
+                                // Verifikator sah (PengumumanService::verifikatorUntuk): pimpinan
+                                // bidang/unit pengaju + DPM. Dipisah per grup supaya jelas.
+                                $RH = \Modules\ManajemenMahasiswa\Support\RoleHimpunan::class;
+                                $pimpinanBidang = $verifiers->filter(fn ($v) => $v->roles->pluck('name')->intersect($RH::PIMPINAN_BIDANG)->isNotEmpty()
+                                    && $v->pengurusBidang?->bidang_id === $bidangPengaju?->id);
+                                $verifikatorDpm = $verifiers->reject(fn ($v) => $pimpinanBidang->contains('id', $v->id));
+                                $namaBidang     = $bidangPengaju?->nama_bidang ?? '-';
+                                $labelPimpinan  = function ($v) use ($RH) {
+                                    $jabatan = collect($RH::PIMPINAN_BIDANG)->first(fn ($r) => $v->roles->contains('name', $r));
+                                    return $jabatan ? $RH::labelLengkap($v, $jabatan) : 'Pimpinan';
+                                };
+                            @endphp
                             <div class="form-group">
                                 <label>Verifikator <span class="required">*</span></label>
                                 <x-manajemenmahasiswa::ui.select name="verifier_id" id="verifierSelect" size="md" required
                                     :invalid="$errors->has('verifier_id')">
-                                    <option value="">— Pilih Ketua Verifikator —</option>
-                                    @foreach($verifiers as $verifier)
-                                        @php
-                                            $roleLabel = $verifier->roles->pluck('name')->map(function($r) {
-                                                return ucwords(str_replace('_', ' ', $r));
-                                            })->implode(', ');
-                                        @endphp
-                                        <option value="{{ $verifier->id }}" {{ old('verifier_id') == $verifier->id ? 'selected' : '' }}>
-                                            {{ $verifier->name }} — {{ $roleLabel }}
-                                        </option>
-                                    @endforeach
+                                    <option value="">— Pilih Verifikator —</option>
+                                    @if($pimpinanBidang->isNotEmpty())
+                                        <optgroup label="Pimpinan {{ $namaBidang }}">
+                                            @foreach($pimpinanBidang as $verifier)
+                                                <option value="{{ $verifier->id }}" {{ old('verifier_id') == $verifier->id ? 'selected' : '' }}>
+                                                    {{ $verifier->name }} — {{ $labelPimpinan($verifier) }}
+                                                </option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endif
+                                    @if($verifikatorDpm->isNotEmpty())
+                                        <optgroup label="DPM">
+                                            @foreach($verifikatorDpm as $verifier)
+                                                <option value="{{ $verifier->id }}" {{ old('verifier_id') == $verifier->id ? 'selected' : '' }}>
+                                                    {{ $verifier->name }} — DPM
+                                                </option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endif
                                 </x-manajemenmahasiswa::ui.select>
+                                <span style="display:block;margin-top:6px;font-size:11px;color:var(--c-fg-placeholder, #808897);">
+                                    Pengumuman diverifikasi oleh pimpinan bidang/unit Anda ({{ $namaBidang }}) atau DPM.
+                                    @if($pimpinanBidang->isEmpty())
+                                        Bidang/unit Anda belum memiliki KABID/WAKABID/KANIT/WAKANIT, jadi saat ini hanya DPM yang bisa dipilih.
+                                    @endif
+                                </span>
                                 @error('verifier_id') <span class="form-error">{{ $message }}</span> @enderror
                             </div>
 
@@ -310,8 +347,14 @@
                         </div>
                     </div>
 
+                    @if($dariDraf)
+                        <p style="margin: 0 0 12px; font-size: 12px; color: var(--c-fg-placeholder, #808897);">
+                            Jika dibatalkan, pengumuman tetap tersimpan di Draft dan bisa dilanjutkan dari menu Load Draft pada halaman Buat Pengumuman.
+                        </p>
+                    @endif
+
                     <div class="form-actions">
-                        <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="mk-btn mk-btn--secondary">Batal</a>
+                        <a href="{{ $urlBatal }}" class="mk-btn mk-btn--secondary">Batal</a>
 
                         <div class="fa-spacer"></div>
 

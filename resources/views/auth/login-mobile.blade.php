@@ -98,7 +98,7 @@
         {{-- Footer --}}
         <div class="mt-6 text-center">
             <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                © {{ date('Y') }} Teknik Komunikasi • Universitas Diponegoro
+                © {{ date('Y') }} Teknik Komputer • Universitas Diponegoro
             </p>
         </div>
     </div>

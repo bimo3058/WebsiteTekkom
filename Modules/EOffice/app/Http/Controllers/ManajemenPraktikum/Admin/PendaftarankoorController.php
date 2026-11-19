@@ -6,8 +6,10 @@ use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Modules\EOffice\Models\PendaftaranKoordinator;
+use Modules\EOffice\Models\PeriodePendaftaran;
 use Modules\EOffice\Models\Praktikum;
 use Modules\EOffice\Services\KoorPraktikumService;
 use Modules\EOffice\Services\NotifikasiService;
@@ -29,6 +31,7 @@ class PendaftaranKoorController extends Controller
         $query = PendaftaranKoordinator::with(['user.student', 'praktikum', 'direviewOleh'])
             ->orderByDesc('created_at');
 
+        if ($request->routeIs('eoffice.manprak.cerc.*')) $query->whereHas('praktikum',fn($q)=>$q->where('is_active',true));
         if ($status = $request->input('status')) {
             $query->where('status', $status);
         }
@@ -43,13 +46,27 @@ class PendaftaranKoorController extends Controller
         }
 
         $pendaftaran = $query->paginate($request->input('per_page', 5))->withQueryString();
+
+        $namaBerkasTambahan = collect();
+        if (Schema::hasTable('eo_prak_periode_pendaftaran')) {
+            $namaBerkasTambahan = PeriodePendaftaran::whereIn('praktikum_id', $pendaftaran->pluck('praktikum_id')->unique())
+                ->where('jenis', 'koor')
+                ->latest('created_at')
+                ->get()
+                ->unique('praktikum_id')
+                ->pluck('nama_berkas_tambahan', 'praktikum_id');
+        }
         
         $praktikumList = \Modules\EOffice\Models\Praktikum::with('matkul')
             ->where('status', 'aktif')
             ->orderByDesc('created_at')
             ->get();
 
-        return view('eoffice::manajemen-praktikum.admin.pendaftaran-koor', compact('pendaftaran', 'praktikumList'));
+        return view('eoffice::manajemen-praktikum.admin.pendaftaran-koor', compact(
+            'pendaftaran',
+            'praktikumList',
+            'namaBerkasTambahan'
+        ));
     }
 
     /**
@@ -58,7 +75,7 @@ class PendaftaranKoorController extends Controller
      */
     public function approve(Request $request, int $id)
     {
-        abort_unless($request->user()?->hasAnyRole(['superadmin', 'admin_eoffice']), 403);
+        abort_unless($request->user()?->hasAnyRole(['superadmin', 'admin_praktikum']), 403);
         $data = $request->validate([
             'override_dosen' => 'sometimes|boolean',
             'override_reason' => 'required_if:override_dosen,1|nullable|string|min:10|max:1000',
@@ -106,7 +123,7 @@ class PendaftaranKoorController extends Controller
 
     public function reject(Request $request, int $id)
     {
-        abort_unless($request->user()?->hasAnyRole(['superadmin', 'admin_eoffice']), 403);
+        abort_unless($request->user()?->hasAnyRole(['superadmin', 'admin_praktikum']), 403);
         $pendaftaran = PendaftaranKoordinator::with('user')->findOrFail($id);
 
         if ($pendaftaran->status !== 'pending') {

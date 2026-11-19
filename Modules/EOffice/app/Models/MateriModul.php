@@ -12,10 +12,11 @@ use Illuminate\Database\Eloquent\Model;
  */
 class MateriModul extends Model
 {
-    protected $table = 'materi_modul';
+    protected $table = 'eo_prak_materi_modul';
 
     protected $fillable = [
         'modul_id',
+        'materi_sumber_id',
         'user_id',
         'judul',
         'deskripsi',
@@ -33,5 +34,10 @@ class MateriModul extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function materiSumber()
+    {
+        return $this->belongsTo(self::class, 'materi_sumber_id');
     }
 }

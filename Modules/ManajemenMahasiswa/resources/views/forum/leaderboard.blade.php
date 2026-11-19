@@ -186,6 +186,36 @@
                 background: #f9fafb;
                 border-top: 1px solid #f3f4f6;
             }
+
+            .lb-expand-row {
+                border-top: 1px solid #f0f1f5;
+                text-align: center;
+                padding: 14px 20px;
+                background: #fafafa;
+            }
+
+            .lb-expand-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 7px 18px;
+                border-radius: 8px;
+                font-size: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                border: 1px solid #DFE1E7;
+                background: #fff;
+                color: #374151;
+                transition: all 0.15s;
+            }
+
+            .lb-expand-btn:hover {
+                border-color: #0B266E;
+                color: #0B266E;
+                background: rgba(11,38,110,0.04);
+            }
+
+            [x-cloak] { display: none !important; }
         </style>
     @endpush
 
@@ -199,40 +229,39 @@
     <div class="dash-box-body">
 
     {{-- My Rank Banner — compact --}}
-    <div style="background: linear-gradient(135deg, #0B266E 0%, #091958 60%, #5C78B8 100%); border-radius: 12px; padding: 14px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; position: relative; overflow: hidden; box-shadow: 0px 1px 2px 0px rgba(228,229,231,0.5);">
-        <div style="position: absolute; top: -30px; right: -30px; width: 100px; height: 100px; background: rgba(255,255,255,0.06); border-radius: 50%;"></div>
+    <div style="background: #fff; border: 1px solid #DFE1E7; border-radius: 12px; padding: 14px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
 
         {{-- Rank --}}
         <div style="display: flex; align-items: baseline; gap: 4px;">
-            <span style="color: rgba(255,255,255,0.65); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Rank</span>
-            <span style="color: #fbbf24; font-size: 32px; font-weight: 900; line-height: 1; letter-spacing: -0.03em;">#{{ $userStats['rank'] }}</span>
+            <span style="color: #808897; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Rank</span>
+            <span style="color: #0B266E; font-size: 32px; font-weight: 800; line-height: 1; letter-spacing: -0.03em;">#{{ $userStats['rank'] }}</span>
         </div>
 
-        <div style="width: 1px; height: 36px; background: rgba(255,255,255,0.2);"></div>
+        <div style="width: 1px; height: 36px; background: #DFE1E7;"></div>
 
         {{-- Stats chips --}}
         <div class="d-flex gap-2 flex-wrap">
-            <div style="background: rgba(255,255,255,0.12); border-radius: 8px; padding: 6px 12px; text-align: center;">
-                <div style="font-size: 14px; font-weight: 800; color: #fff; line-height: 1;">{!! $userStats['tier_icon'] !!} {{ $userStats['level'] }}</div>
-                <div style="font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 1px;">Level</div>
+            <div style="background: #F6F8FA; border: 1px solid #ECEFF3; border-radius: 8px; padding: 6px 12px; text-align: center;">
+                <div style="font-size: 14px; font-weight: 800; color: #0D0D12; line-height: 1;">{{ $userStats['level'] }}</div>
+                <div style="font-size: 9px; font-weight: 600; color: #808897; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 1px;">Level</div>
             </div>
-            <div style="background: rgba(255,255,255,0.12); border-radius: 8px; padding: 6px 12px; text-align: center;">
-                <div style="font-size: 14px; font-weight: 800; color: #fff; line-height: 1;">{{ number_format($userStats['total_xp']) }}</div>
-                <div style="font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 1px;">XP</div>
+            <div style="background: #F6F8FA; border: 1px solid #ECEFF3; border-radius: 8px; padding: 6px 12px; text-align: center;">
+                <div style="font-size: 14px; font-weight: 800; color: #0D0D12; line-height: 1;">{{ number_format($userStats['total_xp']) }}</div>
+                <div style="font-size: 9px; font-weight: 600; color: #808897; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 1px;">XP</div>
             </div>
-            <div style="background: rgba(255,255,255,0.12); border-radius: 8px; padding: 6px 12px; text-align: center;">
-                <div style="font-size: 14px; font-weight: 800; color: #fff; line-height: 1;">{{ $userStats['current_streak'] }}</div>
-                <div style="font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 1px;">Streak</div>
+            <div style="background: #F6F8FA; border: 1px solid #ECEFF3; border-radius: 8px; padding: 6px 12px; text-align: center;">
+                <div style="font-size: 14px; font-weight: 800; color: #0D0D12; line-height: 1;">{{ $userStats['current_streak'] }}</div>
+                <div style="font-size: 9px; font-weight: 600; color: #808897; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 1px;">Streak</div>
             </div>
         </div>
 
-        <div style="margin-left: auto; position: relative; z-index: 1;">
-            <span style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.8);">{!! $userStats['tier_icon'] !!} {{ $userStats['tier_name'] }}</span>
+        <div style="margin-left: auto;">
+            <span style="font-size: 12px; font-weight: 600; color: #0B266E; background: rgba(11,38,110,0.08); padding: 4px 10px; border-radius: 9999px;">{{ $userStats['tier_name'] }}</span>
         </div>
     </div>
 
     {{-- Leaderboard Table --}}
-    <div class="lb-card">
+    <div class="lb-card" x-data="{ expanded: false }">
         <div class="lb-card-header">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2.5"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -242,8 +271,9 @@
                 <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
             </svg>
             <h6>Top Kontributor</h6>
-            <span style="margin-left: auto; font-size: 11px; color: rgba(255,255,255,0.65); font-weight: 500;">
-                Top {{ $leaderboard->count() }} pengguna
+            <span style="margin-left: auto; font-size: 11px; color: #6b7280; font-weight: 500;"
+                x-text="expanded ? 'Menampilkan Top {{ $leaderboard->count() }}' : 'Menampilkan Top 10'">
+                Menampilkan Top 10
             </span>
         </div>
 
@@ -262,7 +292,8 @@
                 <tbody>
                     @forelse($leaderboard as $index => $entry)
                         @php $isMe = $entry->user_id === $user->id; @endphp
-                        <tr class="{{ $isMe ? 'is-me' : '' }}">
+                        <tr class="{{ $isMe ? 'is-me' : '' }}"
+                            @if($index >= 10) x-show="expanded" x-cloak @endif>
                             {{-- Rank --}}
                             <td class="rank-cell">
                                 @if($index === 0)
@@ -301,7 +332,7 @@
                             {{-- Tier & Level --}}
                             <td>
                                 <span class="tier-chip">
-                                    {!! $entry->tier_icon !!} Lv.{{ $entry->level }} &bull; {{ $entry->tier_name }}
+                                    Lv.{{ $entry->level }} &bull; {{ $entry->tier_name }}
                                 </span>
                             </td>
 
@@ -364,10 +395,32 @@
             </table>
         </div>
 
-        {{-- Jika user tidak masuk top 50 --}}
+        {{-- Expand / Collapse --}}
+        @if($leaderboard->count() > 10)
+            <div class="lb-expand-row" x-show="!expanded">
+                <button class="lb-expand-btn" @click="expanded = true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                    Lihat {{ $leaderboard->count() - 10 }} Peserta Lainnya
+                </button>
+            </div>
+            <div class="lb-expand-row" x-show="expanded" x-cloak>
+                <button class="lb-expand-btn" @click="expanded = false">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="18 15 12 9 6 15"/>
+                    </svg>
+                    Sembunyikan
+                </button>
+            </div>
+        @endif
+
+        {{-- Jika user tidak masuk top 100 --}}
         @if($userRankInList === null)
             <div class="outside-top-notice">
-                Kamu belum masuk top 50. Terus berkontribusi di forum untuk naik peringkat!
+                Kamu belum masuk top 100. Terus berkontribusi di forum untuk naik peringkat!
             </div>
         @endif
     </div>

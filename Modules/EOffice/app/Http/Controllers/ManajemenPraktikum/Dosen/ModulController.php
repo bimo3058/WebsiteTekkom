@@ -8,6 +8,7 @@ use Modules\EOffice\Models\Praktikum;
 use Modules\EOffice\Models\Modul;
 use Modules\EOffice\Models\MateriModul;
 use Modules\EOffice\Models\Tugas;
+use Modules\EOffice\Models\PengajuanModul;
 
 class ModulController extends Controller
 {
@@ -46,9 +47,23 @@ class ModulController extends Controller
                 ];
             });
 
+        $pengajuanAktif = PengajuanModul::with(['items', 'pengaju', 'praktikumSumber'])
+            ->where('praktikum_id', $praktikum->id)
+            ->where('status', 'diajukan')
+            ->latest('versi')
+            ->first();
+
+        $riwayatPengajuan = PengajuanModul::with(['reviewer', 'items'])
+            ->where('praktikum_id', $praktikum->id)
+            ->whereIn('status', ['disetujui', 'ditolak', 'perlu_revisi', 'dibatalkan'])
+            ->latest('versi')
+            ->get();
+
         return view('eoffice::manajemen-praktikum.dosen.modul', compact(
             'praktikum',
-            'modulList'
+            'modulList',
+            'pengajuanAktif',
+            'riwayatPengajuan'
         ));
     }
 }

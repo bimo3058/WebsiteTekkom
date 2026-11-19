@@ -21,7 +21,6 @@ class NotificationService
                 'context' => $context,
                 'occurrence_count' => DB::raw('occurrence_count + 1'),
                 'last_occurred_at' => now(),
-                'updated_at' => now(),
             ]
         );
     }

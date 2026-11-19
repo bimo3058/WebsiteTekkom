@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Nilai extends Model
 {
-    protected $table = 'nilai_praktikum';
+    protected $table = 'eo_prak_nilai_praktikum';
 
     protected $fillable = [
         'daftar_praktikan_id',

@@ -9,9 +9,9 @@ use Illuminate\Routing\Controller;
 use Modules\EOffice\Models\AsprakPraktikum;
 use Modules\EOffice\Models\AsistenPraktikum;
 use Modules\EOffice\Models\ModulAsprak;
-use Modules\EOffice\Models\DaftarPraktikan;
 use Modules\EOffice\Models\Modul;
 use Modules\EOffice\Models\Praktikum;
+use Modules\EOffice\Models\PengajuanModul;
 
 class ModulController extends Controller
 {
@@ -20,7 +20,8 @@ class ModulController extends Controller
     public function index()
     {
         $praktikum = DashboardController::resolvePraktikum();
-        $perPage = request('per_page', 10);
+        $perPage = request()->integer('per_page', 10);
+        if (!in_array($perPage, [5, 10, 20], true)) $perPage = 10;
 
         $moduls = $praktikum
             ? Modul::with(['materi', 'tugas', 'modulAsprak.asprak.user'])
@@ -55,7 +56,30 @@ class ModulController extends Controller
         // Also define $modulList for the template
         $modulList = $moduls;
 
-        return view('eoffice::manajemen-praktikum.koordinator.modul', compact('praktikum', 'moduls', 'modulList', 'asistenList', 'distribusiList', 'asistenPaginated'));
+        $pengajuanAktif = $praktikum
+            ? PengajuanModul::with(['items', 'praktikumSumber', 'reviewer'])
+                ->where('praktikum_id', $praktikum->id)
+                ->whereIn('status', ['draft', 'diajukan', 'perlu_revisi'])
+                ->latest('versi')
+                ->first()
+            : null;
+
+        $hambatanPengajuan = $pengajuanAktif
+            ? app(\Modules\EOffice\Services\PengajuanModulService::class)->hambatanPenghapusan($pengajuanAktif)
+            : [];
+
+        $riwayatPengajuan = $praktikum
+            ? PengajuanModul::with(['reviewer', 'items'])
+                ->where('praktikum_id', $praktikum->id)
+                ->whereIn('status', ['perlu_revisi', 'disetujui', 'ditolak', 'dibatalkan'])
+                ->latest('versi')
+                ->get()
+            : collect();
+
+        return view('eoffice::manajemen-praktikum.koordinator.modul', compact(
+            'praktikum', 'moduls', 'modulList', 'asistenList', 'distribusiList',
+            'asistenPaginated', 'pengajuanAktif', 'riwayatPengajuan', 'hambatanPengajuan'
+        ));
     }
 
     public function show(int $modulId)
@@ -73,11 +97,7 @@ class ModulController extends Controller
             abort(403, 'Anda tidak berhak melihat modul ini.');
         }
 
-        $daftarPraktikan = DaftarPraktikan::with(['user', 'nilai'])
-            ->where('praktikum_id', $modul->praktikum_id)
-            ->get();
-
-        return view('eoffice::manajemen-praktikum.koordinator.modul-detail', compact('modul', 'daftarPraktikan'));
+        return view('eoffice::manajemen-praktikum.koordinator.modul-detail', compact('modul'));
     }
 
     public function store(Request $request)

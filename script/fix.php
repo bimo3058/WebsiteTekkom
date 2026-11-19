@@ -1,0 +1,22 @@
+<?php
+
+$path = dirname(__DIR__).'/Modules/EOffice/resources/views/manajemen-praktikum/asprak/tugas-pengumpulan.blade.php';
+$content = file_get_contents($path);
+
+if ($content === false) {
+    fwrite(STDERR, "Gagal membaca file: {$path}\n");
+    exit(1);
+}
+
+$content = str_replace(
+    ['>—</span>', '>-</span>', chr(239).chr(191).chr(189)],
+    ['>&ndash;</span>', '>&ndash;</span>', '&ndash;'],
+    $content,
+);
+
+if (file_put_contents($path, $content) === false) {
+    fwrite(STDERR, "Gagal menulis file: {$path}\n");
+    exit(1);
+}
+
+echo "Done\n";

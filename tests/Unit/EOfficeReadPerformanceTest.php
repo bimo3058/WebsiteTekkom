@@ -14,6 +14,7 @@ use Tests\TestCase;
 
 class EOfficeReadPerformanceTest extends TestCase
 {
+    use \Tests\Support\RunsLegacyPracticumMigrations;
     protected function setUp(): void
     {
         parent::setUp();
@@ -23,21 +24,21 @@ class EOfficeReadPerformanceTest extends TestCase
 
         // Isolated fixtures: never migrate or connect to the configured Supabase database.
         $tables = [
-            'eo_praktikum' => ['nama', 'status', 'is_active', 'matkul_id', 'koor_id', 'deleted_at'],
-            'eo_matkul_praktikum' => ['nama', 'kode'],
-            'manprak_periode_pendaftaran' => ['praktikum_id', 'jenis', 'is_aktif', 'dibuka_pada', 'ditutup_pada', 'created_at'],
-            'pendaftaran_asprak' => ['user_id', 'praktikum_id', 'status', 'created_at'],
-            'pendaftaran_koordinator' => ['user_id', 'praktikum_id', 'status', 'status_dosen', 'created_at'],
-            'asprak_praktikum' => ['user_id', 'praktikum_id', 'role', 'deleted_at'],
-            'daftar_praktikan' => ['user_id', 'praktikum_id'],
-            'eo_praktikum_dosen' => ['praktikum_id', 'dosen_id'],
+            'eo_prak_praktikum' => ['nama', 'status', 'is_active', 'matkul_id', 'koor_id', 'deleted_at'],
+            'eo_prak_matkul_praktikum' => ['nama', 'kode'],
+            'eo_prak_periode_pendaftaran' => ['praktikum_id', 'jenis', 'is_aktif', 'dibuka_pada', 'ditutup_pada', 'created_at'],
+            'eo_prak_pendaftaran_asprak' => ['user_id', 'praktikum_id', 'status', 'created_at'],
+            'eo_prak_pendaftaran_koordinator' => ['user_id', 'praktikum_id', 'status', 'status_dosen', 'created_at'],
+            'eo_prak_asprak_praktikum' => ['user_id', 'praktikum_id', 'role', 'deleted_at'],
+            'eo_prak_daftar_praktikan' => ['user_id', 'praktikum_id'],
+            'eo_prak_praktikum_dosen' => ['praktikum_id', 'dosen_id'],
             'users' => ['name', 'deleted_at'],
-            'modul_praktikum' => ['praktikum_id'],
-            'tugas_praktikum' => ['modul_id', 'is_published', 'deadline'],
-            'pengumpulan_tugas' => ['tugas_id', 'daftar_praktikan_id', 'status_pengumpulan'],
-            'nilai_praktikum' => ['daftar_praktikan_id', 'dipublikasikan'],
-            'pengumuman_praktikum' => ['praktikum_id', 'tipe_sistem', 'is_published', 'created_at', 'deleted_at'],
-            'absensi_praktikum' => ['daftar_praktikan_id', 'status'],
+            'eo_prak_modul_praktikum' => ['praktikum_id'],
+            'eo_prak_tugas_praktikum' => ['modul_id', 'is_published', 'deadline'],
+            'eo_prak_pengumpulan_tugas' => ['tugas_id', 'daftar_praktikan_id', 'status_pengumpulan'],
+            'eo_prak_nilai_praktikum' => ['daftar_praktikan_id', 'dipublikasikan'],
+            'eo_prak_pengumuman_praktikum' => ['praktikum_id', 'tipe_sistem', 'is_published', 'created_at', 'deleted_at'],
+            'eo_prak_absensi_praktikum' => ['daftar_praktikan_id', 'status'],
         ];
         foreach ($tables as $name => $columns) {
             Schema::create($name, function (Blueprint $table) use ($columns) {
@@ -67,12 +68,12 @@ class EOfficeReadPerformanceTest extends TestCase
     {
         $controller = new DaftarAsprakController(\Mockery::mock(SupabaseStorage::class));
         foreach ([2, 20] as $size) {
-            DB::table('eo_praktikum')->delete();
-            DB::table('manprak_periode_pendaftaran')->delete();
+            DB::table('eo_prak_praktikum')->delete();
+            DB::table('eo_prak_periode_pendaftaran')->delete();
             for ($i = 1; $i <= $size; $i++) {
                 $this->seedPraktikum($i);
             }
-            DB::table('manprak_periode_pendaftaran')->insert([
+            DB::table('eo_prak_periode_pendaftaran')->insert([
                 ['id' => 'old', 'praktikum_id' => 'p1', 'jenis' => 'asprak', 'is_aktif' => true, 'dibuka_pada' => null, 'ditutup_pada' => null, 'created_at' => '2026-01-01'],
                 ['id' => 'future', 'praktikum_id' => 'p1', 'jenis' => 'koor', 'is_aktif' => true, 'dibuka_pada' => '2026-10-01', 'ditutup_pada' => null, 'created_at' => '2026-09-07'],
                 ['id' => 'expired', 'praktikum_id' => 'p1', 'jenis' => 'koor', 'is_aktif' => true, 'dibuka_pada' => null, 'ditutup_pada' => '2026-09-08 00:00:00', 'created_at' => '2026-09-07'],
@@ -88,12 +89,12 @@ class EOfficeReadPerformanceTest extends TestCase
             $this->assertNull($data['periodeAktif']['p1']['koor']);
         }
 
-        DB::table('pendaftaran_asprak')->insert([
+        DB::table('eo_prak_pendaftaran_asprak')->insert([
             ['id' => '1', 'user_id' => 7, 'praktikum_id' => 'p1', 'status' => 'rejected', 'created_at' => '2026-08-01'],
             ['id' => '2', 'user_id' => 7, 'praktikum_id' => 'p1', 'status' => 'pending', 'created_at' => '2026-09-01'],
             ['id' => '3', 'user_id' => 8, 'praktikum_id' => 'p1', 'status' => 'approved', 'created_at' => '2026-09-07'],
         ]);
-        DB::table('asprak_praktikum')->insert([
+        DB::table('eo_prak_asprak_praktikum')->insert([
             ['id' => '1', 'user_id' => 7, 'praktikum_id' => 'p1', 'role' => 'koor', 'deleted_at' => null],
             ['id' => '2', 'user_id' => 7, 'praktikum_id' => 'p1', 'role' => 'asprak', 'deleted_at' => '2026-09-01'],
         ]);
@@ -124,16 +125,16 @@ class EOfficeReadPerformanceTest extends TestCase
     public function test_dashboard_batches_submissions_across_enrollments_for_current_student(): void
     {
         $this->seedPraktikum(1);
-        DB::table('daftar_praktikan')->insert(['id' => 'dp1', 'user_id' => 7, 'praktikum_id' => 'p1']);
-        DB::table('modul_praktikum')->insert(['id' => '1', 'praktikum_id' => 'p1']);
+        DB::table('eo_prak_daftar_praktikan')->insert(['id' => 'dp1', 'user_id' => 7, 'praktikum_id' => 'p1']);
+        DB::table('eo_prak_modul_praktikum')->insert(['id' => '1', 'praktikum_id' => 'p1']);
         for ($i = 1; $i <= 8; $i++) {
-            DB::table('tugas_praktikum')->insert(['id' => $i, 'modul_id' => 1, 'is_published' => true, 'deadline' => sprintf('2026-09-%02d', 8 + $i)]);
+            DB::table('eo_prak_tugas_praktikum')->insert(['id' => $i, 'modul_id' => 1, 'is_published' => true, 'deadline' => sprintf('2026-09-%02d', 8 + $i)]);
         }
-        DB::table('pengumpulan_tugas')->insert([
+        DB::table('eo_prak_pengumpulan_tugas')->insert([
             ['id' => 1, 'tugas_id' => 1, 'daftar_praktikan_id' => 'dp1', 'status_pengumpulan' => 'acc'],
             ['id' => 2, 'tugas_id' => 2, 'daftar_praktikan_id' => 'other', 'status_pengumpulan' => 'acc'],
         ]);
-        DB::table('absensi_praktikum')->insert([
+        DB::table('eo_prak_absensi_praktikum')->insert([
             ['id' => 1, 'daftar_praktikan_id' => 'dp1', 'status' => 'hadir'],
             ['id' => 2, 'daftar_praktikan_id' => 'dp1', 'status' => 'izin'],
             ['id' => 3, 'daftar_praktikan_id' => 'other', 'status' => 'hadir'],
@@ -146,12 +147,12 @@ class EOfficeReadPerformanceTest extends TestCase
         $this->assertCount(5, $data['tugasPaginator']->items());
         $this->assertFalse($data['tugasMendatang'][0]->sudah_kumpul);
         $this->assertSame(2, $data['tugasMendatang'][0]->id);
-        $this->assertCount(1, $queries->filter(fn ($sql) => str_contains($sql, 'from "pengumpulan_tugas"')));
+        $this->assertCount(1, $queries->filter(fn ($sql) => str_contains($sql, 'from "eo_prak_pengumpulan_tugas"')));
 
         $this->seedPraktikum(2);
-        DB::table('daftar_praktikan')->insert(['id' => 'dp2', 'user_id' => 7, 'praktikum_id' => 'p2']);
-        DB::table('modul_praktikum')->insert(['id' => 2, 'praktikum_id' => 'p2']);
-        DB::table('tugas_praktikum')->insert([
+        DB::table('eo_prak_daftar_praktikan')->insert(['id' => 'dp2', 'user_id' => 7, 'praktikum_id' => 'p2']);
+        DB::table('eo_prak_modul_praktikum')->insert(['id' => 2, 'praktikum_id' => 'p2']);
+        DB::table('eo_prak_tugas_praktikum')->insert([
             ['id' => 9, 'modul_id' => 2, 'is_published' => true, 'deadline' => '2026-09-07'],
             ['id' => 10, 'modul_id' => 2, 'is_published' => false, 'deadline' => '2026-09-07'],
         ]);
@@ -166,18 +167,18 @@ class EOfficeReadPerformanceTest extends TestCase
     public function test_praktikum_indexes_can_be_created_and_rolled_back(): void
     {
         $migration = require base_path('Modules/EOffice/database/migrations/2026_09_08_100000_add_praktikum_read_indexes.php');
-        $migration->up();
-        $this->assertTrue(Schema::hasIndex('manprak_periode_pendaftaran', ['praktikum_id', 'is_aktif', 'jenis', 'created_at']));
-        $this->assertTrue(Schema::hasIndex('pengumpulan_tugas', ['daftar_praktikan_id', 'tugas_id']));
-        $migration->down();
-        $this->assertFalse(Schema::hasIndex('manprak_periode_pendaftaran', 'eo_periode_active_lookup_idx'));
+        $this->withLegacyPracticumTables(fn()=>$migration->up());
+        $this->assertTrue(Schema::hasIndex('eo_prak_periode_pendaftaran', ['praktikum_id', 'is_aktif', 'jenis', 'created_at']));
+        $this->assertTrue(Schema::hasIndex('eo_prak_pengumpulan_tugas', ['daftar_praktikan_id', 'tugas_id']));
+        $this->withLegacyPracticumTables(fn()=>$migration->down());
+        $this->assertFalse(Schema::hasIndex('eo_prak_periode_pendaftaran', 'eo_periode_active_lookup_idx'));
     }
 
     private function seedPraktikum(int $id): void
     {
-        DB::table('eo_matkul_praktikum')->insertOrIgnore(['id' => $id, 'nama' => 'Matkul '.$id]);
-        DB::table('eo_praktikum')->insert(['id' => 'p'.$id, 'nama' => 'Praktikum '.$id, 'status' => 'aktif', 'matkul_id' => $id]);
-        DB::table('manprak_periode_pendaftaran')->insert([
+        DB::table('eo_prak_matkul_praktikum')->insertOrIgnore(['id' => $id, 'nama' => 'Matkul '.$id]);
+        DB::table('eo_prak_praktikum')->insert(['id' => 'p'.$id, 'nama' => 'Praktikum '.$id, 'status' => 'aktif', 'matkul_id' => $id]);
+        DB::table('eo_prak_periode_pendaftaran')->insert([
             'id' => $id, 'praktikum_id' => 'p'.$id, 'jenis' => 'asprak', 'is_aktif' => true, 'created_at' => '2026-09-01',
         ]);
     }

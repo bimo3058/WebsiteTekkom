@@ -15,7 +15,7 @@ export interface Group {
   group_mode: string;
   period_id: number;
   period: { name: string };
-  title: { title: string } | null;
+  title: { id: number; title: string } | null;
   members: GroupMember[];
   supervisions: { supervisor: { name: string } }[];
   status_label?: string;

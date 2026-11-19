@@ -14,7 +14,7 @@ class PengumumanController extends Controller
         $praktikum = DashboardController::resolvePraktikum();
 
         $pengumuman = $praktikum
-            ? Pengumuman::where('praktikum_id', $praktikum->id)->orderByDesc('created_at')->get()
+            ? Pengumuman::where('praktikum_id', $praktikum->id)->pinnedFirst()->orderByDesc('created_at')->get()
             : collect();
 
         return view('eoffice::manajemen-praktikum.koordinator.pengumuman', compact('praktikum', 'pengumuman'));
@@ -23,7 +23,7 @@ class PengumumanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'praktikum_id' => 'required|exists:eo_praktikum,id',
+            'praktikum_id' => 'required|exists:eo_prak_praktikum,id',
             'judul'        => 'required|string|max:255',
             'konten'       => 'required|string',
             'is_published' => 'boolean',

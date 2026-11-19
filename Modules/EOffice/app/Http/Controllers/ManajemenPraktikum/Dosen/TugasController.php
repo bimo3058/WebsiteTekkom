@@ -77,6 +77,7 @@ class TugasController extends Controller
 
         // Ambil data pengumpulan tugas untuk tugas_id ini
         $pengumpulan = PengumpulanTugas::where('tugas_id', $tugasId)
+            ->where('status_pengumpulan', '!=', PengumpulanTugas::STATUS_DRAFT)
             ->with(['riwayat'])
             ->get()
             ->keyBy('daftar_praktikan_id');

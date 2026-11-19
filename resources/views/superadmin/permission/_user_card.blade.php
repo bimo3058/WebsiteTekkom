@@ -61,8 +61,9 @@
 
     {{-- Expandable Body --}}
     <div id="card-body-{{ $cardKey }}" class="hidden border-t border-slate-100">
-        <form id="form-{{ $cardKey }}" method="POST" action="{{ route('superadmin.permissions.update', $user->id) }}">
-            @csrf @method('PUT')
+        <form id="form-{{ $cardKey }}" method="POST" action="{{ route('superadmin.users.update-permissions', $user->id) }}">
+            @csrf
+            <input type="hidden" name="permissions_present" value="1">
 
             <div class="p-5">
                 {{-- Role Assignment --}}
@@ -75,7 +76,7 @@
                                    style="{{ $hasRole ? 'border-color: var(--c-primary); background: rgba(11,38,110,0.06); color: var(--c-primary)' : 'border-color: var(--c-border); background: #fff; color: var(--c-fg-muted)' }}">
                                 <input type="checkbox"
                                        name="roles[]"
-                                       value="{{ $role->name }}"
+                                       value="{{ $role->id }}"
                                        class="role-checkbox hidden"
                                        data-role-name="{{ $role->name }}"
                                        data-is-academic="{{ in_array($role->name, ['superadmin', 'admin']) ? '1' : '0' }}"
@@ -98,7 +99,7 @@
                                 $modulePerms = \App\Models\Permission::where('name', 'like', $module . '.%')->get();
                             @endphp
                             <div class="module-box border border-slate-200 rounded-xl p-3 transition-all"
-                                 data-all-allowed-roles="{{ json_encode($modulePerms->pluck('name')) }}">
+                                 data-module="{{ $module }}">
                                 <div class="flex items-center justify-between mb-2">
                                     <div class="flex items-center gap-2">
                                         <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"

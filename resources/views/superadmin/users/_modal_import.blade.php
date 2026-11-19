@@ -11,7 +11,7 @@
                 </div>
                 <div>
                     <h3 class="text-base font-semibold text-[#1A1C1E]">Bulk Import User</h3>
-                    <p class="text-xs text-[var(--c-primary)] mt-0.5">Upload file ke bucket: <span class="font-bold">data_user</span></p>
+                    <p class="text-xs text-[var(--c-primary)] mt-0.5">Pratinjau data dan akses SSO sebelum impor</p>
                 </div>
             </div>
             <button onclick="closeModal('modalImportUser')" class="text-[var(--c-primary)] hover:text-[var(--c-primary-hover)] hover:bg-[var(--c-primary-subtle)] transition-colors p-1.5 rounded-lg">
@@ -20,7 +20,7 @@
         </div>
 
         {{-- Form --}}
-        <form id="formImportUser" action="{{ route('superadmin.users.bulkImport') }}" method="POST" enctype="multipart/form-data" class="p-6">
+        <form id="formImportUser" action="{{ route('superadmin.users.bulkImport') }}" data-preview-url="{{ route('superadmin.users.bulkImport.preview') }}" method="POST" enctype="multipart/form-data" class="p-6">
             @csrf
 
             {{-- Error: Validasi biasa --}}
@@ -41,19 +41,19 @@
                 {{-- List duplikat --}}
                 <div id="importDuplicateList" class="bg-white divide-y divide-slate-50 max-h-48 overflow-y-auto"></div>
                 <div class="px-4 py-3 bg-amber-50/50 border-t border-amber-100">
-                    <p class="text-[11px] text-amber-700 font-medium">Upload dibatalkan karena data di atas sudah ada di sistem. Hapus baris tersebut dari file CSV dan coba lagi.</p>
+                    <p class="text-[11px] text-amber-700 font-medium">Upload dibatalkan karena data di atas sudah ada di sistem. Hapus baris tersebut dari file Excel dan coba lagi.</p>
                 </div>
             </div>
 
             {{-- File Input --}}
-            <div class="mb-5">
-                <label class="block text-sm font-medium text-slate-700 mb-2">Pilih File CSV</label>
+            <div id="importFileSection" class="mb-5">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Pilih File Excel</label>
                 <div class="relative group">
-                    <input type="file" name="file" id="importFileInput" accept=".csv,.txt" required
+                    <input type="file" name="file" id="importFileInput" accept=".xlsx" required
                         class="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-200 rounded-xl p-1 group-hover:border-blue-400 transition-all">
                 </div>
                 <p class="mt-2 text-xs text-slate-500">
-                    Format: <code class="bg-slate-100 px-1 rounded">.csv</code> atau <code class="bg-slate-100 px-1 rounded">.txt</code> (Maks. 10MB)
+                    Format: <code class="bg-slate-100 px-1 rounded">.xlsx</code> (Maks. 10MB)
                 </p>
             </div>
 
@@ -64,18 +64,46 @@
                     <div class="flex-1 min-w-0">
                         <div class="text-xs text-amber-700 leading-relaxed mb-3">
                             <strong>Penting:</strong><br>
-                            - Gunakan pemisah koma (,)<br>
-                            - Nama Role harus sesuai dengan di sistem (dosen, mahasiswa, dll)<br>
-                            - Jika email sudah ada, upload akan ditolak otomatis.
+                            - Kolom Excel cukup <code>NIM/NIP, Nama, Email</code>.<br>
+                            - Preview menampilkan toggle akses SSO per akun, default aktif.<br>
+                            - Role dan permission otomatis berdasarkan domain email students/lecturer; password tidak diperlukan untuk SSO.<br>
+                            - Jika email sudah ada, impor akan ditolak otomatis.
                         </div>
                         {{-- Tombol Download Template --}}
                         <a href="{{ route('superadmin.users.downloadImportTemplate') }}"
                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-amber-300 text-amber-700 hover:bg-amber-100 hover:border-amber-400 transition-all rounded-lg text-xs font-semibold shadow-sm">
                             <span class="material-symbols-outlined" style="font-size:15px">download</span>
-                            Unduh Template CSV
+                            Unduh Template Excel
                         </a>
                     </div>
                 </div>
+            </div>
+
+            <input type="hidden" name="preview_confirmed" id="importPreviewConfirmed" value="0">
+            <input type="hidden" name="preview_file_hash" id="importPreviewFileHash" value="">
+            <div id="importSsoAccessValues"></div>
+            <div id="importPreviewContainer" class="hidden mb-5">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-800">Pratinjau akun</p>
+                        <p id="importPreviewSummary" class="text-xs text-slate-500 mt-0.5"></p>
+                    </div>
+                    <button type="button" onclick="editImportPreview()" class="text-xs font-semibold text-[var(--c-primary)] hover:underline">Ganti file</button>
+                </div>
+                <div class="overflow-auto max-h-72 border border-slate-200 rounded-xl">
+                    <table class="min-w-full text-left text-xs">
+                        <thead class="sticky top-0 bg-slate-50 text-slate-500 uppercase tracking-wide">
+                            <tr>
+                                <th class="px-3 py-2">NIM/NIP</th>
+                                <th class="px-3 py-2">Nama</th>
+                                <th class="px-3 py-2">Email / Role</th>
+                                <th class="px-3 py-2 text-center">Akses SSO</th>
+                            </tr>
+                        </thead>
+                        <tbody id="importPreviewRows" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-2">Akun baru yang diimpor akan mengikuti pilihan akses SSO pada setiap baris.</p>
             </div>
 
             <div class="flex gap-3 mt-2">
@@ -86,7 +114,7 @@
                 <button type="submit" id="btnSubmitImport"
                     class="flex-1 px-4 py-2.5 bg-[var(--c-primary)] hover:bg-[var(--c-primary-hover)] text-white font-semibold rounded-xl transition text-sm flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined" style="font-size:20px">upload</span>
-                    Mulai Impor
+                    Lihat Pratinjau
                 </button>
             </div>
         </form>
@@ -167,6 +195,126 @@
 
 <script>
 
+function parseBulkImportCsv(text) {
+    const records = [];
+    let record = [], field = '', quoted = false;
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (quoted) {
+            if (ch === '"' && text[i + 1] === '"') { field += '"'; i++; }
+            else if (ch === '"') quoted = false;
+            else field += ch;
+        } else if (ch === '"') quoted = true;
+        else if (ch === ',') { record.push(field); field = ''; }
+        else if (ch === '\n') { record.push(field.replace(/\r$/, '')); records.push(record); record = []; field = ''; }
+        else field += ch;
+    }
+    if (field !== '' || record.length) { record.push(field.replace(/\r$/, '')); records.push(record); }
+    return records;
+}
+
+function normalizeBulkHeader(value) {
+    return String(value || '').replace(/^\uFEFF/, '').trim().toLowerCase().replace(/[\s_-]+/g, '');
+}
+
+function previewColumn(header, aliases) {
+    for (const alias of aliases) {
+        const index = header.indexOf(alias);
+        if (index !== -1) return index;
+    }
+    return -1;
+}
+
+function editImportPreview() {
+    const form = document.getElementById('formImportUser');
+    form.dataset.previewReady = '0';
+    document.getElementById('importPreviewConfirmed').value = '0';
+    document.getElementById('importPreviewFileHash').value = '';
+    document.getElementById('importSsoAccessValues').replaceChildren();
+    document.getElementById('importPreviewContainer').classList.add('hidden');
+    document.getElementById('importFileSection').classList.remove('hidden');
+    const button = document.getElementById('btnSubmitImport');
+    button.disabled = false;
+    button.textContent = 'Lihat Pratinjau';
+    document.getElementById('importDuplicateContainer').classList.add('hidden');
+    document.getElementById('importErrorContainer').classList.add('hidden');
+}
+
+async function buildBulkImportPreview() {
+    const form = document.getElementById('formImportUser');
+    const file = document.getElementById('importFileInput').files[0];
+    if (!file) throw new Error('Pilih file Excel terlebih dahulu.');
+
+    const previewForm = new FormData();
+    previewForm.append('file', file);
+    const response = await fetch(form.dataset.previewUrl, {
+        method: 'POST',
+        body: previewForm,
+        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+    });
+    const data = await response.json();
+    if (!response.ok || data.status !== 'success') throw new Error(data.message || 'File Excel tidak dapat dipratinjau.');
+    document.getElementById('importPreviewFileHash').value = data.hash;
+
+    const body = document.getElementById('importPreviewRows');
+    const hidden = document.getElementById('importSsoAccessValues');
+    body.replaceChildren();
+    hidden.replaceChildren();
+    data.rows.forEach(row => {
+        const email = String(row.email || '');
+        const tr = document.createElement('tr');
+        tr.dataset.rowIndex = String(row.index);
+        [String(row.identity || '—'), String(row.name || '—'), `${email || 'Email kosong'} · ${row.role || 'role tidak dikenali'}`].forEach(value => {
+            const td = document.createElement('td');
+            td.className = 'px-3 py-2 text-slate-700 whitespace-nowrap';
+            td.textContent = value;
+            tr.appendChild(td);
+        });
+
+        const toggleCell = document.createElement('td');
+        toggleCell.className = 'px-3 py-2 text-center';
+        const label = document.createElement('label');
+        label.className = 'inline-flex items-center gap-2 cursor-pointer';
+        const toggle = document.createElement('input');
+        toggle.type = 'checkbox';
+        toggle.checked = true;
+        toggle.className = 'sso-import-toggle peer sr-only';
+        const track = document.createElement('span');
+        track.className = 'relative h-5 w-9 rounded-full bg-slate-300 transition-colors peer-checked:bg-emerald-500 peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--c-primary)] after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-4';
+        const toggleText = document.createElement('span');
+        toggleText.className = 'text-[11px] font-medium text-emerald-700';
+        toggleText.textContent = 'Aktif';
+        toggle.addEventListener('change', () => {
+            toggleText.textContent = toggle.checked ? 'Aktif' : 'Nonaktif';
+            toggleText.className = `text-[11px] font-medium ${toggle.checked ? 'text-emerald-700' : 'text-slate-500'}`;
+        });
+        label.append(toggle, track, toggleText);
+        toggleCell.appendChild(label);
+        tr.appendChild(toggleCell);
+        body.appendChild(tr);
+    });
+
+    document.getElementById('importPreviewSummary').textContent = `${data.rows.length} akun · akses SSO aktif secara default`;
+    document.getElementById('importFileSection').classList.add('hidden');
+    document.getElementById('importPreviewContainer').classList.remove('hidden');
+    form.dataset.previewReady = '1';
+    document.getElementById('btnSubmitImport').textContent = 'Konfirmasi & Mulai Impor';
+}
+function attachBulkImportSsoValues() {
+    const hidden = document.getElementById('importSsoAccessValues');
+    hidden.replaceChildren();
+    document.querySelectorAll('#importPreviewRows tr').forEach(row => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = `sso_access[${row.dataset.rowIndex}]`;
+        input.value = row.querySelector('.sso-import-toggle').checked ? '1' : '0';
+        hidden.appendChild(input);
+    });
+    document.getElementById('importPreviewConfirmed').value = '1';
+}
+
+document.getElementById('importFileInput')?.addEventListener('change', editImportPreview);
+
 function confirmCancelImportModal() {
     if (typeof openModal === 'function') openModal('modalCancelImport');
 }
@@ -190,6 +338,8 @@ function doResetImportForm() {
     const fileInput = document.getElementById('importFileInput');
     if (fileInput) fileInput.value = '';
 
+    editImportPreview();
+
     // Sembunyikan error container
     document.getElementById('importErrorContainer')?.classList.add('hidden');
     document.getElementById('importDuplicateContainer')?.classList.add('hidden');
@@ -198,7 +348,7 @@ function doResetImportForm() {
     const btn = document.getElementById('btnSubmitImport');
     if (btn) {
         btn.disabled  = false;
-        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px">upload</span> Mulai Impor';
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px">upload</span> Lihat Pratinjau';
     }
 
     closeModal('modalCancelImport');
@@ -264,8 +414,8 @@ function handleImportDuplicateResponse(data) {
     // Reset tombol submit
     const btn = document.getElementById('btnSubmitImport');
     if (btn) {
-        btn.disabled  = false;
-        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px">upload</span> Mulai Impor';
+        btn.disabled  = true;
+        btn.textContent = 'Ganti file Excel untuk melanjutkan';
     }
 }
 </script>

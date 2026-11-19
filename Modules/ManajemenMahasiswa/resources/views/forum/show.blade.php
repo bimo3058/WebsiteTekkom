@@ -513,7 +513,6 @@
                         @if(isset($authorTiers[$thread->user_id]))
                             <span style="background:rgba(11,38,110,0.08); color:#0B266E; font-size:10px; font-weight:700; padding:3px 8px; border-radius:8px; letter-spacing:0.02em;"
                                 title="{{ $authorTiers[$thread->user_id]['tier_name'] }}">
-                                {!! $authorTiers[$thread->user_id]['tier_icon'] !!}
                                 Lv.{{ $authorTiers[$thread->user_id]['level'] }}
                             </span>
                         @endif

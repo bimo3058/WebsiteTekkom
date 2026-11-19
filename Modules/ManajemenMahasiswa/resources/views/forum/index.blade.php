@@ -18,7 +18,7 @@
             .dash-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; }
             .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid #DFE1E7; border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); overflow: hidden; width: 100%; box-sizing: border-box; }
             .dash-box-header { background: #fff; border-bottom: 1px solid #DFE1E7; flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
-            .dash-box-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; padding: 20px 24px; }
+            .dash-box-body { flex: 1; min-height: 0; overflow-y: auto; padding: 20px 24px; }
             .dash-box-body::-webkit-scrollbar { width: 6px; }
             .dash-box-body::-webkit-scrollbar-thumb { background: #C1C7CF; border-radius: 10px; }
             @media (max-width: 767px) {
@@ -237,35 +237,6 @@
                 flex-shrink: 0;
             }
 
-            /* ── Sort Tabs ── */
-            .sort-tab {
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-                padding: 5px 12px;
-                border-radius: 8px;
-                font-size: 12px;
-                font-weight: 600;
-                border: 1px solid #DFE1E7;
-                background: #fff;
-                color: #666D80;
-                cursor: pointer;
-                transition: all 0.15s;
-            }
-
-            .sort-tab:hover {
-                border-color: #0B266E;
-                color: #0B266E;
-                background: rgba(11,38,110,0.04);
-            }
-
-            .sort-tab.active {
-                background: #0B266E;
-                color: #fff;
-                border-color: #0B266E;
-            }
-
-            .sort-tab svg { width: 13px; height: 13px; }
 
             .tag-label {
                 font-size: 11px;
@@ -381,59 +352,55 @@
             ? min(100, round(($userStats['xp_current'] / $userStats['xp_needed']) * 100))
             : 100;
     @endphp
-    <div style="background: linear-gradient(135deg, #0B266E 0%, #091958 55%, #1a3a8a 100%); border-radius: 12px; padding: 14px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 0; flex-wrap: wrap; position: relative; overflow: hidden; box-shadow: 0px 2px 8px rgba(11,38,110,0.18);">
-
-        {{-- Decorative circles --}}
-        <div style="position:absolute; top:-40px; right:-20px; width:120px; height:120px; background:rgba(255,255,255,0.05); border-radius:50%; pointer-events:none;"></div>
-        <div style="position:absolute; bottom:-50px; right:80px; width:90px; height:90px; background:rgba(255,255,255,0.04); border-radius:50%; pointer-events:none;"></div>
+    <div style="background:#fff; border:1px solid #DFE1E7; border-radius:12px; padding:14px 20px; margin-bottom:20px; display:flex; align-items:center; gap:0; flex-wrap:wrap;">
 
         {{-- Streak --}}
-        <div style="display:flex; align-items:center; gap:10px; padding-right:20px; border-right:1px solid rgba(255,255,255,0.15); flex-shrink:0;">
-            <div style="background:linear-gradient(135deg,#f97316,#dc2626); border-radius:10px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(249,115,22,0.4);">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <div style="display:flex; align-items:center; gap:10px; padding-right:20px; border-right:1px solid #DFE1E7; flex-shrink:0;">
+            <div style="background:#FFF1E6; border-radius:10px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#F97316" stroke="#F97316" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
                 </svg>
             </div>
             <div>
-                <div style="font-size:9px; color:rgba(255,255,255,0.6); font-weight:600; text-transform:uppercase; letter-spacing:0.06em; line-height:1;">Streak</div>
-                <div style="font-size:20px; font-weight:900; color:#fff; line-height:1.15; letter-spacing:-0.02em; margin-top:1px;">
-                    {{ $userStats['current_streak'] }}<span style="font-size:11px; font-weight:600; opacity:0.7; margin-left:2px;">hr</span>
+                <div style="font-size:9px; color:#808897; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; line-height:1;">Streak</div>
+                <div style="font-size:20px; font-weight:800; color:#0D0D12; line-height:1.15; letter-spacing:-0.02em; margin-top:1px;">
+                    {{ $userStats['current_streak'] }}<span style="font-size:11px; font-weight:600; color:#808897; margin-left:2px;">hr</span>
                 </div>
             </div>
         </div>
 
         {{-- Rank --}}
-        <div style="padding:0 20px; border-right:1px solid rgba(255,255,255,0.15); text-align:center; flex-shrink:0;">
-            <div style="font-size:9px; color:rgba(255,255,255,0.6); font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:1px;">Rank</div>
-            <div style="font-size:22px; font-weight:900; color:#fbbf24; line-height:1.1; letter-spacing:-0.03em;">#{{ $userStats['rank'] }}</div>
+        <div style="padding:0 20px; border-right:1px solid #DFE1E7; text-align:center; flex-shrink:0;">
+            <div style="font-size:9px; color:#808897; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:1px;">Rank</div>
+            <div style="font-size:22px; font-weight:800; color:#0B266E; line-height:1.1; letter-spacing:-0.03em;">#{{ $userStats['rank'] }}</div>
         </div>
 
         {{-- Level --}}
-        <div style="padding:0 20px; border-right:1px solid rgba(255,255,255,0.15); text-align:center; flex-shrink:0;">
-            <div style="font-size:9px; color:rgba(255,255,255,0.6); font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:1px;">Level</div>
-            <div style="font-size:18px; font-weight:800; color:#fff; line-height:1.1;">{!! $userStats['tier_icon'] !!} {{ $userStats['level'] }}</div>
-            <div style="font-size:10px; color:rgba(255,255,255,0.55); font-weight:500; margin-top:1px;">{{ $userStats['tier_name'] }}</div>
+        <div style="padding:0 20px; border-right:1px solid #DFE1E7; text-align:center; flex-shrink:0;">
+            <div style="font-size:9px; color:#808897; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:1px;">Level</div>
+            <div style="font-size:18px; font-weight:800; color:#0D0D12; line-height:1.1;">{{ $userStats['level'] }}</div>
+            <div style="font-size:10px; color:#666D80; font-weight:500; margin-top:1px;">{{ $userStats['tier_name'] }}</div>
         </div>
 
         {{-- XP Progress --}}
-        <div style="flex:1; min-width:160px; padding:0 20px; {{ $userStats['badges']->isNotEmpty() ? 'border-right:1px solid rgba(255,255,255,0.15);' : '' }}">
+        <div style="flex:1; min-width:160px; padding:0 20px; {{ $userStats['badges']->isNotEmpty() ? 'border-right:1px solid #DFE1E7;' : '' }}">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                <span style="font-size:9px; font-weight:700; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:0.06em;">XP</span>
-                <span style="font-size:11px; font-weight:700; color:#fbbf24;">{{ number_format($userStats['total_xp']) }} / {{ number_format($userStats['xp_for_next']) }}</span>
+                <span style="font-size:9px; font-weight:700; color:#808897; text-transform:uppercase; letter-spacing:0.06em;">XP</span>
+                <span style="font-size:11px; font-weight:700; color:#0B266E;">{{ number_format($userStats['total_xp']) }} / {{ number_format($userStats['xp_for_next']) }}</span>
             </div>
-            <div style="height:5px; background:rgba(255,255,255,0.15); border-radius:99px; overflow:hidden;">
-                <div style="height:100%; width:{{ $progressPct }}%; background:linear-gradient(90deg,#fbbf24,#f97316); border-radius:99px; transition:width .5s ease;"></div>
+            <div style="height:6px; background:#ECEFF3; border-radius:99px; overflow:hidden;">
+                <div style="height:100%; width:{{ $progressPct }}%; background:#0B266E; border-radius:99px; transition:width .5s ease;"></div>
             </div>
             <div style="display:flex; justify-content:space-between; margin-top:4px;">
-                <span style="font-size:9px; color:rgba(255,255,255,0.4);">Lv.{{ $userStats['level'] }}</span>
-                <span style="font-size:9px; color:rgba(255,255,255,0.4);">Lv.{{ $userStats['level'] + 1 }}</span>
+                <span style="font-size:9px; color:#808897;">Lv.{{ $userStats['level'] }}</span>
+                <span style="font-size:9px; color:#808897;">Lv.{{ $userStats['level'] + 1 }}</span>
             </div>
         </div>
 
         {{-- Badges --}}
         @if($userStats['badges']->isNotEmpty())
             <div style="padding:0 0 0 20px; flex-shrink:0;">
-                <div style="font-size:9px; color:rgba(255,255,255,0.6); font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px;">Badges</div>
+                <div style="font-size:9px; color:#808897; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px;">Badges</div>
                 <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
                     @foreach($userStats['badges']->take(4) as $badge)
                         @if($badge->image)
@@ -445,7 +412,7 @@
                         @endif
                     @endforeach
                     @if($userStats['badges']->count() > 4)
-                        <span style="font-size:10px; color:rgba(255,255,255,0.5); font-weight:600;">+{{ $userStats['badges']->count() - 4 }}</span>
+                        <span style="font-size:10px; color:#808897; font-weight:600;">+{{ $userStats['badges']->count() - 4 }}</span>
                     @endif
                 </div>
             </div>
@@ -455,7 +422,6 @@
 
     <!-- Search & Filter Area -->
     <form method="GET" action="{{ route('manajemenmahasiswa.forum.index') }}" id="forumFilterForm">
-        <input type="hidden" name="sort" id="sortInput" value="{{ request('sort', 'terbaru') }}">
         @php $currentSort = request('sort', 'terbaru'); @endphp
 
         {{-- Row 1: Search + Buat Post --}}
@@ -473,7 +439,7 @@
             </a>
         </div>
 
-        {{-- Row 2: Category + Sort Tabs --}}
+        {{-- Row 2: Category + Sort Dropdown --}}
         <div class="d-flex gap-2 mb-4 flex-wrap align-items-center">
             <x-manajemenmahasiswa::ui.select name="kategori" size="md" :block="false" min-width="148"
                 class="flex-shrink-0"
@@ -486,18 +452,13 @@
                     </option>
                 @endforeach
             </x-manajemenmahasiswa::ui.select>
-            <button type="button" class="sort-tab {{ $currentSort === 'terbaru' ? 'active' : '' }}"
-                onclick="document.getElementById('sortInput').value='terbaru'; document.getElementById('forumFilterForm').submit();">
-                <x-manajemenmahasiswa::ui.icon name="clock-02" size="13" /> Terbaru
-            </button>
-            <button type="button" class="sort-tab {{ $currentSort === 'hot' ? 'active' : '' }}"
-                onclick="document.getElementById('sortInput').value='hot'; document.getElementById('forumFilterForm').submit();">
-                <x-manajemenmahasiswa::ui.icon name="flash" size="13" /> Hot
-            </button>
-            <button type="button" class="sort-tab {{ $currentSort === 'top' ? 'active' : '' }}"
-                onclick="document.getElementById('sortInput').value='top'; document.getElementById('forumFilterForm').submit();">
-                <x-manajemenmahasiswa::ui.icon name="chevron-up" size="13" /> Top
-            </button>
+            <x-manajemenmahasiswa::ui.select name="sort" size="md" :block="false" min-width="130"
+                class="flex-shrink-0"
+                onchange="document.getElementById('forumFilterForm').submit()">
+                <option value="terbaru" {{ $currentSort === 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+                <option value="hot"     {{ $currentSort === 'hot'     ? 'selected' : '' }}>Hot</option>
+                <option value="top"     {{ $currentSort === 'top'     ? 'selected' : '' }}>Top</option>
+            </x-manajemenmahasiswa::ui.select>
         </div>
     </form>
 
@@ -517,7 +478,6 @@
                                 @if(isset($authorTiers[$thread->user_id]))
                                     <span style="background:rgba(11,38,110,0.08); color:#0B266E; font-size:10px; font-weight:700; padding:3px 8px; border-radius:8px; letter-spacing:0.02em;"
                                         title="{{ $authorTiers[$thread->user_id]['tier_name'] }}">
-                                        {!! $authorTiers[$thread->user_id]['tier_icon'] !!}
                                         Lv.{{ $authorTiers[$thread->user_id]['level'] }}
                                     </span>
                                 @endif
@@ -541,9 +501,9 @@
                     {{-- Aksi thread: tombol "..." + panel .mk-menu milik modul, sama dengan
                          kolom Aksi Direktori & Pengumuman. Sebelumnya memakai dropdown
                          Bootstrap; diseragamkan supaya semua menu titik tiga sebentuk. --}}
-                    <div style="position: relative;" x-data="{ open: false }">
+                    <div style="position: relative;" x-data="{ open: false }" @click.stop>
                         <button type="button" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm"
-                            @click="open = !open" @click.outside="open = false"
+                            @click.stop="open = !open" @click.outside="open = false"
                             :aria-expanded="open" aria-haspopup="menu" title="Aksi lainnya">
                             <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24">
                                 <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
@@ -884,6 +844,13 @@
                     const btn = event.relatedTarget;
                     reportModal.querySelector('#reportThreadTitle').textContent = `"${btn.dataset.threadTitle}"`;
                     reportModal.querySelector('#reportForm').action = `{{ url('manajemen-mahasiswa/forum') }}/${btn.dataset.threadId}/report`;
+                });
+
+                document.getElementById('alasan').addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.closest('form').requestSubmit();
+                    }
                 });
             }
             // ---- Forum Card Click Handler ----

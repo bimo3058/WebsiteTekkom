@@ -154,7 +154,7 @@
 
         {{-- Footer --}}
         <div class="mt-6 text-center text-xs text-slate-500 dark:text-slate-400 font-medium">
-            <p>© {{ date('Y') }} Departemen Teknik Komunikasi • Universitas Diponegoro</p>
+            <p>© {{ date('Y') }} Departemen Teknik Komputer • Universitas Diponegoro</p>
         </div>
     </div>
 

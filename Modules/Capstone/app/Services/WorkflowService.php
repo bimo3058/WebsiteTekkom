@@ -2,14 +2,22 @@
 
 namespace Modules\Capstone\Services;
 
+use App\Models\Lecturer;
+use Illuminate\Support\Facades\Schema;
+use Modules\Capstone\Models\AssessmentComponent;
 use Modules\Capstone\Models\Document;
+use Modules\Capstone\Models\ExpoRegistration;
+use Modules\Capstone\Models\ExpoSelfEvaluation;
+use Modules\Capstone\Models\ExpoStudentDocument;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Models\PeerReview;
+use Modules\Capstone\Models\PeerReviewIndicator;
 use Modules\Capstone\Models\PeriodAssessmentComponent;
+use Modules\Capstone\Models\PeriodPeerReviewIndicator;
 use Modules\Capstone\Models\SeminarSchedule;
+use Modules\Capstone\Models\StudentPeerReviewStatus;
 use Modules\Capstone\Repositories\AssessmentScoreRepository;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class WorkflowService
 {
@@ -295,37 +303,49 @@ class WorkflowService
      */
     public function getFinalReadyForTaIndividual(Group $group, $allRequirements, $documents): array
     {
-        // Check per-student EXPO documents
-        $expoRegistration = \Modules\Capstone\Models\ExpoRegistration::where('group_id', $group->id)
+        // Group-level EXPO submission: one representative uploads the
+        // document; at least one APPROVED document unlocks the stage.
+        $expoRegistration = ExpoRegistration::where('group_id', $group->id)
             ->where('status', '!=', 'CANCELLED')
             ->first();
 
         $studentCount = GroupMember::where('group_id', $group->id)->count();
+        $registrationApproved = $expoRegistration !== null && $expoRegistration->review_status === 'APPROVED';
 
         if ($expoRegistration) {
-            $uploadedCount = \Modules\Capstone\Models\ExpoStudentDocument::where('expo_registration_id', $expoRegistration->id)
+            $approvedDocCount = ExpoStudentDocument::where('expo_registration_id', $expoRegistration->id)
+                ->where('status', 'APPROVED')
                 ->count();
-            $expoDocsComplete = $uploadedCount >= $studentCount && $studentCount > 0;
-            $pendingDocs = $expoDocsComplete ? [] : ['EXPO documents not uploaded by all students'];
+            $expoDocsComplete = $approvedDocCount > 0;
+            $pendingDocs = $expoDocsComplete
+                ? []
+                : [ExpoStudentDocument::where('expo_registration_id', $expoRegistration->id)->exists()
+                    ? 'Dokumen EXPO belum disetujui dosbing'
+                    : 'Dokumen EXPO belum diunggah perwakilan kelompok'];
         } else {
             $expoDocsComplete = false;
+            $approvedDocCount = 0;
             $pendingDocs = ['No active expo registration'];
         }
 
-        // Check EXPO self-evaluation from all students
-        $studentIds = GroupMember::where('group_id', $group->id)->pluck('student_id')->toArray();
-        $allStudentsEvaluated = true;
-        foreach ($studentIds as $studentId) {
-            $hasEvaluation = AssessmentScoreRepository::forType('EXPO')
-                ->where('group_id', $group->id)
-                ->where('evaluator_id', $studentId)
-                ->where('student_id', $studentId)
-                ->exists();
-            if (! $hasEvaluation) {
-                $allStudentsEvaluated = false;
-                break;
-            }
+        // Group-level EXPO self-evaluation: the representative's submission
+        // covers every member, and it only counts once the supervisor has
+        // APPROVED it (that approval also gates the PDC2 EXPO score).
+        $expoComponentIds = PeriodAssessmentComponent::where('period_id', $group->period_id)
+            ->where('type', 'EXPO')
+            ->pluck('id');
+        $submittedComponentCount = 0;
+        if ($expoRegistration && $expoComponentIds->isNotEmpty()) {
+            $submittedComponentCount = ExpoSelfEvaluation::where('expo_registration_id', $expoRegistration->id)
+                ->whereIn('period_component_id', $expoComponentIds)
+                ->distinct()
+                ->count('period_component_id');
         }
+        $expoEvalSubmitted = $expoRegistration !== null
+            && ($expoComponentIds->isEmpty()
+                ? ExpoSelfEvaluation::where('expo_registration_id', $expoRegistration->id)->exists()
+                : $submittedComponentCount >= $expoComponentIds->count());
+        $expoEvalComplete = $expoEvalSubmitted && $registrationApproved;
 
         $nilaiDosen = $this->getSupervisorEvaluationStatus($group, 'NILAI_DOSEN');
         $milestone = $this->getSupervisorEvaluationStatus($group, 'MILESTONE');
@@ -345,7 +365,7 @@ class WorkflowService
 
         return [
             'ready' => $expoDocsComplete
-                && $allStudentsEvaluated
+                && $expoEvalComplete
                 && $nilaiDosenComplete
                 && $milestoneComplete
                 && $peerReviewStatus['configured']
@@ -353,16 +373,20 @@ class WorkflowService
             'expo_documents' => [
                 'completed' => $expoDocsComplete,
                 'pending_types' => $pendingDocs,
-                'total_required' => $studentCount,
-                'approved_count' => $expoRegistration
-                    ? \Modules\Capstone\Models\ExpoStudentDocument::where('expo_registration_id', $expoRegistration->id)->count()
-                    : 0,
+                'total_required' => 1,
+                'approved_count' => $approvedDocCount,
             ],
             'expo_evaluation' => [
                 'required' => true,
-                'completed' => $allStudentsEvaluated && $studentCount > 0,
+                'configured' => $expoComponentIds->isNotEmpty(),
+                'completed' => $expoEvalComplete,
                 'type' => 'self_evaluation',
-                'students_completed' => $allStudentsEvaluated ? $studentCount : 0,
+                'submitted' => $expoEvalSubmitted,
+                'approved' => $registrationApproved,
+                'review_status' => $expoRegistration?->review_status,
+                'review_feedback' => $expoRegistration?->review_feedback,
+                'supervisors' => [],
+                'students_completed' => $expoEvalComplete ? $studentCount : 0,
                 'students_total' => $studentCount,
             ],
             'nilai_dosen' => [
@@ -389,6 +413,105 @@ class WorkflowService
                 'incomplete_students' => $peerReviewStatus['incomplete_students'],
             ],
         ];
+    }
+
+    /**
+     * Whether a group is finally ready for TA Individual: at least one expo
+     * document APPROVED, the representative's self-evaluation submitted and
+     * APPROVED by the supervisor, NILAI_DOSEN and MILESTONE complete from
+     * every supervisor, and peer review configured + completed. Enforcement
+     * counterpart of the UI-only getFinalReadyForTaIndividual display; used
+     * by GroupLifecycleService to gate EXPO_DONE → PDC2_COMPLETED.
+     *
+     * The display helper takes requirement/document collections but is
+     * fully data-driven, so empty collections are passed here.
+     */
+    public function isFinalReadyForTaIndividual(Group $group): bool
+    {
+        if (! Schema::hasTable('capstone_group_members')
+            || ! Schema::hasTable('capstone_expo_self_evaluations')
+            || ! Schema::hasTable('students')) {
+            return false;
+        }
+
+        $readiness = $this->getFinalReadyForTaIndividual($group, collect(), collect());
+
+        return (bool) ($readiness['ready'] ?? false);
+    }
+
+    /**
+     * Whether a group's SEMPRO stage is fully complete: a schedule exists,
+     * every examiner submitted, and every supervisor submitted
+     * BIMBINGAN_SEMPRO. Enforcement counterpart of the UI-only completion
+     * display; used by GroupLifecycleService to gate SEMPRO_DONE →
+     * PDC2_ACTIVE.
+     */
+    public function isSemproComplete(Group $group): bool
+    {
+        $status = $this->getSemproCompletionStatus($group);
+
+        return $status['schedule_exists']
+            && $status['all_examiners_submitted']
+            && $status['all_supervisors_submitted'];
+    }
+
+    /**
+     * Whether a group's EXPO stage is fully complete: an active REGISTERED
+     * registration exists, the supervisor APPROVED the group submission, at
+     * least one expo document is APPROVED, and the representative member
+     * submitted self-evaluation for every EXPO component (one submission
+     * covers the whole group). Enforcement counterpart used to gate
+     * EXPO_REGISTERED → EXPO_DONE so a group cannot proceed while the
+     * submission is pending or rejected.
+     */
+    public function isExpoComplete(Group $group): bool
+    {
+        if (! Schema::hasTable('capstone_expo_registrations')
+            || ! Schema::hasTable('capstone_expo_student_documents')
+            || ! Schema::hasTable('capstone_expo_self_evaluations')
+            || ! Schema::hasTable('capstone_group_members')) {
+            return false;
+        }
+
+        $registration = ExpoRegistration::where('group_id', $group->id)
+            ->where('status', 'REGISTERED')
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $registration) {
+            return false;
+        }
+
+        if ($registration->review_status !== 'APPROVED') {
+            return false;
+        }
+
+        if (! GroupMember::where('group_id', $group->id)->exists()) {
+            return false;
+        }
+
+        $hasApprovedDoc = ExpoStudentDocument::where('expo_registration_id', $registration->id)
+            ->where('status', 'APPROVED')
+            ->exists();
+
+        if (! $hasApprovedDoc) {
+            return false;
+        }
+
+        $componentIds = Schema::hasTable('capstone_period_assessment_components')
+            ? PeriodAssessmentComponent::where('period_id', $group->period_id)->where('type', 'EXPO')->pluck('id')->all()
+            : [];
+
+        if (empty($componentIds)) {
+            return false;
+        }
+
+        $submitted = ExpoSelfEvaluation::where('expo_registration_id', $registration->id)
+            ->whereIn('period_component_id', $componentIds)
+            ->distinct()
+            ->count('period_component_id');
+
+        return $submitted >= count($componentIds);
     }
 
     /**
@@ -431,7 +554,7 @@ class WorkflowService
 
         $componentCount = Schema::hasTable('capstone_period_assessment_components')
             ? PeriodAssessmentComponent::where('period_id', $group->period_id)->where('type', 'BIMBINGAN_SEMPRO')->count()
-            : \Modules\Capstone\Models\AssessmentComponent::where('period_id', $group->period_id)->where('type', 'BIMBINGAN_SEMPRO')->count();
+            : AssessmentComponent::where('period_id', $group->period_id)->where('type', 'BIMBINGAN_SEMPRO')->count();
 
         $studentCount = GroupMember::where('group_id', $group->id)->count();
         $expectedScores = $componentCount * $studentCount;
@@ -441,7 +564,7 @@ class WorkflowService
         $allSupervisorsSubmitted = ! empty($supervisorIds) && $componentCount > 0;
 
         foreach ($supervisorIds as $supervisorId) {
-            $supervisor = \App\Models\Lecturer::find($supervisorId);
+            $supervisor = Lecturer::find($supervisorId);
             $submittedScores = AssessmentScoreRepository::forType('BIMBINGAN_SEMPRO')
                 ->where('group_id', $group->id)
                 ->where('evaluator_id', $supervisorId)
@@ -488,7 +611,7 @@ class WorkflowService
                 ->where('type', $evalType)
                 ->count();
         } else {
-            $componentCount = \Modules\Capstone\Models\AssessmentComponent::where('period_id', $periodId)
+            $componentCount = AssessmentComponent::where('period_id', $periodId)
                 ->where('type', $evalType)
                 ->count();
         }
@@ -500,7 +623,7 @@ class WorkflowService
         $allComplete = true;
 
         if ($group->supervisor_1_id) {
-            $sup1 = \App\Models\Lecturer::find($group->supervisor_1_id);
+            $sup1 = Lecturer::find($group->supervisor_1_id);
             $scores1 = AssessmentScoreRepository::forType($evalType)
                 ->where('group_id', $group->id)
                 ->where('evaluator_id', $group->supervisor_1_id)
@@ -520,7 +643,7 @@ class WorkflowService
         }
 
         if ($group->supervisor_2_id) {
-            $sup2 = \App\Models\Lecturer::find($group->supervisor_2_id);
+            $sup2 = Lecturer::find($group->supervisor_2_id);
             $scores2 = AssessmentScoreRepository::forType($evalType)
                 ->where('group_id', $group->id)
                 ->where('evaluator_id', $group->supervisor_2_id)
@@ -564,12 +687,10 @@ class WorkflowService
 
         $indicatorCount = 0;
         if ($hasNewIndicators) {
-            $indicatorCount = DB::table('period_peer_review_indicators')
-                ->where('period_id', $group->period_id)
+            $indicatorCount = PeriodPeerReviewIndicator::where('period_id', $group->period_id)
                 ->count();
         } elseif ($hasLegacyIndicators) {
-            $indicatorCount = DB::table('peer_review_indicators')
-                ->where('period_id', $group->period_id)
+            $indicatorCount = PeerReviewIndicator::where('period_id', $group->period_id)
                 ->count();
         }
 
@@ -592,8 +713,7 @@ class WorkflowService
         $completedStudentIds = [];
 
         if ($hasStudentStatus) {
-            $completedStudentIds = DB::table('student_peer_review_status')
-                ->where('group_id', $group->id)
+            $completedStudentIds = StudentPeerReviewStatus::where('group_id', $group->id)
                 ->where('has_completed_peer_review', true)
                 ->pluck('student_id')
                 ->all();
@@ -604,8 +724,7 @@ class WorkflowService
             if ($expected === 0) {
                 $completedStudentIds = $memberRows->pluck('student_id')->all();
             } else {
-                $query = DB::table('peer_reviews')
-                    ->where('group_id', $group->id)
+                $query = PeerReview::where('group_id', $group->id)
                     ->whereIn('reviewer_id', $memberRows->pluck('student_id'));
 
                 if ($useFinalSubmission) {

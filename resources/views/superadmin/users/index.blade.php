@@ -308,6 +308,22 @@
                     if (errorContainer) errorContainer.classList.add('hidden');
                     if (dupeContainer)  dupeContainer.classList.add('hidden');
                     btn.disabled  = true;
+                    if (this.dataset.previewReady !== '1') {
+                        btn.textContent = 'Membaca Excel...';
+                        try {
+                            await buildBulkImportPreview();
+                        } catch (err) {
+                            const errorMessage = document.getElementById('importErrorMessage');
+                            if (errorMessage) errorMessage.textContent = err.message;
+                            if (errorContainer) errorContainer.classList.remove('hidden');
+                            btn.textContent = 'Lihat Pratinjau';
+                        }
+                        btn.disabled = false;
+                        isSubmitting = false;
+                        return;
+                    }
+
+                    attachBulkImportSsoValues();
                     btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;animation:spin 1s linear infinite;">sync</span> Memvalidasi...';
                     try {
                         const res  = await fetch(this.action, {
@@ -335,7 +351,7 @@
                         if (errorMessage) errorMessage.textContent = err.message;
                         if (errorContainer) errorContainer.classList.remove('hidden');
                         btn.disabled  = false;
-                        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">upload</span> Mulai Impor';
+                        btn.textContent = 'Konfirmasi & Mulai Impor';
                         isSubmitting  = false;
                     }
                 });

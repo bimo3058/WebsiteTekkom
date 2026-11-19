@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Edit Tugas">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? $tugas->modul?->praktikum ?? null" pageTitle="Edit Tugas">
 
 {{-- Header --}}
 <div class="mp-page-header">
@@ -46,7 +46,7 @@
                 Jenis Tugas <span style="color:#DF1C41;">*</span>
             </label>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
-                @foreach(['tugas_pendahuluan' => 'Tugas Pendahuluan', 'laporan' => 'Laporan', 'responsi' => 'Responsi', 'tugas_pengganti' => 'Tugas Pengganti'] as $val => $label)
+                @foreach(($moduls->first()?->praktikum?->moduleTaskTypes() ?? \Modules\EOffice\Models\Tugas::JENIS) as $val => $label)
                 @php $isChecked = old('jenis_tugas', $tugas->jenis_tugas) === $val; @endphp
                 <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid {{ $isChecked ? '#5D6DA2' : '#DFE1E7' }};border-radius:10px;cursor:pointer;background:{{ $isChecked ? '#F0F1FE' : '#FAFBFC' }};transition:border-color .15s,background .15s;"
                        x-data
@@ -125,7 +125,7 @@
                 </div>
                 <div style="flex:1;min-width:0;">
                     <div style="font-size:12px;font-weight:600;color:#353849;">File terlampir</div>
-                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($tugas->file_path, 'eoffice') }}"
+                    <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($tugas->file_path, 'eoffice') }}"
                        target="_blank"
                        style="font-size:11px;color:#0B266E;text-decoration:none;font-weight:500;">
                        Lihat / Unduh PDF <x-eoffice::manajemen-praktikum.ui.icon name="arrow-right" />
@@ -187,11 +187,11 @@
             @enderror
         </div>
 
-        {{-- Deadline & Publikasi --}}
+        {{-- Tenggat & Publikasi --}}
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px;">
             <div>
                 <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">
-                    Deadline AC <span style="color:#999;">(Tenggat Pengumpulan Awal)</span>
+                    Tenggat AC <span style="color:#999;">(Tenggat Pengumpulan Awal)</span>
                 </label>
                 <input type="datetime-local" name="deadline" class="mp-input" style="min-height:44px;"
                        value="{{ old('deadline', $tugas->deadline?->format('Y-m-d\TH:i')) }}">
@@ -202,7 +202,7 @@
 
             <div>
                 <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">
-                    Deadline ACC <span style="color:#999;">(Tenggat Revisi / Batas Akhir)</span>
+                    Tenggat ACC <span style="color:#999;">(Tenggat Revisi / Batas Akhir)</span>
                 </label>
                 <input type="datetime-local" name="deadline_acc" class="mp-input" style="min-height:44px;"
                        value="{{ old('deadline_acc', $tugas->deadline_acc?->format('Y-m-d\TH:i')) }}">

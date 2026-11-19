@@ -33,9 +33,9 @@ class PengaduanService
     {
         $anonToken = $isAnonim ? Str::random(32) : null;
 
-        $pengaduan = Pengaduan::create([
-            // Tiket konfidensial tidak menyimpan pelapor sama sekali (bukan sekadar
-            // disembunyikan di tampilan): pelapor hanya memegang magic link.
+        $pengaduan = new Pengaduan([
+            // Tiket anonim tidak memakai user_id, jadi tidak muncul di daftar
+            // pelapor dan namanya tidak tampil ke pengelola; pelapor memegang magic link.
             'user_id'       => $isAnonim ? null : $userId,
             'kategori'      => $kategori,
             'is_anonim'     => $isAnonim,
@@ -43,6 +43,9 @@ class PengaduanService
             'data_template' => $template,
             'status'        => Pengaduan::STATUS_BARU,
         ]);
+        // Akun pelapor tiket anonim tetap disimpan di kolom terpisah untuk
+        // penanganan bila diperlukan (R-40); form memberi tahu pelapor soal ini.
+        $pengaduan->forceFill(['pelapor_tersimpan_id' => $isAnonim ? $userId : null])->save();
 
         // Tiket konfidensial TIDAK boleh menyimpan identitas pelapor pada log.
         // actor_user_id memang nullable ("null = sistem/otomatis") justru untuk ini:
@@ -58,24 +61,22 @@ class PengaduanService
     // ── Lifecycle: Admin ───────────────────────────────────────────────────
 
     /**
-     * Staff membuka detail. Notification-style: status 'baru' berubah menjadi
-     * 'dibaca' (dot biru di tabel hilang). Status lain tidak diturunkan.
+     * Staff membuka detail: hanya mencatat kapan & oleh siapa tiket pertama kali
+     * dibuka. Status tidak diubah — status "Dibaca" sudah dihapus, jadi tiket tetap
+     * "Baru" sampai ditandai tercatat.
      */
     public function markRead(Pengaduan $pengaduan, int $readerUserId): void
     {
-        $pertamaDibuka = !$pengaduan->read_at;
+        if ($pengaduan->read_at) {
+            return;
+        }
 
         $pengaduan->forceFill([
-            'status'  => $pengaduan->status === Pengaduan::STATUS_BARU
-                ? Pengaduan::STATUS_DIBACA
-                : $pengaduan->status,
-            'read_at' => $pengaduan->read_at ?? now(),
+            'read_at' => now(),
             'read_by' => $pengaduan->read_by ?? $readerUserId,
         ])->save();
 
-        if ($pertamaDibuka) {
-            $this->logAction($pengaduan, $readerUserId, PengaduanLog::ACTION_DIBACA);
-        }
+        $this->logAction($pengaduan, $readerUserId, PengaduanLog::ACTION_DIBACA);
     }
 
     // ── Internal helper ───────────────────────────────────────────────────

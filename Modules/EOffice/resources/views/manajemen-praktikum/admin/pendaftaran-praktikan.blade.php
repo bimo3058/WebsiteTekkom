@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Pendaftaran Praktikan">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Pendaftaran Praktikan">
     <div class="mp-page-header">
         <div><h1 class="mp-page-title">Pendaftaran Praktikan</h1><p class="mp-page-sub">Pantau pendaftaran, verifikasi koordinator, dan dokumen IRS mahasiswa.</p></div>
         <a class="mp-btn secondary md" href="{{ route('eoffice.manprak.admin.daftar-praktikan.index') }}"><x-eoffice::manajemen-praktikum.ui.icon name="book" /> Praktikan terdaftar</a>
@@ -48,6 +48,8 @@
                 </tbody>
             </table>
         </div>
-        <div style="padding:16px 18px;">{{ $pendaftaran->links() }}</div>
+        @if(isset($pendaftaran) && $pendaftaran instanceof \Illuminate\Pagination\LengthAwarePaginator)
+            <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$pendaftaran" />
+        @endif
     </section>
 </x-eoffice::manajemen-praktikum.layout>

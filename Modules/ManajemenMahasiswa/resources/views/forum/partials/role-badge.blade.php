@@ -13,8 +13,11 @@
             'gpm' => 8,
             'ketua_departemen' => 8,
             'ketua_himpunan' => 9,
+            'wakil_ketua_himpunan' => 9.5,
             'ketua_bidang' => 10,
+            'wakil_ketua_bidang' => 10.5,
             'ketua_unit' => 11,
+            'wakil_ketua_unit' => 11.5,
             'pengurus_himpunan' => 13,
             'staff_himpunan' => 14,
             'alumni' => 15,
@@ -22,7 +25,7 @@
         ];
 
         $roleLabels = [
-            'superadmin' => 'Super Admin',
+            'superadmin' => 'Admin',
             'admin' => 'Admin',
             'admin_kemahasiswaan' => 'Admin',
             'admin_banksoal' => 'Admin',
@@ -31,18 +34,14 @@
             'dosen' => 'Dosen',
             'gpm' => 'GPM',
             'ketua_departemen' => 'Kadep',
-            'ketua_himpunan' => 'Ketua HMP',
-            'ketua_bidang' => 'Ketua Bidang',
-            'ketua_unit' => 'Ketua Unit',
-            'pengurus_himpunan' => 'Pengurus HMP',
-            'staff_himpunan' => 'Staff HMP',
+            'pengurus_himpunan' => 'Pengurus HIMA',
             'alumni' => 'Alumni',
             'mahasiswa' => 'Mahasiswa',
-        ];
+        ] + \Modules\ManajemenMahasiswa\Support\RoleHimpunan::LABEL;
 
         // Custom colors for each role
         $roleStyles = [
-            'superadmin'           => 'background: #be123c; color: #fff;',
+            'superadmin'           => 'background: #b45309; color: #fff;',
             'admin'                => 'background: #b45309; color: #fff;',
             'admin_kemahasiswaan'  => 'background: #b45309; color: #fff;',
             'admin_banksoal'       => 'background: #b45309; color: #fff;',
@@ -52,8 +51,11 @@
             'gpm'                  => 'background: #6d28d9; color: #fff;',
             'ketua_departemen'     => 'background: #6d28d9; color: #fff;',
             'ketua_himpunan'       => 'background: #047857; color: #fff;',
+            'wakil_ketua_himpunan' => 'background: #047857; color: #fff;',
             'ketua_bidang'         => 'background: #0369a1; color: #fff;',
+            'wakil_ketua_bidang'   => 'background: #0369a1; color: #fff;',
             'ketua_unit'           => 'background: #415086; color: #fff;',
+            'wakil_ketua_unit'     => 'background: #415086; color: #fff;',
             'pengurus_himpunan'    => 'background: #ecfdf5; color: #047857; border: 1px solid #10b981;',
             'staff_himpunan'       => 'background: #f0fdf4; color: #15803d; border: 1px solid #22c55e;',
             'alumni'               => 'background: #fff1f2; color: #be123c; border: 1px solid #fb7185;',
@@ -71,6 +73,10 @@
         $primaryRole = $roleUser->roles->sortBy(fn($r) => $rolePriority[$r->name] ?? 99)->first();
         $roleName = $primaryRole->name ?? null;
         $roleLabel = $roleLabels[$roleName] ?? ucfirst(str_replace('_', ' ', $roleName ?? ''));
+        // Format "KABID / RISTEK" hanya bila bidang sudah di-eager-load (hindari N+1 di daftar forum).
+        if ($roleUser->relationLoaded('pengurusBidang')) {
+            $roleLabel = \Modules\ManajemenMahasiswa\Support\RoleHimpunan::labelLengkap($roleUser, $roleName);
+        }
         $roleStyle = $roleStyles[$roleName] ?? 'background: #f3f4f6; color: #6b7280; border: 1px solid #d1d5db;';
         
         // Find suitable icon (defaults for categories if specific not found)
@@ -86,7 +92,6 @@
 
 @if($roleName)
     <span class="role-badge d-inline-flex align-items-center" style="{{ $roleStyle }} font-size: {{ $badgeSize ?? '10px' }}; font-weight: 700; padding: 2px 8px; border-radius: 6px; white-space: nowrap; line-height: 1; text-transform: uppercase; letter-spacing: 0.02em;">
-        {!! $icon !!}
         {{ $roleLabel }}
     </span>
 @endif

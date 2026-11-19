@@ -2,11 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\UserPresence;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class UpdateUserOnlineStatus
 {
@@ -17,18 +17,24 @@ class UpdateUserOnlineStatus
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check()) {
-            $userId = Auth::id();
+        return $next($request);
+    }
 
-            // Update status directly in DB to maintain performance and avoid model overhead
-            DB::table('users')
-                ->where('id', $userId)
-                ->update([
-                    'is_online' => true,
-                    'last_seen_at' => now(),
-                ]);
+    /**
+     * Presence is non-critical, so refresh it after the response is sent.
+     */
+    public function terminate(Request $request, Response $response): void
+    {
+        $userId = $request->user()?->getAuthIdentifier();
+
+        if (! $userId) {
+            return;
         }
 
-        return $next($request);
+        try {
+            app(UserPresence::class)->touch((int) $userId);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 }

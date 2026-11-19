@@ -120,7 +120,7 @@ class DashboardOverview
         $query = Praktikum::where('status', 'aktif');
         if ($role === 'dosen') $query->whereHas('dosens', fn ($q) => $q->where('users.id', $user->id));
         if ($role === 'mahasiswa') $query->whereHas('daftarPraktikan', fn ($q) => $q->where('user_id', $user->id));
-        $ids = (clone $query)->select('eo_praktikum.id');
+        $ids = (clone $query)->select('eo_prak_praktikum.id');
         $tasks = Tugas::where('is_published', true)->whereHas('modul', fn ($q) => $q->whereIn('praktikum_id', clone $ids));
         $data = [];
         $metrics = ['Praktikum aktif' => (clone $query)->count()];
@@ -141,7 +141,7 @@ class DashboardOverview
         } else {
             $metrics['Peserta terdaftar'] = DaftarPraktikan::whereIn('praktikum_id', clone $ids)->count();
             $metrics['Tugas terbit'] = (clone $tasks)->count();
-            $metrics['Pengumpulan perlu diperiksa'] = DB::table('pengumpulan_tugas')->whereIn('tugas_id', (clone $tasks)->select('tugas_praktikum.id'))->where('status_pengumpulan', 'belum_dicek')->count();
+            $metrics['Pengumpulan perlu diperiksa'] = DB::table('eo_prak_pengumpulan_tugas')->whereIn('tugas_id', (clone $tasks)->select('eo_prak_tugas_praktikum.id'))->where('status_pengumpulan', 'belum_dicek')->count();
         }
         $entries = (clone $query)->withCount('daftarPraktikan')->latest()->limit(3)->get()->map(fn ($p) => [
             'title' => $p->nama, 'detail' => ($p->kode ?: 'Tanpa kode').' · '.$p->daftar_praktikan_count.' peserta', 'status' => 'Aktif',

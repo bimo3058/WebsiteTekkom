@@ -11,6 +11,7 @@ class KoorPraktikumService
 {
     public function assign(Praktikum $praktikum, User $user): void
     {
+        \Modules\EOffice\Services\ManajemenPraktikum\ActiveStudent::ensure($user);
         $roleIds = Role::where('module', 'eoffice')
             ->whereIn('name', ['koor_prak', 'asprak'])
             ->pluck('id')
@@ -27,11 +28,17 @@ class KoorPraktikumService
         }
 
         foreach (['koor', 'asprak'] as $role) {
-            AsprakPraktikum::firstOrCreate([
+            $membership = AsprakPraktikum::withTrashed()->firstOrNew([
                 'praktikum_id' => $praktikum->id,
                 'user_id' => $user->id,
                 'role' => $role,
             ]);
+
+            if (! $membership->exists) {
+                $membership->save();
+            } elseif ($membership->trashed()) {
+                $membership->restore();
+            }
         }
     }
 }

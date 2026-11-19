@@ -17,6 +17,8 @@ import { ShieldCheck } from "lucide-react";
 import { useGroups } from "../hooks/use-groups";
 import { useGroupColumns } from "./GroupTableColumns";
 import { GroupTable } from "./GroupTable";
+import { RenameTitleDialog } from "@/components/finalization/rename-title-dialog";
+import { useAdminTitleRename } from "@/hooks/use-admin-title-rename";
 import type { Group, SortKey, SortDir } from "../types";
 
 export function GroupsFeature() {
@@ -35,13 +37,33 @@ export function GroupsFeature() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<Group | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [groupToRename, setGroupToRename] = useState<Group | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("leader");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+  const { renameTitle, renamingTitle } = useAdminTitleRename();
 
   const handleDeleteClick = useCallback((group: Group) => {
     setGroupToDelete(group);
     setDeleteDialogOpen(true);
   }, []);
+
+  const handleRenameTitleClick = useCallback((group: Group) => {
+    if (!group.title) return;
+    setGroupToRename(group);
+  }, []);
+
+  const handleRenameTitleSubmit = useCallback(
+    async (title: string) => {
+      if (!groupToRename?.title) return;
+      const success = await renameTitle(groupToRename.title.id, title);
+      if (success) {
+        setGroupToRename(null);
+        fetchData(pagination.current_page);
+      }
+    },
+    [groupToRename, renameTitle, fetchData, pagination.current_page]
+  );
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!groupToDelete) return;
@@ -82,7 +104,11 @@ export function GroupsFeature() {
     [fetchData]
   );
 
-  const columns = useGroupColumns({ periods, onDelete: handleDeleteClick });
+  const columns = useGroupColumns({
+    periods,
+    onDelete: handleDeleteClick,
+    onRenameTitle: handleRenameTitleClick,
+  });
 
   return (
     <div className="space-y-6">
@@ -159,6 +185,17 @@ export function GroupsFeature() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <RenameTitleDialog
+        key={`rename-title-${groupToRename?.title?.id ?? "none"}-${groupToRename !== null}`}
+        open={groupToRename !== null}
+        onOpenChange={(open) => {
+          if (!open) setGroupToRename(null);
+        }}
+        currentTitle={groupToRename?.title?.title ?? ""}
+        loading={renamingTitle}
+        onSubmit={handleRenameTitleSubmit}
+      />
     </div>
   );
 }

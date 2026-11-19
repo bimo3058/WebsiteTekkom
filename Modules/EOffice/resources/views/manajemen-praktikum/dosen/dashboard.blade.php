@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Dashboard">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Dashboard">
 @php
     $name      = auth()->user()->name;
     $firstName = explode(' ', $name)[0];

@@ -24,8 +24,8 @@ use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 class KemahasiswaanPolicy
 {
     /**
-     * Role yang boleh mengubah biodata direktori milik mahasiswa mana pun,
-     * termasuk kolom Status. Sinkron dengan gerbang route `direktori.mahasiswa.edit`.
+     * Pengelola direktori. Sejak S-71 (3 Nov 2026) tidak lagi mengubah kontak mahasiswa;
+     * daftar ini masih dipakai AlumniPolicy untuk form edit Direktori Alumni.
      */
     public const PENGELOLA = [
         'superadmin',
@@ -33,18 +33,32 @@ class KemahasiswaanPolicy
     ];
 
     /**
+     * Role yang boleh melihat kontak pribadi (Email Pribadi, WhatsApp/Telepon)
+     * mahasiswa lain di Direktori Mahasiswa. Role di luar daftar ini hanya melihat
+     * kontak pribadinya sendiri — prinsip need-to-know (UU PDP No. 27/2022
+     * Pasal 16 ayat 2, Pasal 35, Pasal 36).
+     */
+    public const LIHAT_KONTAK_PRIBADI = [
+        'superadmin',
+        'admin_kemahasiswaan',
+        'ketua_departemen',
+        'gpm',
+        'dosen',
+        'dpm',
+    ];
+
+    /**
      * Membuka form edit dan menyimpan perubahannya.
      *
-     * Pemilik baris selalu boleh — itulah yang menggantikan halaman "Profil Saya".
-     * Field yang boleh ia ubah dibatasi terpisah di controller (Status hanya milik
-     * pengelola); Policy ini hanya menjawab "baris siapa", bukan "kolom apa".
+     * Hanya pemilik baris, role apa pun — itulah yang menggantikan halaman "Profil Saya".
+     * Field yang boleh ia ubah dibatasi terpisah di controller; Policy ini hanya menjawab
+     * "baris siapa", bukan "kolom apa".
+     *
+     * Dipanggil langsung oleh controller, bukan lewat authorize(): Gate::before meloloskan
+     * superadmin sebelum method ini sempat berjalan.
      */
     public function update(User $user, Kemahasiswaan $mhs): bool
     {
-        if ((int) $mhs->user_id === (int) $user->getKey()) {
-            return true;
-        }
-
-        return $user->hasAnyRole(self::PENGELOLA);
+        return (int) $mhs->user_id === (int) $user->getKey();
     }
 }

@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null"
     pageTitle="{{ $praktikum ? $praktikum->nama : 'Belum Ada Praktikum' }} / Seleksi Asisten">
 
     @if($praktikum)
@@ -165,15 +165,8 @@
                                             :value="berkasType === 'pdf' ? 'Upload File (.pdf)' : 'Input Link'" disabled
                                             style="background: #F9FAFB; color: #808897; border-style: dashed; padding-right: 36px;">
                                         <button type="button" @click="removeBerkas()"
-                                            class="absolute right-1 top-1/2 -translate-y-1/2 text-[#DF1C41] hover:bg-[#FFF5F5] p-1.5 rounded-[6px] transition-colors"
-                                            title="Hapus Berkas">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                                <polyline points="3 6 5 6 21 6" />
-                                                <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                                                <path d="M10 11v6M14 11v6" />
-                                            </svg>
-                                        </button>
+                                            class="mp-delete-button absolute right-1 top-1/2 -translate-y-1/2 text-[#DF1C41] hover:bg-[#FFF5F5] p-1.5 rounded-[6px] transition-colors"
+                                            title="Hapus Berkas" aria-label="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                     </div>
                                     <template x-if="berkasDesc">
                                         <p class="text-[11px] text-[#666D80] mt-1" x-text="berkasDesc"></p>
@@ -182,49 +175,6 @@
                             </div>
                         </div>
 
-
-                        <div class="mt-5">
-                            <label class="block text-[11px] font-semibold text-[#353849] mb-2">Jadwal <span
-                                    class="text-red-500">*</span> <span class="text-[#808897] font-normal">(Pilih hari
-                                    luang)</span></label>
-                            <div class="flex gap-6 flex-wrap">
-                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                    <input type="radio" disabled
-                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                    <span class="text-[12px] text-[#666D80]">Senin</span>
-                                </label>
-                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                    <input type="radio" disabled
-                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                    <span class="text-[12px] text-[#666D80]">Selasa</span>
-                                </label>
-                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                    <input type="radio" disabled
-                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                    <span class="text-[12px] text-[#666D80]">Rabu</span>
-                                </label>
-                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                    <input type="radio" disabled
-                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                    <span class="text-[12px] text-[#666D80]">Kamis</span>
-                                </label>
-                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                    <input type="radio" disabled
-                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                    <span class="text-[12px] text-[#666D80]">Jumat</span>
-                                </label>
-                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                    <input type="radio" disabled
-                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                    <span class="text-[12px] text-[#666D80]">Sabtu</span>
-                                </label>
-                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                    <input type="radio" disabled
-                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                    <span class="text-[12px] text-[#666D80]">Minggu</span>
-                                </label>
-                            </div>
-                        </div>
 
                     </div>
                 </div>
@@ -300,9 +250,12 @@
                         <th class="mp-th text-left" style="padding:10px 16px;">NIM</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">IPK</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">TRANSKRIP NILAI</th>
-
+                        @if(filled($periodeTabel?->nama_berkas_tambahan))
+                            <th class="mp-th text-left" style="padding:10px 16px;">
+                                {{ strtoupper($periodeTabel->nama_berkas_tambahan) }}
+                            </th>
+                        @endif
                         <th class="mp-th text-left" style="padding:10px 16px;">KEANGGOTAAN CERC</th>
-                        <th class="mp-th text-left" style="padding:10px 16px;">Jadwal</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">Status</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">Aksi</th>
                     </tr>
@@ -338,7 +291,7 @@
                             </td>
                             <td style="padding:12px 16px;">
                                 @if($p->transkrip_path)
-                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->transkrip_path, 'eoffice') }}"
+                                    <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($p->transkrip_path, 'eoffice') }}"
                                         target="_blank" style="font-size:13px;font-weight:600;color:#0B266E;"
                                         class="hover:underline">Lihat Berkas</a>
                                 @else
@@ -348,7 +301,7 @@
 
                             <td style="padding:10px 16px;">
                                 @if($p->berkas_cerc_path)
-                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->berkas_cerc_path, 'eoffice') }}"
+                                    <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($p->berkas_cerc_path, 'eoffice') }}"
                                         target="_blank"
                                         style="display:inline-flex; align-items:center; gap:6px; color:#0B266E; font-size:12px; font-weight:600; text-decoration:none;"
                                         class="hover:underline">Lihat Berkas</a>
@@ -356,9 +309,18 @@
                                     <span style="color:#808897; font-size:12px; font-style:italic;">Tidak ada</span>
                                 @endif
                             </td>
-                            <td style="padding:12px 16px;font-size:13px;color:#666D80;">
-                                {{ collect($p->jadwal ?? [])->join(', ') ?: '—' }}
-                            </td>
+                            @if(filled($periodeTabel?->nama_berkas_tambahan))
+                                <td style="padding:10px 16px;">
+                                    @if($p->berkas_tambahan_path)
+                                        <a href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($p->berkas_tambahan_path, 'eoffice') }}"
+                                            target="_blank" rel="noopener noreferrer"
+                                            style="display:inline-flex; align-items:center; gap:6px; color:#0B266E; font-size:12px; font-weight:600; text-decoration:none;"
+                                            class="hover:underline">Lihat Berkas</a>
+                                    @else
+                                        <span style="color:#808897; font-size:12px; font-style:italic;">Tidak ada</span>
+                                    @endif
+                                </td>
+                            @endif
                             <td style="padding:12px 16px;">
                                 @if($p->status_koor === 'disetujui')
                                     <div>
@@ -374,6 +336,7 @@
                             <td style="padding:12px 16px;">
                                 @if($p->status_koor === 'menunggu')
                                     <div class="flex gap-2" x-data="{ catatan: '' }">
+                                        <x-eoffice::manajemen-praktikum.ui.action-menu>
                                         <form method="POST"
                                             action="{{ route('eoffice.manprak.koor.pendaftaran-asprak.approve', $p->id) }}">
                                             @csrf
@@ -392,7 +355,7 @@
                                             @csrf
                                             <input type="hidden" name="alasan_penolakan" :value="alasan">
                                             <button type="button"
-                                                @click="alasan = prompt('Alasan penolakan:'); if(alasan !== null) .closest('form').submit()"
+                                                @click="alasan = prompt('Alasan penolakan:'); if(alasan !== null) $el.closest('form').submit()"
                                                 class="mp-btn destructive sm">
                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
                                                     stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
@@ -402,6 +365,7 @@
                                                 Tolak
                                             </button>
                                         </form>
+                                        </x-eoffice::manajemen-praktikum.ui.action-menu>
                                     </div>
                                 @else
                                     <span style="font-size:13px;color:#808897;">Sudah diproses</span>
@@ -410,7 +374,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" style="padding:48px;text-align:center;">
+                            <td colspan="{{ filled($periodeTabel?->nama_berkas_tambahan) ? 9 : 8 }}" style="padding:48px;text-align:center;">
                                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8"
                                     stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
                                     style="margin:0 auto 12px;display:block;">
@@ -425,446 +389,14 @@
             </table>
         </div>
         {{-- Pagination Custom Fungsional --}}
-        @if(isset($pendaftaran) && method_exists($pendaftaran, 'hasPages') && ($pendaftaran->hasPages() || $pendaftaran->total() > 0))
-            <div
-                style="display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-top:1px solid var(--c-border);">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <div x-data="{ open: false, selected: '{{ request('per_page', 10) }}', options: [5, 10, 20] }"
-                        class="relative" @click.away="open = false">
-                        <div class="flex items-center gap-2 cursor-pointer border rounded-[8px] px-3 py-1.5 transition-colors focus:outline-none"
-                            :class="open ? 'border-[#0B266E] bg-[#EEF1FA] text-[#0B266E]' : 'border-[#DFE1E7] bg-white text-[#353849] hover:bg-[#F6F8FA]'"
-                            @click="open = !open">
-                            <span class="text-[12px] text-[#666D80]" :class="open ? 'text-[#0B266E]' : ''">Per
-                                halaman</span>
-                            <div class="flex items-center gap-1 font-semibold text-[12px]">
-                                <span x-text="selected"></span>
-                                <svg class="w-3.5 h-3.5 transition-transform duration-200"
-                                    :class="{'rotate-180': open, 'text-[#0B266E]': open, 'text-[#666D80]': !open}"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </div>
-                        </div>
-                        <div x-show="open" @click.away="open = false" style="display: none;"
-                            x-transition:enter="transition ease-out duration-100"
-                            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                            x-transition:leave="transition ease-in duration-75"
-                            x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                            class="absolute bottom-full left-0 mb-2 z-10 w-full min-w-[80px] bg-white border border-[#DFE1E7] rounded-[10px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 px-1.5 flex flex-col">
-                            <template x-for="option in options" :key="option">
-                                <a :href="'?per_page=' + option + '&' + decodeURIComponent(new URLSearchParams(Object.fromEntries(Object.entries(Object.fromEntries(new URLSearchParams(window.location.search))).filter(([k,v])=>k!=='per_page'))).toString())"
-                                    class="flex items-center justify-between px-3 py-2 rounded-[6px] cursor-pointer text-[12px] transition-colors mb-0.5 last:mb-0 no-underline"
-                                    :class="selected == option ? 'bg-[#F6F8FA] text-[#0B266E] font-medium' : 'text-[#353849] hover:bg-[#F6F8FA]'">
-                                    <span x-text="option"></span>
-                                    <svg x-show="selected == option" class="w-3.5 h-3.5 flex-shrink-0 text-[#0B266E] ml-2"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                                        stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </a>
-                            </template>
-                        </div>
-                    </div>
-                    <div style="font-size:13px; color:var(--c-fg-sec);">Menampilkan {{ $pendaftaran->firstItem() ?? 0 }}
-                        sampai {{ $pendaftaran->lastItem() ?? 0 }} dari {{ $pendaftaran->total() }} data</div>
-                </div>
-
-                <div style="display:flex; gap:4px;">
-                    @if ($pendaftaran->onFirstPage())
-                        <span
-                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#FAFAFA; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--c-border-strong);">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="15 18 9 12 15 6" />
-                            </svg>
-                        </span>
-                    @else
-                        <a href="{{ $pendaftaran->previousPageUrl() }}"
-                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-fg); text-decoration:none;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="15 18 9 12 15 6" />
-                            </svg>
-                        </a>
-                    @endif
-
-                    @php
-                        $current = $pendaftaran->currentPage();
-                        $last = $pendaftaran->lastPage();
-                        $start = max(1, $current - 1);
-                        $end = min($start + 2, $last);
-                    @endphp
-
-                    @for ($i = $start; $i <= $end; $i++)
-                        @if ($i == $current)
-                            <span
-                                style="width:32px; height:32px; background:#0B266E; color:#fff; font-size:13px; font-weight:600; border-radius:6px; display:flex; align-items:center; justify-content:center;">
-                                {{ $i }}
-                            </span>
-                        @else
-                            <a href="{{ $pendaftaran->url($i) }}"
-                                style="width:32px; height:32px; border:1px solid var(--c-border); background:#fff; color:var(--c-fg-sec); font-size:13px; font-weight:600; border-radius:6px; display:flex; align-items:center; justify-content:center; text-decoration:none; transition:all 0.2s;"
-                                onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
-                                {{ $i }}
-                            </a>
-                        @endif
-                    @endfor
-
-                    @if ($pendaftaran->hasMorePages())
-                        <a href="{{ $pendaftaran->nextPageUrl() }}"
-                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-fg); text-decoration:none;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="9 18 15 12 9 6" />
-                            </svg>
-                        </a>
-                    @else
-                        <span
-                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#FAFAFA; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--c-border-strong);">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="9 18 15 12 9 6" />
-                            </svg>
-                        </span>
-                    @endif
-                </div>
-            </div>
+        @if(isset($pendaftaran) && $pendaftaran instanceof \Illuminate\Pagination\LengthAwarePaginator)
+            <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$pendaftaran" :options="[5, 10, 20]" />
         @endif
     </div>
 
 </x-eoffice::manajemen-praktikum.layout>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<style>
-    /* Styling Flatpickr untuk mengikuti tema desain */
-    .flatpickr-calendar {
-        width: 340px !important;
-        padding-right: 12px !important;
-        box-shadow: 0 8px 24px rgba(11, 38, 110, 0.12) !important;
-        border: 1px solid #DFE1E7 !important;
-        border-radius: 12px !important;
-        font-family: inherit !important;
-        padding-left: 8px !important;
-        padding-bottom: 8px !important;
-    }
-
-    .flatpickr-days {
-        width: 320px !important;
-    }
-
-    .dayContainer {
-        width: 320px !important;
-        min-width: 320px !important;
-        max-width: 320px !important;
-    }
-
-    .flatpickr-calendar.hasTime .flatpickr-time {
-        border-top: 1px solid #DFE1E7 !important;
-        margin-top: 8px;
-    }
-
-    .flatpickr-months {
-        margin-bottom: 8px !important;
-    }
-
-    .flatpickr-current-month {
-        font-size: 14px !important;
-        padding-top: 0px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-
-    .flatpickr-current-month .flatpickr-monthDropdown-months {
-        display: none !important;
-    }
-
-    .flatpickr-current-month .cur-month {
-        font-size: 14px !important;
-        font-weight: 600 !important;
-        color: #353849 !important;
-        padding-top: 0px !important;
-        cursor: pointer;
-    }
-
-    .flatpickr-current-month .cur-month:hover {
-        color: #0B266E !important;
-    }
-
-    .custom-month-dropdown {
-        position: absolute;
-        background: #fff;
-        border: 1px solid #DFE1E7;
-        border-radius: 12px;
-        box-shadow: 0 8px 24px rgba(11, 38, 110, 0.12);
-        z-index: 99999;
-        width: 140px;
-        max-height: 220px;
-        overflow-y: auto;
-        padding: 6px;
-        font-family: inherit;
-        visibility: hidden;
-        opacity: 0;
-        transform: translateY(-8px);
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        pointer-events: none;
-    }
-
-    .custom-month-dropdown::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .custom-month-dropdown::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .custom-month-dropdown::-webkit-scrollbar-thumb {
-        background: #DFE1E7;
-        border-radius: 4px;
-    }
-
-    .custom-month-dropdown.show {
-        visibility: visible;
-        opacity: 1;
-        transform: translateY(0);
-        pointer-events: auto;
-    }
-
-    .custom-month-arrow svg {
-        transition: transform 0.2s ease;
-    }
-
-    .custom-month-arrow.open svg {
-        transform: rotate(180deg);
-    }
-
-    .custom-month-item {
-        padding: 8px 12px;
-        font-size: 13px;
-        font-weight: 500;
-        color: #353849;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .custom-month-item:hover {
-        background: #F6F8FA;
-        color: #0B266E;
-    }
-
-    .custom-month-item.active {
-        background: #0B266E !important;
-        color: #fff !important;
-    }
-
-
-    .flatpickr-current-month .numInputWrapper {
-        width: 65px !important;
-        border-radius: 6px !important;
-        margin-left: 4px;
-    }
-
-    .flatpickr-current-month input.cur-year {
-        font-size: 14px !important;
-        font-weight: 600 !important;
-        color: #353849 !important;
-        padding: 6px 8px !important;
-        border: 1px solid transparent !important;
-        border-radius: 6px !important;
-        height: 32px !important;
-        box-sizing: border-box !important;
-        background: transparent !important;
-        transition: all 0.2s;
-    }
-
-    .flatpickr-current-month .numInputWrapper:hover input.cur-year {
-        border: 1px solid #DFE1E7 !important;
-        background: #F9FAFB !important;
-    }
-
-    /* Customizing the arrows */
-    .flatpickr-current-month .numInputWrapper span.arrowUp,
-    .flatpickr-current-month .numInputWrapper span.arrowDown {
-        border: none !important;
-        border-left: 1px solid transparent !important;
-        right: 1px;
-    }
-
-    .flatpickr-current-month .numInputWrapper:hover span.arrowUp,
-    .flatpickr-current-month .numInputWrapper:hover span.arrowDown {
-        border-left: 1px solid #DFE1E7 !important;
-    }
-
-    .flatpickr-current-month .numInputWrapper span.arrowUp {
-        border-top-right-radius: 5px;
-        top: 1px;
-    }
-
-    .flatpickr-current-month .numInputWrapper span.arrowDown {
-        border-bottom-right-radius: 5px;
-        bottom: 1px;
-    }
-
-    .flatpickr-current-month .numInputWrapper span:hover {
-        background: #F0F2F5 !important;
-    }
-
-    /* Color of the arrow triangles */
-    .flatpickr-current-month .numInputWrapper span.arrowUp:after {
-        border-bottom-color: #666D80 !important;
-        top: 35% !important;
-    }
-
-    .flatpickr-current-month .numInputWrapper span.arrowDown:after {
-        border-top-color: #666D80 !important;
-        top: 40% !important;
-    }
-
-    .flatpickr-current-month .numInputWrapper span.arrowUp:hover:after {
-        border-bottom-color: #0B266E !important;
-    }
-
-    .flatpickr-current-month .numInputWrapper span.arrowDown:hover:after {
-        border-top-color: #0B266E !important;
-    }
-
-
-    .flatpickr-day {
-        border-radius: 8px !important;
-        font-size: 13px !important;
-        color: #353849 !important;
-        max-width: 42px !important;
-        height: 40px !important;
-        line-height: 40px !important;
-    }
-
-    .flatpickr-day.selected,
-    .flatpickr-day.selected:focus,
-    .flatpickr-day.selected:hover {
-        background: #0B266E !important;
-        border-color: #0B266E !important;
-        color: #fff !important;
-        font-weight: 600;
-    }
-
-    .flatpickr-day.prevMonthDay,
-    .flatpickr-day.nextMonthDay {
-        color: #C1C7D0 !important;
-    }
-
-    .flatpickr-day:hover,
-    .flatpickr-day.prevMonthDay:hover,
-    .flatpickr-day.nextMonthDay:hover {
-        background: #F6F8FA !important;
-        border-color: #DFE1E7 !important;
-    }
-
-    .flatpickr-time input {
-        color: #353849 !important;
-        font-size: 14px !important;
-        font-weight: 600 !important;
-    }
-
-    .flatpickr-time .flatpickr-time-separator {
-        color: #808897 !important;
-    }
-
-    .flatpickr-time .numInputWrapper:hover {
-        background: #F6F8FA !important;
-    }
-</style>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        flatpickr('.flatpickr-input', {
-            enableTime: true,
-            dateFormat: "Y-m-d H:i",
-            time_24hr: true,
-            allowInput: true,
-            monthSelectorType: "static",
-            onReady: function (selectedDates, dateStr, instance) {
-                // Buat custom dropdown untuk ganti bulan secara estetik
-                const monthDropdown = document.createElement('div');
-                monthDropdown.className = 'custom-month-dropdown';
-
-                const monthsStr = instance.l10n.months.longhand;
-                monthsStr.forEach((month, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'custom-month-item';
-                    div.textContent = month;
-                    div.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        instance.changeMonth(index, false); // set bulan
-                        monthDropdown.classList.remove('show');
-                        if (instance.monthNav.querySelector('.custom-month-arrow')) {
-                            instance.monthNav.querySelector('.custom-month-arrow').classList.remove('open');
-                        }
-                    });
-                    monthDropdown.appendChild(div);
-                });
-
-                instance.calendarContainer.appendChild(monthDropdown);
-
-                const monthElement = instance.monthNav.querySelector('.cur-month');
-                if (monthElement) {
-                    // Add simple arrow to element parent to avoid reset issue
-                    const arrow = document.createElement('span');
-                    arrow.className = 'custom-month-arrow';
-                    arrow.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
-                    arrow.style.marginLeft = '4px';
-                    arrow.style.cursor = 'pointer';
-                    arrow.style.display = 'inline-flex';
-                    arrow.style.alignItems = 'center';
-                    monthElement.parentNode.insertBefore(arrow, monthElement.nextSibling);
-
-                    // Wrapper trigger
-                    const toggleDropdown = (e) => {
-                        e.stopPropagation();
-                        monthDropdown.classList.toggle('show');
-
-                        if (monthDropdown.classList.contains('show')) {
-                            arrow.classList.add('open');
-                        } else {
-                            arrow.classList.remove('open');
-                        }
-
-                        const monthRect = monthElement.getBoundingClientRect();
-                        const calRect = instance.calendarContainer.getBoundingClientRect();
-
-                        monthDropdown.style.top = (monthRect.bottom - calRect.top + 3) + 'px';
-                        monthDropdown.style.left = (monthRect.left - calRect.left - 6) + 'px';
-
-                        const items = monthDropdown.querySelectorAll('.custom-month-item');
-                        items.forEach((item, idx) => {
-                            item.classList.toggle('active', idx === instance.currentMonth);
-                        });
-
-                        // Scroll into view safely
-                        const activeItem = monthDropdown.querySelector('.custom-month-item.active');
-                        if (activeItem && monthDropdown.classList.contains('show')) {
-                            monthDropdown.scrollTop = activeItem.offsetTop - 10;
-                        }
-                    };
-
-                    monthElement.addEventListener('click', toggleDropdown);
-                    arrow.addEventListener('click', toggleDropdown);
-                }
-
-                // Hide if clicked out
-                document.addEventListener('click', (e) => {
-                    if (monthDropdown.classList.contains('show') && !instance.monthNav.contains(e.target) && !monthDropdown.contains(e.target)) {
-                        monthDropdown.classList.remove('show');
-                        if (monthElement.nextSibling && monthElement.nextSibling.classList) {
-                            monthElement.nextSibling.classList.remove('open');
-                        }
-                    }
-                });
-            }
-        });
-    });
-</script>
+<x-eoffice::manajemen-praktikum.ui.datetime-picker-assets />
 
 <script>
     document.addEventListener('alpine:init', () => {
@@ -945,7 +477,7 @@
 ">
     <template x-teleport="body">
         <div x-show="show" style="display:none;" x-cloak
-            class="fixed inset-0 z-[999999] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300 p-4">
+            class="fixed inset-0 z-[999999] flex items-center justify-center bg-black/50 transition-all duration-300 p-4">
             <div class="bg-white rounded-[16px] shadow-2xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]"
                 @click.away="show = false" x-show="show" x-transition:enter="transition ease-out duration-300"
                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
@@ -979,7 +511,7 @@
                                         :class="tempType === '' ? 'text-[#808897]' : 'text-[#0D0D12]'"></span>
                                     <svg class="transition-transform duration-200"
                                         :class="dropdownOpen ? 'rotate-180' : ''" width="16" height="16"
-                                        viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2.5"
+                                        viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                                         stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
@@ -1012,7 +544,7 @@
                                 placeholder="Tambahkan petunjuk untuk asisten...">
                         </div>
 
-                        <div class="flex gap-3 justify-end mt-4 pt-5 border-t border-[#DFE1E7]">
+                        <div class="mp-modal-footer mp-modal-footer-bleed flex gap-3 justify-end mt-4 pt-5 border-t border-[#DFE1E7]" style="--mp-modal-footer-radius:16px;">
                             <button type="button" @click="show = false" class="mp-btn secondary md px-5">Batal</button>
                             <button type="button"
                                 @click="$dispatch('save-berkas', {name: tempName, type: tempType, desc: tempDesc}); show = false"

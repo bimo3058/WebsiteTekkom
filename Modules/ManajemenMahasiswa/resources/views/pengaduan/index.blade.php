@@ -1,20 +1,14 @@
 <x-dynamic-component :component="$isStaff ? 'manajemenmahasiswa::layouts.admin' : 'manajemenmahasiswa::layouts.mahasiswa'">
 
-@include('manajemenmahasiswa::direktori.partials.palette')
+@include('manajemenmahasiswa::pengaduan.partials.palette')
 @include('manajemenmahasiswa::partials.filter-popover')
+@if($canDelete)
+    @include('manajemenmahasiswa::pengaduan.partials.hapus-script')
+@endif
 
 <style>
-    /* Pola tabel disamakan dengan Direktori Mahasiswa & User Management global. */
-
-    /* ── Tombol utama ── */
-    .btn-post {
-        display: inline-flex; align-items: center; gap: 8px;
-        background: var(--c-primary); color: #ffffff !important; border: none;
-        border-radius: 8px; padding: 0 16px; height: 36px;
-        font-size: 13px; font-weight: 600; white-space: nowrap;
-        text-decoration: none !important; transition: background .15s;
-    }
-    .btn-post:hover { background: var(--c-primary-hover); }
+    /* Pola tabel disamakan dengan User Management SITKOM
+       (resources/views/superadmin/users/_table.blade.php). */
 
     /* ── Search ── */
     .search-wrapper { position: relative; width: min(220px, calc(100vw - 200px)); min-width: 120px; }
@@ -31,14 +25,6 @@
         border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-subtle); outline: none;
     }
 
-    .btn-reset {
-        height: 34px; padding: 0 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
-        display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap;
-        text-decoration: none !important; border: 1px solid var(--c-border);
-        background: #ffffff; color: var(--c-fg-sec); box-shadow: 0 1px 2px rgba(0,0,0,.04);
-    }
-    .btn-reset:hover { background: var(--c-bg); border-color: var(--c-border-strong); color: var(--c-fg); }
-
     /* ── Kartu tabel ── */
     .table-card {
         background: #ffffff; border: 1px solid var(--c-border);
@@ -53,89 +39,155 @@
     .table-toolbar-form { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0; }
 
     .pgd-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    /* Padding sel 12px (kolom tepi 16px) + kolom yang bisa memanjang dibatasi, supaya
+       seluruh kolom — termasuk Tanggal & Aksi — muat di layar laptop 1280px tanpa
+       harus menggeser tabel ke kanan. */
     .pgd-table thead th {
-        background: #FAFAFA; padding: 11px 16px; font-size: 11px; font-weight: 600;
+        background: #FAFAFA; padding: 11px 12px; font-size: 11px; font-weight: 600;
         color: var(--c-fg-muted); border-bottom: 1px solid var(--c-border); white-space: nowrap;
     }
-    .pgd-table tbody tr { transition: background .15s; }
+    .pgd-table tbody tr { transition: background .12s; }
     .pgd-table tbody tr:hover { background: #FAFAFA; }
     .pgd-table tbody td {
-        padding: 14px 16px; font-size: 13px; color: var(--c-fg);
+        padding: 14px 12px; font-size: 13px; color: var(--c-fg);
         border-bottom: 1px solid #F3F4F6; vertical-align: middle;
     }
+    .pgd-table th:first-child, .pgd-table td:first-child { padding-left: 16px; }
+    .pgd-table th:last-child, .pgd-table td:last-child { padding-right: 16px; }
 
+    /* Kategori panjang dipotong dengan elipsis; label lengkap ada di tooltip. */
+    .pgd-table .pgd-pill.kategori {
+        display: inline-block; max-width: 180px; overflow: hidden; text-overflow: ellipsis;
+        vertical-align: middle;
+    }
+
+    /* Tanggal dua baris: tanggal di atas, jam di bawah. */
+    .pgd-tgl { white-space: nowrap; color: var(--c-fg-sec); line-height: 1.35; }
+    .pgd-jam { font-size: 11px; color: var(--c-fg-muted); }
+
+    /* Judul boleh dua baris lalu dipotong, alih-alih satu baris panjang yang melebarkan tabel. */
     .pgd-judul {
         font-weight: 600; color: var(--c-fg); text-decoration: none !important;
-        display: block; max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        overflow: hidden; max-width: 240px; min-width: 120px; line-height: 1.4; overflow-wrap: anywhere;
     }
     .pgd-judul:hover { color: var(--c-primary); }
     .pgd-id { font-family: monospace; font-size: 11px; color: var(--c-fg-muted); margin-top: 1px; }
 
-    /* ── Badge ── */
-    .pill {
-        font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
-        display: inline-block; white-space: nowrap;
-    }
-    .pill-kategori { background: var(--c-primary-subtle); color: var(--c-primary); }
-    .pill-baru { background: var(--c-warning-subtle); color: var(--c-warning); }
-    .pill-tercatat { background: var(--c-success-subtle); color: var(--c-success); }
-    .pill-anonim { background: #111827; color: #ffffff; }
-
-    /* Dot "baru" (belum dibuka staff) */
-    .baru-dot {
-        display: inline-block; width: 9px; height: 9px; border-radius: 50%;
-        background: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    /* Kolom Pelapor, meniru kolom User Name SITKOM (avatar + nama). */
+    .pgd-pelapor { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .pgd-pelapor-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+    .pgd-pelapor-name.is-anon { color: var(--c-fg-sec); }
+    .pgd-anon-avatar {
+        width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: #111827; color: #ffffff;
     }
 
-    /* Checkbox tercatat */
-    .tercatat-check {
-        width: 17px; height: 17px; cursor: pointer; accent-color: var(--c-primary); margin: 0;
-    }
-    .tercatat-check:disabled { opacity: .5; cursor: progress; }
+    /* Menu aksi "⋯" memakai posisi fixed (dihitung saat dibuka) supaya tidak terpotong
+       pembungkus tabel ber-overflow — dulu saat daftar hanya 1–3 baris, menu tertutup
+       footer tabel sehingga "Tandai Tercatat" tidak bisa diklik. */
+    .pgd-table .mk-menu.pgd-menu-fixed { position: fixed; z-index: 1050; }
 
-    /* ── Menu aksi ── */
+    /* Filter Tanggal Masuk: dua isian tanggal berdampingan di panel filter. */
+    .pgd-tanggal-range { display: flex; align-items: center; gap: 6px; color: var(--c-fg-muted); font-size: 12px; }
+    .pgd-tanggal-range .filter-pop-select { flex: 1; min-width: 0; padding: 0 8px; cursor: text; }
+
+    /* Sengaja tanpa kolom centang & aksi massal: "tercatat" berarti tiket sudah dibaca
+       satu per satu, dan aduan (termasuk PPKS) tidak dihapus beramai-ramai. */
+
+    /* ── Kartu tautan rahasia (sekali tampil setelah mengirim pengaduan anonim) ── */
+    .pgd-link-card {
+        background: #ffffff; border: 1px solid #9DE0D3; border-left: 3px solid var(--c-success);
+        border-radius: 12px; padding: 16px; margin-bottom: 16px; flex-shrink: 0;
+    }
+    .pgd-link-head { display: flex; gap: 12px; align-items: flex-start; }
+    .pgd-link-icon {
+        width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--c-success-subtle); color: var(--c-success);
+    }
+    .pgd-link-title { font-size: 14px; font-weight: 700; color: var(--c-fg); }
+    .pgd-link-desc { font-size: 12px; line-height: 1.55; color: var(--c-fg-muted); margin: 3px 0 0; }
+    .pgd-link-row { display: flex; gap: 8px; align-items: center; margin-top: 12px; padding-left: 40px; }
+    .pgd-link-url {
+        flex: 1; min-width: 0; height: 32px; padding: 0 10px; font-family: monospace; font-size: 12px;
+        color: var(--c-primary); background: var(--c-bg); border: 1px dashed var(--c-border-strong); border-radius: 7px;
+    }
+    .pgd-link-url:focus { outline: none; border-color: var(--c-primary); }
+    #pgdSalinLink.is-done { border-color: var(--c-success); color: var(--c-success); }
+    @media (max-width: 600px) {
+        .pgd-link-row { flex-wrap: wrap; padding-left: 0; }
+        .pgd-link-url { flex-basis: 100%; }
+    }
 </style>
 
 {{-- ── Header ── --}}
 <x-manajemenmahasiswa::ui.page-header bordered title="Layanan Pengaduan">
     @if($isStaff)
-        {{ number_format($pengaduan->total()) }} pengaduan
+        Total <span style="color: var(--c-primary); font-weight: 600;">{{ number_format($totalCount) }}</span> pengaduan
         @if($baruCount > 0)
-            · <span style="color:#2563eb;font-weight:700;">{{ $baruCount }} baru</span>
+            · <span style="color: var(--c-warning); font-weight: 700;">{{ $baruCount }} baru</span>
         @endif
+    @elseif($kuotaPesan)
+        <span id="pgdKuotaInfo" style="color: var(--c-warning); font-weight: 600;">{{ $kuotaPesan }}</span>
     @else
         Sampaikan keluhan Anda; tim akan mencatat dan menindaklanjutinya.
     @endif
 
     <x-slot:actions>
+        @if($isStaff)
+            <a href="{{ route('manajemenmahasiswa.pengaduan.statistik') }}" class="mk-btn mk-btn--secondary">
+                <x-manajemenmahasiswa::ui.icon name="bar-chart-12" size="16" /> Statistik
+            </a>
+        @endif
         @if($canCreate)
-            <button type="button" class="mk-btn mk-btn--primary" data-bs-toggle="modal" data-bs-target="#buatPengaduanModal">
-                <x-manajemenmahasiswa::ui.icon name="plus" size="16" /> Buat Pengaduan
-            </button>
+            @if($kuotaPesan)
+                {{-- Kuota harian habis: tombol mati, alasannya di subjudul. --}}
+                <button type="button" class="mk-btn mk-btn--primary" disabled aria-describedby="pgdKuotaInfo">
+                    <x-manajemenmahasiswa::ui.icon name="plus" size="16" /> Buat Pengaduan
+                </button>
+            @else
+                <a href="{{ route('manajemenmahasiswa.pengaduan.create') }}" class="mk-btn mk-btn--primary">
+                    <x-manajemenmahasiswa::ui.icon name="plus" size="16" /> Buat Pengaduan
+                </a>
+            @endif
         @endif
     </x-slot:actions>
 </x-manajemenmahasiswa::ui.page-header>
 
-{{-- ── Flash ── --}}
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-@if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-error-0); color: var(--c-error-200); font-weight: 500; font-size: 14px;">
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+@include('manajemenmahasiswa::pengaduan.partials.alerts')
+
+{{-- Pengaduan anonim baru terkirim: tautan rahasianya hanya ditampilkan sekali (flash). --}}
+@if(session('anon_link'))
+    <div class="pgd-link-card" role="status">
+        <div class="pgd-link-head">
+            <span class="pgd-link-icon"><x-manajemenmahasiswa::ui.icon name="check" size="16" /></span>
+            <div>
+                <div class="pgd-link-title">Pengaduan anonim berhasil dikirim</div>
+                <p class="pgd-link-desc">
+                    Tidak muncul di daftar Anda. Simpan tautan berikut untuk melihatnya kembali beserta statusnya;
+                    <strong>hanya ditampilkan sekali</strong> dan tak bisa dipulihkan.
+                </p>
+            </div>
+        </div>
+        <div class="pgd-link-row">
+            <input type="text" class="pgd-link-url" id="pgdAnonLink" value="{{ session('anon_link') }}" readonly
+                   aria-label="Tautan rahasia pengaduan" onclick="this.select()">
+            <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm" id="pgdSalinLink">
+                <x-manajemenmahasiswa::ui.icon name="files-01" size="15" /> <span>Salin</span>
+            </button>
+            <a href="{{ session('anon_link') }}" target="_blank" rel="noopener" class="mk-btn mk-btn--primary mk-btn--sm">Buka</a>
+        </div>
     </div>
 @endif
 
 @php
-    $adaFilter = ($filters['q'] ?? '') !== '' || ($filters['kategori'] ?? '') !== '' || ($filters['sort'] ?? 'terbaru') !== 'terbaru';
-    $filterPanelAktif = ($filters['kategori'] ?? '') !== '' || ($filters['sort'] ?? 'terbaru') !== 'terbaru';
-    $jumlahKolom = $isStaff ? 8 : 5;
+    $filterPanelAktif = $filters['kategori'] !== '' || $filters['status'] !== ''
+        || $filters['pelapor'] !== '' || $filters['dari'] !== '' || $filters['sampai'] !== '';
+    $adaFilter = $filters['q'] !== '' || $filterPanelAktif;
+    // Pelapor melihat kolom Status versi pelapor (Terkirim/Dibaca/Tercatat).
+    $jumlahKolom = $isStaff ? 7 : 5;
 @endphp
 
 <div class="table-card filter-pop-host">
@@ -151,7 +203,7 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 </span>
                 <input type="text" name="q" class="search-input" value="{{ $filters['q'] }}"
-                       placeholder="Cari judul, kronologi, atau ID…">
+                       placeholder="{{ $isStaff ? 'Cari judul, isi, lokasi, atau ID…' : 'Cari judul, isi, atau ID…' }}">
             </div>
 
             <div class="filter-pop" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
@@ -183,21 +235,46 @@
                     <div class="filter-pop-fields">
                         <div>
                             <label class="filter-pop-label" for="filterKategori">Kategori</label>
+                            {{-- "semua", bukan nilai kosong: nilai kosong digambar komponen
+                                 sebagai placeholder abu, jadi warnanya beda dari kotak lain. --}}
                             <x-manajemenmahasiswa::ui.select name="kategori" id="filterKategori">
-                                <option value="">Semua Kategori</option>
+                                <option value="semua">Semua Kategori</option>
                                 @foreach($kategoriOptions as $value => $meta)
-                                    <option value="{{ $value }}" {{ $filters['kategori'] === $value ? 'selected' : '' }}>{{ $meta['label'] }}</option>
+                                    <option value="{{ $value }}" @selected($filters['kategori'] === $value)>{{ $meta['label'] }}</option>
                                 @endforeach
                             </x-manajemenmahasiswa::ui.select>
                         </div>
 
-                        <div>
-                            <label class="filter-pop-label" for="filterSort">Urutkan</label>
-                            <x-manajemenmahasiswa::ui.select name="sort" id="filterSort">
-                                <option value="terbaru" {{ $filters['sort'] === 'terbaru' ? 'selected' : '' }}>Terbaru</option>
-                                <option value="terlama" {{ $filters['sort'] === 'terlama' ? 'selected' : '' }}>Terlama</option>
-                            </x-manajemenmahasiswa::ui.select>
-                        </div>
+                        @if($isStaff)
+                            <div>
+                                <label class="filter-pop-label" for="filterStatus">Status</label>
+                                <x-manajemenmahasiswa::ui.select name="status" id="filterStatus">
+                                    <option value="semua">Semua Status</option>
+                                    <option value="baru" @selected($filters['status'] === 'baru')>Baru</option>
+                                    <option value="tercatat" @selected($filters['status'] === 'tercatat')>Tercatat</option>
+                                </x-manajemenmahasiswa::ui.select>
+                            </div>
+
+                            <div>
+                                <label class="filter-pop-label" for="filterPelapor">Pelapor</label>
+                                <x-manajemenmahasiswa::ui.select name="pelapor" id="filterPelapor">
+                                    <option value="semua">Semua Pelapor</option>
+                                    <option value="teridentifikasi" @selected($filters['pelapor'] === 'teridentifikasi')>Teridentifikasi</option>
+                                    <option value="anonim" @selected($filters['pelapor'] === 'anonim')>Anonim</option>
+                                </x-manajemenmahasiswa::ui.select>
+                            </div>
+
+                            <div>
+                                <span class="filter-pop-label">Tanggal Masuk</span>
+                                <div class="pgd-tanggal-range">
+                                    <input type="date" name="dari" class="filter-pop-select" value="{{ $filters['dari'] }}"
+                                           max="{{ now()->format('Y-m-d') }}" aria-label="Dari tanggal">
+                                    <span aria-hidden="true">–</span>
+                                    <input type="date" name="sampai" class="filter-pop-select" value="{{ $filters['sampai'] }}"
+                                           max="{{ now()->format('Y-m-d') }}" aria-label="Sampai tanggal">
+                                </div>
+                            </div>
+                        @endif
 
                         <div class="filter-pop-actions">
                             <button type="submit" class="filter-pop-submit">Terapkan</button>
@@ -215,20 +292,13 @@
         <table class="pgd-table">
             <thead>
                 <tr>
-                    @if($isStaff)
-                        <th style="width: 44px; text-align: center;" title="Tercatat">✓</th>
-                    @endif
                     <th style="width: 56px;">No</th>
                     <th>Judul</th>
                     @if($isStaff)
                         <th>Pelapor</th>
                     @endif
                     <th>Kategori</th>
-                    @if($isStaff)
-                        <th style="width: 28px;"></th>
-                    @else
-                        <th>Status</th>
-                    @endif
+                    <th>Status</th>
                     <th>Tanggal</th>
                     @if($isStaff)
                         <th style="width: 72px; text-align: center;">Aksi</th>
@@ -242,70 +312,73 @@
                         $kategoriUtama = \Modules\ManajemenMahasiswa\Models\Pengaduan::normalizeKategori((string) $item->kategori);
                         $kategoriLabel = data_get($kategoriOptions, $kategoriUtama . '.label') ?? ucwords(str_replace('_', ' ', $kategoriUtama));
                         $detailUrl = route('manajemenmahasiswa.pengaduan.show', $item->id);
-                        $tercatat = in_array($item->status, ['tercatat', 'selesai', 'didelegasikan'], true);
                     @endphp
-                    <tr data-row="{{ $item->id }}">
-                        @if($isStaff)
-                            <td style="text-align: center;">
-                                <input type="checkbox" class="tercatat-check"
-                                       data-url="{{ route('manajemenmahasiswa.pengaduan.toggle.tercatat', $item->id) }}"
-                                       aria-label="Tandai tercatat: {{ $judul }}"
-                                       {{ $tercatat ? 'checked' : '' }}>
-                            </td>
-                        @endif
-                        <td style="color: var(--c-fg-muted); font-weight: 500;">{{ $pengaduan->firstItem() + $index }}</td>
+                    <tr>
+                        <td style="color: var(--c-fg-muted);">{{ $pengaduan->firstItem() + $index }}</td>
                         <td>
                             <a href="{{ $detailUrl }}" class="pgd-judul" title="{{ $judul }}">{{ $judul }}</a>
                             <div class="pgd-id">#{{ $item->id }}</div>
                         </td>
                         @if($isStaff)
                             <td>
-                                @if($item->is_anonim)
-                                    <span class="pill pill-anonim">Konfidensial</span>
-                                @else
-                                    {{ optional($item->pelapor)->name ?? '—' }}
-                                @endif
+                                <div class="pgd-pelapor">
+                                    @if($item->is_anonim)
+                                        <span class="pgd-anon-avatar" title="Identitas disembunyikan">
+                                            <x-manajemenmahasiswa::ui.icon name="shield-02" size="15" />
+                                        </span>
+                                        <span class="pgd-pelapor-name is-anon">Anonim</span>
+                                    @else
+                                        <x-ui.user-avatar :user="$item->pelapor" size="sm" />
+                                        <span class="pgd-pelapor-name">{{ optional($item->pelapor)->name ?? '—' }}</span>
+                                    @endif
+                                </div>
                             </td>
                         @endif
-                        <td><span class="pill pill-kategori">{{ $kategoriLabel }}</span></td>
+                        <td><span class="pgd-pill kategori" title="{{ $kategoriLabel }}">{{ $kategoriLabel }}</span></td>
+                        <td>@include('manajemenmahasiswa::pengaduan.partials.status-badge', ['pengaduan' => $item, 'pelapor' => !$isStaff])</td>
+                        <td class="pgd-tgl">
+                            {{ optional($item->created_at)->translatedFormat('d M Y') }}
+                            <div class="pgd-jam">{{ optional($item->created_at)->translatedFormat('H:i') }} WIB</div>
+                        </td>
                         @if($isStaff)
                             <td style="text-align: center;">
-                                <span class="baru-dot js-baru-dot" title="Baru — belum dibuka"
-                                      @if($item->status !== 'baru') style="display: none;" @endif></span>
-                            </td>
-                        @else
-                            <td>
-                                @if($item->status === 'baru')
-                                    <span class="pill pill-baru">Baru</span>
-                                @elseif($tercatat)
-                                    <span class="pill pill-tercatat">Tercatat</span>
-                                @endif
-                            </td>
-                        @endif
-                        <td style="white-space: nowrap; color: var(--c-fg-sec);">{{ optional($item->created_at)->translatedFormat('d M Y, H:i') }}</td>
-                        @if($isStaff)
-                            <td style="text-align: center;">
-                                <div style="position: relative; display: inline-block;" x-data="{ open: false }">
-                                    <button type="button" @click="open = !open" @click.outside="open = false" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" aria-label="Aksi">
+                                <div style="position: relative; display: inline-block;" x-data="pgdAksiMenu"
+                                     @scroll.window.capture="open = false" @resize.window="open = false">
+                                    <button type="button" @click="toggle($el)" @click.outside="open = false" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" aria-label="Aksi">
                                         <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                                     </button>
-                                    <div x-show="open" x-cloak
+                                    <div x-show="open" x-cloak :style="posisi"
                                          x-transition:enter="transition ease-out duration-100"
                                          x-transition:enter-start="opacity-0 scale-95"
                                          x-transition:enter-end="opacity-100 scale-100"
-                                         class="mk-menu" style="display: none;">
+                                         class="mk-menu pgd-menu-fixed" style="display: none;">
                                         <a href="{{ $detailUrl }}" class="mk-menu-item">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                             Lihat Detail
                                         </a>
-                                        @if($canDelete)
-                                            <div class="mk-menu-sep"></div>
-                                            <button type="button" class="mk-menu-item js-hapus"
-                                                    data-action="{{ route('manajemenmahasiswa.pengaduan.destroy', $item->id) }}"
-                                                    data-judul="{{ $judul }}">
-                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
-                                                Hapus
+                                        <div class="mk-menu-sep"></div>
+                                        <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.toggle.tercatat', $item->id) }}">
+                                            @csrf
+                                            <button type="submit" class="mk-menu-item">
+                                                @if($item->isTercatat())
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                                                    Batalkan Tercatat
+                                                @else
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                                                    Tandai Tercatat
+                                                @endif
                                             </button>
+                                        </form>
+                                        @if($canDelete)
+                                            <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.destroy', $item->id) }}"
+                                                  data-judul="{{ $judul }}" onsubmit="return pgdKonfirmasiHapus(this)">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="mk-menu-item">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
+                                                    Hapus Pengaduan
+                                                </button>
+                                            </form>
                                         @endif
                                     </div>
                                 </div>
@@ -338,74 +411,48 @@
     @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $pengaduan])
 </div>
 
-{{-- ── Delete Modal ── --}}
-@if($canDelete)
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 18px; border: none; box-shadow: 0 24px 60px rgba(0,0,0,.18);">
-                <div class="modal-body text-center p-4 p-md-5">
-                    <div style="margin-bottom: 16px; color: #f59e0b;">
-                        <x-manajemenmahasiswa::ui.icon name="alert-triangle" size="48" />
-                    </div>
-                    <h4 class="fw-bold text-dark mb-3">Hapus Pengaduan?</h4>
-                    <p class="text-muted mb-4" id="deleteModalText" style="font-size: 14px;"></p>
-                    <form id="deleteForm" method="POST" action="">
-                        @csrf
-                        @method('DELETE')
-                        <div class="d-flex justify-content-center gap-3">
-                            <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
-                            <button type="submit" class="mk-btn mk-btn--primary">Hapus</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-@endif
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-@if($canCreate)
-    @include('manajemenmahasiswa::pengaduan.partials.buat-modal')
-@endif
-
 <script>
+    // Tombol "Salin" pada kartu tautan rahasia pengaduan anonim.
+    document.getElementById('pgdSalinLink')?.addEventListener('click', async function () {
+        const input = document.getElementById('pgdAnonLink');
+        try {
+            await navigator.clipboard.writeText(input.value);
+        } catch (err) {
+            // Konteks non-HTTPS: salin lewat seleksi teks.
+            input.select();
+            document.execCommand('copy');
+        }
+        const label = this.querySelector('span:last-child');
+        label.textContent = 'Tersalin';
+        this.classList.add('is-done');
+        setTimeout(() => { label.textContent = 'Salin'; this.classList.remove('is-done'); }, 2000);
+    });
+
+    // Menu aksi "⋯" per baris. Posisinya dihitung dari tombol saat dibuka (position:
+    // fixed), jadi tidak terpotong pembungkus tabel; bila ruang di bawah tombol tidak
+    // cukup, menu dibuka ke atas. Ditutup saat halaman digulir/diubah ukurannya.
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('pgdAksiMenu', () => ({
+            open: false,
+            posisi: {},
+            toggle(tombol) {
+                this.open = !this.open;
+                if (!this.open) return;
+
+                const r = tombol.getBoundingClientRect();
+                const layar = document.documentElement;
+                const keAtas = layar.clientHeight - r.bottom < 150 && r.top > 150;
+                this.posisi = {
+                    right: (layar.clientWidth - r.right) + 'px',
+                    top: keAtas ? 'auto' : (r.bottom + 5) + 'px',
+                    bottom: keAtas ? (layar.clientHeight - r.top + 5) + 'px' : 'auto',
+                };
+            },
+        }));
+    });
+
     document.querySelector('.search-input')?.addEventListener('keydown', e => {
         if (e.key === 'Enter') { e.preventDefault(); document.getElementById('pgdFilterForm').submit(); }
-    });
-
-    // Hapus: isi modal konfirmasi
-    document.querySelectorAll('.js-hapus').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.getElementById('deleteForm').action = btn.dataset.action;
-            document.getElementById('deleteModalText').textContent = btn.dataset.judul;
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteModal')).show();
-        });
-    });
-
-    // Centang "tercatat" — AJAX, dikembalikan bila gagal
-    const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '{{ csrf_token() }}';
-    document.querySelectorAll('.tercatat-check').forEach(cb => {
-        cb.addEventListener('change', async () => {
-            const dicentang = cb.checked;
-            cb.disabled = true;
-            try {
-                const res = await fetch(cb.dataset.url, {
-                    method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
-                });
-                if (!res.ok) throw new Error(res.status);
-                const data = await res.json();
-                cb.checked = data.status === 'tercatat';
-                // Tercatat = sudah ditangani, dot "baru" ikut hilang
-                cb.closest('tr').querySelector('.js-baru-dot').style.display = data.status === 'baru' ? '' : 'none';
-            } catch (e) {
-                cb.checked = !dicentang;
-                mkNotify({ title: 'Gagal Memperbarui', message: 'Gagal memperbarui status pengaduan. Silakan coba lagi.', variant: 'danger' });
-            } finally {
-                cb.disabled = false;
-            }
-        });
     });
 </script>
 </x-dynamic-component>

@@ -3,11 +3,17 @@
     <x-sidebar :user="auth()->user()">
 
         @php
-            $user = auth()->user();
-            $namaDepan = explode(' ', $user->name)[0];
-            $nim = $user->student?->student_number ?? '';
-            $isDefaultPw = $user->password &&
-                \Illuminate\Support\Facades\Hash::check($namaDepan . $nim, $user->password);
+            $passwordChangeRequired = $canChangePassword && $user->needsLocalPasswordChange();
+            $settingsTab = match (true) {
+                $passwordChangeRequired,
+                session('status') === 'password-updated',
+                $errors->updatePassword->any(),
+                request('tab') === 'password' => 'password',
+                session('status') === 'notifications-updated',
+                request('tab') === 'notifikasi',
+                old('_settings_tab') === 'notifikasi' => 'notifikasi',
+                default => 'general',
+            };
         @endphp
 
         <style>
@@ -224,7 +230,7 @@
         </style>
 
         <div class="settings-wrap" id="settings-root"
-            x-data="{ tab: '{{ session('status') === 'password-updated' ? 'password' : ((session('status') === 'notifications-updated' || request('tab') === 'notifikasi' || old('_settings_tab') === 'notifikasi') ? 'notifikasi' : 'general') }}' }">
+            x-data="{ tab: '{{ $settingsTab }}' }">
             <div class="settings-box">
 
                 {{-- ── Header ── --}}
@@ -236,7 +242,7 @@
                             <span style="font-size:15px;font-weight:700;color:#0f172a;">Settings</span>
                         </div>
                         <button type="button" onclick="submitActiveForm()"
-                            x-show="tab !== 'notifikasi' || {{ $user->hasRole('superadmin') ? 'true' : 'false' }}"
+                            x-show="(tab !== 'password' || @js($canChangePassword)) && (tab !== 'notifikasi' || @js($user->hasRole('superadmin')))"
                             style="padding:7px 18px;background:#1E1B4B;color:#fff;font-size:13px;font-weight:600;border-radius:8px;border:none;cursor:pointer;transition:background .15s;"
                             onmouseover="this.style.background='#2d2a5e'" onmouseout="this.style.background='#1E1B4B'">
                             Save Changes
@@ -298,7 +304,7 @@
             const tab = (el && window.Alpine) ? Alpine.$data(el).tab : 'general';
 
             if (tab === 'general')  document.getElementById('form-general').submit();
-            if (tab === 'password') document.getElementById('form-password').submit();
+            if (tab === 'password') document.getElementById('form-password')?.submit();
             if (tab === 'notifikasi') document.getElementById('form-notifikasi')?.requestSubmit();
         }
 </script>

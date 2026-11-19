@@ -97,6 +97,16 @@ final class PengaduanBukti
         return $items;
     }
 
+    /**
+     * Buang bukti pending (berkas di storage ikut dihapus), mis. saat pelapor
+     * mengubah jawaban "Ketersediaan Bukti" sehingga berkas tidak dilampirkan lagi.
+     */
+    public static function discard(string $scope): void
+    {
+        self::deleteAll(self::pending($scope));
+        session()->forget(self::sessionKey($scope));
+    }
+
     // ── Penyajian ────────────────────────────────────────────────────────
 
     /**

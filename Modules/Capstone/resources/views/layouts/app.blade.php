@@ -4,24 +4,26 @@
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Capstone & TA') | SICATA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="{{ url('/capstone/assets/images/UNDIPOfficial.png') }}">
     <link rel="stylesheet" href="{{ url('/capstone/assets/build/app.css') }}?v={{ filemtime(module_path('Capstone', 'public/build/app.css')) }}">
     <script type="application/json" id="capstone-context">{!! json_encode(['actor'=>$actor ?? null,'role'=>$activeRole ?? null,'path'=>$pagePath ?? '/','params'=>$pageParams ?? [],'base'=>url('/capstone'),'api'=>url('/capstone/session/capstone')], JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_UNESCAPED_UNICODE) !!}</script>
     <script defer src="{{ url('/capstone/assets/build/app.js') }}?v={{ filemtime(module_path('Capstone', 'public/build/app.js')) }}"></script>
     <x-mobile-navigation-assets />
+    @include('capstone::layouts.shell-styles')
 </head>
 <body class="font-sans bg-background text-foreground" x-data="capstoneShell">
 <div x-show="pendingRequests > 0" x-cloak class="capstone-progress" role="status" aria-label="Sedang memproses permintaan">
     <span class="capstone-progress-bar" aria-hidden="true"></span>
 </div>
-<div class="flex min-h-svh w-full" style="--sidebar-width:16rem">
+<div class="sitkom-shell-capstone flex min-h-svh w-full bg-[#F6F8FA] dark:bg-background" style="--sidebar-width:240px">
     @include('capstone::layouts.sidebar')
     <main class="flex h-screen w-full min-w-0 flex-col overflow-hidden">
-        <div class="flex-1 overflow-y-auto p-4 bg-white">
-            <div class="border-grey-100 shadow-small min-h-full overflow-hidden rounded-xl border">
-                @include('capstone::layouts.topbar')
-                <div class="capstone-mobile-content px-3 sm:px-6 pt-6 pb-6">@yield('content')</div>
-            </div>
+        @include('capstone::layouts.topbar')
+        <div class="flex-1 overflow-y-auto px-4 py-6 sm:px-7 sm:pb-12">
+            <div class="capstone-mobile-content w-full pb-20 md:pb-0">@yield('content')</div>
         </div>
     </main>
 </div>

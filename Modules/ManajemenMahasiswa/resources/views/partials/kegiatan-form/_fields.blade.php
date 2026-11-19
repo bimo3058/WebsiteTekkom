@@ -1,35 +1,54 @@
 {{--
     Partial form kegiatan — dipakai bersama oleh:
-      • Rencana Proker (create & edit)  → $showDokumentasi = false
+      • Rencana Proker (create & edit)  → $showDokumentasi = false, $showDokumen = true
       • Pelaksanaan Kegiatan (edit)     → $showDokumentasi = true
 
-    Foto & Dokumen Kegiatan sengaja HANYA muncul di Pelaksanaan: keduanya
-    dokumentasi acara yang sudah berlangsung, bukan bagian dari rencana.
+    Foto Kegiatan HANYA di Pelaksanaan: dokumentasi acara yang sudah berlangsung.
+    Dokumen ada di keduanya sejak S-49: proposal, RAB, surat undangan, dan surat
+    peminjaman disusun di tahap rencana lalu ikut disalin ke Pelaksanaan saat diajukan.
+    $showFoto / $showDokumen bawaannya mengikuti $showDokumentasi.
 
     Variabel wajib: $proker (boleh instance kosong untuk mode create),
     $formAction, $formMethod ('POST'|'PUT'), $backUrl, $headerTitle,
     $headerSubtitle, $submitLabel, $showDokumentasi, $tahapRencana,
-    $bidangList, $kategoriList, $mahasiswaList, $dosenList,
+    $bidangList, $bidangTerkunci, $bidangMilikId (RoleHimpunan::dataFormKegiatan),
+    $kategoriList, $mahasiswaList, $dosenList,
     $selectedKategoriIds, $selectedBidangIds, $existingPanitia, $existingPanitiaIds.
-    Hanya saat $showDokumentasi: $existingFoto, $existingDokumen.
+    Saat $showFoto: $existingFoto. Saat $showDokumen: $existingDokumen.
 
     Bagian "Akses Kelola" (_akses_kelola.blade.php, di-include dari sini) butuh
     $bolehAturAkses, $calonPengelola, $pengelolaTerpilih, $namaPembuat — semuanya
     dari PengelolaKegiatanService::dataForm().
 
-    _scripts.blade.php butuh $existingPanitia dan $existingDosen — keduanya
-    disiapkan controller, karena @include punya scope sendiri (variabel yang
-    dibuat di partial ini TIDAK terbawa ke partial script).
+    Ketua Pelaksana, Dosen Pendamping, dan Panitia dirender _personel.blade.php
+    (kotak pilih Alpine) dari $existingPanitia dan $existingDosen — keduanya
+    disiapkan controller.
 --}}
 @php
     $showDokumentasi = $showDokumentasi ?? false;
-    // Tahap Rencana Proker: SEMUA detail boleh dikosongkan saat menyimpan draft —
-    // ketua membuat kerangka, pengurus melengkapi kemudian. Kelengkapan baru
-    // ditegakkan saat "Ajukan Proker" (lihat ProkerController::SYARAT_AJUKAN):
-    // tombolnya nonaktif dengan tooltip berisi field yang masih kosong.
-    // Karena itu di tahap ini `tanggal_mulai` TIDAK boleh diberi atribut
-    // `required` — itu akan memblokir penyimpanan draft di sisi browser.
+    $showFoto        = $showFoto ?? $showDokumentasi;
+    $showDokumen     = $showDokumen ?? $showDokumentasi;
+    // Tahap Rencana Proker: selain Judul dan Bidang/Unit (S-73), SEMUA detail boleh
+    // dikosongkan saat menyimpan draft — ketua membuat kerangka, pengurus melengkapi kemudian.
+    // Tanda * di tahap ini berarti "wajib sebelum diajukan" (lihat
+    // ProkerController::SYARAT_AJUKAN): tombol Ajukan nonaktif selama masih ada
+    // yang kosong. Karena itu kolom bertanda * TIDAK boleh diberi atribut
+    // `required`/`minlength` di tahap ini — itu memblokir penyimpanan draft.
     $tahapRencana = $tahapRencana ?? false;
+    // Tahap Pelaksanaan: Lokasi, Ketua Pelaksana, dan Anggaran sudah terisi sejak proker
+    // diajukan, jadi di sini tidak boleh dikosongkan lagi — boleh diubah, tetapi harus
+    // berisi realisasi di lapangan. Ditegakkan juga di PelaksanaanController::update().
+    $wajibRealisasi = $showDokumentasi && !$tahapRencana;
+    // Tanda * untuk Lokasi, Ketua Pelaksana, dan Anggaran: wajib saat Pelaksanaan
+    // (atribut required) dan wajib sebelum diajukan saat Rencana (tanpa required).
+    $tandaWajib = $wajibRealisasi || $tahapRencana;
+    // Pelaksanaan: isian yang terisi di Rencana Proker-nya tidak boleh dikosongkan
+    // (PelaksanaanController::wajibDariRencana, S-59). Kosong untuk Rencana & kegiatan lama.
+    $wajibDariRencana = $wajibDariRencana ?? [];
+    $wajibRencana     = fn (string $isian) => in_array($isian, $wajibDariRencana, true);
+    // Form Buat Proker ringkas (S-82): KABID dkk. hanya mengisi Judul, Kategori (S-85),
+    // Bidang/Unit, dan Ketua Pelaksana; sisanya diisi ketua pelaksana.
+    $ringkas = $ringkas ?? false;
 @endphp
 
 <!-- Header -->
@@ -43,16 +62,7 @@
 </x-manajemenmahasiswa::ui.page-header>
 
 <!-- Validation Errors -->
-@if($errors->any())
-    <div class="alert alert-danger" style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error); font-size: 14px;">
-        <strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Terjadi kesalahan:</strong>
-        <ul class="mb-0 mt-1">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="error" title="Terjadi Kesalahan" :messages="$errors->all()" class="mb-3" />
 
 <form action="{{ $formAction }}" method="POST" enctype="multipart/form-data">
     @csrf
@@ -67,212 +77,180 @@
         <div class="mb-3">
             <label class="form-label-custom">Judul Kegiatan <span class="required">*</span></label>
             <input type="text" name="judul" id="judulInput" class="form-control form-control-custom"
-                   value="{{ old('judul', $proker->judul) }}" required maxlength="255"
-                   oninput="updateCharCount('judulInput','judulCount',255)">
-            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="judulCount">0</span>/255 karakter</div>
+                   value="{{ old('judul', $proker->judul) }}" required maxlength="{{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_JUDUL }}"
+                   oninput="updateCharCount('judulInput','judulCount',{{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_JUDUL }})">
+            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="judulCount">0</span>/{{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_JUDUL }} karakter</div>
         </div>
 
         <div class="row g-3 mb-3">
-            <div class="col-md-6">
+            {{-- Kategori tetap tampil di form ringkas (S-85, 11 Nov 2026): KABID dkk. bisa
+                 langsung menandai proker himpunan yang bekerja sama dengan prodi. --}}
+            <div class="{{ $ringkas ? 'col-12' : 'col-md-6' }}">
                 <label class="form-label-custom">Kategori <span class="required">*</span></label>
                 <div class="checkbox-card-group" id="kategoriGroup">
                     @foreach($kategoriList as $kategori)
-                        <label class="checkbox-card" id="kategoriCard{{ $kategori->id }}">
+                        @php
+                            // Pemegang role berbidang: Kegiatan Himpunan selalu terpilih
+                            // (RoleHimpunan::kunciIsianKegiatan), Kegiatan Prodi tetap pilihan.
+                            $kategoriTerkunci = $bidangTerkunci && $kategori->nama_kategori === \Modules\ManajemenMahasiswa\Models\KategoriKegiatan::NAMA_HIMPUNAN;
+                        @endphp
+                        <label class="checkbox-card {{ $kategoriTerkunci ? 'terkunci' : '' }}" id="kategoriCard{{ $kategori->id }}">
                             <input type="checkbox" name="kategori_kegiatan_id[]"
                                    value="{{ $kategori->id }}"
                                    data-is-prodi="{{ stripos($kategori->nama_kategori, 'prodi') !== false ? '1' : '0' }}"
+                                   @if($kategoriTerkunci) onclick="return false" aria-disabled="true" @endif
                                    onchange="handleKategoriChange()"
-                                   {{ in_array($kategori->id, $selectedKategoriIds) ? 'checked' : '' }}>
+                                   {{ $kategoriTerkunci || in_array($kategori->id, $selectedKategoriIds) ? 'checked' : '' }}>
                             {{ $kategori->nama_kategori }}
                         </label>
                     @endforeach
                 </div>
-                <div class="checkbox-hint">Pilih maksimal 2 kategori</div>
+                <div class="checkbox-hint">
+                    {{ $bidangTerkunci ? 'Centang Kegiatan Prodi bila proker ini bekerja sama dengan prodi.' : 'Pilih maksimal 2 kategori' }}
+                </div>
             </div>
-            <div class="col-md-6" id="bidangFieldWrapper">
-                <label class="form-label-custom">Bidang <span class="required" id="bidangRequired">*</span></label>
-                <div class="checkbox-card-group" id="bidangGroup">
+            @php
+                // Satu proker dipegang SATU bidang himpunan, jadi pilihannya radio.
+                // Nama input tetap `bidang_id[]` agar alur simpan ke pivot tidak berubah.
+                // Data lama bisa tercatat di beberapa bidang: yang dipilih otomatis
+                // bidang utamanya (kolom `bidang_id`), sisanya dilepas saat disimpan.
+                $idsBidangTersimpan = array_map('intval', (array) $selectedBidangIds);
+                $bidangTerpilih = in_array((int) $proker->bidang_id, $idsBidangTersimpan, true)
+                    ? (int) $proker->bidang_id
+                    : ($idsBidangTersimpan[0] ?? null);
+                // Pemegang role berbidang: bidang/unitnya terpilih, yang lain tampil nonaktif.
+                if ($bidangTerkunci) {
+                    $bidangTerpilih = $bidangMilikId;
+                }
+                $bidangLamaGanda = count($idsBidangTersimpan) > 1
+                    ? $bidangList->whereIn('id', $idsBidangTersimpan)->pluck('nama_bidang')->implode(', ')
+                    : null;
+            @endphp
+            <div class="{{ $ringkas ? 'col-12' : 'col-md-6' }}" id="bidangFieldWrapper">
+                {{-- Wajib untuk semua proker, termasuk Kegiatan Prodi (2 Nov 2026): proker
+                     hanya terlihat oleh bidang/unit pemegangnya. Sejak S-82 juga wajib saat
+                     menyimpan draft, karena ketua pelaksana harus staff sebidang. --}}
+                <label class="form-label-custom">Bidang / Unit <span class="required" id="bidangRequired">*</span></label>
+                <div class="checkbox-card-group" id="bidangGroup" role="radiogroup" aria-label="Bidang/unit pemegang proker">
                     @foreach($bidangList as $bidang)
-                        <label class="checkbox-card" id="bidangCard{{ $bidang->id }}">
-                            <input type="checkbox" name="bidang_id[]"
-                                   value="{{ $bidang->id }}"
-                                   {{ in_array($bidang->id, $selectedBidangIds) ? 'checked' : '' }}>
+                        @php $bidangMilik = $bidangTerkunci && (int) $bidang->id === $bidangMilikId; @endphp
+                        <label @class(['checkbox-card', 'terkunci' => $bidangMilik, 'disabled' => $bidangTerkunci && !$bidangMilik]) id="bidangCard{{ $bidang->id }}">
+                            <input type="radio" name="bidang_id[]"
+                                   value="{{ $bidang->id }}" required
+                                   @disabled($bidangTerkunci && !$bidangMilik)
+                                   {{ (int) $bidang->id === $bidangTerpilih ? 'checked' : '' }}>
                             {{ $bidang->nama_bidang }}
                         </label>
                     @endforeach
                 </div>
-                <div class="checkbox-hint">Pilih satu atau lebih bidang</div>
+                @if($bidangTerkunci && !$bidangMilikId)
+                    <div class="checkbox-hint" style="color: var(--c-error, #DF1C41);">
+                        Bidang/unit Anda belum diatur. Minta KAHIM/WAKAHIM atau admin mengaturnya di halaman Permission.
+                    </div>
+                @else
+                    <div class="checkbox-hint">
+                        @if($bidangTerkunci)
+                            Terisi otomatis dari bidang/unit Anda dan tidak bisa diubah.
+                        @elseif($tahapRencana)
+                            Pilih satu bidang/unit yang memegang proker ini. Ketua pelaksana dipilih dari staff bidang/unit ini.
+                        @else
+                            Pilih satu bidang/unit yang memegang proker ini
+                        @endif
+                    </div>
+                @endif
+                @if($bidangLamaGanda)
+                    <div class="checkbox-hint" style="color: var(--c-warning, #b45309);">
+                        Sebelumnya tercatat di beberapa bidang ({{ $bidangLamaGanda }}). Pastikan bidang yang terpilih
+                        sudah benar — bidang lain dilepas saat disimpan.
+                    </div>
+                @endif
             </div>
         </div>
 
+        @unless($ringkas)
         <div class="mb-3">
             <label class="form-label-custom">Deskripsi <span class="required">*</span></label>
             <textarea name="deskripsi" id="deskripsiInput" class="form-control form-control-custom"
-                      required minlength="20" maxlength="3000"
+                      @unless($tahapRencana) required minlength="20" @endunless maxlength="3000"
                       oninput="updateCharCount('deskripsiInput','deskripsiCount',3000)">{{ old('deskripsi', $proker->deskripsi) }}</textarea>
             <div class="d-flex justify-content-between align-items-center" style="margin-top:4px;">
                 <span style="font-size:11px;color:var(--c-fg-muted);font-weight:500;">Minimal 20 karakter</span>
                 <span style="font-size:11px;color:var(--c-fg-muted);font-weight:500;"><span id="deskripsiCount">0</span>/3000 karakter</span>
             </div>
         </div>
+        @endunless
 
     </div>
 
+    @if($ringkas)
+    <!-- Ketua Pelaksana (form ringkas, S-82) -->
+    <div class="form-card">
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Ketua Pelaksana</div>
+        <p style="font-size: 13px; color: var(--c-fg-muted); margin: -4px 0 12px;">Ketua pelaksana mendapat notifikasi untuk melengkapi seluruh data proker, lalu mengirimnya untuk Anda tinjau.</p>
+        @include('manajemenmahasiswa::partials.kegiatan-form._personel', [
+            'ketuaId'         => old('ketua_pelaksana_id'),
+            'ketuaTersimpan'  => null,
+            'ketuaSebidang'   => true,
+            'bidangAsal'      => [],
+            'dosenTerpilih'   => collect(),
+            'panitiaTerpilih' => collect(),
+            'ketuaWajib'      => true,
+            'hanyaKetua'      => true,
+        ])
+    </div>
+    @else
     <!-- Waktu & Lokasi -->
     <div class="form-card">
         <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg> Waktu & Lokasi</div>
 
         <div class="row g-3 mb-3">
             <div class="col-md-3">
-                <label class="form-label-custom">Tanggal Mulai
-                    @unless($tahapRencana)<span class="required">*</span>@endunless
-                </label>
+                <label class="form-label-custom">Tanggal Mulai <span class="required">*</span></label>
                 <input type="date" name="tanggal_mulai" class="form-control form-control-custom"
                        value="{{ old('tanggal_mulai', $proker->tanggal_mulai?->format('Y-m-d')) }}"
                        @unless($tahapRencana) required @endunless>
             </div>
             <div class="col-md-3">
-                <label class="form-label-custom">Jam Mulai</label>
+                {{-- Jam wajib sebelum Ajukan sejak S-81 (sinkron dengan peminjaman ruang EOffice) --}}
+                <label class="form-label-custom">Jam Mulai @if($tahapRencana || $wajibRencana('jam_mulai'))<span class="required">*</span>@endif</label>
                 <input type="time" name="jam_mulai" class="form-control form-control-custom"
-                       value="{{ old('jam_mulai', $proker->jam_mulai_formatted) }}">
+                       value="{{ old('jam_mulai', $proker->jam_mulai_formatted) }}" @if($wajibRencana('jam_mulai')) required @endif>
             </div>
             <div class="col-md-3">
-                <label class="form-label-custom">Tanggal Selesai</label>
+                <label class="form-label-custom">Tanggal Selesai @if($wajibRencana('tanggal_selesai'))<span class="required">*</span>@endif</label>
                 <input type="date" name="tanggal_selesai" class="form-control form-control-custom"
-                       value="{{ old('tanggal_selesai', $proker->tanggal_selesai?->format('Y-m-d')) }}">
+                       value="{{ old('tanggal_selesai', $proker->tanggal_selesai?->format('Y-m-d')) }}" @if($wajibRencana('tanggal_selesai')) required @endif>
             </div>
             <div class="col-md-3">
-                <label class="form-label-custom">Jam Selesai</label>
+                <label class="form-label-custom">Jam Selesai @if($tahapRencana || $wajibRencana('jam_selesai'))<span class="required">*</span>@endif</label>
                 <input type="time" name="jam_selesai" class="form-control form-control-custom"
-                       value="{{ old('jam_selesai', $proker->jam_selesai_formatted) }}">
+                       value="{{ old('jam_selesai', $proker->jam_selesai_formatted) }}" @if($wajibRencana('jam_selesai')) required @endif>
             </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label-custom">Lokasi</label>
-            <input type="text" name="lokasi" class="form-control form-control-custom"
-                   value="{{ old('lokasi', $proker->lokasi) }}">
-        </div>
+        {{-- Ruangan kampus (EOffice) atau luar kampus/daring + cek bentrok (S-81) --}}
+        @include('manajemenmahasiswa::partials.kegiatan-form._lokasi-jadwal')
     </div>
-
-    @php
-        $ketuaNama = '';
-        if ($proker->ketua_pelaksana_id) {
-            $ketua = $proker->ketuaPelaksana;
-            $ketuaNama = $ketua?->user?->name ?? '';
-        }
-    @endphp
 
     <!-- Personel -->
     <div class="form-card">
         <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Personel Kegiatan</div>
 
-        <div class="row g-3 mb-3">
-            <div class="col-md-6">
-                <label class="form-label-custom">Ketua Pelaksana</label>
-                <div class="search-select-wrapper">
-                    <input type="hidden" name="ketua_pelaksana_id" id="ketuaPelaksanaId"
-                           value="{{ old('ketua_pelaksana_id', $proker->ketua_pelaksana_id) }}">
-                    <input type="text" class="form-control form-control-custom" id="ketuaPelaksanaSearch"
-                           placeholder="Cari nama mahasiswa..."
-                           value="{{ $ketuaNama }}"
-                           autocomplete="off"
-                           onfocus="showDropdown('ketuaPelaksanaDropdown')"
-                           oninput="filterOptions('ketuaPelaksanaSearch', 'ketuaPelaksanaDropdown')">
-                    <div class="search-select-dropdown" id="ketuaPelaksanaDropdown">
-                        @foreach($mahasiswaList as $mhs)
-                            <div class="search-select-option"
-                                 onclick="selectOption('ketuaPelaksanaId', '{{ $mhs->id }}', 'ketuaPelaksanaSearch', '{{ $mhs->user->name ?? 'N/A' }}', 'ketuaPelaksanaDropdown')"
-                                 data-name="{{ strtolower($mhs->user->name ?? '') }}"
-                                 data-nim="{{ $mhs->student_number }}">
-                                {{ $mhs->user->name ?? 'N/A' }}
-                                <div class="sub-text">NIM: {{ $mhs->student_number }} • Angkatan {{ $mhs->cohort_year }}</div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            {{-- ── Dosen Pendamping (Multi-Select) ── --}}
-            <div class="col-md-6">
-                <label class="form-label-custom">
-                    Dosen Pendamping <span style="color: var(--c-fg-muted); font-weight: 400;">(opsional)</span>
-                    <span class="panitia-count-badge" id="dosenCountBadge" style="display:none;">0 dipilih</span>
-                </label>
-                {{-- Memakai class .panitia-* agar tampilannya identik dengan multi-select Panitia --}}
-                <div class="panitia-select-wrapper" id="dosenSelectWrapper">
-                    <div class="panitia-chips-container" id="dosenChipsContainer" onclick="focusDosenSearch()">
-                        <input type="text" class="panitia-search-input" id="dosenSearchInput"
-                               placeholder="Cari dan tambah dosen pendamping..."
-                               autocomplete="off"
-                               oninput="filterDosenOptions(this.value)"
-                               onfocus="showDosenDropdown()">
-                    </div>
-                    <div class="panitia-dropdown" id="dosenDropdown">
-                        @foreach($dosenList as $dosen)
-                            <div class="panitia-option"
-                                 data-id="{{ $dosen->id }}"
-                                 data-name="{{ $dosen->user->name ?? 'N/A' }}"
-                                 data-name-lower="{{ strtolower($dosen->user->name ?? '') }}"
-                                 data-nip="{{ $dosen->employee_number }}"
-                                 onclick="toggleDosen(this)">
-                                <div>
-                                    {{ $dosen->user->name ?? 'N/A' }}
-                                    <div class="sub-text">NIP: {{ $dosen->employee_number }}</div>
-                                </div>
-                                <span class="check-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-                            </div>
-                        @endforeach
-                        <div class="panitia-empty" id="dosenEmpty" style="display:none;">Tidak ada dosen yang cocok</div>
-                    </div>
-                    {{-- Hidden inputs di-generate JS --}}
-                    <div id="dosenHiddenInputs"></div>
-                </div>
-                <div class="checkbox-hint">Bisa lebih dari satu. Ketik nama atau NIP untuk mencari.</div>
-            </div>
-        </div>
-
-        {{-- ── Panitia Kegiatan (Multi-Select) ── --}}
-        <div class="mb-1">
-            <label class="form-label-custom">
-                Panitia Kegiatan
-                <span style="color: var(--c-fg-muted); font-weight: 400;">(opsional)</span>
-                <span class="panitia-count-badge" id="panitiaCountBadge" style="display:none;">0 dipilih</span>
-            </label>
-            <div class="panitia-select-wrapper" id="panitiaSelectWrapper">
-                <div class="panitia-chips-container" id="panitiaChipsContainer" onclick="focusPanitiaSearch()">
-                    <input type="text" class="panitia-search-input" id="panitiaSearchInput"
-                           placeholder="Cari dan tambah panitia..."
-                           autocomplete="off"
-                           oninput="filterPanitiaOptions(this.value)"
-                           onfocus="showPanitiaDropdown()">
-                </div>
-                <div class="panitia-dropdown" id="panitiaDropdown">
-                    @foreach($mahasiswaList as $mhs)
-                        <div class="panitia-option"
-                             data-id="{{ $mhs->id }}"
-                             data-name="{{ $mhs->user->name ?? 'N/A' }}"
-                             data-name-lower="{{ strtolower($mhs->user->name ?? '') }}"
-                             data-nim="{{ $mhs->student_number }}"
-                             data-angkatan="{{ $mhs->cohort_year }}"
-                             onclick="togglePanitia(this)">
-                            <div>
-                                {{ $mhs->user->name ?? 'N/A' }}
-                                <div class="sub-text">NIM: {{ $mhs->student_number }} • Angkatan {{ $mhs->cohort_year }}</div>
-                            </div>
-                            <span class="check-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-                        </div>
-                    @endforeach
-                    <div class="panitia-empty" id="panitiaEmpty" style="display:none;">Tidak ada mahasiswa yang cocok</div>
-                </div>
-                {{-- Hidden inputs di-generate JS --}}
-                <div id="panitiaHiddenInputs"></div>
-            </div>
-            <div class="checkbox-hint">Pilih satu atau lebih mahasiswa sebagai panitia. Ketik nama untuk mencari.</div>
-
-            {{-- Container for Jabatan Inputs --}}
-            <div id="panitiaRolesContainer" class="mt-3 d-flex flex-column gap-2"></div>
-        </div>
+        @include('manajemenmahasiswa::partials.kegiatan-form._personel', [
+            'ketuaId'          => old('ketua_pelaksana_id', $proker->ketua_pelaksana_id),
+            'ketuaTersimpan'   => $proker->ketua_pelaksana_id,
+            'ketuaSebidang'    => true,
+            'bidangAsal'       => $proker->exists ? $proker->bidangs()->pluck('mk_bidang.id')->all() : [],
+            'dosenTerpilih'    => $existingDosen,
+            'panitiaTerpilih'  => old('panitia_ids') !== null
+                ? $mahasiswaList->whereIn('id', old('panitia_ids'))
+                : $existingPanitia,
+            'panitiaPeranLama' => old('panitia_peran', []),
+            'ketuaWajib'       => $tandaWajib,
+            'panitiaWajib'     => $tahapRencana || $wajibRencana('panitia_ids'),
+            'dosenWajib'       => $wajibRencana('dosen_pendamping_ids'),
+            'ketuaTerkunci'    => $ketuaTerkunci ?? false,
+        ])
     </div>
 
     {{-- Akses Kelola — hanya dirender untuk pemilik kegiatan & override --}}
@@ -284,60 +262,34 @@
 
         <div class="row g-3 mb-3">
             <div class="col-md-6">
-                <label class="form-label-custom">Peserta</label>
+                <label class="form-label-custom">Peserta @if($tahapRencana || $wajibRencana('target_peserta'))<span class="required">*</span>@endif</label>
                 <input type="number" name="target_peserta" class="form-control form-control-custom"
-                       value="{{ old('target_peserta', $proker->target_peserta) }}" min="1">
-            </div>
-            <div class="col-md-6">
-                @php
-                    // Cast `decimal:2` membuat anggaran keluar sebagai "2999000.00" dan itulah
-                    // yang tampil mentah di kolom angka. Ekor desimalnya dibuang supaya user
-                    // melihat 2999000, bukan 2999000.00.
-                    $anggaranValue = old('anggaran', $proker->anggaran);
-                    if (is_string($anggaranValue) && str_contains($anggaranValue, '.')) {
-                        $anggaranValue = rtrim(rtrim($anggaranValue, '0'), '.');
-                    }
-                @endphp
-                <label class="form-label-custom">Anggaran (Rp)</label>
-                {{--
-                    step="any", BUKAN step="1000". Dengan step="1000" browser diam-diam
-                    menolak angka yang bukan kelipatan seribu (mis. 750500): tombol Simpan
-                    seolah tidak berfungsi dan yang muncul cuma gelembung bawaan browser,
-                    tanpa satu pun keterangan di form bahwa anggaran harus kelipatan 1000.
-                --}}
-                <input type="number" name="anggaran" class="form-control form-control-custom"
-                       value="{{ $anggaranValue }}" min="0" max="9999999999999" step="any">
+                       value="{{ old('target_peserta', $proker->target_peserta) }}" min="1" @if($wajibRencana('target_peserta')) required @endif>
             </div>
         </div>
+        {{-- Anggaran dirinci per sumber dana (S-80); total = kolom `anggaran`. --}}
+        @include('manajemenmahasiswa::partials.kegiatan-form._sumber-dana', [
+            'kegiatan'   => $proker,
+            'tandaWajib' => $tandaWajib,
+            'realisasi'  => $wajibRealisasi,
+        ])
     </div>
 
     <!-- Banner -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg> Banner Kegiatan *</div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg> Banner Kegiatan <span style="color: var(--c-error);">*</span></div>
 
-        @if($proker->banner)
-            <div class="banner-current">
-                <span class="badge-current">Banner Saat Ini</span>
-                <img src="{{ $proker->banner_url }}" alt="Banner saat ini" class="banner-preview" style="display: block;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
-            </div>
-            <p style="font-size: 13px; color: var(--c-fg-muted); margin-bottom: 12px;">Upload gambar baru untuk mengganti banner saat ini.</p>
-        @endif
-
-        <div class="banner-upload-area" onclick="document.getElementById('bannerInput').click()">
-            <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
-            <p>Klik untuk upload banner {{ $proker->banner ? 'baru' : 'kegiatan' }}</p>
-            <small>Format: JPG, PNG, WebP • Maks: 10MB<br><span style="color: var(--c-primary); font-weight: 500;">Rekomendasi: Resolusi 1280 x 720 (Rasio 16:9)</span></small>
-        </div>
-        <input type="file" name="banner" id="bannerInput" accept="image/jpeg,image/png,image/webp"
-               style="display: none;" onchange="previewBanner(this)">
-        <img id="bannerPreview" class="banner-preview" alt="Preview Banner" style="display: none;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
+        @include('manajemenmahasiswa::partials.kegiatan-form._banner', [
+            'bannerUrl'      => $proker->banner ? $proker->banner_url : null,
+            'bannerTerkunci' => $proker->exists && $proker->bannerDariRencana(),
+        ])
     </div>
 
-    {{-- Foto & Dokumen hanya di Pelaksanaan — dokumentasi acara yang sudah berlangsung --}}
-    @if($showDokumentasi)
+    {{-- Foto hanya di Pelaksanaan — dokumentasi acara yang sudah berlangsung --}}
+    @if($showFoto)
     <!-- Foto Kegiatan -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Foto Kegiatan <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks 10 foto)</span></div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Foto Kegiatan <span style="color: var(--c-error);">*</span> <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(wajib minimal 1 sebelum diunggah ke arsip, maks 10 foto)</span></div>
 
         @if($existingFoto->count() > 0)
             <div class="existing-file-label">Foto yang sudah diupload</div>
@@ -355,52 +307,36 @@
         <div class="file-upload-area" id="fotoUploadArea" onclick="document.getElementById('fotoInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
             <p>Klik atau drag & drop foto baru ke sini</p>
-            <small>Format: JPG, PNG, WebP • Maks: 10MB per file</small>
+            <small>Format: JPG, PNG, WebP • Maks: 5MB per file</small>
         </div>
         <input type="file" name="foto_kegiatan[]" id="fotoInput" accept="image/jpeg,image/png,image/webp"
                multiple style="display: none;" onchange="handleFotoSelect(this)">
         <div class="file-preview-grid" id="fotoPreviewGrid"></div>
     </div>
+    @endif
 
+    @if($showDokumen)
     <!-- Dokumen Kegiatan -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen Kegiatan <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks 10 dokumen)</span></div>
-
-        @if($existingDokumen->count() > 0)
-            <div class="existing-file-label">Dokumen yang sudah diupload</div>
-            @foreach($existingDokumen as $doc)
-                @php
-                    $ext = pathinfo($doc->nama_file, PATHINFO_EXTENSION);
-                    $iconMap = ['pdf' => 'PDF', 'doc' => 'DOC', 'docx' => 'DOC', 'xls' => 'XLS', 'xlsx' => 'XLS', 'ppt' => 'PPT', 'pptx' => 'PPT'];
-                    $icon = $iconMap[strtolower($ext)] ?? 'FILE';
-                @endphp
-                <div class="doc-preview-item" id="existingFile{{ $doc->id }}">
-                    <span class="doc-icon">{{ $icon }}</span>
-                    <div class="doc-info">
-                        <div class="doc-name">{{ $doc->nama_file }}</div>
-                        <div class="doc-size">{{ strtoupper($ext) }}</div>
-                    </div>
-                    <a href="{{ $doc->url }}" target="_blank" class="mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" title="Unduh dokumen" aria-label="Unduh dokumen {{ $doc->nama_file }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>
-                    <button type="button" class="btn-remove-doc mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="markFileForDeletion({{ $doc->id }})" title="Hapus dokumen" aria-label="Hapus dokumen {{ $doc->nama_file }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-                </div>
-            @endforeach
-            <div style="margin-bottom: 16px;"></div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>@if($tahapRencana)
+            {{-- Proposal & RAB wajib sebelum diajukan (ProkerController::SYARAT_AJUKAN); draft tetap boleh disimpan tanpanya. --}}
+            Dokumen Rencana <span style="color: var(--c-error);">*</span> <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(maks {{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_DOKUMEN }} dokumen)</span>
+        @else
+            Dokumen Kegiatan <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks {{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_DOKUMEN }} dokumen)</span>
+        @endif</div>
+        @if($tahapRencana)
+            <p style="font-size: 13px; color: var(--c-fg-muted); margin: -4px 0 12px;">Proposal dan RAB wajib ada sebelum proker diajukan; surat undangan dan surat peminjaman dilampirkan bila ada. Dokumen ini ikut disalin ke Pelaksanaan Kegiatan saat proker diajukan, dan rencananya tetap tersimpan di sini.</p>
         @endif
 
-        <div class="file-upload-area" id="dokumenUploadArea" onclick="document.getElementById('dokumenInput').click()">
-            <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></div>
-            <p>Klik atau drag & drop dokumen baru ke sini</p>
-            <small>Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX • Maks: 10MB per file</small>
-        </div>
-        <input type="file" name="dokumen_kegiatan[]" id="dokumenInput"
-               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-               multiple style="display: none;" onchange="handleDokumenSelect(this)">
-        <div id="dokumenPreviewList"></div>
+        @include('manajemenmahasiswa::partials.kegiatan-form._dokumen', ['existingDokumen' => $existingDokumen, 'kunciDariRencana' => $kunciDariRencana ?? false])
     </div>
+    @endif
 
+    @if($showFoto || $showDokumen)
     <!-- Hidden inputs for file deletion -->
     <div id="deleteFileInputs"></div>
     @endif
+    @endif {{-- /$ringkas --}}
 
     <!-- Action Buttons -->
     <div class="d-flex gap-3 justify-content-end mt-2">

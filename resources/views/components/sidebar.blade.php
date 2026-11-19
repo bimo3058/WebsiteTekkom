@@ -6,6 +6,7 @@
     $isDosen = in_array('dosen', $userRoles);
     $isMahasiswa = in_array('mahasiswa', $userRoles);
     $currentRoute = request()->route()->getName();
+    $accessMenuActive = str_contains($currentRoute, 'users') || str_contains($currentRoute, 'permissions');
 
     $name = $user->name;
     $initials = strtoupper(substr($name, 0, 1));
@@ -36,9 +37,9 @@
         'superadmin.users.index' => 'User Management',
         'superadmin.users.online' => 'User Management',
         'superadmin.users.suspended' => 'User Management',
-        'superadmin.notifications.index' => 'Notifications',
-        'superadmin.permissions' => 'Permissions',
-        'superadmin.permissions.category' => 'Permissions',
+        'superadmin.notifications.index' => 'Notifikasi',
+        'superadmin.permissions' => 'Role/Permission',
+        'superadmin.permissions.category' => 'Role/Permission',
         'superadmin.modules' => 'Modul Setting',
         'superadmin.audit-logs' => 'Audit Logs',
         'profile.edit' => 'Settings',
@@ -96,18 +97,39 @@
             {{-- KENDALI --}}
             @if($isSuperadmin)
                 <div x-show="open" class="sb-section-label">Kendali</div>
-                <x-sidebar-link :href="route('superadmin.users.index')" :icon="$iconUsers" label="User Management"
-                    :active="str_contains($currentRoute, 'users')" />
-                <x-sidebar-link :href="route('superadmin.notifications.index')" :icon="$iconNotification" label="Notifications"
-                    :active="str_contains($currentRoute, 'notifications')">
-                    @if($notificationCount > 0)
-                        <span style="margin-left:auto; background:#EF4444; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:99px; line-height:1;">
-                            {{ $notificationCount > 99 ? '99+' : $notificationCount }}
-                        </span>
-                    @endif
-                </x-sidebar-link>
-                <x-sidebar-link :href="route('superadmin.permissions')" :icon="$iconShield" label="Permissions"
-                    :active="str_contains($currentRoute, 'permissions')" />
+                <div class="sb-access-group" x-data="{ accessOpen: @js($accessMenuActive) }">
+                    <button type="button"
+                        class="sb-item sb-access-trigger {{ $accessMenuActive ? 'is-active' : '' }}"
+                        :class="!open ? 'is-collapsed' : ''"
+                        @click="accessOpen = !accessOpen"
+                        :aria-expanded="accessOpen.toString()"
+                        aria-controls="sb-access-submenu"
+                        title="Access Management">
+                        @if($accessMenuActive)
+                            <span class="sb-item-pill"></span>
+                        @endif
+                        <svg viewBox="0 0 24 24" fill="none" stroke="{{ $accessMenuActive ? 'var(--c-primary)' : 'currentColor' }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 3 4 7v5c0 4.5 3.2 8 8 9 4.8-1 8-4.5 8-9V7l-8-4z" />
+                            <path d="m9 12 2 2 4-4" />
+                        </svg>
+                        <span x-show="open" class="sb-item-label">Access Management</span>
+                        <svg x-show="open" class="sb-access-chevron" :class="accessOpen ? 'is-open' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="m7 10 5 5 5-5" />
+                        </svg>
+                    </button>
+                    <div id="sb-access-submenu" class="sb-access-submenu" x-show="accessOpen" x-transition.opacity>
+                        <a href="{{ route('superadmin.users.index') }}"
+                           class="sb-subitem {{ str_contains($currentRoute, 'users') ? 'is-active' : '' }}"
+                           :class="!open ? 'is-collapsed' : ''" title="User Management">
+                            <span class="sb-subitem-marker"></span><span x-show="open">User Management</span>
+                        </a>
+                        <a href="{{ route('superadmin.permissions') }}"
+                           class="sb-subitem {{ str_contains($currentRoute, 'permissions') ? 'is-active' : '' }}"
+                           :class="!open ? 'is-collapsed' : ''" title="Role/Permission">
+                            <span class="sb-subitem-marker"></span><span x-show="open">Role/Permission</span>
+                        </a>
+                    </div>
+                </div>
                 <x-sidebar-link :href="route('superadmin.audit-logs')" :icon="$iconAuditLog" label="Audit Logs"
                     :active="str_contains($currentRoute, 'audit-logs')" />
             @endif
@@ -131,6 +153,12 @@
                     :active="str_contains($currentRoute, 'modules')" />
                 <x-sidebar-link href="/pulse" :icon="$iconMonitor" label="System Monitor" target="_blank"
                     :active="request()->is('pulse*')" />
+            @endif
+
+            @if($isSuperadmin)
+                <x-sidebar-link :href="route('superadmin.notifications.index')" :icon="$iconNotification" label="Notifikasi"
+                    :active="str_contains($currentRoute, 'notifications')"
+                    :badge="$notificationCount > 99 ? '99+' : ($notificationCount > 0 ? $notificationCount : null)" />
             @endif
         </nav>
 
@@ -390,6 +418,66 @@
         white-space: nowrap;
     }
 
+    .sb-access-trigger {
+        width: 100%;
+        text-align: left;
+        border: 0;
+        background: transparent;
+    }
+
+    .sb-access-trigger .sb-access-chevron {
+        width: 14px;
+        height: 14px;
+        margin-left: auto;
+        flex: 0 0 auto;
+        transition: transform .16s ease;
+    }
+
+    .sb-access-trigger .sb-access-chevron.is-open {
+        transform: rotate(180deg);
+    }
+
+    .sb-access-submenu {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 2px 0 4px 28px;
+    }
+
+    .sb-subitem {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-height: 32px;
+        padding: 6px 10px;
+        border-radius: 7px;
+        color: var(--c-fg-sec);
+        font-size: 12px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background .12s, color .12s;
+    }
+
+    .sb-subitem:hover { background: var(--c-bg); }
+    .sb-subitem.is-active {
+        color: var(--c-primary);
+        background: var(--c-primary-subtle);
+        font-weight: 600;
+    }
+
+    .sb-subitem-marker {
+        width: 5px;
+        height: 5px;
+        flex: 0 0 5px;
+        border-radius: 50%;
+        background: var(--c-fg-placeholder);
+    }
+
+    .sb-subitem.is-active .sb-subitem-marker { background: var(--c-primary); }
+    .sb-subitem.is-collapsed { justify-content: center; padding-left: 0; padding-right: 0; }
+
+    .sitkom-sidebar.is-collapsed .sb-access-submenu { padding-left: 0; }
+
     /* Footer */
     .sb-footer {
         padding: 8px 10px 12px;
@@ -403,8 +491,8 @@
     .sb-link {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 8px 10px;
+        gap: 9px;
+        padding: 7px 10px 7px 14px;
         border-radius: 8px;
         font-size: 13px;
         font-weight: 500;

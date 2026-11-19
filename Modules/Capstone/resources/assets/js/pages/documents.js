@@ -4,6 +4,7 @@ export function registerDocuments(Alpine){
     Alpine.data('capstoneDocuments',()=>({
         loading:true,error:'',workflow:{},documents:[],search:'',sortKey:'created_at',sortDirection:-1,page:1,pageSize:10,
         uploadPhase:null,uploadType:null,file:null,saving:false,errors:{},date,
+        feedbackDoc:null,
         labels:{PDC1:'PDC 1',SEMPRO:'Seminar Proposal',PDC2:'PDC 2',TA_DRAFT:'TA Draft',TA:'TA Draft',EXPO:'Expo',SIDANG:'Sidang TA',TA_INDIVIDUAL_READY:'Ready for TA Individual'},
         async init(){
             await this.load();
@@ -25,7 +26,7 @@ export function registerDocuments(Alpine){
         get pageCount(){return Math.max(1,Math.ceil(this.filtered.length/this.pageSize));},
         get visible(){const from=(Math.min(this.page,this.pageCount)-1)*this.pageSize;return this.filtered.slice(from,from+this.pageSize);},
         sort(key){this.sortDirection=this.sortKey===key?-this.sortDirection:1;this.sortKey=key;},
-        color(status){return {APPROVED:'bg-green-500 text-white',REJECTED:'bg-destructive text-white',SUBMITTED:'bg-blue-500 text-white'}[status] || 'bg-secondary text-secondary-foreground';},
+        color(status){return {APPROVED:'bg-green-500 text-white',REVISE:'bg-amber-500 text-white',REJECTED:'bg-destructive text-white',SUBMITTED:'bg-blue-500 text-white'}[status] || 'bg-secondary text-secondary-foreground';},
         openUpload(phase,doc){
             if(!phase.can_upload || !doc.can_upload){notify(doc.locked_reason || phase.locked_reason || 'Upload locked',true);return;}
             this.uploadPhase=phase;this.uploadType=doc;this.file=null;this.errors={};
@@ -38,6 +39,12 @@ export function registerDocuments(Alpine){
                 await api('/mahasiswa/documents',{method:'POST',body});document.getElementById('document-upload').close();notify('Document uploaded successfully');await this.load();
             }catch(e){this.errors=e.errors||{};notify(e.message,true);if(e.status===403)await this.load();}finally{this.saving=false;}
         },
-        async downloadDocument(doc){try{const blob=await api(`/mahasiswa/documents/${doc.id}/download`,{blob:true});const extension=(doc.file_path || '').split('.').pop();download(blob,`document-${doc.id}.${['pdf','doc','docx'].includes(extension)?extension:'pdf'}`);}catch(e){notify(e.message,true);}}
+        async downloadDocument(doc){try{const blob=await api(`/mahasiswa/documents/${doc.id}/download`,{blob:true});const extension=(doc.file_path || '').split('.').pop();download(blob,`document-${doc.id}.${['pdf','doc','docx'].includes(extension)?extension:'pdf'}`);}catch(e){notify(e.message,true);}},
+        openFeedback(doc){
+            if(!doc?.feedback)return;
+            this.feedbackDoc=doc;
+            document.getElementById('document-feedback').showModal();
+        },
+        closeFeedback(){document.getElementById('document-feedback').close();this.feedbackDoc=null;},
     }));
 }

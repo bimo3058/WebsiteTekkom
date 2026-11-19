@@ -85,6 +85,6 @@ class RequestMonitorRecorder
                 'ip'       => $request->ip(),
             ]),
             value: $duration,
-        )->max()->count()->onlyRememberForever();
+        );
     }
 }

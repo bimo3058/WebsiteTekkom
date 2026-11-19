@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class PeriodePendaftaran extends Model
 {
-    protected $table = 'manprak_periode_pendaftaran';
+    protected $table = 'eo_prak_periode_pendaftaran';
 
     protected $fillable = [
         'praktikum_id',

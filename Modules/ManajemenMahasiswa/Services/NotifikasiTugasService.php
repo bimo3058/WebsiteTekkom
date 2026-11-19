@@ -4,6 +4,9 @@ namespace Modules\ManajemenMahasiswa\Services;
 
 use App\Models\User;
 use Modules\ManajemenMahasiswa\Models\ForumReport;
+use Modules\ManajemenMahasiswa\Models\Kegiatan;
+use Modules\ManajemenMahasiswa\Policies\KegiatanPolicy;
+use Modules\ManajemenMahasiswa\Support\RoleHimpunan;
 use Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest;
 use Modules\ManajemenMahasiswa\Models\Prestasi;
 use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
@@ -33,7 +36,7 @@ class NotifikasiTugasService
 
         // Pembagian peran disalin apa adanya dari sidebar supaya tidak ada
         // pengguna yang tiba-tiba melihat antrean yang bukan haknya.
-        $isKetua         = (bool) array_intersect($roles, ['ketua_unit', 'ketua_bidang', 'ketua_himpunan']);
+        $isKetua         = (bool) array_intersect($roles, ['ketua_unit', 'wakil_ketua_unit', 'ketua_bidang', 'wakil_ketua_bidang', 'ketua_himpunan', 'wakil_ketua_himpunan']);
         $isAdminVerifier = (bool) array_intersect($roles, ['admin', 'admin_kemahasiswaan', 'superadmin', 'dpm']);
         $isStaffHimpunan = in_array('staff_himpunan', $roles) && !$isKetua && !$isAdminVerifier;
         $isVerifikatorData = (bool) array_intersect($roles, ['superadmin', 'admin_kemahasiswaan']);
@@ -100,15 +103,28 @@ class NotifikasiTugasService
             // Klaim reward (konversi nilai MK, SK FT 774) antreannya terpisah dari
             // verifikasi prestasi: yang diputus di sini pengajuan reward, bukan
             // benar-tidaknya prestasi. Halaman tujuannya sudah menyaring "menunggu".
+            //
+            // Klaim yang diajukan lewat 1 tahun sejak tanggal prestasi tetap masuk
+            // antrean (mahasiswa tidak dihalangi), jadi jumlahnya disebut di sini:
+            // admin berhak menyetujui atau menolaknya.
+            $klaimDiajukan = Prestasi::rewardDiajukan();
+            $klaimTerlambat = (clone $klaimDiajukan)
+                ->whereRaw("(tanggal + interval '1 year') < claimed_at")
+                ->count();
+
             $tugas[] = [
                 'key'   => 'klaim-prestasi',
                 'label' => 'Klaim Prestasi',
-                'desc'  => 'klaim reward prestasi menunggu keputusan',
-                'count' => Prestasi::rewardDiajukan()->count(),
+                'desc'  => 'klaim reward prestasi menunggu keputusan'
+                    . ($klaimTerlambat > 0 ? " ({$klaimTerlambat} diajukan lewat 1 tahun, Anda berhak menyetujui atau menolak)" : ''),
+                'count' => $klaimDiajukan->count(),
                 'url'   => route('manajemenmahasiswa.verifikasi.reward.index'),
                 'tone'  => 'danger',
             ];
         }
+
+        // ── Alur tinjau proker (S-82) ────────────────────────────────────────
+        array_push($tugas, ...$this->tugasTinjauan($user));
 
         // ── Laporan forum ────────────────────────────────────────────────────
         if ($bisaLihatLaporanForum) {
@@ -123,6 +139,82 @@ class NotifikasiTugasService
         }
 
         return array_values(array_filter($tugas, fn (array $t) => $t['count'] > 0));
+    }
+
+    /**
+     * Tugas alur tinjau Rencana Proker & Pelaksanaan (S-82, 11 Nov 2026).
+     *
+     *  • Ketua pelaksana: proker yang menunggu ia lengkapi (Menunggu Dilengkapi) atau
+     *    perbaiki (Menunggu Dilengkapi + catatan terbuka, S-91) — muncul begitu KABID
+     *    membuat proker / menolak.
+     *  • Peninjau: kiriman Menunggu Tinjauan di bidang/unitnya (KABID, WAKABID, KANIT,
+     *    WAKANIT) atau proker yang ia buat sendiri (KAHIM/admin yang membuat proker).
+     *    KAHIM tidak diberi tahu semua bidang supaya loncengnya tidak banjir; ia tetap
+     *    bisa meninjau dari daftar (filter Status Tinjauan).
+     *
+     * Dihitung dari status, jadi hilang sendiri setelah dikirim/disetujui/dikembalikan.
+     * Bila hanya satu, tautannya langsung ke detail; bila lebih, ke daftar tersaring.
+     *
+     * @return list<array>
+     */
+    private function tugasTinjauan(User $user): array
+    {
+        $tahap = [
+            ['status' => Kegiatan::STATUS_DRAFT, 'route' => 'proker', 'nama' => 'Rencana Proker', 'jenis' => 'rencana proker'],
+            ['status' => Kegiatan::STATUS_DISETUJUI, 'route' => 'pelaksanaan', 'nama' => 'Laporan Pelaksanaan', 'jenis' => 'laporan pelaksanaan'],
+        ];
+        $tugas = [];
+
+        if ($user->hasRole(KegiatanPolicy::ROLE_KETUA_PELAKSANA) && KegiatanPolicy::bisaJadiPengelola($user)) {
+            foreach ($tahap as $t) {
+                // S-91: "dikembalikan" = Menunggu Dilengkapi yang punya catatan terbuka.
+                // Dihitung lewat whereHas/whereDoesntHave (satu query hitung, tanpa N+1).
+                foreach ([
+                    'dikembalikan' => ['Perbaiki ', 'dikembalikan KABID dengan catatan', 'danger', true],
+                    'dilengkapi'   => ['Lengkapi ', 'menunggu Anda lengkapi lalu kirim untuk ditinjau', 'warning', false],
+                ] as $kunci => [$awalan, $desc, $nada, $adaCatatan]) {
+                    $q = Kegiatan::where('status', $t['status'])->tinjauan(Kegiatan::TINJAU_DILENGKAPI)
+                        ->whereHas('ketuaPelaksana', fn ($s) => $s->where('user_id', $user->id));
+                    $adaCatatan ? $q->whereHas('catatanTerbuka') : $q->whereDoesntHave('catatanTerbuka');
+                    $tugas[] = $this->tugasDari($q, "tinjau-{$t['route']}-{$kunci}", $awalan . $t['nama'], "{$t['jenis']} {$desc}", $nada, $t['route'], Kegiatan::TINJAU_DILENGKAPI);
+                }
+            }
+        }
+
+        if ($user->hasAnyRole(KegiatanPolicy::PEMBUAT_PROKER)) {
+            $bidangId = RoleHimpunan::isPimpinanBidang($user) ? RoleHimpunan::bidangId($user) : null;
+            foreach ($tahap as $t) {
+                $q = Kegiatan::where('status', $t['status'])->tinjauan(Kegiatan::TINJAU_DITINJAU)
+                    ->where(function ($w) use ($user, $bidangId, $t) {
+                        // Pembuat proker: rencana yang ia buat, dan salinan Pelaksanaan-nya.
+                        $t['status'] === Kegiatan::STATUS_DRAFT
+                            ? $w->where('user_id', $user->id)
+                            : $w->whereHas('rencana', fn ($r) => $r->where('user_id', $user->id));
+                        if ($bidangId) {
+                            $w->orWhereHas('bidangs', fn ($b) => $b->where('mk_bidang.id', $bidangId));
+                        }
+                    });
+                $tugas[] = $this->tugasDari($q, "tinjau-{$t['route']}-masuk", 'Tinjau ' . $t['nama'], "{$t['jenis']} menunggu tinjauan Anda", 'danger', $t['route'], Kegiatan::TINJAU_DITINJAU);
+            }
+        }
+
+        return $tugas;
+    }
+
+    private function tugasDari($query, string $key, string $label, string $desc, string $tone, string $route, string $kunci): array
+    {
+        $ids = (clone $query)->limit(2)->pluck('mk_kegiatan.id');
+
+        return [
+            'key'   => $key,
+            'label' => $label,
+            'desc'  => $desc,
+            'count' => $ids->count() < 2 ? $ids->count() : $query->count(),
+            'url'   => $ids->count() === 1
+                ? route("manajemenmahasiswa.{$route}.show", $ids->first())
+                : route("manajemenmahasiswa.{$route}.index", ['tinjauan' => $kunci]),
+            'tone'  => $tone,
+        ];
     }
 
     /**

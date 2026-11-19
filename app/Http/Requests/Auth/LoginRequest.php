@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,8 @@ use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
+    protected $redirectRoute = 'login';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -37,16 +40,20 @@ class LoginRequest extends FormRequest
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function authenticate(): void
+    public function authenticate(bool $administrator = false): void
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        if (! Auth::attemptWhen(
+            $this->only('email', 'password'),
+            fn (User $user): bool => $user->hasAdministrativeRole() === $administrator,
+            $this->boolean('remember'),
+        )) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
-            ]);
+                'email' => $administrator ? 'Email atau kata sandi tidak sesuai.' : 'Email tidak dikenali.',
+            ])->redirectTo(route($this->redirectRoute));
         }
 
         RateLimiter::clear($this->throttleKey());
@@ -72,7 +79,7 @@ class LoginRequest extends FormRequest
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),
-        ]);
+        ])->redirectTo(route($this->redirectRoute));
     }
 
     /**
@@ -80,6 +87,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate($this->route()->getName().'|'.Str::lower($this->string('email')).'|'.$this->ip());
     }
 }

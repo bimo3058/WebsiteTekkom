@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\LocalPasswordSession;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -12,7 +14,9 @@ class PasswordController extends Controller
 {
     public function update(Request $request): RedirectResponse
     {
-        $user = \App\Models\User::find($request->user()->id);
+        abort_unless(LocalPasswordSession::isActive($request), 403, LocalPasswordSession::CHANGE_LOCKED);
+
+        $user = User::findOrFail($request->user()->id);
 
         $validated = $request->validateWithBag('updatePassword', [
             'current_password' => ['required', 'current_password'],
@@ -39,9 +43,10 @@ class PasswordController extends Controller
             }
         }
 
-        $user->update([
+        $user->forceFill([
             'password' => Hash::make($validated['password']),
-        ]);
+            'local_password_initialized_at' => $user->local_password_initialized_at ?? now(),
+        ])->save();
 
         $user->clearUserCache();
 

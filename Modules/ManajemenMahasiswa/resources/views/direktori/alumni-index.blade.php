@@ -1,7 +1,7 @@
 <x-dynamic-component :component="$layout">
 
 @include('manajemenmahasiswa::direktori.partials.palette')
-@include('manajemenmahasiswa::partials.card-frame')
+@include('manajemenmahasiswa::partials.sitkom-ui')
 @include('manajemenmahasiswa::partials.filter-popover')
 
 <style>
@@ -123,15 +123,7 @@
         object-fit: cover;
     }
 
-    /* Warna tiap status karir ada di partials/palette */
-    .status-badge {
-        font-size: 11px;
-        font-weight: 700;
-        padding: 3px 10px;
-        border-radius: 20px;
-        display: inline-block;
-        white-space: nowrap;
-    }
+    /* Bentuk & warna badge status karir ada di partials/sitkom-ui */
 
     /* Kolom Aksi memakai tombol .mk-btn--icon + panel .mk-menu milik modul
        (resources/views/partials/button-theme.blade.php). */
@@ -181,14 +173,9 @@
     subtitle="Daftar dan profil karir seluruh lulusan program studi" />
 
 <!-- Flash Messages -->
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
+{{-- Gangguan dari halaman ini sendiri ($error) atau dari halaman detail yang melempar balik ke sini --}}
+<x-manajemenmahasiswa::ui.flash type="error" :message="session('error') ?: ($error ?? null)" class="mb-3" />
 
 <!-- Stat Cards -->
 <div class="row g-3 mb-4 row-cols-2 row-cols-md-4">
@@ -404,20 +391,21 @@
                         {{-- Aksi: tombol "..." + dropdown, mengikuti pola kolom Action
                              User Management global (Alpine.js sudah dimuat di layout admin/dosen/mahasiswa) --}}
                         <td style="text-align: center;">
-                            <div style="position: relative; display: inline-block;" x-data="{ open: false }">
-                                <button type="button" @click="open = !open" @click.outside="open = false" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm">
+                            <div style="position: relative; display: inline-block;" x-data="mmAksiMenu"
+                                 @scroll.window.capture="open = false" @resize.window="open = false">
+                                <button type="button" @click="toggle($el)" @click.outside="open = false" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" aria-label="Aksi">
                                     <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                                 </button>
-                                <div x-show="open" x-cloak
+                                <div x-show="open" x-cloak :style="posisi"
                                      x-transition:enter="transition ease-out duration-100"
                                      x-transition:enter-start="opacity-0 scale-95"
                                      x-transition:enter-end="opacity-100 scale-100"
-                                     class="mk-menu" style="display: none;">
+                                     class="mk-menu mm-menu-fixed" style="display: none;">
                                     <a href="{{ route('manajemenmahasiswa.direktori.alumni.show', $alm->id) }}" class="mk-menu-item">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                         Detail
                                     </a>
-                                    @if($isAdmin)
+                                    @if($isAdmin || (int) $alm->user_id === $userId)
                                         <a href="{{ route('manajemenmahasiswa.direktori.alumni.edit', $alm->id) }}" class="mk-menu-item">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                             Edit
@@ -431,7 +419,7 @@
                     <tr>
                         <td colspan="7" style="padding: 60px 24px; text-align: center;">
                             <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: #E5E7EB;">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--c-border);">
                                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="9" cy="7" r="4"></circle>
                                     <line x1="17" y1="11" x2="23" y2="11"></line>
@@ -450,7 +438,4 @@
     @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $alumni])
 </div>
 
-</div>{{-- end mm-frame-body --}}
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </x-dynamic-component>

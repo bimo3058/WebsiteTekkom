@@ -8,6 +8,7 @@ use App\Http\Middleware\CheckSessionVersion;
 use App\Http\Middleware\CheckSuspended;
 use App\Http\Middleware\PreventBackHistory;
 use App\Http\Middleware\RedirectBasedOnRole;
+use App\Http\Middleware\RequireInitialPasswordChange;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -70,6 +71,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\UpdateUserOnlineStatus::class,
             CheckSuspended::class,
             CheckSessionVersion::class,
+            RequireInitialPasswordChange::class,
             PreventBackHistory::class,
             RedirectBasedOnRole::class,
             ApplyPageMetadata::class,

@@ -87,7 +87,7 @@ class PendaftaranPraktikanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
+            'praktikum_id' => 'required|uuid|exists:eo_prak_praktikum,id',
             'irs'          => 'required|file|max:5120|mimes:pdf,jpg,jpeg,png',
         ]);
 

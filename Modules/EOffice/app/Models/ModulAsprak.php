@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ModulAsprak extends Model
 {
-    protected $table = 'modul_asprak';
+    protected $table = 'eo_prak_modul_asprak';
 
     protected $fillable = [
         'modul_id',
@@ -27,6 +27,6 @@ class ModulAsprak extends Model
 
     public function asprak()
     {
-        return $this->belongsTo(AsistenPraktikum::class, 'asprak_id');
+        return $this->belongsTo(AsistenPraktikum::class, 'asprak_id')->withTrashed();
     }
 }

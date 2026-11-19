@@ -1,0 +1,720 @@
+{
+    "bucket": "storage_web",
+    "checks": [
+        {
+            "path": "documents\/TkYjGSjzb6cBE5d3nGHmG9EtSs8dztmsuo4UDhBA.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/FtEXk8nZSHIlkWW7AGrzNWevN10yViTej11kN69X.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/K0yXUUZYRbzEQs88Gm4VNNvZhmwR448th3UtPFZV.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/29\/1782029805_Metodologi Penelitian A_Proposal Capstone S1T26K30_WebTekkomBS.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/QOi6vzYMBfuXFnQhSAGg71ZGHXcX4xwmg2zJvZb7.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/eF5a6zKyafuHxAxbcASQYlGp8Em455MdwDPzH5Yd.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/J0O1SuQlCHRjQdu1h329652DAZPrHau1Dy94AvYW.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/D8kMlStYjoCAQiUkhcLPOp1ZQyKee74pclriOkqj.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/tPY4D9wOZm6D1D2HUGNP7MEyg1GvyCYTX78Yr9mi.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/29\/1782668488_Dokumen Proposal Tugas Akhir (C100).pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/37\/1781939610_C200_S1T26K38.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/3\/1782032574_C300-_-Dokumen-Perancangan-Alat_Perbaikan Revisi.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/tEry6t6gD3gQMXXy23RSRh1eSGkWQXoK9ZJuMHdi.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/37\/1781939683_C300_S1T26K38.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/31\/1781936587_C100_S1T26K32.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/29\/1782029826_Metodologi Penelitian A_Proposal Capstone S1T26K30_WebTekkomBS.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/1N6GKKRPFCfwy639az0rDfHBFEZQ9OHdMXseibuU.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/d88AsHgMugvPg9PTgxSFlz3eCdTFwrflKxklgFwf.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/05Sqm68oFknpzm83YySS0tY6sY7NBwl0D9g7tDdK.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/kOh1f2MzT1ym96mKGPnyrY3jkVRifudAReHtAIRu.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/I9QltHrTdBMUH5L01lnmVBKxpITXZRX41QfE5yDE.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/YcVs3dKf77ZY2nKqstCfLgkpyKiQnMs99CCBe0P3.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/HcyKmtJw9onqbifv8wfzWMCwNVirDwzDdz4p0R8F.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/JRJt6DU1XZ9hQCtdIlPQmluEWySV6M2Zrp0F1xNx.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/3\/1782032450_C200-_-Dokumen-Spesifikasi-Produk-TA_Perbaikan Revisi.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/MsrYkyyENGXwACzIBPufODGeZwNhml867b0naZLA.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/fu2WYuC9Ea0K5F8aPDKopqH4qXquS71pcV4v0GmQ.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/D3TLaz09Lp0LQo09HUKGJOuFJJUiHgHl6a87gYH0.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/JpTZbEsmwwCibF61quoTPviNebU3BdFtUG0nxGog.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/G5Zp5KkOBXW7mdfG0lq0Vq6fpobleLVVVix5L011.docx",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/HAMgg8bmwO1jKtBkirGLSrpF5HNU1tccPnUpomoI.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/UDzcOnDRtSadCGUv3OhByWgiPC3tVQ4V2E7gnjta.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/aVNU1HWWN0q7FDOqI4TQBmEl5klaf4lsTjwsMTTb.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/N65CFsTIDW7BoIp2ScQoj52xSalFcYr7cbcPanov.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/3YYTN1gF7oduDxKTWfwM1gfvy9Z94OxhHNtTTO5u.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/QvoWkmaTziwcby1s6FRVj6TtNAK9BxqOOMG42TfX.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/pi73R5Qb1IR63X8MOg3Pd2xZSU8o9pkX8yUlRvEB.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/37\/1781939594_C100_S1T26K38.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/IMKNEFeNM16ShZd4dTZvNBDlNJJ0tsXuFbKgYqdD.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/MPIiLnscREif7hZvne49KFPFikXnuVgsGStiOHJn.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/xAcs1HK14ayZLoDNGhvjFvuyGZzXhvjm7YpT6jIs.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/PfH09pJSYtJJpF2wzEv6FFP851JmxZtMHAJvqeub.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/7NBU1AL3bSrA2HdDlz1Hgtge06PkPZ2RDb6z0DSm.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/cGL4GB3h2ApzHIyAbN8YR22isBzVxaIo4EBXmP5J.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/14\/1781888382_C200.Rev02.TA26.B1.K14.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/14\/1781888390_C300.Rev02.TA26.B1.K14.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/ptBK6NeV1YbYtxcPmmMGNolobIiS7cAxJHAuToNu.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/R1bzF9icWuZWXWOVGVjWq4T2NlEInakrwIDGlPvi.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/G3XTblBLwNILtgq7m4uBoSXHwbv50Hqfkxm9Y2qD.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/AFIAjI0gCD3h63rEHq5hq92Mc2TXjZaL44w1zbob.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/ruh9Wo0FKplA3VeiNh6QkcTvjOUwLKFlPJw0wWnt.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/4Ewu78rWwkp0RQxYHF946EH6lUOJZltUKlndycAk.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/I6T5eyY2pAoERYBo18a69ExQuQGZhopjtTgr5IcA.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/9SLlrK4Ij1tjkGgJJAXZtIvpehaNIeDCaFGND9T2.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/KYXV5yec0d11CjklRm4yXb2KZjmHJW5lJ9ANrBR0.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/iFNu7gtDIJlVKgbrHZf4DIUEZXhQcEfEx3FnI7NH.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/Eil6kPAJN2sbsuzbh7ZFITa1106irNF2bfF9YkXC.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/RdsQ98KpzhNFn1pJIeBwAHzfa8OHGLuHPCfeBBsK.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/jSMDh6mKaop9kMmGHuqAbbb1w2rQSzMXyIneMoay.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/FSaFriV3iOsDd4EukJgia1ObqPrHYgLptSZDfI40.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/0YpGgv56t4e6N5mICKhQjHULvz7yQbJUs9zuxs9c.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/hf1c8a6bJpCJCePqbHZdd4OUhcU0HNzwu1p8ckd9.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/aNb6eRNDw5JrHUIHM6x8WpAWn9tmZWmU1qXPKp1H.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/h1p995TMZkE84RFV2Qz6RLv6ahldU1ZhvGmP0Xwq.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/6Y5w57X26L7yNMMG1NHOMJ3LLf84QH23cEavKJVF.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/KhYFpsa1amwsi4T2MgIEopto4CoC4qHmXfaB6JVz.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/BDNBSrAikeax5mvi1IGBjiW4wOmPB3vErC92eFKh.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/cOrJmv4MmaB9SoIVxOmj2jSuzp420HRXnRF7vGKf.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/DUIZKmohWbA2QaXqgnl4H2P9N8pIsL5vp2oyMYRz.docx",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/llPmJhLJ0lDtZOz0OHFjlC4zza3WPsdtEyRIeabR.docx",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/4OZSYxBpMBWeevTLXuJrrOd9zlimpoJeClUhAehP.docx",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/14\/1781888373_C100.Rev02.TA26.B1.K14.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/ZR0Qlzy8qA0rnMNlX7v7u8HzYTGw9m1CuEaSStPT.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/28\/1781934877_C100_S1T26K29.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/13\/1781935017_C100_S1T26K13.docx",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/13\/1781935026_C200_S1T26K13.docx",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/13\/1781935033_C300_ S1T26K13.docx",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/42\/1781935763_C100.TA2026.1.K43.0_4.docx",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/42\/1781935794_C300.TA2026.1.K43.0_4.docx",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/42\/1781935834_C200.TA2026.1.K43.0_4.docx",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/24\/1781936096_C100_S1T26K25.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/24\/1781936205_C200_S1T26K25..pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/24\/1781936214_C300_S1T26K25..pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/31\/1781936600_C200_S1T26K32.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/31\/1781936613_C300_S1T26K32.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/34\/1781937567_C100-S1T26K35.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/34\/1781937579_C200-S1T26K35.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/34\/1781937591_C300-S1T26K35.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/28\/1781938453_C300_S1T26K29.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/28\/1781939053_C200_S1T26K29.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/25\/1781939316_C100_S1T26K26.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/25\/1781939327_C200_S1T26K26.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/25\/1781939336_C300_S1T26K26.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/22\/1781958090_C100_S1T26K23.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/22\/1781958113_C200_S1T26K23.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/22\/1781958128_C300_S1T26K23.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/40\/1781975432_C100.S1T26K41.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/40\/1781975445_C200.S1T26K41.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/40\/1781975455_C300.S1T26K41.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/23\/1781976222_C100.S1T26K24.Rev03.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/23\/1782030339_C200.S1T26K24.Rev03...pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/23\/1782063059_C300.S1T26K24.Rev03 2.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/43\/1782147372_c100.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/43\/1782147423_c200.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/43\/1782147431_c300.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/41\/1782278483_Rev 4_C100 Kel 42.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/41\/1782278505_Rev2_C200_Kel42.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/41\/1782278524_Rev2_C300_Kel42.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/30\/1782701611_TUGAS_METOPEN_S1T26K31.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/30\/1782701617_TUGAS_METOPEN_S1T26K31.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/30\/1782701659_TUGAS_METOPEN_S1T26K31.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/4\/1783839495_[Elvina Nasywa Ariyani]-[21120123140136]-[metolit].pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/4\/1783839559_metopen_cetta.docx",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "documents\/4\/1783839572_[Elvina Nasywa Ariyani]-[21120123140136]-[metolit].pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/219\/PDC1\/20260919203840_lbll5Zt0WIUL_jigsaw-worksheet.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/219\/PDC1\/20260919204309_of29uGYf9Kjn_pdc1-v1.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/222\/PDC1\/20260922224230_2GMOEGiPu55T_peer-review.docx",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/222\/PDC1\/20260922224215_j4r8QGmU2FbZ_peer-review-prida-jigsaw-1.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/222\/SEMPRO\/20260928214747_ViZkzBpAzTMY_tugas-profesi-di-bidang-teknologi-informasi-kelompok-8-etika-profesi-a.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/222\/SEMPRO\/20260928214808_9oHAqJJ6G08y_tugas-profesi-di-bidang-teknologi-informasi-kelompok-8-etika-profesi-a.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/222\/PDC2\/20260929005743_ZUl08h3esPVm_tugas-profesi-di-bidang-teknologi-informasi-kelompok-8-etika-profesi-a.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/222\/PDC2\/20260929005754_QoqqbCWRjMCI_tugas-profesi-di-bidang-teknologi-informasi-kelompok-8-etika-profesi-a.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/222\/TA\/20260929005925_0xMWV0fJj8hZ_tugas-profesi-di-bidang-teknologi-informasi-kelompok-8-etika-profesi-a.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/222\/TA\/20260929005934_pa8nKQF11tGa_tugas-profesi-di-bidang-teknologi-informasi-kelompok-8-etika-profesi-a.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/21\/PDC2\/20260924114924_pU0GDgztzlA5_peer-review-prida-jigsaw-1.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": true
+        },
+        {
+            "path": "capstone\/documents\/222\/EXPO\/20260929120309_BJBTgvam2kgK_tugas-profesi-di-bidang-teknologi-informasi-kelompok-8-etika-profesi-a.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/222\/EXPO\/20260929114252_lEGk1TqaN6c1_tugas-profesi-di-bidang-teknologi-informasi-kelompok-8-etika-profesi-a.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/229\/PDC1\/20261001210635_Owhuko77pqoW_s2t26k03.docx",
+            "local_file_exists": false,
+            "supabase_metadata_exists": true
+        },
+        {
+            "path": "capstone\/documents\/226\/PDC1\/20261001210814_kWSLilMygH4k_c100-capstone-ai-ews-semarang-flood.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": true
+        },
+        {
+            "path": "capstone\/ta-individual\/222\/210\/20261001225540_9Az5CcIwyPVE_analisis-kasus-etika-bisnis-markkula-kelompok-5.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/ta-individual\/222\/210\/20261001225809_6rUCB7TixjNZ_analisis-kasus-etika-bisnis-markkula-kelompok-5.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/231\/PDC1\/20261001232316_kMa8vwL19D1Z_c100-capstone-smart-drainage-monitoring.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": true
+        },
+        {
+            "path": "capstone\/documents\/239\/PDC1\/20261001233013_hKYOB0QhdNDQ_proposal-sistem-reject-amdk-vocawater.docx",
+            "local_file_exists": false,
+            "supabase_metadata_exists": true
+        },
+        {
+            "path": "capstone\/documents\/222\/SIDANG\/20261001232901_qHjeLSiPzItW_analisis-kasus-etika-bisnis-markkula-kelompok-5.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/222\/SIDANG\/20261001232916_35IjUyjgQsZZ_analisis-kasus-etika-bisnis-markkula-kelompok-5.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/225\/PDC1\/20261004124001_EJeKYsqn2Hkl_c100s2t26k10rev00.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": true
+        },
+        {
+            "path": "capstone\/documents\/228\/PDC1\/20261005000014_c29KbpUsIqZe_c100s2t26k09rev00.docx",
+            "local_file_exists": false,
+            "supabase_metadata_exists": true
+        },
+        {
+            "path": "capstone\/documents\/21\/PDC2\/20261009103103_lvUOrQOImRlw_pdc2-v1.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/21\/PDC2\/20261009103229_4j16dKjwBlTY_print-kartu-uts-ssss.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/documents\/21\/TA\/20261009103338_juq2MwaRC8ae_print-kartu-uts-ssss.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/expo\/11\/210\/20260929112833_ywOtFEoPpTaX_tugas-profesi-di-bidang-teknologi-informasi-kelompok-8-etika-profesi-a.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/expo\/11\/211\/20260929114019_GjyC1ILXbjjg_tugas-profesi-di-bidang-teknologi-informasi-kelompok-8-etika-profesi-a.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        },
+        {
+            "path": "capstone\/expo\/11\/212\/20260929114213_LutuNspfVn9J_tugas-profesi-di-bidang-teknologi-informasi-kelompok-8-etika-profesi-a.pdf",
+            "local_file_exists": false,
+            "supabase_metadata_exists": false
+        }
+    ]
+}

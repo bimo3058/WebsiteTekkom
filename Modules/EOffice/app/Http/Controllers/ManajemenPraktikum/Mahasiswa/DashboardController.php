@@ -53,13 +53,13 @@ class DashboardController extends Controller
                 'pengumpulan' => fn ($q) => $q->whereIn('daftar_praktikan_id', $dpIds->values())
                     ->select('id', 'tugas_id', 'daftar_praktikan_id', 'status_pengumpulan'),
             ])
-                ->whereHas('modul', fn($q) => $q->whereIn('praktikum_id', $praktikumIds))
+                ->whereHas('modul', fn($q) => $q->whereIn('praktikum_id', $praktikumIds)->whereHas('praktikum',fn($p)=>$p->where('is_active',true)))
                 ->where('is_published', true)
                 ->get()
                 ->map(function ($t) use ($dpIds) {
                     $dpId = $dpIds[$t->modul->praktikum_id] ?? null;
                     $pengumpulan = $dpId ? $t->pengumpulan->firstWhere('daftar_praktikan_id', $dpId) : null;
-                    $t->sudah_kumpul = !is_null($pengumpulan);
+                    $t->sudah_kumpul = $pengumpulan && !in_array($pengumpulan->status_pengumpulan, ['revisi','draft'], true);
                     $t->status_tugas = $pengumpulan?->status_pengumpulan ?? 'belum_dikumpul';
                     return $t;
                 });
@@ -75,10 +75,7 @@ class DashboardController extends Controller
         })->sortByDesc('deadline')->values();
 
         $pengumumanPraktikum = Pengumuman::with(['praktikum', 'user'])
-            ->whereIn('praktikum_id', $praktikumIds)
-            ->whereNull('tipe_sistem') // hanya pengumuman manual dari asisten/koordinator
-            ->where('is_published', true)
-            ->orderByDesc('created_at')
+            ->forStudentDashboard($user->id)
             ->get();
 
         $pengumumanRekrutmen = Pengumuman::with('praktikum')

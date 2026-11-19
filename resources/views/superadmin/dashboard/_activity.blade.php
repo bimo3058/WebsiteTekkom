@@ -9,7 +9,7 @@
     if (isset($new_registrations)) $new_registrations->loadMissing('roles');
     if (isset($recent_logs))       $recent_logs->loadMissing('user.roles');
 
-    $online_users = \App\Models\User::where('is_online', \Illuminate\Support\Facades\DB::raw('true'))
+    $online_users = \App\Models\User::online()
         ->with('roles')->latest('last_login')->take(5)->get();
 @endphp
 
