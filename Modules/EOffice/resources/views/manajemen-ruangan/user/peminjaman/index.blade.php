@@ -358,7 +358,7 @@
                                 <template x-if="detailData.berkas">
                                     <a :href="detailData.berkas" target="_blank"
                                         class="text-[13px] font-bold text-[#0065ff] hover:text-[#0052cc] hover:underline transition-colors inline-block">
-                                        Lihat Lampiran
+                                        Lihat Berkas
                                     </a>
                                 </template>
                                 <template x-if="!detailData.berkas">

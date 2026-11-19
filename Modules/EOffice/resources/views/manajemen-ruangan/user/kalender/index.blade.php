@@ -13,20 +13,31 @@
         
         // Build absolute events map: [date][ruangan_id] => list of events
         $eventsMap = [];
+        $pendingQueueMap = [];
         $pxPerMinute = 1; // 1 pixel = 1 menit, 1 jam = 60 pixel
         
         foreach ($bookingsRaw as $b) {
             $tgl = is_string($b->tanggal_pinjam) ? $b->tanggal_pinjam : $b->tanggal_pinjam->format('Y-m-d');
+            $jamMulaiNorm = substr($b->jam_mulai, 0, 5);
+            $jamSelesaiNorm = substr($b->jam_selesai, 0, 5);
+
             $eventsMap[$tgl][$b->ruangan_id][] = [
                 'id' => 'pm_' . $b->id,
                 'status' => $b->status,
                 'tujuan' => $b->tujuan ?? '',
                 'pengguna' => $b->user->name ?? 'Mahasiswa',
                 'user_id' => $b->user_id,
-                'jam_mulai' => substr($b->jam_mulai, 0, 5),
-                'jam_selesai' => substr($b->jam_selesai, 0, 5),
+                'jam_mulai' => $jamMulaiNorm,
+                'jam_selesai' => $jamSelesaiNorm,
                 'source' => $b->source ?? null,
             ];
+
+            if ($b->status === 'menunggu' && empty($b->source) && (int) $b->user_id !== (int) auth()->id()) {
+                $pendingQueueMap[$tgl . '|' . $b->ruangan_id][] = [
+                    'jam_mulai' => $jamMulaiNorm,
+                    'jam_selesai' => $jamSelesaiNorm,
+                ];
+            }
         }
 
         $rutins = collect($internalSchedules)->where('tipe_jadwal', 'rutin');
@@ -393,6 +404,7 @@
             @endphp
             {{-- Calendar Grid (Absolute Positioning) --}}
             <div id="calendar-grid-wrapper" class="mp-card overflow-hidden select-none">
+                <script type="application/json" id="pending-queue-data">@json($pendingQueueMap)</script>
                 <div id="table-scroll-container" style="overflow-x: auto; position: relative;">
                     <table style="width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px; min-width: {{ max(900, $minTWidth) }}px;">
                         <thead>
@@ -447,6 +459,10 @@
                                                 $events = $eventsMap[$dateStr][$ruang->id] ?? [];
                                                 $eventBounds = [];
                                                 foreach($events as $ev) {
+                                                    // Jangan blokir klik/drag untuk pengajuan menunggu milik sesama mahasiswa umum
+                                                    if (($ev['status'] ?? '') === 'menunggu' && empty($ev['source']) && (int) ($ev['user_id'] ?? 0) !== (int) auth()->id()) {
+                                                        continue;
+                                                    }
                                                     $mStartArr = explode(':', $ev['jam_mulai']);
                                                     $mEndArr = explode(':', $ev['jam_selesai']);
                                                     $startMinutes = ( (int)$mStartArr[0] * 60 + (int)$mStartArr[1] ) - ($bukaInt * 60);
@@ -576,7 +592,7 @@
                                                                 'tujuan' => '',
                                                             ];
                                                         }
-                                                    } elseif ($status === 'menunggu' && $isPraktikum) {
+                                                    } elseif ($status === 'menunggu' && !empty($source)) {
                                                         $bg = 'rgba(219, 234, 254, 0.9)'; $border = '#60A5FA'; $label = 'Agenda Akademik'; $tColor = '#1E40AF';
                                                         $modalData = [
                                                             'kegiatan' => 'Agenda Akademik',
@@ -599,16 +615,8 @@
                                                             'tujuan' => $tujuan,
                                                         ];
                                                     } elseif ($status === 'menunggu') {
-                                                        $bg = 'rgba(237, 233, 254, 0.9)'; $border = '#C4B5FD'; $label = 'Terpakai'; $tColor = '#5B21B6';
-                                                        $modalData = [
-                                                            'kegiatan' => 'Terpakai',
-                                                            'kelas' => '-',
-                                                            'ruangan' => $ruang->nama,
-                                                            'tanggal' => $day->translatedFormat('l, d M Y'),
-                                                            'waktu' => "{$ev['jam_mulai']} - {$ev['jam_selesai']}",
-                                                            'status' => 'terpakai',
-                                                            'tujuan' => '',
-                                                        ];
+                                                        // Biarkan sel kalender terlihat kosong agar sesama mahasiswa umum tetap bisa klik/drag untuk mengajukan
+                                                        continue;
                                                     }
                                                 @endphp
                                                 <div @mousedown.stop @click.stop="openDetailModal(@js($modalData))"
@@ -807,6 +815,16 @@
                                 Waktu mulai tidak boleh menggunakan jam yang telah berlalu hari ini.
                             </div>
 
+                            <div x-show="!isInvalidTimeRange && !isPastTimeToday && overlappingPendingCount > 0" x-cloak
+                                class="text-[11px] text-amber-900 bg-amber-50 border border-amber-200 px-3 py-2.5 rounded-xl font-medium flex items-start gap-2 leading-relaxed">
+                                <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span>
+                                    <strong>Catatan:</strong> Sudah ada <span class="font-bold" x-text="overlappingPendingCount"></span> pengajuan lain yang berstatus menunggu di waktu ini. Anda tetap dapat mengajukan dan keputusan persetujuan berada di tangan Admin.
+                                </span>
+                            </div>
+
                             {{-- Identitas Peminjam --}}
                             <div class="space-y-3">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -867,18 +885,18 @@
                                     class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
                             </div>
 
-                            {{-- Berkas Pendukung (Opsional) --}}
+                            {{-- Berkas Pendukung --}}
                             <div class="space-y-1.5">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">File Berkas <span class="text-slate-400 font-normal lowercase tracking-normal">(opsional)</span></label>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">File Berkas <span class="text-red-500">*</span></label>
                                 <div class="relative bg-white border border-slate-200 rounded-xl p-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all">
-                                    <input type="file" name="file_berkas" accept=".pdf"
+                                    <input type="file" name="file_berkas" accept=".pdf" required
                                         class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-[#0B266E]/10 file:text-[#0B266E] hover:file:bg-[#0B266E]/20 cursor-pointer transition-all outline-none">
                                 </div>
-                                <p class="text-[10px] text-gray-400 ml-1 leading-relaxed">Format <strong class="text-gray-600 font-semibold">PDF</strong> maksimal <strong class="text-gray-600 font-semibold">2MB</strong>. Biasanya diperlukan untuk persetujuan acara berskala besar atau formal.</p>
+                                <p class="text-[10px] text-gray-400 ml-1 leading-relaxed">Format <strong class="text-gray-600 font-semibold">PDF</strong> maksimal <strong class="text-gray-600 font-semibold">2MB</strong>.</p>
                                 @error('file_berkas')
                                     <p class="text-[11px] text-rose-600 mt-2 font-bold flex items-center gap-1.5 bg-rose-50 p-2.5 rounded-xl border border-rose-100">
                                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        Ukuran maksimal 2MB dan wajib berformat PDF.
+                                        {{ $message }}
                                     </p>
                                 @enderror
                             </div>
@@ -1047,6 +1065,21 @@
 
                 get isSubmitDisabled() {
                     return this.isPastTimeToday || this.isInvalidTimeRange;
+                },
+
+                get overlappingPendingCount() {
+                    if (!this.selectedDate || !this.selectedRoomId || !this.bookingData.jamMulai || !this.bookingData.jamSelesai) {
+                        return 0;
+                    }
+                    const dataEl = document.getElementById('pending-queue-data');
+                    if (!dataEl) return 0;
+                    try {
+                        const queueMap = JSON.parse(dataEl.textContent || '{}');
+                        const list = queueMap[`${this.selectedDate}|${this.selectedRoomId}`] || [];
+                        return list.filter(item => item.jam_mulai < this.bookingData.jamSelesai && item.jam_selesai > this.bookingData.jamMulai).length;
+                    } catch (e) {
+                        return 0;
+                    }
                 },
 
                 bookingData: {

@@ -22,14 +22,28 @@
         }
 
         /* Prevent sticky pseudo-hover delay on touchscreens (iOS/Android/iPad) */
-        @media (hover: none) and (pointer: coarse) {
+        @media (pointer: coarse) {
             .mr-nav-link:hover:not(.is-active) {
                 background: transparent !important;
             }
+            .mr-sidebar-toggle:hover {
+                background: #ffffff !important;
+                border-color: var(--c-border) !important;
+            }
+            .mr-nav-logout:hover {
+                background: transparent !important;
+            }
             .safe-area-pb a:hover,
-            .safe-area-pb button:hover {
+            .safe-area-pb button:hover,
+            [x-show="openMenu"] a:hover,
+            [x-show="openMenu"] button:hover {
                 background-color: transparent !important;
             }
+        }
+
+        /* Instant visual feedback when touched */
+        .mr-nav-link:active {
+            opacity: 0.75;
         }
 
         /* Custom NProgress Color (Biru Dongker) */
@@ -212,10 +226,12 @@
             transition: background 0.15s, border-color 0.15s, color 0.15s;
         }
 
-        .mr-sidebar-toggle:hover {
-            background: #F6F8FA;
-            border-color: var(--c-border-strong);
-            color: var(--c-fg);
+        @media (hover: hover) and (pointer: fine) {
+            .mr-sidebar-toggle:hover {
+                background: #F6F8FA;
+                border-color: var(--c-border-strong);
+                color: var(--c-fg);
+            }
         }
 
         .mr-sidebar-toggle svg {
@@ -310,8 +326,10 @@
             text-overflow: ellipsis;
         }
 
-        .mr-nav-link:hover {
-            background: #F6F8FA;
+        @media (hover: hover) and (pointer: fine) {
+            .mr-nav-link:hover {
+                background: #F6F8FA;
+            }
         }
 
         .mr-nav-link.is-active {
@@ -362,8 +380,10 @@
             color: #DF1C41 !important;
         }
 
-        .mr-nav-logout:hover {
-            background: #FEF1F4 !important;
+        @media (hover: hover) and (pointer: fine) {
+            .mr-nav-logout:hover {
+                background: #FEF1F4 !important;
+            }
         }
 
         /* Flash */
@@ -807,6 +827,19 @@
         .mp-av.violet {
             background: #E4DFFD;
             color: #2A3A7C;
+        }
+
+        /* Filter Popover Multi-Device Optimization */
+        .mp-filter-popover {
+            max-height: calc(100vh - 180px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        @media (max-width: 639px) {
+            .mp-filter-popover {
+                max-height: none;
+                overflow: visible;
+            }
         }
     </style>
     <x-mobile-navigation-assets />

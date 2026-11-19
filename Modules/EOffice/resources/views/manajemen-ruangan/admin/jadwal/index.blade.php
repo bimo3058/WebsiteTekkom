@@ -1667,9 +1667,9 @@
             </div>
 
             <div
-                class="border-t border-slate-200 bg-white px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 rounded-b-[14px]">
+                class="border-t border-slate-200 bg-white px-4 sm:px-5 py-3 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 rounded-b-[14px]">
                 {{-- Left: Per page selector + Showing text --}}
-                <div class="flex items-center gap-2.5 sm:gap-3 text-xs text-slate-500 flex-wrap shrink-0">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-xs text-slate-500 shrink-0">
                     <div class="flex items-center gap-1.5">
                         <span class="font-medium text-slate-500">Per halaman</span>
                         <div x-data="{ 
@@ -1717,7 +1717,7 @@
                         </div>
                     </div>
 
-                    <div class="w-px h-3.5 bg-slate-200"></div>
+                    <div class="hidden sm:block w-px h-3.5 bg-slate-200"></div>
 
                     <span class="text-xs text-slate-500 whitespace-nowrap">
                         Menampilkan <strong class="font-bold text-slate-800">{{ $jadwals->firstItem() ?? 0 }}</strong>
@@ -1727,7 +1727,7 @@
                 </div>
 
                 {{-- Right: Page buttons --}}
-                <div class="flex items-center gap-1 sm:gap-1.5">
+                <div class="flex items-center gap-1 sm:gap-1.5 flex-nowrap justify-start lg:justify-end">
                     @if ($jadwals->onFirstPage())
                         <span
                             class="text-slate-300 cursor-not-allowed w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm">
