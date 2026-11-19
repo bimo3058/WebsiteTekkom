@@ -281,7 +281,7 @@
                                                 <td class="mp-grade-history-cell group-hover:brightness-95 transition-all"
                                                     style="position:relative;padding-right:32px!important;padding:12px 16px;text-align:center;background:#FEF9C3;color:#0D0D12;font-size:13px;">
                                                     {{ isset($njMap['laporan']) ? number_format($njMap['laporan'], 0, ',', '') : '0' }}
-                                                <x-eoffice::manajemen-praktikum.ui.module-score-history :module-id="$modul->id" :student-id="$dp->id" score-key="laporan" score-label="Laporan" :student-name="$dp->user?->name ?? 'Mahasiswa'" /></td>
+                                                <x-eoffice::manajemen-praktikum.ui.module-score-history :module-id="$modul->id" :student-id="$dp->id" score-key="laporan" :score-label="$praktikum->laporanLabel()" :student-name="$dp->user?->name ?? 'Mahasiswa'" /></td>
                                                 {{-- Responsi --}}
                                                 <td class="mp-grade-history-cell group-hover:brightness-95 transition-all"
                                                     style="position:relative;padding-right:32px!important;padding:12px 16px;text-align:center;background:#FFF7ED;color:#0D0D12;font-size:13px;">

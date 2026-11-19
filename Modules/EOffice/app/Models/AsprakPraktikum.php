@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * Asisten / Koordinator yang sudah aktif bertugas di praktikum.
  *
- * Tabel: eo_prak_asprak_praktikum
+ * Tabel: asprak_praktikum
  * role: asprak | koor
  */
 class AsprakPraktikum extends Model

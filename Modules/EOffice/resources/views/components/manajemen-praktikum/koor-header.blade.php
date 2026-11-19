@@ -46,7 +46,7 @@
                 @if($praktikum->cover_path)
                 <form action="{{ route('eoffice.manprak.koor.praktikum.cover.destroy', $praktikum->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus gambar sampul?');">
                     @csrf @method('DELETE')
-                    <button type="submit" class="destructive"><x-eoffice::manajemen-praktikum.ui.icon name="trash" />Hapus Gambar Sampul</button>
+                    <button type="submit" class="mp-delete-button destructive" aria-label="Hapus Gambar Sampul" title="Hapus Gambar Sampul"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                 </form>
                 @endif
             </x-eoffice::manajemen-praktikum.ui.action-menu>

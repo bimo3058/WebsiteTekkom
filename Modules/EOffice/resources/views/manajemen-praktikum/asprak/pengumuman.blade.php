@@ -2,6 +2,7 @@
     $pageTitle = ($praktikum->nama ?? 'Praktikum') . ' / Pengumuman';
 @endphp
 <x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" :pageTitle="$pageTitle">
+    <x-eoffice::manajemen-praktikum.ui.datetime-picker-assets />
 
     <div x-data="pengumumanManager()">
         {{-- Flash Messages --}}
@@ -40,50 +41,32 @@
                 @forelse($pengumumans as $p)
                     @php
                         $isMine = $p->user_id === auth()->id();
+                        $editableAttachments=$isMine?collect($p->lampiran??[])->map(function($file){
+                            $path=is_array($file)?($file['path']??''):$file;
+                            $name=is_array($file)?($file['name']??basename($path)):basename($path);
+                            return ['path'=>$path,'name'=>$name,'url'=>app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($path,'eoffice',$name)];
+                        })->values()->all():[];
                     @endphp
-                    <div style="border:1px solid #DFE1E7; background:#fff; border-radius:14px; padding:15px 24px; position:relative; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition:all 0.2s ease;"
+                    <div style="min-width:0;max-width:100%;overflow-wrap:anywhere;border:1px solid #DFE1E7; background:#fff; border-radius:14px; padding:15px 24px; position:relative; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition:all 0.2s ease;"
                         onmouseover="this.style.boxShadow='0 4px 14px rgba(17,24,39,0.05)';"
                         onmouseout="this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)';">
 
                         {{-- Pengarang --}}
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-                            <div style="display:flex; align-items:center; gap:12px;">
-                                {{-- Gray Circle Avatar --}}
-                                <div
-                                    style="width:40px; height:40px; border-radius:50%; background:#D1D5DB; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                                    @if($p->user?->name)
-                                        @php
-                                            $nameParts = explode(' ', $p->user->name);
-                                            $initials = strtoupper(substr($nameParts[0], 0, 1) . substr($nameParts[1] ?? '', 0, 1));
-                                        @endphp
-                                        <span style="font-size:14px; font-weight:700; color:#6B7280;">{{ $initials }}</span>
-                                    @endif
-                                </div>
-                                <div>
-                                    <div style="font-weight:700; font-size:14px; color:#111827;">
-                                        {{ $p->user?->name ?? 'Sistem' }}
-                                    </div>
-                                    <div style="font-size:12px; color:#6B7280;">
-                                        {{ $p->created_at?->format('d M Y, H:i') ?? '-' }}
-                                        @if($p->updated_at && $p->updated_at->gt($p->created_at))
-                                            <span style="font-style:italic; margin-left:4px;">(Diedit
-                                                {{ $p->updated_at->format('d M Y, H:i') }})</span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
+                            <x-eoffice::manajemen-praktikum.ui.announcement-author :announcement="$p" />
 
-                            @if($isMine)
+                            @if($isMine && $praktikum?->is_active)
                                 <x-eoffice::manajemen-praktikum.ui.action-menu>
-                                    <button type="button" class="primary" data-judul="{{ $p->judul }}" data-konten="{{ $p->konten }}"
-                                        @click="openEditModal({{ $p->id }}, $el.dataset.judul, $el.dataset.konten)">
+                                    <x-eoffice::manajemen-praktikum.ui.announcement-pin-actions :announcement="$p" role="asprak" />
+                                    <button type="button" class="primary" data-judul="{{ $p->judul }}" data-konten="{{ $p->konten }}" data-files="{{ json_encode($editableAttachments) }}"
+                                        @click="openEditModal({{ $p->id }}, $el.dataset.judul, $el.dataset.konten, JSON.parse($el.dataset.files))">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" /></svg>Edit Pengumuman
                                     </button>
                                     <form method="POST" action="{{ route('eoffice.manprak.asprak.pengumuman.destroy', $p->id) }}"
                                         onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengumuman ini?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="destructive"><x-eoffice::manajemen-praktikum.ui.icon name="trash" />Hapus Pengumuman</button>
+                                        <button type="submit" class="mp-delete-button destructive" aria-label="Hapus Pengumuman" title="Hapus Pengumuman"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                     </form>
                                 </x-eoffice::manajemen-praktikum.ui.action-menu>
                             @endif
@@ -94,8 +77,9 @@
                             <h3
                                 style="font-size:15px; font-weight:700; color:#111827; margin:0 0 4px 0; line-height:1.4; padding:0;">
                                 {{ $p->judul }}
+                                <x-eoffice::manajemen-praktikum.ui.announcement-pin-badge :announcement="$p" />
                             </h3>
-                            <p style="font-size:13px; color:#374151; margin:0; padding:0; line-height:1.6;">{{ $p->konten }}</p>
+                            <p class="mp-announcement-copy" style="font-size:13px; color:#374151; margin:0; padding:0; line-height:1.6;">{{ $p->konten }}</p>
                         </div>
 
                         {{-- Lampiran if any --}}
@@ -193,7 +177,7 @@
                                     style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#374151;">
                                     Isi Pengumuman <span style="color:#DC2626;">*</span>
                                 </label>
-                                <textarea name="konten" rows="3" maxlength="1000" required
+                                <textarea name="konten" class="mp-announcement-textarea" rows="10" maxlength="1000" required
                                     placeholder="Tulis isi pengumuman... (Maks. 1000 karakter)"
                                     style="width:100%; padding:10px 14px; border:1px solid #D1D5DB; border-radius:8px; font-size:14px; color:#111827; resize:vertical; min-height:80px; max-height:120px;">{{ old('konten') }}</textarea>
                             </div>
@@ -285,6 +269,7 @@
                             enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:16px;">
                             @csrf
                             @method('PUT')
+                            <input type="hidden" name="attachments_managed" value="1">
                             <input type="hidden" name="praktikum_id" value="{{ $asprak->praktikum_id ?? $praktikum->id }}">
 
                             <div>
@@ -301,7 +286,7 @@
                                     style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#374151;">
                                     Isi Pengumuman <span style="color:#DC2626;">*</span>
                                 </label>
-                                <textarea name="konten" x-model="editModal.konten" rows="3" maxlength="1000" required
+                                <textarea name="konten" class="mp-announcement-textarea" x-model="editModal.konten" rows="10" maxlength="1000" required
                                     placeholder="Tulis isi pengumuman... (Maks. 1000 karakter)"
                                     style="width:100%; padding:10px 14px; border:1px solid #D1D5DB; border-radius:8px; font-size:14px; color:#111827; resize:vertical; min-height:80px; max-height:120px;"></textarea>
                             </div>
@@ -309,10 +294,18 @@
                             <div>
                                 <label
                                     style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#374151;">
-                                    Lampiran Baru
-                                    <br><span style="font-size:11px; font-weight:400; color:#6B7280;">Mengunggah file baru
-                                        akan menimpa semua lampiran lama pengumuman ini.</span>
+                                    Berkas Lampiran
                                 </label>
+                                <div x-show="retainedFiles.length" style="margin-bottom:16px">
+                                    <div style="font-size:13px;font-weight:600;color:#353849;margin-bottom:8px">Berkas Saat Ini:</div>
+                                    <template x-for="(file,index) in retainedFiles" :key="file.path">
+                                        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;border:1px solid #DFE1E7;border-radius:8px;background:#F8F9FB;margin-bottom:6px;min-width:0">
+                                            <input type="hidden" name="retained_files[]" :value="file.path">
+                                            <a :href="file.url" target="_blank" rel="noopener noreferrer" :title="file.name" style="display:flex;align-items:center;gap:8px;min-width:0;color:#0B266E;font-size:13px;text-decoration:none"><x-eoffice::manajemen-praktikum.ui.icon name="file" size="16" /><span x-text="file.name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></span></a>
+                                            <button type="button" @click="retainedFiles.splice(index,1)" aria-label="Hapus lampiran" style="flex-shrink:0;border:0;background:transparent;color:#DF1C41;cursor:pointer;padding:4px" class="mp-delete-button" title="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
+                                        </div>
+                                    </template>
+                                </div>
 
                                 <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">
                                     <button type="button" @click="$refs.fileInputEdit.click()"
@@ -328,7 +321,7 @@
                                     </button>
                                     <div
                                         style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#9CA3AF;">
-                                        <span x-text="editFiles.length + ' / 3 file terpilih'"></span>
+                                        <span x-text="(retainedFiles.length + editFiles.length) + ' / 3 berkas terpilih'"></span>
                                         <span>Maks. 5MB per file</span>
                                     </div>
                                 </div>
@@ -383,6 +376,7 @@
                 showModal: false,
                 files: [],
                 editFiles: [],
+                retainedFiles: [],
                 editModal: {
                     open: false,
                     id: null,
@@ -398,11 +392,12 @@
                         return;
                     }
                     let currentFiles = type === 'edit' ? this.editFiles : this.files;
-                    let totalFiles = currentFiles.length + selectedFiles.length;
+                    let retainedCount = type === 'edit' ? this.retainedFiles.length : 0;
+                    let totalFiles = currentFiles.length + retainedCount + selectedFiles.length;
 
                     if (totalFiles > 3) {
                         alert('Maksimal 3 file yang dapat diunggah!');
-                        selectedFiles = selectedFiles.slice(0, 3 - currentFiles.length);
+                        selectedFiles = selectedFiles.slice(0, Math.max(0, 3 - currentFiles.length - retainedCount));
                     }
 
                     if (type === 'edit') {
@@ -434,11 +429,12 @@
                         document.getElementById('hidden-lampiran').files = dt.files;
                     }
                 },
-                openEditModal(id, judul, konten) {
+                openEditModal(id, judul, konten, existingFiles = []) {
                     this.editModal.id = id;
                     this.editModal.judul = judul;
                     this.editModal.konten = konten;
                     this.editFiles = [];
+                    this.retainedFiles = existingFiles.map(file => ({...file}));
                     this.syncInput('edit');
                     this.editModal.open = true;
                 }

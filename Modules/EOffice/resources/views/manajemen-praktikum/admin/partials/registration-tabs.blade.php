@@ -1,6 +1,6 @@
 <nav aria-label="Jenis pendaftaran" style="display:flex;gap:10px;flex-wrap:wrap;">
     @foreach(['koor' => 'Koordinator', 'asprak' => 'Asisten'] as $tab => $tabLabel)
-        <a href="{{ route('eoffice.manprak.admin.pendaftaran-'.$tab.'.index') }}"
+        <a href="{{ route('eoffice.manprak.'.(request()->routeIs('eoffice.manprak.cerc.*')?'cerc':'admin').'.pendaftaran-'.$tab.'.index') }}"
            class="mp-btn {{ $activeRegistrationTab === $tab ? 'primary' : 'secondary' }} md"
            @if($activeRegistrationTab === $tab) aria-current="page" @endif>
             <x-eoffice::manajemen-praktikum.ui.icon name="file-check" />

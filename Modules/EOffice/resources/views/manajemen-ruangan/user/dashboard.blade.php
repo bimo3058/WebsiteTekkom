@@ -1,10 +1,10 @@
-<x-eoffice::manajemen-ruangan.layout pageTitle="Dashboard Peminjaman">
+<x-eoffice::manajemen-ruangan.layout pageTitle="Dashboard">
 
     <div>
         <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-5">
             <div class="min-w-0">
                 <h1 class="text-[20px] md:text-[22px] font-bold text-gray-900 tracking-tight">
-                    Dashboard Peminjaman
+                    Dashboard
                 </h1>
                 <p class="text-[13px] text-gray-500 mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span>Selamat datang kembali, <strong class="font-semibold text-gray-900">{{ $user->name }}</strong></span>

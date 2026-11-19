@@ -7,4 +7,7 @@
 .ta-options .ta-option:hover,.ta-options .ta-option:focus-visible{background:var(--c-bg);color:var(--c-fg-sec)}
 .ta-options .ta-option.selected{background:#EEF1F8;color:var(--c-primary);font-weight:700}
 </style>
+<style>
+.ta-option-search{position:sticky;top:0;z-index:1;background:white;padding:8px;border-bottom:1px solid #DFE1E7}.ta-option-search input{width:100%;min-width:0;border:1px solid #DFE1E7;border-radius:6px;background:#FAFAFA;padding:7px 10px;font-size:13px;color:#353849;outline:none}.ta-option-search input:focus{border-color:#0B266E}.ta-option-empty{padding:12px;margin:0;text-align:center;font-size:12px;color:#666D80}
+</style>
 @endonce

@@ -127,9 +127,12 @@ class TugasController extends Controller
             'file_path' => $filePath,
         ]);
 
-        // Auto-create eo_prak_pengumpulan_tugas if there are already scores in eo_prak_nilai_jenis_tugas
+        // Auto-create pengumpulan_tugas if there are already scores in nilai_jenis_tugas
         $this->syncExistingNilaiJenisToPengumpulan($tugas);
 
+        if ($tugas->is_published) \Modules\EOffice\Services\ManajemenPraktikum\StudentActivityNotification::send(
+            $tugas->modul->praktikum_id, 'Tugas baru', $tugas->judul.' telah dipublikasikan. Periksa tenggat pada halaman tugas.',
+            ['section'=>'tugas','praktikum_id'=>$tugas->modul->praktikum_id,'tugas_id'=>$tugas->id]);
         return redirect()->route('eoffice.manprak.asprak.tugas.index')->with('success', 'Tugas berhasil dibuat.');
     }
 
@@ -225,9 +228,15 @@ class TugasController extends Controller
 
         $filePath = count($finalPaths) > 0 ? json_encode(array_values($finalPaths)) : null;
 
+        $emptyAssignment = trim(strip_tags((string) $request->input('deskripsi', ''))) === '' && count($finalPaths) === 0;
+        if ($emptyAssignment && PengumpulanTugas::where('tugas_id', $tugas->id)->exists()) {
+            throw ValidationException::withMessages(['deskripsi'=>'Isi tugas tidak dapat dikosongkan karena sudah ada pengumpulan atau penilaian.']);
+        }
+
         $tugas->update([
             ...$request->only(['jenis_tugas', 'judul', 'deskripsi', 'deadline', 'deadline_acc', 'is_published']),
             'file_path' => $filePath,
+            'is_published' => ! $emptyAssignment && $request->boolean('is_published'),
         ]);
 
         foreach ($oldPathsToDelete as $oldPath) {
@@ -238,10 +247,10 @@ class TugasController extends Controller
             }
         }
 
-        // Auto-create/update eo_prak_pengumpulan_tugas if jenis_tugas changed or scores exist in eo_prak_nilai_jenis_tugas
+        // Auto-create/update pengumpulan_tugas if jenis_tugas changed or scores exist in nilai_jenis_tugas
         $this->syncExistingNilaiJenisToPengumpulan($tugas);
 
-        return redirect()->route('eoffice.manprak.asprak.tugas.index')->with('success', 'Tugas berhasil diperbarui.');
+        return redirect()->route('eoffice.manprak.asprak.tugas.index')->with('success', $emptyAssignment ? 'Isi tugas dikosongkan. Tugas tidak lagi dipublikasikan.' : 'Tugas berhasil diperbarui.');
     }
 
     public function destroy(int $id)
@@ -293,7 +302,7 @@ class TugasController extends Controller
             ->get()
             ->keyBy('daftar_praktikan_id');
 
-        // Ambil nilai jenis tugas sesuai jenis_tugas tugas ini (dari tabel eo_prak_nilai_jenis_tugas)
+        // Ambil nilai jenis tugas sesuai jenis_tugas tugas ini (dari tabel nilai_jenis_tugas)
         $nilaiJenis = NilaiJenisTugas::where('modul_id', $tugas->modul_id)
             ->where('jenis_tugas', $tugas->jenis_tugas)
             ->get()
@@ -307,7 +316,7 @@ class TugasController extends Controller
 
     /**
      * Beri nilai sekaligus set status ACC.
-     * Nilai tugas langsung masuk ke tabel eo_prak_nilai_praktikum (auto-sync).
+     * Nilai tugas langsung masuk ke tabel nilai_praktikum (auto-sync).
      */
     public function beriNilai(Request $request, int $id)
     {
@@ -322,12 +331,10 @@ class TugasController extends Controller
 
         $pengumpulan->update([
             'nilai' => $request->nilai,
-            'status_pengumpulan' => PengumpulanTugas::STATUS_ACC,
-            'catatan_revisi' => null,
-            'is_revision' => false,
+            'status_pengumpulan' => $pengumpulan->status_pengumpulan === PengumpulanTugas::STATUS_REVISI ? PengumpulanTugas::STATUS_REVISI : PengumpulanTugas::STATUS_ACC,
         ]);
 
-        // Sync nilai ke tabel eo_prak_nilai_jenis_tugas (two-way sync)
+        // Sync nilai ke tabel nilai_jenis_tugas (two-way sync)
         $tugas = $pengumpulan->tugas;
         if ($tugas && $tugas->jenis_tugas) {
             NilaiJenisTugas::updateOrCreate(
@@ -340,10 +347,10 @@ class TugasController extends Controller
             );
         }
 
-        // Auto-sync nilai ke tabel eo_prak_nilai_praktikum
+        // Auto-sync nilai ke tabel nilai_praktikum
         $this->syncNilaiTugas($pengumpulan);
 
-        return back()->with('success', 'Nilai berhasil disimpan dan status diubah ke ACC.');
+        return back()->with('success', 'Nilai berhasil disimpan.');
     }
 
     /**
@@ -368,6 +375,9 @@ class TugasController extends Controller
         }
         $paths = \Modules\EOffice\Services\ManajemenPraktikum\ModuleRevisionAttachments::retained($pengumpulan->file_revisi_asprak,$request->input('retained_files',[]));
         $uploads=$request->file('file_revisi',[]);
+        if (count($paths) === 0 && count($uploads) === 0 && $pengumpulan->file_revisi_asprak) {
+            return $this->batalkanRevisi($request, $id);
+        }
         if (count($paths)+count($uploads)<1 || count($paths)+count($uploads)>3) {
             throw ValidationException::withMessages(['file_revisi'=>'Lampirkan minimal satu dan maksimal tiga berkas revisi.']);
         }
@@ -401,12 +411,37 @@ class TugasController extends Controller
             'status_pengumpulan' => PengumpulanTugas::STATUS_REVISI,
         ]);
 
+        $studentId = $pengumpulan->daftarPraktikan?->user_id;
+        if ($studentId) app(\Modules\EOffice\Services\NotifikasiService::class)->kirim($studentId,
+            'Revisi tugas', 'Ada revisi untuk '.$pengumpulan->tugas->judul.'. Periksa berkas revisi pada halaman tugas.',null,'mahasiswa',
+            ['section'=>'tugas','praktikum_id'=>$pengumpulan->tugas->modul->praktikum_id,'tugas_id'=>$pengumpulan->tugas_id]);
         return back()->with('success', 'Revisi berhasil dikirim ke mahasiswa.');
+    }
+
+    public function batalkanRevisi(Request $request, int $id)
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+            $submission = PengumpulanTugas::with('tugas.modul.praktikum')->lockForUpdate()->findOrFail($id);
+            abort_unless($this->ownsModul((int)$submission->tugas?->modul_id), 403);
+            abort_unless($submission->tugas?->modul?->praktikum?->is_active, 403, 'Praktikum telah diarsipkan.');
+            if ($submission->status_pengumpulan !== PengumpulanTugas::STATUS_REVISI) {
+                throw ValidationException::withMessages(['revisi'=>'Revisi tidak dapat dibatalkan karena status pengumpulan sudah berubah. Muat ulang halaman.']);
+            }
+            $before = $submission->only(['file_revisi_asprak','catatan_revisi','status_pengumpulan','is_revision']);
+            $submission->update(['file_revisi_asprak'=>null,'catatan_revisi'=>null,'is_revision'=>false,
+                'status_pengumpulan'=>$submission->nilai !== null ? PengumpulanTugas::STATUS_ACC : PengumpulanTugas::STATUS_BELUM_DICEK]);
+            \App\Services\AuditLogger::log('eoffice','UPDATE','Membatalkan revisi tugas',null,
+                ['pengumpulan_id'=>$submission->id]+$before,['status_pengumpulan'=>$submission->status_pengumpulan]);
+            $userId = $submission->daftarPraktikan?->user_id;
+            if ($userId) app(\Modules\EOffice\Services\NotifikasiService::class)->kirim($userId,
+                'Revisi tugas dibatalkan','Revisi untuk '.$submission->tugas->judul.' telah dibatalkan oleh asisten.',null,'mahasiswa');
+        });
+        return back()->with('success','Revisi berhasil dibatalkan.');
     }
 
     /**
      * Update nilai jenis tugas dari halaman Lihat Pengumpulan (two-way sync).
-     * Menyimpan ke eo_prak_nilai_jenis_tugas — sumber kebenaran tunggal.
+     * Menyimpan ke nilai_jenis_tugas — sumber kebenaran tunggal.
      */
     public function updateNilaiJenis(Request $request, int $id)
     {
@@ -441,14 +476,14 @@ class TugasController extends Controller
                 ['nilai' => $nilaiValue]
             );
 
-            // Sync ke eo_prak_pengumpulan_tugas
+            // Sync ke pengumpulan_tugas
             $pengumpulan = PengumpulanTugas::firstOrCreate([
                 'tugas_id' => $tugas->id,
                 'daftar_praktikan_id' => $daftarPraktikanId,
             ]);
             $pengumpulan->update([
                 'nilai' => $nilaiValue,
-                'status_pengumpulan' => $nilaiValue !== null ? 'acc' : 'belum_dicek',
+                'status_pengumpulan' => $pengumpulan->status_pengumpulan === 'revisi' ? 'revisi' : ($nilaiValue !== null ? 'acc' : 'belum_dicek'),
             ]);
         }
 
@@ -467,8 +502,8 @@ class TugasController extends Controller
     }
 
     /**
-     * Helper: Jika form tugas baru dibuat, ambil semua nilai di eo_prak_nilai_jenis_tugas yang sudah ada
-     * dan buatkan form eo_prak_pengumpulan_tugas otomatis dengan nilai tersebut.
+     * Helper: Jika form tugas baru dibuat, ambil semua nilai di nilai_jenis_tugas yang sudah ada
+     * dan buatkan form pengumpulan_tugas otomatis dengan nilai tersebut.
      */
     private function syncExistingNilaiJenisToPengumpulan(Tugas $tugas): void
     {
@@ -486,11 +521,11 @@ class TugasController extends Controller
                 'daftar_praktikan_id' => $nj->daftar_praktikan_id,
             ]);
 
-            // Jika belum ada nilainya di eo_prak_pengumpulan_tugas, update
+            // Jika belum ada nilainya di pengumpulan_tugas, update
             if ($pengumpulan->nilai === null) {
                 $pengumpulan->update([
                     'nilai' => $nj->nilai,
-                    'status_pengumpulan' => 'acc',
+                    'status_pengumpulan' => $pengumpulan->status_pengumpulan === 'revisi' ? 'revisi' : 'acc',
                 ]);
             }
 
@@ -499,7 +534,7 @@ class TugasController extends Controller
     }
 
     /**
-     * Sync nilai tugas rata-rata ke tabel eo_prak_nilai_praktikum.
+     * Sync nilai tugas rata-rata ke tabel nilai_praktikum.
      * Nilai akhir dihitung dari rata-rata nilai semua tugas pada praktikum.
      */
     private function syncNilaiTugas(PengumpulanTugas $pengumpulan): void

@@ -19,7 +19,13 @@ class Praktikum extends Model
 
     public function laporanLabel(): string
     {
-        return Str::contains(Str::lower($this->nama ?? ''), 'multimedia') ? 'Lembar Analisis' : 'Laporan';
+        if (Str::contains(Str::lower($this->nama ?? ''), 'multimedia')) return 'Lembar Analisis';
+        $course=$this->relationLoaded('matkul')?$this->getRelation('matkul'):null;
+        if (!$this->relationLoaded('matkul') && ($this->getAttributes()['matkul_id'] ?? null)) {
+            $course=$this->matkul()->first();
+            $this->setRelation('matkul',$course);
+        }
+        return Str::contains(Str::lower($course?->nama ?? ''), 'multimedia') ? 'Lembar Analisis' : 'Laporan';
     }
 
     public function moduleTaskTypes(): array
@@ -125,7 +131,7 @@ class Praktikum extends Model
                 'user_id'    => Auth::id(),
                 'action'     => $action,
                 'subject_type' => 'Praktikum',
-                // The audit subject_id column is numeric; retain the UUID in the payload.
+                'subject_id' => (string) $this->getKey(),
                 'description' => 'Perubahan praktikum '.$this->getKey(),
                 'old_data' => $old,
                 'new_data' => array_merge($new ?? [], ['id' => $this->getKey()]),

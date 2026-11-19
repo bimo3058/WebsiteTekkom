@@ -34,6 +34,7 @@ class PengajuanModulServiceTest extends TestCase
             $table->string('tahun_ajaran');
             $table->string('semester');
             $table->string('status')->default('aktif');
+            $table->boolean('is_active')->default(true);
             $table->string('status_pelaksanaan')->default('persiapan');
             $table->timestamp('started_at')->nullable();
             $table->softDeletes();
@@ -89,6 +90,65 @@ class PengajuanModulServiceTest extends TestCase
             'tahun_ajaran' => '2026/2027',
             'semester' => 'Ganjil',
         ]);
+    }
+
+    private function unchangedPreviousDraft(): PengajuanModul
+    {
+        $old=Praktikum::create(['nama'=>'Periode Lama','matkul_id'=>10,'tahun_ajaran'=>'2025/2026','semester'=>'Genap']);
+        $old->modul()->create(['nama'=>'Modul Lama','urutan'=>1]);
+        return (new PengajuanModulService)->buatDraft(Praktikum::findOrFail(self::PRAKTIKUM_ID),1);
+    }
+
+    public function test_unchanged_previous_modules_can_be_used_without_fabricating_lecturer_review(): void
+    {
+        $draft=$this->unchangedPreviousDraft();$service=new PengajuanModulService;
+        $service->pakaiModulTetap($draft,1);
+        $this->assertSame(['Modul Lama'],Praktikum::findOrFail(self::PRAKTIKUM_ID)->modul()->pluck('nama')->all());
+        $this->assertSame('disetujui',$draft->fresh()->status);
+        $this->assertNull($draft->fresh()->direview_oleh);
+        $this->assertNull($draft->fresh()->direview_at);
+        $this->assertStringContainsString('di luar sistem',$draft->fresh()->catatan_pengajuan);
+        try{$service->pakaiModulTetap($draft,1);$this->fail('Repeated activation accepted');}
+        catch(ValidationException){$this->assertSame(1,Praktikum::findOrFail(self::PRAKTIKUM_ID)->modul()->count());}
+    }
+
+    public function test_previous_modules_cannot_bypass_review_after_modification(): void
+    {
+        $draft=$this->unchangedPreviousDraft();
+        $draft->items()->first()->update(['nama_baru'=>'Diubah','aksi'=>'ubah']);
+        try{(new PengajuanModulService)->pakaiModulTetap($draft,1);$this->fail('Modified draft accepted');}
+        catch(ValidationException){$this->assertSame(0,Praktikum::findOrFail(self::PRAKTIKUM_ID)->modul()->count());}
+    }
+
+    public function test_previous_modules_are_locked_after_practicum_starts(): void
+    {
+        $draft=$this->unchangedPreviousDraft();
+        Praktikum::whereKey(self::PRAKTIKUM_ID)->update(['started_at'=>now()]);
+        $this->expectException(ValidationException::class);
+        (new PengajuanModulService)->pakaiModulTetap($draft,1);
+    }
+
+    public function test_previous_modules_cannot_be_activated_by_another_coordinator(): void
+    {
+        $draft=$this->unchangedPreviousDraft();
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        (new PengajuanModulService)->pakaiModulTetap($draft,2);
+    }
+
+    public function test_previous_modules_cannot_bypass_a_pending_lecturer_review(): void
+    {
+        $draft=$this->unchangedPreviousDraft();$draft->update(['status'=>'diajukan']);
+        $this->expectException(ValidationException::class);
+        (new PengajuanModulService)->pakaiModulTetap($draft,1);
+    }
+
+    public function test_previous_module_button_and_cerc_dashboard_templates_compile(): void
+    {
+        $source=file_get_contents(base_path('Modules/EOffice/resources/views/manajemen-praktikum/koordinator/modul.blade.php'));
+        $this->assertStringContainsString('Gunakan Modul Lama',$source);
+        $this->assertNotEmpty(token_get_all(app('blade.compiler')->compileString($source),TOKEN_PARSE));
+        $dashboard=file_get_contents(base_path('Modules/EOffice/resources/views/manajemen-praktikum/cerc/dashboard.blade.php'));
+        $this->assertStringNotContainsString('booking dibatalkan untuk jadwal hari ini',$dashboard);
     }
 
     public function test_memindahkan_modul_menggeser_urutan_lain_dan_merapikan_penghapusan(): void

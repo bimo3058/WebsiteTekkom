@@ -818,7 +818,7 @@
                                     <div class="space-y-1.5">
                                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">NIM / NIP</label>
                                         <input type="text" class="w-full bg-slate-100/80 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium text-gray-600 cursor-not-allowed outline-none"
-                                            value="{{ $nim ?? '00000' }}" readonly>
+                                            value="{{ $nim ?? '-' }}" readonly>
                                     </div>
                                 </div>
                                 <div class="space-y-1.5">

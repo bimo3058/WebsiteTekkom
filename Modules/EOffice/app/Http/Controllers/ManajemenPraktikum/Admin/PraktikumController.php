@@ -49,7 +49,8 @@ class PraktikumController extends Controller
             $query->where('tahun_ajaran', $tahunAjaran);
         }
 
-        $perPage = $request->input('per_page', 10);
+        $perPage = in_array((int) $request->input('per_page', 10), [5, 10, 20, 25, 50], true)
+            ? (int) $request->input('per_page', 10) : 10;
         $praktikums = $query->paginate($perPage)->withQueryString()->fragment('daftar-praktikum');
 
         // Dosen list untuk dropdown di modal create
@@ -150,7 +151,7 @@ class PraktikumController extends Controller
 
         $data = $request->validated();
 
-        if (array_key_exists('dosen_ids', $data) && ! empty($data['dosen_ids'])) {
+        if (($data['status'] ?? $praktikum->status) === 'aktif' && array_key_exists('dosen_ids', $data) && ! empty($data['dosen_ids'])) {
             $validDosenIds = [];
             foreach ($data['dosen_ids'] as $dosenId) {
                 if ($dosenId) {
@@ -170,8 +171,7 @@ class PraktikumController extends Controller
 
                 return back()->withInput()->with('error', 'User yang dipilih untuk dosen tidak valid atau tidak memiliki role dosen.');
             }
-            // Sync dosen
-            $praktikum->dosens()->sync($validDosenIds);
+            // Applied atomically with the status change below.
         }
 
         if (array_key_exists('koor_id', $data) && ! empty($data['koor_id'])) {
@@ -192,7 +192,9 @@ class PraktikumController extends Controller
         if (isset($data['status'])) {
             $data['is_active'] = $data['status'] === 'aktif';
         }
-        $praktikum->update($data);
+        $praktikum = app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumLifecycle::class)->save(
+            $id, $data, $validDosenIds ?? null, $request->boolean('status_confirmed'), $request->input('previous_status')
+        );
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
@@ -277,12 +279,13 @@ class PraktikumController extends Controller
     /**
      * PATCH /eoffice/manprak/admin/praktikum/{id}/toggle-active
      */
-    public function toggleActive(string $id)
+    public function toggleActive(Request $request, string $id)
     {
         $praktikum = Praktikum::findOrFail($id);
-        $praktikum->is_active = ! $praktikum->is_active;
-        $praktikum->status = $praktikum->is_active ? 'aktif' : 'nonaktif';
-        $praktikum->save();
+        $praktikum = app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumLifecycle::class)->save(
+            $id, ['status'=>$praktikum->is_active?'nonaktif':'aktif'], null,
+            $request->boolean('status_confirmed'), $request->input('previous_status')
+        );
 
         $statusText = $praktikum->is_active ? 'diaktifkan' : 'ditutup (diarsipkan)';
 
@@ -295,21 +298,36 @@ class PraktikumController extends Controller
     public function bulkToggleActive(Request $request)
     {
         $request->validate([
-            'praktikum_ids' => 'required|array',
-            'praktikum_ids.*' => 'exists:eo_prak_praktikum,id',
+            'praktikum_ids' => 'required|array|min:1|max:50',
+            'praktikum_ids.*' => 'required|distinct|exists:eo_prak_praktikum,id',
             'action' => 'required|in:activate,deactivate',
+            'status_confirmed' => 'required|accepted',
+            'previous_statuses' => 'required|array',
+            'previous_statuses.*' => 'required|in:aktif,nonaktif',
         ]);
 
         $isActive = $request->action === 'activate' ? true : false;
         $status = $isActive ? 'aktif' : 'nonaktif';
 
-        Praktikum::whereIn('id', $request->praktikum_ids)->update([
-            'is_active' => $isActive,
-            'status' => $status,
-        ]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $status) {
+            foreach (collect($request->praktikum_ids)->unique()->sort() as $id) {
+                $praktikum = Praktikum::lockForUpdate()->findOrFail($id);
+                if ($request->input('previous_statuses.'.$id) !== $praktikum->status) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'status' => 'Status praktikum telah berubah. Muat ulang halaman dan pilih kembali.',
+                    ]);
+                }
+                // Selecting a practicum already in the target state must not revoke assignments again.
+                if ($praktikum->status === $status) {
+                    continue;
+                }
+                app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumLifecycle::class)->save(
+                    $id, ['status'=>$status], null, $request->boolean('status_confirmed'),
+                    $request->input('previous_statuses.'.$id)
+                );
+            }
+        });
 
-        $statusText = $isActive ? 'diaktifkan kembali' : 'ditutup (diarsipkan)';
-
-        return back()->with('success', 'Berhasil! '.count($request->praktikum_ids)." praktikum telah {$statusText}.");
+        return back()->with('success', "Status praktikum terpilih berhasil diperbarui. Praktikum yang sudah sesuai tidak diubah.");
     }
 }

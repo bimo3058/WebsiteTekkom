@@ -1,11 +1,12 @@
         @php
             // Resolve navigation from the current route, never from role priority.
             $breadcrumbRole = str_replace('manprak.', '', $activeSection['match'] ?? 'manprak.mahasiswa');
-            $praktikumListRoute = "eoffice.manprak.{$breadcrumbRole}.praktikum.index";
+            $praktikumListRoute = $breadcrumbRole==='cerc' ? 'eoffice.manprak.cerc.kelola-role.index' : "eoffice.manprak.{$breadcrumbRole}.praktikum.index";
             $praktikumListHref = route($praktikumListRoute);
             $praktikumHref = null;
             if ($breadcrumbPraktikum) {
                 $praktikumHref = match ($breadcrumbRole) {
+                    'cerc' => route('eoffice.manprak.cerc.kelola-role.index', ['praktikum_id'=>$breadcrumbPraktikum->id]),
                     'admin' => route('eoffice.manprak.admin.praktikum.detail', $breadcrumbPraktikum->id),
                     'mahasiswa' => route('eoffice.manprak.mahasiswa.pengumuman.index', ['praktikum_id' => $breadcrumbPraktikum->id]),
                     default => route("eoffice.manprak.{$breadcrumbRole}.praktikum.show", $breadcrumbPraktikum->id),
@@ -55,12 +56,7 @@
                 <strong aria-current="page" title="{{ $breadcrumbTitle }}">{{ $breadcrumbTitle }}</strong>
             </nav>
             <div class="mp-topbar-actions">
-                @if($notifCount > 0)
-                    <span class="mp-notification-count" title="{{ $notifCount }} notifikasi belum dibaca" aria-label="{{ $notifCount }} notifikasi belum dibaca">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9 M10 21a2 2 0 0 0 4 0"/></svg>
-                        {{ $notifCount > 99 ? '99+' : $notifCount }}
-                    </span>
-                @endif
+                <x-eoffice::manajemen-praktikum.ui.notification-bell :count="$notifCount" :role="$breadcrumbRole" />
                 <a href="{{ route('profile.edit') }}" class="mp-account" title="Pengaturan profil" aria-label="Pengaturan profil {{ $name }}">
                     <span class="mp-account-avatar" aria-hidden="true">
                         @if($user->avatar_url)

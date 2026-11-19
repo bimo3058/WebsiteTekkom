@@ -124,7 +124,7 @@ class AbsensiController extends Controller
                 $task=\Modules\EOffice\Models\Tugas::where('modul_id',$modulId)->where('jenis_tugas',$type)->first();
                 if($task){
                     $submission=\Modules\EOffice\Models\PengumpulanTugas::firstOrCreate(['tugas_id'=>$task->id,'daftar_praktikan_id'=>$id]);
-                    $submission->update(['nilai'=>$value,'status_pengumpulan'=>$value!==null?'acc':'belum_dicek']);
+                    $submission->update(['nilai'=>$value,'status_pengumpulan'=>$submission->status_pengumpulan==='revisi'?'revisi':($value!==null?'acc':'belum_dicek')]);
                 }
             }
             if(collect($data['absensi'])->contains(fn($item)=>filled($item['status'] ?? null))) Praktikum::whereKey($modul->praktikum_id)->whereNull('started_at')->update(['status_pelaksanaan'=>'berjalan','started_at'=>now()]);

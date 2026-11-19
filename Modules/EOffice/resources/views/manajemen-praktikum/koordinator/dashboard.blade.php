@@ -116,6 +116,8 @@
             </div>
         </div>
 
+        <x-eoffice::manajemen-praktikum.ui.practicum-schedule :praktikum="$praktikum" role="koor" :dashboard="true" />
+
         {{-- ═══════════════════════════════════════════════
         MIDDLE ROW: Pendaftaran Asisten
         ═══════════════════════════════════════════════ --}}

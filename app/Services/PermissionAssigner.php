@@ -13,6 +13,8 @@ class PermissionAssigner
         'admin_banksoal' => ['banksoal'],
         'admin_capstone' => ['capstone'],
         'admin_eoffice' => ['eoffice'],
+        'admin_praktikum' => ['eoffice'],
+        'koordinator_cerc' => ['eoffice'],
         'admin_kemahasiswaan' => ['kemahasiswaan'],
         'dosen' => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
         'mahasiswa' => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],

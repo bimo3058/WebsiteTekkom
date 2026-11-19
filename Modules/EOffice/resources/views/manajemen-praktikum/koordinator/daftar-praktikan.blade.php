@@ -42,6 +42,7 @@
     {{-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
     
 
+<x-eoffice::manajemen-praktikum.ui.practicum-schedule :praktikum="$praktikum" role="koor" />
     <div class="mp-card shrink-0" style="overflow:visible">
         <x-eoffice::manajemen-praktikum.ui.participants-header :search="$search" :praktikum="$praktikum" :export-url="route('eoffice.manprak.koor.praktikan.export')" />
 
@@ -183,6 +184,9 @@
     {{-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
     
     
+    @if($groupingLocked)
+        <div class="mp-alert warning" style="margin-block-start:24px;">{{ \Modules\EOffice\Services\PracticumGroupingLock::MESSAGE }}</div>
+    @else
     <div class="mp-card" style="margin-block-start: 24px; margin-block-end: 24px;">
         <div style="padding: 24px;">
             <div style="font-weight:700; font-size:16px; color:#0D0D12; margin-block-end:16px;">Buat Kelompok & Shift</div>
@@ -191,15 +195,15 @@
                         <input type="hidden" name="praktikum_id" value="{{ $praktikum->id }}">
                         <div style="display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;">
                             <div style="flex:1;min-inline-size:150px;">
-                                <label class="block text-[12px] font-semibold text-[#353849] mb-1">Jumlah Kelompok</label>
-                                <input type="number" name="jumlah_kelompok" value="{{ $praktikum->jumlah_kelompok ?? 0 }}" min="0" class="mp-input" style="inline-size:100%; block-size:38px;">
+                                <label class="block text-[12px] font-semibold text-[#353849] mb-1">Jumlah Kelompok <span style="color:#DF1C41;">*</span></label>
+                                <input type="text" inputmode="numeric" pattern="[0-9]+" required name="jumlah_kelompok" value="{{ $praktikum->jumlah_kelompok ?? 0 }}" onfocus="if(this.value === '0') this.select()" onclick="if(this.value === '0') this.select()" class="mp-input" style="inline-size:100%; block-size:38px;">
                             </div>
                             <div style="flex:1;min-inline-size:150px;">
-                                <label class="block text-[12px] font-semibold text-[#353849] mb-1">Jumlah Shift</label>
-                                <input type="number" name="jumlah_shift" value="{{ $praktikum->jumlah_shift ?? 0 }}" min="0" class="mp-input" style="inline-size:100%; block-size:38px;">
+                                <label class="block text-[12px] font-semibold text-[#353849] mb-1">Jumlah Shift <span style="color:#DF1C41;">*</span></label>
+                                <input type="text" inputmode="numeric" pattern="[0-9]+" required name="jumlah_shift" value="{{ $praktikum->jumlah_shift ?? 0 }}" onfocus="if(this.value === '0') this.select()" onclick="if(this.value === '0') this.select()" class="mp-input" style="inline-size:100%; block-size:38px;">
                             </div>
                             <div style="flex:1.5;min-inline-size:180px;">
-                                <label class="block text-[12px] font-semibold text-[#353849] mb-1">Metode Pembagian</label>
+                                <label class="block text-[12px] font-semibold text-[#353849] mb-1">Metode Pembagian <span style="color:#DF1C41;">*</span></label>
                                 <x-eoffice::manajemen-praktikum.ui.select name="method" :options="[['value' => 'urutan_sistem', 'label' => 'Berurutan'], ['value' => 'acak', 'label' => 'Acak'], ['value' => 'manual', 'label' => 'Manual']]" :selected="$praktikum->metode_pembagian ?? 'urutan_sistem'" />
                             </div>
                             <div style="flex:1.5;min-inline-size:190px;">
@@ -217,6 +221,22 @@
         
         <div style="padding: 24px;">
             @if($hasDraft)
+                <form action="{{ route('eoffice.manprak.koor.praktikan.auto-plot') }}" method="POST" class="mb-4 rounded-[10px] border border-[#DFE1E7] p-4">
+                    @csrf
+                    <input type="hidden" name="praktikum_id" value="{{ $praktikum->id }}">
+                    <input type="hidden" name="remaining_only" value="1">
+                    <div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;">
+                        <div style="flex:1;min-width:220px;">
+                            <div style="font-size:14px;font-weight:600;color:#353849;">Bagikan Sisa Praktikan</div>
+                            <p style="font-size:12px;color:#666D80;margin:4px 0 0;">Anggota yang sudah ditempatkan tidak dipindahkan. Sisanya mengisi kelompok dengan anggota paling sedikit.</p>
+                        </div>
+                        <div style="min-width:180px;">
+                            <label class="block text-[12px] font-semibold text-[#353849] mb-1">Metode untuk sisa praktikan</label>
+                            <x-eoffice::manajemen-praktikum.ui.select name="method" :options="[['value' => 'urutan_sistem', 'label' => 'Berurutan'], ['value' => 'acak', 'label' => 'Acak']]" selected="urutan_sistem" />
+                        </div>
+                        <button type="submit" class="mp-btn primary md" :disabled="unassignedCount === 0">Bagikan Sisanya</button>
+                    </div>
+                </form>
                 <div class="mb-4 rounded-[10px] border px-4 py-3.5 {{ empty($draftErrors) ? 'border-[#A7F3D0] bg-[#ECFDF5]' : 'border-[#FCD34D] bg-[#FFFBEB]' }}">
                     <div style="font-size:13px;font-weight:700;color:#0D0D12;">Preview Draft {{ ucfirst(str_replace('_', ' ', $praktikum->metode_pembagian ?? 'manual')) }}</div>
                     @if(empty($draftErrors))
@@ -286,16 +306,14 @@
                 <form action="{{ route('eoffice.manprak.koor.praktikan.reset-plot') }}" method="POST" onsubmit="return confirm('YAKIN INGIN MENGOSONGKAN SELURUH ANGGOTA DARI SEMUA KELOMPOK? Data mahasiswa tidak akan hilang, hanya pembagian kelompoknya saja yang direset menjadi kosong.');">
                             @csrf
                             <input type="hidden" name="praktikum_id" value="{{ $praktikum->id }}">
-                            <button type="submit" style="inline-size:100%; background:#FFF0F0; color:#D32F2F; border:1px solid #FFCDD2; padding:12px 0; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:background 0.2s;" onmouseover="this.style.background='#FFE4E4'" onmouseout="this.style.background='#FFF0F0'">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                                Hapus Kelompok & Shift
-                            </button>
+                            <button type="submit" style="inline-size:100%; background:#FFF0F0; color:#D32F2F; border:1px solid #FFCDD2; padding:12px 0; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:background 0.2s;" onmouseover="this.style.background='#FFE4E4'" onmouseout="this.style.background='#FFF0F0'" class="mp-delete-button" aria-label="Hapus Kelompok & Shift" title="Hapus Kelompok & Shift"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                         </form>
             </div>
         </div>
     </div>
 
 
+    @endif
     {{-- MODAL SUB: EDIT ANGGOTA KELOMPOK                      --}}
     {{-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
     <template x-teleport="body">
@@ -322,28 +340,29 @@
 
                 {{-- Filter --}}
                 <div style="padding:16px 24px; border-block-end:1px solid #DFE1E7;">
-                    <div style="display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:12px;">
+                    <div style="display:grid;grid-template-columns:minmax(0,1fr);gap:12px;">
                         <div>
-                            <label class="block text-[12px] font-semibold text-[#353849] mb-1">Cari Mahasiswa</label>
-                            <input type="text" x-model="searchQuery" placeholder="Ketik nama atau NIM..." class="mp-input" style="inline-size:100%;">
-                        </div>
-                        <div>
-                            <label class="block text-[12px] font-semibold text-[#353849] mb-1">Shift Kelompok</label>
-                            <input type="text" x-model="activeShift" placeholder="Contoh: 1" class="mp-input" style="inline-size:100%;" required>
+                            <label for="group-member-search" class="block text-[12px] font-semibold text-[#353849] mb-1">Nama Mahasiswa</label>
+                            <input id="group-member-search" type="text" x-model="searchQuery" @focus="suggestionsOpen=true" @click="suggestionsOpen=true" @input="suggestionsOpen=true" @keydown.escape.stop="suggestionsOpen=false" placeholder="Cari nama atau NIM..." class="mp-input" style="inline-size:100%;" :aria-expanded="suggestionsOpen" aria-controls="group-member-suggestions" autocomplete="off">
                         </div>
                     </div>
                 </div>
                 
                 {{-- Daftar Mahasiswa --}}
-                <div style="flex:1; overflow-y:auto; padding:8px 24px;">
+                <div style="flex:1;min-height:0;position:relative;padding:8px 24px;">
+                  <div id="group-member-suggestions" x-show="suggestionsOpen" x-cloak
+                       x-transition:enter="transition ease-out duration-200"
+                       x-transition:enter-start="opacity-0 -translate-y-1"
+                       x-transition:enter-end="opacity-100 translate-y-0"
+                       x-transition:leave="transition ease-in duration-150"
+                       x-transition:leave-start="opacity-100 translate-y-0"
+                       x-transition:leave-end="opacity-0 -translate-y-1"
+                       @click.outside="if($event.target.id !== 'group-member-search') suggestionsOpen=false"
+                       style="display:none;position:absolute;top:0;left:24px;right:24px;z-index:30;background:#fff;max-height:216px;overflow-y:auto;overscroll-behavior:contain;border:1px solid #DFE1E7;border-radius:10px;box-shadow:0 8px 24px #0D0D1214;">
                     <template x-for="section in availableSections" :key="section.key">
                         <div>
-                            <div style="font-size:12px; color:#A4ABB8; margin:8px 0; font-weight:600;">
-                                <span x-text="section.label"></span>
-                                (<span x-text="section.items.length"></span>)
-                            </div>
                             <template x-for="p in section.items" :key="section.key + '-' + p.id">
-                                <label class="group cursor-pointer" style="display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:8px; transition:background 0.2s;" onmouseover="this.style.background='#F0F1F4'" onmouseout="this.style.background='transparent'">
+                                <label class="group cursor-pointer" style="display:flex; align-items:center; gap:12px; height:72px;box-sizing:border-box;padding:10px 12px; border-radius:8px; transition:background 0.2s;" onmouseover="this.style.background='#F0F1F4'" onmouseout="this.style.background='transparent'">
                                     <div class="relative flex items-center justify-center cursor-pointer">
                                           <input type="checkbox" :value="p.id" x-model="selectedMembers" class="hidden">
                                           <div class="w-5 h-5 rounded-md border-[1.5px] transition-all flex items-center justify-center group-hover:border-[#A4ABB8]"
@@ -356,17 +375,19 @@
                                           </div>
                                       </div>
                                     <div class="mp-av yellow" style="inline-size:32px;block-size:32px;font-size:12px;" x-text="p.inisial"></div>
-                                    <div style="flex:1;" :style="(p.kel !== null && p.kel !== '') ? 'opacity:0.6;' : ''">
-                                        <div style="font-weight:600; color:#0D0D12; font-size:13px;" x-text="p.nama"></div>
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="font-weight:600; color:#353849; font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" :title="p.nama" x-text="p.nama"></div>
                                         <div style="font-size:12px; color:#666D80; " x-text="p.nim"></div>
                                     </div>
-                                    <div x-show="p.kel !== null && p.kel !== '' && p.kel !== activeKelompok" style="font-size:11px; background:#F1F5F9; color:#475569; padding:2px 8px; border-radius:4px; font-weight:600; text-align:end;" x-text="'Kelompok ' + p.kel + ' Shift ' + (p.shift || '-')"></div>
-                                    <div x-show="p.kel === null || p.kel === ''" style="font-size:11px; background:#FEF2F2; color:#DC2626; padding:2px 8px; border-radius:4px; font-weight:600;">Kosong</div>
+                                    <span class="mp-badge neutral sm" style="flex-shrink:0;" x-text="selectedMembers.some(id => String(id) === String(p.id)) ? 'Kelompok ' + activeKelompok : (p.kel ? 'Kelompok ' + p.kel : 'Belum ada kelompok')"></span>
                                 </label>
                             </template>
                         </div>
                     </template>
+                    <p x-show="availableSections.length === 0" style="padding:16px;font-size:12px;color:#666D80;">Tidak ada mahasiswa yang sesuai.</p>
+                  </div>
 
+                  <div style="max-height:40vh;min-height:min(216px,40vh);overflow-y:auto;overscroll-behavior:contain;">
                     <div style="font-size:12px; color:#A4ABB8; margin:8px 0; font-weight:600;">ANGGOTA KELOMPOK (<span x-text="memberPraktikans.length"></span>)</div>
                     
                     <template x-for="p in memberPraktikans" :key="p.id">
@@ -398,10 +419,11 @@
                       </div>
                 </div>
 
+                  </div>
                 {{-- Footer --}}
                 <div class="mp-modal-footer mp-modal-footer-split" style="border-radius:0 0 12px 12px;">
                     <div style="font-size:13px; font-weight:600; color:#0D0D12;">
-                        Terpilih: <span style="color:#0B266E;" x-text="selectedMembers.length"></span> orang
+                        <span style="color:#0D0D12;font-size:12px;font-weight:600;" x-text="memberRecommendation"></span>
                     </div>
                     <div class="mp-modal-actions" style="display:flex; gap:8px;">
                         <button @click="closeEditModal()" type="button" class="mp-btn secondary sm" style="color:#353849;">Batal</button>
@@ -419,6 +441,7 @@
 
 <script type="application/json" id="manajemen-kelompok-config">{!! json_encode([
     'praktikans' => $praktikansSemuaJSON,
+    'groupCount' => $draftGroups->count(),
     'csrf' => csrf_token(),
     'saveUrl' => route('eoffice.manprak.koor.praktikan.save-group-members'),
 ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}</script>
@@ -433,9 +456,19 @@
             activeKelompok: '',
             activeShift: '',
             searchQuery: '',
+            suggestionsOpen: false,
             isSaving: false,
             selectedMembers: [],
             allPraktikans: kelompokConfig.praktikans,
+            groupCount: Number(kelompokConfig.groupCount || 0),
+
+            get memberRecommendation() {
+                if (this.groupCount < 1 || this.allPraktikans.length === 0) return 'Rekomendasi: — anggota';
+                const average = this.allPraktikans.length / this.groupCount;
+                const lower = Math.floor(average);
+                const upper = Math.ceil(average);
+                return `Rekomendasi: ${lower === upper ? lower : lower + '–' + upper} anggota`;
+            },
             
             get unassignedCount() {
                 return this.allPraktikans.filter(p => p.kel === null || p.kel === '').length;
@@ -447,34 +480,13 @@
             },
 
             get availableSections() {
-                let isSearching = this.searchQuery.trim() !== '';
-                let available = this.allPraktikans.filter(p => {
-                    let isCurrentGroup = (p.kel === this.activeKelompok) || this.selectedMembers.includes(p.id) || this.selectedMembers.includes(p.id.toString());
-                    if(isCurrentGroup) return false;
-                    return this.matchesSearch(p);
-                });
-
-                return [
-                    {
-                        key: 'unassigned',
-                        label: 'BELUM MEMILIKI KELOMPOK',
-                        items: available.filter(p => p.kel === null || p.kel === '')
-                    },
-                    {
-                        key: 'other-groups',
-                        label: 'HASIL PENCARIAN DARI KELOMPOK LAIN',
-                        items: isSearching ? available.filter(p => p.kel !== null && p.kel !== '') : []
-                    }
-                ].filter(section => section.items.length > 0);
+                const items = this.allPraktikans.filter(p => this.matchesSearch(p));
+                return items.length ? [{key: 'students', items}] : [];
             },
 
             get memberPraktikans() {
-                let q = this.searchQuery.toLowerCase();
                 return this.allPraktikans.filter(p => {
-                    let isMemberOrSelected = (p.kel === this.activeKelompok) || this.selectedMembers.includes(p.id) || this.selectedMembers.includes(p.id.toString());
-                    if(!isMemberOrSelected) return false;
-                    if(q !== '') return p.nama.toLowerCase().includes(q) || p.nim.toLowerCase().includes(q);
-                    return true;
+                    return this.selectedMembers.some(id => String(id) === String(p.id));
                 });
             },
 
@@ -489,6 +501,7 @@
                 this.activeKelompok = kel.toString();
                 this.activeShift = shift.toString();
                 this.searchQuery = '';
+                this.suggestionsOpen = false;
                 
                 // Pre-fill checkboxes based on current members of this group
                 this.selectedMembers = this.allPraktikans

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Absensi per modul per praktikan.
  *
- * Tabel: eo_prak_absensi_praktikum
+ * Tabel: absensi_praktikum
  * status: hadir | izin | tidak_hadir
  */
 class Absensi extends Model

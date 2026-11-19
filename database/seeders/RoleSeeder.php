@@ -24,6 +24,9 @@ class RoleSeeder extends Seeder
             ['name' => 'dosen_koor',          'module' => 'global', 'is_academic' => true],
         ];
 
+        $roles[] = ['name'=>'admin_praktikum','module'=>'eoffice','is_academic'=>false];
+        $roles[] = ['name'=>'koordinator_cerc','module'=>'eoffice','is_academic'=>false];
+
         foreach ($roles as $role) {
             Role::firstOrCreate(
                 ['name' => $role['name'], 'guard_name' => 'web'],
