@@ -10,7 +10,7 @@ final class PageTitle
     /** @var array<string, string> */
     private const EXACT_TITLES = [
         'login' => 'Masuk',
-        'dev-login' => 'Masuk',
+        'admin.login' => 'Masuk Admin',
         'register' => 'Daftar Akun',
         'microsoft.redirect' => 'Masuk dengan SSO',
         'microsoft.callback' => 'Menghubungkan SSO',

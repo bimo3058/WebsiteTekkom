@@ -49,9 +49,15 @@ return new class extends Migration
                 }
             });
 
-        Schema::table('mk_kegiatan', function (Blueprint $table) {
+        $foreignKeys = Schema::getForeignKeys('mk_kegiatan');
+
+        Schema::table('mk_kegiatan', function (Blueprint $table) use ($foreignKeys) {
             if (DB::getDriverName() !== 'sqlite') {
-                $table->dropForeign(['dosen_pendamping_id']);
+                foreach ($foreignKeys as $foreignKey) {
+                    if ($foreignKey['columns'] === ['dosen_pendamping_id']) {
+                        $table->dropForeign($foreignKey['name']);
+                    }
+                }
             }
             $table->dropColumn('dosen_pendamping_id');
         });

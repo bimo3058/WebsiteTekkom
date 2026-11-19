@@ -1,3 +1,4 @@
+@include('superadmin.permission._policy')
 <script>
 function permissionActionDropdown() {
     return {
@@ -107,34 +108,28 @@ function permissionActionDropdown() {
         }
     };
 
-    window.executeAutopilot = function(card) {
+    window.executeAutopilot = function(card, fillDefaults = false) {
         if (!card) return;
         const activeCheckboxes = Array.from(card.querySelectorAll('.role-checkbox:checked'));
         const activeRoles      = activeCheckboxes.map(cb => cb.dataset.roleName);
-        const isFullAccess     = activeCheckboxes.some(cb => cb.dataset.isAcademic === '1' || cb.dataset.roleName === 'superadmin');
+        const inputs = Array.from(card.querySelectorAll('.perm-checkbox'));
+        const state = window.userPermissionEditor(activeRoles, inputs.filter(cb => cb.checked).map(cb => cb.value), inputs.map(cb => cb.value));
+        if (fillDefaults) state.refreshPermissions(true);
+        else state.init();
 
         card.querySelectorAll('.module-box').forEach(box => {
-            const allowedRoles = JSON.parse(box.dataset.allAllowedRoles || '[]');
-            const isAllowed    = isFullAccess || activeRoles.some(r => allowedRoles.includes(r));
+            const isAllowed    = state.moduleAllowed(box.dataset.module);
             const checkboxes   = box.querySelectorAll('.perm-checkbox');
-
-            if (isAllowed) {
-                box.style.opacity       = '1';
-                box.style.filter        = 'none';
-                box.style.pointerEvents = 'auto';
-                if (isFullAccess) {
-                    checkboxes.forEach(cb => cb.checked = true);
-                } else {
-                    checkboxes.forEach(cb => {
-                        const name = cb.dataset.perm.toLowerCase();
-                        cb.checked = (name.includes('view') || name.includes('index') || name.includes('read') || name.includes('edit') || name.includes('update'));
-                    });
-                }
-            } else {
-                box.style.opacity       = '0.35';
-                box.style.filter        = 'grayscale(1)';
-                box.style.pointerEvents = 'none';
-                checkboxes.forEach(cb => cb.checked = false);
+            box.style.opacity = isAllowed ? '1' : '0.5';
+            checkboxes.forEach(cb => {
+                cb.disabled = !isAllowed;
+                cb.checked = state.permissions.includes(cb.value);
+            });
+            const master = box.querySelector('.module-select-all');
+            if (master) {
+                master.disabled = !isAllowed;
+                master.checked = checkboxes.length > 0 && Array.from(checkboxes).every(cb => cb.checked);
+                master.indeterminate = !master.checked && Array.from(checkboxes).some(cb => cb.checked);
             }
         });
     };
@@ -171,7 +166,7 @@ function permissionActionDropdown() {
         if (e.target.id === 'btnConfirmSuperadmin') {
             if (!pendingRoleCheckbox) return;
             pendingRoleCheckbox.checked = true;
-            window.executeAutopilot(pendingRoleCheckbox.closest('.user-card'));
+            window.executeAutopilot(pendingRoleCheckbox.closest('.user-card'), true);
             window.closeSuperadminWarning();
         }
     });
@@ -202,15 +197,17 @@ function permissionActionDropdown() {
                     setTimeout(() => el.input?.focus(), 100);
                 }
             } else {
-                window.executeAutopilot(target.closest('.user-card'));
+                window.executeAutopilot(target.closest('.user-card'), true);
             }
         }
 
         // B. Module Select All (Pilih Semua di Card)
         if (target.classList.contains('module-select-all')) {
+            if (target.disabled) return;
             const key = target.dataset.moduleTarget;
             const checkboxes = document.querySelectorAll(`.perm-checkbox[data-module-key="${key}"]`);
             checkboxes.forEach(p => {
+                if (p.disabled) return;
                 p.checked = target.checked;
                 p.dispatchEvent(new Event('change', { bubbles: true }));
             });
@@ -277,7 +274,7 @@ function permissionActionDropdown() {
         
         pd.innerHTML = ud.innerHTML = '';
         
-        document.querySelectorAll('.perm-checkbox:checked').forEach(cb => {
+        document.querySelectorAll('.perm-checkbox:checked:not(:disabled)').forEach(cb => {
             const i = document.createElement('input'); 
             i.type = 'hidden'; i.name = 'permissions[]'; i.value = cb.value; 
             pd.appendChild(i);

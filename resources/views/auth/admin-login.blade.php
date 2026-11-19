@@ -1,5 +1,3 @@
-{{-- resources/views/auth/dev-login.blade.php --}}
-{{-- Accessible only via direct URL: /dev/login (not linked anywhere in UI) --}}
 <x-guest-layout>
 <style>
     :root {
@@ -21,11 +19,11 @@
     .sk-login-root {
         position: fixed; inset: 0;
         display: flex; flex-direction: column;
-        align-items: center; justify-content: center;
+        align-items: center;
         background: #fff;
         font-family: 'Inter Tight', system-ui, -apple-system, sans-serif;
         -webkit-font-smoothing: antialiased;
-        overflow: hidden;
+        overflow-y: auto;
     }
     .sk-bg-dots {
         position: absolute; inset: 0;
@@ -40,7 +38,8 @@
     }
     .sk-card {
         position: relative; z-index: 1;
-        width: 440px; background: #fff;
+        width: min(440px, calc(100% - 32px)); background: #fff;
+        margin: auto;
         border-radius: 16px; padding: 36px;
         box-shadow: 0 4px 24px rgba(13,13,18,0.08);
         border: 1px solid var(--c-border);
@@ -53,15 +52,6 @@
     }
     .sk-card-sub {
         text-align: center; font-size: 14px; color: var(--c-fg-muted);
-    }
-    .sk-dev-badge {
-        display: inline-flex; align-items: center; gap: 6px;
-        margin: 0 auto;
-        background: #FFF3CD; color: #7A4E10;
-        border: 1px solid rgba(211,156,61,0.35);
-        font-size: 11px; font-weight: 600;
-        padding: 4px 10px; border-radius: 9999px;
-        letter-spacing: .04em; text-transform: uppercase;
     }
     .sk-alert {
         padding: 12px 14px; border-radius: 10px;
@@ -103,9 +93,9 @@
     }
     .sk-back-link a:hover { opacity: 1; }
     .sk-footer {
-        position: absolute; bottom: 0; left: 0; right: 0;
         padding: 20px 40px;
         display: flex; align-items: center; justify-content: center; z-index: 1;
+        text-align: center;
     }
     .sk-footer span { font-size: 12px; color: var(--c-fg-placeholder); }
     .sk-footer-links { display: flex; gap: 20px; }
@@ -115,7 +105,7 @@
     }
     .sk-footer-links a:hover { color: var(--c-fg-muted); }
     @media (max-width: 520px) {
-        .sk-card { width: 100%; margin: 0 16px; padding: 28px 20px; }
+        .sk-card { padding: 28px 20px; }
         .sk-footer { padding: 16px 20px; flex-direction: column; gap: 8px; text-align: center; }
         .sk-footer-links { justify-content: center; }
     }
@@ -130,44 +120,40 @@
             <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="Logo UNDIP"
                  style="width:110px;height:110px;object-fit:contain;"/>
             <div>
-                <div class="sk-card-title">Developer Login</div>
-                <div class="sk-card-sub">Akses khusus SUPERADMIN. Jangan disebarkan.</div>
+                <h1 class="sk-card-title">Masuk Admin SITKOM</h1>
+                <p class="sk-card-sub">Gunakan email dan kata sandi akun admin Anda.</p>
             </div>
-            <span class="sk-dev-badge">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                SUPERADMIN Only
-            </span>
         </div>
 
         @if (session('status'))
             <div class="sk-alert sk-alert-warning">{{ session('status') }}</div>
         @endif
         @if ($errors->any())
-            <div class="sk-alert sk-alert-error">{{ $errors->first() }}</div>
+            <div class="sk-alert sk-alert-error" role="alert">{{ $errors->first() }}</div>
         @endif
 
-        <form method="POST" action="{{ route('login') }}">
+        <form method="POST" action="{{ route('admin.login.store') }}">
             @csrf
             <div class="sk-field-group">
                 <div class="sk-field">
-                    <label class="sk-label" for="email">Email Address <span>*</span></label>
+                    <label class="sk-label" for="email">Email <span>*</span></label>
                     <input id="email" class="sk-input" type="email" name="email"
                            value="{{ old('email') }}" placeholder="nama@undip.ac.id"
                            required autofocus autocomplete="username"/>
                 </div>
                 <div class="sk-field">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                        <label class="sk-label" for="password" style="margin-bottom:0;">Password <span>*</span></label>
+                        <label class="sk-label" for="password" style="margin-bottom:0;">Kata sandi <span>*</span></label>
                         <a href="{{ route('password.request') }}"
                            style="font-size:12px;font-weight:500;color:var(--c-primary);text-decoration:none;opacity:0.8;transition:opacity 0.15s;"
                            onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                            Ubah Password
+                            Ubah kata sandi
                         </a>
                     </div>
                     <input id="password" class="sk-input" type="password" name="password"
                            placeholder="••••••••" required autocomplete="current-password"/>
                 </div>
-                <button type="submit" class="sk-btn-submit">Login</button>
+                <button type="submit" class="sk-btn-submit">Masuk</button>
             </div>
         </form>
 

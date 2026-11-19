@@ -1,0 +1,535 @@
+{
+    "before_non_eo": "17504694748dcfb4eb7a2bed967559e1",
+    "applied": [
+        {
+            "table": "eo_prak_grade_batches",
+            "sql": "ALTER TABLE public.\"eo_prak_grade_batches\" ALTER COLUMN \"fingerprint\" TYPE character(64)",
+            "kind": "type",
+            "state": "applied",
+            "error": null
+        }
+    ],
+    "not_valid": [],
+    "blocked": [
+        {
+            "table": "eo_kp_mahasiswa",
+            "sql": "ALTER TABLE public.\"eo_kp_mahasiswa\" ADD CONSTRAINT \"eo_kp_mahasiswa_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint",
+            "state": "23505",
+            "error": "could not create unique index \"eo_kp_mahasiswa_pkey\""
+        },
+        {
+            "table": "eo_mr_peminjamans",
+            "sql": "ALTER TABLE public.\"eo_mr_peminjamans\" ADD CONSTRAINT \"eo_mr_peminjamans_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint",
+            "state": "23505",
+            "error": "could not create unique index \"eo_mr_peminjamans_pkey\""
+        },
+        {
+            "table": "eo_kerja_praktik",
+            "sql": "ALTER TABLE public.\"eo_kerja_praktik\" ADD CONSTRAINT \"eo_kerja_praktik_mahasiswa_id_foreign\" FOREIGN KEY (mahasiswa_id) REFERENCES public.eo_kp_mahasiswa(id) ON DELETE CASCADE",
+            "kind": "constraint",
+            "state": "42830",
+            "error": "there is no unique constraint matching given keys for referenced table \"eo_kp_mahasiswa\""
+        },
+        {
+            "table": "eo_kp_balancing",
+            "sql": "ALTER TABLE public.\"eo_kp_balancing\" ADD CONSTRAINT \"eo_kp_balancing_mahasiswa_id_foreign\" FOREIGN KEY (mahasiswa_id) REFERENCES public.eo_kp_mahasiswa(id) ON DELETE CASCADE",
+            "kind": "constraint",
+            "state": "42830",
+            "error": "there is no unique constraint matching given keys for referenced table \"eo_kp_mahasiswa\""
+        },
+        {
+            "table": "eo_mr_peminjamans",
+            "sql": "ALTER TABLE public.\"eo_mr_peminjamans\" ADD CONSTRAINT \"eo_mr_peminjamans_replaces_peminjaman_id_foreign\" FOREIGN KEY (replaces_peminjaman_id) REFERENCES public.eo_mr_peminjamans(id) ON DELETE SET NULL",
+            "kind": "constraint",
+            "state": "42830",
+            "error": "there is no unique constraint matching given keys for referenced table \"eo_mr_peminjamans\""
+        },
+        {
+            "table": "eo_prak_praktikum_legacy",
+            "sql": "ALTER TABLE public.\"eo_prak_praktikum_legacy\" ADD CONSTRAINT \"praktikum_dosen_id_foreign\" FOREIGN KEY (dosen_id) REFERENCES public.pengguna(id) ON DELETE NO ACTION",
+            "kind": "constraint",
+            "state": "42830",
+            "error": "there is no unique constraint matching given keys for referenced table \"pengguna\""
+        },
+        {
+            "table": "eo_prak_praktikum_legacy",
+            "sql": "ALTER TABLE public.\"eo_prak_praktikum_legacy\" ADD CONSTRAINT \"praktikum_koor_id_foreign\" FOREIGN KEY (koor_id) REFERENCES public.pengguna(id) ON DELETE NO ACTION",
+            "kind": "constraint",
+            "state": "42830",
+            "error": "there is no unique constraint matching given keys for referenced table \"pengguna\""
+        }
+    ],
+    "after_non_eo": "17504694748dcfb4eb7a2bed967559e1",
+    "original_values_unchanged": true,
+    "non_eo_unchanged": true,
+    "row_fingerprints": [
+        {
+            "table_name": "eo_approval",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_approval_config",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_arsip_surat",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_aturan_peminjaman",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_audit_logs",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_berkas_pendukung",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_disposisi_surat_masuk",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_field_template",
+            "rows": 1,
+            "hash": "f5b6229493abab6260bbcdb79b7dde3d"
+        },
+        {
+            "table_name": "eo_import_log",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_isi_surat",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_jadwal_kuliah",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_jenis_surat",
+            "rows": 1,
+            "hash": "d12c5d221dadf222300cf83c09063acc"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "rows": 5,
+            "hash": "8c9d62f5d5c48e3b7fa02a4dda3145fc"
+        },
+        {
+            "table_name": "eo_kp_balancing",
+            "rows": 2,
+            "hash": "3eb266498630770dae112d4b49999f1e"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "rows": 8,
+            "hash": "900a7793747fb6cf4d597473591f3d8c"
+        },
+        {
+            "table_name": "eo_kp_dosen",
+            "rows": 26,
+            "hash": "566f3bf21da3f2a88c65947e37f84826"
+        },
+        {
+            "table_name": "eo_kp_komponen_nilai",
+            "rows": 7,
+            "hash": "3de8fc830270a04fcaafdc3a46af6d24"
+        },
+        {
+            "table_name": "eo_kp_mahasiswa",
+            "rows": 15,
+            "hash": "9d2cbd1b0fc65abec37111f0b45136cd"
+        },
+        {
+            "table_name": "eo_kp_master_rubrik",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_kp_nilai_detail",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_kp_pengumuman",
+            "rows": 8,
+            "hash": "d907d24ddf998b04af2d5bc44efeeb75"
+        },
+        {
+            "table_name": "eo_kp_penilaian",
+            "rows": 1,
+            "hash": "86b7cd9c2a16125c44b30010afeed60e"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "rows": 2,
+            "hash": "d3334499b1a9ffb13c68112e0f6f5520"
+        },
+        {
+            "table_name": "eo_kp_seminar",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_kp_settings",
+            "rows": 3,
+            "hash": "654e9ecb026f2a81160b9835fc597b3c"
+        },
+        {
+            "table_name": "eo_kp_template",
+            "rows": 12,
+            "hash": "460431c6ef88a1d42d8a2337efb23074"
+        },
+        {
+            "table_name": "eo_lampiran",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_log_aktivitas",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_mi_barang",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_mi_kategori",
+            "rows": 1,
+            "hash": "04b33d11a3d4666190eb9f60e8f8ac9d"
+        },
+        {
+            "table_name": "eo_mi_satuan",
+            "rows": 1,
+            "hash": "6df62d7845566ff208710e4843b76047"
+        },
+        {
+            "table_name": "eo_mr_blacklists",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_mr_fasilitas",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "rows": 129,
+            "hash": "15d7789c3cea9d4693ec94a49fcfb055"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "rows": 62,
+            "hash": "0de0d570c42646864e910613bffe45c7"
+        },
+        {
+            "table_name": "eo_mr_pengaturan",
+            "rows": 4,
+            "hash": "70f284974e8ed9a2d2c37066cbd43af2"
+        },
+        {
+            "table_name": "eo_mr_ruangan_fasilitas",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_mr_ruangan_fotos",
+            "rows": 18,
+            "hash": "d23980da6b3e66bf16c720c0625ac86b"
+        },
+        {
+            "table_name": "eo_mr_ruangans",
+            "rows": 13,
+            "hash": "a5a5b73049ce293d8ac3bd398194e169"
+        },
+        {
+            "table_name": "eo_mr_tanggal_libur",
+            "rows": 1,
+            "hash": "2bd00f054dd46f4841a117aa6b3ade5a"
+        },
+        {
+            "table_name": "eo_ms_audit_log",
+            "rows": 15,
+            "hash": "a50948a9da6012564acc051ccf034957"
+        },
+        {
+            "table_name": "eo_ms_hak_akses",
+            "rows": 1,
+            "hash": "1bf72a43fa00e80a3e33a6cd29278886"
+        },
+        {
+            "table_name": "eo_ms_jawaban_field",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_ms_klasifikasi",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_ms_penandatangan",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_ms_pengajuan",
+            "rows": 2,
+            "hash": "9785afe0774fe00798fba580016cbb5e"
+        },
+        {
+            "table_name": "eo_ms_pengaturan",
+            "rows": 12,
+            "hash": "7dbfc824a8a3b541d84777d0acd80cc3"
+        },
+        {
+            "table_name": "eo_ms_unit_kerja",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_notifikasi",
+            "rows": 147,
+            "hash": "6486733a4ca601c007d97c9d8818a190"
+        },
+        {
+            "table_name": "eo_peminjaman",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_penomoran_counter",
+            "rows": 1,
+            "hash": "942eb3777e75636ac6babc886785410f"
+        },
+        {
+            "table_name": "eo_prak_absensi_praktikum",
+            "rows": 21,
+            "hash": "2b9bf340306b4c3db9848562a151877e"
+        },
+        {
+            "table_name": "eo_prak_asprak_praktikum",
+            "rows": 24,
+            "hash": "290cb97e8bc8a1d0d64eab1583890953"
+        },
+        {
+            "table_name": "eo_prak_booking_meetings",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_prak_booking_requests",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_prak_daftar_praktikan",
+            "rows": 22,
+            "hash": "735b3b79dbe5e3b942d2346211da9273"
+        },
+        {
+            "table_name": "eo_prak_extra_scores",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_prak_final_results",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_prak_grade_batches",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_prak_grade_policies",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_prak_grade_settings",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_prak_materi_modul",
+            "rows": 12,
+            "hash": "31dd220dbb574a9ef8cc709fa878829d"
+        },
+        {
+            "table_name": "eo_prak_matkul_praktikum",
+            "rows": 15,
+            "hash": "a6a85244a72987262a9095bed2926c68"
+        },
+        {
+            "table_name": "eo_prak_modul_asprak",
+            "rows": 11,
+            "hash": "dcb6fd423e1c1bd09a7b4155f69f6f42"
+        },
+        {
+            "table_name": "eo_prak_modul_praktikum",
+            "rows": 9,
+            "hash": "e2d51e5f0a54e1e0bc2d9dbe8880d993"
+        },
+        {
+            "table_name": "eo_prak_nilai_jenis_tugas",
+            "rows": 64,
+            "hash": "7d20985b9b7e9e2002572ac6e204d388"
+        },
+        {
+            "table_name": "eo_prak_nilai_praktikum",
+            "rows": 21,
+            "hash": "32c6afcbfa63ec0f3c9bd3aba5d4d53f"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "rows": 8,
+            "hash": "23c7ce67c3f198334a66bdd56ee00424"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "rows": 10,
+            "hash": "5c9219d87bc557b4c7f17a4a88e49f8f"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_praktikan",
+            "rows": 5,
+            "hash": "9956ea86df02bc036eb7b2d291ef3aab"
+        },
+        {
+            "table_name": "eo_prak_pengajuan_modul",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_prak_pengajuan_modul_item",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_prak_pengumpulan_tugas",
+            "rows": 18,
+            "hash": "26d5e0aa01a9c83cc4c8e2a08b99789e"
+        },
+        {
+            "table_name": "eo_prak_pengumuman_praktikum",
+            "rows": 57,
+            "hash": "e40db72c30ce560e74b170c8d248afeb"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "rows": 45,
+            "hash": "33d9c5409b738983caf731191bd4c7ee"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "rows": 19,
+            "hash": "6c2d2cdcedf45da00abbf959f5844aa8"
+        },
+        {
+            "table_name": "eo_prak_praktikum_dosen",
+            "rows": 22,
+            "hash": "119afed7c282ca972183e8f86e406448"
+        },
+        {
+            "table_name": "eo_prak_praktikum_legacy",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_prak_riwayat_pengumpulan_tugas",
+            "rows": 5,
+            "hash": "f4ead37a36f967192fd3254634c2b614"
+        },
+        {
+            "table_name": "eo_prak_schedule_periods",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_prak_score_histories",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_prak_ta_absensi",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_prak_ta_nilai",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_prak_ta_pengumpulan",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_prak_tugas_akhir",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_prak_tugas_praktikum",
+            "rows": 6,
+            "hash": "97a4d8eda4d4a46e2d4d477c10244b54"
+        },
+        {
+            "table_name": "eo_riwayat_status_surat",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_roles",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_ruangan",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_surat",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_surat_masuk",
+            "rows": 0,
+            "hash": null
+        },
+        {
+            "table_name": "eo_template_surat",
+            "rows": 1,
+            "hash": "bdc7940ef30cae6fc4c27a9743b1b269"
+        },
+        {
+            "table_name": "eo_user_profiles",
+            "rows": 0,
+            "hash": null
+        }
+    ],
+    "committed": true
+}

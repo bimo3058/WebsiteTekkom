@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\AdminLoginRequest;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\LocalPasswordSession;
 use App\Services\MicrosoftSsoSession;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,11 +21,29 @@ class AuthenticatedSessionController extends Controller
         return view('auth.login');
     }
 
+    public function createAdmin(): View
+    {
+        return view('auth.admin-login');
+    }
+
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
+
+        return $this->startSession($request, 'login');
+    }
+
+    public function storeAdmin(AdminLoginRequest $request): RedirectResponse
+    {
+        $request->authenticate(administrator: true);
+
+        return $this->startSession($request, 'admin.login');
+    }
+
+    private function startSession(LoginRequest $request, string $loginRoute): RedirectResponse
+    {
         $request->session()->forget([MicrosoftSsoSession::KEY, 'auth.after_microsoft_logout', 'sso_pending_user_id', 'sso_verified']);
-        $request->session()->put('auth.local_password', true);
+        $request->session()->put(LocalPasswordSession::KEY, true);
         $request->session()->regenerate();
 
         $user = auth()->user();
@@ -38,7 +59,7 @@ class AuthenticatedSessionController extends Controller
                 $message .= ' Alasan: '.$user->suspension_reason;
             }
 
-            return back()->withErrors(['email' => $message])->onlyInput('email');
+            return redirect()->route($loginRoute)->withErrors(['email' => $message])->onlyInput('email');
         }
 
         // 2. Query roles sekali, pakai untuk cache + redirect logic
@@ -63,7 +84,7 @@ class AuthenticatedSessionController extends Controller
 
         // Superadmin selalu prioritas utama
         if ($roleNames->contains('superadmin')) {
-            return redirect()->intended(route('superadmin.dashboard'));
+            return $this->redirectAfterLogin($user, 'superadmin.dashboard');
         }
 
         // Admin modul — masing-masing dikunci ke dashboard modulnya
@@ -72,25 +93,18 @@ class AuthenticatedSessionController extends Controller
             'admin_capstone' => 'capstone.dashboard',
             'admin_eoffice' => 'eoffice.dashboard',
             'admin_kemahasiswaan' => 'manajemenmahasiswa.dashboard',
-            'admin_praktikum' => 'eoffice.manprak.admin.dashboard',
+            'admin' => 'dashboard',
         ];
 
         foreach ($adminRedirects as $role => $routeName) {
             if ($roleNames->contains($role)) {
-                if ($role === 'admin_praktikum' && $roleNames->intersect(['mahasiswa', 'dosen', 'gpm', 'pengurus_himpunan', 'alumni', 'dosen_koor', 'dpm', 'ketua_departemen'])->isNotEmpty()) {
-                    continue;
-                }
-                if ($role === 'admin_praktikum' && $roleNames->count() === 1) {
-                    $request->session()->forget('url.intended');
-                    return redirect()->route($routeName);
-                }
-                return redirect()->intended(route($routeName));
+                return $this->redirectAfterLogin($user, $routeName);
             }
         }
 
         // Mahasiswa, Dosen, GPM, DPM, Ketua Departemen ke dashboard global
         if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm', 'pengurus_himpunan', 'alumni', 'dosen_koor', 'dpm', 'ketua_departemen'])->isNotEmpty()) {
-            return redirect()->intended(route('dashboard'));
+            return $this->redirectAfterLogin($user, 'dashboard');
         }
 
         // Protection layer: login sukses tapi tidak punya role yang dikenali
@@ -98,9 +112,18 @@ class AuthenticatedSessionController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->withErrors([
+        return redirect()->route($loginRoute)->withErrors([
             'email' => 'Akun Anda belum memiliki akses (Role) yang terdaftar. Silakan hubungi Administrator.',
         ]);
+    }
+
+    private function redirectAfterLogin(User $user, string $dashboard): RedirectResponse
+    {
+        if ($user->needsLocalPasswordChange()) {
+            return LocalPasswordSession::redirectToPasswordChange();
+        }
+
+        return redirect()->intended(route($dashboard));
     }
 
     public function destroy(Request $request): RedirectResponse

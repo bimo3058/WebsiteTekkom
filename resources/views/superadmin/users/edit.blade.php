@@ -48,40 +48,18 @@
 
         $dbModules = \App\Models\SystemModule::orderBy('id')->get();
 
-        /*
-        |----------------------------------------------------------------------
-        | FIX 2: Pisahkan data role untuk dua keperluan berbeda:
-        |
-        | (a) Alpine.js display → pakai NAME (string) agar cocok dengan
-        |     $roleList yang juga memakai name sebagai key, dan agar label
-        |     serta warna chip bisa di-lookup via window.roleStyles[name].
-        |
-        | (b) Hidden input form → pakai ID (integer) karena controller
-        |     updateRole() memvalidasi: 'roles.*' => ['exists:roles,id']
-        |     Kirim roles sebagai ID, bukan name.
-        |
-        | Solusi: Alpine state tetap menyimpan NAME, tapi saat render hidden
-        | input kita lookup ID dari $allRolesById (map name → id).
-        |----------------------------------------------------------------------
-        */
-
-        // Semua role dari DB, sudah di-eager-load di controller via:
-        // $user->load(['roles', 'permissions'])
-        // $roles = \App\Models\Role::orderBy('name')->get() → dikirim sebagai $roles
-
         // Role aktif user saat ini sebagai array of NAME (untuk Alpine.js initial state)
         $currentRoleNames = $user->roles->pluck('name')->toArray();
+        $availablePermissions = \App\Models\Permission::query()->pluck('name')->all();
+        $selectedPermissions = old('permissions', $user->permissions->pluck('name')->all());
     @endphp
 
+    @include('superadmin.permission._policy')
     <form action="{{ route('superadmin.users.update', $user) }}" method="POST" class="edit-wrap"
-          x-data="{
-              open: false,
-              selected: @js(old('roles', $currentRoleNames)),
-              removeRole(role) { this.selected = this.selected.filter(r => r !== role); },
-              addRole(role) { if (!this.selected.includes(role)) { this.selected.push(role); } this.open = false; }
-          }">
+          x-data="userPermissionEditor(@js(old('roles', $currentRoleNames)), @js($selectedPermissions), @js($availablePermissions))">
         @csrf
         @method('PATCH')
+        <input type="hidden" name="permissions_present" value="1">
         
         <div class="edit-box">
             {{-- ── Toolbar ── --}}
@@ -256,18 +234,6 @@
                             <template x-for="role in selected" :key="'hidden_' + role">
                                 <input type="hidden" name="roles[]" :value="role">
                             </template>
-                            {{-- 
-                                FIX: Gunakan x-if bukan x-show agar elemen benar-benar
-                                tidak di-render ke DOM (dan tidak ikut terkirim ke server)
-                                saat ada role yang dipilih. x-show hanya menyembunyikan
-                                secara visual tapi elemen tetap ada di DOM dan ikut submit.
-                                Nilai kosong "" akan menyebabkan validasi 'exists:roles,name'
-                                gagal dan roles tidak tersimpan sama sekali.
-                            --}}
-                            <template x-if="selected.length === 0">
-                                <input type="hidden" name="roles[]" value="">
-                            </template>
-
                             {{-- Menu Dropdown List --}}
                             <div x-show="open" x-cloak
                                  style="position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:50; background:#fff; border:1px solid #D4D5D8; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1); padding:5px; max-height:220px; overflow-y:auto;">
@@ -312,7 +278,7 @@
                                 */
                                 $perms = \App\Models\Permission::where('name', 'like', $pPrefix . '.%')->get();
                             @endphp
-                            <div class="module-box" style="border:1px solid #D4D5D8;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04); opacity: {{ $mod->is_active ? '1' : '0.6' }};">
+                            <div class="module-box" :style="{ opacity: moduleAllowed('{{ $pPrefix }}') ? 1 : 0.5 }" style="border:1px solid #D4D5D8;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04);">
                                 <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 15px;border-bottom:1px solid #E8E9EB;background:#fff;">
                                     <div style="display:flex;align-items:center;gap:10px;">
                                         <div style="width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;border:1px solid {{ $style['border'] }};background:{{ $style['bg'] }};">
@@ -321,19 +287,22 @@
                                             </svg>
                                         </div>
                                         <span style="font-size:12px;font-weight:900;color:#1E293B;">{{ $mod->name }}</span>
+                                        @if(!$mod->is_active)<span style="font-size:10px;color:#94A3B8;">Nonaktif</span>@endif
                                     </div>
                                     <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                                        <input type="checkbox" onclick="toggleAllPerms('{{ $pPrefix }}', this)" {{ !$mod->is_active ? 'disabled' : '' }}
+                                        <input type="checkbox" :disabled="!moduleAllowed('{{ $pPrefix }}')"
+                                            :checked="moduleSelected('{{ $pPrefix }}')"
+                                            x-effect="$el.indeterminate = modulePartiallySelected('{{ $pPrefix }}')"
+                                            @change="toggleModule('{{ $pPrefix }}', $event.target.checked)"
                                             style="width:15px; height:15px; border-radius:4px; border:1.5px solid #CBD5E1; cursor:pointer; accent-color:var(--c-primary);">
                                         <span style="font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em;">Pilih Semua</span>
                                     </label>
                                 </div>
                                 <div class="edit-permissions">
                                     @foreach($perms as $perm)
-                                        <label style="display:flex;align-items:center;gap:8px;cursor:{{ $mod->is_active ? 'pointer' : 'not-allowed' }};">
+                                        <label :style="{ cursor: moduleAllowed('{{ $pPrefix }}') ? 'pointer' : 'not-allowed' }" style="display:flex;align-items:center;gap:8px;">
                                             <input type="checkbox" name="permissions[]" value="{{ $perm->name }}" 
-                                                    {{ $user->permissions->contains('name', $perm->name) ? 'checked' : '' }}
-                                                {{ !$mod->is_active ? 'disabled' : '' }}
+                                                x-model="permissions" :disabled="!moduleAllowed('{{ $pPrefix }}')"
                                                 style="width:15px; height:15px; border-radius:4px; border:1.5px solid #CBD5E1; cursor:inherit; accent-color:var(--c-primary);">
                                             <span style="font-size:12px;font-weight:600;color:#64748B;">{{ $perm->display_name ?? \Illuminate\Support\Str::title(\Illuminate\Support\Str::after($perm->name, '.')) }}</span>
                                         </label>
@@ -357,14 +326,6 @@
     // window.roleStyles: dipakai Alpine untuk lookup label & warna chip
     window.roleStyles = @json($roleList);
 
-    function toggleAllPerms(moduleName, masterCheckbox) {
-        const checkboxes = document.querySelectorAll(`input[name="permissions[]"][value^="${moduleName}."]`);
-        checkboxes.forEach(cb => {
-            if (!cb.disabled) {
-                cb.checked = masterCheckbox.checked;
-            }
-        });
-    }
 </script>
 
 </x-sidebar>

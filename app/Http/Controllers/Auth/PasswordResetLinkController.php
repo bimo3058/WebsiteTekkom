@@ -60,7 +60,7 @@ class PasswordResetLinkController extends Controller
 
         event(new PasswordReset($user));
 
-        return redirect()->route('login')
+        return redirect()->route('admin.login')
             ->with('status', 'Password berhasil diubah. Silakan login dengan password baru.');
     }
 }
