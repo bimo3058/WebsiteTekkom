@@ -456,10 +456,23 @@
                                         {{ $pinjam->status }}
                                     </span>
                                     @if($isConflictRow)
-                                        <div class="mt-1">
-                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full" title="Terdapat {{ $conflictingPendings->count() }} pengajuan lain yang menunggu di slot waktu yang sama">
-                                                <span>Bentrok Slot</span>
-                                            </span>
+                                        @php
+                                            $firstConflict = $conflictingPendings->first();
+                                            $conflictJam = substr((string) $firstConflict->jam_mulai, 0, 5) . '–' . substr((string) $firstConflict->jam_selesai, 0, 5);
+                                            $conflictUser = $firstConflict->user->name ?? 'User';
+                                            $conflictTujuan = $firstConflict->tujuan ?: $firstConflict->source_label;
+                                            $conflictSummary = $conflictingPendings->count() === 1
+                                                ? "{$conflictTujuan} ({$conflictUser} · {$conflictJam})"
+                                                : "{$conflictTujuan} (+" . ($conflictingPendings->count() - 1) . ' lainnya)';
+                                            $conflictTooltip = $conflictingPendings->map(function ($c) {
+                                                $jam = substr((string) $c->jam_mulai, 0, 5) . '–' . substr((string) $c->jam_selesai, 0, 5);
+                                                return ($c->tujuan ?: $c->source_label) . ' — ' . ($c->user->name ?? 'User') . " ({$jam})";
+                                            })->implode("\n");
+                                        @endphp
+                                        <div class="mt-1.5">
+                                            <p class="text-[10px] leading-snug text-amber-800 max-w-[200px] line-clamp-2" title="Bentrok dengan:&#10;{{ $conflictTooltip }}">
+                                                <span class="font-semibold">Bentrok dengan:</span> {{ $conflictSummary }}
+                                            </p>
                                         </div>
                                     @endif
                                 </td>
@@ -719,11 +732,11 @@
                     </div>
 
                     <form id="actionForm" method="POST" :action="getFormAction()"
-                        class="flex flex-col flex-1 overflow-hidden">
+                        class="flex flex-col flex-1 min-h-0 overflow-hidden">
                         @csrf
                         <input type="hidden" name="status" x-model="selectedAction">
 
-                        <div class="p-6 flex-1 overflow-y-auto bg-white">
+                        <div class="p-6 flex-1 min-h-0 overflow-y-auto bg-white">
 
                             <!-- Ringkasan Informasi -->
                             <div class="mb-5 p-4 bg-white border border-slate-200 rounded-xl space-y-3 shadow-sm">
@@ -867,7 +880,7 @@
 
                             <!-- Jika Status Menunggu -->
                             <div x-show="selectedStatus === 'menunggu'" class="grid grid-cols-2 gap-3 mb-5">
-                                <label class="cursor-pointer">
+                                <label class="relative cursor-pointer">
                                     <input type="radio" x-model="selectedAction" value="disetujui" class="sr-only">
                                     <div :class="selectedAction === 'disetujui' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-100 hover:bg-gray-50 text-gray-700'"
                                         class="rounded-xl border-2 px-4 py-3.5 transition-all text-center font-semibold text-sm flex items-center justify-center gap-2">
@@ -879,7 +892,7 @@
                                         Setujui
                                     </div>
                                 </label>
-                                <label class="cursor-pointer">
+                                <label class="relative cursor-pointer">
                                     <input type="radio" x-model="selectedAction" value="ditolak" class="sr-only">
                                     <div :class="selectedAction === 'ditolak' ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-100 hover:bg-gray-50 text-gray-700'"
                                         class="rounded-xl border-2 px-4 py-3.5 transition-all text-center font-semibold text-sm flex items-center justify-center gap-2">
@@ -909,7 +922,7 @@
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-3">
-                                    <label class="cursor-pointer block">
+                                    <label class="relative cursor-pointer block">
                                         <input type="radio" x-model="selectedAction" value="ditolak" class="sr-only">
                                         <div :class="selectedAction === 'ditolak' ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-100 hover:bg-gray-50 text-gray-700'"
                                             class="rounded-xl border-2 px-3 py-2.5 transition-all text-center font-semibold text-[13px] flex flex-col items-center justify-center gap-1.5 h-full leading-tight">
@@ -924,7 +937,7 @@
                                         </div>
                                     </label>
 
-                                    <label class="cursor-pointer block">
+                                    <label class="relative cursor-pointer block">
                                         <input type="radio" x-model="selectedAction" value="edit" class="sr-only">
                                         <div :class="selectedAction === 'edit' ? 'border-[#0B266E] bg-blue-50 text-[#0B266E]' : 'border-gray-100 hover:bg-gray-50 text-gray-700'"
                                             class="rounded-xl border-2 px-3 py-2.5 transition-all text-center font-semibold text-[13px] flex flex-col items-center justify-center gap-1.5 h-full leading-tight">
@@ -1073,7 +1086,7 @@
                         </div> <!-- End of scrollable body -->
 
                         <!-- Fixed Footer -->
-                        <div class="px-6 py-4 pb-8 sm:pb-4 flex gap-3 z-10 w-full justify-end border-t border-slate-100 bg-white">
+                        <div class="px-6 py-4 pb-8 sm:pb-4 flex gap-3 z-10 w-full justify-end border-t border-slate-100 bg-white shrink-0">
                             <button type="button" @click="closeModal()"
                                 class="flex-1 cursor-pointer py-2.5 px-4 border border-slate-200 text-slate-600 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-all">Batalkan</button>
                             <button type="submit"
