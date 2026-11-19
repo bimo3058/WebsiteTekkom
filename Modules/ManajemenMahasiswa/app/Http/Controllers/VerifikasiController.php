@@ -124,7 +124,7 @@ class VerifikasiController extends Controller
 
 
         // Semua jenis pengurus himpunan menggunakan layout admin
-        $pengurus = ['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
+        $pengurus = ['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'wakil_ketua_bidang', 'ketua_unit', 'wakil_ketua_unit', 'staff_himpunan'];
         foreach ($pengurus as $role) {
             if (\in_array($role, $roles)) {
                 return 'manajemenmahasiswa::layouts.admin';
@@ -266,6 +266,8 @@ class VerifikasiController extends Controller
                 'nama'     => $user->name,
                 'nim'      => 'PENGURUS-' . $user->id,
                 'angkatan' => (int) date('Y'),
+                // PERINGATAN (S-53, 29 Okt 2026): status tak lagi dikelola di Direktori Mahasiswa;
+                // diisi hanya karena kolomnya NOT NULL dan Dashboard Analitik masih membacanya.
                 'status'   => Kemahasiswaan::STATUS_AKTIF,
             ]
         );
@@ -532,6 +534,14 @@ class VerifikasiController extends Controller
             $reward = 'menunggu';
         }
 
+        // Filter tingkat — sama dengan Verifikasi Prestasi (adminIndex).
+        // Nilai di luar daftar resmi dianggap "semua" supaya URL yang diubah
+        // manual tidak menghasilkan tabel kosong tanpa penjelasan.
+        $tingkat = $request->get('tingkat');
+        if (!\in_array($tingkat, Prestasi::TINGKAT_LIST, true)) {
+            $tingkat = 'semua';
+        }
+
         $rewardStatusMap = [
             'menunggu'  => Prestasi::CLAIM_DIAJUKAN,
             'disetujui' => Prestasi::CLAIM_DISETUJUI,
@@ -558,6 +568,10 @@ class VerifikasiController extends Controller
             });
         }
 
+        if ($tingkat !== 'semua') {
+            $rewardQuery->where('tingkat', $tingkat);
+        }
+
         $rewardData = $rewardQuery->orderByDesc('claimed_at')
             ->paginate(PerPage::resolve($request))
             ->withQueryString();
@@ -580,6 +594,8 @@ class VerifikasiController extends Controller
             ->orderBy('angkatan', 'desc')
             ->pluck('angkatan');
 
+        $tingkatList = Prestasi::TINGKAT_LIST;
+
         // Hanya admin kemahasiswaan yang memutus konversi SKS — sembunyikan
         // tinjau/setujui/tolak/batalkan dari Ketua Departemen & GPM (satu-
         // satunya pengawas yang bisa sampai ke halaman ini; DPM sudah dicabut
@@ -592,6 +608,8 @@ class VerifikasiController extends Controller
             'search',
             'angkatan',
             'angkatanList',
+            'tingkat',
+            'tingkatList',
             'pendingPrestasiReward',
             'rewardStats',
             'kuotaMap',
@@ -758,7 +776,7 @@ class VerifikasiController extends Controller
             // tahun kegiatan bisa terisi masa depan dan ikut terbawa ke statistik.
             'tanggal_kegiatan'     => 'required|date|before_or_equal:today',
             'bukti_docs'           => 'required|array|size:1',
-            'bukti_docs.*'         => 'file|mimes:pdf|max:10240',
+            'bukti_docs.*'         => 'file|mimes:pdf|max:5120',
         ], [
             'tanggal_kegiatan.before_or_equal' => 'Tanggal kegiatan tidak boleh melewati hari ini.',
         ], ['bukti_docs' => 'bukti kegiatan']);
@@ -819,7 +837,7 @@ class VerifikasiController extends Controller
             // yang sama pada tanggal kegiatan.
             'tanggal'       => 'required|date|before_or_equal:today',
             'bukti_docs'    => 'required|array|size:1',
-            'bukti_docs.*'  => 'file|mimes:pdf|max:10240',
+            'bukti_docs.*'  => 'file|mimes:pdf|max:5120',
         ], [
             'tanggal.before_or_equal' => 'Tanggal prestasi tidak boleh melewati hari ini.',
         ], ['bukti_docs' => 'bukti kegiatan']);
@@ -833,6 +851,8 @@ class VerifikasiController extends Controller
                 'nama'     => $user->name,
                 'nim'      => 'PENGURUS-' . $user->id,
                 'angkatan' => (int) date('Y'),
+                // PERINGATAN (S-53, 29 Okt 2026): status tak lagi dikelola di Direktori Mahasiswa;
+                // diisi hanya karena kolomnya NOT NULL dan Dashboard Analitik masih membacanya.
                 'status'   => Kemahasiswaan::STATUS_AKTIF,
             ]
         );
@@ -1098,13 +1118,15 @@ class VerifikasiController extends Controller
                 ->with('error', 'Reward prestasi ini sudah diajukan atau sudah disetujui.');
         }
 
+        // Tidak ada guard batas waktu 1 tahun: klaim yang lewat setahun sejak
+        // tanggal prestasi tetap diterima, dan mahasiswa tidak diberi tahu.
+        // Penandanya hanya tampil bagi admin (Prestasi::rewardTerlambat()), yang
+        // berhak menyetujui atau menolaknya.
+
         $validated = $request->validate([
             'reward_penyelenggara' => 'required|in:' . implode(',', Prestasi::PENYELENGGARA_LIST),
             'reward_capaian'       => 'required|string',
             'reward_is_invention'  => 'nullable|boolean',
-            // Daftarnya dibangun ulang tiap permintaan, jadi semester yang baru
-            // dibuka langsung sah tanpa ada yang perlu diperbarui manual.
-            'reward_tahun_ajaran'  => 'required|in:' . implode(',', array_keys(Prestasi::tahunAjaranList())),
         ]);
 
         $penyelenggara = $validated['reward_penyelenggara'];
@@ -1157,11 +1179,29 @@ class VerifikasiController extends Controller
         // Usulan MK: hanya MK kurikulum yang valid, jumlah maks sesuai jatah (SK 774)
         $mkFlat     = Prestasi::mataKuliahFlat();
         $mkValid    = array_keys($mkFlat);
-        $mkInput    = (array) $request->input('reward_mk_diajukan', []);
-        $mkDiajukan = array_values(array_unique(array_filter(
-            $mkInput,
-            fn ($mk) => \in_array($mk, $mkValid, true)
-        )));
+        $mkInput    = array_values((array) $request->input('reward_mk_diajukan', []));
+        $taInput    = array_values((array) $request->input('reward_mk_ta', []));
+
+        // Tahun ajaran dikirim sejajar dengan MK-nya (indeks yang sama), jadi
+        // dipasangkan dulu sebelum disaring — kalau disaring lebih dulu,
+        // posisinya bergeser dan tahun ajaran bisa menempel di MK yang salah.
+        // Daftar tahun ajaran dibangun ulang tiap permintaan, jadi semester yang
+        // baru dibuka langsung sah tanpa ada yang perlu diperbarui manual.
+        $taValid    = array_keys(Prestasi::tahunAjaranList());
+        $mkTa       = [];
+        foreach ($mkInput as $i => $mk) {
+            if (!\in_array($mk, $mkValid, true) || isset($mkTa[$mk])) {
+                continue;
+            }
+            $ta = $taInput[$i] ?? null;
+            if (!\in_array($ta, $taValid, true)) {
+                return redirect()
+                    ->route('manajemenmahasiswa.verifikasi.reward.index')
+                    ->with('error', "Tahun ajaran untuk mata kuliah \"{$mk}\" belum diisi atau tidak valid.");
+            }
+            $mkTa[$mk] = $ta;
+        }
+        $mkDiajukan = array_keys($mkTa);
 
         if (empty($mkDiajukan)) {
             return redirect()
@@ -1206,10 +1246,10 @@ class VerifikasiController extends Controller
             // termasuk bila SK berganti sementara klaim ini masih menunggu.
             'reward_kuota_grup'    => Prestasi::tentukanKuotaGrup($penyelenggara, $isInvention),
             'reward_sk_ref'        => Prestasi::SK_BERLAKU,
-            'reward_tahun_ajaran'  => $validated['reward_tahun_ajaran'],
             'reward_jml_mk_max'    => $jatah['jml_mk_max'],
             'reward_sks_max'       => $jatah['sks_max'],
             'reward_mk_diajukan'   => $mkDiajukan,
+            'reward_mk_ta'         => $mkTa,
             // Bobot SKS ikut dicap: nilainya berasal dari konstanta kurikulum,
             // yang bisa berubah setelah klaim ini diputus.
             'reward_sks_diajukan'  => $totalSks,
@@ -1257,11 +1297,11 @@ class VerifikasiController extends Controller
             // menyandang kelompok kuota & nomor SK milik pengajuan yang tak ada.
             'reward_kuota_grup'    => null,
             'reward_sk_ref'        => null,
-            'reward_tahun_ajaran'  => null,
             'reward_jml_mk_max'    => null,
             'reward_sks_max'       => null,
             'reward_sks_diajukan'  => null,
             'reward_mk_diajukan'   => null,
+            'reward_mk_ta'         => null,
         ]);
 
         return redirect()
@@ -1322,7 +1362,7 @@ class VerifikasiController extends Controller
         if (!empty($mkBentrok)) {
             return redirect()
                 ->route('manajemenmahasiswa.verifikasi.reward.index')
-                ->with('error', 'Mata kuliah ' . implode('; ', $mkBentrok) . ' sudah dinaikkan lewat klaim lain milik mahasiswa ini (SK 774 poin 4: mata kuliah harus berbeda). Tolak pengajuan ini agar mahasiswa mengajukan ulang dengan MK lain.');
+                ->with('error', 'Mata kuliah ' . implode('; ', $mkBentrok) . ' sudah dinaikkan lewat klaim lain milik mahasiswa ini (SK 774 poin 4: mata kuliah harus berbeda). Tolak pengajuan ini agar mahasiswa mengajukan ulang dengan mata kuliah lain.');
         }
 
         $prestasi->update([

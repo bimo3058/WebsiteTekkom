@@ -1,0 +1,83 @@
+{
+    "reference_tables": 93,
+    "excluded_legacy_aliases": [
+        "eo_praktikum",
+        "eo_matkul_praktikum",
+        "eo_praktikum_dosen"
+    ],
+    "delete_actions": {
+        "eo_kerja_praktik_mahasiswa_id_foreign": {
+            "action": "CASCADE",
+            "source": "2026_05_08_000001_create_eo_kerja_praktik_tables.php",
+            "table": "eo_kerja_praktik",
+            "column": "mahasiswa_id",
+            "parent": "eo_kp_mahasiswa"
+        },
+        "eo_kp_balancing_mahasiswa_id_foreign": {
+            "action": "CASCADE",
+            "source": "2026_05_18_214101_create_eo_kp_balancing_table.php",
+            "table": "eo_kp_balancing",
+            "column": "mahasiswa_id",
+            "parent": "eo_kp_mahasiswa"
+        },
+        "eo_mr_peminjamans_replaces_peminjaman_id_foreign": {
+            "action": "SET NULL",
+            "source": "2026_11_08_142000_update_source_id_and_add_replaces_peminjaman_id_to_eo_mr_peminjamans_table.php",
+            "table": "eo_mr_peminjamans",
+            "column": "replaces_peminjaman_id",
+            "parent": "eo_mr_peminjamans"
+        },
+        "praktikum_dosen_id_foreign": {
+            "action": "NO ACTION",
+            "source": "reference (no delete action specified)",
+            "table": "eo_prak_praktikum_legacy",
+            "column": "dosen_id",
+            "parent": "pengguna"
+        },
+        "praktikum_koor_id_foreign": {
+            "action": "NO ACTION",
+            "source": "reference (no delete action specified)",
+            "table": "eo_prak_praktikum_legacy",
+            "column": "koor_id",
+            "parent": "pengguna"
+        }
+    },
+    "operations": [
+        {
+            "table": "eo_kp_mahasiswa",
+            "sql": "ALTER TABLE public.\"eo_kp_mahasiswa\" ADD CONSTRAINT \"eo_kp_mahasiswa_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "eo_mr_peminjamans",
+            "sql": "ALTER TABLE public.\"eo_mr_peminjamans\" ADD CONSTRAINT \"eo_mr_peminjamans_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "eo_kerja_praktik",
+            "sql": "ALTER TABLE public.\"eo_kerja_praktik\" ADD CONSTRAINT \"eo_kerja_praktik_mahasiswa_id_foreign\" FOREIGN KEY (mahasiswa_id) REFERENCES public.eo_kp_mahasiswa(id) ON DELETE CASCADE",
+            "kind": "constraint"
+        },
+        {
+            "table": "eo_kp_balancing",
+            "sql": "ALTER TABLE public.\"eo_kp_balancing\" ADD CONSTRAINT \"eo_kp_balancing_mahasiswa_id_foreign\" FOREIGN KEY (mahasiswa_id) REFERENCES public.eo_kp_mahasiswa(id) ON DELETE CASCADE",
+            "kind": "constraint"
+        },
+        {
+            "table": "eo_mr_peminjamans",
+            "sql": "ALTER TABLE public.\"eo_mr_peminjamans\" ADD CONSTRAINT \"eo_mr_peminjamans_replaces_peminjaman_id_foreign\" FOREIGN KEY (replaces_peminjaman_id) REFERENCES public.eo_mr_peminjamans(id) ON DELETE SET NULL",
+            "kind": "constraint"
+        },
+        {
+            "table": "eo_prak_praktikum_legacy",
+            "sql": "ALTER TABLE public.\"eo_prak_praktikum_legacy\" ADD CONSTRAINT \"praktikum_dosen_id_foreign\" FOREIGN KEY (dosen_id) REFERENCES public.pengguna(id) ON DELETE NO ACTION",
+            "kind": "constraint"
+        },
+        {
+            "table": "eo_prak_praktikum_legacy",
+            "sql": "ALTER TABLE public.\"eo_prak_praktikum_legacy\" ADD CONSTRAINT \"praktikum_koor_id_foreign\" FOREIGN KEY (koor_id) REFERENCES public.pengguna(id) ON DELETE NO ACTION",
+            "kind": "constraint"
+        }
+    ],
+    "column_differences": []
+}

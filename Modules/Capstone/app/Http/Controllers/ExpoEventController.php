@@ -1,13 +1,15 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Modules\Capstone\Models\ExpoEvent;
 use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Services\EofficeAvailabilityService;
 use Modules\Capstone\Services\ExpoService;
 use Modules\Capstone\Support\CapstoneActor;
-use Illuminate\Http\Request;
+use Modules\EOffice\Models\Ruangan;
 
 class ExpoEventController extends Controller
 {
@@ -16,6 +18,20 @@ class ExpoEventController extends Controller
     public function __construct(ExpoService $expoService)
     {
         $this->expoService = $expoService;
+    }
+
+    /**
+     * Normalize the period selector before validation: an empty value
+     * means cross-period (global, NULL). Stale clients may send '' or 0,
+     * which would otherwise fail the `exists` rule with "period id yang
+     * dipilih tidak valid". The key is only touched when present, so
+     * `sometimes` updates that omit period_id leave it unchanged.
+     */
+    private function normalizePeriodInput(Request $request): void
+    {
+        if ($request->has('period_id') && empty($request->input('period_id'))) {
+            $request->merge(['period_id' => null]);
+        }
     }
 
     // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -27,8 +43,10 @@ class ExpoEventController extends Controller
         $query = ExpoEvent::with(['period', 'creator'])
             ->withCount(['registrations' => fn ($query) => $query->where('status', 'REGISTERED')]);
 
-        if ($request->has('period_id')) {
-            $query->where('period_id', $request->period_id);
+        if ($request->filled('period_id')) {
+            // Cross-period (global, period_id NULL) events apply to every
+            // period, so they stay visible under any period filter.
+            $query->where(fn ($q) => $q->whereNull('period_id')->orWhere('period_id', $request->period_id));
         }
 
         return response()->json($query->orderBy('date', 'desc')->get());
@@ -36,8 +54,9 @@ class ExpoEventController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizePeriodInput($request);
         $validated = $request->validate([
-            'period_id' => 'required|exists:capstone_periods,id',
+            'period_id' => 'nullable|exists:capstone_periods,id',
             'name' => 'required|string|max:255',
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
@@ -48,8 +67,8 @@ class ExpoEventController extends Controller
         ]);
 
         // Rooms come from EOffice only; `room` is a display snapshot.
-        $ruangan = \Modules\EOffice\Models\Ruangan::findOrFail($validated['eoffice_ruangan_id']);
-        $conflict = app(\Modules\Capstone\Services\EofficeAvailabilityService::class)->checkByEofficeId(
+        $ruangan = Ruangan::findOrFail($validated['eoffice_ruangan_id']);
+        $conflict = app(EofficeAvailabilityService::class)->checkByEofficeId(
             $ruangan->id, $validated['date'], $validated['start_time'], $validated['end_time']
         );
         if ($conflict) {
@@ -58,6 +77,10 @@ class ExpoEventController extends Controller
 
         $validated['room'] = $ruangan->nama;
         $validated['created_by'] = $request->user()->id;
+        // Empty-string from the "All periods" option means cross-period (global).
+        if (array_key_exists('period_id', $validated) && empty($validated['period_id'])) {
+            $validated['period_id'] = null;
+        }
 
         $event = ExpoEvent::create($validated);
 
@@ -73,7 +96,9 @@ class ExpoEventController extends Controller
 
     public function update(Request $request, ExpoEvent $expoEvent)
     {
+        $this->normalizePeriodInput($request);
         $validated = $request->validate([
+            'period_id' => 'sometimes|nullable|exists:capstone_periods,id',
             'name' => 'sometimes|string|max:255',
             'date' => 'sometimes|date',
             'start_time' => 'sometimes|date_format:H:i',
@@ -83,12 +108,15 @@ class ExpoEventController extends Controller
         ]);
 
         unset($validated['room']);
+        if (array_key_exists('period_id', $validated) && empty($validated['period_id'])) {
+            $validated['period_id'] = null;
+        }
         $eofficeId = $validated['eoffice_ruangan_id'] ?? $expoEvent->getAttributes()['eoffice_ruangan_id'] ?? null;
         if (! empty($validated['eoffice_ruangan_id'])) {
-            $validated['room'] = \Modules\EOffice\Models\Ruangan::findOrFail($validated['eoffice_ruangan_id'])->nama;
+            $validated['room'] = Ruangan::findOrFail($validated['eoffice_ruangan_id'])->nama;
         }
         if ($eofficeId) {
-            $conflict = app(\Modules\Capstone\Services\EofficeAvailabilityService::class)->checkByEofficeId(
+            $conflict = app(EofficeAvailabilityService::class)->checkByEofficeId(
                 (int) $eofficeId,
                 $validated['date'] ?? $expoEvent->date->format('Y-m-d'),
                 $validated['start_time'] ?? $expoEvent->start_time,
@@ -112,6 +140,7 @@ class ExpoEventController extends Controller
         }
 
         $expoEvent->delete(); // soft delete
+
         return response()->json(['message' => 'Event deleted.']);
     }
 
@@ -120,7 +149,7 @@ class ExpoEventController extends Controller
      */
     public function publish(ExpoEvent $expoEvent)
     {
-        $expoEvent->update(['is_published' => !$expoEvent->is_published]);
+        $expoEvent->update(['is_published' => ! $expoEvent->is_published]);
 
         return response()->json([
             'message' => $expoEvent->is_published ? 'Event published.' : 'Event unpublished.',
@@ -133,7 +162,8 @@ class ExpoEventController extends Controller
     // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
-     * List published expo events for the student's period.
+     * List published expo events for the student's period, plus cross-period
+     * (global, period_id NULL) events which are visible to every period.
      */
     public function studentEvents(Request $request)
     {
@@ -141,21 +171,21 @@ class ExpoEventController extends Controller
         $group = GroupMember::where('student_id', CapstoneActor::student($user)->id)
             ->first()?->group;
 
-        if (!$group) {
+        if (! $group) {
             return response()->json([]);
         }
 
-        $events = ExpoEvent::where('period_id', $group->period_id)
+        $events = ExpoEvent::where(fn ($q) => $q->whereNull('period_id')->orWhere('period_id', $group->period_id))
             ->where('is_published', true)
-            ->withCount(['registrations'=>fn($q)=>$q->where('status','REGISTERED')])
-            ->withExists(['registrations as is_registered'=>fn($q)=>$q->where('status','REGISTERED')->where('group_id',$group->id)])
+            ->withCount(['registrations' => fn ($q) => $q->where('status', 'REGISTERED')])
+            ->withExists(['registrations as is_registered' => fn ($q) => $q->where('status', 'REGISTERED')->where('group_id', $group->id)])
             ->orderBy('date')
             ->get();
 
-        $hasDraft=\Modules\Capstone\Models\TaSubmission::where('group_id',$group->id)->exists();
-        $events->each(function ($event) use ($group,$hasDraft) {
-            $event->registration_reason = $group->status !== 'PDC2_READY_FOR_EXPO' ? 'Group must be ready for Expo.' : (!$hasDraft ? 'At least 1 member must submit a TA draft.' : null);
-            $event->can_register = !$event->is_registered && !$event->registration_reason && $event->registrations_count < $event->capacity;
+        $hasDraft = $group->hasApprovedTaDraftDocument();
+        $events->each(function ($event) use ($group, $hasDraft) {
+            $event->registration_reason = $group->status !== 'PDC2_READY_FOR_EXPO' ? 'Group must be ready for Expo.' : (! $hasDraft ? 'Upload the TA draft document and get it approved first.' : null);
+            $event->can_register = ! $event->is_registered && ! $event->registration_reason && $event->registrations_count < $event->capacity;
         });
 
         return response()->json($events);
@@ -163,11 +193,14 @@ class ExpoEventController extends Controller
 
     public function withdraw(Request $request, ExpoEvent $expoEvent)
     {
-        $member=GroupMember::where('student_id',CapstoneActor::student($request->user())->id)->firstOrFail();
+        $member = GroupMember::where('student_id', CapstoneActor::student($request->user())->id)->firstOrFail();
         try {
-            $this->expoService->withdrawGroupFromEvent($expoEvent->id,$member->group_id,$request->user()->id);
-            return response()->json(['message'=>'Successfully withdrawn from expo.']);
-        } catch (\InvalidArgumentException $e) {return response()->json(['message'=>$e->getMessage()],403);}
+            $this->expoService->withdrawGroupFromEvent($expoEvent->id, $member->group_id, $request->user()->id);
+
+            return response()->json(['message' => 'Successfully withdrawn from expo.']);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 403);
+        }
     }
 
     /**
@@ -178,7 +211,7 @@ class ExpoEventController extends Controller
         $user = $request->user();
         $groupMember = GroupMember::where('student_id', CapstoneActor::student($user)->id)->first();
 
-        if (!$groupMember) {
+        if (! $groupMember) {
             return response()->json(['message' => 'You are not in a group.'], 400);
         }
 

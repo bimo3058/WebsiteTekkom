@@ -1,78 +1,8 @@
 <x-dynamic-component :component="$layout">
 
     <style>
-        /* ── Header ── */
-        .verif-header {
-            margin-bottom: 24px;
-        }
-
-        .verif-header h4 {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--c-fg);
-            margin-bottom: 2px;
-            letter-spacing: -.02em;
-        }
-
-        .verif-header p {
-            color: var(--c-fg-muted);
-            font-size: 13px;
-        }
-
-        /* ── Status & Buttons ── */
-        .status-verif {
-            display: inline-flex;
-            align-items: center;
-            padding: 3px 9px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .status-verif.pending {
-            background: #FFFBEB;
-            color: #d97706;
-        }
-
-        .status-verif.approved {
-            background: #ECFDF5;
-            color: #059669;
-        }
-
-        .status-verif.rejected {
-            background: var(--c-error-subtle, #fef2f2);
-            color: var(--c-error, #dc2626);
-        }
-
-        .btn-submit {
-            background: #0B266E;
-            color: #fff;
-            font-weight: 600;
-            font-size: 13px;
-            padding: 9px 18px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            transition: background .15s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            text-decoration: none !important;
-            white-space: nowrap;
-        }
-
-        .btn-submit:hover {
-            background: #091958;
-            color: #fff;
-        }
-
-        .btn-submit:disabled,
-        .btn-submit[disabled] {
-            background: #C1C7CF;
-            color: #fff;
-            cursor: not-allowed;
-            opacity: .7;
-        }
+        /* Badge status, tingkat, reward, kotak isian form, dan modal:
+           partials/sitkom-ui. */
 
         /* ── Empty State ── */
         .empty-state {
@@ -85,106 +15,7 @@
             display: flex;
             justify-content: center;
             margin-bottom: 12px;
-            color: #E5E7EB;
-        }
-
-        /* ── Form Controls ── */
-        .form-label-custom {
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--c-fg-sec);
-            margin-bottom: 6px;
-        }
-
-        .form-control-custom,
-        .form-select-custom {
-            border: 1.5px solid #B6BCC6;
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--c-fg-sec);
-            transition: all .2s;
-            background: #F1F3F5;
-        }
-
-        .form-control-custom:hover,
-        .form-select-custom:hover {
-            border-color: var(--c-primary-border);
-            background: #EDEFF2;
-        }
-
-        .form-control-custom:focus,
-        .form-select-custom:focus {
-            border-color: var(--c-primary);
-            box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
-            outline: none;
-            background: #fff;
-        }
-
-        .tingkat-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 2px 8px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .tingkat-badge.internasional {
-            background: #FFFBEB;
-            color: #92400e;
-        }
-
-        .tingkat-badge.nasional {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .tingkat-badge.regional {
-            background: #f3e8ff;
-            color: #7c3aed;
-        }
-
-        .tingkat-badge.universitas {
-            background: #ECFDF5;
-            color: #059669;
-        }
-
-        .tingkat-badge.prodi {
-            background: #eef2ff;
-            color: var(--c-primary);
-        }
-
-        /* ── Reward Badge & Button ── */
-        .claim-badge {
-            font-size: 12px;
-            font-weight: 600;
-            padding: 3px 9px;
-            border-radius: 50px;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .claim-badge.belum {
-            background: #f3f4f6;
-            color: var(--c-fg-muted);
-        }
-
-        .claim-badge.diajukan {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .claim-badge.disetujui {
-            background: #ECFDF5;
-            color: #059669;
-        }
-
-        .claim-badge.ditolak {
-            background: var(--c-error-subtle, #fef2f2);
-            color: var(--c-error, #dc2626);
+            color: var(--c-border);
         }
 
         /* Tombol sekunder di dalam modal (picker mata kuliah), bukan aksi baris. */
@@ -205,16 +36,10 @@
             border-color: var(--c-primary-border);
         }
 
-        /* Kolom Reward memuat status saja; semua aksi baris berkumpul di kolom Aksi,
-       sama seperti halaman admin (verifikasi/reward.blade.php). Rel ini rata
-       kanan: tombol langkah maju di kiri, Tinjau selalu paling kanan, jadi
-       tombol Tinjau segaris di semua baris. Kerangka modal (.tp-*) & .btn-tinjau
-       ada di partials/tinjau-modal-styles.blade.php — dipakai bersama admin. */
-        .aksi-rail {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
+        /* Semua aksi baris berkumpul di menu "⋯" kolom Aksi (partials/aksi-menu),
+       sama seperti Direktori Mahasiswa & halaman admin. Kerangka modal (.tp-*)
+       & .btn-tinjau ada di partials/tinjau-modal-styles.blade.php — dipakai
+       bersama admin. */
 
         /* Satu-satunya tombol berlatar pekat dalam sebuah baris: navy mengikuti tombol
        primer halaman Superadmin. Hierarkinya dibawa oleh bobot latar (pekat vs
@@ -234,21 +59,21 @@
         }
 
         .btn-aksi-utama:hover {
-            background: #081D55;
-            border-color: #081D55;
+            background: var(--c-primary-hover);
+            border-color: var(--c-primary-hover);
         }
 
         /* Kuota habis: tombolnya tetap ada supaya kolom Aksi tidak berubah bentuk,
        tapi kelabu — langkah itu memang sudah tidak bisa diambil. */
         .btn-aksi-utama:disabled {
-            background: #C1C7CF;
-            border-color: #C1C7CF;
+            background: var(--c-border-strong);
+            border-color: var(--c-border-strong);
             cursor: not-allowed;
         }
 
         .btn-aksi-utama:disabled:hover {
-            background: #C1C7CF;
-            border-color: #C1C7CF;
+            background: var(--c-border-strong);
+            border-color: var(--c-border-strong);
         }
 
         .jatah-preview {
@@ -296,14 +121,6 @@
             font-size: 12px;
             color: var(--c-fg-muted);
             font-weight: 500;
-        }
-
-        /* Aturan dibaca sebagai kalimat ("tanpa batas, kecuali …"), bukan nama
-       kelompok: kelompok tanpa batas tidak perlu diberi nama sendiri. */
-        .kuota-ringkas-teks {
-            font-size: 12px;
-            color: var(--c-fg);
-            font-weight: 600;
         }
 
         /* Daftar aturan di modal Aturan & rincian — isi .tinjau-info biasa */
@@ -394,9 +211,27 @@
         /* Picker usulan mata kuliah (reward) */
         .mk-chosen {
             display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
+            flex-direction: column;
+            gap: 8px;
             margin-top: 10px;
+        }
+
+        /* Satu baris per MK terpilih: nama MK di kiri, kolom tahun ajarannya di kanan */
+        .mk-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mk-row .mk-chip {
+            flex: 1;
+            min-width: 0;
+            justify-content: space-between;
+        }
+
+        .mk-row .mk-row-ta {
+            width: 150px;
+            flex-shrink: 0;
         }
 
         /* Chip ringkas untuk sel tabel. Dibiarkan satu baris (tidak wrap) supaya
@@ -404,8 +239,80 @@
            tabel sudah bisa discroll horizontal. Daftar utuhnya ada di modal Tinjau. */
         .mk-sel {
             display: flex;
-            flex-wrap: nowrap;
-            gap: 4px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .mk-sel-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mk-sel-ta {
+            font-size: 11px;
+            color: var(--c-fg-muted);
+            white-space: nowrap;
+        }
+
+        /* Tabel Klaim Prestasi di layar sempit (laptop ≤ 1680px): tanpa ini tabel
+           selebar ±1270px dan kolom Aksi (Ajukan Reward / Tinjau) terdorong keluar
+           layar. Di atas 1680px tabel sudah muat, jadi tidak diubah sama sekali.
+           Gaya sel ditulis inline di markup, jadi di sini perlu !important —
+           hanya di dalam media query ini. Hanya padding yang dikecilkan; nama MK
+           dan tahun ajarannya TETAP sejajar dalam satu baris di semua lebar
+           layar (keputusan Surya). */
+        @media (max-width: 1680px) {
+            .klaim-table {
+                min-width: 0 !important;
+            }
+
+            .klaim-table th,
+            .klaim-table td {
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+            }
+
+            .klaim-table th:first-child,
+            .klaim-table td:first-child {
+                padding-left: 12px !important;
+                padding-right: 4px !important;
+                width: 40px !important;
+            }
+
+            .klaim-table th[style*="min-width:180px"],
+            .klaim-table td[style*="min-width:180px"] {
+                min-width: 130px !important;
+            }
+
+            /* Jaring pengaman: kalau tabel tetap harus digeser, kolom Aksi
+               menempel di tepi kanan supaya tombol "⋯" tidak hilang dari pandangan. */
+            .klaim-table th:last-child,
+            .klaim-table td:last-child {
+                position: sticky;
+                right: 0;
+                box-shadow: -8px 0 8px -8px rgba(15, 23, 42, .12);
+            }
+
+            .klaim-table th:last-child {
+                background: #FAFAFA;
+            }
+
+            .klaim-table td:last-child {
+                background: #fff;
+            }
+
+            .klaim-table tr:hover td:last-child {
+                background: #FAFAFA;
+            }
+
+            /* Sel yang menempel membentuk lapisan sendiri, jadi sel baris di
+               bawahnya bisa menimpa menu "⋯" yang sedang terbuka — sel yang
+               aktif dinaikkan di atas yang lain. */
+            .klaim-table td:last-child:focus-within {
+                z-index: 5;
+            }
         }
 
         .mk-sel-tag {
@@ -435,14 +342,35 @@
             padding: 4px 6px 4px 12px;
         }
 
+        /* Nama MK di baris atas, SKS + tahun ajaran di bawahnya — dua baris
+           supaya tidak terpotong acak di kolom kanan yang sempit. */
+        .mk-chip {
+            border-radius: 12px;
+        }
+
+        .mk-chip .mk-teks {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow-wrap: anywhere;
+            line-height: 1.3;
+        }
+
         .mk-chip .mk-sks {
+            font-size: 11px;
             font-weight: 500;
             color: var(--c-primary-border);
         }
 
         .mk-chip .mk-remove {
+            /* Ukuran dikunci: nama MK panjang membungkus di kolom sempit dan tanpa
+               flex-shrink:0 tombol ikut terjepit jadi lonjong / menimpa teks. */
+            flex: 0 0 18px;
             width: 18px;
             height: 18px;
+            padding: 0;
+            align-self: center;
             border-radius: 50%;
             background: rgba(11, 38, 110, 0.18);
             color: var(--c-primary);
@@ -460,6 +388,27 @@
             background: var(--c-primary-border);
         }
 
+        /* Petunjuk & catatan di bawah pilihan mata kuliah: poin-poin pendek,
+           satu ukuran huruf dan satu jarak baris untuk keduanya. */
+        .mk-bantuan {
+            margin: 6px 0 0;
+            padding-left: 16px;
+            font-size: 11.5px;
+            line-height: 1.55;
+            color: var(--c-fg-muted);
+        }
+
+        .mk-bantuan li+li {
+            margin-top: 3px;
+        }
+
+        .mk-bantuan-judul {
+            margin: 14px 0 0;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--c-fg-sec);
+        }
+
         .mk-counter {
             font-size: 13px;
             font-weight: 600;
@@ -469,32 +418,6 @@
 
         .mk-counter.over {
             color: var(--c-error);
-        }
-
-        .modal-content {
-            border-radius: 18px;
-            border: none;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, .18);
-        }
-
-        .modal-header {
-            border-bottom: 1px solid #f3f4f6;
-            padding: 18px 22px;
-        }
-
-        .modal-header .modal-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--c-fg);
-        }
-
-        .modal-body {
-            padding: 22px;
-        }
-
-        .modal-footer {
-            border-top: 1px solid #f3f4f6;
-            padding: 14px 22px;
         }
 
         /* Preview styles */
@@ -577,6 +500,8 @@
             background: var(--c-error);
         }
 
+        /* Warna jenis berkas mengikuti konvensi umum (PDF merah, DOC biru, XLS hijau,
+           PPT oranye), sengaja di luar palet SITKOM supaya langsung dikenali. */
         .doc-preview-item .doc-icon.doc {
             background: #2563eb;
         }
@@ -656,6 +581,9 @@
     </style>
 
     @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
+    {{-- Juga mendeklarasikan token warna: layout mahasiswa (akun mahasiswa & alumni)
+         tidak memuatnya, sehingga tanpa ini garis tabel & aksen navy hilang. --}}
+    @include('manajemenmahasiswa::partials.sitkom-ui')
 
     @php
         // Dipakai juga oleh modal pengajuan yang berada di luar blok per-tab,
@@ -671,7 +599,8 @@
         $kuotaSemuaPenuh = false;
         $grupPenuh       = [];
         $adaMenunggu     = false;
-        // Ada kelompok tanpa batas → toolbar membaca "tanpa batas, kecuali …"
+        // Ada kelompok tanpa batas → toolbar membaca "Kuota reward: tanpa batas"
+        // diikuti pil "Kuota <kelompok terbatas>: sisa X dari N"
         $adaTanpaBatas   = in_array(null, $P::KUOTA_MAKS, true);
         if ($tab === 'klaim') {
             foreach ($P::KUOTA_MAKS as $grupCek => $maksCek) {
@@ -693,42 +622,20 @@
     <x-manajemenmahasiswa::ui.page-header bordered
         :title="match($tab) { 'klaim' => 'Klaim Prestasi', 'riwayat' => 'Riwayat Kegiatan Saya', default => 'Prestasi Saya' }">
         @if($tab === 'prestasi')
-            Ajukan prestasi lomba untuk diverifikasi admin. Prestasi yang sudah disetujui bisa Anda lihat &amp;
-            ajukan rewardnya (konversi nilai mata kuliah, SK FT 774) di subbab Klaim Prestasi.
+            Ajukan prestasi lomba untuk diverifikasi admin. Prestasi yang sudah disetujui akan ditampilkan di halaman
+            profil Anda pada bab Direktori Mahasiswa dan otomatis masuk ke fitur CV generator.
         @elseif($tab === 'klaim')
-            Ajukan reward untuk prestasi Anda yang sudah disetujui. Reward berupa peningkatan nilai mata kuliah
-            (SK FT 774); mata kuliah final ditetapkan departemen.
+            Ajukan reward untuk prestasi Anda yang sudah disetujui pada verifikasi prestasi. Reward berupa
+            peningkatan nilai mata kuliah sesuai dengan SK FT 774.
         @else
-            Ajukan riwayat keikutsertaan kegiatan untuk diverifikasi admin.
+            Ajukan riwayat keikutsertaan kegiatan di luar sistem untuk diverifikasi admin. Riwayat yang sudah disetujui
+            akan ditampilkan di halaman profil Anda pada bab Direktori Mahasiswa dan otomatis masuk ke fitur CV generator.
         @endif
     </x-manajemenmahasiswa::ui.page-header>
 
     <!-- Flash Messages -->
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert"
-            style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert"
-            style="border-radius: 10px; border: none; background: #fef2f2; color: #dc2626; font-weight: 500; font-size: 14px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+    <x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
+    <x-manajemenmahasiswa::ui.flash type="error" :message="session('error')" class="mb-3" />
     @php
         // Batasnya diambil dari controller, satu angka untuk form & validasinya
         $maksNama  = \Modules\ManajemenMahasiswa\Http\Controllers\VerifikasiController::MAKS_NAMA;
@@ -737,12 +644,11 @@
         $canSubmit = auth()->user()->hasAnyRole([
             'mahasiswa',
             'pengurus_himpunan',
-            'ketua_himpunan',
-            'ketua_bidang',
-            'ketua_unit',
+            'ketua_himpunan', 'wakil_ketua_himpunan',
+            'ketua_bidang', 'wakil_ketua_bidang',
+            'ketua_unit', 'wakil_ketua_unit',
             'staff_himpunan',
             'superadmin',
-            'admin',
             'admin_kemahasiswaan'
         ]);
     @endphp
@@ -750,10 +656,10 @@
     @if($tab === 'riwayat')
         <!-- Riwayat Kegiatan - Global Style Table Card -->
         <div
-            style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; margin-bottom:18px;">
+            style="background:#fff; border:1px solid var(--c-border); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; margin-bottom:18px;">
             <!-- Table Toolbar -->
             <div
-                style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #e5e7eb; gap:10px; flex-wrap:wrap;">
+                style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border); gap:10px; flex-wrap:wrap;">
                 <h2
                     style="font-size:14px; font-weight:700; color:var(--c-fg); margin:0; display:flex; align-items:center; gap:8px;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary)" stroke-width="2"
@@ -781,7 +687,7 @@
                 <div style="overflow-x:auto;">
                     <table style="width:100%; border-collapse:collapse; min-width:600px;">
                         <thead>
-                            <tr style="border-bottom:1px solid #e5e7eb; background:#FAFAFA;">
+                            <tr style="border-bottom:1px solid var(--c-border); background:#FAFAFA;">
                                 <th
                                     style="padding:11px 12px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:48px;">
                                     No</th>
@@ -798,7 +704,7 @@
                                     style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
                                     Status</th>
                                 <th
-                                    style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:120px;">
+                                    style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:72px;">
                                     Aksi</th>
                             </tr>
                         </thead>
@@ -853,14 +759,14 @@
                                         ] : null,
                                     ];
                                 @endphp
-                                <tr style="border-bottom:1px solid #e5e7eb; transition:background .12s;"
+                                <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s;"
                                     onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
                                     <td style="padding:14px 12px; font-size:13px; color:var(--c-fg-muted); width:48px;">
                                         {{ ($riwayatData->currentPage() - 1) * $riwayatData->perPage() + $i + 1 }}
                                     </td>
                                     <td style="padding:14px 16px; min-width:200px;">
                                         <p
-                                            style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; max-width:260px;">
+                                            style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow-wrap:break-word; line-height:1.5; max-width:260px;">
                                             {{ $rw->nama_kegiatan_manual ?? 'Kegiatan tidak diketahui' }}</p>
                                     </td>
                                     <td style="padding:14px 16px; font-size:13px; color:var(--c-fg-sec);">
@@ -898,14 +804,9 @@
                                         @endif
                                         {{-- Satu pintu masuk seperti halaman admin: bukti, tanggal, dan
                                         catatan verifikasi semuanya dibuka dari sini. --}}
-                                        <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" onclick="openTinjau(@js($tinjauRiwayatPayload))">
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                                <circle cx="12" cy="12" r="3" />
-                                            </svg>
-                                            Tinjau
-                                        </button>
+                                        @include('manajemenmahasiswa::verifikasi.partials.aksi-menu', ['items' => [
+                                            ['label' => 'Tinjau', 'fn' => 'openTinjau', 'payload' => $tinjauRiwayatPayload],
+                                        ]])
                                     </td>
                                 </tr>
                             @endforeach
@@ -916,7 +817,7 @@
                 @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $riwayatData])
             @else
                 <div class="empty-state">
-                    <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;"
+                    <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:var(--c-border);"
                             stroke="currentColor" stroke-width="1.5">
                             <path d="M21 8V21H3V8"></path>
                             <path d="M23 3H1v5h22V3z"></path>
@@ -935,10 +836,10 @@
     @if($tab === 'prestasi')
         <!-- Prestasi Lomba - Global Style Table Card -->
         <div
-            style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; margin-bottom:18px;">
+            style="background:#fff; border:1px solid var(--c-border); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; margin-bottom:18px;">
             <!-- Table Toolbar -->
             <div
-                style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #e5e7eb; gap:10px; flex-wrap:wrap;">
+                style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border); gap:10px; flex-wrap:wrap;">
                 <h2
                     style="font-size:14px; font-weight:700; color:var(--c-fg); margin:0; display:flex; align-items:center; gap:8px;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary)" stroke-width="2"
@@ -964,7 +865,7 @@
                 <div style="overflow-x:auto;">
                     <table style="width:100%; border-collapse:collapse; min-width:680px;">
                         <thead>
-                            <tr style="border-bottom:1px solid #e5e7eb; background:#FAFAFA;">
+                            <tr style="border-bottom:1px solid var(--c-border); background:#FAFAFA;">
                                 <th
                                     style="padding:11px 12px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:48px;">
                                     No</th>
@@ -980,11 +881,8 @@
                                 <th
                                     style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
                                     Status Verifikasi</th>
-                                {{-- Rata kanan: tombol Tinjau jadi elemen paling kanan di setiap baris,
-                                sehingga kolomnya membentuk satu rel lurus meski lebar tombol
-                                utamanya berbeda-beda (atau tidak ada sama sekali). --}}
                                 <th
-                                    style="padding:11px 16px; text-align:right; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:170px;">
+                                    style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:72px;">
                                     Aksi</th>
                             </tr>
                         </thead>
@@ -1042,14 +940,14 @@
                                         ] : null,
                                     ];
                                 @endphp
-                                <tr style="border-bottom:1px solid #e5e7eb; transition:background .12s;"
+                                <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s;"
                                     onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
                                     <td style="padding:14px 12px; font-size:13px; color:var(--c-fg-muted); width:48px;">
                                         {{ ($prestasiData->currentPage() - 1) * $prestasiData->perPage() + $i + 1 }}
                                     </td>
                                     <td style="padding:14px 16px; min-width:180px;">
                                         <p
-                                            style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; max-width:220px;">
+                                            style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow-wrap:break-word; line-height:1.5; max-width:220px;">
                                             {{ $p->nama_prestasi }}</p>
                                     </td>
                                     <td style="padding:14px 16px;"><span
@@ -1072,7 +970,7 @@
                                             @endif
                                         </span>
                                     </td>
-                                    <td style="padding:14px 16px; text-align:right;">
+                                    <td style="padding:14px 16px; text-align:center;">
                                         @if(!$pDiputus && $canSubmit)
                                             {{-- Lihat catatan pada form tarik di tabel Riwayat Kegiatan --}}
                                             <form method="POST" id="tarikPrestasiForm{{ $p->id }}" style="display:none;"
@@ -1080,17 +978,9 @@
                                                 @csrf @method('DELETE')
                                             </form>
                                         @endif
-                                        <div class="aksi-rail">
-                                            <button type="button" class="mk-btn mk-btn--primary mk-btn--sm"
-                                                onclick="openTinjau(@js($tinjauPrestasiPayload))">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                                    <circle cx="12" cy="12" r="3" />
-                                                </svg>
-                                                Tinjau
-                                            </button>
-                                        </div>
+                                        @include('manajemenmahasiswa::verifikasi.partials.aksi-menu', ['items' => [
+                                            ['label' => 'Tinjau', 'fn' => 'openTinjau', 'payload' => $tinjauPrestasiPayload],
+                                        ]])
                                     </td>
                                 </tr>
                             @endforeach
@@ -1101,7 +991,7 @@
                 @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $prestasiData])
             @else
                 <div class="empty-state">
-                    <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;"
+                    <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:var(--c-border);"
                             stroke="currentColor" stroke-width="1.5">
                             <circle cx="12" cy="8" r="7"></circle>
                             <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
@@ -1152,10 +1042,10 @@
     @if($tab === 'klaim')
         <!-- Klaim Prestasi - Global Style Table Card -->
         <div
-            style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; margin-bottom:18px;">
+            style="background:#fff; border:1px solid var(--c-border); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; margin-bottom:18px;">
             <!-- Table Toolbar -->
             <div
-                style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #e5e7eb; gap:10px; flex-wrap:wrap;">
+                style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border); gap:10px; flex-wrap:wrap;">
                 <h2
                     style="font-size:14px; font-weight:700; color:var(--c-fg); margin:0; display:flex; align-items:center; gap:8px;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary)" stroke-width="2"
@@ -1169,15 +1059,16 @@
 
                 {{-- Ringkasan kuota di kanan toolbar, sejajar judul tabel — mengisi
                      ruang kosong di sebelah judul, bukan strip tambahan di atas
-                     tabel. Dibaca sebagai kalimat aturan: "tanpa batas, kecuali
-                     [kelompok terbatas: sisa X dari N]". Penjelasan lengkapnya di
+                     tabel. Dua pil sejajar: "Kuota reward: tanpa batas" dan
+                     "Kuota [kelompok terbatas]: sisa X dari N". Penjelasan lengkapnya di
                      modal lewat tombol sekunder — bukan tooltip, yang tidak
                      muncul di HP. --}}
                 <div class="kuota-toolbar">
                     <div class="kuota-ringkas">
-                        <span class="kuota-ringkas-label">Kuota reward:</span>
                         @if($adaTanpaBatas)
-                            <span class="kuota-ringkas-teks">tanpa batas, kecuali</span>
+                            <span class="kuota-pill">Kuota reward: tanpa batas</span>
+                        @else
+                            <span class="kuota-ringkas-label">Kuota reward:</span>
                         @endif
                         @foreach($P::KUOTA_MAKS as $grup => $maks)
                             @continue($maks === null)
@@ -1186,7 +1077,7 @@
                                 $sisa = max($maks - ($kuotaTerpakai[$grup] ?? 0), 0);
                             @endphp
                             <span class="kuota-pill {{ $sisa === 0 ? 'penuh' : ($sisa === 1 && $maks > 1 ? 'hampir' : '') }}">
-                                {{ ucfirst($P::KUOTA_LABELS[$grup]) }}: {{ $sisa === 0 ? 'habis' : "sisa {$sisa} dari {$maks}" }}
+                                {{ $adaTanpaBatas ? 'Kuota ' : '' }}{{ ucfirst($P::KUOTA_LABELS[$grup]) }}: {{ $sisa === 0 ? 'habis' : "sisa {$sisa} dari {$maks}" }}
                             </span>
                         @endforeach
                     </div>
@@ -1209,9 +1100,9 @@
             {{-- Peringatan kuota penuh ada di callout di atas kartu ini. --}}
             @if($prestasiData->count() > 0)
                 <div style="overflow-x:auto;">
-                    <table style="width:100%; border-collapse:collapse; min-width:1100px;">
+                    <table class="klaim-table" style="width:100%; border-collapse:collapse; min-width:1100px;">
                         <thead>
-                            <tr style="border-bottom:1px solid #e5e7eb; background:#FAFAFA;">
+                            <tr style="border-bottom:1px solid var(--c-border); background:#FAFAFA;">
                                 <th
                                     style="padding:11px 12px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:48px;">
                                     No</th>
@@ -1223,10 +1114,7 @@
                                     Tingkat</th>
                                 <th
                                     style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
-                                    Tanggal</th>
-                                <th
-                                    style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
-                                    Tahun Ajaran</th>
+                                    Tanggal Raih</th>
                                 <th
                                     style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
                                     SKS Diklaim</th>
@@ -1237,7 +1125,7 @@
                                     style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
                                     Status Reward</th>
                                 <th
-                                    style="padding:11px 16px; text-align:right; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:290px;">
+                                    style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:72px;">
                                     Aksi</th>
                             </tr>
                         </thead>
@@ -1265,6 +1153,12 @@
                                     ];
 
                                     $mkUsulan = $p->reward_mk_diajukan ?? [];
+                                    // Modal Tinjau membaca daftar teks, jadi tahun ajaran tiap MK
+                                    // ikut ditempel di labelnya.
+                                    $mkUsulanLabel = array_map(
+                                        fn ($m) => $m['nama'] . ($m['ta_label'] ? ' — ' . $m['ta_label'] : ''),
+                                        $p->reward_mk_list
+                                    );
                                     // Nama kelas badge mengikuti .claim-badge di tabel, bukan nilai
                                     // statusnya — 'belum_ajukan' tidak punya padanan kelas.
                                     $rewardKelas = match ($p->reward_status) {
@@ -1283,10 +1177,9 @@
                                                 $p->reward_capaian_label
                                                 . ($p->reward_is_invention ? ' · invention/expo/fair' : '')
                                             ] : null,
-                                            $p->reward_tahun_ajaran_label ? ['Tahun Ajaran', $p->reward_tahun_ajaran_label] : null,
                                             $p->reward_jml_mk_max ? ['Jatah', $p->reward_jml_mk_max . ' mata kuliah, maksimal ' . $p->reward_sks_max . ' SKS'] : null,
                                             $p->reward_sks_diajukan !== null ? ['SKS diklaim', $p->reward_sks_diajukan . ' SKS'] : null,
-                                            count($mkUsulan) ? [($p->reward_status === $P::CLAIM_DISETUJUI ? 'Mata kuliah disetujui' : 'Mata kuliah usulan'), $mkUsulan] : null,
+                                            count($mkUsulan) ? [($p->reward_status === $P::CLAIM_DISETUJUI ? 'Mata kuliah disetujui' : 'Mata kuliah usulan'), $mkUsulanLabel] : null,
                                             (!count($mkUsulan) && $p->reward_mk_disetujui) ? ['Mata kuliah disetujui', $p->reward_mk_disetujui] : null,
                                             $p->reward_note ? [($p->reward_status === $P::CLAIM_DITOLAK ? 'Alasan' : 'Catatan'), $p->reward_note] : null,
                                             $p->reward_status === $P::CLAIM_BELUM_AJUKAN
@@ -1311,34 +1204,36 @@
                                         ] : null,
                                     ];
 
-                                    // Payload modal Ajukan/Ajukan Ulang Reward — kerangkanya sama dengan
-                                    // modal Tinjau (bukti di kiri, data di kanan), isinya formulir.
-                                    $ajukanRewardPayload = [
-                                        'id' => $p->id,
-                                        'judul' => $p->reward_status === $P::CLAIM_DITOLAK
-                                            ? 'Ajukan Ulang Reward Prestasi'
-                                            : 'Ajukan Reward Prestasi',
-                                        'sections' => [$blokPengajuan],
-                                        'bukti' => $pBukti,
-                                        // SK 774 poin 9 — hanya penanda, pengajuan tetap boleh
-                                        'pra_sk' => $p->rewardSebelumMasaBerlaku(),
-                                    ];
+                                     // Payload modal Ajukan/Ajukan Ulang Reward — kerangkanya sama dengan
+                                     // modal Tinjau (bukti di kiri, data di kanan), isinya formulir.
+                                     $ajukanRewardPayload = [
+                                         'id' => $p->id,
+                                         'judul' => $p->reward_status === $P::CLAIM_DITOLAK
+                                             ? 'Ajukan Ulang Reward Prestasi'
+                                             : 'Ajukan Reward Prestasi',
+                                         'sections' => [$blokPengajuan],
+                                         'bukti' => $pBukti,
+                                         // SK 774 poin 9 — hanya penanda, pengajuan tetap boleh
+                                         'pra_sk' => $p->rewardSebelumMasaBerlaku(),
+                                     ];
 
-                                    // Langkah maju yang benar-benar bisa diambil pada baris ini.
-                                    $rewardBisaDiajukan = !($isAlumni ?? false)
-                                        && !in_array($p->reward_status, [$P::CLAIM_DIAJUKAN, $P::CLAIM_DISETUJUI], true);
-                                    $rewardLabelAksi = $p->reward_status === $P::CLAIM_DITOLAK
-                                        ? 'Ajukan Ulang Reward'
-                                        : 'Ajukan Reward';
+                                     // Langkah maju yang benar-benar bisa diambil pada baris ini.
+                                     // Umur prestasi tidak menghalangi apa pun di sisi mahasiswa — klaim
+                                     // yang lewat 1 tahun hanya ditandai untuk admin.
+                                     $rewardBisaDiajukan = !($isAlumni ?? false)
+                                         && !in_array($p->reward_status, [$P::CLAIM_DIAJUKAN, $P::CLAIM_DISETUJUI], true);
+                                     $rewardLabelAksi = $p->reward_status === $P::CLAIM_DITOLAK
+                                         ? 'Ajukan Ulang Reward'
+                                         : 'Ajukan Reward';
                                 @endphp
-                                <tr style="border-bottom:1px solid #e5e7eb; transition:background .12s;"
+                                <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s;"
                                     onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
                                     <td style="padding:14px 12px; font-size:13px; color:var(--c-fg-muted); width:48px;">
                                         {{ ($prestasiData->currentPage() - 1) * $prestasiData->perPage() + $i + 1 }}
                                     </td>
                                     <td style="padding:14px 16px; min-width:180px;">
                                         <p
-                                            style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; max-width:220px;">
+                                            style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow-wrap:break-word; line-height:1.5; max-width:220px;">
                                             {{ $p->nama_prestasi }}</p>
                                     </td>
                                     <td style="padding:14px 16px;"><span
@@ -1352,13 +1247,6 @@
                                         @endif
                                     </td>
                                     <td style="padding:14px 16px; font-size:13px; white-space:nowrap;">
-                                        @if($p->reward_tahun_ajaran_label)
-                                            {{ $p->reward_tahun_ajaran_label }}
-                                        @else
-                                            <span style="color:#d1d5db;">—</span>
-                                        @endif
-                                    </td>
-                                    <td style="padding:14px 16px; font-size:13px; white-space:nowrap;">
                                         @if($p->reward_sks_diajukan !== null)
                                             <span style="font-weight:600;">{{ $p->reward_sks_diajukan }} SKS</span>
                                             @if($p->reward_sks_max)
@@ -1366,21 +1254,23 @@
                                                     {{ $p->reward_sks_max }}</div>
                                             @endif
                                         @else
-                                            <span style="color:#d1d5db;">—</span>
+                                            <span style="color:var(--c-border-strong);">—</span>
                                         @endif
                                     </td>
                                     <td style="padding:14px 16px;">
                                         @if(count($mkUsulan))
+                                            {{-- Satu baris per MK dengan tahun ajarannya sendiri — maksimal 3 MK,
+                                            jadi daftarnya ditampilkan utuh. --}}
                                             <div class="mk-sel">
-                                                @foreach(array_slice($mkUsulan, 0, 2) as $mkNama)
-                                                    <span class="mk-sel-tag">{{ $mkNama }}</span>
+                                                @foreach($p->reward_mk_list as $mkItem)
+                                                    <div class="mk-sel-item">
+                                                        <span class="mk-sel-tag">{{ $mkItem['nama'] }}</span>
+                                                        <span class="mk-sel-ta">{{ $mkItem['ta_label'] ?? '—' }}</span>
+                                                    </div>
                                                 @endforeach
-                                                @if(count($mkUsulan) > 2)
-                                                    <span class="mk-sel-tag">+{{ count($mkUsulan) - 2 }}</span>
-                                                @endif
                                             </div>
                                         @else
-                                            <span style="color:#d1d5db;">—</span>
+                                            <span style="color:var(--c-border-strong);">—</span>
                                         @endif
                                     </td>
                                     <td style="padding:14px 16px;">
@@ -1401,32 +1291,31 @@
                                             <span class="claim-badge belum">Belum diajukan</span>
                                         @endif
                                     </td>
-                                    <td style="padding:14px 16px; text-align:right;">
-                                        <div class="aksi-rail">
-                                            @if($rewardBisaDiajukan)
-                                                @if($kuotaSemuaPenuh)
-                                                    {{-- Kedua kelompok kuota habis: kategori apa pun yang
-                                                    dipilih pasti tertahan, jadi jangan biarkan mahasiswa
-                                                    mengisi formulir lalu menunggu penolakan. --}}
-                                                    <button type="button" class="mk-btn mk-btn--primary" disabled
-                                                        title="Semua kuota reward Anda sudah habis. Buka &quot;Aturan &amp; rincian&quot; di kanan atas tabel untuk melihat prestasi mana yang memakainya.">
-                                                        Kuota reward habis
-                                                    </button>
-                                                @else
-                                                    <button type="button" class="mk-btn mk-btn--primary"
-                                                        onclick="openAjukanReward(@js($ajukanRewardPayload))">{{ $rewardLabelAksi }}</button>
-                                                @endif
-                                            @endif
-                                            <button type="button" class="mk-btn mk-btn--primary mk-btn--sm"
-                                                onclick="openTinjau(@js($tinjauKlaimPayload))">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                                    <circle cx="12" cy="12" r="3" />
-                                                </svg>
-                                                Tinjau
-                                            </button>
-                                        </div>
+                                    <td style="padding:14px 16px; text-align:center;">
+                                        @php
+                                            // Langkah maju (Ajukan Reward) di atas, Tinjau di bawah.
+                                            // Kedua kelompok kuota habis: kategori apa pun yang dipilih
+                                            // pasti tertahan, jadi butirnya dimatikan supaya mahasiswa
+                                            // tidak mengisi formulir lalu menunggu penolakan.
+                                            $itemAksiKlaim = [];
+                                            if ($rewardBisaDiajukan) {
+                                                $itemAksiKlaim[] = $kuotaSemuaPenuh
+                                                    ? [
+                                                        'label'    => 'Kuota reward habis',
+                                                        'icon'     => 'gift',
+                                                        'disabled' => true,
+                                                        'title'    => 'Semua kuota reward Anda sudah habis. Buka "Aturan & rincian" di kanan atas tabel untuk melihat prestasi mana yang memakainya.',
+                                                    ]
+                                                    : [
+                                                        'label'   => $rewardLabelAksi,
+                                                        'icon'    => 'gift',
+                                                        'fn'      => 'openAjukanReward',
+                                                        'payload' => $ajukanRewardPayload,
+                                                    ];
+                                            }
+                                            $itemAksiKlaim[] = ['label' => 'Tinjau', 'fn' => 'openTinjau', 'payload' => $tinjauKlaimPayload];
+                                        @endphp
+                                        @include('manajemenmahasiswa::verifikasi.partials.aksi-menu', ['items' => $itemAksiKlaim])
                                     </td>
                                 </tr>
                             @endforeach
@@ -1437,7 +1326,7 @@
                 @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $prestasiData])
             @else
                 <div class="empty-state">
-                    <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;"
+                    <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:var(--c-border);"
                             stroke="currentColor" stroke-width="1.5">
                             <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6" />
                             <path d="M9 12l2 2 4-4" />
@@ -1467,22 +1356,10 @@
         <div class="modal fade" id="rincianKuotaModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold" style="color: #0D0D12;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                style="vertical-align:-3px;">
-                                <line x1="8" y1="6" x2="21" y2="6" />
-                                <line x1="8" y1="12" x2="21" y2="12" />
-                                <line x1="8" y1="18" x2="21" y2="18" />
-                                <line x1="3" y1="6" x2="3.01" y2="6" />
-                                <line x1="3" y1="12" x2="3.01" y2="12" />
-                                <line x1="3" y1="18" x2="3.01" y2="18" />
-                            </svg>
-                            Aturan &amp; Rincian Kuota Reward
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
+                    <x-manajemenmahasiswa::ui.modal-header subtitle="Ketentuan klaim reward prestasi mahasiswa">
+                        <x-slot:icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg></x-slot:icon>
+                        Aturan &amp; Rincian Kuota Reward
+                    </x-manajemenmahasiswa::ui.modal-header>
                     <div class="modal-body">
                         <p style="font-size:11px; color:var(--c-fg-muted); margin:0 0 16px;">
                             Dasar aturan: {{ $P::SK_BERLAKU }}, dengan batas kuota dari kebijakan departemen.
@@ -1514,8 +1391,8 @@
                                         @endif
                                     </li>
                                     <li>Setiap mata kuliah hanya bisa dinaikkan nilainya satu tingkat lebih tinggi, dan harus bernilai minimal C.</li>
+                                    <li>Mata kuliah yang sudah mendapatkan reward tidak bisa dipilih lagi.</li>
                                     <li>Hanya mata kuliah yang sudah pernah diambil yang bisa diajukan kenaikan nilainya.</li>
-                                    <li>Klaim kenaikan nilai paling lambat diajukan 1 tahun sejak tanggal lomba diadakan.</li>
                                     <li>Khusus kuota invention/expo/fair, pengajuan yang masih dalam tahap menunggu review tetap memakai jatah kuota tersebut selama belum diproses.</li>
                                 </ul>
                             </div>
@@ -1536,15 +1413,14 @@
                 <form method="POST" action="{{ route('manajemenmahasiswa.verifikasi.riwayat.store') }}"
                     enctype="multipart/form-data">
                     @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold">Ajukan Riwayat Kegiatan</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
+                    <x-manajemenmahasiswa::ui.modal-header subtitle="Catat kegiatan di luar sistem untuk diverifikasi admin">
+                        <x-slot:icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg></x-slot:icon>
+                        Ajukan Riwayat Kegiatan
+                    </x-manajemenmahasiswa::ui.modal-header>
                     <div class="modal-body">
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label class="form-label-custom mb-0">Nama Kegiatan <span
-                                        style="color: #dc2626;">*</span></label>
+                                <label class="form-label-custom mb-0">Nama Kegiatan <span class="required">*</span></label>
                                 <span class="text-muted" style="font-size: 11px;" id="charCount_nama_kegiatan_manual">0
                                     / {{ $maksNama }} huruf</span>
                             </div>
@@ -1557,8 +1433,7 @@
                         </div>
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label class="form-label-custom mb-0">Peran <span
-                                        style="color: #dc2626;">*</span></label>
+                                <label class="form-label-custom mb-0">Peran <span class="required">*</span></label>
                                 <span class="text-muted" style="font-size: 11px;" id="charCount_peran_manual">0 / {{ $maksPeran }}
                                     huruf</span>
                             </div>
@@ -1568,8 +1443,7 @@
                                 oninput="document.getElementById('charCount_peran_manual').innerText = this.value.length + ' / {{ $maksPeran }} huruf'">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label-custom">Tanggal Kegiatan <span
-                                    style="color: #dc2626;">*</span></label>
+                            <label class="form-label-custom">Tanggal Kegiatan <span class="required">*</span></label>
                             {{-- max hari ini: kegiatan yang belum terjadi belum punya bukti,
                             dan tahunnya ikut terbawa ke statistik. Divalidasi ulang di server. --}}
                             <input type="date" name="tanggal_kegiatan" class="form-control form-control-custom"
@@ -1577,19 +1451,19 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label-custom">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626"
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    style="vertical-align: -2px;">
+                                    style="vertical-align: -2px; color: var(--c-error);">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                     <polyline points="14 2 14 8 20 8"></polyline>
                                 </svg>
-                                Bukti Kegiatan <span style="color: #dc2626;">*</span>
+                                Bukti Kegiatan <span class="required">*</span>
                             </label>
                             <input type="file" name="bukti_docs[]" id="riwayatDocs"
                                 class="form-control form-control-custom" required accept="application/pdf,.pdf"
                                 style="padding: 8px 14px;">
                             <small class="text-muted" style="font-size: 11px;">Gabungkan semua bukti (sertifikat, surat
-                                tugas, foto, dsb.) dalam <b>1 file PDF</b>. Maks 10MB.</small>
+                                tugas, foto, dsb.) dalam <b>1 file PDF</b>. Maks 5MB.</small>
                             <div class="doc-preview-list" id="riwayatDocsPreview"></div>
                         </div>
                     </div>
@@ -1609,15 +1483,14 @@
                 <form method="POST" action="{{ route('manajemenmahasiswa.verifikasi.prestasi.store') }}"
                     enctype="multipart/form-data">
                     @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold">Ajukan Prestasi Lomba</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
+                    <x-manajemenmahasiswa::ui.modal-header subtitle="Kirim prestasi lomba untuk diverifikasi admin">
+                        <x-slot:icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></x-slot:icon>
+                        Ajukan Prestasi Lomba
+                    </x-manajemenmahasiswa::ui.modal-header>
                     <div class="modal-body">
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label class="form-label-custom mb-0">Nama Prestasi <span
-                                        style="color: #dc2626;">*</span></label>
+                                <label class="form-label-custom mb-0">Nama Prestasi <span class="required">*</span></label>
                                 <span class="text-muted" style="font-size: 11px;" id="charCount_nama_prestasi">0 / {{ $maksNama }}
                                     huruf</span>
                             </div>
@@ -1627,7 +1500,7 @@
                                 oninput="document.getElementById('charCount_nama_prestasi').innerText = this.value.length + ' / {{ $maksNama }} huruf'">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label-custom">Tingkat <span style="color: #dc2626;">*</span></label>
+                            <label class="form-label-custom">Tingkat <span class="required">*</span></label>
                             <x-manajemenmahasiswa::ui.select name="tingkat" size="lg" required>
                                 <option value="">Pilih tingkat...</option>
                                 @foreach($P::TINGKAT_LIST as $tk)
@@ -1636,7 +1509,7 @@
                             </x-manajemenmahasiswa::ui.select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label-custom">Tanggal <span style="color: #dc2626;">*</span></label>
+                            <label class="form-label-custom">Tanggal <span class="required">*</span></label>
                             {{-- Lihat catatan max pada tanggal kegiatan --}}
                             <input type="date" name="tanggal" class="form-control form-control-custom" required
                                 max="{{ date('Y-m-d') }}" value="{{ old('tanggal', date('Y-m-d')) }}">
@@ -1644,19 +1517,19 @@
 
                         <div class="mb-3">
                             <label class="form-label-custom">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626"
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    style="vertical-align: -2px;">
+                                    style="vertical-align: -2px; color: var(--c-error);">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                     <polyline points="14 2 14 8 20 8"></polyline>
                                 </svg>
-                                Bukti Kegiatan <span style="color: #dc2626;">*</span>
+                                Bukti Kegiatan <span class="required">*</span>
                             </label>
                             <input type="file" name="bukti_docs[]" id="prestasiDocs"
                                 class="form-control form-control-custom" required accept="application/pdf,.pdf"
                                 style="padding: 8px 14px;">
                             <small class="text-muted" style="font-size: 11px;">Gabungkan semua bukti (sertifikat, surat
-                                tugas/lomba, foto, dsb.) dalam <b>1 file PDF</b>. Maks 10MB.</small>
+                                tugas/lomba, foto, dsb.) dalam <b>1 file PDF</b>. Maks 5MB.</small>
                             <div class="doc-preview-list" id="prestasiDocsPreview"></div>
                         </div>
                     </div>
@@ -1678,18 +1551,10 @@
             <div class="modal-content" style="overflow: hidden;">
                 <form method="POST" id="ajukanRewardForm">
                     @csrf @method('PATCH')
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold" style="color: #0D0D12;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                style="vertical-align:-3px;">
-                                <circle cx="12" cy="8" r="7"></circle>
-                                <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
-                            </svg>
-                            <span id="arJudul">Ajukan Reward Prestasi</span>
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
+                    <x-manajemenmahasiswa::ui.modal-header subtitle="Pilih kategori, capaian, dan mata kuliah yang diajukan">
+                        <x-slot:icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></x-slot:icon>
+                        <span id="arJudul">Ajukan Reward Prestasi</span>
+                    </x-manajemenmahasiswa::ui.modal-header>
                     <div class="modal-body" style="padding: 0;">
                         <div class="tp-grid">
                             @include('manajemenmahasiswa::verifikasi.partials.tinjau-bukti-pane')
@@ -1699,7 +1564,9 @@
                                 sama persis dengan yang tampil di modal Tinjau. --}}
                                 <div id="arFields"></div>
 
-                                <div class="tp-section">
+                                {{-- #arFields berisi .tp-section sendiri, jadi aturan sibling
+                                .tp-section + .tp-section tidak mengenai blok ini; jaraknya diberi manual. --}}
+                                <div class="tp-section" style="margin-top:28px;">
                                     <p class="tp-pane-heading">Formulir reward</p>
                                     {{-- SK 774 poin 9 — penanda saja, pengajuan tetap bisa dikirim --}}
                                     <div id="arPraSk" class="sk-lawas" style="display:none; margin:0 0 12px;">
@@ -1707,8 +1574,7 @@
                                         prestasi tersebut masih diatur SE 176/2020, jadi departemen dapat menolaknya.
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label-custom">Kategori Penyelenggara <span
-                                                style="color:#dc2626;">*</span></label>
+                                        <label class="form-label-custom">Kategori Penyelenggara <span class="required">*</span></label>
                                         <x-manajemenmahasiswa::ui.select name="reward_penyelenggara" id="arPenyelenggara"
                                             size="lg" required>
                                             <option value="">Pilih kategori...</option>
@@ -1718,29 +1584,15 @@
                                         </x-manajemenmahasiswa::ui.select>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label-custom">Capaian / Peringkat <span
-                                                style="color:#dc2626;">*</span></label>
+                                        <label class="form-label-custom">Capaian / Peringkat <span class="required">*</span></label>
                                         <x-manajemenmahasiswa::ui.select name="reward_capaian" id="arCapaian"
                                             size="lg" required disabled>
                                             <option value="">Pilih penyelenggara dulu...</option>
                                         </x-manajemenmahasiswa::ui.select>
                                     </div>
-                                    <div class="mb-3">
-                                        <label class="form-label-custom">Tahun Ajaran <span
-                                                style="color:#dc2626;">*</span></label>
-                                        {{-- Daftarnya dihitung dari tanggal hari ini, jadi bertambah
-                                        sendiri tiap semester berganti. --}}
-                                        <x-manajemenmahasiswa::ui.select name="reward_tahun_ajaran" id="arTahunAjaran"
-                                            size="lg" required>
-                                            <option value="">Pilih tahun ajaran...</option>
-                                            @foreach(\Modules\ManajemenMahasiswa\Models\Prestasi::tahunAjaranList() as $taKode => $taLabel)
-                                                <option value="{{ $taKode }}">{{ $taLabel }}</option>
-                                            @endforeach
-                                        </x-manajemenmahasiswa::ui.select>
-                                    </div>
                                     <div class="mb-3" id="arInventionWrap" style="display:none;">
                                         <label
-                                            style="font-size:13px; color:#374151; display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                                            style="font-size:13px; color:var(--c-fg-sec); display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
                                             <input type="checkbox" name="reward_is_invention" id="arInvention" value="1"
                                                 style="margin-top:3px;">
                                             @php $maksInv = $P::KUOTA_MAKS[$P::KUOTA_INVENTION]; @endphp
@@ -1758,42 +1610,65 @@
                                     <div class="jatah-preview" id="arJatahPreview" style="display:none;"></div>
 
                                     <div class="mb-3 mt-3" id="arMkWrap" style="display:none;">
-                                        <label class="form-label-custom">
-                                            Usulan Mata Kuliah yang Dinaikkan Nilainya <span
-                                                style="color:#dc2626;">*</span>
-                                            <span style="font-weight:400; color:#666D80;">(maks <span
-                                                    id="arMkMax">0</span> MK)</span>
-                                        </label>
-                                        <div class="d-flex gap-2">
-                                            <x-manajemenmahasiswa::ui.select id="arMkSelect" size="lg"
-                                                style="flex:1;">
-                                                <option value="">Pilih mata kuliah...</option>
-                                                @foreach(\Modules\ManajemenMahasiswa\Models\Prestasi::MATA_KULIAH as $smt => $mks)
-                                                    <optgroup label="{{ $smt }}">
-                                                        @foreach($mks as $namaMk => $sksMk)
-                                                            <option value="{{ $namaMk }}">{{ $namaMk }} ({{ $sksMk }} SKS)
-                                                            </option>
+                                        {{-- Judul dibuat pendek seperti label isian lain; batas jumlahnya
+                                        sudah tampil di kotak jatah di atas dan penghitung di bawah. --}}
+                                        <label class="form-label-custom">Mata Kuliah <span class="required">*</span></label>
+                                        <x-manajemenmahasiswa::ui.select id="arMkSelect" size="lg">
+                                            <option value="">Pilih mata kuliah...</option>
+                                            @foreach(\Modules\ManajemenMahasiswa\Models\Prestasi::MATA_KULIAH as $smt => $mks)
+                                                <optgroup label="{{ $smt }}">
+                                                    @foreach($mks as $namaMk => $sksMk)
+                                                        <option value="{{ $namaMk }}">{{ $namaMk }} ({{ $sksMk }} SKS)
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+                                            @endforeach
+                                        </x-manajemenmahasiswa::ui.select>
+                                        {{-- Tahun ajaran diisi per mata kuliah: begitu sebuah MK dipilih, barisnya
+                                        muncul dengan kolom tahun ajaran di sebelah kanannya, karena tiap MK
+                                        bisa diambil di semester yang berbeda. Jatah maksimal 3 MK, jadi
+                                        disediakan 3 baris tetap yang dinyalakan satu per satu oleh JS.
+                                        Daftar tahun ajaran dihitung dari tanggal hari ini, jadi bertambah
+                                        sendiri tiap semester berganti. --}}
+                                        <div id="arMkChosen" class="mk-chosen">
+                                            @for($slot = 0; $slot < 3; $slot++)
+                                                <div class="mk-row" data-slot="{{ $slot }}" style="display:none;">
+                                                    <span class="mk-chip">
+                                                        <span class="mk-teks">
+                                                            <span class="mk-nama"></span>
+                                                            <span class="mk-sks"></span>
+                                                        </span>
+                                                        <button type="button" class="mk-remove" aria-label="Hapus mata kuliah">&times;</button>
+                                                    </span>
+                                                    <x-manajemenmahasiswa::ui.select id="arMkTa{{ $slot }}" size="lg" :block="false"
+                                                        class="mk-row-ta" data-slot="{{ $slot }}">
+                                                        <option value="">Tahun ajaran...</option>
+                                                        @foreach(\Modules\ManajemenMahasiswa\Models\Prestasi::tahunAjaranList() as $taKode => $taLabel)
+                                                            <option value="{{ $taKode }}">{{ $taLabel }}</option>
                                                         @endforeach
-                                                    </optgroup>
-                                                @endforeach
-                                            </x-manajemenmahasiswa::ui.select>
-                                            <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" id="arMkAddBtn"
-                                                style="white-space:nowrap;">+ Tambah</button>
+                                                    </x-manajemenmahasiswa::ui.select>
+                                                </div>
+                                            @endfor
                                         </div>
-                                        <div id="arMkChosen" class="mk-chosen"></div>
                                         <div id="arMkCounter" class="mk-counter"></div>
                                         <div id="arMkHidden"></div>
-                                        <small class="text-muted" style="font-size:11px;">Pilih MK kurikulum Teknik
-                                            Komputer yang nilainya ingin dinaikkan (syarat min. C). MK yang sudah dipakai
-                                            di klaim lain tidak bisa dipilih lagi.</small>
+                                        <ul class="mk-bantuan">
+                                            <li>Pilih mata kuliah kurikulum Teknik Komputer yang nilainya ingin dinaikkan.</li>
+                                            <li>Setelah dipilih, isi tahun ajaran saat mata kuliah itu diambil di kolom
+                                                sebelah kanannya.</li>
+                                            <li>Mata kuliah yang sudah mendapatkan reward tidak bisa dipilih lagi.</li>
+                                        </ul>
                                     </div>
 
-                                    <div style="font-size:11px; color:#666D80; margin-top:10px; line-height:1.5;">
-                                        Catatan: departemen berwenang menyetujui atau menolak usulan MK ini (SK 774
-                                        poin 7). Kalau ditolak, ajukan ulang dengan MK lain. Reward hanya untuk MK
-                                        bernilai minimal C, dan setiap MK hanya bisa dinaikkan sekali. Aturan kuota
-                                        lengkapnya ada di "Aturan &amp; rincian" di kanan atas tabel.
-                                    </div>
+                                    <p class="mk-bantuan-judul">Catatan</p>
+                                    <ul class="mk-bantuan">
+                                        <li>Reward hanya untuk mata kuliah bernilai minimal C, dan setiap mata kuliah hanya
+                                            bisa dinaikkan sekali.</li>
+                                        <li>Departemen berwenang menyetujui atau menolak usulan mata kuliah ini sesuai
+                                            dengan SK 774 poin 7. Harap memperhatikan alasan penolakan yang tertera sebelum
+                                            mengajukan kembali.</li>
+                                        <li>Aturan kuota lengkapnya ada di "Aturan &amp; rincian" di kanan atas tabel.</li>
+                                    </ul>
                                 </div>
 
                                 {{-- Tombol memakai bentuk yang sama dengan panel keputusan di modal
@@ -1843,9 +1718,9 @@
                     <div id="claimConfirmIcon"
                         style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
                     </div>
-                    <h5 id="claimConfirmTitle" class="fw-bold mb-2" style="color: #1f2937;"></h5>
+                    <h5 id="claimConfirmTitle" class="fw-bold mb-2" style="color: var(--c-fg);"></h5>
                     <p id="claimConfirmText"
-                        style="color: #666D80; font-size: 14px; line-height: 1.5; margin-bottom: 0;"></p>
+                        style="color: var(--c-fg-muted); font-size: 14px; line-height: 1.5; margin-bottom: 0;"></p>
                 </div>
                 <div class="modal-footer" style="justify-content: center; gap: 8px;">
                     <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
@@ -2017,19 +1892,19 @@
             const textEl = document.getElementById('claimConfirmText');
             const btnEl = document.getElementById('claimConfirmBtn');
 
-            const ICON_WARN = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+            const ICON_WARN = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
 
             let activeFormId = null;
 
             window.openBatalConfirm = function (formId, namaPrestasi) {
                 activeFormId = formId;
-                iconEl.style.background = '#FFFBEB';
+                iconEl.style.background = 'var(--c-warning-subtle)'; iconEl.style.color = 'var(--c-warning)';
                 iconEl.innerHTML = ICON_WARN;
                 titleEl.textContent = 'Batalkan Pengajuan Reward';
                 textEl.innerHTML = 'Batalkan pengajuan reward untuk prestasi <strong class="cc-nama"></strong>? Anda bisa mengajukan ulang nanti.';
                 const namaEl = textEl.querySelector('.cc-nama');
                 if (namaEl) namaEl.textContent = '"' + namaPrestasi + '"';
-                btnEl.textContent = 'Ya, Batalkan';
+                btnEl.textContent = 'Ya';
                 ccModal.show();
             };
 
@@ -2037,13 +1912,13 @@
             // beserta berkasnya, jadi konfirmasinya menyebut itu apa adanya.
             window.openTarikConfirm = function (formId, nama) {
                 activeFormId = formId;
-                iconEl.style.background = '#FFFBEB';
+                iconEl.style.background = 'var(--c-warning-subtle)'; iconEl.style.color = 'var(--c-warning)';
                 iconEl.innerHTML = ICON_WARN;
                 titleEl.textContent = 'Tarik Pengajuan';
                 textEl.innerHTML = 'Tarik pengajuan <strong class="cc-nama"></strong> dari antrean verifikasi? Data & berkas buktinya dihapus, dan Anda perlu mengunggah ulang bila ingin mengajukannya lagi.';
                 const namaEl = textEl.querySelector('.cc-nama');
                 if (namaEl) namaEl.textContent = '"' + nama + '"';
-                btnEl.textContent = 'Ya, Tarik';
+                btnEl.textContent = 'Ya';
                 ccModal.show();
             };
 
@@ -2076,7 +1951,6 @@
             const submitLabelEl = document.getElementById('arSubmitLabel');
             const penyEl = document.getElementById('arPenyelenggara');
             const capEl = document.getElementById('arCapaian');
-            const taEl = document.getElementById('arTahunAjaran');
             const invWrap = document.getElementById('arInventionWrap');
             const invEl = document.getElementById('arInvention');
             const previewEl = document.getElementById('arJatahPreview');
@@ -2087,11 +1961,11 @@
             // Picker usulan mata kuliah
             const mkWrap = document.getElementById('arMkWrap');
             const mkSelect = document.getElementById('arMkSelect');
-            const mkAddBtn = document.getElementById('arMkAddBtn');
             const mkChosen = document.getElementById('arMkChosen');
+            // 3 baris tetap (jatah maksimal 3 MK), tiap baris punya dropdown tahun ajaran sendiri
+            const mkRows = Array.from(mkChosen.querySelectorAll('.mk-row'));
             const mkCounter = document.getElementById('arMkCounter');
             const mkHidden = document.getElementById('arMkHidden');
-            const mkMaxEl = document.getElementById('arMkMax');
 
             const LABELS = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::CAPAIAN_LABELS);
             const CAP_BY_PENY = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::CAPAIAN_BY_PENYELENGGARA);
@@ -2099,6 +1973,7 @@
             const JATAH_INV = @json($rewardJatahInvention);
             const PENY_LAINNYA = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::PENYELENGGARA_LAINNYA);
             const MK_SKS = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::mataKuliahFlat());
+            const TA_LABEL = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::tahunAjaranList());
             const BASE_URL = @json(url('manajemen-mahasiswa/verifikasi'));
 
             // Kuota milik mahasiswa ini — angkanya sama dengan yang dipakai guard
@@ -2131,41 +2006,47 @@
             }
 
             let arMkList = [];   // nama MK yang dipilih
+            let arMkTa = {};     // nama MK -> kode tahun ajaran pengambilannya
             let arJatahOk = false;
             let arKuotaOk = true; // kelompok kuota yang dituju masih tersisa
             let arCap = 0;    // maks jumlah MK
             let arSksMax = 0;    // maks total SKS
 
             function renderMk() {
-                mkChosen.innerHTML = '';
                 mkHidden.innerHTML = '';
                 let totalSks = 0;
-                arMkList.forEach(function (name) {
+                let tanpaTa = 0;
+                mkRows.forEach(function (row, i) {
+                    const name = arMkList[i];
+                    if (!name) { row.style.display = 'none'; return; }
+
                     const sks = MK_SKS[name] || 0;
                     totalSks += sks;
-                    const chip = document.createElement('span');
-                    chip.className = 'mk-chip';
-                    chip.appendChild(document.createTextNode(name + ' '));
-                    const s = document.createElement('span');
-                    s.className = 'mk-sks';
-                    s.textContent = '(' + sks + ' SKS)';
-                    chip.appendChild(s);
-                    const rm = document.createElement('button');
-                    rm.type = 'button';
-                    rm.className = 'mk-remove';
-                    rm.dataset.mk = name;
-                    rm.innerHTML = '&times;';
-                    chip.appendChild(rm);
-                    mkChosen.appendChild(chip);
+                    if (!arMkTa[name]) tanpaTa++;
+
+                    row.style.display = 'flex';
+                    row.querySelector('.mk-nama').textContent = name;
+                    row.querySelector('.mk-sks').textContent = sks + ' SKS';
+                    const taSel = row.querySelector('select');
+                    taSel.value = arMkTa[name] || '';
+                    syncSelect(taSel);
+
                     const hid = document.createElement('input');
                     hid.type = 'hidden';
                     hid.name = 'reward_mk_diajukan[]';
                     hid.value = name;
                     mkHidden.appendChild(hid);
+                    // Sejajar dengan reward_mk_diajukan[] — server memasangkannya per indeks
+                    const hidTa = document.createElement('input');
+                    hidTa.type = 'hidden';
+                    hidTa.name = 'reward_mk_ta[]';
+                    hidTa.value = arMkTa[name] || '';
+                    mkHidden.appendChild(hidTa);
                 });
                 const over = (arMkList.length > arCap) || (totalSks > arSksMax);
                 mkCounter.className = 'mk-counter' + (over ? ' over' : '');
-                mkCounter.textContent = 'Dipilih ' + arMkList.length + '/' + arCap + ' MK • Total ' + totalSks + ' SKS (maks ' + arSksMax + ')';
+                mkCounter.textContent = 'Dipilih ' + arMkList.length + '/' + arCap + ' mata kuliah • Total ' + totalSks + ' SKS (maks ' + arSksMax + ')'
+                    + (tanpaTa ? ' • Isi tahun ajaran ' + tanpaTa + ' mata kuliah' : '');
             }
 
             function currentTotalSks() {
@@ -2174,7 +2055,8 @@
 
             function refreshSubmit() {
                 const totalSks = currentTotalSks();
-                const valid = arKuotaOk && arJatahOk && taEl.value !== ''
+                const valid = arKuotaOk && arJatahOk
+                    && arMkList.every(function (n) { return !!arMkTa[n]; })
                     && arMkList.length >= 1 && arMkList.length <= arCap && totalSks <= arSksMax;
                 // Tampilan nonaktifnya diatur .mk-btn:disabled, jadi cukup flagnya
                 submitBtn.disabled = !valid;
@@ -2212,25 +2094,39 @@
                 kuotaEl.style.display = penuh ? 'block' : 'none';
             }
 
-            mkAddBtn.addEventListener('click', function () {
+            // Begitu sebuah MK dipilih, MK itu langsung masuk sebagai baris baru; kolom
+            // tahun ajarannya muncul di sebelah kanan dan wajib diisi sebelum Ajukan.
+            mkSelect.addEventListener('change', function () {
                 const v = mkSelect.value;
                 if (!v) return;
-                if (MK_TERPAKAI.indexOf(v) !== -1) return;   // sudah dipakai klaim lain
-                if (arMkList.indexOf(v) !== -1) { mkSelect.value = ''; syncSelect(mkSelect); return; }
-                if (arMkList.length >= arCap) return;   // jumlah MK sudah penuh
-                if (currentTotalSks() + (MK_SKS[v] || 0) > arSksMax) return;   // melebihi plafon SKS
-                arMkList.push(v);
                 mkSelect.value = '';
                 syncSelect(mkSelect);
+                if (MK_TERPAKAI.indexOf(v) !== -1) return;   // sudah dipakai klaim lain
+                if (arMkList.indexOf(v) !== -1) return;      // sudah ada di daftar
+                if (arMkList.length >= arCap) return;        // jumlah MK sudah penuh
+                if (currentTotalSks() + (MK_SKS[v] || 0) > arSksMax) return;   // melebihi plafon SKS
+                arMkList.push(v);
                 renderMk();
                 refreshSubmit();
+            });
+
+            // Tahun ajaran milik tiap MK diisi di baris MK itu sendiri
+            mkRows.forEach(function (row, i) {
+                row.querySelector('select').addEventListener('change', function (e) {
+                    const name = arMkList[i];
+                    if (!name) return;
+                    arMkTa[name] = e.target.value;
+                    renderMk();
+                    refreshSubmit();
+                });
             });
 
             mkChosen.addEventListener('click', function (e) {
                 const btn = e.target.closest('.mk-remove');
                 if (!btn) return;
-                const name = btn.dataset.mk;
+                const name = arMkList[Number(btn.closest('.mk-row').dataset.slot)];
                 arMkList = arMkList.filter(function (x) { return x !== name; });
+                delete arMkTa[name];
                 renderMk();
                 refreshSubmit();
             });
@@ -2249,16 +2145,15 @@
                 penyEl.value = '';
                 capEl.innerHTML = '<option value="">Pilih penyelenggara dulu...</option>';
                 capEl.disabled = true;
-                taEl.value = '';
                 syncSelect(penyEl);
                 syncSelect(capEl);
-                syncSelect(taEl);
                 invWrap.style.display = 'none';
                 invEl.checked = false;
                 previewEl.style.display = 'none';
                 kuotaEl.style.display = 'none';
                 kuotaEl.innerHTML = '';
                 arMkList = [];
+                arMkTa = {};
                 arJatahOk = false;
                 arKuotaOk = true;
                 arCap = 0;
@@ -2321,7 +2216,6 @@
                     arJatahOk = true;
                     arCap = jatah.jml_mk_max;
                     arSksMax = jatah.sks_max;
-                    mkMaxEl.textContent = arCap;
                     mkWrap.style.display = 'block';
                     // bila jatah mengecil (ganti kategori), pangkas pilihan yang melebihi
                     if (arMkList.length > arCap) arMkList = arMkList.slice(0, arCap);
@@ -2338,7 +2232,6 @@
 
             penyEl.addEventListener('change', function () { rebuildCapaian(); updatePreview(); });
             capEl.addEventListener('change', updatePreview);
-            taEl.addEventListener('change', refreshSubmit);
             invEl.addEventListener('change', updatePreview);
         })();
 

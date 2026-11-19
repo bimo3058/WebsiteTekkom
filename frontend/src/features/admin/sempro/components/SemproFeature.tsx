@@ -3,7 +3,7 @@
 import { useState, useMemo, Fragment } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { semproScheduleSchema, type SemproScheduleFormData } from '@/lib/validations/sempro';
+import { semproScheduleSchema, isExaminerSupervisor, EXAMINER_SUPERVISOR_ERROR, type SemproScheduleFormData } from '@/lib/validations/sempro';
 import type { ScheduleUpdatePayload } from '@/types/schedule';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -127,6 +127,19 @@ export function SemproFeature() {
     };
 
     const handleSchedule = async (data: SemproScheduleFormData) => {
+        // Guard against stale selections: examiner dropdown already filters out
+        // supervisors, but the group may have changed after examiners were picked.
+        const supervisorIds: number[] = [];
+        if (selectedGroup?.supervisor1?.id) supervisorIds.push(selectedGroup.supervisor1.id);
+        if (selectedGroup?.supervisor2?.id) supervisorIds.push(selectedGroup.supervisor2.id);
+        if (isExaminerSupervisor(data.examiner_1_id, supervisorIds)) {
+            form.setError('examiner_1_id', { type: 'manual', message: EXAMINER_SUPERVISOR_ERROR });
+            return;
+        }
+        if (isExaminerSupervisor(data.examiner_2_id, supervisorIds)) {
+            form.setError('examiner_2_id', { type: 'manual', message: EXAMINER_SUPERVISOR_ERROR });
+            return;
+        }
         interface SchedulePayload {
             group_id: number;
             date: string;
@@ -662,7 +675,20 @@ export function SemproFeature() {
                                     name="group_id"
                                     control={form.control}
                                     render={({ field }) => (
-                                        <Select value={field.value} onValueChange={field.onChange} disabled={!watchedPeriodId}>
+                                        <Select value={field.value} onValueChange={(val) => {
+                                            field.onChange(val);
+                                            const nextGroup = groups.find((g) => g.id.toString() === val);
+                                            const nextSupervisorIds: number[] = [];
+                                            if (nextGroup?.supervisor1?.id) nextSupervisorIds.push(nextGroup.supervisor1.id);
+                                            if (nextGroup?.supervisor2?.id) nextSupervisorIds.push(nextGroup.supervisor2.id);
+                                            if (isExaminerSupervisor(form.getValues('examiner_1_id'), nextSupervisorIds)) {
+                                                form.setValue('examiner_1_id', '');
+                                            }
+                                            if (isExaminerSupervisor(form.getValues('examiner_2_id'), nextSupervisorIds)) {
+                                                form.setValue('examiner_2_id', '');
+                                            }
+                                            form.clearErrors(['examiner_1_id', 'examiner_2_id']);
+                                        }} disabled={!watchedPeriodId}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder={watchedPeriodId ? "Select a group..." : "Select a period first..."} />
                                             </SelectTrigger>
@@ -775,6 +801,9 @@ export function SemproFeature() {
                                     />
                                     {form.formState.errors.examiner_1_id && (
                                         <p className="text-xs text-destructive">{form.formState.errors.examiner_1_id.message}</p>
+                                    )}
+                                    {selectedGroup && (
+                                        <p className="text-[11px] text-muted-foreground">Supervisors of the selected group are excluded.</p>
                                     )}
                                 </div>
                                 <div className="grid gap-1.5">

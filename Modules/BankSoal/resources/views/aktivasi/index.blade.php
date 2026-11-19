@@ -1,4 +1,4 @@
-<x-banksoal::layouts.admin>
+<x-banksoal::layouts.admin kompre-font>
     @section('breadcrumbs')
         <a href="#" class="hover:text-primary transition-colors text-gray-500">Ujian Komprehensif</a>
         <span class="mx-2 text-gray-300">/</span>

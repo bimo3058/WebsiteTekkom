@@ -1,5 +1,4 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
-@include('manajemenmahasiswa::partials.card-frame')
 
 @include('manajemenmahasiswa::partials.kegiatan-theme')
 
@@ -18,43 +17,15 @@
         color: var(--c-fg);
         margin-bottom: 20px;
         display: flex;
+        /* Judul + keterangan "(maks 10 dokumen)" turun baris di layar sempit, tidak dijepit jadi kolom. */
+        flex-wrap: wrap;
         align-items: center;
         gap: 8px;
         padding-bottom: 14px;
         border-bottom: 1px solid var(--c-surface-muted);
     }
 
-    /* ── Custom Form Styles ── */
-    .form-label-custom {
-        font-weight: 600;
-        font-size: 13px;
-        color: var(--c-fg-sec);
-        margin-bottom: 6px;
-    }
-    .form-label-custom .required {
-        color: var(--c-error);
-    }
-    .form-control-custom,
-    .form-select-custom {
-        border: 1.5px solid var(--c-border);
-        border-radius: 10px;
-        padding: 10px 14px;
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--c-fg);
-        transition: all 0.2s;
-        background: var(--c-surface);
-    }
-    .form-control-custom:focus,
-    .form-select-custom:focus {
-        border-color: var(--c-primary);
-        box-shadow: 0 0 0 3px var(--c-primary-subtle);
-        outline: none;
-    }
-    .form-control-custom::placeholder {
-        color: var(--c-fg-muted);
-        font-weight: 400;
-    }
+    /* ── Label & kotak isian: partials/sitkom-ui (gaya Edit User SITKOM) ── */
     textarea.form-control-custom {
         min-height: 140px;
         resize: vertical;
@@ -140,7 +111,8 @@
         border-color: var(--c-primary-border);
         background: var(--c-primary-subtle);
     }
-    .checkbox-card input[type="checkbox"] {
+    .checkbox-card input[type="checkbox"],
+    .checkbox-card input[type="radio"] {
         width: 16px;
         height: 16px;
         accent-color: var(--c-primary);
@@ -594,16 +566,7 @@
 </x-manajemenmahasiswa::ui.page-header>
 
 <!-- Validation Errors -->
-@if($errors->any())
-    <div class="alert alert-danger" style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error); font-size: 14px;">
-        <strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Terjadi kesalahan:</strong>
-        <ul class="mb-0 mt-1">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="error" title="Terjadi Kesalahan" :messages="$errors->all()" class="mb-3" />
 
 <form action="{{ route('manajemenmahasiswa.kegiatan.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
@@ -615,9 +578,9 @@
         <div class="mb-3">
             <label class="form-label-custom">Judul Kegiatan <span class="required">*</span></label>
             <input type="text" name="judul" id="judulInput" class="form-control form-control-custom"
-                   placeholder="Contoh: Seminar Nasional IT 2026" value="{{ old('judul') }}" required maxlength="255"
-                   oninput="updateCharCount('judulInput','judulCount',255)">
-            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="judulCount">0</span>/255 karakter</div>
+                   placeholder="Contoh: Seminar Nasional IT 2026" value="{{ old('judul') }}" required maxlength="{{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_JUDUL }}"
+                   oninput="updateCharCount('judulInput','judulCount',{{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_JUDUL }})">
+            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="judulCount">0</span>/{{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_JUDUL }} karakter</div>
         </div>
 
         <div class="row g-3 mb-3">
@@ -639,17 +602,20 @@
             </div>
             <div class="col-md-6" id="bidangFieldWrapper">
                 <label class="form-label-custom">Bidang <span class="required" id="bidangRequired">*</span></label>
-                <div class="checkbox-card-group" id="bidangGroup">
+                {{-- Radio: satu kegiatan dipegang satu bidang himpunan. Nama input tetap
+                     `bidang_id[]` agar alur simpan ke pivot tidak berubah. --}}
+                @php $bidangTerpilih = (int) (((array) old('bidang_id', []))[0] ?? 0); @endphp
+                <div class="checkbox-card-group" id="bidangGroup" role="radiogroup" aria-label="Bidang pemegang kegiatan">
                     @foreach($bidangList as $bidang)
                         <label class="checkbox-card" id="bidangCard{{ $bidang->id }}">
-                            <input type="checkbox" name="bidang_id[]"
+                            <input type="radio" name="bidang_id[]"
                                    value="{{ $bidang->id }}"
-                                   {{ is_array(old('bidang_id')) && in_array($bidang->id, old('bidang_id')) ? 'checked' : '' }}>
+                                   {{ (int) $bidang->id === $bidangTerpilih ? 'checked' : '' }}>
                             {{ $bidang->nama_bidang }}
                         </label>
                     @endforeach
                 </div>
-                <div class="checkbox-hint">Pilih satu atau lebih bidang</div>
+                <div class="checkbox-hint">Pilih satu bidang yang memegang kegiatan ini</div>
             </div>
         </div>
 
@@ -697,7 +663,9 @@
         <div class="mb-3">
             <label class="form-label-custom">Lokasi</label>
             <input type="text" name="lokasi" class="form-control form-control-custom"
-                   placeholder="Contoh: Gedung A Lantai 3, Undip Tembalang" value="{{ old('lokasi') }}">
+                   placeholder="Contoh: Gedung A Lantai 3, Undip Tembalang" value="{{ old('lokasi') }}" id="lokasiInput" maxlength="150"
+                   oninput="updateCharCount('lokasiInput','lokasiCount',150)">
+            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="lokasiCount">0</span>/150 karakter</div>
         </div>
     </div>
 
@@ -705,119 +673,13 @@
     <div class="form-card">
         <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Personel Kegiatan</div>
 
-        <div class="row g-3 mb-3">
-            <div class="col-md-6">
-                <label class="form-label-custom">Ketua Pelaksana</label>
-                <div class="search-select-wrapper">
-                    <input type="hidden" name="ketua_pelaksana_id" id="ketuaPelaksanaId" value="{{ old('ketua_pelaksana_id') }}">
-                    <input type="text" class="form-control form-control-custom" id="ketuaPelaksanaSearch"
-                           placeholder="Cari nama mahasiswa..."
-                           autocomplete="off"
-                           onfocus="showDropdown('ketuaPelaksanaDropdown')"
-                           oninput="filterOptions('ketuaPelaksanaSearch', 'ketuaPelaksanaDropdown')">
-                    <div class="search-select-dropdown" id="ketuaPelaksanaDropdown">
-                        @foreach($mahasiswaList as $mhs)
-                            <div class="search-select-option"
-                                 onclick="selectOption('ketuaPelaksanaId', '{{ $mhs->id }}', 'ketuaPelaksanaSearch', '{{ $mhs->user->name ?? 'N/A' }}', 'ketuaPelaksanaDropdown')"
-                                 data-name="{{ strtolower($mhs->user->name ?? '') }}"
-                                 data-nim="{{ $mhs->student_number }}">
-                                {{ $mhs->user->name ?? 'N/A' }}
-                                <div class="sub-text">NIM: {{ $mhs->student_number }} • Angkatan {{ $mhs->cohort_year }}</div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            {{-- ── Dosen Pendamping (Multi-Select) ── --}}
-            @php
-                // Pertahankan pilihan bila form gagal validasi
-                $existingDosenIds = old('dosen_pendamping_ids', []);
-                $existingDosen    = $dosenList->whereIn('id', $existingDosenIds);
-            @endphp
-            <div class="col-md-6">
-                <label class="form-label-custom">
-                    Dosen Pendamping <span style="color: var(--c-fg-muted); font-weight: 400;">(opsional)</span>
-                    <span class="panitia-count-badge" id="dosenCountBadge" style="display:none;">0 dipilih</span>
-                </label>
-                {{-- Memakai class .panitia-* agar tampilannya identik dengan multi-select Panitia --}}
-                <div class="panitia-select-wrapper" id="dosenSelectWrapper">
-                    <div class="panitia-chips-container" id="dosenChipsContainer" onclick="focusDosenSearch()">
-                        <input type="text" class="panitia-search-input" id="dosenSearchInput"
-                               placeholder="Cari dan tambah dosen pendamping..."
-                               autocomplete="off"
-                               oninput="filterDosenOptions(this.value)"
-                               onfocus="showDosenDropdown()">
-                    </div>
-                    <div class="panitia-dropdown" id="dosenDropdown">
-                        @foreach($dosenList as $dosen)
-                            <div class="panitia-option"
-                                 data-id="{{ $dosen->id }}"
-                                 data-name="{{ $dosen->user->name ?? 'N/A' }}"
-                                 data-name-lower="{{ strtolower($dosen->user->name ?? '') }}"
-                                 data-nip="{{ $dosen->employee_number }}"
-                                 onclick="toggleDosen(this)">
-                                <div>
-                                    {{ $dosen->user->name ?? 'N/A' }}
-                                    <div class="sub-text">NIP: {{ $dosen->employee_number }}</div>
-                                </div>
-                                <span class="check-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-                            </div>
-                        @endforeach
-                        <div class="panitia-empty" id="dosenEmpty" style="display:none;">Tidak ada dosen yang cocok</div>
-                    </div>
-                    {{-- Hidden inputs di-generate JS --}}
-                    <div id="dosenHiddenInputs"></div>
-                </div>
-                <div class="checkbox-hint">Bisa lebih dari satu. Ketik nama atau NIP untuk mencari.</div>
-            </div>
-        </div>
-
-        {{-- ── Panitia Kegiatan (Multi-Select) ── --}}
-        <div class="mb-1">
-            <label class="form-label-custom">
-                Panitia Kegiatan
-                <span style="color: var(--c-fg-muted); font-weight: 400;">(opsional)</span>
-                <span class="panitia-count-badge" id="panitiaCountBadge" style="display:none;">0 dipilih</span>
-            </label>
-            <div class="panitia-select-wrapper" id="panitiaSelectWrapper">
-                <div class="panitia-chips-container" id="panitiaChipsContainer" onclick="focusPanitiaSearch()">
-                    <input type="text" class="panitia-search-input" id="panitiaSearchInput"
-                           placeholder="Cari dan tambah panitia..."
-                           autocomplete="off"
-                           oninput="filterPanitiaOptions(this.value)"
-                           onfocus="showPanitiaDropdown()">
-                </div>
-                <div class="panitia-dropdown" id="panitiaDropdown">
-                    @foreach($mahasiswaList as $mhs)
-                        <div class="panitia-option"
-                             data-id="{{ $mhs->id }}"
-                             data-name="{{ $mhs->user->name ?? 'N/A' }}"
-                             data-name-lower="{{ strtolower($mhs->user->name ?? '') }}"
-                             data-nim="{{ $mhs->student_number }}"
-                             data-angkatan="{{ $mhs->cohort_year }}"
-                             onclick="togglePanitia(this)">
-                            <div>
-                                {{ $mhs->user->name ?? 'N/A' }}
-                                <div class="sub-text">NIM: {{ $mhs->student_number }} • Angkatan {{ $mhs->cohort_year }}</div>
-                            </div>
-                            <span class="check-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-                        </div>
-                    @endforeach
-                    <div class="panitia-empty" id="panitiaEmpty" style="display:none;">Tidak ada mahasiswa yang cocok</div>
-                </div>
-                {{-- Hidden inputs di-generate JS --}}
-                <div id="panitiaHiddenInputs"></div>
-            </div>
-            <div class="checkbox-hint">Pilih satu atau lebih mahasiswa sebagai panitia. Ketik nama untuk mencari.</div>
-            
-            {{-- Container for Jabatan Inputs --}}
-            <div id="panitiaRolesContainer" class="mt-3 d-flex flex-column gap-2"></div>
-        </div>
+        @include('manajemenmahasiswa::partials.kegiatan-form._personel', [
+            'ketuaId'          => old('ketua_pelaksana_id'),
+            'dosenTerpilih'    => $dosenList->whereIn('id', old('dosen_pendamping_ids', [])),
+            'panitiaTerpilih'  => $mahasiswaList->whereIn('id', old('panitia_ids', [])),
+            'panitiaPeranLama' => old('panitia_peran', []),
+        ])
     </div>
-
-    {{-- Akses Kelola — hanya dirender untuk pemilik kegiatan & override --}}
-    @include('manajemenmahasiswa::partials.kegiatan-form._akses_kelola')
 
     <!-- Detail Tambahan -->
     <div class="form-card">
@@ -829,28 +691,16 @@
                 <input type="number" name="target_peserta" class="form-control form-control-custom"
                        placeholder="Jumlah peserta" value="{{ old('target_peserta') }}" min="1">
             </div>
-            <div class="col-md-6">
-                <label class="form-label-custom">Anggaran (Rp)</label>
-                {{-- step="any": step="1000" membuat browser diam-diam menolak angka yang
-                     bukan kelipatan seribu (mis. 750500) tanpa keterangan apa pun di form. --}}
-                <input type="number" name="anggaran" class="form-control form-control-custom"
-                       placeholder="Contoh: 5000000" value="{{ old('anggaran') }}" min="0" max="9999999999999" step="any">
-            </div>
         </div>
+        {{-- Anggaran per sumber dana (S-80) --}}
+        @include('manajemenmahasiswa::partials.kegiatan-form._sumber-dana', ['kegiatan' => null, 'realisasi' => true])
     </div>
 
     <!-- Banner -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg> Banner Kegiatan *</div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg> Banner Kegiatan <span style="color: var(--c-error);">*</span></div>
 
-        <div class="banner-upload-area" onclick="document.getElementById('bannerInput').click()">
-            <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
-            <p>Klik untuk upload banner kegiatan</p>
-            <small>Format: JPG, PNG, WebP • Maks: 10MB<br><span style="color: var(--c-primary); font-weight: 500;">Rekomendasi: Resolusi 1280 x 720 (Rasio 16:9)</span></small>
-        </div>
-        <input type="file" name="banner" id="bannerInput" accept="image/jpeg,image/png,image/webp"
-               style="display: none;" onchange="previewBanner(this)">
-        <img id="bannerPreview" class="banner-preview" alt="Preview Banner" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
+        @include('manajemenmahasiswa::partials.kegiatan-form._banner', ['bannerUrl' => null])
     </div>
 
     <!-- Foto Kegiatan -->
@@ -860,7 +710,7 @@
         <div class="file-upload-area" id="fotoUploadArea" onclick="document.getElementById('fotoInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
             <p>Klik atau drag & drop foto ke sini</p>
-            <small>Format: JPG, PNG, WebP • Maks: 10MB per file</small>
+            <small>Format: JPG, PNG, WebP • Maks: 5MB per file</small>
         </div>
         <input type="file" name="foto_kegiatan[]" id="fotoInput" accept="image/jpeg,image/png,image/webp"
                multiple style="display: none;" onchange="handleFotoSelect(this)">
@@ -869,17 +719,9 @@
 
     <!-- Dokumen Kegiatan -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen Kegiatan <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks 10 dokumen)</span></div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen Kegiatan <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks {{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_DOKUMEN }} dokumen)</span></div>
 
-        <div class="file-upload-area" id="dokumenUploadArea" onclick="document.getElementById('dokumenInput').click()">
-            <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></div>
-            <p>Klik atau drag & drop dokumen ke sini</p>
-            <small>Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX • Maks: 10MB per file</small>
-        </div>
-        <input type="file" name="dokumen_kegiatan[]" id="dokumenInput"
-               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-               multiple style="display: none;" onchange="handleDokumenSelect(this)">
-        <div id="dokumenPreviewList"></div>
+        @include('manajemenmahasiswa::partials.kegiatan-form._dokumen', ['existingDokumen' => collect(), 'tahapRencana' => false])
     </div>
 
     <!-- Action Buttons -->
@@ -900,7 +742,7 @@
 </div>
 
 <script>
-// ── Char counter (judul & deskripsi) ──
+// ── Char counter (judul, lokasi & deskripsi) ──
 function updateCharCount(inputId, countId, max) {
     const el  = document.getElementById(inputId);
     const cnt = document.getElementById(countId);
@@ -910,24 +752,11 @@ function updateCharCount(inputId, countId, max) {
     cnt.style.color = len >= max ? 'var(--c-error)' : (len > max * 0.9 ? 'var(--c-warning)' : 'var(--c-fg-muted)');
 }
 document.addEventListener('DOMContentLoaded', () => {
-    ['judulInput','deskripsiInput'].forEach(id => {
+    ['judulInput','lokasiInput','deskripsiInput'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.dispatchEvent(new Event('input'));
     });
 });
-
-// ── Banner Preview ──
-function previewBanner(input) {
-    const preview = document.getElementById('bannerPreview');
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
 
 // ── Lightbox ──
 function openLightbox(src) {
@@ -947,42 +776,6 @@ function closeLightbox(e) {
     modal.classList.remove('active');
     document.body.style.overflow = 'auto';
 }
-
-// ── Searchable Dropdown ──
-function showDropdown(dropdownId) {
-    document.getElementById(dropdownId).classList.add('show');
-}
-
-function filterOptions(inputId, dropdownId) {
-    const query = document.getElementById(inputId).value.toLowerCase();
-    const dropdown = document.getElementById(dropdownId);
-    const options = dropdown.querySelectorAll('.search-select-option');
-    let hasVisible = false;
-
-    options.forEach(opt => {
-        const name = opt.getAttribute('data-name') || '';
-        const secondary = opt.getAttribute('data-nim') || opt.getAttribute('data-nip') || '';
-        const match = name.includes(query) || secondary.includes(query);
-        opt.style.display = match ? 'block' : 'none';
-        if (match) hasVisible = true;
-    });
-
-    dropdown.classList.toggle('show', hasVisible && query.length > 0 || document.activeElement === document.getElementById(inputId));
-}
-
-function selectOption(hiddenId, value, inputId, label, dropdownId) {
-    document.getElementById(hiddenId).value = value;
-    document.getElementById(inputId).value = label;
-    document.getElementById(dropdownId).classList.remove('show');
-}
-
-document.addEventListener('click', function(e) {
-    document.querySelectorAll('.search-select-dropdown').forEach(d => {
-        if (!d.parentElement.contains(e.target)) {
-            d.classList.remove('show');
-        }
-    });
-});
 
 // ── Multi-File Upload: Foto ──
 let fotoFiles = [];
@@ -1028,51 +821,7 @@ function syncFotoInput() {
     document.getElementById('fotoInput').files = dt.files;
 }
 
-// ── Multi-File Upload: Dokumen ──
-let dokumenFiles = [];
-
-function handleDokumenSelect(input) {
-    const newFiles = Array.from(input.files);
-    newFiles.forEach(file => {
-        if (dokumenFiles.length >= 10) return;
-        dokumenFiles.push(file);
-    });
-    renderDokumenPreviews();
-    syncDokumenInput();
-}
-
-function removeDokumen(index) {
-    dokumenFiles.splice(index, 1);
-    renderDokumenPreviews();
-    syncDokumenInput();
-}
-
-function renderDokumenPreviews() {
-    const list = document.getElementById('dokumenPreviewList');
-    list.innerHTML = '';
-    dokumenFiles.forEach((file, i) => {
-        const ext = file.name.split('.').pop().toLowerCase();
-        const icons = { pdf: 'PDF', doc: 'DOC', docx: 'DOC', xls: 'XLS', xlsx: 'XLS', ppt: 'PPT', pptx: 'PPT' };
-        const icon = icons[ext] || '\u25A1';
-        const item = document.createElement('div');
-        item.className = 'doc-preview-item';
-        item.innerHTML = `
-            <span class="doc-icon">${icon}</span>
-            <div class="doc-info">
-                <div class="doc-name">${file.name}</div>
-                <div class="doc-size">${formatFileSize(file.size)} • ${ext.toUpperCase()}</div>
-            </div>
-            <button type="button" class="btn-remove-doc mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="removeDokumen(${i})" title="Hapus dokumen" aria-label="Hapus dokumen ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-        `;
-        list.appendChild(item);
-    });
-}
-
-function syncDokumenInput() {
-    const dt = new DataTransfer();
-    dokumenFiles.forEach(f => dt.items.add(f));
-    document.getElementById('dokumenInput').files = dt.files;
-}
+// Dokumen (unggah, dropdown jenis, drag & drop) diurus partial _dokumen.
 
 // ── Helper ──
 function formatFileSize(bytes) {
@@ -1081,9 +830,9 @@ function formatFileSize(bytes) {
     return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
-// ── Drag & Drop ──
-['fotoUploadArea', 'dokumenUploadArea'].forEach(id => {
-    const area = document.getElementById(id);
+// ── Drag & Drop: Foto ──
+(function () {
+    const area = document.getElementById('fotoUploadArea');
     if (!area) return;
     ['dragenter', 'dragover'].forEach(evt => {
         area.addEventListener(evt, e => { e.preventDefault(); area.classList.add('dragover'); });
@@ -1092,292 +841,11 @@ function formatFileSize(bytes) {
         area.addEventListener(evt, e => { e.preventDefault(); area.classList.remove('dragover'); });
     });
     area.addEventListener('drop', e => {
-        const files = e.dataTransfer.files;
-        if (id === 'fotoUploadArea') {
-            Array.from(files).forEach(f => { if (fotoFiles.length < 10 && f.type.startsWith('image/')) fotoFiles.push(f); });
-            renderFotoPreviews();
-            syncFotoInput();
-        } else {
-            Array.from(files).forEach(f => { if (dokumenFiles.length < 10) dokumenFiles.push(f); });
-            renderDokumenPreviews();
-            syncDokumenInput();
-        }
+        Array.from(e.dataTransfer.files).forEach(f => { if (fotoFiles.length < 10 && f.type.startsWith('image/')) fotoFiles.push(f); });
+        renderFotoPreviews();
+        syncFotoInput();
     });
-});
-
-// ── Panitia Multi-Select ──
-{{--
-    Saat form dikembalikan karena validasi gagal, panitia & jabatannya dipulihkan
-    dari isian terakhir user (old()). Tanpa ini satu error kecil di field lain —
-    mis. Banner belum diunggah — membuat seluruh chip panitia beserta kolom
-    jabatannya lenyap dan harus dipilih ulang satu per satu, padahal Dosen
-    Pendamping di form yang sama sudah dipulihkan dengan benar.
---}}
-@php
-    $panitiaIdsLama   = old('panitia_ids', []);
-    $panitiaPeranLama = old('panitia_peran', []);
-    $panitiaTerpilih  = $mahasiswaList->whereIn('id', $panitiaIdsLama);
-@endphp
-let selectedPanitia = {}; // { id: name }
-let initialRoles = {};    // { id: jabatan }
-
-@foreach($panitiaTerpilih as $pan)
-selectedPanitia['{{ $pan->id }}'] = '{{ addslashes($pan->user->name ?? '') }}';
-initialRoles['{{ $pan->id }}'] = '{{ addslashes($panitiaPeranLama[$pan->id] ?? '') }}';
-@endforeach
-
-function focusPanitiaSearch() {
-    document.getElementById('panitiaSearchInput').focus();
-}
-
-function showPanitiaDropdown() {
-    const dropdown = document.getElementById('panitiaDropdown');
-    dropdown.classList.add('show');
-    filterPanitiaOptions(document.getElementById('panitiaSearchInput').value);
-}
-
-function filterPanitiaOptions(query) {
-    const q = query.toLowerCase().trim();
-    const options = document.querySelectorAll('#panitiaDropdown .panitia-option');
-    const empty = document.getElementById('panitiaEmpty');
-    let visibleCount = 0;
-
-    options.forEach(opt => {
-        const name = opt.getAttribute('data-name-lower') || '';
-        const nim  = opt.getAttribute('data-nim') || '';
-        const match = !q || name.includes(q) || nim.includes(q);
-        opt.style.display = match ? 'flex' : 'none';
-        if (match) visibleCount++;
-    });
-
-    empty.style.display = visibleCount === 0 ? 'block' : 'none';
-    document.getElementById('panitiaDropdown').classList.add('show');
-}
-
-function togglePanitia(optEl) {
-    const id   = optEl.getAttribute('data-id');
-    const name = optEl.getAttribute('data-name');
-
-    if (selectedPanitia[id]) {
-        // Sudah dipilih → hapus
-        removePanitia(id);
-    } else {
-        // Tambah
-        selectedPanitia[id] = name;
-        optEl.classList.add('selected');
-        renderPanitiaChips();
-        updatePanitiaHiddenInputs();
-    }
-
-    // Reset search
-    document.getElementById('panitiaSearchInput').value = '';
-    filterPanitiaOptions('');
-    document.getElementById('panitiaSearchInput').focus();
-}
-
-function removePanitia(id) {
-    delete selectedPanitia[id];
-    const opt = document.querySelector(`#panitiaDropdown .panitia-option[data-id="${id}"]`);
-    if (opt) opt.classList.remove('selected');
-    renderPanitiaChips();
-    updatePanitiaHiddenInputs();
-}
-
-function renderPanitiaChips() {
-    const container = document.getElementById('panitiaChipsContainer');
-    const searchInput = document.getElementById('panitiaSearchInput');
-
-    // Hapus chips yang lama (bukan input)
-    container.querySelectorAll('.panitia-chip').forEach(c => c.remove());
-
-    // Tambah chips baru sebelum input
-    Object.entries(selectedPanitia).forEach(([id, name]) => {
-        const chip = document.createElement('span');
-        chip.className = 'panitia-chip';
-        chip.innerHTML = `
-            ${name}
-            <button type="button" class="panitia-chip-remove" onclick="removePanitia('${id}')" title="Hapus panitia" aria-label="Hapus panitia ${name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-        `;
-        container.insertBefore(chip, searchInput);
-    });
-
-    // Update badge count
-    const count = Object.keys(selectedPanitia).length;
-    const badge = document.getElementById('panitiaCountBadge');
-    if (count > 0) {
-        badge.textContent = count + ' dipilih';
-        badge.style.display = 'inline';
-        document.getElementById('panitiaSearchInput').placeholder = 'Tambah lebih banyak...';
-    } else {
-        badge.style.display = 'none';
-        document.getElementById('panitiaSearchInput').placeholder = 'Cari dan tambah panitia...';
-    }
-}
-
-function updatePanitiaHiddenInputs() {
-    const container = document.getElementById('panitiaHiddenInputs');
-    const rolesContainer = document.getElementById('panitiaRolesContainer');
-    
-    container.innerHTML = '';
-    
-    // Simpan nilai peran yang sudah diinput sebelum me-render ulang
-    const existingRoles = {};
-    rolesContainer.querySelectorAll('input[type="text"]').forEach(input => {
-        existingRoles[input.dataset.id] = input.value;
-    });
-    
-    rolesContainer.innerHTML = '';
-
-    Object.keys(selectedPanitia).forEach(id => {
-        // Hidden input untuk ID panitia
-        const input = document.createElement('input');
-        input.type  = 'hidden';
-        input.name  = 'panitia_ids[]';
-        input.value = id;
-        container.appendChild(input);
-        
-        // Input untuk Jabatan/Peran
-        const name = selectedPanitia[id];
-        const roleDiv = document.createElement('div');
-        roleDiv.className = 'd-flex align-items-center gap-3 p-2 border rounded bg-light';
-        roleDiv.innerHTML = `
-            <div style="flex: 1; font-size: 13px; font-weight: 600; color: var(--c-fg-sec);">${name}</div>
-            <div style="flex: 2;">
-                <input type="text" name="panitia_peran[${id}]" data-id="${id}" class="form-control form-control-sm" placeholder="Masukkan Jabatan (misal: Sekretaris, Bendahara, dll)" value="${existingRoles[id] !== undefined ? existingRoles[id] : (initialRoles[id] || '')}">
-            </div>
-        `;
-        rolesContainer.appendChild(roleDiv);
-    });
-}
-
-// Tutup dropdown panitia saat klik di luar
-document.addEventListener('click', function(e) {
-    const wrapper = document.getElementById('panitiaSelectWrapper');
-    if (wrapper && !wrapper.contains(e.target)) {
-        document.getElementById('panitiaDropdown').classList.remove('show');
-    }
-});
-
-// ── Dosen Pendamping Multi-Select ──
-let selectedDosen = {}; // { id: name }
-
-// Pre-populate dari input sebelumnya (bila form gagal validasi)
-@foreach($existingDosen as $d)
-selectedDosen['{{ $d->id }}'] = '{{ addslashes($d->user->name ?? '') }}';
-@endforeach
-
-function focusDosenSearch() {
-    document.getElementById('dosenSearchInput').focus();
-}
-
-function showDosenDropdown() {
-    document.getElementById('dosenDropdown').classList.add('show');
-    filterDosenOptions(document.getElementById('dosenSearchInput').value);
-}
-
-function filterDosenOptions(query) {
-    const q = query.toLowerCase().trim();
-    const options = document.querySelectorAll('#dosenDropdown .panitia-option');
-    const empty = document.getElementById('dosenEmpty');
-    let visibleCount = 0;
-
-    options.forEach(opt => {
-        const name = opt.getAttribute('data-name-lower') || '';
-        const nip  = opt.getAttribute('data-nip') || '';
-        const match = !q || name.includes(q) || nip.includes(q);
-        opt.style.display = match ? 'flex' : 'none';
-        if (match) visibleCount++;
-    });
-
-    empty.style.display = visibleCount === 0 ? 'block' : 'none';
-    document.getElementById('dosenDropdown').classList.add('show');
-}
-
-function toggleDosen(optEl) {
-    const id   = optEl.getAttribute('data-id');
-    const name = optEl.getAttribute('data-name');
-
-    if (selectedDosen[id]) {
-        removeDosen(id);
-    } else {
-        selectedDosen[id] = name;
-        optEl.classList.add('selected');
-        renderDosenChips();
-        updateDosenHiddenInputs();
-    }
-
-    // Reset pencarian
-    document.getElementById('dosenSearchInput').value = '';
-    filterDosenOptions('');
-    document.getElementById('dosenSearchInput').focus();
-}
-
-function removeDosen(id) {
-    delete selectedDosen[id];
-    const opt = document.querySelector(`#dosenDropdown .panitia-option[data-id="${id}"]`);
-    if (opt) opt.classList.remove('selected');
-    renderDosenChips();
-    updateDosenHiddenInputs();
-}
-
-function renderDosenChips() {
-    const container   = document.getElementById('dosenChipsContainer');
-    const searchInput = document.getElementById('dosenSearchInput');
-
-    container.querySelectorAll('.panitia-chip').forEach(c => c.remove());
-
-    Object.entries(selectedDosen).forEach(([id, name]) => {
-        const chip = document.createElement('span');
-        chip.className = 'panitia-chip';
-        chip.innerHTML = `
-            ${name}
-            <button type="button" class="panitia-chip-remove" onclick="removeDosen('${id}')" title="Hapus dosen" aria-label="Hapus dosen ${name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-        `;
-        container.insertBefore(chip, searchInput);
-    });
-
-    const count = Object.keys(selectedDosen).length;
-    const badge = document.getElementById('dosenCountBadge');
-    if (count > 0) {
-        badge.textContent = count + ' dipilih';
-        badge.style.display = 'inline';
-        searchInput.placeholder = 'Tambah dosen lain...';
-    } else {
-        badge.style.display = 'none';
-        searchInput.placeholder = 'Cari dan tambah dosen pendamping...';
-    }
-}
-
-function updateDosenHiddenInputs() {
-    const container = document.getElementById('dosenHiddenInputs');
-    container.innerHTML = '';
-
-    Object.keys(selectedDosen).forEach(id => {
-        const input = document.createElement('input');
-        input.type  = 'hidden';
-        input.name  = 'dosen_pendamping_ids[]';
-        input.value = id;
-        container.appendChild(input);
-    });
-}
-
-// Tutup dropdown dosen saat klik di luar
-document.addEventListener('click', function(e) {
-    const wrapper = document.getElementById('dosenSelectWrapper');
-    if (wrapper && !wrapper.contains(e.target)) {
-        document.getElementById('dosenDropdown').classList.remove('show');
-    }
-});
-
-// Render chips dosen saat halaman dimuat
-document.addEventListener('DOMContentLoaded', function() {
-    Object.keys(selectedDosen).forEach(id => {
-        const opt = document.querySelector(`#dosenDropdown .panitia-option[data-id="${id}"]`);
-        if (opt) opt.classList.add('selected');
-    });
-    renderDosenChips();
-    updateDosenHiddenInputs();
-});
+})();
 
 // ── Toggle Bidang Field based on Kategori (checkbox version) ──
 function handleKategoriChange() {
@@ -1430,7 +898,7 @@ function toggleBidangField() {
         // Hanya Kegiatan Prodi → sembunyikan kolom Bidang & kosongkan pilihannya
         if (bidangWrapper) bidangWrapper.style.display = 'none';
         if (bidangRequired) bidangRequired.style.display = 'none';
-        document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(cb => {
+        document.querySelectorAll('#bidangGroup input').forEach(cb => {
             if (cb.checked) {
                 cb.checked = false;
                 cb.dispatchEvent(new Event('change'));
@@ -1446,32 +914,26 @@ function toggleBidangField() {
 // ── Initialize checkbox card states on page load ──
 document.addEventListener('DOMContentLoaded', function() {
     // Set initial 'checked' class on pre-selected cards
-    document.querySelectorAll('.checkbox-card input[type="checkbox"]:checked').forEach(cb => {
+    document.querySelectorAll('.checkbox-card input:checked').forEach(cb => {
         cb.closest('.checkbox-card').classList.add('checked');
     });
 
-    // Add change listeners for bidang cards styling
-    document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', function() {
-            if (this.checked) {
-                this.closest('.checkbox-card').classList.add('checked');
-            } else {
-                this.closest('.checkbox-card').classList.remove('checked');
-            }
+    // Bidang berupa radio: radio yang ikut terlepas tidak memicu `change`,
+    // jadi sorotan kartu disegarkan untuk seluruh grup.
+    const bidangInputs = document.querySelectorAll('#bidangGroup input[type="radio"]');
+    bidangInputs.forEach(rb => {
+        rb.addEventListener('change', function() {
+            bidangInputs.forEach(other => {
+                other.closest('.checkbox-card').classList.toggle('checked', other.checked);
+            });
         });
     });
 
     handleKategoriChange();
-
-    // Tampilkan kembali chip panitia & kolom jabatan hasil pemulihan old().
-    Object.keys(selectedPanitia).forEach(id => {
-        const opt = document.querySelector(`#panitiaDropdown .panitia-option[data-id="${id}"]`);
-        if (opt) opt.classList.add('selected');
-    });
-    renderPanitiaChips();
-    updatePanitiaHiddenInputs();
 });
 </script>
+
+@include('manajemenmahasiswa::partials.kegiatan-form._batas-kirim')
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </x-manajemenmahasiswa::layouts.mahasiswa>

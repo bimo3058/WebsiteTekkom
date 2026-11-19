@@ -12,7 +12,7 @@
         .text-center { text-align: center; }
         .status-disetujui { color: #047857; }
         .status-ditolak { color: #9D174D; }
-        .status-selesai { color: #5E53F4; }
+        .status-dibatalkan { color: #9D174D; }
     </style>
 </head>
 <body>
@@ -76,8 +76,17 @@
                     <td class="text-center">{{ \Carbon\Carbon::parse($pinjam->jam_mulai)->format('H:i') }}</td>
                     <td class="text-center">{{ \Carbon\Carbon::parse($pinjam->jam_selesai)->format('H:i') }}</td>
                     <td>{{ $pinjam->tujuan }}</td>
-                    <td class="text-center status-{{ strtolower($pinjam->status) }}">{{ strtoupper($pinjam->status) }}</td>
-                    <td>{{ $pinjam->alasan_penolakan ?? '-' }}</td>
+                    @php
+                        $exportStatus = strtoupper($pinjam->display_status);
+                    @endphp
+                    <td class="text-center status-{{ strtolower($exportStatus) }}">{{ $exportStatus }}</td>
+                    <td>
+                        @if(str_contains($pinjam->alasan_penolakan ?? '', 'Dibatalkan Sistem: Kedaluwarsa'))
+                            <span style="color: #EF4444; font-weight: 600;">{{ $pinjam->alasan_penolakan }}</span>
+                        @else
+                            {{ $pinjam->alasan_penolakan ?? '-' }}
+                        @endif
+                    </td>
                     <td class="text-center">{{ $pinjam->created_at ? $pinjam->created_at->format('d/m/Y H:i') : '-' }}</td>
                     <td class="text-center">{{ $pinjam->waktu_approval ? \Carbon\Carbon::parse($pinjam->waktu_approval)->format('d/m/Y H:i') : '-' }}</td>
                 </tr>

@@ -163,7 +163,7 @@ class PendaftarAdminController extends Controller
 
         $pendaftar = PendaftarUjian::findOrFail($id);
 
-        if ($this->pendaftaranService->hasPassed($pendaftar->mahasiswa_id)) {
+        if ($pendaftar->mahasiswa_id && $this->pendaftaranService->hasPassed($pendaftar->mahasiswa_id)) {
             return back()->with('error', 'Mahasiswa ini sudah dinyatakan lulus ujian komprehensif.');
         }
 
@@ -186,7 +186,8 @@ class PendaftarAdminController extends Controller
             ->get();
 
         $eligible = $pendaftars->reject(
-            fn (PendaftarUjian $pendaftar) => $this->pendaftaranService->hasPassed($pendaftar->mahasiswa_id)
+            fn (PendaftarUjian $pendaftar) => $pendaftar->mahasiswa_id
+                && $this->pendaftaranService->hasPassed($pendaftar->mahasiswa_id)
         );
 
         $updated = $eligible->isEmpty()

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\ModulePermissionEnforcementTest" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" tests="32" assertions="82" errors="0" failures="10" skipped="0" time="20.222341">
+    <testsuite name="Tests\Feature\ModulePermissionEnforcementTest::test_a_single_direct_permission_does_not_grant_other_actions" tests="12" assertions="36" errors="0" failures="0" skipped="0" time="6.699243">
+      <testcase name="test_a_single_direct_permission_does_not_grant_other_actions with data set &quot;banksoal.view&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="106" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="2.031657"/>
+      <testcase name="test_a_single_direct_permission_does_not_grant_other_actions with data set &quot;banksoal.edit&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="106" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.213581"/>
+      <testcase name="test_a_single_direct_permission_does_not_grant_other_actions with data set &quot;banksoal.delete&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="106" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.190165"/>
+      <testcase name="test_a_single_direct_permission_does_not_grant_other_actions with data set &quot;capstone.view&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="106" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.189181"/>
+      <testcase name="test_a_single_direct_permission_does_not_grant_other_actions with data set &quot;capstone.edit&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="106" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.281123"/>
+      <testcase name="test_a_single_direct_permission_does_not_grant_other_actions with data set &quot;capstone.delete&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="106" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.524386"/>
+      <testcase name="test_a_single_direct_permission_does_not_grant_other_actions with data set &quot;eoffice.view&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="106" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.556299"/>
+      <testcase name="test_a_single_direct_permission_does_not_grant_other_actions with data set &quot;eoffice.edit&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="106" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.543704"/>
+      <testcase name="test_a_single_direct_permission_does_not_grant_other_actions with data set &quot;eoffice.delete&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="106" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.544252"/>
+      <testcase name="test_a_single_direct_permission_does_not_grant_other_actions with data set &quot;kemahasiswaan.view&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="106" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.528815"/>
+      <testcase name="test_a_single_direct_permission_does_not_grant_other_actions with data set &quot;kemahasiswaan.edit&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="106" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.545781"/>
+      <testcase name="test_a_single_direct_permission_does_not_grant_other_actions with data set &quot;kemahasiswaan.delete&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="106" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.550300"/>
+    </testsuite>
+    <testsuite name="Tests\Feature\ModulePermissionEnforcementTest::test_selecting_only_view_should_revoke_effective_edit_for_module_admin" tests="4" assertions="12" errors="0" failures="4" skipped="0" time="3.937991">
+      <testcase name="test_selecting_only_view_should_revoke_effective_edit_for_module_admin with data set &quot;Bank Soal&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="127" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="2.186104">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ModulePermissionEnforcementTest::test_selecting_only_view_should_revoke_effective_edit_for_module_admin with data set "Bank Soal"&#13;
+Edit is still inherited from the module admin role.
+Failed asserting that true is false.
+&#13;
+C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php:139</failure>
+      </testcase>
+      <testcase name="test_selecting_only_view_should_revoke_effective_edit_for_module_admin with data set &quot;Capstone&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="127" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.607232">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ModulePermissionEnforcementTest::test_selecting_only_view_should_revoke_effective_edit_for_module_admin with data set "Capstone"&#13;
+Edit is still inherited from the module admin role.
+Failed asserting that true is false.
+&#13;
+C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php:139</failure>
+      </testcase>
+      <testcase name="test_selecting_only_view_should_revoke_effective_edit_for_module_admin with data set &quot;EOffice&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="127" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.550603">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ModulePermissionEnforcementTest::test_selecting_only_view_should_revoke_effective_edit_for_module_admin with data set "EOffice"&#13;
+Edit is still inherited from the module admin role.
+Failed asserting that true is false.
+&#13;
+C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php:139</failure>
+      </testcase>
+      <testcase name="test_selecting_only_view_should_revoke_effective_edit_for_module_admin with data set &quot;Kemahasiswaan&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="127" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.594053">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ModulePermissionEnforcementTest::test_selecting_only_view_should_revoke_effective_edit_for_module_admin with data set "Kemahasiswaan"&#13;
+Edit is still inherited from the module admin role.
+Failed asserting that true is false.
+&#13;
+C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php:139</failure>
+      </testcase>
+    </testsuite>
+    <testsuite name="Tests\Feature\ModulePermissionEnforcementTest::test_view_only_user_should_be_forbidden_from_writing" tests="8" assertions="10" errors="0" failures="6" skipped="0" time="5.404265">
+      <testcase name="test_view_only_user_should_be_forbidden_from_writing with data set &quot;banksoal.edit&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="155" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="2" time="1.124069"/>
+      <testcase name="test_view_only_user_should_be_forbidden_from_writing with data set &quot;banksoal.delete&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="155" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="2" time="0.544183"/>
+      <testcase name="test_view_only_user_should_be_forbidden_from_writing with data set &quot;capstone.edit&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="155" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="1" time="1.290359">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ModulePermissionEnforcementTest::test_view_only_user_should_be_forbidden_from_writing with data set "capstone.edit"&#13;
+PUT /api/capstone/admin/periods/1 returned 200. Original record unchanged: NO
+Failed asserting that 200 is identical to 403.
+&#13;
+C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php:165</failure>
+      </testcase>
+      <testcase name="test_view_only_user_should_be_forbidden_from_writing with data set &quot;capstone.delete&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="155" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="1" time="0.485322">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ModulePermissionEnforcementTest::test_view_only_user_should_be_forbidden_from_writing with data set "capstone.delete"&#13;
+DELETE /api/capstone/admin/periods/1 returned 200. Original record unchanged: NO
+Failed asserting that 200 is identical to 403.
+&#13;
+C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php:165</failure>
+      </testcase>
+      <testcase name="test_view_only_user_should_be_forbidden_from_writing with data set &quot;eoffice.edit&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="155" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="1" time="0.465377">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ModulePermissionEnforcementTest::test_view_only_user_should_be_forbidden_from_writing with data set "eoffice.edit"&#13;
+PUT /eoffice/manprak/admin/matkul-praktikum/1 returned 302. Original record unchanged: NO
+Failed asserting that 302 is identical to 403.
+&#13;
+C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php:165</failure>
+      </testcase>
+      <testcase name="test_view_only_user_should_be_forbidden_from_writing with data set &quot;eoffice.delete&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="155" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="1" time="0.407432">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ModulePermissionEnforcementTest::test_view_only_user_should_be_forbidden_from_writing with data set "eoffice.delete"&#13;
+DELETE /eoffice/manprak/admin/matkul-praktikum/1 returned 302. Original record unchanged: NO
+Failed asserting that 302 is identical to 403.
+&#13;
+C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php:165</failure>
+      </testcase>
+      <testcase name="test_view_only_user_should_be_forbidden_from_writing with data set &quot;kemahasiswaan.edit&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="155" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="1" time="0.514936">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ModulePermissionEnforcementTest::test_view_only_user_should_be_forbidden_from_writing with data set "kemahasiswaan.edit"&#13;
+PUT /manajemen-mahasiswa/pengumuman/1 returned 302. Original record unchanged: NO
+Failed asserting that 302 is identical to 403.
+&#13;
+C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php:165</failure>
+      </testcase>
+      <testcase name="test_view_only_user_should_be_forbidden_from_writing with data set &quot;kemahasiswaan.delete&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="155" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="1" time="0.572587">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ModulePermissionEnforcementTest::test_view_only_user_should_be_forbidden_from_writing with data set "kemahasiswaan.delete"&#13;
+DELETE /manajemen-mahasiswa/pengumuman/1 returned 302. Original record unchanged: NO
+Failed asserting that 302 is identical to 403.
+&#13;
+C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php:165</failure>
+      </testcase>
+    </testsuite>
+    <testsuite name="Tests\Feature\ModulePermissionEnforcementTest::test_matching_permission_allows_the_same_write_request" tests="8" assertions="24" errors="0" failures="0" skipped="0" time="4.180841">
+      <testcase name="test_matching_permission_allows_the_same_write_request with data set &quot;banksoal.edit&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="171" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.640731"/>
+      <testcase name="test_matching_permission_allows_the_same_write_request with data set &quot;banksoal.delete&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="171" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.537531"/>
+      <testcase name="test_matching_permission_allows_the_same_write_request with data set &quot;capstone.edit&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="171" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.556307"/>
+      <testcase name="test_matching_permission_allows_the_same_write_request with data set &quot;capstone.delete&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="171" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.526680"/>
+      <testcase name="test_matching_permission_allows_the_same_write_request with data set &quot;eoffice.edit&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="171" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.533971"/>
+      <testcase name="test_matching_permission_allows_the_same_write_request with data set &quot;eoffice.delete&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="171" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.440040"/>
+      <testcase name="test_matching_permission_allows_the_same_write_request with data set &quot;kemahasiswaan.edit&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="171" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.438903"/>
+      <testcase name="test_matching_permission_allows_the_same_write_request with data set &quot;kemahasiswaan.delete&quot;" file="C:\WebsiteTekkom - Copy\tests\Feature\ModulePermissionEnforcementTest.php" line="171" class="Tests\Feature\ModulePermissionEnforcementTest" classname="Tests.Feature.ModulePermissionEnforcementTest" assertions="3" time="0.506677"/>
+    </testsuite>
+  </testsuite>
+</testsuites>

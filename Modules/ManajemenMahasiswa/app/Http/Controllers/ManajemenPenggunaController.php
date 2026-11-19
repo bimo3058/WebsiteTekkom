@@ -11,175 +11,204 @@ use App\Services\PermissionAssigner;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
-use Modules\ManajemenMahasiswa\Models\PengurusHimaskom;
 use Modules\ManajemenMahasiswa\Models\Alumni;
+use Modules\ManajemenMahasiswa\Models\Bidang;
 use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
+use Modules\ManajemenMahasiswa\Models\PengurusBidang;
+use Modules\ManajemenMahasiswa\Support\RoleHimpunan;
 
 class ManajemenPenggunaController extends Controller
 {
     // Semua role posisi himpunan (tidak termasuk pengurus_himpunan yang bersifat umbrella)
-    private const HIMPUNAN_POSITION_ROLES = [
-        'ketua_himpunan',
-        'ketua_bidang',
-        'ketua_unit',
-        'staff_himpunan',
-    ];
+    private const HIMPUNAN_POSITION_ROLES = RoleHimpunan::POSISI;
 
-    // Role yang dapat diassign oleh masing-masing level caller
+    // Role yang dapat diassign oleh masing-masing level caller.
+    // KAHIM = WAKAHIM; KABID = WAKABID = KANIT = WAKANIT (terbatas bidang/unitnya).
     private const ASSIGNABLE_BY = [
-        'admin_kemahasiswaan' => ['ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'alumni'],
-        'admin'               => ['ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'alumni'],
-        'superadmin'          => ['ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'alumni'],
-        'ketua_himpunan'      => ['ketua_bidang', 'ketua_unit', 'staff_himpunan'],
-        'ketua_bidang'        => ['staff_himpunan'],
-        'ketua_unit'          => ['staff_himpunan'],
+        'admin_kemahasiswaan'  => [...RoleHimpunan::POSISI, 'alumni'],
+        'admin'                => [...RoleHimpunan::POSISI, 'alumni'],
+        'superadmin'           => [...RoleHimpunan::POSISI, 'alumni'],
+        'ketua_himpunan'       => RoleHimpunan::BERBIDANG,
+        'wakil_ketua_himpunan' => RoleHimpunan::BERBIDANG,
+        'ketua_bidang'         => [RoleHimpunan::STAFF],
+        'wakil_ketua_bidang'   => [RoleHimpunan::STAFF],
+        'ketua_unit'           => [RoleHimpunan::STAFF],
+        'wakil_ketua_unit'     => [RoleHimpunan::STAFF],
     ];
 
     // ── Halaman Utama ─────────────────────────────────────────────────────────
 
+    /** Kategori pengguna: kunci query string => label kartu. */
+    private const KATEGORI = [
+        'mahasiswa' => 'Mahasiswa Aktif',
+        'pengurus'  => 'Pengurus Himpunan',
+        'alumni'    => 'Alumni',
+    ];
+
     /**
-     * Halaman utama Permission: ringkasan pengguna per kategori.
+     * Halaman Permission: satu tabel berpaginasi untuk seluruh pengguna modul.
      *
-     * Daftar dapat dipersempit lewat pencarian dan filter angkatan. Angkatan
-     * dibaca dari `students.cohort_year`, kolom yang sama dengan yang tampil di
-     * kolom "Angkatan" pada tabel, supaya hasil filter selalu cocok dengan yang
-     * terlihat.
+     * Dulu dipecah menjadi tiga tabel ringkas (5 baris per kategori) plus halaman
+     * "Lihat Semua" per kategori, sehingga filter hanya berlaku di salah satunya.
+     * Kini semua filter bekerja pada satu tabel yang sama dan bisa dikombinasikan:
+     *  - search   : nama, email, atau NIM
+     *  - angkatan : students.cohort_year, sama dengan kolom "Angkatan" di tabel
+     *  - himpunan : semua | pengurus (pengurus himpunan) | bukan (bukan pengurus)
+     *  - alumni   : semua | alumni | bukan (bukan alumni) — hanya untuk admin
+     * Kartu di atas tabel hanya status (jumlah per kategori), bukan filter
+     * (16 Nov 2026). Angkanya mengikuti filter di atas, jadi kartu "Semua Pengguna"
+     * selalu sama dengan jumlah baris tabel.
      */
     public function index(Request $request)
     {
-        $actor = auth()->user();
-        $search = $request->input('search');
-        $angkatan = $request->input('angkatan');
+        $actor      = auth()->user();
+        $search     = $request->input('search');
+        $angkatan   = $request->input('angkatan');
+        $perPage    = PerPage::resolve($request);
+        $kategoriBoleh = $this->kategoriKeyUntuk($actor);
 
-        $query = User::with(['roles', 'student'])
-            ->whereNull('deleted_at')
-            ->whereHas('roles', fn($q) => $q->whereIn('name', ['mahasiswa', 'alumni', 'pengurus_himpunan', ...self::HIMPUNAN_POSITION_ROLES]));
+        // Filter status: pengurus himpunan & alumni — masing-masing semua | ya | bukan.
+        $himpunanFilter = in_array($request->input('himpunan'), ['pengurus', 'bukan'], true) ? $request->input('himpunan') : 'semua';
+        // Filter alumni hanya untuk actor yang boleh melihat alumni (admin).
+        $alumniFilter   = in_array('alumni', $kategoriBoleh, true) && in_array($request->input('alumni'), ['alumni', 'bukan'], true)
+            ? $request->input('alumni')
+            : 'semua';
+
+        // Cakupan dasar: pengguna yang boleh dilihat actor + filter selain kategori &
+        // angkatan. Dipakai untuk daftar pilihan angkatan.
+        $base = User::query()->whereNull('deleted_at');
+        $this->terapkanKategori($base, 'semua', $kategoriBoleh);
 
         if ($search) {
-            $query->where(fn($q) => $q
+            $base->where(fn($q) => $q
                 ->where('name', 'LIKE', "%{$search}%")
                 ->orWhere('email', 'LIKE', "%{$search}%")
                 ->orWhereHas('student', fn($sq) => $sq->where('student_number', 'LIKE', "%{$search}%"))
             );
         }
-
-        // kabid/kanit hanya melihat anggota divisi sendiri
-        if ($actor->hasAnyRole(['ketua_bidang', 'ketua_unit'])) {
-            $actorDivisi = $this->getActorDivisi($actor);
-            if ($actorDivisi) {
-                $query->whereHas('student.pengurusHimaskom', fn($q) =>
-                    $q->where('divisi', $actorDivisi)
-                );
-            }
+        $pengurusRoles = ['pengurus_himpunan', ...self::HIMPUNAN_POSITION_ROLES];
+        if ($himpunanFilter === 'pengurus') {
+            $base->whereHas('roles', fn($q) => $q->whereIn('name', $pengurusRoles));
+        } elseif ($himpunanFilter === 'bukan') {
+            $base->whereDoesntHave('roles', fn($q) => $q->whereIn('name', $pengurusRoles));
         }
-
-        $semuaUser = $query->orderBy('name')->get();
-
-        // Pilihan angkatan disusun SEBELUM filter angkatan dipakai, jadi dropdown
-        // tetap memuat seluruh pilihan meski daftarnya sedang disaring. Relasi
-        // student sudah di-eager load di atas, jadi ini tidak memicu N+1.
-        $angkatanList = $semuaUser
-            ->pluck('student.cohort_year')
-            ->filter()
-            ->unique()
-            ->sortDesc()
-            ->values();
-
-        $users = $angkatan
-            ? $semuaUser->filter(fn($u) => (string) ($u->student->cohort_year ?? '') === (string) $angkatan)->values()
-            : $semuaUser;
-
-        $categories = [
-            'Mahasiswa Aktif'   => $users->filter(fn($u) => $this->isMahasiswaAktif($u))->sortBy('name')->take(5),
-            'Pengurus Himpunan' => $users->filter(fn($u) => $this->isPengurus($u))->sortBy('name')->take(5),
-            'Alumni'            => $users->filter(fn($u) => $u->roles->pluck('name')->contains('alumni'))->sortBy('name')->take(5),
-        ];
-
-        $assignableRoles = $this->getAssignableRoles($actor);
-        $isFiltered      = filled($search) || filled($angkatan);
-
-        return view('manajemenmahasiswa::permissions.index', compact(
-            'users', 'categories', 'assignableRoles', 'search', 'angkatan', 'angkatanList', 'isFiltered'
-        ));
-    }
-
-    // ── Halaman Kategori ──────────────────────────────────────────────────────
-
-    /**
-     * Halaman daftar lengkap satu kategori (Mahasiswa Aktif / Pengurus / Alumni).
-     *
-     * Selain pencarian, role, dan jumlah baris, daftar juga bisa disaring per
-     * angkatan (`students.cohort_year`) — sumber yang sama dengan halaman utama
-     * Permission maupun kolom "Angkatan" di tabel.
-     */
-    public function category(Request $request, string $category)
-    {
-        $actor    = auth()->user();
-        $search   = $request->input('search');
-        $perPage  = PerPage::resolve($request);
-        $roleFilter = $request->input('role', 'all');
-        $angkatan = $request->input('angkatan');
-
-        $validCategories = ['Mahasiswa Aktif', 'Pengurus Himpunan', 'Alumni'];
-        abort_unless(in_array($category, $validCategories), 404);
-
-        $query = User::with(['roles', 'student'])
-            ->whereNull('deleted_at');
-
-        match ($category) {
-            'Mahasiswa Aktif'   => $query->whereHas('roles', fn($q) => $q->where('name', 'mahasiswa'))
-                                         ->whereDoesntHave('roles', fn($q) => $q->whereIn('name', ['pengurus_himpunan', ...self::HIMPUNAN_POSITION_ROLES])),
-            'Pengurus Himpunan' => $query->whereHas('roles', fn($q) => $q->whereIn('name', ['pengurus_himpunan', ...self::HIMPUNAN_POSITION_ROLES])),
-            'Alumni'            => $query->whereHas('roles', fn($q) => $q->where('name', 'alumni')),
-        };
-
-        if ($search) {
-            $query->where(fn($q) => $q
-                ->where('name', 'LIKE', "%{$search}%")
-                ->orWhere('email', 'LIKE', "%{$search}%")
-                ->orWhereHas('student', fn($sq) => $sq->where('student_number', 'LIKE', "%{$search}%"))
-            );
+        if ($alumniFilter === 'alumni') {
+            $base->whereHas('roles', fn($q) => $q->where('name', 'alumni'));
+        } elseif ($alumniFilter === 'bukan') {
+            $base->whereDoesntHave('roles', fn($q) => $q->where('name', 'alumni'));
         }
+        $this->batasiKeBidangActor($base, $actor);
 
-        if ($category === 'Pengurus Himpunan' && $roleFilter !== 'all') {
-            $query->whereHas('roles', fn($q) => $q->where('name', $roleFilter));
-        }
-
-        // kabid/kanit hanya melihat divisi sendiri
-        if ($actor->hasAnyRole(['ketua_bidang', 'ketua_unit'])) {
-            $actorDivisi = $this->getActorDivisi($actor);
-            if ($actorDivisi) {
-                $query->whereHas('student.pengurusHimaskom', fn($q) =>
-                    $q->where('divisi', $actorDivisi)
-                );
-            }
-        }
-
-        // Opsi angkatan diambil dari cakupan yang sama TAPI sebelum filter angkatan
-        // dipasang, supaya dropdown tidak menyusut jadi satu pilihan begitu dipakai.
+        // Pilihan angkatan disusun sebelum filter angkatan dipasang, supaya dropdown
+        // tidak menyusut jadi satu pilihan begitu dipakai.
         $angkatanList = Student::query()
             ->whereNotNull('cohort_year')
-            ->whereIn('user_id', (clone $query)->select('users.id'))
+            ->whereIn('user_id', (clone $base)->select('users.id'))
             ->distinct()
             ->orderByDesc('cohort_year')
             ->pluck('cohort_year');
 
         if ($angkatan) {
-            $query->whereHas('student', fn($q) => $q->where('cohort_year', $angkatan));
+            $base->whereHas('student', fn($q) => $q->where('cohort_year', $angkatan));
         }
 
-        $users = $query->orderBy('name')->paginate($perPage)->withQueryString();
-        $assignableRoles = $this->getAssignableRoles($actor);
-        $isFiltered = filled($search) || filled($angkatan)
-            || ($category === 'Pengurus Himpunan' && $roleFilter !== 'all');
+        // Angka kartu status, dengan filter yang sama dengan tabel.
+        $categoryTotals = ['semua' => (clone $base)->count()];
+        foreach ($kategoriBoleh as $key) {
+            $categoryTotals[$key] = $this->terapkanKategori(clone $base, $key, $kategoriBoleh)->count();
+        }
 
-        return view('manajemenmahasiswa::permissions.category', compact(
-            'users', 'category', 'assignableRoles', 'search', 'perPage', 'roleFilter', 'angkatan', 'angkatanList', 'isFiltered'
+        $users = (clone $base)
+            ->with(['roles', 'student', 'pengurusBidang.bidang'])
+            ->orderBy('name')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        $assignableRoles = $this->getAssignableRoles($actor);
+        $isFiltered      = filled($search) || filled($angkatan) || $himpunanFilter !== 'semua' || $alumniFilter !== 'semua';
+        $bisaUbah        = fn (User $target) => $this->bisaUbah($actor, $target);
+        $kategoriLabels  = array_intersect_key(self::KATEGORI, array_flip($kategoriBoleh));
+
+        return view('manajemenmahasiswa::permissions.index', compact(
+            'users', 'categoryTotals', 'kategoriLabels', 'assignableRoles', 'search',
+            'angkatan', 'angkatanList', 'himpunanFilter', 'alumniFilter', 'isFiltered', 'bisaUbah', 'perPage'
+        ) + $this->dataFormBidang($actor));
+    }
+
+    /**
+     * Tautan lama "Lihat Semua" per kategori — kini diarahkan ke tabel tunggal di
+     * halaman utama dengan filter yang setara (filter lain ikut terbawa).
+     */
+    public function category(Request $request, string $category)
+    {
+        $key = array_search($category, self::KATEGORI, true);
+        abort_unless($key !== false, 404);
+
+        $filterSetara = [
+            'mahasiswa' => ['himpunan' => 'bukan', 'alumni' => 'bukan'],
+            'pengurus'  => ['himpunan' => 'pengurus'],
+            'alumni'    => ['alumni' => 'alumni'],
+        ][$key];
+
+        return redirect()->route('manajemenmahasiswa.pengguna.index', $filterSetara + $request->query());
+    }
+
+    /**
+     * Batasi query ke satu kategori pengguna.
+     *
+     *  - mahasiswa : ber-role mahasiswa, bukan pengurus/jabatan himpunan, bukan alumni
+     *  - pengurus  : ber-role pengurus_himpunan atau jabatan himpunan
+     *  - alumni    : ber-role alumni
+     *  - semua     : gabungan kategori yang boleh dilihat actor
+     *
+     * @param  list<string>  $kategoriBoleh
+     */
+    private function terapkanKategori($query, string $kategori, array $kategoriBoleh)
+    {
+        $pengurusRoles = ['pengurus_himpunan', ...self::HIMPUNAN_POSITION_ROLES];
+
+        $mahasiswa = fn ($q) => $q->whereHas('roles', fn($r) => $r->where('name', 'mahasiswa'))
+            ->whereDoesntHave('roles', fn($r) => $r->whereIn('name', [...$pengurusRoles, 'alumni']));
+        $pengurus  = fn ($q) => $q->whereHas('roles', fn($r) => $r->whereIn('name', $pengurusRoles));
+        $alumni    = fn ($q) => $q->whereHas('roles', fn($r) => $r->where('name', 'alumni'));
+
+        $definisi = ['mahasiswa' => $mahasiswa, 'pengurus' => $pengurus, 'alumni' => $alumni];
+
+        if ($kategori !== 'semua') {
+            $definisi[$kategori]($query);
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($definisi, $kategoriBoleh) {
+            foreach ($kategoriBoleh as $key) {
+                $q->orWhere(fn ($sub) => $definisi[$key]($sub));
+            }
+        });
+    }
+
+    /**
+     * Kunci kategori yang boleh dilihat actor (padanan kategoriUntuk()).
+     *
+     * @return list<string>
+     */
+    private function kategoriKeyUntuk(User $actor): array
+    {
+        return array_values(array_map(
+            fn ($label) => array_search($label, self::KATEGORI, true),
+            $this->kategoriUntuk($actor)
         ));
     }
 
     // ── Update Role ───────────────────────────────────────────────────────────
 
+    /**
+     * Ubah role jabatan seorang pengguna beserta bidang/unit tempatnya bertugas.
+     *
+     * Role berbidang (KABID, WAKABID, KANIT, WAKANIT, Staff) wajib disertai satu
+     * bidang/unit yang jenisnya cocok: KABID/WAKABID → Bidang, KANIT/WAKANIT → Unit,
+     * Staff → keduanya boleh. Pimpinan bidang/unit hanya bisa mengatur staff di
+     * bidang/unitnya sendiri; bidangnya dipaksa ke bidang actor.
+     */
     public function updateRole(Request $request, User $user)
     {
         $actor = auth()->user();
@@ -187,12 +216,15 @@ class ManajemenPenggunaController extends Controller
         // Jangan boleh ubah role diri sendiri
         abort_if($actor->id === $user->id, 403, 'Tidak dapat mengubah role diri sendiri.');
 
-        // Jangan boleh ubah superadmin/admin global
-        abort_if($user->hasAnyRole(['superadmin', 'admin', 'dosen', 'gpm', 'ketua_departemen']), 403, 'Tidak dapat mengubah role pengguna ini.');
+        // Hanya akun dengan hak lebih rendah dari actor (lihat bisaUbah()): KABID tidak
+        // bisa mengubah KAHIM/WAKAHIM maupun sesama KABID/WAKABID/KANIT/WAKANIT, tapi
+        // bisa mengubah Mahasiswa & Staff Himpunan.
+        abort_unless($this->bisaUbah($actor, $user), 403, 'Anda tidak dapat mengubah role pengguna dengan hak setara atau lebih tinggi.');
 
         $request->validate([
-            'roles'   => ['required', 'array', 'min:1'],
-            'roles.*' => ['string'],
+            'roles'     => ['required', 'array', 'min:1'],
+            'roles.*'   => ['string'],
+            'bidang_id' => ['nullable', 'integer', 'exists:mk_bidang,id'],
         ]);
 
         $selectedRoles = $request->input('roles', []);
@@ -204,23 +236,48 @@ class ManajemenPenggunaController extends Controller
             abort_unless(in_array($role, $allowedChoices), 403, "Anda tidak memiliki izin untuk mengassign role '{$role}'.");
         }
 
-        // Validasi divisi untuk ketua_bidang/ketua_unit
-        if ($actor->hasAnyRole(['ketua_bidang', 'ketua_unit'])) {
-            $actorDivisi = $this->getActorDivisi($actor);
-            $userDivisi  = $this->getActorDivisi($user);
-            abort_if(
-                $actorDivisi && $userDivisi && $actorDivisi !== $userDivisi,
-                403,
-                'Anda hanya dapat mengubah anggota divisi Anda sendiri.'
-            );
+        // Pimpinan bidang/unit hanya menempatkan staff di bidang/unitnya sendiri
+        // (kesamaan bidang target sudah dicek bisaUbah()).
+        $bidangActor = null;
+        if ($this->actorTerbatasBidang($actor)) {
+            $bidangActor = RoleHimpunan::bidangId($actor);
+            if (!$bidangActor) {
+                return back()->with('error', 'Bidang/unit Anda belum diatur. Minta KAHIM/WAKAHIM atau admin mengaturnya terlebih dahulu.');
+            }
+        }
+
+        // Jabatan berbidang yang benar-benar tersimpan: alumni & "Mahasiswa Biasa"
+        // menghapus semua jabatan (lihat resolveMultipleRoleIds()).
+        $jabatanBerbidang = array_intersect($selectedRoles, ['alumni', 'mahasiswa'])
+            ? []
+            : array_values(array_intersect($selectedRoles, RoleHimpunan::BERBIDANG));
+
+        $bidang = null;
+        if ($jabatanBerbidang) {
+            $bidangId = $bidangActor ?? $request->integer('bidang_id') ?: null;
+            $bidang   = $bidangId ? Bidang::find($bidangId) : null;
+
+            if ($pesan = $this->tolakBidangJabatan($jabatanBerbidang, $bidang)) {
+                return back()->with('error', $pesan);
+            }
         }
 
         DB::beginTransaction();
         try {
             $oldRoleNames = $user->roles->pluck('name')->values()->toArray();
+            $oldBidang    = $user->pengurusBidang?->bidang?->nama_bidang;
 
-            $newRoleIds = $this->resolveMultipleRoleIds($selectedRoles);
+            $newRoleIds = $this->resolveMultipleRoleIds($selectedRoles, $user);
             $user->roles()->sync($newRoleIds);
+
+            // Bidang/unit pengurus: disimpan bila masih memegang jabatan berbidang,
+            // dilepas bila tidak (mis. jadi KAHIM, Mahasiswa Biasa, atau Alumni).
+            if ($bidang) {
+                PengurusBidang::updateOrCreate(['user_id' => $user->id], ['bidang_id' => $bidang->id]);
+            } else {
+                PengurusBidang::where('user_id', $user->id)->delete();
+            }
+            $user->unsetRelation('pengurusBidang');
             
             // Auto-create Alumni record jika diubah menjadi alumni
             if (in_array('alumni', $selectedRoles) && !in_array('alumni', $oldRoleNames)) {
@@ -235,6 +292,11 @@ class ManajemenPenggunaController extends Controller
                     ]);
                 }
                 
+                // PERINGATAN (S-53, 29 Okt 2026 — Surya): status kemahasiswaan sudah dicabut dari
+                // Direktori Mahasiswa (tidak tampil & tidak bisa diubah; sumber resmi = SIAP Undip).
+                // Kini halaman Permission ini SATU-SATUNYA jalur menjadikan alumni. Baris di bawah tetap
+                // perlu karena Dashboard Analitik masih menghitung Kemahasiswaan::alumni().
+                // Direktori Mahasiswa sendiri memisahkan alumni lewat mk_alumni, bukan kolom status.
                 // Update juga status di mk_kemahasiswaan agar tidak dihapus oleh auto-sync Direktori Alumni
                 Kemahasiswaan::where('user_id', $user->id)->update([
                     'status' => Kemahasiswaan::STATUS_ALUMNI,
@@ -246,14 +308,23 @@ class ManajemenPenggunaController extends Controller
             $user->syncPermissionsFromRoles();
             $user->clearUserCache();
 
-            $newRoleLabels = implode(', ', array_map([$this, 'getRoleLabel'], $selectedRoles));
+            $newRoleLabels = implode(', ', array_map(
+                fn ($role) => in_array($role, RoleHimpunan::POSISI, true)
+                    ? RoleHimpunan::labelLengkap($user, $role)
+                    : $this->getRoleLabel($role),
+                $selectedRoles
+            ));
 
             AuditLogger::update(
                 module:  'manajemen_mahasiswa',
                 desc:    "Mengubah role pengguna: {$user->name} ({$user->email})",
                 subject: $user,
-                oldData: ['roles' => $oldRoleNames],
-                newData: ['roles' => $user->roles->pluck('name')->values()->toArray(), 'assigned_by' => $actor->name],
+                oldData: ['roles' => $oldRoleNames, 'bidang' => $oldBidang],
+                newData: [
+                    'roles'       => $user->roles->pluck('name')->values()->toArray(),
+                    'bidang'      => $bidang?->nama_bidang,
+                    'assigned_by' => $actor->name,
+                ],
             );
 
             DB::commit();
@@ -292,7 +363,14 @@ class ManajemenPenggunaController extends Controller
             return response()->json([
                 'count'   => $count,
                 'message' => "Ditemukan {$count} mahasiswa yang akan dijadikan alumni (angkatan ≤ {$cutoffYear}).",
-                'preview' => $toPromote->take(10)->map(fn($s) => [
+                // Seluruh calon alumni dikirim (bukan 10 teratas) supaya admin bisa
+                // memeriksa semua nama sebelum menekan "Jalankan"; diurutkan per angkatan
+                // lalu nama. values(): filter() di atas menyisakan index berlubang
+                // (0, 3, 4, ...) yang membuat JSON-nya objek, bukan array.
+                'preview' => $toPromote
+                    ->sortBy(fn($s) => sprintf('%04d|%s', $s->cohort_year, mb_strtolower($s->user->name)))
+                    ->values()
+                    ->map(fn($s) => [
                     'name'        => $s->user->name,
                     'nim'         => $s->student_number,
                     'cohort_year' => $s->cohort_year,
@@ -325,6 +403,11 @@ class ManajemenPenggunaController extends Controller
                     ]);
                 }
                 
+                // PERINGATAN (S-53, 29 Okt 2026 — Surya): status kemahasiswaan sudah dicabut dari
+                // Direktori Mahasiswa (tidak tampil & tidak bisa diubah; sumber resmi = SIAP Undip).
+                // Kini halaman Permission ini SATU-SATUNYA jalur menjadikan alumni. Baris di bawah tetap
+                // perlu karena Dashboard Analitik masih menghitung Kemahasiswaan::alumni().
+                // Direktori Mahasiswa sendiri memisahkan alumni lewat mk_alumni, bukan kolom status.
                 // Update status kemahasiswaan
                 Kemahasiswaan::where('user_id', $user->id)->update([
                     'status' => Kemahasiswaan::STATUS_ALUMNI,
@@ -389,29 +472,32 @@ class ManajemenPenggunaController extends Controller
             ]);
         }
 
-        $mahasiswaRole = Role::where('name', 'mahasiswa')->first();
-
-        if (!$mahasiswaRole) {
+        if (!$this->roleMahasiswaId()) {
             return response()->json(['error' => 'Role mahasiswa tidak ditemukan.'], 422);
         }
 
         DB::beginTransaction();
         try {
             foreach ($pengurusUsers as $user) {
-                // Hapus semua role pengurus, pertahankan role lain (misal: alumni jika ada)
+                // Hapus semua role pengurus, pertahankan role lain (misal: alumni jika ada).
+                // Role mahasiswa juga dilepas dulu lalu dipasang tepat satu, supaya tidak
+                // ada dua role "mahasiswa" (lihat roleMahasiswaId()).
                 $keepRoles = $user->roles
-                    ->whereNotIn('name', $pengurusNames)
+                    ->whereNotIn('name', [...$pengurusNames, 'mahasiswa'])
                     ->pluck('id')
                     ->toArray();
 
                 // Pastikan minimal ada role mahasiswa
-                $newRoleIds = array_unique([...$keepRoles, $mahasiswaRole->id]);
+                $newRoleIds = array_unique([...$keepRoles, $this->roleMahasiswaId($user)]);
 
                 $user->roles()->sync($newRoleIds);
                 $user->load('roles');
                 $user->syncPermissionsFromRoles();
                 $user->clearUserCache();
             }
+
+            // Bidang/unit kepengurusan ikut dilepas — periode baru diatur ulang.
+            PengurusBidang::whereIn('user_id', $pengurusUsers->pluck('id'))->delete();
 
             AuditLogger::update(
                 module:  'manajemen_mahasiswa',
@@ -441,7 +527,24 @@ class ManajemenPenggunaController extends Controller
      */
     private function getAssignableRoles(User $actor): \Illuminate\Support\Collection
     {
-        $actorRoles  = $actor->roles->pluck('name')->toArray();
+        $allowedNames = $this->assignableNames($actor);
+
+        // Diurutkan sesuai senioritas jabatan (KAHIM, WAKAHIM, KABID, ...), alumni terakhir.
+        $urutan = [...RoleHimpunan::POSISI, 'alumni'];
+
+        return Role::whereIn('name', $allowedNames)->get()
+            ->sortBy(fn ($role) => array_search($role->name, $urutan, true))
+            ->values();
+    }
+
+    /**
+     * Nama role yang boleh di-assign actor (gabungan ASSIGNABLE_BY dari semua role-nya).
+     *
+     * @return list<string>
+     */
+    private function assignableNames(User $actor): array
+    {
+        $actorRoles   = $actor->roles->pluck('name')->toArray();
         $allowedNames = [];
 
         foreach (self::ASSIGNABLE_BY as $callerRole => $allowed) {
@@ -450,7 +553,7 @@ class ManajemenPenggunaController extends Controller
             }
         }
 
-        return Role::whereIn('name', $allowedNames)->get();
+        return array_values($allowedNames);
     }
 
     /**
@@ -460,64 +563,198 @@ class ManajemenPenggunaController extends Controller
      * - Alumni → menggantikan semua (tidak lagi mahasiswa aktif).
      * - Mahasiswa Biasa (dipilih tanpa posisi) → strip semua posisi, hanya mahasiswa.
      * - Role posisi → mahasiswa SELALU dipertahankan + posisi + pengurus_himpunan.
+     *
+     * Role "mahasiswa" selalu tepat SATU (roleMahasiswaId()). Dulu dicari lewat
+     * whereIn('name', ...) sehingga kedua baris role bernama "mahasiswa" ikut
+     * terpasang dan user tercatat punya dua role Mahasiswa.
      */
-    private function resolveMultipleRoleIds(array $selectedRoles): array
+    private function resolveMultipleRoleIds(array $selectedRoles, ?User $user = null): array
     {
         if (in_array('alumni', $selectedRoles)) {
             $role = Role::where('name', 'alumni')->first();
             return $role ? [$role->id] : [];
         }
 
+        $mahasiswaId = $this->roleMahasiswaId($user);
+
         if (in_array('mahasiswa', $selectedRoles)) {
-            $role = Role::where('name', 'mahasiswa')->first();
-            return $role ? [$role->id] : [];
+            return $mahasiswaId ? [$mahasiswaId] : [];
         }
 
         // Role posisi: selalu tambahkan mahasiswa + pengurus_himpunan
         $positionNames = array_intersect($selectedRoles, self::HIMPUNAN_POSITION_ROLES);
-        $finalNames    = array_unique([...$positionNames, 'mahasiswa', 'pengurus_himpunan']);
+        $finalNames    = array_unique([...$positionNames, 'pengurus_himpunan']);
 
-        return Role::whereIn('name', $finalNames)->pluck('id')->toArray();
+        $ids = Role::whereIn('name', $finalNames)->pluck('id')->toArray();
+
+        return array_values(array_unique(array_filter([...$ids, $mahasiswaId])));
     }
 
     /**
-     * Ambil divisi aktif dari actor (untuk ketua_bidang/ketua_unit).
+     * ID role "mahasiswa" yang dipakai — tepat satu.
+     *
+     * Tabel roles punya DUA baris bernama "mahasiswa": module `capstone` (data lama)
+     * dan module `global` (dibuat login SSO, AcademicRoleSynchronizer). Pengecekan
+     * akses di seluruh aplikasi memakai nama role, jadi cukup satu. Urutan pilihan:
+     * role mahasiswa yang sudah dipegang user (versi `global` lebih dulu), lalu versi
+     * `global`, lalu yang lain.
      */
-    private function getActorDivisi(User $actor): ?string
+    private function roleMahasiswaId(?User $user = null): ?int
     {
-        if (!$actor->student) return null;
+        $kandidat = Role::where('name', 'mahasiswa')
+            ->orderByRaw("CASE WHEN module = 'global' THEN 0 ELSE 1 END")
+            ->orderBy('id')
+            ->pluck('id');
 
-        return PengurusHimaskom::where('student_id', $actor->student->id)
-            ->where('status_keaktifan', PengurusHimaskom::STATUS_AKTIF)
-            ->latest()
-            ->value('divisi');
+        if ($user) {
+            $dipegang = $kandidat->intersect($user->roles->pluck('id'))->first();
+            if ($dipegang) {
+                return (int) $dipegang;
+            }
+        }
+
+        return $kandidat->first() ? (int) $kandidat->first() : null;
     }
 
-    private function isMahasiswaAktif(User $u): bool
+    /**
+     * Kategori tabel yang boleh dilihat actor: admin melihat ketiganya, role
+     * himpunan hanya Mahasiswa Aktif & Pengurus Himpunan.
+     *
+     * @return list<string>
+     */
+    private function kategoriUntuk(User $actor): array
     {
-        $names = $u->roles->pluck('name');
-        return $names->contains('mahasiswa')
-            && $names->intersect(['pengurus_himpunan', ...self::HIMPUNAN_POSITION_ROLES])->isEmpty()
-            && !$names->contains('alumni');
+        return $actor->hasAnyRole(['admin_kemahasiswaan', 'admin', 'superadmin'])
+            ? ['Mahasiswa Aktif', 'Pengurus Himpunan', 'Alumni']
+            : ['Mahasiswa Aktif', 'Pengurus Himpunan'];
     }
 
-    private function isPengurus(User $u): bool
+    /**
+     * Apakah actor boleh mengubah role target — hanya akun berhak LEBIH RENDAH.
+     *
+     *  - Bukan diri sendiri, dan bukan superadmin/admin/dosen/GPM/Kadep.
+     *  - Role himpunan juga tidak bisa mengubah akun admin modul (admin_*), DPM,
+     *    atau dosen koordinator/kaprodi.
+     *  - Setiap jabatan himpunan & alumni yang sudah dipegang target harus termasuk
+     *    role yang boleh di-assign actor. Jadi KABID (hanya boleh assign Staff) tidak
+     *    bisa mengubah KAHIM/WAKAHIM maupun sesama KABID/WAKABID/KANIT/WAKANIT, tapi
+     *    bisa mengubah Mahasiswa & Staff Himpunan; KAHIM tidak bisa mengubah WAKAHIM.
+     *  - Pimpinan bidang/unit hanya untuk anggota bidang/unitnya, atau yang belum
+     *    punya bidang/unit.
+     */
+    private function bisaUbah(User $actor, User $target): bool
     {
-        return $u->roles->pluck('name')
-            ->intersect(['pengurus_himpunan', ...self::HIMPUNAN_POSITION_ROLES])
-            ->isNotEmpty();
+        if ($actor->id === $target->id) {
+            return false;
+        }
+
+        if ($target->hasAnyRole(['superadmin', 'admin', 'dosen', 'gpm', 'ketua_departemen'])) {
+            return false;
+        }
+
+        $actorAdmin = $actor->hasAnyRole(['admin_kemahasiswaan', 'admin', 'superadmin']);
+        $roleTarget = $target->roles->pluck('name');
+
+        if (!$actorAdmin && $roleTarget->contains(fn ($r) => str_starts_with($r, 'admin')
+                || in_array($r, ['dpm', 'dosen_koordinator', 'kaprodi'], true))) {
+            return false;
+        }
+
+        $assignable = $this->assignableNames($actor);
+        $dilindungi = $roleTarget->intersect([...self::HIMPUNAN_POSITION_ROLES, 'alumni']);
+        if ($dilindungi->diff($assignable)->isNotEmpty()) {
+            return false;
+        }
+
+        if ($this->actorTerbatasBidang($actor)) {
+            $bidangTarget = RoleHimpunan::bidangId($target);
+            if ($bidangTarget && $bidangTarget !== RoleHimpunan::bidangId($actor)) {
+                return false;
+            }
+        }
+
+        return true;
     }
+
+    /**
+     * Pimpinan bidang/unit (KABID, WAKABID, KANIT, WAKANIT) yang bukan KAHIM/WAKAHIM
+     * atau admin — aksesnya di halaman ini terkunci ke bidang/unitnya.
+     */
+    private function actorTerbatasBidang(User $actor): bool
+    {
+        return RoleHimpunan::isPimpinanBidang($actor)
+            && !$actor->hasAnyRole([...RoleHimpunan::INTI, 'admin_kemahasiswaan', 'admin', 'superadmin']);
+    }
+
+    /**
+     * Pimpinan bidang/unit hanya melihat anggota bidang/unitnya sendiri, ditambah
+     * pengguna yang belum punya bidang/unit (calon staff yang bisa ia rekrut).
+     */
+    private function batasiKeBidangActor($query, User $actor): void
+    {
+        if (!$this->actorTerbatasBidang($actor)) {
+            return;
+        }
+
+        $bidangId = RoleHimpunan::bidangId($actor);
+
+        $query->where(fn ($q) => $q
+            ->whereDoesntHave('pengurusBidang')
+            ->when($bidangId, fn ($q2) => $q2->orWhereHas('pengurusBidang', fn ($pb) => $pb->where('bidang_id', $bidangId)))
+        );
+    }
+
+    /**
+     * Data dropdown Bidang/Unit untuk form Ubah Role.
+     *
+     * @return array{bidangOptions: \Illuminate\Support\Collection, bidangTerkunci: ?int}
+     */
+    private function dataFormBidang(User $actor): array
+    {
+        $terkunci = $this->actorTerbatasBidang($actor) ? RoleHimpunan::bidangId($actor) : null;
+
+        $bidangOptions = Bidang::orderBy('jenis')->orderBy('nama_bidang')
+            ->when($this->actorTerbatasBidang($actor), fn ($q) => $q->whereKey($terkunci))
+            ->get();
+
+        return ['bidangOptions' => $bidangOptions, 'bidangTerkunci' => $terkunci];
+    }
+
+    /**
+     * Pastikan bidang/unit cocok dengan jabatan berbidang yang dipilih.
+     *
+     * @param  list<string>  $jabatan
+     * @return string|null pesan error, atau null bila valid
+     */
+    private function tolakBidangJabatan(array $jabatan, ?Bidang $bidang): ?string
+    {
+        if (!$bidang) {
+            return 'Pilih Bidang/Unit untuk jabatan ' . implode(', ', array_map([RoleHimpunan::class, 'label'], $jabatan)) . '.';
+        }
+
+        $butuhBidang = array_intersect($jabatan, RoleHimpunan::ROLE_BIDANG);
+        $butuhUnit   = array_intersect($jabatan, RoleHimpunan::ROLE_UNIT);
+
+        if ($butuhBidang && $butuhUnit) {
+            return 'Jabatan KABID/WAKABID dan KANIT/WAKANIT tidak bisa dipegang bersamaan — satu pengurus hanya di satu bidang/unit.';
+        }
+        if ($butuhBidang && $bidang->isUnit()) {
+            return "{$bidang->nama_bidang} adalah Unit. KABID/WAKABID harus memegang Bidang.";
+        }
+        if ($butuhUnit && !$bidang->isUnit()) {
+            return "{$bidang->nama_bidang} adalah Bidang. KANIT/WAKANIT harus memegang Unit.";
+        }
+
+        return null;
+    }
+
 
     private function getRoleLabel(string $roleName): string
     {
         return match ($roleName) {
-            'ketua_himpunan'       => 'Ketua Himpunan',
-            'ketua_bidang'         => 'Ketua Bidang',
-            'ketua_unit'           => 'Ketua Unit',
-            'staff_himpunan'       => 'Staff Himpunan',
-            'alumni'               => 'Alumni',
-            'mahasiswa'            => 'Mahasiswa Biasa',
-            default                => ucfirst(str_replace('_', ' ', $roleName)),
+            'alumni'    => 'Alumni',
+            'mahasiswa' => 'Mahasiswa Biasa',
+            default     => RoleHimpunan::label($roleName),
         };
     }
 }

@@ -72,7 +72,8 @@ class AlokasiSesiController extends Controller
 
         $passed = PendaftarUjian::whereIn('id', $request->pendaftar_ids)
             ->get(['id', 'mahasiswa_id'])
-            ->filter(fn (PendaftarUjian $pendaftar) => $this->pendaftaranService->hasPassed($pendaftar->mahasiswa_id));
+            ->filter(fn (PendaftarUjian $pendaftar) => $pendaftar->mahasiswa_id
+                && $this->pendaftaranService->hasPassed($pendaftar->mahasiswa_id));
 
         if ($passed->isNotEmpty()) {
             return back()->with('error', 'Alokasi dibatalkan: ada mahasiswa yang sudah dinyatakan lulus ujian komprehensif.');

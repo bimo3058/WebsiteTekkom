@@ -1,150 +1,81 @@
-<!-- RPS Delete Confirmation Modal Component -->
-<div id="deleteConfirmationModal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden">
-    <div class="bg-white rounded-lg w-11/12 max-w-md shadow-2xl">
-        <!-- Modal Header -->
-        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
-            <h3 class="text-lg font-semibold text-slate-900">Konfirmasi Penghapusan</h3>
-        </div>
-
-        <!-- Modal Content -->
-        <div class="px-6 py-4 space-y-3">
-            <p class="text-slate-700">Apakah Anda yakin ingin menghapus RPS untuk:</p>
-            <p id="deleteConfirmationMkName" class="font-semibold text-slate-900 text-lg"></p>
-            <p class="text-sm text-red-600 mt-4">
-                <i class="fas fa-exclamation-triangle mr-2"></i>
-                Tindakan ini tidak dapat dibatalkan!
-            </p>
-        </div>
-
-        <!-- Modal Footer -->
-        <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
-            <button type="button" id="deleteConfirmationBatal" class="btn-secondary">
-                Batal
-            </button>
-            <button type="button" id="deleteConfirmationSetuju" class="btn-danger" style="background-color: #dc2626; color: white; padding: 0.5rem 1rem; border-radius: 0.375rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem;">
-                <i class="fas fa-trash"></i> Hapus
-            </button>
-        </div>
-    </div>
-</div>
-
+<!-- Konfirmasi Hapus Draft RPS menggunakan SweetAlert2 (matches admin style) -->
 <script>
 (function() {
-    const modal = document.getElementById('deleteConfirmationModal');
-    const mkNameEl = document.getElementById('deleteConfirmationMkName');
-    const batalBtn = document.getElementById('deleteConfirmationBatal');
-    const setujuBtn = document.getElementById('deleteConfirmationSetuju');
-    
-    let pendingDeleteUrl = null;
-
-    // Open modal when delete button clicked
     document.addEventListener('click', function(e) {
-        if (e.target.closest('.delete-rps-btn')) {
-            const btn = e.target.closest('.delete-rps-btn');
-            const mkName = btn.dataset.mk;
-            const destroyUrl = btn.dataset.destroyUrl;
+        const btn = e.target.closest('.delete-draft-btn');
+        if (!btn) return;
 
-            mkNameEl.textContent = mkName;
-            pendingDeleteUrl = destroyUrl;
-            
-            // Show modal
-            modal.classList.remove('hidden');
-            modal.style.display = 'flex';
-        }
-    });
+        const mkName = btn.dataset.mk || 'data ini';
+        const destroyUrl = btn.dataset.destroyUrl;
+        if (!destroyUrl) return;
 
-    // Close modal when batal clicked
-    batalBtn.addEventListener('click', function() {
-        modal.classList.add('hidden');
-        modal.style.display = 'none';
-        pendingDeleteUrl = null;
-    });
+        const title = 'Hapus Draft RPS?';
+        const text = `Apakah Anda yakin ingin menghapus draft RPS untuk "${mkName}"? Data yang dihapus tidak dapat dikembalikan.`;
 
-    // Close modal when clicking outside
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-            modal.classList.add('hidden');
-            modal.style.display = 'none';
-            pendingDeleteUrl = null;
-        }
-    });
-
-    // Submit delete when setuju clicked
-    setujuBtn.addEventListener('click', function() {
-        if (!pendingDeleteUrl) return;
-
-        // Show loading state
-        setujuBtn.disabled = true;
-        window.showLoader();
-
-        // Send AJAX DELETE request
-        fetch(pendingDeleteUrl, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // Show success message
-                showNotification('success', 'RPS berhasil dihapus');
-                
-                // Reload page after short delay
-                setTimeout(() => {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                showLoaderOnConfirm: true,
+                preConfirm: async () => {
+                    try {
+                        const response = await fetch(destroyUrl, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        const data = await response.json();
+                        if (!response.ok || !data.success) {
+                            throw new Error(data.message || 'Gagal menghapus data');
+                        }
+                        return data;
+                    } catch (error) {
+                        Swal.showValidationMessage(error.message || 'Terjadi kesalahan saat menghapus data');
+                    }
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: result.value?.message || 'Draft RPS berhasil dihapus',
+                        timer: 1500,
+                        showConfirmButton: false,
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                }
+            });
+        } else if (confirm(text)) {
+            fetch(destroyUrl, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message || 'Berhasil dihapus');
                     window.location.reload();
-                }, 1500);
-            } else {
-                throw new Error(data.message || 'Gagal menghapus RPS');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            window.hideLoader();
-            showNotification('error', error.message || 'Terjadi kesalahan saat menghapus RPS');
-            
-            // Reset button state
-            setujuBtn.disabled = false;
-        });
-    });
-
-    // Helper function to show notification
-    function showNotification(type, message) {
-        if (typeof Snackbar !== 'undefined' && typeof Snackbar.show === 'function') {
-            Snackbar.show(message, type);
-        } else {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-60 shadow-lg ${
-                type === 'success' ? 'bg-green-500' : 'bg-red-500'
-            }`;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            // Remove after 3 seconds
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
+                } else {
+                    alert(data.message || 'Gagal menghapus');
+                }
+            })
+            .catch(err => alert(err.message || 'Terjadi kesalahan'));
         }
-    }
+    });
 })();
 </script>
-
-<style>
-    .btn-danger:hover {
-        background-color: #b91c1c !important;
-    }
-
-    .btn-danger:disabled {
-        background-color: #9ca3af !important;
-        cursor: not-allowed;
-    }
-</style>

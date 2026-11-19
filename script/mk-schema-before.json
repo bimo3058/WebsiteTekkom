@@ -1,0 +1,4471 @@
+{
+    "columns": [
+        {
+            "table_name": "mk_kegiatan_pkey",
+            "name": "id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_dosen_pendamping_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_dosen_pendamping_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_dosen_pendamping_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_dosen_pendamping_pkey",
+            "name": "id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_dosen_pendamping",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_kegiatan_dosen_pendamping_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_kegiatan_dosen_pendamping",
+            "name": "kegiatan_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_dosen_pendamping",
+            "name": "lecturer_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_dosen_pendamping",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_dosen_pendamping",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_dosen_pendamping_kegiatan_id_lecturer_id_unique",
+            "name": "kegiatan_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_dosen_pendamping_kegiatan_id_lecturer_id_unique",
+            "name": "lecturer_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_pengelola_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_pengelola_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_pengelola_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_pengelola_pkey",
+            "name": "id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_pengelola",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_kegiatan_pengelola_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_kegiatan_pengelola",
+            "name": "kegiatan_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_pengelola",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_pengelola",
+            "name": "boleh_hapus",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": "false"
+        },
+        {
+            "table_name": "mk_kegiatan_pengelola",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_pengelola",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_pengelola_kegiatan_id_user_id_unique",
+            "name": "kegiatan_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_pengelola_kegiatan_id_user_id_unique",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_repo_mulmed_pkey",
+            "name": "id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_bidang",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_bidang_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_bidang",
+            "name": "nama_bidang",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_bidang",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_bidang",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_audit_logs",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_audit_logs_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_audit_logs",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_audit_logs",
+            "name": "action",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_audit_logs",
+            "name": "subject_type",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_audit_logs",
+            "name": "subject_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_audit_logs",
+            "name": "description",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_audit_logs",
+            "name": "old_data",
+            "type": "json",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_audit_logs",
+            "name": "new_data",
+            "type": "json",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_audit_logs",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": true,
+            "default_value": "CURRENT_TIMESTAMP"
+        },
+        {
+            "table_name": "mk_audit_logs_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_audit_logs_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_audit_logs_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_badges",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_badges_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_badges",
+            "name": "name",
+            "type": "character varying(100)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_badges",
+            "name": "slug",
+            "type": "character varying(100)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_badges",
+            "name": "icon",
+            "type": "character varying(10)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_badges",
+            "name": "description",
+            "type": "text",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_badges",
+            "name": "criteria_type",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_badges",
+            "name": "criteria_value",
+            "type": "integer",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_badges",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_badges",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_badges",
+            "name": "image",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_badges_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_badges_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_badges_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_bidang_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_bidang_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_bidang_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dosen",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_dosen_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_dosen",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dosen",
+            "name": "nip",
+            "type": "character varying(30)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dosen",
+            "name": "program_studi",
+            "type": "character varying(100)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dosen",
+            "name": "bidang_keahlian",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dosen",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dosen",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dosen_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dosen_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dosen_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dashboard_analitik",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_dashboard_analitik_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_dashboard_analitik",
+            "name": "lecturer_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dashboard_analitik",
+            "name": "generated_by_user_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dashboard_analitik",
+            "name": "tanggal_generate",
+            "type": "timestamp(0) without time zone",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dashboard_analitik",
+            "name": "total_mahasiswa_aktif",
+            "type": "integer",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dashboard_analitik",
+            "name": "total_alumni",
+            "type": "integer",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dashboard_analitik",
+            "name": "total_kegiatan",
+            "type": "integer",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dashboard_analitik",
+            "name": "total_pengumuman",
+            "type": "integer",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dashboard_analitik",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dashboard_analitik",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dashboard_analitik_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dashboard_analitik_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_dashboard_analitik_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_discussion",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_discussion_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_discussion",
+            "name": "forum_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_discussion",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_discussion",
+            "name": "judul_discussion",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_discussion",
+            "name": "isi_discussion",
+            "type": "text",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_discussion",
+            "name": "status",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_discussion",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_discussion",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_discussion_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_discussion_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_discussion_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_kegiatan_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "kategori_kegiatan_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "bidang_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "judul",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "deskripsi",
+            "type": "text",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "tanggal_mulai",
+            "type": "date",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "tanggal_selesai",
+            "type": "date",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "lokasi",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "banner",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "anggaran",
+            "type": "numeric(15,2)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "penanggung_jawab",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "target_peserta",
+            "type": "integer",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "status",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "jam_mulai",
+            "type": "time(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "jam_selesai",
+            "type": "time(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "ketua_pelaksana_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "tahun",
+            "type": "integer",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "realisasi_tanggal_mulai",
+            "type": "date",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "realisasi_tanggal_selesai",
+            "type": "date",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "realisasi_lokasi",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "realisasi_peserta",
+            "type": "integer",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "realisasi_anggaran",
+            "type": "numeric(15,2)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "catatan_pelaksanaan",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "disetujui_oleh",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "disetujui_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "catatan_penolakan",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "surat_proker",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "surat_proker_original",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "is_pelaksanaan_updated",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": "false"
+        },
+        {
+            "table_name": "mk_forum_reports",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_forum_reports_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_forum_reports",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_reports",
+            "name": "thread_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_reports",
+            "name": "alasan",
+            "type": "text",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_reports",
+            "name": "status",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": "'pending'::character varying"
+        },
+        {
+            "table_name": "mk_forum_reports",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_reports",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_attachments",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_kegiatan_attachments_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_kegiatan_attachments",
+            "name": "kegiatan_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_attachments",
+            "name": "file_path",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_attachments",
+            "name": "file_name",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_attachments",
+            "name": "file_size",
+            "type": "integer",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_attachments",
+            "name": "tipe",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_attachments",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_attachments",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_reports_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_reports_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_reports_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kategori_kegiatan",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_kategori_kegiatan_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_kategori_kegiatan",
+            "name": "nama_kategori",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kategori_kegiatan",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kategori_kegiatan",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kategori_kegiatan_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kategori_kegiatan_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kategori_kegiatan_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kemahasiswaan",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_kemahasiswaan_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_kemahasiswaan",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kemahasiswaan",
+            "name": "nama",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kemahasiswaan",
+            "name": "nim",
+            "type": "character varying(30)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kemahasiswaan",
+            "name": "angkatan",
+            "type": "integer",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kemahasiswaan",
+            "name": "status",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kemahasiswaan",
+            "name": "tahun_lulus",
+            "type": "integer",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kemahasiswaan",
+            "name": "profesi",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kemahasiswaan",
+            "name": "kontak",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kemahasiswaan",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kemahasiswaan",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kemahasiswaan_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kemahasiswaan_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kemahasiswaan_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_panitia",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_kegiatan_panitia_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_kegiatan_panitia",
+            "name": "kegiatan_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_panitia",
+            "name": "student_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_panitia",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_panitia",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_panitia",
+            "name": "peran",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_panitia_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_panitia_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_panitia_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_peserta",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_kegiatan_peserta_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_kegiatan_peserta",
+            "name": "kegiatan_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_peserta",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_peserta",
+            "name": "status_kehadiran",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": "'terdaftar'::character varying"
+        },
+        {
+            "table_name": "mk_kegiatan_peserta",
+            "name": "registered_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_peserta",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_peserta",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_peserta_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_peserta_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_peserta_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_log_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_log_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_log_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_delegasi",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_pengaduan_delegasi_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_pengaduan_delegasi",
+            "name": "pengaduan_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_delegasi",
+            "name": "delegated_by",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_delegasi",
+            "name": "delegated_to",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_delegasi",
+            "name": "notes_admin",
+            "type": "text",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_delegasi",
+            "name": "status",
+            "type": "character varying(20)",
+            "not_null": true,
+            "default_value": "'aktif'::character varying"
+        },
+        {
+            "table_name": "mk_pengaduan_delegasi",
+            "name": "tanggapan",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_delegasi",
+            "name": "notes_balik",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_delegasi",
+            "name": "alasan_tolak",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_delegasi",
+            "name": "delegated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": true,
+            "default_value": "CURRENT_TIMESTAMP"
+        },
+        {
+            "table_name": "mk_pengaduan_delegasi",
+            "name": "responded_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_delegasi_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_delegasi_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_delegasi_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_pengumuman_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_pengumuman",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman",
+            "name": "judul",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman",
+            "name": "konten",
+            "type": "text",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman",
+            "name": "target_audience",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman",
+            "name": "kategori",
+            "type": "character varying(100)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman",
+            "name": "status_publish",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman",
+            "name": "is_draft",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": "false"
+        },
+        {
+            "table_name": "mk_pengumuman",
+            "name": "published_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman",
+            "name": "scheduled_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman",
+            "name": "is_pinned",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": "false"
+        },
+        {
+            "table_name": "mk_pengaduan_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_log",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_pengaduan_log_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_pengaduan_log",
+            "name": "pengaduan_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_log",
+            "name": "actor_user_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_log",
+            "name": "action",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_log",
+            "name": "notes",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan_log",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": true,
+            "default_value": "CURRENT_TIMESTAMP"
+        },
+        {
+            "table_name": "mk_pengumuman_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_drafts",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_pengumuman_drafts_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_pengumuman_drafts",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_drafts",
+            "name": "judul",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_drafts",
+            "name": "kategori",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_drafts",
+            "name": "target_audience",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_drafts",
+            "name": "konten",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_drafts",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_drafts",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_drafts",
+            "name": "poster_repo_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_drafts",
+            "name": "lampiran_repo_ids",
+            "type": "json",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_drafts",
+            "name": "poster_repo_ids",
+            "type": "json",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_attachments",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_pengumuman_attachments_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_pengumuman_attachments",
+            "name": "pengumuman_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_attachments",
+            "name": "file_path",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_attachments",
+            "name": "file_name",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_attachments",
+            "name": "file_size",
+            "type": "integer",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_attachments",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_attachments",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_personal_pins",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_pengumuman_personal_pins_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_pengumuman_personal_pins",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_personal_pins",
+            "name": "pengumuman_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_personal_pins",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_personal_pins",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_attachments_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_attachments_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_attachments_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_drafts_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_drafts_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_drafts_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_prestasi_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "kemahasiswaan_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "nama_prestasi",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "tingkat",
+            "type": "character varying(100)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "verification_status",
+            "type": "character varying(20)",
+            "not_null": true,
+            "default_value": "'pending'::character varying"
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "verified_by",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "verified_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "verification_note",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "tanggal",
+            "type": "date",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "claim_status",
+            "type": "character varying(20)",
+            "not_null": true,
+            "default_value": "'belum_claim'::character varying"
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "claimed_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "claimed_by",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "reward_penyelenggara",
+            "type": "character varying(20)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "reward_capaian",
+            "type": "character varying(40)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "reward_is_invention",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": "false"
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "reward_jml_mk_max",
+            "type": "smallint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "reward_sks_max",
+            "type": "smallint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "reward_mk_disetujui",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "reward_reviewed_by",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "reward_reviewed_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "reward_note",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "reward_mk_diajukan",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "reward_kuota_grup",
+            "type": "character varying(20)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi",
+            "name": "reward_sk_ref",
+            "type": "character varying(60)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_permissions",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_permissions_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_permissions",
+            "name": "name",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_permissions",
+            "name": "guard_name",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_permissions",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_permissions",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_proker_ttd_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_proker_ttd_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_proker_ttd_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_permissions_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_permissions_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_permissions_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_prestasi_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_proker_ttd",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_proker_ttd_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_proker_ttd",
+            "name": "kegiatan_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_proker_ttd",
+            "name": "role",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_proker_ttd",
+            "name": "signed_by",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_proker_ttd",
+            "name": "signature_image_path",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_proker_ttd",
+            "name": "page_number",
+            "type": "smallint",
+            "not_null": true,
+            "default_value": "'1'::smallint"
+        },
+        {
+            "table_name": "mk_proker_ttd",
+            "name": "pos_x_percent",
+            "type": "numeric(6,2)",
+            "not_null": true,
+            "default_value": "'0'::numeric"
+        },
+        {
+            "table_name": "mk_proker_ttd",
+            "name": "pos_y_percent",
+            "type": "numeric(6,2)",
+            "not_null": true,
+            "default_value": "'0'::numeric"
+        },
+        {
+            "table_name": "mk_proker_ttd",
+            "name": "width_percent",
+            "type": "numeric(6,2)",
+            "not_null": true,
+            "default_value": "'15'::numeric"
+        },
+        {
+            "table_name": "mk_proker_ttd",
+            "name": "height_percent",
+            "type": "numeric(6,2)",
+            "not_null": true,
+            "default_value": "'8'::numeric"
+        },
+        {
+            "table_name": "mk_proker_ttd",
+            "name": "signed_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_proker_ttd",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_proker_ttd",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_roles",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_roles_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_roles",
+            "name": "name",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_roles",
+            "name": "guard_name",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_roles",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_roles",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_reward_aturan",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_reward_aturan_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_reward_aturan",
+            "name": "judul",
+            "type": "character varying(150)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_reward_aturan",
+            "name": "nama_file",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_reward_aturan",
+            "name": "path_file",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_reward_aturan",
+            "name": "tipe_file",
+            "type": "character varying(20)",
+            "not_null": true,
+            "default_value": "'document'::character varying"
+        },
+        {
+            "table_name": "mk_reward_aturan",
+            "name": "uploaded_by",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_reward_aturan",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_reward_aturan",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_reward_aturan_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_reward_aturan_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_reward_aturan_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_riwayat_kegiatan_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan",
+            "name": "student_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan",
+            "name": "kegiatan_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan",
+            "name": "peran",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan",
+            "name": "nama_kegiatan_manual",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan",
+            "name": "peran_manual",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan",
+            "name": "tanggal_kegiatan",
+            "type": "date",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan",
+            "name": "verification_status",
+            "type": "character varying(20)",
+            "not_null": true,
+            "default_value": "'pending'::character varying"
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan",
+            "name": "verified_by",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan",
+            "name": "verified_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan",
+            "name": "verification_note",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_role_has_permissions",
+            "name": "permission_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_role_has_permissions",
+            "name": "role_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_roles_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_roles_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_roles_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_poll_options",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_thread_poll_options_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_thread_poll_options",
+            "name": "poll_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_poll_options",
+            "name": "text",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_poll_options",
+            "name": "votes_count",
+            "type": "integer",
+            "not_null": true,
+            "default_value": "0"
+        },
+        {
+            "table_name": "mk_thread_poll_options",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_poll_options",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_poll_options_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_poll_options_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_poll_options_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_drafts",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_thread_drafts_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_thread_drafts",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_drafts",
+            "name": "judul",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_drafts",
+            "name": "kategori",
+            "type": "jsonb",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_drafts",
+            "name": "konten",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_drafts",
+            "name": "media_files",
+            "type": "jsonb",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_drafts",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_drafts",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_drafts_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_drafts_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_drafts_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_personal_pins",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_thread_personal_pins_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_thread_personal_pins",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_personal_pins",
+            "name": "thread_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_personal_pins",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_personal_pins",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_personal_pins_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_personal_pins_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_personal_pins_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_votes_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_votes_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_votes_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_xp_logs",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_xp_logs_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_xp_logs",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_xp_logs",
+            "name": "action",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_xp_logs",
+            "name": "xp_amount",
+            "type": "integer",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_xp_logs",
+            "name": "reference_type",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_xp_logs",
+            "name": "reference_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_xp_logs",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_xp_logs",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_xp_logs_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_xp_logs_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_xp_logs_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_verifikasi_bukti",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_verifikasi_bukti_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_verifikasi_bukti",
+            "name": "bukti_type",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_verifikasi_bukti",
+            "name": "bukti_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_verifikasi_bukti",
+            "name": "nama_file",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_verifikasi_bukti",
+            "name": "path_file",
+            "type": "character varying(500)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_verifikasi_bukti",
+            "name": "tipe_file",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_verifikasi_bukti",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_verifikasi_bukti",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_verifikasi_bukti_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_verifikasi_bukti_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_verifikasi_bukti_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_votes",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_votes_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_votes",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_votes",
+            "name": "voteable_type",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_votes",
+            "name": "voteable_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_votes",
+            "name": "value",
+            "type": "smallint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_votes",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_votes",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_alumni",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_alumni_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_alumni",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_alumni",
+            "name": "nim",
+            "type": "character varying(20)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_alumni",
+            "name": "angkatan",
+            "type": "integer",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_alumni",
+            "name": "program_studi",
+            "type": "character varying(100)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_alumni",
+            "name": "tahun_lulus",
+            "type": "integer",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_alumni",
+            "name": "perusahaan",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_alumni",
+            "name": "jabatan",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_alumni",
+            "name": "linkedin",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_alumni",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_alumni",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_alumni",
+            "name": "bidang_industri",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_alumni",
+            "name": "tahun_mulai_bekerja",
+            "type": "integer",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_alumni",
+            "name": "status_karir",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_alumni_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_alumni_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_alumni_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comment_forum",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_comment_forum_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_comment_forum",
+            "name": "discussion_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comment_forum",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comment_forum",
+            "name": "isi_comment",
+            "type": "text",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comment_forum",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comment_forum",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comment_forum_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comment_forum_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comment_forum_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comments",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_comments_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_comments",
+            "name": "thread_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comments",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comments",
+            "name": "parent_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comments",
+            "name": "konten",
+            "type": "text",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comments",
+            "name": "is_best_answer",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": "false"
+        },
+        {
+            "table_name": "mk_comments",
+            "name": "vote_count",
+            "type": "integer",
+            "not_null": true,
+            "default_value": "0"
+        },
+        {
+            "table_name": "mk_comments",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comments",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comments_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comments_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_comments_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_mahasiswa",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_forum_mahasiswa_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_forum_mahasiswa",
+            "name": "nama_forum",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_mahasiswa",
+            "name": "deskripsi",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_mahasiswa",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_mahasiswa",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_mahasiswa_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_mahasiswa_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_mahasiswa_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_notifications",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_forum_notifications_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_forum_notifications",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_notifications",
+            "name": "actor_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_notifications",
+            "name": "type",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_notifications",
+            "name": "thread_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_notifications",
+            "name": "comment_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_notifications",
+            "name": "message",
+            "type": "text",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_notifications",
+            "name": "read_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_notifications",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_notifications",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_notifications_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_notifications_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_forum_notifications_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_attachments_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_attachments_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_attachments_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_bidang",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_kegiatan_bidang_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_kegiatan_bidang",
+            "name": "kegiatan_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_bidang",
+            "name": "bidang_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_bidang",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_bidang",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_bidang_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_bidang_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_bidang_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_pengaduan_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "kategori",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "is_anonim",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": "false"
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "data_template",
+            "type": "jsonb",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "status",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": "'baru'::character varying"
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "read_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "read_by",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "jawaban",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "answered_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "answered_by",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "reopen_count",
+            "type": "smallint",
+            "not_null": true,
+            "default_value": "'0'::smallint"
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "reopen_reason",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "auto_close_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "closed_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "closed_by",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "anon_token",
+            "type": "character varying(255)",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "name": "deleted_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_kategori",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_kegiatan_kategori_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_kegiatan_kategori",
+            "name": "kegiatan_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_kategori",
+            "name": "kategori_kegiatan_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_kategori",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_kategori",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_kategori_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_kategori_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kegiatan_kategori_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kepengurusan",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_kepengurusan_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_kepengurusan",
+            "name": "tahun_periode",
+            "type": "character varying(20)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kepengurusan",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kepengurusan",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kepengurusan_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kepengurusan_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_kepengurusan_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_mahasiswa",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_mahasiswa_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_mahasiswa",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_mahasiswa",
+            "name": "nim",
+            "type": "character varying(20)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_mahasiswa",
+            "name": "angkatan",
+            "type": "integer",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_mahasiswa",
+            "name": "program_studi",
+            "type": "character varying(100)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_mahasiswa",
+            "name": "status",
+            "type": "character varying(20)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_mahasiswa",
+            "name": "dosen_wali_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_mahasiswa",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_mahasiswa",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_mahasiswa_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_mahasiswa_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_mahasiswa_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_model_has_permissions",
+            "name": "permission_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_model_has_permissions",
+            "name": "model_type",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_model_has_permissions",
+            "name": "model_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_model_has_roles",
+            "name": "role_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_model_has_roles",
+            "name": "model_type",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_model_has_roles",
+            "name": "model_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_approval_requests",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_pengumuman_approval_requests_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_pengumuman_approval_requests",
+            "name": "pengumuman_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_approval_requests",
+            "name": "requester_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_approval_requests",
+            "name": "verifier_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_approval_requests",
+            "name": "status",
+            "type": "character varying(20)",
+            "not_null": true,
+            "default_value": "'pending'::character varying"
+        },
+        {
+            "table_name": "mk_pengumuman_approval_requests",
+            "name": "pesan_pengaju",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_approval_requests",
+            "name": "catatan_verifikator",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_approval_requests",
+            "name": "verified_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_approval_requests",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_approval_requests",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_approval_requests_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_approval_requests_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_approval_requests_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_personal_pins_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_personal_pins_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengumuman_personal_pins_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_repo_mulmed",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_repo_mulmed_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_repo_mulmed",
+            "name": "kegiatan_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_repo_mulmed",
+            "name": "pengumuman_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_repo_mulmed",
+            "name": "nama_file",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_repo_mulmed",
+            "name": "path_file",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_repo_mulmed",
+            "name": "tipe_file",
+            "type": "character varying(100)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_repo_mulmed",
+            "name": "judul_file",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_repo_mulmed",
+            "name": "deskripsi_meta",
+            "type": "text",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_repo_mulmed",
+            "name": "visibility_status",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_repo_mulmed",
+            "name": "status_arsip",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_repo_mulmed",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_repo_mulmed",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himaskom",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_pengurus_himaskom_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_pengurus_himaskom",
+            "name": "student_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himaskom",
+            "name": "kepengurusan_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himaskom",
+            "name": "divisi",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himaskom",
+            "name": "jabatan",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himaskom",
+            "name": "status_keaktifan",
+            "type": "character varying(50)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himaskom",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himaskom",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himaskom_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himaskom_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himaskom_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himpunan",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_pengurus_himpunan_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_pengurus_himpunan",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himpunan",
+            "name": "organisasi",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himpunan",
+            "name": "jabatan_organisasi",
+            "type": "character varying(100)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himpunan",
+            "name": "periode",
+            "type": "character varying(20)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himpunan",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himpunan",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himpunan_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himpunan_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_pengurus_himpunan_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_repo_mulmed_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_repo_mulmed_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_repo_mulmed_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_streaks",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_streaks_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_streaks",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_streaks",
+            "name": "current_streak",
+            "type": "integer",
+            "not_null": true,
+            "default_value": "0"
+        },
+        {
+            "table_name": "mk_streaks",
+            "name": "longest_streak",
+            "type": "integer",
+            "not_null": true,
+            "default_value": "0"
+        },
+        {
+            "table_name": "mk_streaks",
+            "name": "last_activity_date",
+            "type": "date",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_streaks",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_streaks",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_streaks_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_streaks_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_streaks_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_poll_votes",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_thread_poll_votes_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_thread_poll_votes",
+            "name": "poll_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_poll_votes",
+            "name": "option_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_poll_votes",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_poll_votes",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_poll_votes",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_poll_votes_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_poll_votes_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_poll_votes_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_polls",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_thread_polls_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_thread_polls",
+            "name": "thread_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_polls",
+            "name": "expires_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_polls",
+            "name": "is_closed",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": "false"
+        },
+        {
+            "table_name": "mk_thread_polls",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_polls",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_polls_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_polls_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_thread_polls_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_threads",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_threads_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_threads",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_threads",
+            "name": "kategori",
+            "type": "jsonb",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_threads",
+            "name": "judul",
+            "type": "character varying(255)",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_threads",
+            "name": "konten",
+            "type": "text",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_threads",
+            "name": "is_pinned",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": "false"
+        },
+        {
+            "table_name": "mk_threads",
+            "name": "is_locked",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": "false"
+        },
+        {
+            "table_name": "mk_threads",
+            "name": "best_answer_id",
+            "type": "bigint",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_threads",
+            "name": "vote_count",
+            "type": "integer",
+            "not_null": true,
+            "default_value": "0"
+        },
+        {
+            "table_name": "mk_threads",
+            "name": "comment_count",
+            "type": "integer",
+            "not_null": true,
+            "default_value": "0"
+        },
+        {
+            "table_name": "mk_threads",
+            "name": "created_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_threads",
+            "name": "updated_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": false,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_threads_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_threads_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_threads_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_user_badges",
+            "name": "id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": "nextval('mk_user_badges_id_seq'::regclass)"
+        },
+        {
+            "table_name": "mk_user_badges",
+            "name": "user_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_user_badges",
+            "name": "badge_id",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_user_badges",
+            "name": "earned_at",
+            "type": "timestamp(0) without time zone",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_user_badges_id_seq",
+            "name": "last_value",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_user_badges_id_seq",
+            "name": "log_cnt",
+            "type": "bigint",
+            "not_null": true,
+            "default_value": null
+        },
+        {
+            "table_name": "mk_user_badges_id_seq",
+            "name": "is_called",
+            "type": "boolean",
+            "not_null": true,
+            "default_value": null
+        }
+    ],
+    "constraints": [
+        {
+            "table_name": "mk_kegiatan_dosen_pendamping",
+            "name": "mk_kegiatan_dosen_pendamping_kegiatan_id_foreign",
+            "definition": "FOREIGN KEY (kegiatan_id) REFERENCES mk_kegiatan(id) ON DELETE CASCADE"
+        },
+        {
+            "table_name": "mk_kegiatan_dosen_pendamping",
+            "name": "mk_kegiatan_dosen_pendamping_kegiatan_id_lecturer_id_unique",
+            "definition": "UNIQUE (kegiatan_id, lecturer_id)"
+        },
+        {
+            "table_name": "mk_kegiatan_dosen_pendamping",
+            "name": "mk_kegiatan_dosen_pendamping_lecturer_id_foreign",
+            "definition": "FOREIGN KEY (lecturer_id) REFERENCES lecturers(id) ON DELETE CASCADE"
+        },
+        {
+            "table_name": "mk_kegiatan_dosen_pendamping",
+            "name": "mk_kegiatan_dosen_pendamping_pkey",
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "table_name": "mk_kegiatan_pengelola",
+            "name": "mk_kegiatan_pengelola_kegiatan_id_foreign",
+            "definition": "FOREIGN KEY (kegiatan_id) REFERENCES mk_kegiatan(id) ON DELETE CASCADE"
+        },
+        {
+            "table_name": "mk_kegiatan_pengelola",
+            "name": "mk_kegiatan_pengelola_kegiatan_id_user_id_unique",
+            "definition": "UNIQUE (kegiatan_id, user_id)"
+        },
+        {
+            "table_name": "mk_kegiatan_pengelola",
+            "name": "mk_kegiatan_pengelola_pkey",
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "table_name": "mk_kegiatan_pengelola",
+            "name": "mk_kegiatan_pengelola_user_id_foreign",
+            "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "name": "mk_kegiatan_pkey",
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "table_name": "mk_pengumuman_drafts",
+            "name": "mk_pengumuman_drafts_poster_repo_id_foreign",
+            "definition": "FOREIGN KEY (poster_repo_id) REFERENCES mk_repo_mulmed(id) ON DELETE SET NULL"
+        },
+        {
+            "table_name": "mk_repo_mulmed",
+            "name": "mk_repo_mulmed_pkey",
+            "definition": "PRIMARY KEY (id)"
+        }
+    ]
+}

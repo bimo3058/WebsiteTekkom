@@ -47,7 +47,7 @@ class EnsureAsprakOwnership
 
         // Jika tidak punya role asprak tapi admin/koor, izinkan bypass (read-only view)
         if ($allAsprak->isEmpty()) {
-            if ($user?->hasAnyRole(['superadmin', 'admin_eoffice', 'koor_prak'])) {
+            if ($user?->hasAnyRole(['superadmin', 'koor_prak'])) {
                 return $next($request);
             }
             abort(403, 'Anda belum terdaftar sebagai Asisten Praktikum aktif.');

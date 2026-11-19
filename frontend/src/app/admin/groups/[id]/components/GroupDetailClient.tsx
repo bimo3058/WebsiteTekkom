@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { 
     ChevronLeft, Users, BookOpen, GraduationCap, 
     Calendar, Loader2, Mail, User, Flag, ShieldCheck,
-    ArrowUpDown, MoreHorizontal, ExternalLink
+    ArrowUpDown, MoreHorizontal, ExternalLink, Pencil
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
@@ -34,6 +34,8 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { RenameTitleDialog } from '@/components/finalization/rename-title-dialog';
+import { useAdminTitleRename } from '@/hooks/use-admin-title-rename';
 
 const AVATAR_COLORS = [
   'bg-emerald-100 text-emerald-700 border-emerald-200',
@@ -116,6 +118,10 @@ export default function GroupDetailClient() {
     const [flagReason, setFlagReason] = useState('');
     const [flagLoading, setFlagLoading] = useState(false);
 
+    // Title rename state (text-only edit; group status untouched)
+    const [renameOpen, setRenameOpen] = useState(false);
+    const { renameTitle, renamingTitle } = useAdminTitleRename();
+
     const fetchGroup = useCallback(async () => {
         if (!groupId) {
             toast.error('Invalid group ID');
@@ -174,6 +180,16 @@ export default function GroupDetailClient() {
         setMemberToFlag(null);
         setFlagReason('');
     };
+
+    // Title rename handler
+    const handleRenameTitleSubmit = useCallback(async (title: string) => {
+        if (!group?.title) return;
+        const success = await renameTitle(group.title.id, title);
+        if (success) {
+            setRenameOpen(false);
+            await fetchGroup();
+        }
+    }, [group, renameTitle, fetchGroup]);
 
     if (loading) {
         return (
@@ -262,6 +278,17 @@ export default function GroupDetailClient() {
                             <h3 className="text-sm font-medium text-grey-400 mb-2 flex items-center gap-2">
                                 <BookOpen className="h-4 w-4" />
                                 Project Title
+                                {group.title && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="ml-auto h-7 w-7 text-grey-400 hover:text-grey-600"
+                                        title="Edit title"
+                                        onClick={() => setRenameOpen(true)}
+                                    >
+                                        <Pencil className="h-3.5 w-3.5" />
+                                    </Button>
+                                )}
                             </h3>
                             {group.title ? (
                                 <div className="space-y-3">
@@ -478,6 +505,16 @@ export default function GroupDetailClient() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Rename Title Dialog (text-only; group status unchanged) */}
+            <RenameTitleDialog
+                key={`rename-title-${group.title?.id ?? "none"}-${renameOpen}`}
+                open={renameOpen}
+                onOpenChange={setRenameOpen}
+                currentTitle={group.title?.title ?? ""}
+                loading={renamingTitle}
+                onSubmit={handleRenameTitleSubmit}
+            />
         </div>
     );
 }

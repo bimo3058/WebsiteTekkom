@@ -20,6 +20,19 @@ class ImportController extends Controller
         return (new KompreNilaiTemplateExport)->download($periode);
     }
 
+    public function templateKosong()
+    {
+        $this->authorize('viewAny', KompreSession::class);
+
+        $path = module_path('BankSoal', 'resources/templates/Template_Import_Riwayat_Ujian_Kompre.xlsx');
+
+        abort_unless(is_file($path), 404, 'Template import tidak ditemukan.');
+
+        return response()->download($path, 'Template_Import_Riwayat_Ujian_Kompre.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
     public function preview(Request $request)
     {
         $this->authorize('viewAny', KompreSession::class);

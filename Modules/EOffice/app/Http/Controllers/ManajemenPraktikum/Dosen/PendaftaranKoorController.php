@@ -66,7 +66,6 @@ class PendaftaranKoorController extends Controller
         if ($praktikumId) {
             $periode = \Modules\EOffice\Models\PeriodePendaftaran::where('praktikum_id', $praktikumId)
                 ->where('jenis', 'koor')
-                ->where('is_aktif', true)
                 ->orderByDesc('created_at')
                 ->first();
         }
@@ -112,7 +111,7 @@ class PendaftaranKoorController extends Controller
         $adminIds = \App\Models\User::whereHas(
             'roles',
             fn($q) =>
-            $q->whereIn('name', ['superadmin', 'admin_eoffice'])
+            $q->whereIn('name', ['superadmin', 'koordinator_cerc'])
         )->pluck('id');
 
         $this->notif->kirimBulk(

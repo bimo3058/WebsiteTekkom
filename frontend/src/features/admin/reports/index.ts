@@ -2,6 +2,7 @@ export { AssessmentTable } from "./components/AssessmentTable";
 export { PhaseEvaluationTable } from "./components/PhaseEvaluationTable";
 export { FinalGradeTable } from "./components/FinalGradeTable";
 export { PeerReviewTable } from "./components/PeerReviewTable";
+export { PeerReviewSummaryTable } from "./components/PeerReviewSummaryTable";
 export { GroupTable } from "./components/GroupTable";
 export { useAssessmentColumns } from "./components/AssessmentColumns";
 export { usePhaseEvaluationColumns } from "./components/PhaseEvaluationColumns";
@@ -15,6 +16,8 @@ export {
   usePhaseEvaluationsReport,
   useFinalGradesReport,
   usePeerReviewsReport,
+  usePeerReviewSummaryReport,
+  usePeerReviewDetail,
   useGroupsReport,
   useReportExport,
 } from "./hooks/use-reports";

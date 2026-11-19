@@ -16,7 +16,7 @@ class AsprakPraktikum extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'asprak_praktikum';
+    protected $table = 'eo_prak_asprak_praktikum';
 
     protected $fillable = [
         'praktikum_id',

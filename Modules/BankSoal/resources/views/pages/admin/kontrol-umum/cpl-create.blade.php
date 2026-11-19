@@ -276,7 +276,7 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                    window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'success', message: 'Data berhasil disimpan.' } }));
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'success', message: data.message || 'Data berhasil disimpan.' } }));
                     setTimeout(() => {
                         window.location.href = '{{ route("banksoal.admin.kontrol-umum.mata-kuliah") }}';
                     }, 1500);

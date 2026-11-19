@@ -1,4 +1,4 @@
-<x-banksoal::layouts.mahasiswa>
+<x-banksoal::layouts.mahasiswa kompre-font>
     @php
         $nim = old('nim', optional(auth()->user()->student)->student_number ?? auth()->user()->external_id);
         $semesterAktif = 1;

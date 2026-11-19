@@ -17,7 +17,48 @@ class CvBuilderController extends Controller
 
     public function index()
     {
-        return view('profile.cv.index');
+        // Langkah terbuka = satu setelah langkah tertinggi yang pernah disimpan lewat
+        // "Simpan & Lanjut" (R-35, menggantikan "sudah punya CV = semua terbuka").
+        $langkahTersimpan = (int) CvProfile::where('user_id', auth()->id())->value('langkah_tersimpan');
+
+        return view('profile.cv.index', [
+            'langkahTerbuka' => min(6, $langkahTersimpan + 1),
+            'tautanMm' => $this->tautanSubmenuMm(),
+        ]);
+    }
+
+    /**
+     * Tautan ke submenu SIMENMA (Manajemen Mahasiswa) yang jadi sumber data Auto-Sync,
+     * dipakai keterangan ⓘ di tiap langkah (token {kunci} di partials/_judul). Nama
+     * tautannya MENGIKUTI sidebar modul — alumni melihat "Riwayat …" (hanya lihat),
+     * yang lain "Verifikasi …" — jadi ubah di sini bila label sidebar berubah.
+     */
+    private function tautanSubmenuMm(): array
+    {
+        $alumni = auth()->user()->hasRole('alumni');
+
+        return [
+            // Pendidikan: baris profil milik sendiri di Direktori (data angkatan/tahun lulus)
+            'direktori' => [
+                'url'   => route($alumni ? 'manajemenmahasiswa.direktori.alumni.profil' : 'manajemenmahasiswa.direktori.mahasiswa.profil'),
+                'label' => $alumni ? 'Direktori Alumni' : 'Direktori Mahasiswa',
+            ],
+            // Prestasi: diajukan & dipantau di Verifikasi Data
+            'prestasi' => [
+                'url'   => route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi']),
+                'label' => $alumni ? 'Riwayat Prestasi' : 'Verifikasi Prestasi',
+            ],
+            // Kegiatan: riwayat yang sudah diverifikasi
+            'kegiatan' => [
+                'url'   => route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat']),
+                'label' => $alumni ? 'Riwayat Kegiatan' : 'Verifikasi Kegiatan',
+            ],
+            // Kegiatan himpunan berstatus selesai tempat pengguna ketua pelaksana / panitia
+            'arsip' => [
+                'url'   => route('manajemenmahasiswa.kegiatan.index'),
+                'label' => 'Laporan & Arsip',
+            ],
+        ];
     }
 
     public function loadStep($step)
@@ -203,6 +244,14 @@ class CvBuilderController extends Controller
                 'keahlian' => 'nullable|array',
             ]);
             $cvProfile->keahlian = $request->keahlian ?? [];
+        }
+
+        // Hanya "Simpan & Lanjut" yang membuka langkah berikutnya. Simpan otomatis saat
+        // pindah lewat stepper / "Sebelumnya" tidak dihitung.
+        // Langkah yang belum terbuka tidak bisa melompati urutan.
+        $tersimpan = (int) $cvProfile->langkah_tersimpan;
+        if ($request->boolean('lanjut') && $step >= 1 && $step <= 5 && $step <= $tersimpan + 1) {
+            $cvProfile->langkah_tersimpan = max($tersimpan, (int) $step);
         }
 
         try {

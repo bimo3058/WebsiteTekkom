@@ -20,13 +20,18 @@ Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 
-    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    Route::post('login', [AuthenticatedSessionController::class, 'store'])->name('login.store');
+
+    $adminLoginPath = config('app.spc_login_path');
+    Route::get($adminLoginPath, [AuthenticatedSessionController::class, 'createAdmin'])->name('admin.login');
+    Route::post($adminLoginPath, [AuthenticatedSessionController::class, 'storeAdmin'])->name('admin.login.store');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
 
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
-        ->name('password.email');
+        ->middleware('throttle:5,1')
+        ->name('password.change');
 
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
         ->name('password.reset');

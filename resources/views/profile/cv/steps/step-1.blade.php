@@ -1,56 +1,51 @@
 <div>
-    <h3 class="text-lg font-bold text-slate-800 mb-6">Data Pribadi</h3>
+    @include('profile.cv.partials._judul', ['judul' => 'Data Pribadi'])
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div>
-            <label class="form-label">Nama Lengkap</label>
-            <div class="flex items-center bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 cursor-not-allowed">
-                <span class="text-sm font-semibold text-slate-500" x-text="data.user.name"></span>
-                <span class="ml-auto flex-shrink-0 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md" style="background: var(--c-primary-subtle); color: var(--c-primary);">SSO</span>
+            <label class="form-label-custom">Nama Lengkap</label>
+            {{-- Kolom yang tidak bisa diubah di sini cukup tampil abu-abu (R-35) --}}
+            <div class="form-control-custom cvb-readonly">
+                <span x-text="data.user.name"></span>
             </div>
         </div>
 
         <div>
-            <label class="form-label">Email Publik / Kontak</label>
-            <div class="flex items-center bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 cursor-not-allowed">
-                <span class="text-sm font-semibold text-slate-500 truncate" x-text="data.user.personal_email || data.user.email"></span>
-                <span class="ml-auto flex-shrink-0 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md" style="background: var(--c-primary-subtle); color: var(--c-primary);">SSO</span>
+            <label class="form-label-custom">Email Publik / Kontak</label>
+            {{-- Email Pribadi dari Settings; jatuh ke email SSO bila Email Pribadi kosong. --}}
+            <div class="form-control-custom cvb-readonly">
+                <span x-text="data.user.personal_email || data.user.email"></span>
             </div>
-            <p class="form-hint">Pembaruan email dapat dilakukan melalui menu edit Profil Utama.</p>
+            <p class="form-hint">Ubah Email Pribadi di <a href="{{ route('profile.edit') }}" target="_blank" rel="noopener" class="cvb-link">Settings</a>.</p>
         </div>
 
         <div>
-            <label class="form-label">Kontak / WhatsApp</label>
-            <div class="flex items-center bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 cursor-not-allowed">
-                <span class="text-sm font-semibold text-slate-500 truncate" x-text="data.user.whatsapp || 'Belum diatur di Profil Utama'"></span>
-                <span class="ml-auto flex-shrink-0 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md" style="background: var(--c-primary-subtle); color: var(--c-primary);">SSO</span>
+            <label class="form-label-custom">Kontak / WhatsApp</label>
+            <div class="form-control-custom cvb-readonly">
+                <span x-text="data.user.whatsapp || 'Belum diatur di Settings'"></span>
             </div>
-            <p class="form-hint">Pembaruan nomor dapat dilakukan melalui menu edit Profil Utama.</p>
+            <p class="form-hint">Ubah Nomor Telepon di <a href="{{ route('profile.edit') }}" target="_blank" rel="noopener" class="cvb-link">Settings</a>.</p>
         </div>
 
         <div>
-            <label class="form-label">Domisili (Kota/Provinsi)</label>
-            <div class="relative">
-                <input type="text" x-model="data.cv.cv_domisili" placeholder="Contoh: Jakarta Selatan, DKI Jakarta" 
-                       class="form-control">
-            </div>
+            <label class="form-label-custom">Domisili (Kota/Provinsi)</label>
+            <input type="text" x-model="data.cv.cv_domisili" placeholder="Contoh: Jakarta Selatan, DKI Jakarta"
+                   class="form-control-custom">
         </div>
 
         <div class="md:col-span-2">
-            <label class="form-label">Tautan Profesional (Portofolio / LinkedIn / GitHub)</label>
-            <div class="relative">
-                <input type="url" x-model="data.cv.cv_portfolio" placeholder="Contoh: linkedin.com/in/username atau github.com/username" 
-                       class="form-control">
-            </div>
+            <label class="form-label-custom">Tautan Profesional (Portofolio / LinkedIn / GitHub)</label>
+            <input type="url" x-model="data.cv.cv_portfolio" placeholder="Contoh: linkedin.com/in/username atau github.com/username"
+                   class="form-control-custom">
         </div>
     </div>
 
-    <div class="border-t border-slate-100 pt-6">
-        <label class="block text-sm font-bold text-slate-800 mb-2">Tentang Diri (Opsional)</label>
+    <div class="cvb-section">
+        <label class="form-label-custom">Tentang Diri</label>
         <p class="form-hint mb-3">Tuliskan deskripsi singkat mengenai diri Anda, fokus karir, dan objektif profesional.</p>
         <textarea x-model="data.cv.tentang_diri"
                   rows="5"
-                  class="form-control"
+                  class="form-control-custom"
                   placeholder="Saya adalah seorang mahasiswa tingkat akhir..."></textarea>
     </div>
 </div>

@@ -1,4 +1,4 @@
-<x-banksoal::layouts.mahasiswa>
+<x-banksoal::layouts.mahasiswa kompre-font>
     @section('breadcrumbs')
         <span class="text-slate-900 font-semibold">Portal Ujian</span>
     @endsection

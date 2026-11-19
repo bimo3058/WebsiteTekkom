@@ -56,11 +56,13 @@ class PendaftaranAsprakController extends Controller
             : collect();
 
         $periodeAktif = $periodeList->firstWhere('is_aktif', true);
+        $periodeTabel = $periodeList->first();
 
         return view('eoffice::manajemen-praktikum.koordinator.pendaftaran-asprak', compact(
             'praktikum',
             'pendaftaran',
             'periodeAktif',
+            'periodeTabel',
             'periodeList'
         ));
     }

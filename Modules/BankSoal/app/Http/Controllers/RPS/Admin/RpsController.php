@@ -86,10 +86,10 @@ class RpsController extends Controller
                         $baseFileName = sprintf('RPS_%s_%s_%s_%s', $mkName, $tahunAjaranSafe, $semesterSafe, $version);
                         $baseFileName = preg_replace('/[\\\\:*?"<>|]+/', '', $baseFileName);
                         $baseFileName = trim((string) $baseFileName, " \t\n\r\0\x0B._");
-                        
+
                         $healedPath = 'rps/' . $baseFileName . '.pdf';
                         $healedUrl = $supabaseStorage->getPublicUrl($healedPath, 'rps');
-                        
+
                         $healedResponse = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(2)->get($healedUrl);
                         if ($healedResponse->status() === 200) {
                             // Berkas ditemukan di Supabase! Lakukan self-healing sinkronisasi database

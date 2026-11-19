@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Dashboard Asisten">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Dashboard Asisten">
 
     @php
         /** @var \Modules\EOffice\Models\AsistenPraktikum $asprak */
@@ -152,6 +152,8 @@
             </div>
         </div>
 
+        <x-eoffice::manajemen-praktikum.ui.practicum-schedule :praktikum="$asprak->praktikum" role="asprak" :dashboard="true" />
+
         {{-- Section: Modul Diampu Header Removed --}}
 
         @if(!isset($modulDiampu) || $modulDiampu->isEmpty())
@@ -179,10 +181,10 @@
 
                         {{-- Optional: Modul Title --}}
                         <div style="padding:12px 16px; border-bottom:1px solid #DFE1E7;">
-                            <div style="font-weight:700; font-size:14px; color:#0D0D12; margin-bottom: 2px;">
+                            <div style="font-weight:700; font-size:16px; color:#0D0D12; margin-bottom: 2px;">
                                 {{ $m->nama ?? 'Modul' }}
                             </div>
-                            <div style="font-size:13px; color:#353849;">
+                            <div style="font-size:12px; color:#374151;">
                                 Asisten:
                                 {{ $m->asprak && $m->asprak->count() ? $m->asprak->map(fn($a) => $a->user->name ?? '—')->implode(', ') : (auth()->user()->name ?? '—') }}
                             </div>
@@ -218,7 +220,7 @@
                                     </div>
                                     <div style="display:flex; align-items:center;">
                                         {!! $laporan ? $cbCheck : $cbUncheck !!}
-                                        <span style="font-size:13px; color:#353849;">Unggah Form Laporan</span>
+                                        <span style="font-size:13px; color:#353849;">Unggah Form {{ $m->praktikum?->laporanLabel() ?? 'Laporan' }}</span>
                                     </div>
                                     <div style="display:flex; align-items:center;">
                                         {!! $responsi ? $cbCheck : $cbUncheck !!}
@@ -253,7 +255,7 @@
                                     </div>
                                     <div style="display:flex; align-items:center;">
                                         {!! $isDinilai($laporan) ? $cbCheck : $cbUncheck !!}
-                                        <span style="font-size:13px; color:#353849;">Nilai Laporan</span>
+                                        <span style="font-size:13px; color:#353849;">Nilai {{ $m->praktikum?->laporanLabel() ?? 'Laporan' }}</span>
                                     </div>
                                     <div style="display:flex; align-items:center;">
                                         {!! $isDinilai($responsi) ? $cbCheck : $cbUncheck !!}

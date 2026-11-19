@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class PendaftaranKoordinator extends Model
 {
-    protected $table = 'pendaftaran_koordinator';
+    protected $table = 'eo_prak_pendaftaran_koordinator';
 
     protected $fillable = [
         'user_id',

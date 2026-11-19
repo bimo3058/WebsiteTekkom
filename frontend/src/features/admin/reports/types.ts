@@ -209,9 +209,61 @@ export interface ReportGroup {
   members_count: number;
 }
 
+export interface PeerReviewSummary {
+  reviewee_id: number;
+  reviewee_name: string;
+  reviewee_nim: string;
+  group_id: number;
+  group_name: string;
+  reviewers_count: number;
+  reviews_count: number;
+  avg_raw_score: number | null;
+  avg_score: number | null;
+  status: "DINILAI" | "BELUM_DINILAI";
+}
+
+export interface PeerReviewDetailIndicator {
+  indicator_code: string;
+  indicator_name: string;
+  weight: number | null;
+  raw_score: number | null;
+  score: number | null;
+  comment: string | null;
+  created_at: string;
+}
+
+export interface PeerReviewDetailReviewer {
+  reviewer_id: number;
+  reviewer_name: string;
+  reviewer_nim: string;
+  reviews_count: number;
+  avg_raw_score: number | null;
+  avg_score: number | null;
+  details: PeerReviewDetailIndicator[];
+}
+
+export interface PeerReviewDetail {
+  reviewee: {
+    id: number;
+    name: string;
+    nim: string;
+    group_id: number;
+    group_name: string;
+  };
+  overall: {
+    reviewers_count: number;
+    reviews_count: number;
+    avg_raw_score: number | null;
+    avg_score: number | null;
+    status: "DINILAI" | "BELUM_DINILAI";
+  };
+  reviewers: PeerReviewDetailReviewer[];
+}
+
 export type AssessmentSortKey = "group" | "name";
 export type FinalGradeSortKey = "group" | "name";
 export type PeerReviewSortKey = "created_at" | "reviewer";
+export type PeerReviewSummarySortKey = "reviewee" | "group" | "avg_score" | "reviewers_count";
 export type GroupSortKey = "code" | "status" | "members_count";
 
 export type SortDir = "asc" | "desc";

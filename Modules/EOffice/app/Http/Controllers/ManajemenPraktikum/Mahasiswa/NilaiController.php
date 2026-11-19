@@ -13,6 +13,15 @@ use Modules\EOffice\Models\Nilai;
  */
 class NilaiController extends Controller
 {
+    public function exportCsv(Request $request)
+    {
+        $data = $request->validate(['praktikum_id'=>'required|string']);
+        $registration = DaftarPraktikan::with('praktikum')
+            ->where('user_id', auth()->id())->where('praktikum_id', $data['praktikum_id'])->firstOrFail();
+        return app(\Modules\EOffice\Services\ManajemenPraktikum\NilaiCsvExport::class)
+            ->download($request, $registration->praktikum, true);
+    }
+
     public function index(Request $request)
     {
         $user = auth()->user();

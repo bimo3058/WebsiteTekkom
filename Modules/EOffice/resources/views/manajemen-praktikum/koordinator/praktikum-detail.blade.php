@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="{{ $praktikum->nama }} / Dashboard">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="{{ $praktikum->nama }} / Dashboard">
     
     <x-eoffice::manajemen-praktikum.koor-header :praktikum="$praktikum" />
 

@@ -12,18 +12,20 @@ export function schedulePage() {
             this.loading=true;this.error='';
             try {
                 const role=context.role;
+                const quiet=promise=>promise.catch(()=>null);
                 const result=await Promise.all([
                     api(`/${role}/all-schedules`),
-                    role==='mahasiswa' ? [] : api(role==='admin' ? '/admin/periods' : '/periods-list'),
-                    role==='dosen' ? api('/dosen/groups/supervised') : [],
-                    role==='dosen' ? api('/locations/eoffice-rooms') : [],
+                    role==='mahasiswa' ? [] : quiet(api(role==='admin' ? '/admin/periods' : '/periods-list')),
+                    role==='dosen' ? quiet(api('/dosen/groups/supervised')) : [],
+                    role==='dosen' ? quiet(api('/locations/eoffice-rooms')) : [],
                 ]);
                 this.schedules=rows(result[0]).map(item=>normalizeSchedule(item,item.type)).filter(item=>localDateKey(item.date));
                 // Bimbingan stays free-text: map EOffice rooms to {id,name} suggestions.
+                // Aux calls fail soft so one bad picker feed can never blank the page.
                 this.periods=rows(result[1]);this.groups=rows(result[2]);this.locations=rows(result[3]).map(r=>r.nama!==undefined?{id:r.id,name:r.nama,type:'offline'}:r);
             } catch(e){this.error=e.message;} finally{this.loading=false;}
         },
-        get filtered(){return this.schedules.filter(s=>this.selectedPeriod==='all' || String(s.period_id || s.group?.period_id)===String(this.selectedPeriod));},
+        get filtered(){return this.schedules.filter(s=>this.selectedPeriod==='all' || (s.is_master && s.period_id==null) || String(s.period_id || s.group?.period_id)===String(this.selectedPeriod));},
         get tableRows(){
             const term=this.search.toLocaleLowerCase();
             return this.filtered.filter(s=>(this.typeFilter==='all'||s.type===this.typeFilter) && (this.statusFilter==='all'||s.status===this.statusFilter)
@@ -48,8 +50,23 @@ export function schedulePage() {
         color(type){return eventColors[type] || eventColors.BIMBINGAN;},
         label(type){return eventLabels[type] || type;},
         statusColor(status){return ['APPROVED','SCHEDULED'].includes(status) ? 'bg-green-100 text-green-700' : ['COMPLETED','DONE'].includes(status) ? 'bg-blue-100 text-blue-700' : ['REJECTED','CANCELLED'].includes(status) ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700';},
+        pillClass(type){return ['SEMPRO','TA_DEFENSE','SIDANG'].includes(type) ? 'sched-pill-navy' : 'sched-pill-amber';},
+        typePill(type){return 'sched-type-' + (type || 'BIMBINGAN');},
+        statusPill(status){return ['COMPLETED','DONE'].includes(status) ? 'sched-status-done' : ['SCHEDULED','APPROVED'].includes(status) ? 'sched-status-soon' : ['REJECTED','CANCELLED'].includes(status) ? 'sched-status-bad' : 'sched-status-wait';},
+        statusLabel(status){return {COMPLETED:'Selesai',DONE:'Selesai',SCHEDULED:'Terjadwal',APPROVED:'Disetujui',PENDING:'Menunggu',PENDING_APPROVAL:'Menunggu',REJECTED:'Ditolak',CANCELLED:'Dibatalkan'}[status] || (status || 'Menunggu');},
+        dateId(value){const key=localDateKey(value);if(!key)return '-';const months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];const [y,m,d]=key.split('-').map(Number);return `${d} ${months[m-1]} ${y}`;},
+        timeShort(value){return (value || '').slice(0,5).replace(':', '.') || '-';},
+        groupCode(event){return event.group?.code || event.group?.title?.title || '-';},
+        memberNames(event){const fromGroup=(event.group?.members || []).map(m=>m.student?.name).filter(Boolean);if(fromGroup.length)return fromGroup;const single=this.students(event);return single ? [single] : [];},
+        initials(name){return String(name || '').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase() || '?';},
+        avatarBg(name){const palette=['#0B266E','#B45309','#047857','#475569','#7C3AED','#0E7490'];let hash=0;for(const ch of String(name || '?'))hash=(hash*31+ch.charCodeAt(0))>>>0;return palette[hash%palette.length];},
+        get showingFrom(){return this.tableRows.length ? (this.currentPage-1)*this.perPage+1 : 0;},
+        get showingTo(){return Math.min(this.currentPage*this.perPage,this.tableRows.length);},
+        get pageList(){const total=this.totalPages,current=this.currentPage;if(total<=7)return Array.from({length:total},(_,i)=>i+1);const keep=new Set([1,2,current-1,current,current+1,total-1,total].filter(p=>p>=1&&p<=total));const sorted=[...keep].sort((a,b)=>a-b);const out=[];let prev=0;for(const p of sorted){if(p-prev>1)out.push('…');out.push(p);prev=p;}return out;},
+        goto(p){this.page=Math.min(Math.max(1,p),this.totalPages);},
+        openDay(key){this.selectedDate=key;document.getElementById('schedule-day').showModal();},
         time(event){const start=(event.start_time||'').slice(0,5),end=(event.end_time||'').slice(0,5);return start ? start+(end?' — '+end:'') : 'Time not set';},
-        title(event){return event.student_name || event.group?.title?.title || this.label(event.type);},
+        title(event){return event.name || event.student_name || event.group?.title?.title || this.label(event.type);},
         students(event){return event.students?.map(s=>s.name).join(', ') || event.student_name || '';},
         examiners(event){return event.examiners?.map(e=>e.name || e.examiner?.name).filter(Boolean).join(', ') || [event.examiner1?.name,event.examiner2?.name].filter(Boolean).join(', ');},
         canApprove(event){return context.role==='admin' && ['SEMPRO','EXPO','TA_DEFENSE'].includes(event?.type) && ['PENDING','PENDING_APPROVAL'].includes(event?.status);},

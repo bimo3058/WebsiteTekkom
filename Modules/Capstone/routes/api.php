@@ -6,9 +6,10 @@ use Modules\Capstone\Http\Controllers\Admin\BladeMonitoringController;
 use Modules\Capstone\Http\Controllers\Admin\BladeUserController;
 use Modules\Capstone\Http\Controllers\Admin\DocumentUploadController;
 use Modules\Capstone\Http\Controllers\Admin\PeriodRegistrationApprovalController;
-use Modules\Capstone\Http\Controllers\Admin\TaRegistrationApprovalController;
 use Modules\Capstone\Http\Controllers\Admin\PhaseDocumentRequirementController;
 use Modules\Capstone\Http\Controllers\Admin\StakeholderController;
+use Modules\Capstone\Http\Controllers\Admin\TaRegistrationApprovalController;
+use Modules\Capstone\Http\Controllers\Admin\TitleManagementController;
 use Modules\Capstone\Http\Controllers\AssessmentComponentController;
 use Modules\Capstone\Http\Controllers\AssessmentComponentTemplateController;
 use Modules\Capstone\Http\Controllers\AssessmentScoreController;
@@ -179,8 +180,8 @@ Route::prefix('capstone')->group(function () {
 
             // Expo (legacy)
             Route::get('/expo/schedules', [ExpoController::class, 'index']);
-            Route::put('/expo/schedules/{id}/approve', [ExpoController::class, 'approve']);
             Route::put('/expo/schedules/{id}/reject', [ExpoController::class, 'reject']);
+            Route::put('/expo/schedules/{id}/cancel', [ExpoController::class, 'cancel']);
 
             // TA Defense
             Route::get('/ta-defense/schedules', [TaDefenseController::class, 'index']);
@@ -223,6 +224,8 @@ Route::prefix('capstone')->group(function () {
             Route::get('/reports/summary', [ReportSummaryController::class, 'summary']);
             Route::get('/reports/assessments', [ReportDetailController::class, 'assessments']);
             Route::get('/reports/peer-reviews', [ReportDetailController::class, 'peerReviews']);
+            Route::get('/reports/peer-review-summary', [ReportDetailController::class, 'peerReviewSummary']);
+            Route::get('/reports/peer-review-summary/{studentId}', [ReportDetailController::class, 'peerReviewDetail']);
             Route::get('/reports/final-grades', [ReportDetailController::class, 'finalGrades']);
             Route::get('/reports/grade-consistency', [ReportDetailController::class, 'gradeConsistency']);
             Route::get('/reports/groups', [ReportDetailController::class, 'groups']);
@@ -244,6 +247,11 @@ Route::prefix('capstone')->group(function () {
             Route::apiResource('stakeholders', StakeholderController::class)->except(['show']);
             Route::post('/titles/{title}/stakeholders', [StakeholderController::class, 'attachToTitle']);
             Route::delete('/titles/{title}/stakeholders/{stakeholder}', [StakeholderController::class, 'detachFromTitle']);
+
+            // Admin text-only title edit: renames Title display text without
+            // touching any Group row (status / title_id unchanged).
+            Route::match(['put', 'patch'], '/titles/{title}', [TitleManagementController::class, 'update'])
+                ->middleware('permission:capstone.edit');
 
             Route::get('/grade-configuration/{periodId}', [GradeConfigurationController::class, 'getFullConfiguration']);
             Route::post('/grade-configuration/{periodId}', [GradeConfigurationController::class, 'updateWeights']);
@@ -306,7 +314,6 @@ Route::prefix('capstone')->group(function () {
 
             // Evaluations
             Route::post('/sempro/{schedule}/evaluate', [SemproController::class, 'evaluate']);
-            Route::post('/expo/{schedule}/evaluate', [ExpoController::class, 'evaluate']);
             Route::put('/ta/{id}/review', [TaSubmissionController::class, 'review']);
             Route::put('/ta/{id}/defended', [TaSubmissionController::class, 'defended']);
             Route::post('/ta-defense/{schedule}/evaluate', [TaDefenseController::class, 'evaluate']);
@@ -331,6 +338,9 @@ Route::prefix('capstone')->group(function () {
             Route::get('/supervisor-evaluation/pending-count', [SupervisorEvaluationController::class, 'pendingCount']);
             Route::get('/supervisor-evaluation/form/{groupId}', [SupervisorEvaluationController::class, 'form']);
             Route::post('/supervisor-evaluation', [SupervisorEvaluationController::class, 'store']);
+            // Group-level EXPO submission review (approve/reject per group)
+            Route::get('/supervisor-evaluation/expo/{groupId}', [SupervisorEvaluationController::class, 'expoReview']);
+            Route::post('/supervisor-evaluation/expo/{groupId}/review', [SupervisorEvaluationController::class, 'reviewExpo']);
         });
 
         // â”€â”€ Mahasiswa â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

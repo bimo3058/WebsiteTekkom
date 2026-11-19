@@ -153,7 +153,7 @@
                                             <button
                                                 type="button"
                                                 @click.stop="expandedGroups.includes({{ $mkId }}) ? expandedGroups = expandedGroups.filter(i => i !== {{ $mkId }}) : expandedGroups.push({{ $mkId }})"
-                                                class="rounded-lg p-2 text-slate-300 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                                                class="border-0 bg-transparent p-2 text-slate-400 hover:text-primary transition-colors"
                                                 aria-label="Lihat aksi arsip {{ $first->mataKuliah->nama }}"
                                             >
                                                 <i class="fas fa-ellipsis-v"></i>
@@ -201,8 +201,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center justify-end gap-2 relative" x-data="{ menuOpen: false }">
-                                                    <button type="button" @click.stop="menuOpen = !menuOpen" class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-primary transition-all">
-                                                        <i class="fas fa-ellipsis-h"></i>
+                                                    <button type="button" @click.stop="menuOpen = !menuOpen" class="border-0 bg-transparent p-2 text-slate-400 hover:text-primary transition-colors">
+                                                        <i class="fas fa-ellipsis-v"></i>
                                                     </button>
                                                     <div x-show="menuOpen" @click.away="menuOpen = false" x-cloak class="bs-dropdown-menu bs-archive-action-menu absolute right-0 z-50">
                                                         <a href="{{ route('banksoal.arsip.dosen.show', $arsip->id) }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-primary transition-all">
@@ -309,9 +309,9 @@
                                                     });
                                                 }
                                             "
-                                            class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-primary transition-all"
+                                            class="border-0 bg-transparent p-2 text-slate-400 hover:text-primary transition-colors"
                                         >
-                                            <i class="fas fa-ellipsis-h"></i>
+                                            <i class="fas fa-ellipsis-v"></i>
                                         </button>
                                         <template x-teleport="body">
                                             <div

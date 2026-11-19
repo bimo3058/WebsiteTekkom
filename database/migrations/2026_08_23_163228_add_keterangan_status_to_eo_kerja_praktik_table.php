@@ -10,8 +10,12 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        if (Schema::hasColumn('eo_kerja_praktik', 'keterangan_status')) {
+            return;
+        }
+
         Schema::table('eo_kerja_praktik', function (Blueprint $table) {
-            $table->string('keterangan_status')->nullable()->after('status_kp');
+            $table->string('keterangan_status')->nullable();
         });
     }
 
@@ -20,6 +24,10 @@ return new class extends Migration {
      */
     public function down(): void
     {
+        if (! Schema::hasColumn('eo_kerja_praktik', 'keterangan_status')) {
+            return;
+        }
+
         Schema::table('eo_kerja_praktik', function (Blueprint $table) {
             $table->dropColumn('keterangan_status');
         });

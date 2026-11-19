@@ -1,4 +1,116 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Daftar Praktikum">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Daftar Praktikum">
+    <x-eoffice::manajemen-praktikum.ui.practicum-list-frame />
+    <div class="mp-practicum-list-frame" x-data="{
+        selecting: false, selected: [], editData: {status: 'aktif'}, confirmOpen: false, confirmed: false, submitting: false,
+        changeStatus(status) { this.editData.status=status; this.confirmOpen=true; }
+    }">
+    @include('eoffice::manajemen-praktikum.admin.partials.status-confirmation')
+
+    <style>
+        .praktikum-toolbar-actions > .mp-btn {
+            width:190px;
+            height:38px;
+            justify-content:center;
+            white-space:nowrap;
+            flex-shrink:0;
+        }
+        @media (max-width:639px) {
+            .praktikum-toolbar-actions > .mp-btn { width:100%; }
+        }
+        .praktikum-bulk-bar { background:#EEF2FA; border-bottom:1px solid #CDD7EF; padding:16px 20px; }
+        .praktikum-bulk-check { width:18px; height:18px; accent-color:#0B266E; cursor:pointer; flex-shrink:0; }
+        .praktikum-row-selected { background:#EEF2FA !important; box-shadow:inset 3px 0 #0B266E; }
+        .praktikum-bulk-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-left:auto; }
+        @media (max-width:639px) { .praktikum-bulk-actions { margin-left:0; width:100%; } }
+        .praktikum-filter-search {
+            flex: 1 1 320px;
+            min-width: 260px;
+        }
+
+        .praktikum-filter-status {
+            flex: 0 0 150px;
+            width: 150px;
+        }
+
+        .praktikum-filter-semester {
+            flex: 0 0 165px;
+            width: 165px;
+        }
+
+        .praktikum-filter-year {
+            flex: 0 0 235px;
+            width: 235px;
+        }
+
+        .praktikum-filter-status button,
+        .praktikum-filter-semester button {
+            padding-left: 10px;
+            padding-right: 8px;
+        }
+
+        .praktikum-filter-status button span,
+        .praktikum-filter-semester button span {
+            padding-right: 4px;
+        }
+
+        .praktikum-filter-status button svg,
+        .praktikum-filter-semester button svg {
+            margin-right: 0;
+        }
+
+        .praktikum-filter-status label svg,
+        .praktikum-filter-semester label svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        @media (min-width: 1280px) {
+            .praktikum-toolbar-actions {
+                margin-left: 4px;
+                padding-left: 16px;
+            }
+        }
+
+        .praktikum-name {
+            white-space: normal;
+            overflow-wrap: anywhere;
+            line-height: 1.45;
+        }
+
+        @media (min-width:1280px) {
+            .praktikum-toolbar { flex-wrap:nowrap; align-items:center; }
+            #filter_praktikum_form {
+                display:grid;
+                grid-template-columns:minmax(120px,1fr) 120px 135px 170px;
+                gap:10px;
+            }
+            #filter_praktikum_form:has(> a) {
+                grid-template-columns:minmax(120px,1fr) 120px 135px 170px auto;
+            }
+            #filter_praktikum_form > .praktikum-filter-search,
+            #filter_praktikum_form > .praktikum-filter-status,
+            #filter_praktikum_form > .praktikum-filter-semester,
+            #filter_praktikum_form > .praktikum-filter-year { width:100%; min-width:0; }
+            .praktikum-toolbar-actions > .mp-btn { width:180px; padding-left:10px; padding-right:10px; }
+        }
+
+        @media (max-width: 1279px) {
+            .praktikum-filter-search {
+                flex: 1 1 260px;
+            }
+        }
+
+        @media (max-width: 639px) {
+            .praktikum-filter-search,
+            .praktikum-filter-status,
+            .praktikum-filter-semester,
+            .praktikum-filter-year {
+                flex: 1 1 100%;
+                width: 100%;
+                min-width: 0;
+            }
+        }
+    </style>
 
     @php
         /** @var \Illuminate\Pagination\LengthAwarePaginator|\Modules\EOffice\Models\Praktikum[] $praktikums */
@@ -17,10 +129,11 @@
     {{-- Tabel Data Grid terintegrasi Filter --}}
     <div id="daftar-praktikum" class="mp-card mt-2">
         {{-- Area Filter & Aksi Utama di dalam Card --}}
-        <div class="p-4 border-b border-[#DFE1E7] bg-white flex gap-4 justify-between items-center flex-wrap">
+        <div
+            class="praktikum-toolbar p-4 border-b border-[#DFE1E7] bg-white flex flex-col gap-4 xl:flex-row xl:justify-between xl:items-center">
             <form id="filter_praktikum_form" method="GET" action="{{ url()->current() }}#daftar-praktikum"
                 class="flex flex-wrap gap-3 items-center flex-1 min-w-0">
-                <div class="relative flex-1 min-w-[200px]">
+                <div class="praktikum-filter-search relative">
                     <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24"
                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                         <circle cx="11" cy="11" r="8"></circle>
@@ -33,26 +146,30 @@
                 </div>
 
                 {{-- Custom Dropdown Status --}}
-                <x-eoffice::manajemen-praktikum.ui.select name="status" :options="[
+                <div class="praktikum-filter-status">
+                    <x-eoffice::manajemen-praktikum.ui.select name="status" :options="[
         ['value' => '', 'label' => 'Semua Status'],
         ['value' => 'aktif', 'label' => 'Aktif'],
         ['value' => 'nonaktif', 'label' => 'Nonaktif']
     ]"
-                    :selected="request('status', '')" placeholder="Status Praktikum"
-                    onChange="$event.target.form.submit()" minWidth="170px" />
+                        :selected="request('status', '')" placeholder="Status Praktikum"
+                        onChange="$event.target.form.submit()" minWidth="0" />
+                </div>
 
                 {{-- Custom Dropdown Semester --}}
-                <x-eoffice::manajemen-praktikum.ui.select name="semester" :options="[
+                <div class="praktikum-filter-semester">
+                    <x-eoffice::manajemen-praktikum.ui.select name="semester" :options="[
         ['value' => '', 'label' => 'Semua Semester'],
         ['value' => 'Ganjil', 'label' => 'Ganjil'],
         ['value' => 'Genap', 'label' => 'Genap']
     ]"
-                    :selected="request('semester', '')" placeholder="Semua Semester"
-                    onChange="$event.target.form.submit()" minWidth="160px" />
+                        :selected="request('semester', '')" placeholder="Semua Semester"
+                        onChange="$event.target.form.submit()" minWidth="0" />
+                </div>
 
                 <input type="text" name="tahun_ajaran" value="{{ request('tahun_ajaran') }}"
-                    placeholder="Tahun Ajaran (Contoh: 2025/2026)"
-                    class="w-56 h-[38px] px-3 text-[13px] border border-[#DFE1E7] rounded-[8px] focus:outline-none focus:border-[#0B266E]"
+                    placeholder="Tahun ajaran" aria-label="Tahun ajaran" title="Tahun ajaran, contoh: 2025/2026"
+                    class="praktikum-filter-year h-[38px] px-3 text-[13px] border border-[#DFE1E7] rounded-[8px] focus:outline-none focus:border-[#0B266E]"
                     onchange="this.form.submit()">
 
                 @if(request()->anyFilled(['search', 'status', 'semester', 'tahun_ajaran']))
@@ -61,23 +178,14 @@
                 @endif
             </form>
 
-            <div class="flex-shrink-0 border-l border-[#DFE1E7] pl-4 flex gap-2">
-                {{-- Bulk Toggle --}}
-                <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-bulk-modal'))"
-                    class="mp-btn secondary md"
-                    style="height:35px; background-color:#FFF1F2; border-color:#FECDD3; color:#BE123C;"
-                    onmouseover="this.style.backgroundColor='#FEE2E2'"
-                    onmouseout="this.style.backgroundColor='#FFF1F2'">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                        <polyline points="2 17 12 22 22 17"></polyline>
-                        <polyline points="2 12 12 17 22 12"></polyline>
-                    </svg>
-                    Ubah Status Keseluruhan
+            <div
+                class="praktikum-toolbar-actions w-full flex flex-wrap gap-2 pt-4 border-t border-[#DFE1E7] xl:w-auto xl:flex-nowrap xl:flex-shrink-0 xl:pt-0 xl:border-t-0 xl:border-l">
+                <button type="button" class="mp-btn secondary md" :aria-pressed="selecting"
+                    @click="selecting=!selecting; selected=[]" :disabled="submitting">
+                    <x-eoffice::manajemen-praktikum.ui.icon name="file-check" :size="16" />
+                    <span x-text="selecting ? 'Batal Pilih' : 'Ubah Status Praktikum'">Ubah Status Praktikum</span>
                 </button>
-                <button onclick="window.dispatchEvent(new CustomEvent('open-create-modal'))" class="mp-btn primary md"
-                    style="height:35px;">
+                <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-create-modal'))" class="mp-btn primary md">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                         stroke-linecap="round">
                         <line x1="12" y1="5" x2="12" y2="19" />
@@ -87,6 +195,33 @@
                 </button>
             </div>
         </div>
+
+        <form x-ref="statusForm" method="POST" action="{{ route('eoffice.manprak.admin.praktikum.bulk-toggle-active') }}"
+            x-show="selecting" x-cloak x-transition.opacity.duration.200ms
+            @submit="submitting=true" class="praktikum-bulk-bar flex flex-wrap items-center gap-4">
+            @csrf
+            <input type="hidden" name="action" :value="editData.status === 'aktif' ? 'activate' : 'deactivate'">
+            <input type="hidden" name="status_confirmed" :value="confirmed ? '1' : '0'">
+            @foreach($praktikums as $item)
+                <input type="hidden" name="previous_statuses[{{ $item->id }}]" value="{{ $item->status }}">
+            @endforeach
+            <template x-for="id in selected" :key="id"><input type="hidden" name="praktikum_ids[]" :value="id"></template>
+            <label class="flex items-center gap-2 text-[13px] text-[#353849]">
+                <input type="checkbox" class="praktikum-bulk-check" aria-label="Pilih semua praktikum pada halaman ini"
+                    :indeterminate.prop="selected.length > 0 && selected.length < {{ $praktikums->count() }}"
+                    :checked="selected.length > 0 && selected.length === {{ $praktikums->count() }}"
+                    @change="selected=$event.target.checked ? @js($praktikums->pluck('id')->values()) : []">
+                Pilih halaman ini
+            </label>
+            <div class="min-w-0">
+                <div class="text-[13px] font-semibold text-[#0B266E]" aria-live="polite" x-text="selected.length ? selected.length + ' praktikum dipilih' : 'Pilih praktikum yang ingin diubah'"></div>
+                <div class="text-[12px] text-[#666D80] mt-1">Pilihan hanya berlaku pada halaman ini.</div>
+            </div>
+            <div class="praktikum-bulk-actions">
+                <button type="button" class="mp-btn secondary md" :disabled="!selected.length || submitting" @click="changeStatus('nonaktif')">Nonaktifkan</button>
+                <button type="button" class="mp-btn primary md" :disabled="!selected.length || submitting" @click="changeStatus('aktif')">Aktifkan</button>
+            </div>
+        </form>
 
         <div class="mp-card-body p-0 overflow-x-auto">
             <div style="min-width: 1200px;">
@@ -111,12 +246,18 @@
                 <div class="flex flex-col">
                     @forelse($praktikums ?? [] as $p)
                         <div class="grid gap-4 px-5 py-4 border-b border-[#F6F8FA] hover:bg-[#FAFAFA] transition-colors items-center cursor-pointer"
+                            :class="selected.includes(@js($p->id)) ? 'praktikum-row-selected' : ''"
                             style="grid-template-columns: minmax(220px, 1.5fr) minmax(320px, 2fr) minmax(250px, 1.5fr) 90px 100px 90px;"
-                            onclick="window.location='{{ route('eoffice.manprak.admin.praktikum.detail', $p->id) }}'">
-                            <div class="min-w-0">
-                                <div class="text-[13px] font-semibold text-[#0D0D12] whitespace-nowrap">{{ $p->nama }}</div>
+                            @click="if(selecting){const id=@js($p->id);selected=selected.includes(id)?selected.filter(value=>value!==id):[...selected,id]}else{window.location=@js(route('eoffice.manprak.admin.praktikum.detail', $p->id))}">
+                            <div class="min-w-0 flex items-center gap-3">
+                                <label x-show="selecting" x-cloak class="flex items-center p-1" @click.stop>
+                                    <input type="checkbox" class="praktikum-bulk-check" value="{{ $p->id }}" x-model="selected" aria-label="Pilih {{ $p->nama }}">
+                                </label>
+                                <div class="min-w-0">
+                                <div class="praktikum-name text-[13px] font-semibold text-[#0D0D12]">{{ $p->nama }}</div>
                                 <div class="text-[11px] text-[#666D80] mt-1">{{ $p->tahun_ajaran }} / Semester
                                     {{ $p->semester }}</div>
+                                </div>
                             </div>
                             <div class="flex flex-col gap-1.5 w-full items-start">
                                 @forelse($p->dosens as $dosen)
@@ -140,7 +281,7 @@
                                             title="{{ $dosen->name }}">{{ $dosen->name }}</div>
                                     </div>
                                 @empty
-                                    <div class="text-[13px] text-[#A4ABB8] italic">Belum ada dosen</div>
+                                    <span class="mp-badge error sm">Belum ditunjuk</span>
                                 @endforelse
                             </div>
                             <div class="w-full flex flex-col items-start">
@@ -181,9 +322,11 @@
                                 @endif
                             </div>
                             <div class="flex items-center justify-center gap-1.5" onclick="event.stopPropagation()">
+                                <x-eoffice::manajemen-praktikum.ui.action-menu>
                                 <a href="{{ route('eoffice.manprak.admin.praktikum.detail', $p->id) }}"
                                     class="flex items-center justify-center w-8 h-8 rounded-lg border border-[#DFE1E7] bg-white text-[#666D80] hover:bg-[#F6F8FA] hover:text-[#0B266E] transition-colors"
                                     title="Detail Praktikum">
+                                    <span>Detail Praktikum</span>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2" stroke-linecap="round">
                                         <circle cx="12" cy="12" r="10"></circle>
@@ -195,25 +338,21 @@
                                     @click="$dispatch('open-edit-modal', { id: '{{ $p->id }}', nama: '{{ addslashes($p->nama) }}', matkul_id: '{{ $p->matkul_id }}', tahun_ajaran: '{{ $p->tahun_ajaran }}', semester: '{{ $p->semester }}', status: '{{ $p->is_active ? 'aktif' : 'nonaktif' }}', dosens: {{ json_encode($p->dosens->pluck('id')->isEmpty() ? [''] : $p->dosens->pluck('id')) }} })"
                                     class="flex items-center justify-center w-8 h-8 rounded-lg border border-[#DFE1E7] bg-white text-[#666D80] hover:bg-[#F6F8FA] hover:text-[#0D0D12] transition-colors"
                                     title="Edit Praktikum">
+                                    <span>Edit Praktikum</span>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2" stroke-linecap="round">
                                         <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
                                         <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                                     </svg>
                                 </button>
+                                <x-eoffice::manajemen-praktikum.ui.practicum-status-action :praktikum="$p" />
                                 <form method="POST" action="{{ route('eoffice.manprak.admin.praktikum.destroy', $p->id) }}"
                                     onsubmit="return confirm('Hapus praktikum {{ $p->nama }}?')">
                                     @csrf @method('DELETE')
                                     <button type="submit"
-                                        class="flex items-center justify-center w-8 h-8 rounded-lg border border-[#FADAE1] bg-[#FFF5F5] text-[#DF1C41] hover:bg-[#FEE2E2] transition-colors">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round">
-                                            <polyline points="3 6 5 6 21 6" />
-                                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                                            <path d="M10 11v6M14 11v6" />
-                                        </svg>
-                                    </button>
+                                        class="mp-delete-button flex items-center justify-center w-8 h-8 rounded-lg border border-[#FADAE1] bg-[#FFF5F5] text-[#DF1C41] hover:bg-[#FEE2E2] transition-colors" aria-label="Hapus Praktikum" title="Hapus Praktikum"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                 </form>
+                                </x-eoffice::manajemen-praktikum.ui.action-menu>
                             </div>
                         </div>
                     @empty
@@ -231,142 +370,18 @@
             </div>
         </div>
 
-        {{-- Pagination Custom Fungsional --}}
-        @if(isset($praktikums) && method_exists($praktikums, 'hasPages') && ($praktikums->hasPages() || $praktikums->total() > 0))
-            <div
-                style="display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-top:1px solid var(--c-border);">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <div x-data="{ open: false, selected: '{{ request('per_page', 10) }}', options: [5, 10, 20] }"
-                        class="relative" @click.away="open = false">
-                        <div class="flex items-center gap-2 cursor-pointer border rounded-[8px] px-3 py-1.5 transition-colors focus:outline-none"
-                            :class="open ? 'border-[#0B266E] bg-[#EEF1FA] text-[#0B266E]' : 'border-[#DFE1E7] bg-white text-[#353849] hover:bg-[#F6F8FA]'"
-                            @click="open = !open">
-                            <span class="text-[12px] text-[#666D80]" :class="open ? 'text-[#0B266E]' : ''">Per
-                                halaman</span>
-                            <div class="flex items-center gap-1 font-semibold text-[12px]">
-                                <span x-text="selected"></span>
-                                <svg class="w-3.5 h-3.5 transition-transform duration-200"
-                                    :class="{'rotate-180': open, 'text-[#0B266E]': open, 'text-[#666D80]': !open}"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </div>
-                        </div>
-                        <div x-show="open" @click.away="open = false" style="display: none;"
-                            x-transition:enter="transition ease-out duration-100"
-                            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                            x-transition:leave="transition ease-in duration-75"
-                            x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                            class="absolute top-full left-0 mt-2 z-10 w-full min-w-[80px] bg-white border border-[#DFE1E7] rounded-[10px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 px-1.5 flex flex-col">
-                            <template x-for="option in options" :key="option">
-                                <label
-                                    class="flex items-center justify-between px-3 py-2 rounded-[6px] cursor-pointer text-[12px] transition-colors mb-0.5 last:mb-0"
-                                    :class="selected == option ? 'bg-[#F6F8FA] text-[#0B266E] font-medium' : 'text-[#353849] hover:bg-[#F6F8FA]'">
-                                    <input type="radio" :value="option" name="per_page" form="filter_praktikum_form"
-                                        x-model="selected"
-                                        @change="document.getElementById('filter_praktikum_form').submit()" class="hidden">
-                                    <span x-text="option"></span>
-                                    <svg x-show="selected == option" class="w-3.5 h-3.5 flex-shrink-0 text-[#0B266E] ml-2"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                                        stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </label>
-                            </template>
-                        </div>
-                    </div>
-                    <div style="font-size:13px; color:var(--c-fg-sec);">Menampilkan {{ $praktikums->firstItem() ?? 0 }}
-                        sampai {{ $praktikums->lastItem() ?? 0 }} dari {{ $praktikums->total() }} data</div>
-                </div>
-
-                <div style="display:flex; gap:4px;">
-                    {{-- Tombol Prev --}}
-                    @if ($praktikums->onFirstPage())
-                        <span
-                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#FAFAFA; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--c-border-strong);">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="15 18 9 12 15 6" />
-                            </svg>
-                        </span>
-                    @else
-                        <a href="{{ $praktikums->previousPageUrl() }}#daftar-praktikum"
-                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-fg); text-decoration:none;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="15 18 9 12 15 6" />
-                            </svg>
-                        </a>
-                    @endif
-
-                    {{-- Looping Nomor Halaman (Pola Custom) --}}
-                    @php
-                        $current = $praktikums->currentPage();
-                        $last = $praktikums->lastPage();
-
-                        if ($current % 3 == 1) {
-                            $start = $current;
-                        } else {
-                            $start = $current - 1;
-                        }
-
-                        // Jika sudah mentok di halaman terakhir
-                        if ($start + 2 > $last) {
-                            $start = max(1, $last - 2);
-                        }
-
-                        $end = min($start + 2, $last);
-                    @endphp
-
-                    @if($start > 1)
-                        <span
-                            style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--c-fg-sec);">...</span>
-                    @endif
-
-                    @for ($i = $start; $i <= $end; $i++)
-                        @if ($i == $current)
-                            <span
-                                style="width:32px; height:32px; border:none; background:var(--c-primary); color:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600;">{{ $i }}</span>
-                        @else
-                            <a href="{{ $praktikums->url($i) }}#daftar-praktikum"
-                                style="width:32px; height:32px; border:1px solid var(--c-border); background:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; font-weight:600; color:var(--c-fg); text-decoration:none;">{{ $i }}</a>
-                        @endif
-                    @endfor
-
-                    @if($end < $last)
-                        <span
-                            style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--c-fg-sec);">...</span>
-                    @endif
-
-                    {{-- Tombol Next --}}
-                    @if ($praktikums->hasMorePages())
-                        <a href="{{ $praktikums->nextPageUrl() }}#daftar-praktikum"
-                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-fg); text-decoration:none;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="9 18 15 12 9 6" />
-                            </svg>
-                        </a>
-                    @else
-                        <span
-                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#FAFAFA; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--c-border-strong);">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="9 18 15 12 9 6" />
-                            </svg>
-                        </span>
-                    @endif
-                </div>
-            </div>
+    {{-- Pagination Custom Fungsional --}}
+        @if(isset($praktikums) && $praktikums instanceof \Illuminate\Pagination\LengthAwarePaginator)
+            <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$praktikums" :options="[5, 10, 20]" fragment="daftar-praktikum" />
         @endif
     </div>
 
 
+    </div>
     {{-- Modal Create --}}
     <div x-data="{ open: {{ $errors->any() ? 'true' : 'false' }} }" @open-create-modal.window="open = true"
         id="modalCreate"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-all duration-300"
         x-show="open" style="display: none;" x-cloak>
         <div class="bg-white rounded-[16px] shadow-2xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]"
             @click.away="open = false" x-show="open" x-transition:enter="transition ease-out duration-300"
@@ -427,7 +442,7 @@
                                         class="truncate pr-2" :class="!selected ? 'text-[#94A3B8]' : ''"></span>
                                     <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                         :class="{'rotate-180': open, 'text-[#0B266E]': open, 'text-[#666D80]': !open}"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 20 20" fill="none" stroke="#666D80" stroke-width="2"
                                         stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
@@ -496,7 +511,7 @@
                                             class="truncate pr-2" :class="!selected ? 'text-[#94A3B8]' : ''"></span>
                                         <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                             :class="{'rotate-180': dropdownOpen, 'text-[#0B266E]': dropdownOpen, 'text-[#666D80]': !dropdownOpen}"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                            viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round">
                                             <polyline points="6 9 12 15 18 9"></polyline>
                                         </svg>
@@ -567,7 +582,7 @@
                                                 :class="dosens[index] ? 'text-[#0D0D12]' : 'text-[#94A3B8]'"></span>
                                             <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                                 :class="{'rotate-180': open, 'text-[#0B266E]': open, 'text-[#666D80]': !open}"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                                                 stroke-linecap="round" stroke-linejoin="round">
                                                 <polyline points="6 9 12 15 18 9"></polyline>
                                             </svg>
@@ -612,15 +627,8 @@
 
                                     {{-- Tombol Hapus (Tampil jika > 1) --}}
                                     <button type="button" x-show="dosens.length > 1" @click="dosens.splice(index, 1)"
-                                        class="flex-shrink-0 w-[38px] h-[38px] flex items-center justify-center rounded-[8px] border border-[#FADAE1] bg-[#FFF5F5] text-[#DF1C41] hover:bg-[#FEE2E2] transition-colors"
-                                        title="Hapus Dosen">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                            <polyline points="3 6 5 6 21 6" />
-                                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                                            <path d="M10 11v6M14 11v6" />
-                                        </svg>
-                                    </button>
+                                        class="mp-delete-button flex-shrink-0 w-[38px] h-[38px] flex items-center justify-center rounded-[8px] border border-[#FADAE1] bg-[#FFF5F5] text-[#DF1C41] hover:bg-[#FEE2E2] transition-colors"
+                                        title="Hapus Dosen" aria-label="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                 </div>
                             </template>
                             <button type="button" x-show="dosens.length < 3" @click="dosens.push('')"
@@ -649,7 +657,7 @@
                                         class="truncate pr-2" :class="!selected ? 'text-[#94A3B8]' : ''"></span>
                                     <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                         :class="{'rotate-180': dropdownOpen, 'text-[#0B266E]': dropdownOpen, 'text-[#666D80]': !dropdownOpen}"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                                         stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
@@ -681,8 +689,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex gap-3 justify-end mt-6 pt-5 border-t border-[#DFE1E7]">
-                        <button type="button" onclick="document.getElementById('modalCreate').classList.add('hidden')"
+                    <div class="mp-modal-footer mp-modal-footer-bleed flex gap-3 justify-end mt-6 pt-5 border-t border-[#DFE1E7]" style="--mp-modal-footer-radius:16px;">
+                        <button type="button" @click="open = false"
                             class="mp-btn secondary md px-5">Batal</button>
                         <button type="submit" class="mp-btn primary md px-5">Simpan</button>
                     </div>
@@ -695,13 +703,15 @@
     <div x-data="{ 
     open: false, 
     editData: { id: '', nama: '', matkul_id: '', tahun_ajaran: '', semester: 'Ganjil', status: 'aktif', dosens: [''] },
-    updateActionUrl: '' 
+    updateActionUrl: '', originalStatus: '', confirmOpen: false, confirmed: false, submitting: false,
+    get statusMessage() { return this.editData.status === 'nonaktif' ? 'Mahasiswa hanya dapat membaca arsip. Penugasan dosen, koordinator, dan asisten pada praktikum ini akan dicabut. Data kegiatan dan berkas tetap disimpan.' : 'Praktikum dapat digunakan kembali. Penugasan dosen, koordinator, dan asisten perlu ditetapkan ulang.'; }
 }" @open-edit-modal.window="
     editData = $event.detail; 
+    originalStatus = editData.status; confirmed = false; confirmOpen = false; submitting = false;
     updateActionUrl = '{{ route('eoffice.manprak.admin.praktikum.index') }}/' + editData.id;
     open = true;
 " id="modalEdit"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-all duration-300"
         x-show="open" style="display: none;" x-cloak>
         <div class="bg-white rounded-[16px] shadow-2xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]"
             @click.away="open = false" x-show="open" x-transition:enter="transition ease-out duration-300"
@@ -714,9 +724,12 @@
                 <div class="font-bold text-[16px] text-[#0D0D12]">Edit Praktikum</div>
             </div>
             <div class="overflow-y-auto flex-1">
-                <form method="POST" :action="updateActionUrl" class="p-6 overflow-visible">
+                <form method="POST" :action="updateActionUrl" class="p-6 overflow-visible" x-ref="statusForm"
+                    @submit="if(editData.status !== originalStatus && !confirmed){$event.preventDefault();confirmOpen=true;}else{submitting=true;}">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" name="previous_status" :value="originalStatus">
+                    <input type="hidden" name="status_confirmed" :value="confirmed ? '1' : '0'">
                     <div class="flex flex-col gap-4">
                         <div>
                             <label class="block text-[12px] font-semibold text-[#353849] mb-1">Nama Praktikum <span
@@ -753,7 +766,7 @@
                                         :class="!editData.matkul_id ? 'text-[#94A3B8]' : ''"></span>
                                     <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                         :class="{'rotate-180': dropdownOpen, 'text-[#0B266E]': dropdownOpen, 'text-[#666D80]': !dropdownOpen}"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                                         stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
@@ -824,7 +837,7 @@
                                             :class="!editData.semester ? 'text-[#94A3B8]' : ''"></span>
                                         <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                             :class="{'rotate-180': dropdownOpen, 'text-[#0B266E]': dropdownOpen, 'text-[#666D80]': !dropdownOpen}"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                            viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round">
                                             <polyline points="6 9 12 15 18 9"></polyline>
                                         </svg>
@@ -866,7 +879,7 @@
                             <label class="block text-[12px] font-semibold text-[#353849] mb-1">Dosen Pengampu <span
                                     class="text-red-500">*</span></label>
                             <template x-for="(dosen, index) in editData.dosens" :key="index">
-                                <div class="flex gap-2 mb-2">
+                                <div class="flex gap-2 mb-2" style="display:flex;min-width:0;width:100%;gap:8px;">
                                     <div x-data="{ 
                                 dropdownOpen: false,
                                 search: '',
@@ -874,19 +887,20 @@
                                     if (!this.search) return dosenOptions;
                                     return dosenOptions.filter(o => o.label.toLowerCase().includes(this.search.toLowerCase()));
                                 }
-                            }" class="relative w-full">
+                            }" class="relative w-full" style="flex:1 1 0%;min-width:0;width:0;">
                                         <input type="hidden" :name="'dosen_ids[' + index + ']'"
                                             x-model="editData.dosens[index]" required>
                                         <button type="button" @click="dropdownOpen = !dropdownOpen"
+                                            style="width:100%;min-width:0;display:flex;align-items:center;overflow:hidden;"
                                             class="w-full py-2 pl-3 pr-3 text-left text-[13px] border focus:outline-none font-medium flex items-center justify-between transition-colors rounded-[8px]"
                                             :class="dropdownOpen ? 'border-[#0B266E] bg-[#EEF1FA] text-[#0B266E]' : 'border-[#DFE1E7] bg-white text-[#353849] hover:bg-[#F6F8FA]'">
-                                            <span
+                                            <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;padding-right:8px;"
                                                 x-text="editData.dosens[index] ? dosenOptions.find(o => o.value == editData.dosens[index])?.label : '— Pilih Dosen —'"
                                                 class="truncate pr-2"
                                                 :class="editData.dosens[index] ? 'text-[#0D0D12]' : 'text-[#94A3B8]'"></span>
                                             <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                                 :class="{'rotate-180': dropdownOpen, 'text-[#0B266E]': dropdownOpen, 'text-[#666D80]': !dropdownOpen}"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                                                 stroke-linecap="round" stroke-linejoin="round">
                                                 <polyline points="6 9 12 15 18 9"></polyline>
                                             </svg>
@@ -930,15 +944,8 @@
                                     </div>
                                     <button type="button" x-show="editData.dosens.length > 1"
                                         @click="editData.dosens.splice(index, 1)"
-                                        class="flex-shrink-0 w-[38px] h-[38px] flex items-center justify-center rounded-[8px] border border-[#FADAE1] bg-[#FFF5F5] text-[#DF1C41] hover:bg-[#FEE2E2] transition-colors"
-                                        title="Hapus Dosen">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                            <polyline points="3 6 5 6 21 6" />
-                                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                                            <path d="M10 11v6M14 11v6" />
-                                        </svg>
-                                    </button>
+                                        class="mp-delete-button flex-shrink-0 w-[38px] h-[38px] flex items-center justify-center rounded-[8px] border border-[#FADAE1] bg-[#FFF5F5] text-[#DF1C41] hover:bg-[#FEE2E2] transition-colors"
+                                        title="Hapus Dosen" aria-label="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                 </div>
                             </template>
                             <button type="button" x-show="editData.dosens.length < 3" @click="editData.dosens.push('')"
@@ -966,7 +973,7 @@
                                         class="truncate pr-2" :class="!editData.status ? 'text-[#94A3B8]' : ''"></span>
                                     <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                         :class="{'rotate-180': dropdownOpen, 'text-[#0B266E]': dropdownOpen, 'text-[#666D80]': !dropdownOpen}"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2"
                                         stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
@@ -998,117 +1005,22 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex gap-3 justify-end mt-6 pt-5 border-t border-[#DFE1E7]">
+                    <div class="mp-modal-footer mp-modal-footer-bleed flex gap-3 justify-end mt-6 pt-5 border-t border-[#DFE1E7]" style="--mp-modal-footer-radius:16px;">
                         <button type="button" @click="open = false" class="mp-btn secondary md px-5">Batal</button>
-                        <button type="submit" class="mp-btn primary md px-5">Simpan Perubahan</button>
+                        <button type="submit" class="mp-btn primary md px-5" :disabled="submitting">Simpan Perubahan</button>
                     </div>
                 </form>
             </div>
         </div>
+        @include('eoffice::manajemen-praktikum.admin.partials.status-confirmation')
     </div>
 
-    @if($errors->any())
+    @if($errors->any() && !old('_method'))
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 window.dispatchEvent(new CustomEvent('open-create-modal'));
             });
         </script>
     @endif
-
-    {{-- Modal Bulk Toggle --}}
-    <div x-data="{ open: false, selectAll: false, action: 'deactivate', toggleAll() { document.querySelectorAll('.bulk-checkbox').forEach(cb => cb.checked = this.selectAll); } }"
-        @open-bulk-modal.window="open = true" @close-bulk-modal.window="open = false" id="modalBulkToggle"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300"
-        x-show="open" style="display: none;" x-cloak>
-
-        <div class="bg-white rounded-[16px] shadow-2xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]"
-            @click.away="open = false" x-show="open" x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-            x-transition:leave="transition ease-in duration-200"
-            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-            x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-
-            <div class="px-6 py-4 border-b border-[#DFE1E7] flex justify-between items-center flex-shrink-0">
-                <div>
-                    <div class="font-bold text-[16px] text-[#0D0D12]">Ubah Status Keseluruhan</div>
-                    <div class="text-[12px] text-[#666D80] mt-0.5">Pilih praktikum yang akan diubah statusnya</div>
-                </div>
-                <button type="button" @click="open = false"
-                    class="text-[#666D80] hover:text-[#0D0D12] transition-colors p-1.5 hover:bg-[#F6F8FA] rounded-[8px]">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.2">
-                        <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-
-            <div class="overflow-y-auto flex-1">
-                <form method="POST" action="{{ route('eoffice.manprak.admin.praktikum.bulk-toggle-active') }}"
-                    class="p-6">
-                    @csrf
-
-                    <div class="mb-5">
-                        <label class="block text-[12px] font-semibold text-[#353849] mb-2">Aksi yang diinginkan <span
-                                class="text-red-500">*</span></label>
-                        <div class="flex gap-4">
-                            <label class="flex items-center gap-2 text-[13px] text-[#353849] cursor-pointer">
-                                <input type="radio" name="action" value="deactivate" x-model="action"
-                                    class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E]">
-                                Non-Aktifkan Praktikum
-                            </label>
-                            <label class="flex items-center gap-2 text-[13px] text-[#353849] cursor-pointer">
-                                <input type="radio" name="action" value="activate" x-model="action"
-                                    class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E]">
-                                Aktifkan Praktikum
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="mb-3 flex justify-between items-center border-b border-[#DFE1E7] pb-3">
-                        <label class="flex items-center gap-2 text-[13px] font-semibold text-[#353849] cursor-pointer">
-                            <input type="checkbox" x-model="selectAll" @change="toggleAll()"
-                                class="w-4 h-4 rounded text-[#0B266E] border-gray-300 focus:ring-[#0B266E]">
-                            Pilih Semua
-                        </label>
-                    </div>
-
-                    <div class="flex flex-col border border-[#DFE1E7] rounded-[8px] overflow-hidden">
-                        @forelse($praktikums ?? [] as $p)
-                            <label
-                                class="flex items-start gap-3 p-3 border-b border-[#F6F8FA] last:border-0 cursor-pointer hover:bg-[#F6F8FA] transition-colors">
-                                <input type="checkbox" name="praktikum_ids[]" value="{{ $p->id }}"
-                                    class="bulk-checkbox w-4 h-4 mt-0.5 rounded text-[#0B266E] border-gray-300 focus:ring-[#0B266E]">
-                                <div>
-                                    <div class="text-[13px] font-medium text-[#0D0D12] leading-tight mb-1">{{ $p->nama }}
-                                    </div>
-                                    <div class="text-[11px] text-[#666D80]">
-                                        Sem. {{ $p->semester }} {{ $p->tahun_ajaran }} &bull; Status:
-                                        <span
-                                            class="{{ $p->is_active ? 'text-[#0D9488]' : 'text-[#DF1C41]' }} font-semibold">{{ $p->is_active ? 'Aktif' : 'Non-Aktif' }}</span>
-                                    </div>
-                                </div>
-                            </label>
-                        @empty
-                            <div class="text-[13px] text-center text-[#666D80] py-6 bg-[#FAFAFA]">Belum ada praktikum yang
-                                tersedia.</div>
-                        @endforelse
-                    </div>
-
-                    <div class="flex gap-3 justify-end mt-6 pt-5 border-t border-[#DFE1E7]">
-                        <button type="button" @click="open = false" class="mp-btn secondary md px-5">Batal</button>
-                        <button type="submit" class="mp-btn primary md px-5"
-                            :class="action === 'deactivate' ? 'bg-[#DF1C41] border-[#DF1C41] hover:bg-[#C9193A]' : ''">Simpan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Legacy functions redirect to Alpine events for safety
-        function openBulkModal() { window.dispatchEvent(new CustomEvent('open-bulk-modal')); }
-        function closeBulkModal() { window.dispatchEvent(new CustomEvent('close-bulk-modal')); }
-    </script>
 
 </x-eoffice::manajemen-praktikum.layout>

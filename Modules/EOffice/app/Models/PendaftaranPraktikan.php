@@ -22,7 +22,7 @@ class PendaftaranPraktikan extends Model
     /** Pesan standar penolakan otomatis / cepat */
     public const PESAN_TOLAK_IRS_DEFAULT = 'Anda belum mengambil IRS praktikum';
 
-    protected $table = 'pendaftaran_praktikan';
+    protected $table = 'eo_prak_pendaftaran_praktikan';
 
     protected $fillable = [
         'user_id',

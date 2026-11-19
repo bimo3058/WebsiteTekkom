@@ -69,6 +69,8 @@ class PeminjamanExport implements FromCollection, WithHeadings, WithMapping, Wit
             }
         }
 
+        $exportStatus = strtoupper($pinjam->display_status);
+
         return [
             $rowNumber,
             $fullName,
@@ -80,7 +82,7 @@ class PeminjamanExport implements FromCollection, WithHeadings, WithMapping, Wit
             \Carbon\Carbon::parse($pinjam->jam_mulai)->format('H:i'),
             \Carbon\Carbon::parse($pinjam->jam_selesai)->format('H:i'),
             $pinjam->tujuan,
-            strtoupper($pinjam->status),
+            $exportStatus,
             $pinjam->alasan_penolakan ?? '-',
             $pinjam->created_at ? $pinjam->created_at->translatedFormat('d M Y, H:i') : '-',
             $pinjam->waktu_approval ? \Carbon\Carbon::parse($pinjam->waktu_approval)->translatedFormat('d M Y, H:i') : '-'
@@ -128,8 +130,16 @@ class PeminjamanExport implements FromCollection, WithHeadings, WithMapping, Wit
             ->getAlignment()
             ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
 
-        // Ensure Identitas (NIM/NIP) column is explicitly left-aligned
+        // Ensure Identitas (NIM/NIP) column is explicitly left-aligned and formatted as number without decimal
         $sheet->getStyle('C4:C' . $sheet->getHighestRow())
+            ->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+        $sheet->getStyle('C4:C' . $sheet->getHighestRow())
+            ->getNumberFormat()
+            ->setFormatCode('0');
+
+        // Ensure No Telepon is explicitly left-aligned
+        $sheet->getStyle('E4:E' . $sheet->getHighestRow())
             ->getAlignment()
             ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
 

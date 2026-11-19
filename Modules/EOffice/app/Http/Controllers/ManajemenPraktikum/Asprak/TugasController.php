@@ -5,6 +5,7 @@ namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak;
 use App\Services\SupabaseStorage;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Validation\ValidationException;
 use Modules\EOffice\Models\AsistenPraktikum;
 use Modules\EOffice\Models\DaftarPraktikan;
 use Modules\EOffice\Models\Modul;
@@ -78,8 +79,8 @@ class TugasController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'modul_id' => 'required|exists:modul_praktikum,id',
-            'jenis_tugas' => 'required|in:tugas_pendahuluan,laporan,responsi,tugas_pengganti',
+            'modul_id' => 'required|exists:eo_prak_modul_praktikum,id',
+            'jenis_tugas' => 'required|in:tugas_pendahuluan,laporan,responsi,tugas_pengganti,tambahan_1,tambahan_2',
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'deadline' => 'nullable|date',
@@ -92,10 +93,13 @@ class TugasController extends Controller
         if (!$this->ownsModul((int) $request->modul_id)) {
             abort(403, 'Anda tidak di-assign ke modul ini.');
         }
+        $modul=Modul::with('praktikum')->findOrFail($request->modul_id);
+        $request->validate(['jenis_tugas'=>['required',\Illuminate\Validation\Rule::in(array_keys($modul->praktikum->moduleTaskTypes()))]]);
 
         $filePath = null;
         if ($request->hasFile('files')) {
             $paths = [];
+            $uploadFailed = false;
             foreach ($request->file('files') as $file) {
                 $uploadedPath = $this->supabase->upload($file, 'tugas-praktikum', 'eoffice');
                 if ($uploadedPath) {
@@ -103,7 +107,17 @@ class TugasController extends Controller
                         'path' => $uploadedPath,
                         'original_name' => $file->getClientOriginalName()
                     ];
+                } else {
+                    $uploadFailed = true;
                 }
+            }
+            if ($uploadFailed) {
+                foreach ($paths as $uploadedFile) {
+                    $this->supabase->delete($uploadedFile['path'], 'eoffice');
+                }
+                throw ValidationException::withMessages([
+                    'files' => 'Berkas gagal diunggah ke penyimpanan. Tugas belum disimpan.',
+                ]);
             }
             $filePath = json_encode($paths);
         }
@@ -116,6 +130,9 @@ class TugasController extends Controller
         // Auto-create pengumpulan_tugas if there are already scores in nilai_jenis_tugas
         $this->syncExistingNilaiJenisToPengumpulan($tugas);
 
+        if ($tugas->is_published) \Modules\EOffice\Services\ManajemenPraktikum\StudentActivityNotification::send(
+            $tugas->modul->praktikum_id, 'Tugas baru', $tugas->judul.' telah dipublikasikan. Periksa tenggat pada halaman tugas.',
+            ['section'=>'tugas','praktikum_id'=>$tugas->modul->praktikum_id,'tugas_id'=>$tugas->id]);
         return redirect()->route('eoffice.manprak.asprak.tugas.index')->with('success', 'Tugas berhasil dibuat.');
     }
 
@@ -135,7 +152,7 @@ class TugasController extends Controller
     public function update(Request $request, int $id)
     {
         $request->validate([
-            'jenis_tugas' => 'required|in:tugas_pendahuluan,laporan,responsi,tugas_pengganti',
+            'jenis_tugas' => 'required|in:tugas_pendahuluan,laporan,responsi,tugas_pengganti,tambahan_1,tambahan_2',
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'deadline' => 'nullable|date',
@@ -146,7 +163,8 @@ class TugasController extends Controller
             'hapus_file' => 'nullable|string',
         ]);
 
-        $tugas = $this->findOwnedTugas($id);
+        $tugas = $this->findOwnedTugas($id, ['modul.praktikum']);
+        $request->validate(['jenis_tugas'=>['required',\Illuminate\Validation\Rule::in(array_keys($tugas->modul->praktikum->moduleTaskTypes()))]]);
 
         $filePath = $tugas->file_path;
         $finalPaths = [];
@@ -156,18 +174,23 @@ class TugasController extends Controller
             $oldFiles = $tugas->file_path ? [$tugas->file_path] : [];
         }
 
+        $deleted = $request->input('hapus_file', []);
+        $deletedIndexes = is_string($deleted) ? json_decode($deleted, true) : $deleted;
+        $deletedIndexes = is_array($deletedIndexes) ? array_unique($deletedIndexes) : [];
+        $remainingCount = count(array_diff_key($oldFiles, array_flip($deletedIndexes)));
+        if ($remainingCount + count($request->file('files', [])) > 3) {
+            throw ValidationException::withMessages([
+                'files' => 'Batas akumulasi maksimal lampiran adalah 3 file per tugas.',
+            ]);
+        }
+
+        $oldPathsToDelete = [];
         if ($request->has('hapus_file')) {
-            $deleted = $request->input('hapus_file');
-            $deletedIndexes = is_string($deleted) ? json_decode($deleted, true) : (is_array($deleted) ? $deleted : []);
             if (is_array($deletedIndexes)) {
                 foreach ($deletedIndexes as $idx) {
                     if (isset($oldFiles[$idx])) {
                         $f = $oldFiles[$idx];
-                        $p = is_array($f) && isset($f['path']) ? $f['path'] : $f;
-                        try {
-                            $this->supabase->delete($p, 'eoffice');
-                        } catch (\Throwable $e) {
-                        }
+                        $oldPathsToDelete[] = is_array($f) && isset($f['path']) ? $f['path'] : $f;
                         unset($oldFiles[$idx]);
                     }
                 }
@@ -176,30 +199,58 @@ class TugasController extends Controller
         $finalPaths = $oldFiles;
 
         if ($request->hasFile('files')) {
+            $uploadedPaths = [];
+            $uploadFailed = false;
             foreach ($request->file('files') as $file) {
                 if (count($finalPaths) < 3) {
                     $uploadedPath = $this->supabase->upload($file, 'tugas-praktikum', 'eoffice');
                     if ($uploadedPath) {
-                        $finalPaths[] = [
+                        $uploadedFile = [
                             'path' => $uploadedPath,
                             'original_name' => $file->getClientOriginalName()
                         ];
+                        $finalPaths[] = $uploadedFile;
+                        $uploadedPaths[] = $uploadedFile;
+                    } else {
+                        $uploadFailed = true;
                     }
                 }
+            }
+            if ($uploadFailed) {
+                foreach ($uploadedPaths as $uploadedFile) {
+                    $this->supabase->delete($uploadedFile['path'], 'eoffice');
+                }
+                throw ValidationException::withMessages([
+                    'files' => 'Berkas gagal diunggah ke penyimpanan. Perubahan tugas belum disimpan.',
+                ]);
             }
         }
 
         $filePath = count($finalPaths) > 0 ? json_encode(array_values($finalPaths)) : null;
 
+        $emptyAssignment = trim(strip_tags((string) $request->input('deskripsi', ''))) === '' && count($finalPaths) === 0;
+        if ($emptyAssignment && PengumpulanTugas::where('tugas_id', $tugas->id)->exists()) {
+            throw ValidationException::withMessages(['deskripsi'=>'Isi tugas tidak dapat dikosongkan karena sudah ada pengumpulan atau penilaian.']);
+        }
+
         $tugas->update([
             ...$request->only(['jenis_tugas', 'judul', 'deskripsi', 'deadline', 'deadline_acc', 'is_published']),
             'file_path' => $filePath,
+            'is_published' => ! $emptyAssignment && $request->boolean('is_published'),
         ]);
+
+        foreach ($oldPathsToDelete as $oldPath) {
+            try {
+                $this->supabase->delete($oldPath, 'eoffice');
+            } catch (\Throwable) {
+                // The database already points to the latest valid files.
+            }
+        }
 
         // Auto-create/update pengumpulan_tugas if jenis_tugas changed or scores exist in nilai_jenis_tugas
         $this->syncExistingNilaiJenisToPengumpulan($tugas);
 
-        return redirect()->route('eoffice.manprak.asprak.tugas.index')->with('success', 'Tugas berhasil diperbarui.');
+        return redirect()->route('eoffice.manprak.asprak.tugas.index')->with('success', $emptyAssignment ? 'Isi tugas dikosongkan. Tugas tidak lagi dipublikasikan.' : 'Tugas berhasil diperbarui.');
     }
 
     public function destroy(int $id)
@@ -229,8 +280,14 @@ class TugasController extends Controller
         $tugas = $this->findOwnedTugas($id, ['modul.praktikum']);
 
         // Ambil semua praktikan terdaftar di praktikum tugas ini
+        request()->validate(['search'=>'nullable|string|max:100','kelompok'=>'nullable|string|max:50','shift'=>'nullable|string|max:50','per_page'=>'nullable|integer|in:10,20,30']);
         $perPage = request()->input('per_page', 10);
+        $search=mb_strtolower(trim((string)request('search','')));
+        $totalPraktikan=DaftarPraktikan::where('praktikum_id',$tugas->modul?->praktikum_id)->count();
         $praktikans = DaftarPraktikan::where('praktikum_id', $tugas->modul?->praktikum_id)
+            ->when($search!=='',fn($q)=>$q->whereHas('user',fn($user)=>$user->where(fn($match)=>$match->whereRaw('LOWER(name) LIKE ?', ['%'.$search.'%'])->orWhereHas('student',fn($student)=>$student->where('student_number','like','%'.$search.'%')))))
+            ->when(filled(request('kelompok')),fn($q)=>$q->where('kelompok',trim(request('kelompok'))))
+            ->when(filled(request('shift')),fn($q)=>$q->where('shift',trim(request('shift'))))
             ->with(['user', 'user.student'])
             ->orderByRaw("CASE WHEN (shift IS NULL OR shift = '') THEN 1 ELSE 0 END, shift ASC")
             ->orderByRaw("CASE WHEN (kelompok IS NULL OR kelompok = '') THEN 1 ELSE 0 END, kelompok ASC")
@@ -240,6 +297,7 @@ class TugasController extends Controller
 
         // Ambil data pengumpulan tugas untuk tugas_id ini
         $pengumpulan = PengumpulanTugas::where('tugas_id', $id)
+            ->where('status_pengumpulan', '!=', PengumpulanTugas::STATUS_DRAFT)
             ->with(['riwayat'])
             ->get()
             ->keyBy('daftar_praktikan_id');
@@ -252,7 +310,7 @@ class TugasController extends Controller
 
         return view(
             'eoffice::manajemen-praktikum.asprak.tugas-pengumpulan',
-            compact('tugas', 'praktikans', 'pengumpulan', 'nilaiJenis')
+            compact('tugas', 'praktikans', 'pengumpulan', 'nilaiJenis','totalPraktikan')
         );
     }
 
@@ -273,9 +331,7 @@ class TugasController extends Controller
 
         $pengumpulan->update([
             'nilai' => $request->nilai,
-            'status_pengumpulan' => PengumpulanTugas::STATUS_ACC,
-            'catatan_revisi' => null,
-            'is_revision' => false,
+            'status_pengumpulan' => $pengumpulan->status_pengumpulan === PengumpulanTugas::STATUS_REVISI ? PengumpulanTugas::STATUS_REVISI : PengumpulanTugas::STATUS_ACC,
         ]);
 
         // Sync nilai ke tabel nilai_jenis_tugas (two-way sync)
@@ -294,7 +350,7 @@ class TugasController extends Controller
         // Auto-sync nilai ke tabel nilai_praktikum
         $this->syncNilaiTugas($pengumpulan);
 
-        return back()->with('success', 'Nilai berhasil disimpan dan status diubah ke ACC.');
+        return back()->with('success', 'Nilai berhasil disimpan.');
     }
 
     /**
@@ -303,8 +359,10 @@ class TugasController extends Controller
     public function beriRevisi(Request $request, int $id)
     {
         $request->validate([
-            'catatan_revisi' => 'required|string',
-            'file_revisi' => 'nullable|file|mimes:pdf,docx,doc,zip,rar|max:10240',
+            'file_revisi' => 'nullable|array|max:3',
+            'file_revisi.*' => 'required|file|max:5120',
+            'retained_files' => 'nullable|array|max:3',
+            'retained_files.*' => 'required|string',
         ]);
 
         $pengumpulan = PengumpulanTugas::with('tugas.modul')->findOrFail($id);
@@ -312,32 +370,73 @@ class TugasController extends Controller
             abort(403, 'Anda tidak berhak merevisi pengumpulan ini.');
         }
 
-        $filePath = $pengumpulan->file_revisi_asprak;
-        if ($request->hasFile('file_revisi')) {
-            // Hapus file revisi lama jika ada
-            if ($pengumpulan->file_revisi_asprak) {
-                try {
-                    $this->supabase->delete($pengumpulan->file_revisi_asprak, 'eoffice');
-                } catch (\Throwable $e) {
-                    // Ignore storage deletion errors
-                }
-            }
-
-            $filePath = $this->supabase->upload(
-                $request->file('file_revisi'),
+        if (!$pengumpulan->tugas?->modul?->praktikum?->is_active) {
+            throw ValidationException::withMessages(['revisi'=>'Praktikum telah diarsipkan.']);
+        }
+        $paths = \Modules\EOffice\Services\ManajemenPraktikum\ModuleRevisionAttachments::retained($pengumpulan->file_revisi_asprak,$request->input('retained_files',[]));
+        $uploads=$request->file('file_revisi',[]);
+        if (count($paths) === 0 && count($uploads) === 0 && $pengumpulan->file_revisi_asprak) {
+            return $this->batalkanRevisi($request, $id);
+        }
+        if (count($paths)+count($uploads)<1 || count($paths)+count($uploads)>3) {
+            throw ValidationException::withMessages(['file_revisi'=>'Lampirkan minimal satu dan maksimal tiga berkas revisi.']);
+        }
+        $failedCount = 0;
+        foreach ($uploads as $f) {
+            $uploadedPath = $this->supabase->upload(
+                $f,
                 'tugas-revisi/' . ($pengumpulan->tugas?->modul?->praktikum_id ?? 'default') . '/' . $pengumpulan->tugas_id,
                 'eoffice'
             );
+            if ($uploadedPath) {
+                $paths[] = [
+                    'path' => $uploadedPath,
+                    'original_name' => $f->getClientOriginalName()
+                ];
+            } else {
+                $failedCount++;
+            }
         }
 
+        if ($failedCount > 0) {
+            return back()->with('error', 'Gagal mengunggah file revisi.');
+        }
+
+        $filePathJson = json_encode($paths);
+
         $pengumpulan->update([
-            'catatan_revisi' => $request->catatan_revisi,
-            'file_revisi_asprak' => $filePath,
+            'catatan_revisi' => null,
+            'file_revisi_asprak' => $filePathJson,
             'is_revision' => true,
             'status_pengumpulan' => PengumpulanTugas::STATUS_REVISI,
         ]);
 
+        $studentId = $pengumpulan->daftarPraktikan?->user_id;
+        if ($studentId) app(\Modules\EOffice\Services\NotifikasiService::class)->kirim($studentId,
+            'Revisi tugas', 'Ada revisi untuk '.$pengumpulan->tugas->judul.'. Periksa berkas revisi pada halaman tugas.',null,'mahasiswa',
+            ['section'=>'tugas','praktikum_id'=>$pengumpulan->tugas->modul->praktikum_id,'tugas_id'=>$pengumpulan->tugas_id]);
         return back()->with('success', 'Revisi berhasil dikirim ke mahasiswa.');
+    }
+
+    public function batalkanRevisi(Request $request, int $id)
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+            $submission = PengumpulanTugas::with('tugas.modul.praktikum')->lockForUpdate()->findOrFail($id);
+            abort_unless($this->ownsModul((int)$submission->tugas?->modul_id), 403);
+            abort_unless($submission->tugas?->modul?->praktikum?->is_active, 403, 'Praktikum telah diarsipkan.');
+            if ($submission->status_pengumpulan !== PengumpulanTugas::STATUS_REVISI) {
+                throw ValidationException::withMessages(['revisi'=>'Revisi tidak dapat dibatalkan karena status pengumpulan sudah berubah. Muat ulang halaman.']);
+            }
+            $before = $submission->only(['file_revisi_asprak','catatan_revisi','status_pengumpulan','is_revision']);
+            $submission->update(['file_revisi_asprak'=>null,'catatan_revisi'=>null,'is_revision'=>false,
+                'status_pengumpulan'=>$submission->nilai !== null ? PengumpulanTugas::STATUS_ACC : PengumpulanTugas::STATUS_BELUM_DICEK]);
+            \App\Services\AuditLogger::log('eoffice','UPDATE','Membatalkan revisi tugas',null,
+                ['pengumpulan_id'=>$submission->id]+$before,['status_pengumpulan'=>$submission->status_pengumpulan]);
+            $userId = $submission->daftarPraktikan?->user_id;
+            if ($userId) app(\Modules\EOffice\Services\NotifikasiService::class)->kirim($userId,
+                'Revisi tugas dibatalkan','Revisi untuk '.$submission->tugas->judul.' telah dibatalkan oleh asisten.',null,'mahasiswa');
+        });
+        return back()->with('success','Revisi berhasil dibatalkan.');
     }
 
     /**
@@ -348,15 +447,21 @@ class TugasController extends Controller
     {
         $request->validate([
             'nilai' => 'required|array',
-            'nilai.*.nilai_jenis' => 'nullable|numeric|min:0|max:100',
+            'nilai.*.nilai_jenis' => 'present|nullable|numeric|min:0|max:100',
         ]);
 
         $tugas = $this->findOwnedTugas($id, ['modul']);
+
+        if (!$tugas->modul?->praktikum?->is_active) throw ValidationException::withMessages(['nilai'=>'Praktikum telah diarsipkan.']);
+        $studentIds=array_keys($request->nilai);
+        $enrolled=DaftarPraktikan::where('praktikum_id',$tugas->modul->praktikum_id)->whereIn('id',$studentIds)->count();
+        if ($enrolled!==count($studentIds)) throw ValidationException::withMessages(['nilai'=>'Mahasiswa tidak terdaftar pada praktikum ini.']);
 
         if (!$tugas->jenis_tugas) {
             return back()->with('error', 'Tugas ini belum memiliki jenis tugas.');
         }
 
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request,$tugas) {
         foreach ($request->nilai as $daftarPraktikanId => $item) {
             $nilaiValue = isset($item['nilai_jenis']) && $item['nilai_jenis'] !== ''
                 ? (float) $item['nilai_jenis']
@@ -378,7 +483,7 @@ class TugasController extends Controller
             ]);
             $pengumpulan->update([
                 'nilai' => $nilaiValue,
-                'status_pengumpulan' => $nilaiValue !== null ? 'acc' : 'belum_dicek',
+                'status_pengumpulan' => $pengumpulan->status_pengumpulan === 'revisi' ? 'revisi' : ($nilaiValue !== null ? 'acc' : 'belum_dicek'),
             ]);
         }
 
@@ -392,6 +497,7 @@ class TugasController extends Controller
             }
         }
 
+        });
         return back()->with('success', 'Nilai berhasil disimpan.');
     }
 
@@ -419,7 +525,7 @@ class TugasController extends Controller
             if ($pengumpulan->nilai === null) {
                 $pengumpulan->update([
                     'nilai' => $nj->nilai,
-                    'status_pengumpulan' => 'acc',
+                    'status_pengumpulan' => $pengumpulan->status_pengumpulan === 'revisi' ? 'revisi' : 'acc',
                 ]);
             }
 

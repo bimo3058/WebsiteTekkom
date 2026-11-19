@@ -41,14 +41,18 @@ class AdminCbtController extends Controller
         // Compatible dengan MySQL 5.7+ (tanpa window function)
         $ujianKeSubquery = "
             (SELECT COUNT(*) FROM bs_kompre_session s2
-             WHERE s2.user_id = bs_kompre_session.user_id
-               AND s2.status = 'finished'
+             WHERE s2.status = 'finished'
+               AND (
+                    (bs_kompre_session.user_id IS NOT NULL AND s2.user_id = bs_kompre_session.user_id)
+                    OR (bs_kompre_session.user_id IS NULL AND s2.user_id IS NULL
+                        AND s2.pendaftar_ujian_id = bs_kompre_session.pendaftar_ujian_id)
+               )
                AND (s2.finished_at < bs_kompre_session.finished_at
                     OR (s2.finished_at = bs_kompre_session.finished_at AND s2.id <= bs_kompre_session.id))
             ) AS ujian_ke
         ";
 
-        $query = KompreSession::with(['user.student', 'jadwal.periode'])
+        $query = KompreSession::with(['user.student', 'pendaftar', 'jadwal.periode'])
             ->selectRaw("bs_kompre_session.*, {$ujianKeSubquery}")
             ->where('bs_kompre_session.status', 'finished');
 
@@ -69,9 +73,14 @@ class AdminCbtController extends Controller
         // Pencarian NIM atau Nama Mahasiswa
         if ($request->filled('q')) {
             $q = $request->q;
-            $query->whereHas('user', function ($subQ) use ($q) {
-                $subQ->where('name', 'ilike', "%{$q}%")
-                    ->orWhereHas('student', fn ($sq) => $sq->where('student_number', 'ilike', "%{$q}%"));
+            $query->where(function ($subQ) use ($q) {
+                $subQ->whereHas('user', function ($userQuery) use ($q) {
+                    $userQuery->where('name', 'ilike', "%{$q}%")
+                        ->orWhereHas('student', fn ($studentQuery) => $studentQuery->where('student_number', 'ilike', "%{$q}%"));
+                })->orWhereHas('pendaftar', function ($pendaftarQuery) use ($q) {
+                    $pendaftarQuery->where('nama_lengkap', 'ilike', "%{$q}%")
+                        ->orWhere('nim', 'ilike', "%{$q}%");
+                });
             });
         }
 
@@ -94,6 +103,7 @@ class AdminCbtController extends Controller
     {
         $session = KompreSession::with([
             'user.student',
+            'pendaftar',
             'jadwal.periode',
             'jawabans.pertanyaan.jawaban',
             'jawabans.pertanyaan.cpl',
@@ -126,8 +136,8 @@ class AdminCbtController extends Controller
                     'deskripsi' => $cpl['deskripsi'] ?? '',
                     'total' => $total,
                     'benar' => $benar,
-                    'salah' => 0,
-                    'kosong' => max(0, $total - $benar),
+                    'salah' => max(0, $total - $benar),
+                    'kosong' => 0,
                     'pct_benar' => $total > 0 ? round($benar / $total * 100) : 0,
                     'nilai' => (float) ($cpl['nilai'] ?? 0),
                     'lulus' => true,

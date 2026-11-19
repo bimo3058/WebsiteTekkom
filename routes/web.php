@@ -44,19 +44,13 @@ Route::middleware('web')->group(function () {
 
 Route::middleware('guest')->group(function () {
 
-    Route::get('/login', function () {
-        return view('auth.login');
-    })->name('login');
-
     Route::get('/auth/microsoft/redirect', [MicrosoftController::class, 'redirect'])
         ->name('microsoft.redirect');
+    Route::get('/admin-praktikum/login',[\App\Http\Controllers\Auth\PracticumAdminLoginController::class,'create'])->name('practicum-admin.login');
+    Route::post('/admin-praktikum/login',[\App\Http\Controllers\Auth\PracticumAdminLoginController::class,'store'])->middleware('throttle:10,1')->name('practicum-admin.login.store');
 
     Route::get('/auth/microsoft/callback', [MicrosoftController::class, 'callback'])
         ->name('microsoft.callback');
-    Route::get(env('SPC_LOGIN_PATH', 'disabled'), function () {
-        abort_unless(app()->isLocal() || app()->environment('staging'), 403);
-        return view('auth.dev-login');
-    });
 });
 
 Route::middleware('auth')->group(function () {
@@ -103,7 +97,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{user}/unsuspend', [SuperAdminController::class, 'unsuspend'])
             ->name('users.unsuspend');
         // Tambah user baru
+        Route::post('/users/bulk-import/preview', [SuperAdminController::class, 'previewBulkImport'])->name('users.bulkImport.preview');
         Route::post('/users/bulk-import', [SuperAdminController::class, 'bulkImport'])->name('users.bulkImport');
+        Route::patch('/users/{user}/sso-access', [SuperAdminController::class, 'updateSsoAccess'])->name('users.sso-access.update');
         Route::post('/import-status/{id}/cancel', [SuperAdminController::class, 'cancelImport'])->name('import.cancel');
         Route::post('/clear-import-session', function () {
             session()->forget('import_id');

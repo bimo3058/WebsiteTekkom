@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Models\Parameter;
+use Modules\BankSoal\Support\MasterDataUpsert;
 
 class ParameterController extends Controller
 {
@@ -84,6 +85,13 @@ class ParameterController extends Controller
         }
     }
 
+    /**
+     * Simpan parameter baru.
+     *
+     * Identitas parameter = seluruh field (jenis + aspek + bobot). Kalau sudah ada
+     * baris dengan isi yang sama persis, baris itu yang ditampilkan (dipulihkan bila
+     * sebelumnya dihapus); kalau ada satu field berbeda, baris baru ditulis.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -93,11 +101,33 @@ class ParameterController extends Controller
         ]);
 
         try {
-            $parameter = Parameter::create($validated);
-            
+            $result = MasterDataUpsert::firstOrCreateIdentical(Parameter::class, [
+                'jenis' => $validated['jenis'],
+                'aspek' => $validated['aspek'],
+                'bobot' => (int) $validated['bobot'],
+            ]);
+
+            if (!$result['created']) {
+                $message = MasterDataUpsert::existingMessage('parameter', $result['restored']);
+
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'created' => false,
+                        'message' => $message,
+                        'data' => $result['record'],
+                    ]);
+                }
+
+                return redirect()->route('banksoal.soal.gpm.parameter.index')->with('success', $message);
+            }
+
+            $parameter = $result['record'];
+
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => true,
+                    'created' => true,
                     'message' => 'Parameter berhasil ditambahkan',
                     'data' => $parameter
                 ], 201);
@@ -175,26 +205,20 @@ class ParameterController extends Controller
         }
     }
 
+    /**
+     * Hapus parameter (soft delete).
+     *
+     * Parameter yang dihapus hanya disembunyikan dari frontend; baris dan relasi
+     * hasil review yang sudah ada tetap utuh sebagai histori.
+     */
     public function destroy(string $id)
     {
         $id = (int) $id;
 
         try {
             $parameter = Parameter::findOrFail($id);
-            
-            if ($parameter->hasilReview()->exists()) {
-                $message = 'Parameter tidak dapat dihapus karena sudah digunakan dalam review RPS.';
-                if (request()->wantsJson() || request()->ajax()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => $message
-                    ], 400);
-                }
-                return back()->with('error', $message);
-            }
-
             $parameter->delete();
-            
+
             $message = 'Parameter berhasil dihapus';
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([

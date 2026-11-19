@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class PendaftaranAsprak extends Model
 {
-    protected $table = 'pendaftaran_asprak';
+    protected $table = 'eo_prak_pendaftaran_asprak';
 
     protected $fillable = [
         'user_id',

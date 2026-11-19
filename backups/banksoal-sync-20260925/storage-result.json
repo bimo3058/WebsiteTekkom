@@ -1,0 +1,37 @@
+[
+    {
+        "path": "rps/RPS_Data Mining_2025-2026_Genap.pdf",
+        "status": "copied_and_verified",
+        "sha256": "88ad85757cfdab236ef4a4a3bca4b1ad809dff4034158ab8fa8a4f9b316dc25b"
+    },
+    {
+        "path": "rps/RPS_Fisika Dasar_2025-2026_Genap_V1.pdf",
+        "status": "copied_and_verified",
+        "sha256": "e3a33ad6ef82dbb52567b65a9d0b2b787ad409d01316fbab627098979c369dde"
+    },
+    {
+        "path": "rps/RPS_Tugas Akhir_2025-2026_Genap_V1.pdf",
+        "status": "copied_and_verified",
+        "sha256": "4608a4c43c5df20f74da45b83b43d6fc54c6157e56c510ca2b6c07026c51b2fd"
+    },
+    {
+        "path": "rps/RPS_Metodologi Penelitian_2025-2026_Genap.pdf",
+        "status": "copied_and_verified",
+        "sha256": "6cb0294261a49da15deb0e4bec1bad1185a395844ca09cd053ee7ec8d44c6592"
+    },
+    {
+        "path": "rps/RPS_Bahasa Indonesia_2026-2027_Ganjil_V1.pdf",
+        "status": "copied_and_verified",
+        "sha256": "1e8b68fd738882a57588f9868d0b4a8c8f53aa805a9f201d4b61d6a0fb13cad3"
+    },
+    {
+        "path": "templates/rps/TemplateRPS_V1.docx",
+        "status": "copied_and_verified",
+        "sha256": "0a5d1978559e7c1509ee179f3547088737d50b06dbfc3a337c05036b3e55d627"
+    },
+    {
+        "path": "templates/rps/TemplateRPS_V2.docx",
+        "status": "copied_and_verified",
+        "sha256": "0a5d1978559e7c1509ee179f3547088737d50b06dbfc3a337c05036b3e55d627"
+    }
+]

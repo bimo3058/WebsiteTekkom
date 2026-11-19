@@ -18,7 +18,7 @@ export function lecturerDocuments(taOnly=false){
         get filtered(){return this.items.filter(d=>(!taOnly||['TA','SIDANG','TA_INDIVIDUAL'].includes(d.phase))&&this.matches(d)&&this.inPeriod(d.group?.period_id||this.groups.find(g=>String(g.id)===String(d.group_id))?.period_id)&&(this.selectedGroup==='all'||String(d.group_id)===String(this.selectedGroup))&&(this.phase==='all'||d.phase===this.phase)&&(this.status==='all'||d.status===this.status));},
         get phases(){return [...new Set(this.items.map(d=>d.phase))].filter(Boolean);},
         get grouped(){const groups=new Map();for(const doc of this.visible){if(!groups.has(doc.group_id))groups.set(doc.group_id,{id:doc.group_id,group:doc.group,documents:[]});groups.get(doc.group_id).documents.push(doc);}return [...groups.values()];},
-        review(doc){this.selected=doc;this.feedback=doc.feedback||'';this.reviewStatus=['APPROVED','REJECTED'].includes(doc.status)?doc.status:'APPROVED';this.errors={};this.open('document-review');},
+        review(doc){this.selected=doc;this.feedback=doc.feedback||'';this.reviewStatus=['APPROVED','REVISE','REJECTED'].includes(doc.status)?doc.status:'APPROVED';this.errors={};this.open('document-review');},
         async submit(){if(this.selected)await this.mutate('/dosen/documents/'+this.selected.id,{status:this.reviewStatus,feedback:this.feedback},'PUT','document-review');},
         async downloadDocument(doc){if(this.downloading)return;this.downloading=doc.id;try{download(await api('/dosen/documents/'+doc.id+'/download',{blob:true}),doc.file_name||`${doc.phase}-v${doc.version}.pdf`);}catch(e){notify(e.message,true);}finally{this.downloading=null;}},
     });

@@ -392,6 +392,7 @@
          Dipasang sebelum @stack('scripts') supaya mkConfirm/mkNotify sudah ada saat skrip
          halaman dijalankan. --}}
     <x-manajemenmahasiswa::ui.dialog />
+    <x-manajemenmahasiswa::ui.progress />
 
     @stack('scripts')
     <x-mobile-navigation />

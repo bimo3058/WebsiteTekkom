@@ -12,46 +12,40 @@ use Modules\ManajemenMahasiswa\Policies\KegiatanPolicy;
 
 /**
  * Data di balik bagian "Akses Kelola" pada form kegiatan — dipakai bersama
- * Rencana Proker, Pelaksanaan, dan Laporan & Arsip. Aturan siapa-boleh-apa ada
- * di KegiatanPolicy; service ini menyiapkan pilihannya dan menyimpan hasilnya.
+ * Rencana Proker dan Pelaksanaan. Aturan siapa-boleh-apa ada di KegiatanPolicy;
+ * service ini menyiapkan pilihannya dan menyimpan hasilnya.
  */
 class PengelolaKegiatanService
 {
     /**
-     * Role yang bisa DITAMBAHKAN sebagai pengelola. Ini hak mengedit, bukan
-     * membuat: staff_himpunan tetap tidak bisa membuat proker.
-     */
-    private const ROLE_CALON = ['ketua_bidang', 'ketua_unit', 'staff_himpunan'];
-
-    /**
-     * Pengurus yang bisa dipilih di bagian Akses Kelola.
+     * Pengurus yang bisa dipilih di bagian Akses Kelola: staff himpunan saja.
      *
-     * Akun yang sudah berakses penuh (KegiatanPolicy::PENGELOLA_SEMUA) tidak
-     * ditawarkan — mencantumkannya tidak mengubah apa pun.
+     * Ketua bidang/unit lain tidak ditawarkan — satu proker dipegang satu bidang,
+     * jadi mereka tidak berhak mengedit apalagi menghapus proker bidang lain
+     * (KegiatanPolicy::bisaJadiPengelola). Ketua Himpunan dan admin juga tidak
+     * ditawarkan karena hak editnya sudah datang dari KegiatanPolicy.
      *
-     * `bisa_hapus` bukan pilihan, melainkan keterangan: Ketua Bidang/Unit yang
-     * ditambahkan otomatis boleh mengedit sekaligus menghapus, staff_himpunan
-     * hanya mengedit. Yang menegakkannya KegiatanPolicy::delete.
+     * `bidangId` dipakai form untuk menyaring calon sebidang dengan kegiatannya (S-73):
+     * staff bidang lain tidak bisa membuka kegiatan itu (KegiatanPolicy::update).
      *
-     * @return Collection<int, array{id: int, nama: string, role: string, bisa_hapus: bool}>
+     * @return Collection<int, array{id: int, nama: string, role: string, bidangId: ?int}>
      */
     public function calonPengelola(): Collection
     {
         return User::query()
-            ->whereHas('roles', fn($q) => $q->whereIn('name', self::ROLE_CALON))
-            ->whereDoesntHave('roles', fn($q) => $q->whereIn('name', KegiatanPolicy::PENGELOLA_SEMUA))
-            ->with('roles')
+            ->with('pengurusBidang')
+            ->whereHas('roles', fn($q) => $q->whereIn('name', KegiatanPolicy::ROLE_PENGELOLA))
+            ->whereDoesntHave('roles', fn($q) => $q->whereIn('name', [
+                ...KegiatanPolicy::JABATAN_KETUA,
+                ...KegiatanPolicy::PENGELOLA_SEMUA,
+            ]))
             ->orderBy('name')
             ->get()
             ->map(fn(User $user) => [
-                'id'         => (int) $user->id,
-                'nama'       => $user->name,
-                'role'       => match (true) {
-                    $user->hasRole('ketua_bidang') => 'Ketua Bidang',
-                    $user->hasRole('ketua_unit')   => 'Ketua Unit',
-                    default                        => 'Staff Himpunan',
-                },
-                'bisa_hapus' => $user->hasAnyRole(KegiatanPolicy::PENGELOLA_BOLEH_HAPUS),
+                'id'       => (int) $user->id,
+                'nama'     => $user->name,
+                'role'     => 'Staff Himpunan',
+                'bidangId' => $user->pengurusBidang?->bidang_id,
             ])
             ->values();
     }
@@ -111,8 +105,13 @@ class PengelolaKegiatanService
             return [];
         }
 
+        // Pengelola lama yang kini tidak memenuhi syarat (mis. ketua bidang lain dari
+        // sebelum aturan satu-bidang) tidak dimunculkan, sehingga ikut terlepas saat
+        // form disimpan — hak aksesnya sendiri sudah dicabut KegiatanPolicy::update.
         return $kegiatan->pengelola
+            ->filter(fn(User $user) => KegiatanPolicy::bisaJadiPengelola($user))
             ->map(fn(User $user) => (int) $user->id)
+            ->values()
             ->all();
     }
 
@@ -129,7 +128,11 @@ class PengelolaKegiatanService
             return;
         }
 
-        $calon     = $this->calonPengelola()->keyBy('id');
+        // Dipanggil setelah bidang kegiatan disimpan. Yang tidak sebidang ikut terlepas.
+        $bidangKegiatan = $kegiatan->bidangs()->pluck('mk_bidang.id')->all();
+        $calon          = $this->calonPengelola()
+            ->filter(fn($c) => in_array($c['bidangId'], $bidangKegiatan))
+            ->keyBy('id');
         $pemilikId = $this->pemilikId($kegiatan);
 
         $data = [];
@@ -137,13 +140,13 @@ class PengelolaKegiatanService
             $id = (int) $id;
 
             // Hanya pengurus yang memang bisa dipilih; pemilik tidak perlu dicantumkan.
+            // Ketua bidang/unit lain yang dikirim lewat request palsu ikut tersaring di sini.
             if (!$calon->has($id) || $id === $pemilikId) {
                 continue;
             }
 
-            // Catatan saja, bukan penentu: hak hapus mengikuti role pengelola dan
-            // diputuskan ulang setiap kali di KegiatanPolicy::delete.
-            $data[$id] = ['boleh_hapus' => $calon[$id]['bisa_hapus']];
+            // Pengelola tambahan tidak pernah boleh menghapus (KegiatanPolicy::delete).
+            $data[$id] = ['boleh_hapus' => false];
         }
 
         $kegiatan->pengelola()->sync($data);
@@ -151,15 +154,21 @@ class PengelolaKegiatanService
 
     /**
      * Pesan untuk orang yang role-nya boleh mengelola tetapi bukan pengelola
-     * kegiatan ini. Nama pembuat hanya disebut bila ia memang masih pemiliknya.
+     * kegiatan ini (dipanggil hanya bila ia memang ditolak KegiatanPolicy).
+     * Nama pembuat hanya disebut bila ia memang masih pemiliknya.
      */
     public function pesanTolak(Kegiatan $kegiatan): string
     {
-        $pemilik = $this->pemilikId($kegiatan) !== null ? $kegiatan->creator : null;
+        // Sejak S-82 KABID dkk. & KAHIM tidak mengedit: mereka meninjau.
+        if (Auth::user()?->hasAnyRole(KegiatanPolicy::JABATAN_KETUA)) {
+            return 'Data kegiatan diisi ketua pelaksana. Anda memantau dan meninjaunya; bila ada yang salah, kembalikan dengan catatan.';
+        }
 
-        return 'Anda bukan pengelola kegiatan ini. Minta '
-            . ($pemilik ? "pembuatnya ({$pemilik->name}) atau " : '')
-            . 'Ketua Himpunan menambahkan Anda di bagian Akses Kelola.';
+        $ketua = $kegiatan->ketuaPelaksana?->user?->name;
+
+        return 'Anda bukan ketua pelaksana atau pengelola kegiatan ini. Minta '
+            . ($ketua ? "ketua pelaksananya ({$ketua}) " : 'ketua pelaksananya ')
+            . 'menambahkan Anda di bagian Akses Kelola.';
     }
 
     /**

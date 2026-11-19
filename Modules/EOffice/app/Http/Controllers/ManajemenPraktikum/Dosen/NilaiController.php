@@ -85,6 +85,8 @@ class NilaiController extends Controller
         if (!$praktikum)
             abort(404);
 
+        if ($request->has('cards')) return app(\Modules\EOffice\Services\ManajemenPraktikum\NilaiCsvExport::class)->download($request,$praktikum);
+
         $modulFilter = $request->input('modul_id');
         $modulsQuery = Modul::where('praktikum_id', $praktikum->id)->orderBy('urutan');
         if ($modulFilter)
@@ -113,10 +115,10 @@ class NilaiController extends Controller
             "Expires" => "0"
         ];
 
-        $callback = function () use ($daftarPraktikan, $moduls, $nilaiJenisMap) {
+        $callback = function () use ($daftarPraktikan, $moduls, $nilaiJenisMap, $praktikum) {
             $file = fopen('php://output', 'w');
 
-            fputcsv($file, ['No', 'Nama Praktikan', 'NIM', 'Kelompok', 'Shift', 'Modul', 'Kehadiran', 'Tugas Pendahuluan', 'Laporan', 'Responsi', 'Tugas Pengganti', 'Keterangan']);
+            fputcsv($file, ['No', 'Nama Praktikan', 'NIM', 'Kelompok', 'Shift', 'Modul', 'Kehadiran', 'Tugas Pendahuluan', $praktikum->laporanLabel(), 'Responsi', 'Tugas Pengganti', 'Keterangan']);
 
             $no = 1;
             foreach ($daftarPraktikan as $dp) {
@@ -163,24 +165,7 @@ class NilaiController extends Controller
             return back()->with('error', 'Praktikum tidak ditemukan.');
         }
 
-        $daftarIds = DaftarPraktikan::where('praktikum_id', $praktikum->id)->pluck('id');
-
-        // Cek apakah koor sudah approve semua nilai
-        $belumDisetujuiKoor = Nilai::whereIn('daftar_praktikan_id', $daftarIds)
-            ->where('disetujui_koor', false)
-            ->count();
-
-        if ($belumDisetujuiKoor > 0) {
-            return back()->with('error', 'Masih ada nilai yang belum disetujui oleh koordinator. Minta koordinator untuk approve terlebih dulu.');
-        }
-
-        // Approve & publikasikan semua nilai
-        Nilai::whereIn('daftar_praktikan_id', $daftarIds)
-            ->update([
-                'disetujui_dosen' => true,
-                'dipublikasikan' => true,
-            ]);
-
+        app(\Modules\EOffice\Services\ManajemenPraktikum\GradePublication::class)->approve($request,$praktikum,'dosen');
         return back()->with('success', 'Nilai berhasil disetujui dan dipublikasikan ke mahasiswa.');
     }
 
@@ -199,15 +184,7 @@ class NilaiController extends Controller
             return back()->with('error', 'Praktikum tidak ditemukan.');
         }
 
-        $daftarIds = DaftarPraktikan::where('praktikum_id', $praktikum->id)->pluck('id');
-
-        // Batalkan approve & publikasi
-        Nilai::whereIn('daftar_praktikan_id', $daftarIds)
-            ->update([
-                'disetujui_dosen' => false,
-                'dipublikasikan' => false,
-            ]);
-
+        app(\Modules\EOffice\Services\ManajemenPraktikum\GradePublication::class)->cancel($praktikum);
         return back()->with('success', 'Publikasi nilai berhasil dibatalkan.');
     }
 }

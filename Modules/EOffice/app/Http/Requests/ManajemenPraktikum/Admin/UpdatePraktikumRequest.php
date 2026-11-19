@@ -19,16 +19,16 @@ class UpdatePraktikumRequest extends FormRequest
             'matkul_id' => [
                 'required',
                 'integer',
-                'exists:eo_matkul_praktikum,id',
-                \Illuminate\Validation\Rule::unique('eo_praktikum', 'matkul_id')->where(function ($query) {
+                'exists:eo_prak_matkul_praktikum,id',
+                \Illuminate\Validation\Rule::unique('eo_prak_praktikum', 'matkul_id')->where(function ($query) {
                     return $query->where('tahun_ajaran', $this->tahun_ajaran ?? \Modules\EOffice\Models\Praktikum::find($this->route('praktikum'))?->tahun_ajaran)
                         ->where('semester', $this->semester ? ucfirst(strtolower($this->semester)) : \Modules\EOffice\Models\Praktikum::find($this->route('praktikum'))?->semester)
                         ->whereNull('deleted_at');
                 })->ignore($this->route('praktikum')),
             ],
             'deskripsi' => ['nullable', 'string'],
-            'dosen_ids' => ['required', 'array', 'min:1', 'max:3'],
-            'dosen_ids.*' => ['required', 'integer', 'exists:users,id'],
+            'dosen_ids' => ['required_if:status,aktif', 'nullable', 'array', 'max:3'],
+            'dosen_ids.*' => ['nullable', 'integer', 'exists:users,id'],
             'koor_id' => ['nullable', 'integer', 'exists:users,id'],
             'tahun_ajaran' => ['sometimes', 'string', 'regex:/^\d{4}\/\d{4}$/'],
             'semester' => ['sometimes', 'in:Ganjil,Genap,ganjil,genap'],

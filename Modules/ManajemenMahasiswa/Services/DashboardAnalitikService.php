@@ -2,7 +2,9 @@
 
 namespace Modules\ManajemenMahasiswa\Services;
 
+use App\Models\Student;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Modules\ManajemenMahasiswa\Models\DashboardAnalitik;
@@ -13,10 +15,12 @@ use Modules\ManajemenMahasiswa\Models\Pengumuman;
 use Modules\ManajemenMahasiswa\Models\Prestasi;
 use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
 use Modules\ManajemenMahasiswa\Models\Pengaduan;
+use Modules\ManajemenMahasiswa\Models\PengaduanLog;
 use Modules\ManajemenMahasiswa\Models\ForumReport;
 use Modules\ManajemenMahasiswa\Models\Thread;
 use Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest;
 use Modules\ManajemenMahasiswa\Models\PengurusHimaskom;
+use Modules\ManajemenMahasiswa\Support\RoleHimpunan;
 
 class DashboardAnalitikService
 {
@@ -29,13 +33,13 @@ class DashboardAnalitikService
     {
         return Cache::remember('mk.dashboard.snapshot', 300, function () {
             return [
-                'total_mahasiswa_aktif' => Kemahasiswaan::aktif()->count(),
+                'total_mahasiswa_aktif' => $this->queryMahasiswaAktif()->count(),
                 'total_alumni'          => Alumni::count(),
-                'total_kegiatan'        => Kegiatan::count(),
+                'total_kegiatan'        => Kegiatan::unik()->count(),
                 'total_pengumuman'      => Pengumuman::published()->count(),
 
                 // Tren kegiatan per bulan (12 bulan terakhir)
-                'kegiatan_per_bulan' => Kegiatan::selectRaw("TO_CHAR(tanggal_mulai, 'YYYY-MM') as bulan, count(*) as total")
+                'kegiatan_per_bulan' => Kegiatan::unik()->selectRaw("TO_CHAR(tanggal_mulai, 'YYYY-MM') as bulan, count(*) as total")
                     ->where('tanggal_mulai', '>=', now()->subMonths(12))
                     ->groupBy('bulan')
                     ->orderBy('bulan')
@@ -67,9 +71,9 @@ class DashboardAnalitikService
     public function recordSnapshot(int $generatedByUserId, ?int $lecturerId = null): DashboardAnalitik
     {
         $data = [
-            'total_mahasiswa_aktif' => Kemahasiswaan::aktif()->count(),
+            'total_mahasiswa_aktif' => $this->queryMahasiswaAktif()->count(),
             'total_alumni'          => Alumni::count(),
-            'total_kegiatan'        => Kegiatan::count(),
+            'total_kegiatan'        => Kegiatan::unik()->count(),
             'total_pengumuman'      => Pengumuman::published()->count(),
             'tanggal_generate'      => now(),
             'generated_by_user_id'  => $generatedByUserId,
@@ -162,7 +166,11 @@ class DashboardAnalitikService
     {
         return Cache::remember('mk.dashboard.tier1', 30, function () {
             return [
-                'pengaduan_baru'      => Pengaduan::where('status', Pengaduan::STATUS_BARU)->count(),
+                // "Baru" = belum ditandai tercatat — sama dengan filter "Baru" di halaman
+                // Pengaduan (bukan hanya status `baru`, yang tidak mencakup `dibaca` dll.).
+                'pengaduan_baru'      => Pengaduan::where('status', '!=', Pengaduan::STATUS_DRAFT)
+                                            ->whereNotIn('status', Pengaduan::TERCATAT_STATUSES)
+                                            ->count(),
                 'verif_kegiatan'      => RiwayatKegiatan::pending()->count(),
                 'verif_prestasi'      => Prestasi::pending()->count(),
                 'reward_pending'      => Prestasi::rewardDiajukan()->count(),
@@ -185,30 +193,32 @@ class DashboardAnalitikService
             $kegiatanTrendPelaksanaan = []; // berdasarkan tanggal pelaksanaan (tanggal_mulai) — dipakai GPM (2D)
             for ($i = 5; $i >= 0; $i--) {
                 $m = now()->subMonths($i);
-                $label = $m->translatedFormat('M Y');
-                $kegiatanTrend[$label] = Kegiatan::whereYear('created_at', $m->year)
+                $label = $m->locale('id')->translatedFormat('M Y');
+                // "Ditambahkan" = proker baru dibuat; salinan hasil Ajukan (rencana_id
+                // terisi) bukan kegiatan baru, jadi tidak dihitung lagi.
+                $kegiatanTrend[$label] = Kegiatan::whereNull('rencana_id')
+                    ->whereYear('created_at', $m->year)
                     ->whereMonth('created_at', $m->month)
                     ->count();
-                $kegiatanTrendPelaksanaan[$label] = Kegiatan::whereNotNull('tanggal_mulai')
+                $kegiatanTrendPelaksanaan[$label] = Kegiatan::unik()
+                    ->whereNotNull('tanggal_mulai')
                     ->whereYear('tanggal_mulai', $m->year)
                     ->whereMonth('tanggal_mulai', $m->month)
                     ->count();
             }
 
             return [
-                'kegiatan_bulan_ini'          => Kegiatan::whereYear('created_at', now()->year)
+                // Sinkron dengan popup "kegiatan" di DashboardController::modalData().
+                'kegiatan_bulan_ini'          => Kegiatan::whereNull('rencana_id')
+                                                    ->whereYear('created_at', now()->year)
                                                     ->whereMonth('created_at', now()->month)->count(),
                 'pengumuman_bulan_ini'         => Pengumuman::published()
                                                     ->whereYear('published_at', now()->year)
                                                     ->whereMonth('published_at', now()->month)->count(),
-                // Kegiatan yang sedang berlangsung hari ini (tanggal_mulai <= hari ini <= tanggal_selesai)
-                'kegiatan_berlangsung'         => Kegiatan::whereNotNull('tanggal_mulai')
-                                                    ->where('tanggal_mulai', '<=', now())
-                                                    ->where(fn ($q) => $q
-                                                        ->whereNull('tanggal_selesai')
-                                                        ->orWhere('tanggal_selesai', '>=', now())
-                                                    )
-                                                    ->count(),
+                // Kegiatan tahap Pelaksanaan yang tanggalnya mencakup hari ini
+                // (Kegiatan::scopeBerlangsungPada). Dulu kegiatan tanpa tanggal selesai,
+                // draft, dan arsip ikut terhitung "berlangsung" selamanya.
+                'kegiatan_berlangsung'         => Kegiatan::berlangsungPada()->count(),
                 'kegiatan_trend'               => $kegiatanTrend,
                 'kegiatan_trend_pelaksanaan'   => $kegiatanTrendPelaksanaan,
             ];
@@ -221,13 +231,7 @@ class DashboardAnalitikService
     public function getAdminOperationalStats(): array
     {
         return Cache::remember('mk.dashboard.admin.operasional', 120, function () {
-            $slaHari = 7;
-
-            $pengaduanPerStatus = Pengaduan::where('status', '!=', Pengaduan::STATUS_DRAFT)
-                ->selectRaw('status, count(*) as total')
-                ->groupBy('status')
-                ->pluck('total', 'status')
-                ->toArray();
+            $pengaduan = $this->statistikPengaduan();
 
             $pengaduanPerKategori = Pengaduan::where('status', '!=', Pengaduan::STATUS_DRAFT)
                 ->selectRaw('kategori, count(*) as total')
@@ -237,37 +241,30 @@ class DashboardAnalitikService
                 ->pluck('total', 'kategori')
                 ->toArray();
 
-            $totalPengaduan = array_sum($pengaduanPerStatus);
-            $pengaduanSlaLewat = Pengaduan::where('status', '!=', Pengaduan::STATUS_DRAFT)
-                ->whereNull('answered_at')
-                ->where('created_at', '<', now()->subDays($slaHari))
-                ->count();
-
-            $kegiatanStatus = Kegiatan::selectRaw('status, count(*) as total')
+            // Satu baris per kegiatan (Kegiatan::scopeUnik) — rencana yang sudah
+            // diajukan tidak dihitung lagi di samping salinannya.
+            $kegiatanStatus = Kegiatan::unik()
+                ->selectRaw('status, count(*) as total')
                 ->groupBy('status')
                 ->pluck('total', 'status')
                 ->toArray();
 
-            $targetPeserta = (int) Kegiatan::whereNotNull('target_peserta')->sum('target_peserta');
-            $realisasiPeserta = (int) Kegiatan::whereNotNull('realisasi_peserta')->sum('realisasi_peserta');
-            $anggaranRencana = (float) Kegiatan::whereNotNull('anggaran')->sum('anggaran');
-            $anggaranRealisasi = (float) Kegiatan::whereNotNull('realisasi_anggaran')->sum('realisasi_anggaran');
-
-            $alumniUserIds = Alumni::whereNotNull('user_id')->pluck('user_id')->all();
+            $realisasi = $this->realisasiRencanaVsPelaksanaan();
 
             return [
-                'sla_hari' => $slaHari,
-                'pengaduan_total' => $totalPengaduan,
-                'pengaduan_baru' => $pengaduanPerStatus[Pengaduan::STATUS_BARU] ?? 0,
-                'pengaduan_dibaca' => $pengaduanPerStatus[Pengaduan::STATUS_DIBACA] ?? 0,
-                'pengaduan_didelegasikan' => $pengaduanPerStatus[Pengaduan::STATUS_DIDELEGASIKAN] ?? 0,
-                'pengaduan_selesai' => $pengaduanPerStatus[Pengaduan::STATUS_SELESAI] ?? 0,
-                'pengaduan_belum_dibaca' => Pengaduan::where('status', Pengaduan::STATUS_BARU)->whereNull('read_at')->count(),
-                'pengaduan_sla_lewat' => $pengaduanSlaLewat,
+                // Status pengaduan mengikuti halaman Pengaduan: hanya "Baru" (dipecah
+                // belum/sudah dibaca dari read_at) dan "Tercatat". Ketiganya menjumlah ke total.
+                'sla_hari' => $pengaduan['sla_hari'],
+                'pengaduan_total' => $pengaduan['total'],
+                'pengaduan_baru' => $pengaduan['baru'],
+                'pengaduan_belum_dibaca' => $pengaduan['baru_belum_dibaca'],
+                'pengaduan_dibaca' => $pengaduan['baru_dibaca'],
+                'pengaduan_tercatat' => $pengaduan['tercatat'],
+                'pengaduan_sla_lewat' => $pengaduan['sla_lewat'],
+                'pengaduan_sla_terpenuhi' => $pengaduan['sla_terpenuhi'],
                 'pengaduan_per_kategori' => $pengaduanPerKategori,
-                'responsivitas_pengaduan' => $totalPengaduan > 0
-                    ? round((($pengaduanPerStatus[Pengaduan::STATUS_SELESAI] ?? 0) + ($pengaduanPerStatus[Pengaduan::STATUS_DIDELEGASIKAN] ?? 0)) / $totalPengaduan * 100)
-                    : 0,
+                // Definisi sama dengan Evaluasi Mutu GPM (statistikPengaduan()).
+                'responsivitas_pengaduan' => $pengaduan['responsivitas'],
 
                 'verif_riwayat_pending' => RiwayatKegiatan::pending()->count(),
                 'verif_prestasi_pending' => Prestasi::pending()->count(),
@@ -278,28 +275,28 @@ class DashboardAnalitikService
                 'forum_report_pending' => ForumReport::where('status', 'pending')->count(),
 
                 'kegiatan_draft' => $kegiatanStatus[Kegiatan::STATUS_DRAFT] ?? 0,
+                // Rencana diajukan yang salinannya sudah dihapus — tetap dihitung supaya
+                // rinciannya menjumlah ke total.
+                'kegiatan_diajukan' => $kegiatanStatus[Kegiatan::STATUS_DIAJUKAN] ?? 0,
                 'kegiatan_pelaksanaan' => $kegiatanStatus[Kegiatan::STATUS_DISETUJUI] ?? 0,
                 'kegiatan_selesai' => $kegiatanStatus[Kegiatan::STATUS_SELESAI] ?? 0,
-                'kegiatan_tanpa_dosen' => Kegiatan::doesntHave('dosenPendampings')->count(),
-                'kegiatan_selesai_belum_realisasi' => Kegiatan::where('status', Kegiatan::STATUS_SELESAI)
-                    ->where(function ($q) {
-                        $q->whereNull('realisasi_peserta')
-                            ->orWhereNull('realisasi_anggaran');
-                    })
-                    ->count(),
-                'target_peserta' => $targetPeserta,
-                'realisasi_peserta' => $realisasiPeserta,
-                'persen_realisasi_peserta' => $targetPeserta > 0 ? round($realisasiPeserta / $targetPeserta * 100) : 0,
-                'anggaran_rencana' => $anggaranRencana,
-                'anggaran_realisasi' => $anggaranRealisasi,
-                'persen_realisasi_anggaran' => $anggaranRencana > 0 ? round($anggaranRealisasi / $anggaranRencana * 100) : 0,
+                'kegiatan_tanpa_dosen' => Kegiatan::unik()->doesntHave('dosenPendampings')->count(),
+                // Kegiatan di Pelaksanaan yang datanya belum disesuaikan dengan realisasi
+                // (flag is_pelaksanaan_updated, syarat Unggah ke Arsip).
+                'kegiatan_belum_diperbarui' => $realisasi['belum_diperbarui'],
+                'realisasi_jumlah_kegiatan' => $realisasi['jumlah_kegiatan'],
+                'target_peserta' => $realisasi['peserta_rencana'],
+                'realisasi_peserta' => $realisasi['peserta_realisasi'],
+                'persen_realisasi_peserta' => $realisasi['persen_peserta'],
+                'anggaran_rencana' => $realisasi['anggaran_rencana'],
+                'anggaran_realisasi' => $realisasi['anggaran_realisasi'],
+                'persen_realisasi_anggaran' => $realisasi['persen_anggaran'],
 
                 'mahasiswa_tanpa_nim' => Kemahasiswaan::whereNull('nim')->orWhere('nim', '')->count(),
                 'mahasiswa_tanpa_angkatan' => Kemahasiswaan::whereNull('angkatan')->count(),
-                'lulusan_belum_sinkron' => Kemahasiswaan::alumni()
-                    ->whereNotNull('user_id')
-                    ->when(!empty($alumniUserIds), fn ($q) => $q->whereNotIn('user_id', $alumniUserIds))
-                    ->count(),
+                // Akun ber-role alumni yang belum punya baris direktori alumni. Dulu dari
+                // status kemahasiswaan 'alumni' yang dibekukan sejak S-53 (15 Nov 2026).
+                'lulusan_belum_sinkron' => $this->alumniBelumSinkron(),
                 'alumni_belum_terdata' => Alumni::whereNull('status_karir')->count(),
             ];
         });
@@ -370,12 +367,7 @@ class DashboardAnalitikService
 
     private function getDpmHimpunanRoleFallback(?object $periodeAktif): array
     {
-        $roleLabels = [
-            'ketua_himpunan'       => 'Ketua Himpunan',
-            'ketua_bidang'         => 'Ketua Bidang',
-            'ketua_unit'           => 'Ketua Unit',
-            'staff_himpunan'       => 'Staff Himpunan',
-        ];
+        $roleLabels = RoleHimpunan::LABEL;
 
         $roleNames = array_keys($roleLabels);
         $pengurus = User::role($roleNames)
@@ -389,7 +381,7 @@ class DashboardAnalitikService
         }
         $perJabatan = array_filter($perJabatan, fn ($total) => $total > 0);
 
-        $pengurusIntiRoles = ['ketua_himpunan', 'ketua_bidang', 'ketua_unit'];
+        $pengurusIntiRoles = ['ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'wakil_ketua_bidang', 'ketua_unit', 'wakil_ketua_unit'];
         $pengurusInti = $pengurus
             ->filter(fn ($user) => $user->hasAnyRole($pengurusIntiRoles))
             ->take(8)
@@ -419,7 +411,7 @@ class DashboardAnalitikService
             'kpi_3_label'       => 'Pengurus Inti',
             'kpi_3_value'       => $pengurus->filter(fn ($user) => $user->hasAnyRole($pengurusIntiRoles))->count(),
             'kpi_4_label'       => 'Ketua Unit/Bidang',
-            'kpi_4_value'       => $pengurus->filter(fn ($user) => $user->hasAnyRole(['ketua_unit', 'ketua_bidang']))->count(),
+            'kpi_4_value'       => $pengurus->filter(fn ($user) => $user->hasAnyRole(['ketua_unit', 'wakil_ketua_unit', 'ketua_bidang', 'wakil_ketua_bidang']))->count(),
             'composition_label' => 'Komposisi Pengurus per Jabatan',
             'per_divisi'        => $perJabatan,
             'pengurus_inti'     => $pengurusInti,
@@ -432,13 +424,18 @@ class DashboardAnalitikService
     public function getDpmProkerStats(): array
     {
         return Cache::remember('mk.dashboard.dpm.proker', 120, function () {
-            $statusCounts = Kegiatan::selectRaw('status, count(*) as total')
+            // Satu baris per proker (Kegiatan::scopeUnik).
+            $statusCounts = Kegiatan::unik()
+                ->selectRaw('status, count(*) as total')
                 ->groupBy('status')
                 ->pluck('total', 'status')
                 ->toArray();
 
+            // Pivot bidang/kategori ikut tersalin saat Ajukan, jadi baris rencana yang
+            // sudah punya salinan dibuang di sini juga.
             $perBidang = DB::table('mk_kegiatan_bidang as kb')
                 ->join('mk_bidang as b', 'kb.bidang_id', '=', 'b.id')
+                ->tap(fn ($q) => $this->hanyaKegiatanUnik($q, 'kb.kegiatan_id'))
                 ->selectRaw('b.nama_bidang, count(*) as total')
                 ->groupBy('b.nama_bidang')
                 ->orderByDesc('total')
@@ -447,6 +444,7 @@ class DashboardAnalitikService
 
             $perKategori = DB::table('mk_kegiatan_kategori as kk')
                 ->join('mk_kategori_kegiatan as kat', 'kk.kategori_kegiatan_id', '=', 'kat.id')
+                ->tap(fn ($q) => $this->hanyaKegiatanUnik($q, 'kk.kegiatan_id'))
                 ->selectRaw('kat.nama_kategori, count(*) as total')
                 ->groupBy('kat.nama_kategori')
                 ->orderByDesc('total')
@@ -456,9 +454,11 @@ class DashboardAnalitikService
             return [
                 'total'             => array_sum($statusCounts),
                 'total_draft'       => $statusCounts[Kegiatan::STATUS_DRAFT] ?? 0,
+                'total_diajukan'    => $statusCounts[Kegiatan::STATUS_DIAJUKAN] ?? 0,
                 'total_pelaksanaan' => $statusCounts[Kegiatan::STATUS_DISETUJUI] ?? 0,
                 'total_selesai'     => $statusCounts[Kegiatan::STATUS_SELESAI] ?? 0,
-                'tahun_ini'         => Kegiatan::whereYear('created_at', now()->year)->count(),
+                // Proker baru yang dibuat tahun ini — salinan hasil Ajukan tidak dihitung.
+                'tahun_ini'         => Kegiatan::whereNull('rencana_id')->whereYear('created_at', now()->year)->count(),
                 'per_bidang'        => $perBidang,
                 'per_kategori'      => $perKategori,
                 'proker_terbaru'    => Kegiatan::perencanaan()
@@ -476,32 +476,28 @@ class DashboardAnalitikService
     public function getDpmPelaksanaanStats(): array
     {
         return Cache::remember('mk.dashboard.dpm.pelaksanaan', 120, function () {
-            $targetPeserta = (int) Kegiatan::whereNotNull('target_peserta')->sum('target_peserta');
-            $realisasiPeserta = (int) Kegiatan::whereNotNull('realisasi_peserta')->sum('realisasi_peserta');
-            $anggaranRencana = (float) Kegiatan::whereNotNull('anggaran')->sum('anggaran');
-            $anggaranRealisasi = (float) Kegiatan::whereNotNull('realisasi_anggaran')->sum('realisasi_anggaran');
+            $realisasi = $this->realisasiRencanaVsPelaksanaan();
 
             return [
                 'total_pelaksanaan'      => Kegiatan::pelaksanaan()->count(),
                 'total_selesai'          => Kegiatan::selesai()->count(),
-                'bulan_ini'              => Kegiatan::whereYear('tanggal_mulai', now()->year)
+                // Kegiatan yang dimulai bulan ini — tiap kegiatan sekali (Kegiatan::scopeUnik).
+                'bulan_ini'              => Kegiatan::unik()
+                                                ->whereYear('tanggal_mulai', now()->year)
                                                 ->whereMonth('tanggal_mulai', now()->month)
                                                 ->count(),
-                'berlangsung_hari_ini'   => Kegiatan::whereNotNull('tanggal_mulai')
-                                                ->where('tanggal_mulai', '<=', now())
-                                                ->where(fn ($q) => $q->whereNull('tanggal_selesai')->orWhere('tanggal_selesai', '>=', now()))
-                                                ->count(),
-                'belum_realisasi'        => Kegiatan::pelaksanaan()
-                                                ->whereNull('realisasi_tanggal_mulai')
-                                                ->whereNull('catatan_pelaksanaan')
-                                                ->count(),
-                'tanpa_dosen_pendamping' => Kegiatan::doesntHave('dosenPendampings')->count(),
-                'target_peserta'         => $targetPeserta,
-                'realisasi_peserta'      => $realisasiPeserta,
-                'rate_peserta'           => $targetPeserta > 0 ? round($realisasiPeserta / $targetPeserta * 100) : 0,
-                'anggaran_rencana'       => $anggaranRencana,
-                'anggaran_realisasi'     => $anggaranRealisasi,
-                'rate_anggaran'          => $anggaranRencana > 0 ? round($anggaranRealisasi / $anggaranRencana * 100) : 0,
+                'berlangsung_hari_ini'   => Kegiatan::berlangsungPada()->count(),
+                // Di Pelaksanaan tapi datanya belum disesuaikan dengan realisasi
+                // (is_pelaksanaan_updated). Kolom realisasi_* lama tidak pernah diisi form.
+                'belum_realisasi'        => $realisasi['belum_diperbarui'],
+                'tanpa_dosen_pendamping' => Kegiatan::unik()->doesntHave('dosenPendampings')->count(),
+                'realisasi_jumlah_kegiatan' => $realisasi['jumlah_kegiatan'],
+                'target_peserta'         => $realisasi['peserta_rencana'],
+                'realisasi_peserta'      => $realisasi['peserta_realisasi'],
+                'rate_peserta'           => $realisasi['persen_peserta'],
+                'anggaran_rencana'       => $realisasi['anggaran_rencana'],
+                'anggaran_realisasi'     => $realisasi['anggaran_realisasi'],
+                'rate_anggaran'          => $realisasi['persen_anggaran'],
                 'pelaksanaan_mendatang'  => Kegiatan::pelaksanaan()
                                                 ->with(['bidangs', 'kategoris', 'ketuaPelaksana.user', 'dosenPendampings.user'])
                                                 ->whereNotNull('tanggal_mulai')
@@ -613,52 +609,15 @@ class DashboardAnalitikService
     }
 
     /**
-     * TIER 3 - Data Mahasiswa (cache 120 detik).
-     * Berubah saat admin update status mahasiswa atau data baru masuk, biasanya mingguan.
+     * TIER 3 - Data Mahasiswa & Prestasi (cache 120 detik).
+     *
+     * Hitungan per status kemahasiswaan (aktif/cuti/DO/...) dan grafik per angkatan
+     * dihapus (15 Nov 2026): statusnya dibekukan sejak S-53 dan kartunya sudah
+     * dicabut dari dashboard. "Mahasiswa aktif" kini dari role (queryMahasiswaAktif()).
      */
     public function getMahasiswaStats(): array
     {
         return Cache::remember('mk.dashboard.tier3', 120, function () {
-            $statusCounts = Kemahasiswaan::selectRaw('status, count(*) as total')
-                ->groupBy('status')
-                ->pluck('total', 'status')
-                ->toArray();
-
-            // Semua angkatan yang ada (sebagai sumbu X)
-            $angkatanList = Kemahasiswaan::whereNotNull('angkatan')
-                ->selectRaw('DISTINCT angkatan')
-                ->orderBy('angkatan')
-                ->pluck('angkatan')
-                ->toArray();
-
-            // Count per status per angkatan — untuk multi-line chart
-            $rawPerStatusAngkatan = Kemahasiswaan::selectRaw('status, angkatan, count(*) as total')
-                ->whereNotNull('angkatan')
-                ->groupBy('status', 'angkatan')
-                ->get()
-                ->groupBy('status');
-
-            // Bangun struktur: ['aktif' => [2020=>5, 2021=>8, ...], 'alumni' => [...], ...]
-            // Angkatan yang tidak ada datanya diisi 0
-            $perAngkatanByStatus = [];
-            $statusKeys = [
-                Kemahasiswaan::STATUS_AKTIF,
-                Kemahasiswaan::STATUS_ALUMNI,
-                Kemahasiswaan::STATUS_CUTI,
-                Kemahasiswaan::STATUS_DO,
-                Kemahasiswaan::STATUS_PINDAH_STUDI,
-                Kemahasiswaan::STATUS_WAFAT,
-                Kemahasiswaan::STATUS_MANGKIR,
-            ];
-            foreach ($statusKeys as $status) {
-                $rows = $rawPerStatusAngkatan->get($status, collect());
-                $byAngkatan = $rows->pluck('total', 'angkatan')->toArray();
-                $perAngkatanByStatus[$status] = array_map(
-                    fn ($a) => (int) ($byAngkatan[$a] ?? 0),
-                    $angkatanList
-                );
-            }
-
             $prestasiPerTingkat = Prestasi::approved()
                 ->selectRaw('tingkat, count(*) as total')
                 ->groupBy('tingkat')
@@ -666,15 +625,7 @@ class DashboardAnalitikService
                 ->toArray();
 
             return [
-                'total_aktif'          => $statusCounts[Kemahasiswaan::STATUS_AKTIF] ?? 0,
-                'total_cuti'           => $statusCounts[Kemahasiswaan::STATUS_CUTI] ?? 0,
-                'total_do'             => $statusCounts[Kemahasiswaan::STATUS_DO] ?? 0,
-                'total_pindah'         => $statusCounts[Kemahasiswaan::STATUS_PINDAH_STUDI] ?? 0,
-                'total_alumni_status'  => $statusCounts[Kemahasiswaan::STATUS_ALUMNI] ?? 0,
-                'total_wafat'          => $statusCounts[Kemahasiswaan::STATUS_WAFAT] ?? 0,
-                'total_mangkir'        => $statusCounts[Kemahasiswaan::STATUS_MANGKIR] ?? 0,
-                'angkatan_list'              => $angkatanList,
-                'per_angkatan_by_status'     => $perAngkatanByStatus,
+                'total_aktif'          => $this->queryMahasiswaAktif()->count(),
                 'prestasi_per_tingkat' => $prestasiPerTingkat,
                 'total_prestasi'       => array_sum($prestasiPerTingkat),
                 // Counter prestasi menunggu review (FASE 2B) — tersedia lintas scope
@@ -685,9 +636,16 @@ class DashboardAnalitikService
                                             ->orderByDesc('verified_at')
                                             ->limit(5)
                                             ->get(),
-                'mahasiswa_terbaru'    => Kemahasiswaan::aktif()->with('user')
-                                            ->whereNotNull('angkatan')
-                                            ->orderByDesc('created_at')->limit(8)->get(),
+                // Bentuknya dipertahankan (nama, nim, angkatan, user) untuk tabel
+                // "Mahasiswa Aktif Terbaru" di view.
+                'mahasiswa_terbaru'    => $this->queryMahasiswaAktif()->with('user')
+                                            ->orderByDesc('created_at')->limit(8)->get()
+                                            ->map(fn (Student $s) => (object) [
+                                                'nama'     => $s->user?->name,
+                                                'nim'      => $s->student_number,
+                                                'angkatan' => $s->cohort_year,
+                                                'user'     => $s->user,
+                                            ]),
             ];
         });
     }
@@ -724,18 +682,24 @@ class DashboardAnalitikService
 
     /**
      * METRIK EVALUASI MUTU — untuk GPM & Ketua Departemen (cache 300 detik).
-     * Mengukur kualitas penyelenggaraan prodi: kelulusan, masa studi, DO rate,
+     * Mengukur kualitas penyelenggaraan prodi: kelulusan, masa studi,
      * waktu tunggu kerja, dan responsivitas layanan pengaduan.
      */
     public function getEvaluasiMutu(): array
     {
         return Cache::remember('mk.dashboard.evaluasi', 300, function () {
-            // Distribusi status per angkatan untuk hitung kelulusan & DO rate
-            $perAngkatan = Kemahasiswaan::selectRaw('angkatan, status, count(*) as total')
-                ->whereNotNull('angkatan')
-                ->groupBy('angkatan', 'status')
-                ->get()
-                ->groupBy('angkatan');
+            // Kelulusan per angkatan dari sumber yang masih diperbarui (15 Nov 2026):
+            // seluruh mahasiswa angkatan itu = akun ber-role mahasiswa/alumni yang punya
+            // data angkatan (students.cohort_year); lulus = sudah alumni (role alumni /
+            // mk_alumni). Dulu dari status kemahasiswaan yang dibekukan sejak S-53. Drop
+            // Out tidak lagi dihitung: tidak ada sumber status DO selain data beku itu
+            // (status resmi di SIAP Undip).
+            $idAlumni = $this->idUserAlumni();
+            $mahasiswaPerAngkatan = Student::query()
+                ->whereNotNull('cohort_year')
+                ->whereHas('user', fn ($u) => $u->whereHas('roles', fn ($r) => $r->whereIn('name', ['mahasiswa', 'alumni'])))
+                ->get(['user_id', 'cohort_year'])
+                ->groupBy('cohort_year');
 
             // Masa studi normal prodi = 4 tahun. Angkatan yang belum mencapai
             // usia 4 tahun belum jatuh tempo kelulusan, jadi % kelulusan 0%
@@ -744,22 +708,17 @@ class DashboardAnalitikService
             $masaStudiNormal = 4;
 
             $kelulusan = [];
-            foreach ($perAngkatan as $angkatan => $rows) {
-                $byStatus = $rows->pluck('total', 'status');
-                $total    = $rows->sum('total');
-                $lulus    = (int) ($byStatus[Kemahasiswaan::STATUS_ALUMNI] ?? 0);
-                $do       = (int) ($byStatus[Kemahasiswaan::STATUS_DO] ?? 0);
+            foreach ($mahasiswaPerAngkatan as $angkatan => $rows) {
+                $total = $rows->count();
+                $lulus = $rows->filter(fn ($s) => $idAlumni->contains((int) $s->user_id))->count();
                 // Kohort dianggap jatuh tempo bila usianya >= masa studi normal
                 $jatuhTempo = ($currentYear - (int) $angkatan) >= $masaStudiNormal;
                 $kelulusan[$angkatan] = [
                     'total'        => $total,
                     'lulus'        => $lulus,
-                    'do'           => $do,
                     'jatuh_tempo'  => $jatuhTempo,
                     // Rate kelulusan hanya bermakna untuk kohort yang sudah jatuh tempo
                     'rate_lulus'   => ($jatuhTempo && $total > 0) ? round($lulus / $total * 100, 1) : 0,
-                    // DO bisa terjadi kapan saja — selalu dihitung
-                    'rate_do'      => $total > 0 ? round($do / $total * 100, 1) : 0,
                 ];
             }
             ksort($kelulusan);
@@ -778,18 +737,14 @@ class DashboardAnalitikService
             $sampleWaktuTunggu = (clone $waktuTungguQuery)->count();
             $rataWaktuTunggu   = (float) (clone $waktuTungguQuery)->avg(DB::raw('tahun_mulai_bekerja - tahun_lulus'));
 
-            // Responsivitas layanan pengaduan — berbasis SLA (FASE 3C):
-            // % pengaduan (non-draft) yang DIJAWAB dalam ≤ 7 hari sejak dibuat.
-            $slaHari = 7;
-            $totalPengaduan = Pengaduan::where('status', '!=', Pengaduan::STATUS_DRAFT)->count();
-            $pengaduanSlaTerpenuhi = Pengaduan::where('status', '!=', Pengaduan::STATUS_DRAFT)
-                ->whereNotNull('answered_at')
-                ->whereRaw("answered_at <= created_at + interval '{$slaHari} days'")
-                ->count();
-            $pengaduanDitangani = Pengaduan::whereIn('status', [
-                Pengaduan::STATUS_DIDELEGASIKAN,
-                Pengaduan::STATUS_SELESAI,
-            ])->count();
+            // Responsivitas layanan pengaduan — berbasis SLA (FASE 3C): % pengaduan
+            // (non-draft) yang ditangani pertama kali dalam ≤ 7 hari sejak dibuat.
+            // Lihat statistikPengaduan() — dulu memakai answered_at, yang tidak diisi lagi
+            // sejak fitur jawab dihapus (pengaduan kini satu arah: Baru → Tercatat).
+            $statPengaduan = $this->statistikPengaduan();
+            $slaHari = $statPengaduan['sla_hari'];
+            $totalPengaduan = $statPengaduan['total'];
+            $pengaduanSlaTerpenuhi = $statPengaduan['sla_terpenuhi'];
 
             // Serapan kerja keseluruhan (bekerja + wirausaha dari yang terdata)
             $totalAlumni  = Alumni::count();
@@ -804,27 +759,30 @@ class DashboardAnalitikService
 
             // Nilai metrik yang dibandingkan dengan target mutu
             $serapanKerja = $totalTerdata > 0 ? round($totalBekerja / $totalTerdata * 100) : 0;
-            $responsivitas = $totalPengaduan > 0 ? round($pengaduanSlaTerpenuhi / $totalPengaduan * 100) : 0;
+            $responsivitas = $statPengaduan['responsivitas'];
 
             // ── Evaluasi Kegiatan Kemahasiswaan (bahan evaluasi GPM/Kadep) ──
             // Distribusi kegiatan per kategori — untuk menilai relevansi kurikulum
             $kegiatanPerKategori = DB::table('mk_kegiatan_kategori as kk')
                 ->join('mk_kategori_kegiatan as kat', 'kk.kategori_kegiatan_id', '=', 'kat.id')
+                ->tap(fn ($q) => $this->hanyaKegiatanUnik($q, 'kk.kegiatan_id'))
                 ->selectRaw('kat.nama_kategori, count(*) as total')
                 ->groupBy('kat.nama_kategori')
                 ->orderByDesc('total')
                 ->pluck('total', 'kat.nama_kategori')
                 ->toArray();
 
-            // Tingkat realisasi kegiatan — % kegiatan yang sudah terlaksana (selesai)
-            $totalKegiatan   = Kegiatan::count();
-            $kegiatanSelesai = Kegiatan::where('status', Kegiatan::STATUS_SELESAI)->count();
-            $kegiatanBerjalan = Kegiatan::where('status', Kegiatan::STATUS_DISETUJUI)->count();
-            $kegiatanTahunIni = Kegiatan::whereYear('created_at', now()->year)->count();
+            // Tingkat realisasi kegiatan — % kegiatan yang sudah terlaksana (selesai).
+            // Dihitung per kegiatan (Kegiatan::scopeUnik): dulu baris rencana + salinannya
+            // terhitung dua, sehingga penyebutnya membengkak dan persentasenya turun.
+            $totalKegiatan   = Kegiatan::unik()->count();
+            $kegiatanSelesai = Kegiatan::unik()->where('status', Kegiatan::STATUS_SELESAI)->count();
+            $kegiatanBerjalan = Kegiatan::unik()->where('status', Kegiatan::STATUS_DISETUJUI)->count();
+            $kegiatanTahunIni = Kegiatan::whereNull('rencana_id')->whereYear('created_at', now()->year)->count();
 
             // Breakdown SEMUA status kegiatan (FASE 3D) — agar jumlah konsisten dgn total.
             // Termasuk status legacy bila masih ada di data lama.
-            $kegiatanPerStatus = Kegiatan::selectRaw('status, count(*) as total')
+            $kegiatanPerStatus = Kegiatan::unik()->selectRaw('status, count(*) as total')
                 ->groupBy('status')
                 ->pluck('total', 'status')
                 ->toArray();
@@ -872,6 +830,173 @@ class DashboardAnalitikService
     }
 
     /**
+     * Mahasiswa aktif menurut sumber yang masih diperbarui: akun ber-role `mahasiswa`,
+     * bukan alumni (role `alumni` / baris mk_alumni), dan punya data angkatan
+     * (students.cohort_year). Pengganti Kemahasiswaan::aktif() yang statusnya
+     * dibekukan sejak S-53 (status resmi kini di SIAP Undip). Dipakai juga oleh
+     * popup DashboardController::modalData() supaya angka kartu & popup sama.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder<Student>
+     */
+    public function queryMahasiswaAktif()
+    {
+        return Student::query()
+            ->whereNotNull('cohort_year')
+            ->whereHas('user', fn ($u) => $u
+                ->whereHas('roles', fn ($r) => $r->where('name', 'mahasiswa'))
+                ->whereDoesntHave('roles', fn ($r) => $r->where('name', 'alumni')))
+            ->whereNotIn('user_id', Alumni::whereNotNull('user_id')->select('user_id'));
+    }
+
+    /**
+     * ID user yang sudah lulus: ber-role `alumni` atau tercatat di mk_alumni.
+     *
+     * @return \Illuminate\Support\Collection<int, int>
+     */
+    private function idUserAlumni()
+    {
+        return User::role('alumni')->pluck('id')
+            ->merge(Alumni::whereNotNull('user_id')->pluck('user_id'))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+    }
+
+    /** Akun ber-role alumni yang belum punya baris di direktori alumni (mk_alumni). */
+    private function alumniBelumSinkron(): int
+    {
+        return User::role('alumni')
+            ->whereNotIn('id', Alumni::whereNotNull('user_id')->select('user_id'))
+            ->count();
+    }
+
+    /** Aksi pengelola di mk_pengaduan_log yang dihitung sebagai penanganan pengaduan. */
+    private const AKSI_PENANGANAN_PENGADUAN = [
+        PengaduanLog::ACTION_TERCATAT,
+        PengaduanLog::ACTION_DIDELEGASIKAN,
+        PengaduanLog::ACTION_DITANGGAPI_DOSEN,
+        PengaduanLog::ACTION_DIJAWAB,
+        PengaduanLog::ACTION_DITUTUP_ADMIN,
+    ];
+
+    /**
+     * Statistik layanan pengaduan dengan definisi yang sama dengan halaman Pengaduan.
+     *
+     * Status tampilan pengaduan kini hanya dua: "Tercatat" (Pengaduan::TERCATAT_STATUSES)
+     * dan "Baru" (selain itu) — "sudah dibaca" diambil dari read_at. Waktu penanganan
+     * pertama diambil dari log aksi pengelola (AKSI_PENANGANAN_PENGADUAN), dengan
+     * answered_at sebagai cadangan untuk data alur lama. answered_at sendiri tidak
+     * diisi lagi sejak fitur jawab dihapus.
+     *
+     *  - sla_lewat     : masih "Baru" dan sudah lebih dari SLA hari sejak dibuat.
+     *  - sla_terpenuhi : ditangani pertama kali ≤ SLA hari sejak dibuat.
+     *  - responsivitas : sla_terpenuhi / total (%), dipakai admin & GPM.
+     *
+     * @return array{sla_hari:int, total:int, baru:int, baru_belum_dibaca:int, baru_dibaca:int,
+     *               tercatat:int, sla_lewat:int, sla_terpenuhi:int, responsivitas:int|float}
+     */
+    private function statistikPengaduan(): array
+    {
+        $slaHari = 7;
+
+        $daftar = Pengaduan::where('status', '!=', Pengaduan::STATUS_DRAFT)
+            ->get(['id', 'status', 'read_at', 'answered_at', 'created_at']);
+
+        $penangananPertama = PengaduanLog::whereIn('pengaduan_id', $daftar->pluck('id'))
+            ->whereIn('action', self::AKSI_PENANGANAN_PENGADUAN)
+            ->selectRaw('pengaduan_id, MIN(created_at) as pertama')
+            ->groupBy('pengaduan_id')
+            ->pluck('pertama', 'pengaduan_id');
+
+        $tercatat = $daftar->filter(fn ($p) => $p->isTercatat());
+        $baru     = $daftar->reject(fn ($p) => $p->isTercatat());
+
+        $slaTerpenuhi = $daftar->filter(function ($p) use ($penangananPertama, $slaHari) {
+            $pertama = $penangananPertama->get($p->id) ?? $p->answered_at;
+
+            return $pertama && Carbon::parse($pertama)->lte($p->created_at->copy()->addDays($slaHari));
+        })->count();
+
+        return [
+            'sla_hari'          => $slaHari,
+            'total'             => $daftar->count(),
+            'baru'              => $baru->count(),
+            'baru_belum_dibaca' => $baru->whereNull('read_at')->count(),
+            'baru_dibaca'       => $baru->whereNotNull('read_at')->count(),
+            'tercatat'          => $tercatat->count(),
+            'sla_lewat'         => $baru->filter(fn ($p) => $p->created_at->lt(now()->subDays($slaHari)))->count(),
+            'sla_terpenuhi'     => $slaTerpenuhi,
+            'responsivitas'     => $daftar->isNotEmpty() ? round($slaTerpenuhi / $daftar->count() * 100) : 0,
+        ];
+    }
+
+    /**
+     * Batasi query pivot kegiatan (bidang/kategori) ke satu baris per kegiatan —
+     * padanan Kegiatan::scopeUnik untuk query builder: buang baris rencana yang
+     * sudah punya salinan (pivotnya ikut tersalin saat Ajukan Proker).
+     */
+    private function hanyaKegiatanUnik($query, string $kolomKegiatanId): void
+    {
+        $query->whereNotExists(fn ($sub) => $sub
+            ->from('mk_kegiatan as salinan')
+            ->whereColumn('salinan.rencana_id', $kolomKegiatanId));
+    }
+
+    /**
+     * Rencana vs realisasi kegiatan.
+     *
+     * Sejak S-49 rencana disalin ke Pelaksanaan saat diajukan, lalu isian salinan
+     * diubah sesuai realisasi (peserta, anggaran) — jadi baris RENCANA = rencana,
+     * baris SALINAN = realisasi. Dihitung hanya untuk kegiatan yang realisasinya
+     * sudah dicatat: sudah diperbarui di Pelaksanaan (is_pelaksanaan_updated) atau
+     * sudah diunggah ke Arsip. Kolom lama realisasi_* tidak pernah diisi form mana
+     * pun, jadi tidak dipakai.
+     *
+     * @return array{jumlah_kegiatan:int, peserta_rencana:int, peserta_realisasi:int, persen_peserta:int|float,
+     *               anggaran_rencana:float, anggaran_realisasi:float, persen_anggaran:int|float, belum_diperbarui:int}
+     */
+    private function realisasiRencanaVsPelaksanaan(): array
+    {
+        $pasangan = DB::table('mk_kegiatan as realisasi')
+            ->join('mk_kegiatan as rencana', 'rencana.id', '=', 'realisasi.rencana_id')
+            ->where(fn ($q) => $q
+                ->where('realisasi.status', Kegiatan::STATUS_SELESAI)
+                ->orWhere(fn ($p) => $p
+                    ->where('realisasi.status', Kegiatan::STATUS_DISETUJUI)
+                    ->where('realisasi.is_pelaksanaan_updated', true)));
+
+        $peserta = (clone $pasangan)
+            ->whereNotNull('rencana.target_peserta')
+            ->whereNotNull('realisasi.target_peserta')
+            ->selectRaw('COALESCE(SUM(rencana.target_peserta), 0) as rencana, COALESCE(SUM(realisasi.target_peserta), 0) as realisasi')
+            ->first();
+
+        $anggaran = (clone $pasangan)
+            ->whereNotNull('rencana.anggaran')
+            ->whereNotNull('realisasi.anggaran')
+            ->selectRaw('COALESCE(SUM(rencana.anggaran), 0) as rencana, COALESCE(SUM(realisasi.anggaran), 0) as realisasi')
+            ->first();
+
+        $pesertaRencana    = (int) $peserta->rencana;
+        $pesertaRealisasi  = (int) $peserta->realisasi;
+        $anggaranRencana   = (float) $anggaran->rencana;
+        $anggaranRealisasi = (float) $anggaran->realisasi;
+
+        return [
+            'jumlah_kegiatan'    => (clone $pasangan)->count(),
+            'peserta_rencana'    => $pesertaRencana,
+            'peserta_realisasi'  => $pesertaRealisasi,
+            'persen_peserta'     => $pesertaRencana > 0 ? round($pesertaRealisasi / $pesertaRencana * 100) : 0,
+            'anggaran_rencana'   => $anggaranRencana,
+            'anggaran_realisasi' => $anggaranRealisasi,
+            'persen_anggaran'    => $anggaranRencana > 0 ? round($anggaranRealisasi / $anggaranRencana * 100) : 0,
+            'belum_diperbarui'   => Kegiatan::pelaksanaan()
+                ->where(fn ($q) => $q->where('is_pelaksanaan_updated', false)->orWhereNull('is_pelaksanaan_updated'))
+                ->count(),
+        ];
+    }
+
+    /**
      * Evaluasi sebuah nilai metrik terhadap target mutu di config/quality_targets.
      *
      * @param  string      $metricKey  Kunci metrik (mis. 'masa_studi').
@@ -904,91 +1029,95 @@ class DashboardAnalitikService
     }
 
     /**
+     * Ambang angkatan deteksi dini DO. Mahasiswa masuk Agustus, 1 tahun = 2 semester:
+     * angkatan ≤ `pantau` sudah semester ≥ 9, angkatan ≤ `kritis` sudah semester ≥ 12.
+     *
+     * @return array{pantau:int, kritis:int}
+     */
+    public function ambangCalonDO(): array
+    {
+        $tahun = now()->year;
+
+        return [
+            'pantau' => $tahun - (now()->month >= 8 ? 4 : 5),
+            'kritis' => $tahun - 6,
+        ];
+    }
+
+    /** Estimasi semester berjalan sebuah angkatan (semester ganjil mulai Agustus). */
+    public function semesterAngkatan(int $angkatan): int
+    {
+        $tahunBerlalu = now()->year - $angkatan;
+
+        return now()->month >= 8 ? ($tahunBerlalu * 2 + 1) : ($tahunBerlalu * 2);
+    }
+
+    /**
      * EVALUASI CALON DO — deteksi dini bertingkat (FASE 3B).
-     * Mahasiswa masuk Agustus, 1 tahun = 2 semester.
      *  - "Perlu Pemantauan": mahasiswa aktif semester ≥ 9
      *  - "Kritis": mahasiswa aktif semester ≥ 12
+     *
+     * "Mahasiswa aktif" dari queryMahasiswaAktif() (role mahasiswa, bukan alumni) —
+     * dulu dari status kemahasiswaan yang dibekukan sejak S-53, sehingga mahasiswa yang
+     * sudah lulus/keluar ikut terhitung. Semester tetap perkiraan dari angkatan.
      */
     public function getCalonDO(): array
     {
         return Cache::remember('mk.dashboard.calon_do', 300, function () {
-            $currentYear  = now()->year;
-            $currentMonth = now()->month;
+            $ambang = $this->ambangCalonDO();
 
-            // Estimasi semester berjalan dari angkatan (ganjil mulai Agustus)
-            $semFor = function (int $angkatan) use ($currentYear, $currentMonth) {
-                $y = $currentYear - $angkatan;
-                return $currentMonth >= 8 ? ($y * 2 + 1) : ($y * 2);
-            };
+            $kandidat = $this->queryMahasiswaAktif()
+                ->where('cohort_year', '<=', $ambang['pantau'])
+                ->with('user:id,name')
+                ->get(['id', 'user_id', 'student_number', 'cohort_year'])
+                // angkatan terlama (paling kritis) dahulu, lalu nama
+                ->sortBy(fn (Student $s) => sprintf('%04d|%s', $s->cohort_year, mb_strtolower((string) $s->user?->name)))
+                ->values();
 
-            // Tahun berlalu minimal agar semester mencapai ambang
-            $yPantau = $currentMonth >= 8 ? 4 : 5; // semester ≥ 9
-            $yKritis = 6;                          // semester ≥ 12
-            $thresholdPantau = $currentYear - $yPantau; // angkatan ≤ ini → semester ≥ 9
-            $thresholdKritis = $currentYear - $yKritis; // angkatan ≤ ini → semester ≥ 12
+            $kritisCount = $kandidat->where('cohort_year', '<=', $ambang['kritis'])->count();
 
-            $base = Kemahasiswaan::aktif()
-                ->whereNotNull('angkatan')
-                ->where('angkatan', '<=', $thresholdPantau);
+            $list = $kandidat->take(12)->map(function (Student $s) {
+                $semester = $this->semesterAngkatan((int) $s->cohort_year);
 
-            $totalCount  = (clone $base)->count();
-            $kritisCount = (clone $base)->where('angkatan', '<=', $thresholdKritis)->count();
-            $pantauCount = max(0, $totalCount - $kritisCount);
-
-            $list = (clone $base)
-                ->with('user:id,email')
-                ->orderBy('angkatan')   // angkatan terlama (paling kritis) dahulu
-                ->orderBy('nama')
-                ->limit(12)
-                ->get()
-                ->map(function ($m) use ($semFor) {
-                    $semester = $semFor((int) $m->angkatan);
-                    return [
-                        'nama'     => $m->nama ?? $m->user?->name ?? '-',
-                        'nim'      => $m->nim ?? '-',
-                        'angkatan' => (int) $m->angkatan,
-                        'semester' => $semester,
-                        'tier'     => $semester >= 12 ? 'kritis' : 'pantau',
-                    ];
-                });
+                return [
+                    'nama'     => $s->user?->name ?? '-',
+                    'nim'      => $s->student_number ?? '-',
+                    'angkatan' => (int) $s->cohort_year,
+                    'semester' => $semester,
+                    'tier'     => $semester >= 12 ? 'kritis' : 'pantau',
+                ];
+            });
 
             return [
-                'total_count'      => $totalCount,
+                'total_count'      => $kandidat->count(),
                 'kritis_count'     => $kritisCount,
-                'pantau_count'     => $pantauCount,
-                'threshold_pantau' => $thresholdPantau,
-                'threshold_kritis' => $thresholdKritis,
+                'pantau_count'     => $kandidat->count() - $kritisCount,
+                'threshold_pantau' => $ambang['pantau'],
+                'threshold_kritis' => $ambang['kritis'],
                 'list'             => $list,
             ];
         });
     }
 
     /**
-     * LULUSAN PER PERIODE — pantau kelulusan & sinkronisasi ke direktori alumni.
-     * Menampilkan jumlah lulusan per tahun + deteksi mahasiswa berstatus alumni
-     * yang belum punya record di tabel mk_alumni (belum tersinkron).
+     * LULUSAN PER PERIODE — jumlah lulusan per tahun lulus dari direktori alumni
+     * (mk_alumni), plus akun ber-role alumni yang belum punya baris direktori.
+     * Dulu dari status kemahasiswaan 'alumni' yang dibekukan sejak S-53.
      */
     public function getLulusanPerPeriode(): array
     {
         return Cache::remember('mk.dashboard.lulusan', 300, function () {
-            $perTahun = Kemahasiswaan::alumni()
-                ->whereNotNull('tahun_lulus')
+            $perTahun = Alumni::whereNotNull('tahun_lulus')
                 ->selectRaw('tahun_lulus, count(*) as total')
                 ->groupBy('tahun_lulus')
                 ->orderBy('tahun_lulus')
                 ->pluck('total', 'tahun_lulus')
                 ->toArray();
 
-            // Mahasiswa berstatus alumni yang belum tersinkron ke mk_alumni
-            $belumSinkron  = Kemahasiswaan::alumni()
-                ->whereNotNull('user_id')
-                ->whereNotIn('user_id', Alumni::select('user_id')->whereNotNull('user_id'))
-                ->count();
-
             return [
                 'per_tahun'        => $perTahun,
                 'total_lulus'      => array_sum($perTahun),
-                'belum_sinkron'    => $belumSinkron,
+                'belum_sinkron'    => $this->alumniBelumSinkron(),
                 'total_alumni'     => Alumni::count(),
             ];
         });

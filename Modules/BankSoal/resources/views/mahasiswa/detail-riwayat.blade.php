@@ -1,4 +1,4 @@
-<x-banksoal::layouts.mahasiswa>
+<x-banksoal::layouts.mahasiswa kompre-font>
     @section('breadcrumbs')
         <a href="{{ route('komprehensif.mahasiswa.riwayat') }}"
             class="text-slate-500 hover:text-primary transition-colors">Riwayat Ujian</a>
@@ -125,10 +125,10 @@
     </style>
 
     @php
-        $totalSoal = $session->jawabans->count();
-        $benar = $session->jawabans->filter(fn($j) => $j->opsiTerpilih && $j->opsiTerpilih->is_benar)->count();
-        $salah = $session->jawabans->filter(fn($j) => $j->jawaban_dipilih && (!$j->opsiTerpilih || !$j->opsiTerpilih->is_benar))->count();
-        $tidakDijawab = $totalSoal - ($benar + $salah);
+        $totalSoal = (int) $cplStats->sum('total');
+        $benar = (int) $cplStats->sum('benar');
+        $salah = (int) $cplStats->sum('salah');
+        $tidakDijawab = (int) $cplStats->sum('kosong');
         $skor = (int) ($session->score ?? 0);
         $lulus = (bool) ($session->lulus ?? false);
         $pct = min(100, $skor);
@@ -235,15 +235,15 @@
                         style="min-width: 0; background:#fff; border:1px solid var(--c-border); border-radius:14px; box-shadow:var(--shadow-card); overflow:hidden;">
                         <div style="padding:16px 20px 14px; border-bottom:1px solid var(--c-border);">
                             <h3 style="font-size:13px; font-weight:700; color:var(--c-fg); margin-bottom:0;">Nilai per CPL</h3>
-                            <p style="font-size:11px; color:var(--c-fg-muted); margin-top:2px;">
-                                @if($isImport)
-                                    Data historis — ambang CPL 6.0/10 hanya informasi.
-                                @elseif($passingRule === 'total_min')
-                                    Lulus jika nilai total minimal {{ (int) $totalMinScore }} — nilai CPL hanya informasi.
-                                @else
-                                    Ambang lulus per CPL: {{ rtrim(rtrim(number_format($cplMinScore, 2, '.', ''), '0'), '.') }}/10
-                                @endif
-                            </p>
+                            @if(! $isImport)
+                                <p style="font-size:11px; color:var(--c-fg-muted); margin-top:2px;">
+                                    @if($passingRule === 'total_min')
+                                        Lulus jika nilai total minimal {{ (int) $totalMinScore }} — nilai CPL hanya informasi.
+                                    @else
+                                        Ambang lulus per CPL: {{ rtrim(rtrim(number_format($cplMinScore, 2, '.', ''), '0'), '.') }}/10
+                                    @endif
+                                </p>
+                            @endif
                         </div>
                         <div style="overflow-x:auto;">
                             <table style="width:100%; min-width:680px; text-align:left; border-collapse:collapse;">

@@ -1,0 +1,10 @@
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import test from 'node:test';
+import assert from 'node:assert/strict';
+const source=readFileSync(new URL('../../resources/views/components/manajemen-praktikum/ui/staffing-styles.blade.php',import.meta.url),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
+function form(){const context=vm.createContext({window:{}});vm.runInContext(source,context);return context.window.practicumStaffingForm({roleModalOpen:true,userId:'',role:'asprak',coordinatorId:'',assignments:[{user_id:'1',role:'asprak'}],students:[{value:'1',label:'Mahasiswa Pertama'},{value:'2',label:"D'Angelo · mahasiswa@example.test"}]});}
+test('all students are visible and existing role assignments are labeled and protected',()=>{const value=form();assert.equal(value.candidates.length,2);assert.equal(value.studentRoleLabel('1'),'Asisten');value.selectStudent('1');assert.equal(value.canSubmit,false);value.search="D'Angelo";assert.equal(value.filteredStudents.length,1);value.search='tidak-ada';assert.equal(value.filteredStudents.length,0);});
+test('empty selection and a filled coordinator position cannot submit',()=>{const value=form();assert.equal(value.canSubmit,false);value.selectStudent('2');assert.equal(value.canSubmit,true);value.role='koor';value.coordinatorId='3';assert.equal(value.canSubmit,false);});
+test('submission cannot be repeated and modal cannot close while sending',()=>{const value=form();value.selectStudent('2');let blocked=0;value.submit({preventDefault(){blocked++}});assert.equal(value.submitting,true);value.submit({preventDefault(){blocked++}});assert.equal(blocked,1);value.closeModal();assert.equal(value.roleModalOpen,true);});
+test('assistant rows are capped at five and duplicate selections cannot submit',()=>{const value=form();for(let i=0;i<8;i++)value.addStudent();assert.equal(value.userIds.length,5);value.userIds=['2','2'];assert.equal(value.canSubmit,false);value.removeStudent(1);assert.equal(value.userIds.length,1);assert.equal(value.canSubmit,true);});

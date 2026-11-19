@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Daftar Praktikan">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Daftar Praktikan">
 
 {{-- Page Header --}}
 <div class="mp-page-header">
@@ -154,7 +154,7 @@
                         <form method="POST" action="{{ route('eoffice.manprak.admin.daftar-praktikan.destroy', $p->id) }}"
                               onsubmit="return confirm('Hapus praktikan ini dari daftar?')" style="display:inline;">
                             @csrf @method('DELETE')
-                            <button type="submit" class="mp-btn destructive xs">Hapus</button>
+                            <button type="submit" class="mp-delete-button mp-btn destructive xs" aria-label="Hapus" title="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                         </form>
                     </td>
                 </tr>
@@ -179,8 +179,8 @@
             </tbody>
         </table>
     </div>
-    @if($praktikans->hasPages())
-    <div style="padding:12px 16px;border-top:1px solid var(--c-border, #DFE1E7);flex-shrink:0;">{{ $praktikans->links() }}</div>
+    @if(isset($praktikans) && $praktikans instanceof \Illuminate\Pagination\LengthAwarePaginator)
+        <x-eoffice::manajemen-praktikum.ui.pagination :paginator="$praktikans" />
     @endif
 </div>
 

@@ -15,7 +15,7 @@ class PraktikumController extends Controller
     {
         $user = auth()->user();
 
-        $praktikums = Praktikum::with(['dosens', 'modul'])
+        $praktikums = Praktikum::with(['dosens', 'modul', 'asistenPraktikum'])
             ->where('koor_id', $user->id)
             ->withCount(['daftarPraktikan', 'modul', 'asprakPraktikum'])
             ->orderByDesc('status') // 'aktif' di atas

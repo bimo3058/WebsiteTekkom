@@ -645,7 +645,7 @@
                     em.style.display = 'none';
                     const rows = paged.map(x => {
                         const chk = T[i].selIds.has(x.id);
-                        return `<label class="check-item ${chk ? 'checked' : ''}" onclick="event.preventDefault();togR(${i},${x.id},this)">
+                        return `<label class="check-item ${chk ? 'checked' : ''}">
                             <input type="checkbox" ${chk ? 'checked' : ''} onchange="togR(${i},${x.id},this.closest('.check-item'))">
                             <span style="font-size:13px;font-weight:600;color:#334155">${lbl(x, T[i].rightPool)}</span></label>`;
                     }).join('');
@@ -671,9 +671,15 @@
             }
             function setRP(i, p) { T[i].rp = p; renderRight(i); }
             function togR(i, id, row) {
-                T[i].selIds.has(id) ? T[i].selIds.delete(id) : T[i].selIds.add(id);
-                row.classList.toggle('checked', T[i].selIds.has(id));
-                const cb = row.querySelector('input[type=checkbox]'); if (cb) cb.checked = T[i].selIds.has(id);
+                const cb = row.querySelector('input[type=checkbox]');
+                const isChecked = cb ? cb.checked : !T[i].selIds.has(id);
+                if (isChecked) {
+                    T[i].selIds.add(id);
+                } else {
+                    T[i].selIds.delete(id);
+                }
+                row.classList.toggle('checked', isChecked);
+                if (cb) cb.checked = isChecked;
                 const paged = filtR(i).slice((T[i].rp - 1) * RS, T[i].rp * RS);
                 const sa = document.getElementById('sa' + i), cc = paged.filter(x => T[i].selIds.has(x.id)).length;
                 sa.checked = paged.length > 0 && cc === paged.length; sa.indeterminate = cc > 0 && cc < paged.length;

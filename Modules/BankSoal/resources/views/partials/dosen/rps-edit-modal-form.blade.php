@@ -27,15 +27,17 @@
         <!-- Row 1: Mata Kuliah & Dosen Lain -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="form-group-compact">
-                <label class="form-label form-label-required">Mata Kuliah</label>
-                <select name="mata_kuliah_id" id="mkSelect" class="form-control compact-control" required {{ ($rps->status->value === 'revisi' || !$isUploadOpen) ? 'disabled' : '' }}>
-                    <option value="" disabled>Pilih Mata Kuliah</option>
-                    @foreach ($mataKuliahs as $mk)
-                        <option value="{{ $mk->id }}" {{ $mk->id == $rps->mk_id ? 'selected' : '' }}>
-                            {{ $mk->kode }} - {{ $mk->nama }} ({{ $mk->sks }} SKS)
-                        </option>
-                    @endforeach
-                </select>
+                <label for="mkSelect-trigger" class="form-label form-label-required">Mata Kuliah</label>
+                <x-banksoal::ui.alpine-select id="mkSelect" label="Mata Kuliah">
+                    <select name="mata_kuliah_id" id="mkSelect" class="form-control compact-control" required {{ ($rps->status->value === 'revisi' || !$isUploadOpen) ? 'disabled' : '' }}>
+                        <option value="" disabled>Pilih Mata Kuliah</option>
+                        @foreach ($mataKuliahs as $mk)
+                            <option value="{{ $mk->id }}" {{ $mk->id == $rps->mk_id ? 'selected' : '' }}>
+                                {{ $mk->kode }} - {{ $mk->nama }} ({{ $mk->sks }} SKS)
+                            </option>
+                        @endforeach
+                    </select>
+                </x-banksoal::ui.alpine-select>
                 @if($rps->status->value === 'revisi')
                     <input type="hidden" name="mata_kuliah_id" value="{{ $rps->mk_id }}">
                 @endif

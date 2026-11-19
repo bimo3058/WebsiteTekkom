@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Periode Pendaftaran Asprak">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="Periode Pendaftaran Asprak">
 
 {{-- Page Header --}}
 <div class="mp-page-header">
@@ -209,6 +209,7 @@
                     <td>
                         <div style="display:flex;gap:6px;flex-wrap:wrap;">
                             @if($praktikumDipilih->is_active)
+                                <x-eoffice::manajemen-praktikum.ui.action-menu>
                                 @if($p->is_aktif)
                                 <form method="POST" action="{{ route('eoffice.manprak.koordinator.periode-pendaftaran.tutup', $p->id) }}"
                                       onsubmit="return confirm('Tutup periode ini?')">
@@ -219,8 +220,9 @@
                                 <form method="POST" action="{{ route('eoffice.manprak.koordinator.periode-pendaftaran.destroy', $p->id) }}"
                                       onsubmit="return confirm('Hapus periode ini?')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="mp-btn neutral xs">Hapus</button>
+                                    <button type="submit" class="mp-delete-button mp-btn neutral xs" aria-label="Hapus" title="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                 </form>
+                                </x-eoffice::manajemen-praktikum.ui.action-menu>
                             @else
                                 <span class="mp-badge neutral sm">Read-only</span>
                             @endif

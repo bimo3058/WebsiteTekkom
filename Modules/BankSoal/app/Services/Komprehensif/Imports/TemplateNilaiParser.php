@@ -13,34 +13,53 @@ class TemplateNilaiParser extends AbstractKompreParser
     public function parse(string $path): array
     {
         $spreadsheet = $this->loadSpreadsheet($path);
-        $nilai = $spreadsheet->getSheetByName('Nilai');
+        $title = trim((string) $spreadsheet->getSheet(0)->getCell('A1')->getValue());
+
+        if (stripos($title, 'REKAPITULASI HASIL TES') !== false) {
+            throw new \InvalidArgumentException('File rekap lama harus diproses sebagai rekap legacy.');
+        }
+
+        $nilai = $spreadsheet->getSheetByName('Nilai') ?? $spreadsheet->getSheet(0);
 
         if (! $nilai) {
-            throw new \InvalidArgumentException('Sheet "Nilai" tidak ditemukan. Gunakan template import yang disediakan.');
+            throw new \InvalidArgumentException('Sheet nilai tidak ditemukan. Gunakan template import yang disediakan.');
         }
 
         $info = $spreadsheet->getSheetByName('Info Periode') ?? $spreadsheet->getSheetByName('Info');
-        $period = $this->readPeriodInfo($info);
+        $period = $this->readPeriodInfo($info ?? $nilai);
 
-        $headerMap = $this->readHeaderMap($nilai);
+        $headerRow = $this->findHeaderRow($nilai);
+        if ($headerRow === null) {
+            throw new \InvalidArgumentException('Baris header (NIM dan Nama) tidak ditemukan pada sheet nilai.');
+        }
+
+        $headerMap = $this->readHeaderMap($nilai, $headerRow);
         if (! isset($headerMap['nim'])) {
-            throw new \InvalidArgumentException('Kolom NIM tidak ditemukan pada sheet Nilai.');
+            throw new \InvalidArgumentException('Kolom NIM tidak ditemukan pada sheet nilai.');
         }
 
         $rows = [];
         $highestRow = $nilai->getHighestDataRow();
+        $periodName = trim((string) ($period['nama'] ?? ''));
 
-        for ($row = 2; $row <= $highestRow; $row++) {
+        for ($row = $headerRow + 1; $row <= $highestRow; $row++) {
             $nim = $this->normalizeNim($nilai->getCell($headerMap['nim'].$row)->getValue());
 
             if ($nim === '') {
                 continue;
             }
 
-            $periodName = isset($headerMap['period'])
+            $rowPeriod = isset($headerMap['period'])
                 ? trim((string) $nilai->getCell($headerMap['period'].$row)->getValue())
                 : '';
-            $periodName = $periodName !== '' ? $periodName : ($period['nama'] ?? 'Periode Import');
+
+            if ($rowPeriod !== '') {
+                if ($periodName === '') {
+                    $periodName = $rowPeriod;
+                } elseif ($rowPeriod !== $periodName) {
+                    throw new \InvalidArgumentException('Satu file hanya boleh berisi satu periode ujian komprehensif.');
+                }
+            }
 
             $cplValues = [];
             foreach ($headerMap as $key => $column) {
@@ -75,31 +94,32 @@ class TemplateNilaiParser extends AbstractKompreParser
             ];
         }
 
-        $grouped = [];
-        foreach ($rows as $row) {
-            $grouped[$row['period_name']][] = $row;
-        }
-
-        $periods = [];
-        foreach ($grouped as $name => $periodRows) {
-            $rowDates = array_values(array_filter(array_map(
-                fn (array $row) => $row['tanggal_ujian'],
-                $periodRows
-            )));
-            sort($rowDates);
-
-            $periods[] = [
-                'period' => [
-                    'nama' => $name,
-                    'tanggal_mulai' => $period['tanggal_mulai'] ?? ($rowDates[0] ?? now()->toDateString()),
-                    'tanggal_selesai' => $period['tanggal_selesai'] ?? ($rowDates[count($rowDates) - 1] ?? now()->toDateString()),
-                    'tanggal_mulai_ujian' => $period['tanggal_mulai_ujian'] ?? ($rowDates[0] ?? now()->toDateString()),
-                    'tanggal_selesai_ujian' => $period['tanggal_selesai_ujian'] ?? ($rowDates[count($rowDates) - 1] ?? now()->toDateString()),
-                    'status' => $period['status'] ?? null,
-                ],
-                'rows' => $periodRows,
+        if ($rows === []) {
+            return [
+                'type' => 'template',
+                'file_name' => basename($path),
+                'file_hash' => $this->fileHash($path),
+                'periods' => [],
             ];
         }
+
+        $rowDates = array_values(array_filter(array_map(
+            fn (array $row) => $row['tanggal_ujian'],
+            $rows
+        )));
+        sort($rowDates);
+
+        $periods = [[
+            'period' => [
+                'nama' => $periodName !== '' ? $periodName : 'Periode Import',
+                'tanggal_mulai' => $period['tanggal_mulai'] ?? ($rowDates[0] ?? now()->toDateString()),
+                'tanggal_selesai' => $period['tanggal_selesai'] ?? ($rowDates[count($rowDates) - 1] ?? now()->toDateString()),
+                'tanggal_mulai_ujian' => $period['tanggal_mulai_ujian'] ?? ($rowDates[0] ?? now()->toDateString()),
+                'tanggal_selesai_ujian' => $period['tanggal_selesai_ujian'] ?? ($rowDates[count($rowDates) - 1] ?? now()->toDateString()),
+                'status' => $period['status'] ?? null,
+            ],
+            'rows' => $rows,
+        ]];
 
         return [
             'type' => 'template',
@@ -147,9 +167,35 @@ class TemplateNilaiParser extends AbstractKompreParser
     }
 
     /**
+     * Cari baris header secara dinamis agar template satu-sheet
+     * (info periode di atas tabel) tetap bisa dibaca.
+     */
+    private function findHeaderRow(Worksheet $sheet): ?int
+    {
+        $highestRow = min(100, max(1, $sheet->getHighestDataRow()));
+        $fallback = null;
+
+        for ($row = 1; $row <= $highestRow; $row++) {
+            $map = $this->readHeaderMap($sheet, $row);
+
+            if (! isset($map['nim'])) {
+                continue;
+            }
+
+            if (isset($map['name'])) {
+                return $row;
+            }
+
+            $fallback ??= $row;
+        }
+
+        return $fallback;
+    }
+
+    /**
      * @return array<string|int, string>
      */
-    private function readHeaderMap(Worksheet $sheet): array
+    private function readHeaderMap(Worksheet $sheet, int $headerRow = 1): array
     {
         $map = [];
         $highestColumn = $sheet->getHighestDataColumn();
@@ -157,7 +203,7 @@ class TemplateNilaiParser extends AbstractKompreParser
 
         for ($index = 1; $index <= $lastColumn; $index++) {
             $column = Coordinate::stringFromColumnIndex($index);
-            $header = $this->normalizeHeader((string) $sheet->getCell($column.'1')->getValue());
+            $header = $this->normalizeHeader((string) $sheet->getCell($column.$headerRow)->getValue());
 
             if ($header === '') {
                 continue;

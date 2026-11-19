@@ -533,8 +533,54 @@
                 border-collapse: collapse;
                 border: 1px solid var(--slate-200);
                 border-radius: 8px;
-                overflow: hidden;
+                overflow: visible;
                 margin-bottom: 20px;
+            }
+
+            .ts-dropdown {
+                z-index: 99999 !important;
+            }
+
+            .has-summary-badge .ts-control>.item,
+            #dosenSelect+.ts-wrapper .ts-control>.item {
+                display: none !important;
+            }
+
+            .ts-summary-badge {
+                display: inline-flex;
+                align-items: center;
+                background: #f1f5f9;
+                color: #0b266e;
+                font-weight: 600;
+                border: 1px solid #cbd5e1;
+                border-radius: 6px;
+                padding: 2px 8px;
+                font-size: 12px;
+                white-space: nowrap;
+                flex-shrink: 0;
+                height: 24px;
+                box-sizing: border-box;
+                cursor: default;
+                user-select: none;
+            }
+
+            .ts-summary-badge .ts-summary-clear {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                margin-left: 6px;
+                color: #0b266e;
+                font-size: 14px;
+                font-weight: 700;
+                cursor: pointer;
+                line-height: 1;
+                opacity: 0.7;
+                transition: opacity 0.15s;
+            }
+
+            .ts-summary-badge .ts-summary-clear:hover {
+                opacity: 1;
+                color: #ef4444;
             }
 
             .main-table th {
@@ -582,99 +628,102 @@
 
         <x-banksoal::notification.alerts />
 
-    @php
-        $creationMethod = old('creation_method', 'upload');
-    @endphp
-    <!-- 1. Selection of Creation Method -->
-    <div class="method-cards">
-        <div class="method-card {{ $creationMethod === 'upload' ? 'active' : '' }}" data-method="upload">
-            <input type="radio" name="creation_method_trigger" value="upload" {{ $creationMethod === 'upload' ? 'checked' : '' }}>
-            <div class="method-icon"><i class="fas fa-file-pdf"></i></div>
-            <div class="method-info">
-                <h3>Upload Berkas RPS (PDF)</h3>
-                <p>Unggah file dokumen RPS berformat PDF yang sudah Anda buat secara manual.</p>
+        @php
+            $creationMethod = old('creation_method', 'upload');
+        @endphp
+        <!-- 1. Selection of Creation Method -->
+        <div class="method-cards">
+            <div class="method-card {{ $creationMethod === 'upload' ? 'active' : '' }}" data-method="upload">
+                <input type="radio" name="creation_method_trigger" value="upload" {{ $creationMethod === 'upload' ? 'checked' : '' }}>
+                <div class="method-icon"><i class="fas fa-file-pdf"></i></div>
+                <div class="method-info">
+                    <h3>Upload Berkas RPS (PDF)</h3>
+                    <p>Unggah file dokumen RPS berformat PDF yang sudah Anda buat secara manual.</p>
+                </div>
+            </div>
+            <div class="method-card {{ $creationMethod === 'generator' ? 'active' : '' }}" data-method="generator">
+                <input type="radio" name="creation_method_trigger" value="generator" {{ $creationMethod === 'generator' ? 'checked' : '' }}>
+                <div class="method-icon"><i class="fas fa-magic"></i></div>
+                <div class="method-info">
+                    <h3>Buat RPS Otomatis (Progressive Form)</h3>
+                    <p>Isi data melalui form bertahap, dan biarkan sistem merender dokumen PDF RPS & Kontrak Kuliah
+                        Anda.
+                    </p>
+                </div>
             </div>
         </div>
-        <div class="method-card {{ $creationMethod === 'generator' ? 'active' : '' }}" data-method="generator">
-            <input type="radio" name="creation_method_trigger" value="generator" {{ $creationMethod === 'generator' ? 'checked' : '' }}>
-            <div class="method-icon"><i class="fas fa-magic"></i></div>
-            <div class="method-info">
-                <h3>Buat RPS Otomatis (Progressive Form)</h3>
-                <p>Isi data melalui form bertahap, dan biarkan sistem merender dokumen PDF RPS & Kontrak Kuliah Anda.
-                </p>
-            </div>
-        </div>
-    </div>
 
         <!-- ======================= SHARED HEADER (di luar form) ======================= -->
-    <div class="form-card" id="shared_info_card">
-        <div class="form-card-title"><i class="fas fa-book-open"></i> Informasi Dasar RPS</div>
-        <div class="form-row">
-            <div class="form-group">
-                <label class="field-label">Mata Kuliah <span class="req">*</span></label>
-                <select id="mkSelect" class="field-control" required>
-                    <option value="" disabled selected>-- Pilih Mata Kuliah --</option>
-                    @foreach($mataKuliahs as $mk)
-                        <option value="{{ $mk->id }}">
-                            {{ $mk->kode }} – {{ $mk->nama }} ({{ $mk->sks }} SKS)
-                        </option>
-                    @endforeach
-                </select>
+        <div class="form-card" id="shared_info_card">
+            <div class="form-card-title"><i class="fas fa-book-open"></i> Informasi Dasar RPS</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="mkSelect-trigger" class="field-label">Mata Kuliah <span class="req">*</span></label>
+                    <x-banksoal::ui.alpine-select id="mkSelect" label="Mata Kuliah">
+                        <select id="mkSelect" class="field-control" required>
+                            <option value="" disabled selected>-- Pilih Mata Kuliah --</option>
+                            @foreach($mataKuliahs as $mk)
+                                <option value="{{ $mk->id }}">
+                                    {{ $mk->kode }} – {{ $mk->nama }} ({{ $mk->sks }} SKS)
+                                </option>
+                            @endforeach
+                        </select>
+                    </x-banksoal::ui.alpine-select>
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Dosen Pengampu Lain</label>
+                    <select id="dosenSelect" class="field-control" multiple></select>
+                    <p class="field-hint">Pilih satu atau lebih dosen pengampu tambahan.</p>
+                </div>
             </div>
-            <div class="form-group">
-                <label class="field-label">Dosen Pengampu Lain</label>
-                <select id="dosenSelect" class="field-control" multiple></select>
-                <p class="field-hint">Pilih satu atau lebih dosen pengampu tambahan.</p>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="field-label">Semester <span class="req">*</span></label>
+                    <select id="semester"
+                        class="field-control bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed" disabled>
+                        <option value="Ganjil" {{ $semester == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                        <option value="Genap" {{ $semester == 'Genap' ? 'selected' : '' }}>Genap</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Tahun Ajaran <span class="req">*</span></label>
+                    <select id="tahun_ajaran"
+                        class="field-control bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed" disabled>
+                        @foreach($tahunAjarans as $ta)
+                            <option value="{{ $ta }}" {{ $ta == $academicYear ? 'selected' : '' }}>{{ $ta }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label class="field-label">Semester <span class="req">*</span></label>
-                <select id="semester" class="field-control bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed" disabled>
-                    <option value="Ganjil" {{ $semester == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
-                    <option value="Genap" {{ $semester == 'Genap' ? 'selected' : '' }}>Genap</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="field-label">Tahun Ajaran <span class="req">*</span></label>
-                <select id="tahun_ajaran" class="field-control bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed" disabled>
-                    @foreach($tahunAjarans as $ta)
-                        <option value="{{ $ta }}" {{ $ta == $academicYear ? 'selected' : '' }}>{{ $ta }}</option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-        {{-- Draft resume banner --}}
-        <div id="draftResumeBanner" class="hidden mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-2 text-sm text-amber-800">
-                <i class="fas fa-history text-amber-500"></i>
-                <span id="draftResumeBannerText">Ditemukan draft tersimpan untuk MK ini.</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <button type="button" id="btnResumeDraft"
+            {{-- Draft resume banner --}}
+            <div id="draftResumeBanner"
+                class="hidden mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2 text-sm text-amber-800">
+                    <i class="fas fa-history text-amber-500"></i>
+                    <span id="draftResumeBannerText">Ditemukan draft tersimpan untuk MK ini.</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="btnResumeDraft"
                         style="height:30px; padding:0 12px; background:var(--c-primary,#0B266E); color:#fff; border:none; border-radius:7px; font-size:11.5px; font-weight:600; cursor:pointer; font-family:inherit;">
-                    Lanjutkan Draft
-                </button>
-                <button type="button" id="btnDiscardDraft"
+                        Lanjutkan Draft
+                    </button>
+                    <button type="button" id="btnDiscardDraft"
                         style="height:30px; padding:0 10px; background:transparent; color:var(--c-fg-sec,#475569); border:1px solid var(--c-border,#DFE1E7); border-radius:7px; font-size:11.5px; font-weight:600; cursor:pointer; font-family:inherit;">
-                    Abaikan
-                </button>
+                        Abaikan
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- ======================= FORM A: UPLOAD PDF ======================= -->
-    <form id="uploadForm"
-          action="{{ route('banksoal.rps.dosen.store-upload') }}"
-          method="POST" enctype="multipart/form-data" novalidate
-          data-route-cpl="{{ route('banksoal.rps.dosen.cpl') }}"
-          data-route-dosen="{{ route('banksoal.rps.dosen.dosen') }}"
-          data-cpmk-row-builder="1">
-        @csrf
-        <input type="hidden" name="mata_kuliah_id" id="upload_mk_id">
-        <input type="hidden" name="semester"       id="upload_semester"     value="{{ $semester }}">
-        <input type="hidden" name="tahun_ajaran"   id="upload_tahun_ajaran" value="{{ $academicYear }}">
-        {{-- Semester & tahun_ajaran sudah ada sebagai hidden inputs. Dosen diisi via JS saat submit. --}}
+        <!-- ======================= FORM A: UPLOAD PDF ======================= -->
+        <form id="uploadForm" action="{{ route('banksoal.rps.dosen.store-upload') }}" method="POST"
+            enctype="multipart/form-data" novalidate data-route-cpl="{{ route('banksoal.rps.dosen.cpl') }}"
+            data-route-dosen="{{ route('banksoal.rps.dosen.dosen') }}" data-cpmk-row-builder="1">
+            @csrf
+            <input type="hidden" name="mata_kuliah_id" id="upload_mk_id">
+            <input type="hidden" name="semester" id="upload_semester" value="{{ $semester }}">
+            <input type="hidden" name="tahun_ajaran" id="upload_tahun_ajaran" value="{{ $academicYear }}">
+            {{-- Semester & tahun_ajaran sudah ada sebagai hidden inputs. Dosen diisi via JS saat submit. --}}
             {{-- CPMK Section --}}
             <div class="form-card">
                 <div class="form-card-title"><i class="fas fa-list-check"></i> Capaian Pembelajaran Mata Kuliah (CPMK)
@@ -744,14 +793,17 @@
                             </div>
                             <div>
                                 <input type="text" name="cpmk_rows[0][objek]" class="field-control objek-input"
-                                    style="font-size:13px;" placeholder="merancang sistem IoT" required>
+                                    style="font-size:13px;" placeholder="Contoh: konsep dasar pemrograman" required>
                             </div>
                             <div>
                                 <input type="text" name="cpmk_rows[0][konteks]" class="field-control"
-                                    style="font-size:13px;" placeholder="sesuai kebutuhan">
+                                    style="font-size:13px;" placeholder="Contoh: dalam studi kasus aplikasi web">
                             </div>
                             <div style="display:flex;align-items:flex-end;">
-                                <button type="button" class="btn-danger-sm" data-remove-cpmk-row>Hapus</button>
+                                <button type="button" class="btn-danger-sm" data-remove-cpmk-row
+                                    aria-label="Hapus baris CPMK" title="Hapus baris CPMK">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -759,454 +811,500 @@
             </div>
 
             <div class="form-card">
-                <div class="form-card-title"><i class="fas fa-file-pdf"></i> Unggah Dokumen RPS</div>
-                <x-banksoal::ui.upload-zone name="dokumen" inputId="fileInput" accept=".pdf" maxLabel="PDF (Maks. 5MB)"
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+                    <div class="form-card-title" style="margin-bottom:0;"><i class="fas fa-file-pdf"></i> Unggah Dokumen
+                        RPS</div>
+                    <a href="{{ route('rps.template.download') }}" target="_blank"
+                        style="display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--c-primary,#0B266E); text-decoration:none; font-weight:600;">
+                        <i class="fas fa-download"></i>
+                        Unduh Template RPS Terbaru
+                    </a>
+                </div>
+                <x-banksoal::ui.upload-zone name="dokumen" inputId="fileInput" accept=".pdf" maxLabel="PDF (Maks. 1MB)"
                     :required="true" />
                 @error('dokumen')
                 <p class="field-error" style="margin-top:8px;">{{ $message }}</p>@enderror
             </div>
 
             <div class="form-card">
-                <div class="form-card-title"><i class="fas fa-comment"></i> Catatan Pengajuan</div>
+                <div class="form-card-title"><i class="fas fa-comment"></i> Catatan perubahan</div>
                 <div class="form-group">
                     <textarea name="catatan" class="field-control" rows="3"
                         placeholder="Opsional. Tambahkan catatan untuk validator GPM."></textarea>
                 </div>
             </div>
 
-                        <div class="form-actions" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-top: 24px;">
-                <a href="{{ route('banksoal.rps.dosen.index') }}" class="btn btn-secondary" style="height:38px; display:inline-flex; align-items:center;">Batal</a>
+            <div class="form-actions"
+                style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-top: 24px;">
+                <a href="{{ route('banksoal.rps.dosen.index') }}" class="btn btn-secondary"
+                    style="height:38px; display:inline-flex; align-items:center;">Batal</a>
                 <div style="display:flex; align-items:flex-start; gap:12px;">
                     {{-- Tombol Simpan Draft --}}
                     <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
                         <button type="button" id="btnSaveDraftUpload" class="btn btn-secondary" disabled
-                                onclick="saveDraftManual('upload')"
-                                style="height:38px; display:inline-flex; align-items:center; opacity:0.45; cursor:not-allowed;">
+                            onclick="saveDraftManual('upload')"
+                            style="height:38px; display:inline-flex; align-items:center; opacity:0.45; cursor:not-allowed;">
                             Simpan Draft
                         </button>
-                        <span id="uploadDraftLabel" style="font-size:10px; color:var(--c-fg-placeholder,#A4ABB8); white-space:nowrap;">
+                        <span id="uploadDraftLabel"
+                            style="font-size:10px; color:var(--c-fg-placeholder,#A4ABB8); white-space:nowrap;">
                             Pilih Mata Kuliah terlebih dahulu
                         </span>
                     </div>
-                    <button type="submit" class="btn btn-primary" id="btnSubmitManual" style="height:38px; display:inline-flex; align-items:center;">
+                    <button type="submit" class="btn btn-primary" id="btnSubmitManual"
+                        style="height:38px; display:inline-flex; align-items:center;">
                         Ajukan RPS
                     </button>
                 </div>
             </div>
-    </form><!-- END uploadForm -->
+        </form><!-- END uploadForm -->
 
-    <!-- ======================= FORM B: GENERATOR ======================= -->
-    <form id="generatorForm"
-          action="{{ route('banksoal.rps.dosen.store-generator') }}"
-          method="POST" novalidate
-          data-route-cpl="{{ route('banksoal.rps.dosen.cpl') }}"
-          data-route-dosen="{{ route('banksoal.rps.dosen.dosen') }}"
-          data-cpmk-row-builder="1">
-        @csrf
-        <input type="hidden" name="mata_kuliah_id" id="generator_mk_id">
-        <input type="hidden" name="semester"       id="generator_semester"     value="{{ $semester }}">
-        <input type="hidden" name="tahun_ajaran"   id="generator_tahun_ajaran" value="{{ $academicYear }}">
-        {{-- dosen_lain di-sync via JS --}}
+        <!-- ======================= FORM B: GENERATOR ======================= -->
+        <form id="generatorForm" action="{{ route('banksoal.rps.dosen.store-generator') }}" method="POST" novalidate
+            data-route-cpl="{{ route('banksoal.rps.dosen.cpl') }}"
+            data-route-dosen="{{ route('banksoal.rps.dosen.dosen') }}" data-cpmk-row-builder="1">
+            @csrf
+            <input type="hidden" name="mata_kuliah_id" id="generator_mk_id">
+            <input type="hidden" name="semester" id="generator_semester" value="{{ $semester }}">
+            <input type="hidden" name="tahun_ajaran" id="generator_tahun_ajaran" value="{{ $academicYear }}">
+            {{-- dosen_lain di-sync via JS --}}
 
 
-        <!-- ==================== METHOD B: WIZARD GENERATOR ==================== -->
-        <div id="method_generator_panel" class="{{ $creationMethod === 'generator' ? '' : 'hidden' }}">
-            <!-- Steps Indicators -->
-            <div class="wizard-steps">
-                <div class="wizard-step active" data-step="1">
-                    <div class="step-num">1</div>
-                    <div class="step-label">Perancangan MK</div>
-                </div>
-                <div class="wizard-step" data-step="2">
-                    <div class="step-num">2</div>
-                    <div class="step-label">Kontrak Kuliah</div>
-                </div>
-                <div class="wizard-step" data-step="3">
-                    <div class="step-num">3</div>
-                    <div class="step-label">Pertemuan & Referensi</div>
-                </div>
-            </div>
-
-            <!-- STEP 1: PERANCANGAN MK -->
-            <div class="wizard-content-section" id="step_1_panel">
-                <div class="form-card">
-                    <div class="form-card-title"><i class="fas fa-bullseye"></i> Capaian Pembelajaran Lulusan (CPL)
+            <!-- ==================== METHOD B: WIZARD GENERATOR ==================== -->
+            <div id="method_generator_panel" class="{{ $creationMethod === 'generator' ? '' : 'hidden' }}">
+                <!-- Steps Indicators -->
+                <div class="wizard-steps">
+                    <div class="wizard-step active" data-step="1">
+                        <div class="step-num">1</div>
+                        <div class="step-label">Perancangan MK</div>
                     </div>
-                    <div class="form-group-full">
-                        <label class="field-label">Pilih CPL yang Terkait <span class="req">*</span></label>
-                        <div id="cpl_checkbox_container"
-                            style="display:flex; flex-direction:column; gap:10px; padding: 15px; border: 1px solid var(--slate-200); border-radius: 9px; max-height: 250px; overflow-y: auto;">
-                            <p class="field-hint">Silakan pilih Mata Kuliah di atas terlebih dahulu untuk memuat daftar
-                                CPL.</p>
+                    <div class="wizard-step" data-step="2">
+                        <div class="step-num">2</div>
+                        <div class="step-label">Kontrak Kuliah</div>
+                    </div>
+                    <div class="wizard-step" data-step="3">
+                        <div class="step-num">3</div>
+                        <div class="step-label">Pertemuan & Referensi</div>
+                    </div>
+                </div>
+
+                <!-- STEP 1: PERANCANGAN MK -->
+                <div class="wizard-content-section" id="step_1_panel">
+                    <div class="form-card">
+                        <div class="form-card-title"><i class="fas fa-bullseye"></i> Capaian Pembelajaran Lulusan (CPL)
                         </div>
-                    </div>
-                </div>
-
-                <div class="form-card">
-                    <div class="form-card-title" style="margin-bottom:16px;"><i class="fas fa-list-check"></i> Capaian
-                        Pembelajaran Mata Kuliah (CPMK)</div>
-                    <div class="cpmk-section">
-                        <div class="cpmk-header">
-                            <div>
-                                <p style="margin: 0; font-size: 13px; color: var(--slate-600);">Tentukan CPMK. CPMK
-                                    minimal 1 baris.</p>
+                        <div class="form-group-full">
+                            <label class="field-label">Pilih CPL yang Terkait <span class="req">*</span></label>
+                            <div id="cpl_checkbox_container"
+                                style="display:flex; flex-direction:column; gap:10px; padding: 15px; border: 1px solid var(--slate-200); border-radius: 9px; max-height: 250px; overflow-y: auto;">
+                                <p class="field-hint">Silakan pilih Mata Kuliah di atas terlebih dahulu untuk memuat
+                                    daftar
+                                    CPL.</p>
                             </div>
-                            <button type="button" class="btn btn-secondary" id="addCpmkRowBtnGenerator"
-                                style="padding:8px 16px;font-size:13px;">
-                                Tambah Baris
-                            </button>
-                        </div>
-
-                        <div class="cpmk-col-head">
-                            <div>CPL</div>
-                            <div>Kode CPMK</div>
-                            <div>KKO</div>
-                            <div>Objek</div>
-                            <div>Konteks</div>
-                            <div></div>
-                        </div>
-
-                        <div id="cpmkRowsGenerator" class="cpmk-rows" data-cpmk-rows>
-                            <!-- Rows will be injected and bound dynamically -->
                         </div>
                     </div>
-                </div>
 
-                <div class="form-card">
-                    <div class="form-card-title"><i class="fas fa-align-left"></i> Deskripsi Singkat Mata Kuliah</div>
-                    <div class="form-group">
-                        <label class="field-label">Deskripsi Mata Kuliah <span class="req">*</span></label>
-                        <textarea name="deskripsi_mk" id="deskripsi_mk" class="field-control" rows="5"
-                            placeholder="Tuliskan deskripsi singkat mengenai materi, fokus kajian, dan tujuan pembelajaran mata kuliah ini..."></textarea>
-                    </div>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-                    <a href="{{ route('banksoal.rps.dosen.index') }}" class="btn btn-secondary" style="height:38px; display:inline-flex; align-items:center;">Batal</a>
-                    <div style="display:flex; align-items:flex-start; gap:12px;">
-                        <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
-                            <button type="button" class="btn btn-secondary btn-save-draft-generator" disabled onclick="saveDraftManual('generator')" style="height:38px; display:inline-flex; align-items:center; opacity:0.45; cursor:not-allowed;">
-                                Simpan Draft
-                            </button>
-                            <span class="generator-draft-label" style="font-size:10px; color:var(--c-fg-placeholder,#A4ABB8); white-space:nowrap;">Pilih Mata Kuliah terlebih dahulu</span>
-                        </div>
-                        <button type="button" class="btn btn-primary btn-next-step" data-next="2" style="height:38px; display:inline-flex; align-items:center;">Next</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- STEP 2: KONTRAK KULIAH -->
-            <div class="wizard-content-section hidden" id="step_2_panel">
-                <div class="form-card">
-                    <div class="form-card-title"><i class="fas fa-university"></i> Institusi Pelaksana</div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="field-label">Fakultas</label>
-                            <input type="text" class="field-control bg-slate-100" value="Teknik"
-                                data-always-disabled="true" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label class="field-label">Program Studi</label>
-                            <input type="text" class="field-control bg-slate-100" value="Teknik Komputer"
-                                data-always-disabled="true" disabled>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-card">
-                    <div class="form-card-title"><i class="fas fa-star-half-stroke"></i> Tabel Penilaian Mata Kuliah
-                    </div>
-                    <p style="font-size: 13px; color: var(--slate-600); margin-bottom: 16px;">Tentukan bobot (%) dan
-                        komponen evaluasi yang dinilai. Total bobot harus berjumlah 100%.</p>
-
-                    <table class="main-table" id="penilaian_data_table">
-                        <thead>
-                            <tr>
-                                <th style="width: 5%;">No</th>
-                                <th style="width: 25%;">Poin Evaluasi</th>
-                                <th style="width: 40%;">Komponen Evaluasi</th>
-                                <th style="width: 15%;">Bobot (%)</th>
-                                <th style="width: 15%;">Target CPMK</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="text-center">1</td>
-                                <td class="font-bold">Aktivitas Partisipatif<input type="hidden"
-                                        name="penilaian_data[0][poin]" value="Aktivitas Partisipatif"></td>
-                                <td><textarea name="penilaian_data[0][komponen]" class="field-control" rows="2"
-                                        placeholder="Aktivitas Kelas / Diskusi" required></textarea></td>
-                                <td><input type="number" name="penilaian_data[0][bobot]"
-                                        class="field-control text-center weight-input" min="0" max="100" value="0"
-                                        required></td>
-                                <td><select name="penilaian_data[0][cpmk][]" class="field-control cpmk-target-select"
-                                        multiple required></select></td>
-                            </tr>
-                            <tr>
-                                <td class="text-center">2</td>
-                                <td class="font-bold">Hasil Proyek<input type="hidden" name="penilaian_data[1][poin]"
-                                        value="Hasil Proyek"></td>
-                                <td><textarea name="penilaian_data[1][komponen]" class="field-control" rows="2"
-                                        placeholder="Hasil Proyek Desain" required></textarea></td>
-                                <td><input type="number" name="penilaian_data[1][bobot]"
-                                        class="field-control text-center weight-input" min="0" max="100" value="0"
-                                        required></td>
-                                <td><select name="penilaian_data[1][cpmk][]" class="field-control cpmk-target-select"
-                                        multiple required></select></td>
-                            </tr>
-                            <tr>
-                                <td class="text-center">3</td>
-                                <td class="font-bold">Tugas<input type="hidden" name="penilaian_data[2][poin]"
-                                        value="Tugas"></td>
-                                <td><textarea name="penilaian_data[2][komponen]" class="field-control" rows="2"
-                                        placeholder="Tugas Kelompok" required></textarea></td>
-                                <td><input type="number" name="penilaian_data[2][bobot]"
-                                        class="field-control text-center weight-input" min="0" max="100" value="0"
-                                        required></td>
-                                <td><select name="penilaian_data[2][cpmk][]" class="field-control cpmk-target-select"
-                                        multiple required></select></td>
-                            </tr>
-                            <tr>
-                                <td class="text-center">4</td>
-                                <td class="font-bold">Quiz<input type="hidden" name="penilaian_data[3][poin]"
-                                        value="Quiz"></td>
-                                <td><textarea name="penilaian_data[3][komponen]" class="field-control" rows="2"
-                                        placeholder="Tugas Individu / Kuis" required></textarea></td>
-                                <td><input type="number" name="penilaian_data[3][bobot]"
-                                        class="field-control text-center weight-input" min="0" max="100" value="0"
-                                        required></td>
-                                <td><select name="penilaian_data[3][cpmk][]" class="field-control cpmk-target-select"
-                                        multiple required></select></td>
-                            </tr>
-                            <!-- Kognitif has UTS and UAS -->
-                            <tr>
-                                <td class="text-center" rowspan="2">5</td>
-                                <td class="font-bold" rowspan="2">Kognitif / Pengetahuan<input type="hidden"
-                                        name="penilaian_data[4][poin]" value="Kognitif / Pengetahuan"></td>
-                                <td>UTS (Ujian Tengah Semester)<input type="hidden"
-                                        name="penilaian_data[4][sub_rows][0][komponen]" value="UTS"></td>
-                                <td><input type="number" name="penilaian_data[4][sub_rows][0][bobot]"
-                                        class="field-control text-center weight-input" min="0" max="100" value="0"
-                                        required></td>
-                                <td><select name="penilaian_data[4][sub_rows][0][cpmk][]"
-                                        class="field-control cpmk-target-select" multiple required></select></td>
-                            </tr>
-                            <tr>
-                                <td>UAS (Ujian Akhir Semester)<input type="hidden"
-                                        name="penilaian_data[4][sub_rows][1][komponen]" value="UAS"></td>
-                                <td><input type="number" name="penilaian_data[4][sub_rows][1][bobot]"
-                                        class="field-control text-center weight-input" min="0" max="100" value="0"
-                                        required></td>
-                                <td><select name="penilaian_data[4][sub_rows][1][cpmk][]"
-                                        class="field-control cpmk-target-select" multiple required></select></td>
-                            </tr>
-                            <tr class="font-bold" style="background-color: var(--slate-100);">
-                                <td colspan="3" class="text-right">Total Bobot:</td>
-                                <td class="text-center" id="total_weight_label">0%</td>
-                                <td></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-                    <button type="button" class="btn btn-secondary btn-prev-step" data-prev="1" style="height:38px; display:inline-flex; align-items:center;">Back</button>
-                    <div style="display:flex; align-items:flex-start; gap:12px;">
-                        <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
-                            <button type="button" class="btn btn-secondary btn-save-draft-generator" disabled onclick="saveDraftManual('generator')" style="height:38px; display:inline-flex; align-items:center; opacity:0.45; cursor:not-allowed;">
-                                Simpan Draft
-                            </button>
-                            <span class="generator-draft-label" style="font-size:10px; color:var(--c-fg-placeholder,#A4ABB8); white-space:nowrap;">Pilih Mata Kuliah terlebih dahulu</span>
-                        </div>
-                        <button type="button" class="btn btn-primary btn-next-step" data-next="3" style="height:38px; display:inline-flex; align-items:center;">Next</button>
-                    </div>
-                </div>
-            </div>
-
-                        <!-- STEP 3: PERTEMUAN & REFERENSI -->
-            <div class="wizard-content-section hidden" id="step_3_panel">
-
-                <!-- Navigator grid -->
-                <div class="form-card" style="padding: 18px 20px 14px;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-                        <div class="form-card-title" style="margin:0; padding:0; border:none;">
-                            <i class="fas fa-calendar-alt"></i> Rencana Pembelajaran per Pertemuan
-                        </div>
-                        <span id="pertemuanProgress" style="font-size:12px; font-weight:600; color:var(--c-fg-sec,#475569);">0 / 14 terisi</span>
-                    </div>
-
-                    <!-- Grid nomor pertemuan -->
-                    <div id="pertemuanNav" style="display:grid; grid-template-columns:repeat(8,1fr); gap:6px; margin-bottom:16px;">
-                        @for($p = 1; $p <= 16; $p++)
-                            @if($p === 8)
-                                <div data-nav-p="8" style="grid-column:span 1;">
-                                    <div style="height:36px; border-radius:8px; background:#f1f5f9; border:1px solid #DFE1E7; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#94A3B8; letter-spacing:.03em;">
-                                        UTS
-                                    </div>
+                    <div class="form-card">
+                        <div class="form-card-title" style="margin-bottom:16px;"><i class="fas fa-list-check"></i>
+                            Capaian
+                            Pembelajaran Mata Kuliah (CPMK)</div>
+                        <div class="cpmk-section">
+                            <div class="cpmk-header">
+                                <div>
+                                    <p style="margin: 0; font-size: 13px; color: var(--slate-600);">Tentukan CPMK. CPMK
+                                        minimal 1 baris.</p>
                                 </div>
-                            @elseif($p === 16)
-                                <div data-nav-p="16" style="grid-column:span 1;">
-                                    <div style="height:36px; border-radius:8px; background:#f1f5f9; border:1px solid #DFE1E7; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#94A3B8; letter-spacing:.03em;">
-                                        UAS
-                                    </div>
-                                </div>
-                            @else
-                                <button type="button"
-                                        data-nav-p="{{ $p }}"
-                                        onclick="goToPertemuan({{ $p }})"
-                                        style="height:36px; border-radius:8px; border:1px solid #DFE1E7; background:#fff; font-size:13px; font-weight:600; color:#64748b; cursor:pointer; transition:all .15s; position:relative;">
-                                    {{ $p < 8 ? $p : $p - 1 }}
-                                    <span data-filled-{{ $p }} style="display:none; position:absolute; top:4px; right:4px; width:6px; height:6px; border-radius:50%; background:#0B266E;"></span>
+                                <button type="button" class="btn btn-secondary" id="addCpmkRowBtnGenerator"
+                                    style="padding:8px 16px;font-size:13px;">
+                                    Tambah Baris
                                 </button>
-                            @endif
-                        @endfor
+                            </div>
+
+                            <div class="cpmk-col-head">
+                                <div>CPL</div>
+                                <div>Kode CPMK</div>
+                                <div>KKO</div>
+                                <div>Objek</div>
+                                <div>Konteks</div>
+                                <div></div>
+                            </div>
+
+                            <div id="cpmkRowsGenerator" class="cpmk-rows" data-cpmk-rows>
+                                <!-- Rows will be injected and bound dynamically -->
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Panel form satu pertemuan -->
-                    <div id="pertemuanFormPanel" style="border:1px solid #DFE1E7; border-radius:12px; overflow:hidden;">
-                        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#FAFAFA; border-bottom:1px solid #DFE1E7;">
-                            <span id="pertemuanTitle" style="font-size:14px; font-weight:700; color:#1e293b;">Pertemuan 1</span>
+                    <div class="form-card">
+                        <div class="form-card-title"><i class="fas fa-align-left"></i> Deskripsi Singkat Mata Kuliah
                         </div>
-                        <div style="padding:16px 18px;" id="pertemuanFields">
-                            <!-- Fields dirender via JS -->
+                        <div class="form-group">
+                            <label class="field-label">Deskripsi Mata Kuliah <span class="req">*</span></label>
+                            <textarea name="deskripsi_mk" id="deskripsi_mk" class="field-control" rows="5"
+                                placeholder="Tuliskan deskripsi singkat mengenai materi, fokus kajian, dan tujuan pembelajaran mata kuliah ini..."></textarea>
                         </div>
                     </div>
 
-                    <!-- Navigasi prev/next pertemuan -->
-                    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:14px;">
-                        <button type="button" id="btnPrevPertemuan" onclick="prevPertemuan()"
-                                style="height:34px; padding:0 16px; border:1px solid #DFE1E7; border-radius:8px; background:#fff; font-size:13px; font-weight:600; color:#475569; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-family:inherit; transition:all .15s;">
-                            Sebelumnya
-                        </button>
-                        <button type="button" id="btnNextPertemuan" onclick="nextPertemuan()"
-                                style="height:34px; padding:0 16px; border:1px solid #0B266E; border-radius:8px; background:#0B266E; color:#fff; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-family:inherit; transition:all .15s;">
-                            Selanjutnya
-                        </button>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                        <a href="{{ route('banksoal.rps.dosen.index') }}" class="btn btn-secondary"
+                            style="height:38px; display:inline-flex; align-items:center;">Batal</a>
+                        <div style="display:flex; align-items:flex-start; gap:12px;">
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+                                <button type="button" class="btn btn-secondary btn-save-draft-generator" disabled
+                                    onclick="saveDraftManual('generator')"
+                                    style="height:38px; display:inline-flex; align-items:center; opacity:0.45; cursor:not-allowed;">
+                                    Simpan Draft
+                                </button>
+                                <span class="generator-draft-label"
+                                    style="font-size:10px; color:var(--c-fg-placeholder,#A4ABB8); white-space:nowrap;">Pilih
+                                    Mata Kuliah terlebih dahulu</span>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-next-step" data-next="2"
+                                style="height:38px; display:inline-flex; align-items:center;">Next</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Hidden inputs untuk UTS dan UAS (auto-populated) -->
-                <input type="hidden" name="pertemuan_data[8][pertemuan]"        value="8">
-                <input type="hidden" name="pertemuan_data[8][kemampuan_akhir]"  value="Evaluation">
-                <input type="hidden" name="pertemuan_data[8][pokok_bahasan]"    value="-">
-                <input type="hidden" name="pertemuan_data[8][metode]"           value="-">
-                <input type="hidden" name="pertemuan_data[8][waktu]"            value="0">
-                <input type="hidden" name="pertemuan_data[8][pengalaman_belajar]" value="-">
-                <input type="hidden" name="pertemuan_data[8][target_cpmk]"      value="-">
-                <input type="hidden" name="pertemuan_data[8][kriteria_penilaian]" value="-">
-                <input type="hidden" name="pertemuan_data[8][bobot]"            value="0">
-                <input type="hidden" name="pertemuan_data[16][pertemuan]"       value="16">
-                <input type="hidden" name="pertemuan_data[16][kemampuan_akhir]" value="Evaluation">
-                <input type="hidden" name="pertemuan_data[16][pokok_bahasan]"   value="-">
-                <input type="hidden" name="pertemuan_data[16][metode]"          value="-">
-                <input type="hidden" name="pertemuan_data[16][waktu]"           value="0">
-                <input type="hidden" name="pertemuan_data[16][pengalaman_belajar]" value="-">
-                <input type="hidden" name="pertemuan_data[16][target_cpmk]"     value="-">
-                <input type="hidden" name="pertemuan_data[16][kriteria_penilaian]" value="-">
-                <input type="hidden" name="pertemuan_data[16][bobot]"           value="0">
+                <!-- STEP 2: KONTRAK KULIAH -->
+                <div class="wizard-content-section hidden" id="step_2_panel">
+                    <div class="form-card">
+                        <div class="form-card-title"><i class="fas fa-university"></i> Institusi Pelaksana</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="field-label">Fakultas</label>
+                                <input type="text" class="field-control bg-slate-100" value="Teknik"
+                                    data-always-disabled="true" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label class="field-label">Program Studi</label>
+                                <input type="text" class="field-control bg-slate-100" value="Teknik Komputer"
+                                    data-always-disabled="true" disabled>
+                            </div>
+                        </div>
+                    </div>
 
-                <!-- Referensi & Catatan -->
-                <div class="form-card">
-                    <div class="form-card-title"><i class="fas fa-book"></i> Daftar Referensi</div>
-                    <p style="font-size: 13px; color: var(--slate-600); margin-bottom: 12px;">Tambahkan satu atau lebih buku/jurnal referensi.</p>
-                    <div id="references_container">
-                        <div class="ref-row">
-                            <input type="text" name="referensi_data[]" class="field-control"
-                                placeholder="Contoh: Pressman, R.S. (2015). Software Engineering. McGraw-Hill." required>
-                            <button type="button" class="btn-danger-sm btn-remove-ref" style="flex-shrink: 0; display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0;" title="Hapus referensi" aria-label="Hapus referensi">
-                                <i class="fas fa-trash"></i>
+                    <div class="form-card">
+                        <div class="form-card-title"><i class="fas fa-star-half-stroke"></i> Tabel Penilaian Mata Kuliah
+                        </div>
+                        <p style="font-size: 13px; color: var(--slate-600); margin-bottom: 16px;">Tentukan bobot (%) dan
+                            komponen evaluasi yang dinilai. Total bobot harus berjumlah 100%.</p>
+
+                        <table class="main-table" id="penilaian_data_table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%;">No</th>
+                                    <th style="width: 25%;">Poin Evaluasi</th>
+                                    <th style="width: 40%;">Komponen Evaluasi</th>
+                                    <th style="width: 15%;">Bobot (%)</th>
+                                    <th style="width: 15%;">Target CPMK</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-center">1</td>
+                                    <td class="font-bold">Aktivitas Partisipatif<input type="hidden"
+                                            name="penilaian_data[0][poin]" value="Aktivitas Partisipatif"></td>
+                                    <td><textarea name="penilaian_data[0][komponen]" class="field-control" rows="2"
+                                            placeholder="Aktivitas Kelas / Diskusi" required></textarea></td>
+                                    <td><input type="number" name="penilaian_data[0][bobot]"
+                                            class="field-control text-center weight-input" min="0" max="100" value="0"
+                                            required></td>
+                                    <td><select name="penilaian_data[0][cpmk][]"
+                                            class="field-control cpmk-target-select" multiple required></select></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">2</td>
+                                    <td class="font-bold">Hasil Proyek<input type="hidden"
+                                            name="penilaian_data[1][poin]" value="Hasil Proyek"></td>
+                                    <td><textarea name="penilaian_data[1][komponen]" class="field-control" rows="2"
+                                            placeholder="Hasil Proyek Desain" required></textarea></td>
+                                    <td><input type="number" name="penilaian_data[1][bobot]"
+                                            class="field-control text-center weight-input" min="0" max="100" value="0"
+                                            required></td>
+                                    <td><select name="penilaian_data[1][cpmk][]"
+                                            class="field-control cpmk-target-select" multiple required></select></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">3</td>
+                                    <td class="font-bold">Tugas<input type="hidden" name="penilaian_data[2][poin]"
+                                            value="Tugas"></td>
+                                    <td><textarea name="penilaian_data[2][komponen]" class="field-control" rows="2"
+                                            placeholder="Tugas Kelompok" required></textarea></td>
+                                    <td><input type="number" name="penilaian_data[2][bobot]"
+                                            class="field-control text-center weight-input" min="0" max="100" value="0"
+                                            required></td>
+                                    <td><select name="penilaian_data[2][cpmk][]"
+                                            class="field-control cpmk-target-select" multiple required></select></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">4</td>
+                                    <td class="font-bold">Quiz<input type="hidden" name="penilaian_data[3][poin]"
+                                            value="Quiz"></td>
+                                    <td><textarea name="penilaian_data[3][komponen]" class="field-control" rows="2"
+                                            placeholder="Tugas Individu / Kuis" required></textarea></td>
+                                    <td><input type="number" name="penilaian_data[3][bobot]"
+                                            class="field-control text-center weight-input" min="0" max="100" value="0"
+                                            required></td>
+                                    <td><select name="penilaian_data[3][cpmk][]"
+                                            class="field-control cpmk-target-select" multiple required></select></td>
+                                </tr>
+                                <!-- Kognitif has UTS and UAS -->
+                                <tr>
+                                    <td class="text-center" rowspan="2">5</td>
+                                    <td class="font-bold" rowspan="2">Kognitif / Pengetahuan<input type="hidden"
+                                            name="penilaian_data[4][poin]" value="Kognitif / Pengetahuan"></td>
+                                    <td>UTS (Ujian Tengah Semester)<input type="hidden"
+                                            name="penilaian_data[4][sub_rows][0][komponen]" value="UTS"></td>
+                                    <td><input type="number" name="penilaian_data[4][sub_rows][0][bobot]"
+                                            class="field-control text-center weight-input" min="0" max="100" value="0"
+                                            required></td>
+                                    <td><select name="penilaian_data[4][sub_rows][0][cpmk][]"
+                                            class="field-control cpmk-target-select" multiple required></select></td>
+                                </tr>
+                                <tr>
+                                    <td>UAS (Ujian Akhir Semester)<input type="hidden"
+                                            name="penilaian_data[4][sub_rows][1][komponen]" value="UAS"></td>
+                                    <td><input type="number" name="penilaian_data[4][sub_rows][1][bobot]"
+                                            class="field-control text-center weight-input" min="0" max="100" value="0"
+                                            required></td>
+                                    <td><select name="penilaian_data[4][sub_rows][1][cpmk][]"
+                                            class="field-control cpmk-target-select" multiple required></select></td>
+                                </tr>
+                                <tr class="font-bold" style="background-color: var(--slate-100);">
+                                    <td colspan="3" class="text-right">Total Bobot:</td>
+                                    <td class="text-center" id="total_weight_label">0%</td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                        <button type="button" class="btn btn-secondary btn-prev-step" data-prev="1"
+                            style="height:38px; display:inline-flex; align-items:center;">Back</button>
+                        <div style="display:flex; align-items:flex-start; gap:12px;">
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+                                <button type="button" class="btn btn-secondary btn-save-draft-generator" disabled
+                                    onclick="saveDraftManual('generator')"
+                                    style="height:38px; display:inline-flex; align-items:center; opacity:0.45; cursor:not-allowed;">
+                                    Simpan Draft
+                                </button>
+                                <span class="generator-draft-label"
+                                    style="font-size:10px; color:var(--c-fg-placeholder,#A4ABB8); white-space:nowrap;">Pilih
+                                    Mata Kuliah terlebih dahulu</span>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-next-step" data-next="3"
+                                style="height:38px; display:inline-flex; align-items:center;">Next</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: PERTEMUAN & REFERENSI -->
+                <div class="wizard-content-section hidden" id="step_3_panel">
+
+                    <!-- Navigator grid -->
+                    <div class="form-card" style="padding: 18px 20px 14px;">
+                        <div
+                            style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                            <div class="form-card-title" style="margin:0; padding:0; border:none;">
+                                <i class="fas fa-calendar-alt"></i> Rencana Pembelajaran per Pertemuan
+                            </div>
+                            <span id="pertemuanProgress"
+                                style="font-size:12px; font-weight:600; color:var(--c-fg-sec,#475569);">0 / 14
+                                terisi</span>
+                        </div>
+
+                        <!-- Grid nomor pertemuan -->
+                        <div id="pertemuanNav"
+                            style="display:grid; grid-template-columns:repeat(8,1fr); gap:6px; margin-bottom:16px;">
+                            @for($p = 1; $p <= 16; $p++)
+                                @if($p === 8)
+                                    <div data-nav-p="8" style="grid-column:span 1;">
+                                        <div
+                                            style="height:36px; border-radius:8px; background:#f1f5f9; border:1px solid #DFE1E7; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#94A3B8; letter-spacing:.03em;">
+                                            UTS
+                                        </div>
+                                    </div>
+                                @elseif($p === 16)
+                                    <div data-nav-p="16" style="grid-column:span 1;">
+                                        <div
+                                            style="height:36px; border-radius:8px; background:#f1f5f9; border:1px solid #DFE1E7; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#94A3B8; letter-spacing:.03em;">
+                                            UAS
+                                        </div>
+                                    </div>
+                                @else
+                                    <button type="button" data-nav-p="{{ $p }}" onclick="goToPertemuan({{ $p }})"
+                                        style="height:36px; border-radius:8px; border:1px solid #DFE1E7; background:#fff; font-size:13px; font-weight:600; color:#64748b; cursor:pointer; transition:all .15s; position:relative;">
+                                        {{ $p < 8 ? $p : $p - 1 }}
+                                        <span data-filled-{{ $p }}
+                                            style="display:none; position:absolute; top:4px; right:4px; width:6px; height:6px; border-radius:50%; background:#0B266E;"></span>
+                                    </button>
+                                @endif
+                            @endfor
+                        </div>
+
+                        <!-- Panel form satu pertemuan -->
+                        <div id="pertemuanFormPanel"
+                            style="border:1px solid #DFE1E7; border-radius:12px; overflow:hidden;">
+                            <div
+                                style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#FAFAFA; border-bottom:1px solid #DFE1E7;">
+                                <span id="pertemuanTitle"
+                                    style="font-size:14px; font-weight:700; color:#1e293b;">Pertemuan 1</span>
+                            </div>
+                            <div style="padding:16px 18px;" id="pertemuanFields">
+                                <!-- Fields dirender via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Navigasi prev/next pertemuan -->
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:14px;">
+                            <button type="button" id="btnPrevPertemuan" onclick="prevPertemuan()"
+                                style="height:34px; padding:0 16px; border:1px solid #DFE1E7; border-radius:8px; background:#fff; font-size:13px; font-weight:600; color:#475569; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-family:inherit; transition:all .15s;">
+                                Sebelumnya
+                            </button>
+                            <button type="button" id="btnNextPertemuan" onclick="nextPertemuan()"
+                                style="height:34px; padding:0 16px; border:1px solid #0B266E; border-radius:8px; background:#0B266E; color:#fff; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-family:inherit; transition:all .15s;">
+                                Selanjutnya
                             </button>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-secondary" id="btnAddReference" style="margin-top:12px; padding:8px 16px; font-size:13px;">
-                        Tambah Referensi
+
+                    <!-- Hidden inputs untuk UTS dan UAS (auto-populated) -->
+                    <input type="hidden" name="pertemuan_data[8][pertemuan]" value="8">
+                    <input type="hidden" name="pertemuan_data[8][kemampuan_akhir]" value="Evaluation">
+                    <input type="hidden" name="pertemuan_data[8][pokok_bahasan]" value="-">
+                    <input type="hidden" name="pertemuan_data[8][metode]" value="-">
+                    <input type="hidden" name="pertemuan_data[8][waktu]" value="0">
+                    <input type="hidden" name="pertemuan_data[8][pengalaman_belajar]" value="-">
+                    <input type="hidden" name="pertemuan_data[8][target_cpmk]" value="-">
+                    <input type="hidden" name="pertemuan_data[8][kriteria_penilaian]" value="-">
+                    <input type="hidden" name="pertemuan_data[8][bobot]" value="0">
+                    <input type="hidden" name="pertemuan_data[16][pertemuan]" value="16">
+                    <input type="hidden" name="pertemuan_data[16][kemampuan_akhir]" value="Evaluation">
+                    <input type="hidden" name="pertemuan_data[16][pokok_bahasan]" value="-">
+                    <input type="hidden" name="pertemuan_data[16][metode]" value="-">
+                    <input type="hidden" name="pertemuan_data[16][waktu]" value="0">
+                    <input type="hidden" name="pertemuan_data[16][pengalaman_belajar]" value="-">
+                    <input type="hidden" name="pertemuan_data[16][target_cpmk]" value="-">
+                    <input type="hidden" name="pertemuan_data[16][kriteria_penilaian]" value="-">
+                    <input type="hidden" name="pertemuan_data[16][bobot]" value="0">
+
+                    <!-- Referensi & Catatan -->
+                    <div class="form-card">
+                        <div class="form-card-title"><i class="fas fa-book"></i> Daftar Referensi</div>
+                        <p style="font-size: 13px; color: var(--slate-600); margin-bottom: 12px;">Tambahkan satu atau
+                            lebih buku/jurnal referensi.</p>
+                        <div id="references_container">
+                            <div class="ref-row">
+                                <input type="text" name="referensi_data[]" class="field-control"
+                                    placeholder="Contoh: Pressman, R.S. (2015). Software Engineering. McGraw-Hill."
+                                    required>
+                                <button type="button" class="btn-danger-sm btn-remove-ref"
+                                    style="flex-shrink: 0; display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0;"
+                                    title="Hapus referensi" aria-label="Hapus referensi">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="btnAddReference"
+                            style="margin-top:12px; padding:8px 16px; font-size:13px;">
+                            Tambah Referensi
+                        </button>
+                    </div>
+
+                    <div class="form-card">
+                        <div class="form-card-title"><i class="fas fa-comment"></i> Catatan perubahan</div>
+                        <div class="form-group">
+                            <textarea name="catatan" class="field-control" rows="3"
+                                placeholder="Opsional. Tambahkan catatan untuk validator GPM."></textarea>
+                        </div>
+                    </div>
+
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-top: 16px;">
+                        <button type="button" class="btn btn-secondary btn-prev-step" data-prev="2"
+                            style="height:38px; display:inline-flex; align-items:center;">Back</button>
+                        <div style="display:flex; align-items:flex-start; gap:12px;">
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+                                <button type="button" id="btnSaveDraftGenerator" class="btn btn-secondary" disabled
+                                    onclick="saveDraftManual('generator')"
+                                    style="height:38px; display:inline-flex; align-items:center; opacity:0.45; cursor:not-allowed;">
+                                    Simpan Draft
+                                </button>
+                                <span id="generatorDraftLabel"
+                                    style="font-size:10px; color:var(--c-fg-placeholder,#A4ABB8); white-space:nowrap;">Pilih
+                                    Mata Kuliah terlebih dahulu</span>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="btnSubmitGenerator"
+                                style="height:38px; display:inline-flex; align-items:center;">
+                                Ajukan & Generate PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </form><!-- END generatorForm -->
+
+
+        <template id="cpmkRowTemplate">
+            <div class="cpmk-row" data-cpmk-row data-row-index="__INDEX__">
+                <div>
+                    <select name="cpmk_rows[__INDEX__][cpl_id]" class="field-control cpl-select-input"
+                        data-cpmk-cpl-select style="font-size:13px;" required>
+                        <option value="">Pilih CPL</option>
+                    </select>
+                </div>
+                <div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span
+                            style="font-size:12px;font-weight:600;color:var(--slate-500);padding:10px 8px;background:var(--slate-50);border:1px solid var(--slate-200);border-radius:8px;">CPMK</span>
+                        <input type="text" name="cpmk_rows[__INDEX__][kode]" class="field-control"
+                            style="font-size:13px;" placeholder="1" required>
+                    </div>
+                </div>
+                <div>
+                    <select name="cpmk_rows[__INDEX__][kko]" class="field-control kko-select-input"
+                        style="font-size:13px;" required>
+                        <option value="">Pilih KKO</option>
+                        @foreach([
+                                'C1' => 'Mengingat',
+                                'C2' => 'Memahami',
+                                'C3' => 'Menerapkan',
+                                'C4' => 'Menganalisis',
+                                'C5' => 'Mengevaluasi',
+                                'C6' => 'Mencipta',
+                                'P1' => 'Meniru',
+                                'P2' => 'Menyesuaikan',
+                                'P3' => 'Membiasakan',
+                                'P4' => 'Menguasai',
+                                'P5' => 'Mahir',
+                                'A1' => 'Menerima',
+                                'A2' => 'Merespon',
+                                'A3' => 'Menilai',
+                                'A4' => 'Mengorganisasi',
+                                'A5' => 'Menghayati',
+                            ] as $val => $lbl)
+                            <option value="{{ $val }}">{{ $val }} – {{ $lbl }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <input type="text" name="cpmk_rows[__INDEX__][objek]" class="field-control objek-input"
+                        style="font-size:13px;" placeholder="Contoh: konsep dasar pemrograman" required>
+                </div>
+                <div>
+                    <input type="text" name="cpmk_rows[__INDEX__][konteks]" class="field-control"
+                        style="font-size:13px;" placeholder="Contoh: dalam studi kasus aplikasi web">
+                </div>
+                <div style="display:flex;align-items:flex-end;">
+                    <button type="button" class="btn-danger-sm" data-remove-cpmk-row aria-label="Hapus baris CPMK"
+                        title="Hapus baris CPMK">
+                        <i class="fas fa-trash"></i>
                     </button>
                 </div>
-
-                <div class="form-card">
-                    <div class="form-card-title"><i class="fas fa-comment"></i> Catatan Pengajuan</div>
-                    <div class="form-group">
-                        <textarea name="catatan" class="field-control" rows="3" placeholder="Opsional. Tambahkan catatan untuk validator GPM."></textarea>
-                    </div>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-top: 16px;">
-                    <button type="button" class="btn btn-secondary btn-prev-step" data-prev="2" style="height:38px; display:inline-flex; align-items:center;">Back</button>
-                    <div style="display:flex; align-items:flex-start; gap:12px;">
-                        <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
-                            <button type="button" id="btnSaveDraftGenerator" class="btn btn-secondary" disabled onclick="saveDraftManual('generator')" style="height:38px; display:inline-flex; align-items:center; opacity:0.45; cursor:not-allowed;">
-                                Simpan Draft
-                            </button>
-                            <span id="generatorDraftLabel" style="font-size:10px; color:var(--c-fg-placeholder,#A4ABB8); white-space:nowrap;">Pilih Mata Kuliah terlebih dahulu</span>
-                        </div>
-                        <button type="submit" class="btn btn-primary" id="btnSubmitGenerator" style="height:38px; display:inline-flex; align-items:center;">
-                            Ajukan & Generate PDF
-                        </button>
-                    </div>
-                </div>
             </div>
-            </div>
-        </div>
-    </form><!-- END generatorForm -->
-
-
-    <template id="cpmkRowTemplate">
-        <div class="cpmk-row" data-cpmk-row data-row-index="__INDEX__">
-            <div>
-                <select name="cpmk_rows[__INDEX__][cpl_id]" class="field-control cpl-select-input" data-cpmk-cpl-select
-                    style="font-size:13px;" required>
-                    <option value="">Pilih CPL</option>
-                </select>
-            </div>
-            <div>
-                <div style="display:flex;align-items:center;gap:6px;">
-                    <span
-                        style="font-size:12px;font-weight:600;color:var(--slate-500);padding:10px 8px;background:var(--slate-50);border:1px solid var(--slate-200);border-radius:8px;">CPMK</span>
-                    <input type="text" name="cpmk_rows[__INDEX__][kode]" class="field-control" style="font-size:13px;"
-                        placeholder="1" required>
-                </div>
-            </div>
-            <div>
-                <select name="cpmk_rows[__INDEX__][kko]" class="field-control kko-select-input" style="font-size:13px;"
-                    required>
-                    <option value="">Pilih KKO</option>
-                    @foreach([
-                            'C1' => 'Mengingat',
-                            'C2' => 'Memahami',
-                            'C3' => 'Menerapkan',
-                            'C4' => 'Menganalisis',
-                            'C5' => 'Mengevaluasi',
-                            'C6' => 'Mencipta',
-                            'P1' => 'Meniru',
-                            'P2' => 'Menyesuaikan',
-                            'P3' => 'Membiasakan',
-                            'P4' => 'Menguasai',
-                            'P5' => 'Mahir',
-                            'A1' => 'Menerima',
-                            'A2' => 'Merespon',
-                            'A3' => 'Menilai',
-                            'A4' => 'Mengorganisasi',
-                            'A5' => 'Menghayati',
-                        ] as $val => $lbl)
-                        <option value="{{ $val }}">{{ $val }} – {{ $lbl }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <input type="text" name="cpmk_rows[__INDEX__][objek]" class="field-control objek-input"
-                    style="font-size:13px;" placeholder="merancang sistem IoT" required>
-            </div>
-            <div>
-                <input type="text" name="cpmk_rows[__INDEX__][konteks]" class="field-control" style="font-size:13px;"
-                    placeholder="sesuai kebutuhan">
-            </div>
-            <div style="display:flex;align-items:flex-end;">
-                <button type="button" class="btn-danger-sm" data-remove-cpmk-row aria-label="Hapus baris CPMK" title="Hapus baris CPMK">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        </div>
-    </template>
+        </template>
 
     </x-banksoal::ui.bank-soal-page>
 
@@ -1330,17 +1428,18 @@
 
                         if (typeof TomSelect !== 'undefined') {
                             const ts = new TomSelect(sel, {
-                                plugins: { remove_button: { title: "Hapus dosen ini" } },
                                 maxOptions: 100,
                                 searchField: ["text"],
                                 persist: false,
                                 hideSelected: false,
+                                placeholder: 'Pilih dosen pengampu lain...',
+                                dropdownParent: 'body',
                                 render: {
-                                    item: function(data, escape) {
-                                        return `<div class="item" style="background:#f1f5f9;color:#0b266e;font-weight:600;border:1px solid #cbd5e1;border-radius:6px;padding:2px 8px;font-size:12px;margin:2px;">${escape(data.text)}</div>`;
+                                    item: function (data, escape) {
+                                        return `<div class="item" data-value="${escape(data.value)}" style="display:none !important;"></div>`;
                                     },
-                                    option: function(data, escape) {
-                                        return `<div class="option py-2 px-3">${escape(data.text)}</div>`;
+                                    option: function (data, escape) {
+                                        return `<div class="option py-2 px-3" data-value="${escape(data.value)}">${escape(data.text)}</div>`;
                                     }
                                 }
                             });
@@ -1368,18 +1467,18 @@
                         }
                     });
 
-                    const uploadForm    = document.getElementById('uploadForm');
+                    const uploadForm = document.getElementById('uploadForm');
                     const generatorForm = document.getElementById('generatorForm');
 
                     if (method === 'upload') {
                         if (methodUploadPanel) methodUploadPanel.classList.remove('hidden');
                         if (methodGeneratorPanel) methodGeneratorPanel.classList.add('hidden');
-                        if (uploadForm)    uploadForm.style.display    = '';
+                        if (uploadForm) uploadForm.style.display = '';
                         if (generatorForm) generatorForm.style.display = 'none';
                     } else {
                         if (methodUploadPanel) methodUploadPanel.classList.add('hidden');
                         if (methodGeneratorPanel) methodGeneratorPanel.classList.remove('hidden');
-                        if (uploadForm)    uploadForm.style.display    = 'none';
+                        if (uploadForm) uploadForm.style.display = 'none';
                         if (generatorForm) generatorForm.style.display = '';
                         loadWizardStep(1);
                     }
@@ -1406,17 +1505,17 @@
 
 
                 function syncSharedFields() {
-                    const mkVal  = document.getElementById('mkSelect')?.value  || '';
-                    const semVal = document.getElementById('semester')?.value  || '{{ $semester }}';
-                    const taVal  = document.getElementById('tahun_ajaran')?.value || '{{ $academicYear }}';
+                    const mkVal = document.getElementById('mkSelect')?.value || '';
+                    const semVal = document.getElementById('semester')?.value || '{{ $semester }}';
+                    const taVal = document.getElementById('tahun_ajaran')?.value || '{{ $academicYear }}';
 
                     ['upload', 'generator'].forEach(m => {
                         const mkEl = document.getElementById(`${m}_mk_id`);
                         const semEl = document.getElementById(`${m}_semester`);
-                        const taEl  = document.getElementById(`${m}_tahun_ajaran`);
-                        if (mkEl)  mkEl.value  = mkVal;
+                        const taEl = document.getElementById(`${m}_tahun_ajaran`);
+                        if (mkEl) mkEl.value = mkVal;
                         if (semEl) semEl.value = semVal;
-                        if (taEl)  taEl.value  = taVal;
+                        if (taEl) taEl.value = taVal;
                     });
 
                     updateDraftButtonState();
@@ -1428,7 +1527,7 @@
 
                     ['upload', 'generator'].forEach(method => {
                         const suffix = method === 'upload' ? 'Upload' : 'Generator';
-                        const btns   = document.querySelectorAll(`#btnSaveDraft${suffix}, .btn-save-draft-${method}`);
+                        const btns = document.querySelectorAll(`#btnSaveDraft${suffix}, .btn-save-draft-${method}`);
                         const labels = document.querySelectorAll(`#${method}DraftLabel, .${method}-draft-label`);
 
                         btns.forEach(btn => {
@@ -1436,11 +1535,11 @@
                             if (!mkId) {
                                 btn.disabled = true;
                                 btn.style.opacity = '0.45';
-                                btn.style.cursor  = 'not-allowed';
+                                btn.style.cursor = 'not-allowed';
                             } else {
                                 btn.disabled = false;
                                 btn.style.opacity = '1';
-                                btn.style.cursor  = 'pointer';
+                                btn.style.cursor = 'pointer';
                             }
                         });
 
@@ -1495,12 +1594,12 @@
                     window.currentDraftStepReached = currentMax;
 
                     const payload = {
-                        mk_id:           mkId,
-                        semester:        document.getElementById('semester')?.value         || '{{ $semester }}',
-                        tahun_ajaran:    document.getElementById('tahun_ajaran')?.value     || '{{ $academicYear }}',
+                        mk_id: mkId,
+                        semester: document.getElementById('semester')?.value || '{{ $semester }}',
+                        tahun_ajaran: document.getElementById('tahun_ajaran')?.value || '{{ $academicYear }}',
                         creation_method: method,
-                        step_reached:    currentMax,
-                        dosen_lain:      getDosenLainIds(),
+                        step_reached: currentMax,
+                        dosen_lain: getDosenLainIds(),
                     };
 
                     const s1 = collectStep1Data();
@@ -1514,10 +1613,10 @@
 
                     if (window.showLoader) window.showLoader();
                     try {
-                        const res  = await fetch('{{ route("banksoal.rps.dosen.save-draft") }}', {
-                            method:  'POST',
+                        const res = await fetch('{{ route("banksoal.rps.dosen.save-draft") }}', {
+                            method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                            body:    JSON.stringify(payload),
+                            body: JSON.stringify(payload),
                         });
                         const data = await res.json();
                         if (data.success) {
@@ -1544,17 +1643,17 @@
                     const cpmkRows = [];
                     document.querySelectorAll('#cpmkRowsGenerator [data-cpmk-row]').forEach(row => {
                         cpmkRows.push({
-                            cpl_id:  row.querySelector('[data-cpmk-cpl-select]')?.value || row.querySelector('[data-cpmk-cpl-select]')?.dataset?.selectedValue || '',
-                            kode:    row.querySelector('input[name*="[kode]"]')?.value   || '',
-                            kko:     row.querySelector('select[name*="[kko]"]')?.value   || '',
-                            objek:   row.querySelector('input[name*="[objek]"]')?.value  || '',
+                            cpl_id: row.querySelector('[data-cpmk-cpl-select]')?.value || row.querySelector('[data-cpmk-cpl-select]')?.dataset?.selectedValue || '',
+                            kode: row.querySelector('input[name*="[kode]"]')?.value || '',
+                            kko: row.querySelector('select[name*="[kko]"]')?.value || '',
+                            objek: row.querySelector('input[name*="[objek]"]')?.value || '',
                             konteks: row.querySelector('input[name*="[konteks]"]')?.value || '',
                         });
                     });
                     const selectedCpls = Array.from(document.querySelectorAll('#cpl_checkbox_container input[name="cpl_ids[]"]:checked')).map(cb => cb.value);
                     return {
-                        cpl_ids:      selectedCpls,
-                        cpmk_rows:    cpmkRows,
+                        cpl_ids: selectedCpls,
+                        cpmk_rows: cpmkRows,
                         deskripsi_mk: document.getElementById('deskripsi_mk')?.value || '',
                     };
                 }
@@ -1584,7 +1683,7 @@
                     if (pData) {
                         for (const [p, d] of Object.entries(pData)) {
                             if (!d) continue;
-                            const fields = ['kemampuan_akhir','pokok_bahasan','metode','waktu','pengalaman_belajar','kriteria_penilaian','bobot'];
+                            const fields = ['kemampuan_akhir', 'pokok_bahasan', 'metode', 'waktu', 'pengalaman_belajar', 'kriteria_penilaian', 'bobot'];
                             fields.forEach(f => {
                                 pertemuan[`pertemuan_data[${p}][${f}]`] = d[f] ?? '';
                             });
@@ -1610,13 +1709,13 @@
                     if (!mkId) return;
                     try {
                         const url = "{{ route('banksoal.rps.dosen.get-draft', ['mkId' => 'PLACEHOLDER']) }}".replace('PLACEHOLDER', mkId);
-                        const res  = await fetch(url, {
+                        const res = await fetch(url, {
                             headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                         });
                         const data = await res.json();
                         if (data.success && data.data && data.data.length > 0) {
-                            const method  = creationMethodInput?.value || 'generator';
-                            const draft   = data.data.find(d => d.creation_method === method) || data.data[0];
+                            const method = creationMethodInput?.value || 'generator';
+                            const draft = data.data.find(d => d.creation_method === method) || data.data[0];
                             if (autoRestore) {
                                 setCreationMethod(draft.creation_method);
                                 restoreDraftData(draft);
@@ -1633,13 +1732,13 @@
 
                 function showDraftResumeBanner(draft) {
                     const banner = document.getElementById('draftResumeBanner');
-                    const text   = document.getElementById('draftResumeBannerText');
-                    const btnResume  = document.getElementById('btnResumeDraft');
+                    const text = document.getElementById('draftResumeBannerText');
+                    const btnResume = document.getElementById('btnResumeDraft');
                     const btnDiscard = document.getElementById('btnDiscardDraft');
                     if (!banner) return;
 
                     const methodLabel = draft.creation_method === 'generator' ? 'Form Generator' : 'Upload PDF';
-                    const stepLabel   = ['Belum dimulai','Langkah 1/3','Langkah 2/3','Langkah 3/3'][draft.step_reached] || '';
+                    const stepLabel = ['Belum dimulai', 'Langkah 1/3', 'Langkah 2/3', 'Langkah 3/3'][draft.step_reached] || '';
                     if (text) text.textContent = `Ditemukan draft ${methodLabel} (${stepLabel}) — terakhir disimpan ${draft.updated_at}.`;
 
                     banner.classList.remove('hidden');
@@ -1652,7 +1751,59 @@
                         };
                     }
                     if (btnDiscard) {
-                        btnDiscard.onclick = () => hideDraftResumeBanner();
+                        btnDiscard.onclick = async () => {
+                            if (typeof Swal !== 'undefined') {
+                                const result = await Swal.fire({
+                                    title: 'Hapus Draft RPS?',
+                                    text: 'Apakah Anda yakin ingin menghapus draft tersimpan untuk mata kuliah ini? Data draft tidak dapat dikembalikan.',
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    showDenyButton: true,
+                                    confirmButtonColor: '#ef4444',
+                                    denyButtonColor: '#94a3b8',
+                                    cancelButtonColor: '#cbd5e1',
+                                    confirmButtonText: 'Ya, Hapus Draft',
+                                    denyButtonText: 'Hanya Sembunyikan',
+                                    cancelButtonText: 'Batal',
+                                });
+
+                                if (result.isConfirmed) {
+                                    const draftId = draft.id || draft.draft_id || window.currentDraftId;
+                                    if (draftId) {
+                                        try {
+                                            const destroyUrl = "{{ route('banksoal.rps.dosen.delete-draft', 'PLACEHOLDER') }}".replace('PLACEHOLDER', draftId);
+                                            const res = await fetch(destroyUrl, {
+                                                method: 'DELETE',
+                                                headers: {
+                                                    'X-CSRF-TOKEN': csrfToken,
+                                                    'Accept': 'application/json'
+                                                }
+                                            });
+                                            const d = await res.json();
+                                            if (d.success) {
+                                                window.currentDraftId = null;
+                                                hideDraftResumeBanner();
+                                                Swal.fire({
+                                                    icon: 'success',
+                                                    title: 'Berhasil',
+                                                    text: 'Draft RPS berhasil dihapus',
+                                                    timer: 1400,
+                                                    showConfirmButton: false
+                                                });
+                                                return;
+                                            }
+                                        } catch (e) {
+                                            console.warn('Gagal menghapus draft:', e);
+                                        }
+                                    }
+                                    hideDraftResumeBanner();
+                                } else if (result.isDenied) {
+                                    hideDraftResumeBanner();
+                                }
+                            } else {
+                                hideDraftResumeBanner();
+                            }
+                        };
                     }
                 }
 
@@ -1726,11 +1877,11 @@
                                         const row = document.createElement('div');
                                         row.className = 'ref-row';
                                         row.innerHTML = `
-                                            <input type="text" name="referensi_data[]" class="field-control" value="${String(refText).replace(/"/g, '&quot;')}" required>
-                                            <button type="button" class="btn-danger-sm btn-remove-ref" style="flex-shrink: 0; display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0;" title="Hapus referensi" aria-label="Hapus referensi">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        `;
+                                                                        <input type="text" name="referensi_data[]" class="field-control" value="${String(refText).replace(/"/g, '&quot;')}" required>
+                                                                        <button type="button" class="btn-danger-sm btn-remove-ref" style="flex-shrink: 0; display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0;" title="Hapus referensi" aria-label="Hapus referensi">
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    `;
                                         refContainer.appendChild(row);
                                     });
                                 }
@@ -1752,7 +1903,7 @@
                                             try {
                                                 const parsed = typeof val === 'string' ? JSON.parse(val) : val;
                                                 pData[p][field] = Array.isArray(parsed) ? parsed : (val ? String(val).split(',').map(s => s.trim()).filter(Boolean) : []);
-                                            } catch(e) {
+                                            } catch (e) {
                                                 pData[p][field] = val ? String(val).split(',').map(s => s.trim()).filter(Boolean) : [];
                                             }
                                         } else {
@@ -1826,9 +1977,9 @@
                                             item.style.fontSize = '13px';
                                             item.style.cursor = 'pointer';
                                             item.innerHTML = `
-                                                <input type="checkbox" name="cpl_ids[]" class="cpl-checkbox-item" value="${cpl.id}" style="margin-top: 3px; accent-color: var(--primary-blue);" data-code="${cpl.kode}">
-                                                <div><strong>${cpl.kode}</strong>: ${cpl.deskripsi}</div>
-                                            `;
+                                                                            <input type="checkbox" name="cpl_ids[]" class="cpl-checkbox-item" value="${cpl.id}" style="margin-top: 3px; accent-color: var(--primary-blue);" data-code="${cpl.kode}">
+                                                                            <div><strong>${cpl.kode}</strong>: ${cpl.deskripsi}</div>
+                                                                        `;
                                             cplCheckboxContainer.appendChild(item);
                                         });
                                     }
@@ -1891,6 +2042,29 @@
                         if (!isValid) {
                             alert('Harap lengkapi seluruh kolom yang wajib diisi (Required), termasuk Target CPMK pada tabel!');
                             return;
+                        }
+
+                        // Validasi duplikasi CPMK khusus untuk Step 1
+                        if (currentPanel && currentPanel.id === 'step_1_panel') {
+                            const genContainer = document.getElementById('cpmkRowsGenerator');
+                            const isCpmkValid = window.validateCpmkDuplicates ? window.validateCpmkDuplicates(genContainer) : true;
+                            if (!isCpmkValid) {
+                                if (window.Swal) {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Kombinasi CPMK Duplikat',
+                                        text: 'Terdapat kombinasi CPL dan Kode CPMK yang sama. Mohon bedakan kode CPMK untuk setiap baris CPL yang sama.',
+                                        confirmButtonColor: '#0B266E'
+                                    });
+                                } else {
+                                    alert('Terdapat kombinasi CPL dan Kode CPMK yang sama. Mohon bedakan kode CPMK untuk setiap baris CPL yang sama.');
+                                }
+                                const firstDup = genContainer?.querySelector('.cpmk-duplicate-warning, input.is-invalid');
+                                if (firstDup) {
+                                    firstDup.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }
+                                return;
+                            }
                         }
 
                         // Specifically for Step 2 total weight check (Kontrak Kuliah)
@@ -1984,9 +2158,13 @@
                     }
                 });
 
-                // Helper to attach toggle deselect hook & Navy badge formatting on TomSelect instance
+                // Helper to attach toggle deselect hook & "{count} Terpilih" badge on TomSelect instance
                 function attachTomSelectToggleDeselect(ts) {
                     if (!ts) return;
+
+                    if (ts.wrapper) {
+                        ts.wrapper.classList.add('has-summary-badge');
+                    }
 
                     if (!ts._hasToggleHook) {
                         ts._hasToggleHook = true;
@@ -2006,7 +2184,6 @@
                                     ts.removeItem(normalizedVal);
                                 }
                                 ts.refreshOptions(false);
-                                ts.refreshItems();
                                 if (evt && evt.preventDefault) evt.preventDefault();
                                 return;
                             }
@@ -2014,83 +2191,70 @@
                         };
                     }
 
-                    const updateDisplayAndSort = () => {
+                    const updateSummaryBadge = () => {
                         if (!ts) return;
-
-                        const allOptions = Object.values(ts.options || {});
-                        allOptions.forEach(opt => {
-                            opt.$is_selected = ts.items.includes(String(opt.value));
-                        });
-                        allOptions.sort((a, b) => {
-                            if (a.$is_selected && !b.$is_selected) return -1;
-                            if (!a.$is_selected && b.$is_selected) return 1;
-                            return (a.$order || 0) - (b.$order || 0);
-                        });
-
                         const count = ts.items ? ts.items.length : 0;
                         const control = ts.control;
-                        if (control) {
-                            control.style.display = 'flex';
-                            control.style.flexWrap = 'nowrap';
-                            control.style.overflowX = 'auto';
-                            control.style.overflowY = 'hidden';
-                            control.style.height = '38px';
-                            control.style.minHeight = '38px';
-                            control.style.maxHeight = '38px';
-                            control.style.boxSizing = 'border-box';
-                            control.style.alignItems = 'center';
-                            control.style.gap = '4px';
-                            control.style.width = '100%';
-                            control.style.minWidth = '220px';
-                            if (ts.wrapper) ts.wrapper.style.width = '100%';
+                        if (!control) return;
 
-                            const itemEls = control.querySelectorAll('.item');
-                            itemEls.forEach((el, index) => {
-                                const removeBtn = el.querySelector('.remove');
-                                if (count > 0 && index === 0) {
-                                    const textNode = Array.from(el.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
-                                    if (textNode) {
-                                        textNode.textContent = `${count} Terpilih`;
-                                    } else {
-                                        el.insertBefore(document.createTextNode(`${count} Terpilih`), el.firstChild);
-                                    }
-                                    el.style.display = 'inline-flex';
-                                    el.style.alignItems = 'center';
-                                    el.style.backgroundColor = '#f1f5f9';
-                                    el.style.color = '#0b266e';
-                                    el.style.fontWeight = '600';
-                                    el.style.border = '1px solid #cbd5e1';
-                                    el.style.borderRadius = '6px';
-                                    el.style.padding = '2px 8px';
-                                    el.style.fontSize = '12px';
-                                    el.style.whiteSpace = 'nowrap';
-                                    el.style.flexShrink = '0';
-                                    el.style.height = '24px';
-                                    el.style.boxSizing = 'border-box';
-                                    if (removeBtn) {
-                                        removeBtn.style.display = '';
-                                        removeBtn.style.marginLeft = '4px';
-                                        removeBtn.style.color = '#0b266e';
-                                    }
-                                } else {
-                                    el.style.display = 'none';
-                                    if (removeBtn) removeBtn.style.display = 'none';
-                                }
-                            });
+                        control.style.display = 'flex';
+                        control.style.alignItems = 'center';
+                        control.style.height = '38px';
+                        control.style.minHeight = '38px';
+                        control.style.maxHeight = '38px';
+                        control.style.boxSizing = 'border-box';
+                        control.style.padding = '0 8px';
+
+                        let badge = control.querySelector('.ts-summary-badge');
+                        if (!badge) {
+                            badge = document.createElement('div');
+                            badge.className = 'ts-summary-badge';
+                            badge.innerHTML = `<span class="ts-summary-text"></span><span class="ts-summary-clear" title="Hapus semua pilihan">×</span>`;
+                            const clearBtn = badge.querySelector('.ts-summary-clear');
+                            if (clearBtn) {
+                                clearBtn.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    ts.clear();
+                                    ts.refreshOptions(false);
+                                    updateSummaryBadge();
+                                });
+                            }
+                            control.insertBefore(badge, ts.control_input || control.firstChild);
+                        }
+
+                        if (count > 0) {
+                            badge.style.display = 'inline-flex';
+                            badge.querySelector('.ts-summary-text').textContent = `${count} Terpilih`;
+                            if (ts.control_input) {
+                                ts.control_input.placeholder = '';
+                                ts.control_input.style.width = '0px';
+                                ts.control_input.style.minWidth = '0px';
+                                ts.control_input.style.opacity = '0';
+                            }
+                        } else {
+                            badge.style.display = 'none';
+                            if (ts.control_input) {
+                                ts.control_input.placeholder = ts.settings.placeholder || '';
+                                ts.control_input.style.width = '';
+                                ts.control_input.style.minWidth = '';
+                                ts.control_input.style.opacity = '';
+                            }
                         }
                     };
 
                     if (!ts._hasDisplayEvents) {
                         ts._hasDisplayEvents = true;
                         ts.on('change', () => {
-                            updateDisplayAndSort();
+                            updateSummaryBadge();
                             ts.refreshOptions(false);
                         });
-                        ts.on('item_add', updateDisplayAndSort);
-                        ts.on('item_remove', updateDisplayAndSort);
+                        ts.on('item_add', updateSummaryBadge);
+                        ts.on('item_remove', updateSummaryBadge);
+                        ts.on('clear', updateSummaryBadge);
                     }
 
-                    updateDisplayAndSort();
+                    updateSummaryBadge();
                 }
 
                 window.attachTomSelectToggleDeselect = attachTomSelectToggleDeselect;
@@ -2169,13 +2333,13 @@
 
                         if (typeof TomSelect !== 'undefined' && select.tomselect) {
                             const ts = select.tomselect;
-                            ts.clear(true);
+                            ts.clear();
                             ts.clearOptions();
                             list.forEach(item => {
                                 ts.addOption({ value: item.value, text: item.label });
                             });
                             currentVals.forEach(val => {
-                                ts.addItem(val, true);
+                                ts.addItem(val);
                             });
                             attachTomSelectToggleDeselect(ts);
                             ts.refreshOptions(false);
@@ -2193,17 +2357,18 @@
                             });
                             if (typeof TomSelect !== 'undefined') {
                                 const cpmkTs = new TomSelect(select, {
-                                    plugins: { remove_button: { title: "Hapus CPMK" } },
                                     maxOptions: 100,
                                     persist: false,
                                     create: false,
                                     hideSelected: false,
+                                    placeholder: 'Pilih CPMK...',
+                                    dropdownParent: 'body',
                                     render: {
-                                        item: function(data, escape) {
-                                            return `<div class="item" style="background:#f1f5f9;color:#0b266e;font-weight:600;border:1px solid #cbd5e1;border-radius:6px;padding:2px 8px;font-size:12px;margin:2px;">${escape(data.text)}</div>`;
+                                        item: function (data, escape) {
+                                            return `<div class="item" data-value="${escape(data.value)}" style="display:none !important;"></div>`;
                                         },
-                                        option: function(data, escape) {
-                                            return `<div class="option py-2 px-3">${escape(data.text)}</div>`;
+                                        option: function (data, escape) {
+                                            return `<div class="option py-2 px-3" data-value="${escape(data.value)}">${escape(data.text)}</div>`;
                                         }
                                     }
                                 });
@@ -2219,11 +2384,11 @@
                     const row = document.createElement('div');
                     row.className = 'ref-row';
                     row.innerHTML = `
-                        <input type="text" name="referensi_data[]" class="field-control" placeholder="Tulis rujukan referensi baru..." required>
-                        <button type="button" class="btn-danger-sm btn-remove-ref" style="flex-shrink: 0; display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0;" title="Hapus referensi" aria-label="Hapus referensi">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    `;
+                                                    <input type="text" name="referensi_data[]" class="field-control" placeholder="Tulis rujukan referensi baru..." required>
+                                                    <button type="button" class="btn-danger-sm btn-remove-ref" style="flex-shrink: 0; display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0;" title="Hapus referensi" aria-label="Hapus referensi">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                `;
                     refContainer.appendChild(row);
                     triggerAutoSave();
                 });
@@ -2285,31 +2450,31 @@
                         if (i === 8 || i === 16) {
                             row.className = `grid-table-row pertemuan-row-item ${i === 8 ? 'uts-row' : 'uas-row'}`;
                             row.innerHTML = `
-                                <div style="grid-column: span 9; width: 100%; padding: 12px 10px; background: #e2e8f0; font-weight: bold; text-align: center;">
-                                    ${i === 8 ? 'UJIAN TENGAH SEMESTER (UTS)' : 'UJIAN AKHIR SEMESTER (UAS)'}
-                                    <input type="hidden" name="pertemuan_data[${i}][pertemuan]" value="${i}">
-                                    <input type="hidden" name="pertemuan_data[${i}][kemampuan_akhir]" value="Evaluation">
-                                    <input type="hidden" name="pertemuan_data[${i}][pokok_bahasan]" value="-">
-                                    <input type="hidden" name="pertemuan_data[${i}][metode]" value="-">
-                                    <input type="hidden" name="pertemuan_data[${i}][waktu]" value="0">
-                                    <input type="hidden" name="pertemuan_data[${i}][pengalaman_belajar]" value="-">
-                                    <input type="hidden" name="pertemuan_data[${i}][target_cpmk]" value="-">
-                                    <input type="hidden" name="pertemuan_data[${i}][kriteria_penilaian]" value="-">
-                                    <input type="hidden" name="pertemuan_data[${i}][bobot]" value="0">
-                                </div>
-                            `;
+                                                            <div style="grid-column: span 9; width: 100%; padding: 12px 10px; background: #e2e8f0; font-weight: bold; text-align: center;">
+                                                                ${i === 8 ? 'UJIAN TENGAH SEMESTER (UTS)' : 'UJIAN AKHIR SEMESTER (UAS)'}
+                                                                <input type="hidden" name="pertemuan_data[${i}][pertemuan]" value="${i}">
+                                                                <input type="hidden" name="pertemuan_data[${i}][kemampuan_akhir]" value="Evaluation">
+                                                                <input type="hidden" name="pertemuan_data[${i}][pokok_bahasan]" value="-">
+                                                                <input type="hidden" name="pertemuan_data[${i}][metode]" value="-">
+                                                                <input type="hidden" name="pertemuan_data[${i}][waktu]" value="0">
+                                                                <input type="hidden" name="pertemuan_data[${i}][pengalaman_belajar]" value="-">
+                                                                <input type="hidden" name="pertemuan_data[${i}][target_cpmk]" value="-">
+                                                                <input type="hidden" name="pertemuan_data[${i}][kriteria_penilaian]" value="-">
+                                                                <input type="hidden" name="pertemuan_data[${i}][bobot]" value="0">
+                                                            </div>
+                                                        `;
                         } else {
                             row.innerHTML = `
-                                <div class="text-center font-bold">${i}<input type="hidden" name="pertemuan_data[${i}][pertemuan]" value="${i}"></div>
-                                <div><textarea name="pertemuan_data[${i}][kemampuan_akhir]" class="field-control" rows="2" required></textarea></div>
-                                <div><textarea name="pertemuan_data[${i}][pokok_bahasan]" class="field-control" rows="2" required></textarea></div>
-                                <div><input type="text" name="pertemuan_data[${i}][metode]" class="field-control" required></div>
-                                <div><input type="number" name="pertemuan_data[${i}][waktu]" class="field-control text-center" value="150" required></div>
-                                <div><textarea name="pertemuan_data[${i}][pengalaman_belajar]" class="field-control" rows="2" required></textarea></div>
-                                <div><select name="pertemuan_data[${i}][target_cpmk][]" class="field-control pertemuan-cpmk-select" multiple required></select></div>
-                                <div><textarea name="pertemuan_data[${i}][kriteria_penilaian]" class="field-control" rows="2" required></textarea></div>
-                                <div><input type="number" name="pertemuan_data[${i}][bobot]" class="field-control text-center" value="5" min="0" max="100" required></div>
-                            `;
+                                                            <div class="text-center font-bold">${i}<input type="hidden" name="pertemuan_data[${i}][pertemuan]" value="${i}"></div>
+                                                            <div><textarea name="pertemuan_data[${i}][kemampuan_akhir]" class="field-control" rows="2" required></textarea></div>
+                                                            <div><textarea name="pertemuan_data[${i}][pokok_bahasan]" class="field-control" rows="2" required></textarea></div>
+                                                            <div><input type="text" name="pertemuan_data[${i}][metode]" class="field-control" required></div>
+                                                            <div><input type="number" name="pertemuan_data[${i}][waktu]" class="field-control text-center" value="150" required></div>
+                                                            <div><textarea name="pertemuan_data[${i}][pengalaman_belajar]" class="field-control" rows="2" required></textarea></div>
+                                                            <div><select name="pertemuan_data[${i}][target_cpmk][]" class="field-control pertemuan-cpmk-select" multiple required></select></div>
+                                                            <div><textarea name="pertemuan_data[${i}][kriteria_penilaian]" class="field-control" rows="2" required></textarea></div>
+                                                            <div><input type="number" name="pertemuan_data[${i}][bobot]" class="field-control text-center" value="5" min="0" max="100" required></div>
+                                                        `;
                         }
                         if (i <= 8) pertemuanSebelumUtsContainer.appendChild(row);
                         else pertemuanSetelahUtsContainer.appendChild(row);
@@ -2450,11 +2615,11 @@
                                         const row = document.createElement('div');
                                         row.className = 'ref-row';
                                         row.innerHTML = `
-                                            <input type="text" name="referensi_data[]" class="field-control" value="${ref}" required>
-                                            <button type="button" class="btn-danger-sm btn-remove-ref" style="flex-shrink: 0; display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0;" title="Hapus referensi" aria-label="Hapus referensi">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        `;
+                                                                        <input type="text" name="referensi_data[]" class="field-control" value="${ref}" required>
+                                                                        <button type="button" class="btn-danger-sm btn-remove-ref" style="flex-shrink: 0; display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0;" title="Hapus referensi" aria-label="Hapus referensi">
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    `;
                                         refContainer.appendChild(row);
                                     });
                                 }
@@ -2499,6 +2664,22 @@
                     console.log("Creation method:", method);
 
                     if (method === 'upload') {
+                        const uploadContainer = document.getElementById('cpmkRows');
+                        const isCpmkValid = window.validateCpmkDuplicates ? window.validateCpmkDuplicates(uploadContainer) : true;
+                        if (!isCpmkValid) {
+                            if (window.Swal) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Kombinasi CPMK Duplikat',
+                                    text: 'Terdapat kombinasi CPL dan Kode CPMK yang sama pada baris CPMK. Mohon bedakan kodenya.',
+                                    confirmButtonColor: '#0B266E'
+                                });
+                            } else {
+                                alert('Terdapat kombinasi CPL dan Kode CPMK yang sama pada baris CPMK. Mohon bedakan kodenya.');
+                            }
+                            return;
+                        }
+
                         if (!this.checkValidity()) {
                             this.reportValidity();
                             return;
@@ -2534,6 +2715,27 @@
                     }
 
                     // Generator mode - validate visible/non-disabled required inputs
+                    const genContainer = document.getElementById('cpmkRowsGenerator');
+                    const isCpmkValid = window.validateCpmkDuplicates ? window.validateCpmkDuplicates(genContainer) : true;
+                    if (!isCpmkValid) {
+                        loadWizardStep(1);
+                        if (window.Swal) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Kombinasi CPMK Duplikat',
+                                text: 'Terdapat kombinasi CPL dan Kode CPMK yang sama pada Step 1. Mohon bedakan kode CPMK untuk CPL yang sama.',
+                                confirmButtonColor: '#0B266E'
+                            });
+                        } else {
+                            alert('Terdapat kombinasi CPL dan Kode CPMK yang sama pada Step 1. Mohon bedakan kode CPMK untuk CPL yang sama.');
+                        }
+                        const firstDup = genContainer?.querySelector('.cpmk-duplicate-warning, input.is-invalid');
+                        if (firstDup) {
+                            firstDup.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        return;
+                    }
+
                     const requiredInputs = rpsSubmitForm.querySelectorAll('input[required], select[required], textarea[required]');
                     console.log("Total required inputs found:", requiredInputs.length);
 
@@ -2655,18 +2857,23 @@
                         },
                         body: formData,
                     })
-                        .then(response => {
+                        .then(async response => {
                             console.log("Server response status:", response.status);
-                            return response.json().then(data => ({ status: response.status, data }));
+                            const text = await response.text();
+                            let data;
+                            try {
+                                data = JSON.parse(text);
+                            } catch (e) {
+                                console.error("Server returned non-JSON response:", text.substring(0, 500));
+                                throw new Error('Server mengembalikan respons yang tidak valid. Silakan coba lagi atau hubungi administrator.');
+                            }
+                            return { status: response.status, data };
                         })
                         .then(({ status, data }) => {
                             console.log("Server JSON response:", data);
                             if (data.success && data.redirect) {
-                                // Show success snackbar then redirect
-                                if (typeof Snackbar !== 'undefined' && typeof Snackbar.show === 'function') {
-                                    Snackbar.show(data.message || 'RPS berhasil disimpan dan sedang menunggu verifikasi GPM.', 'success', 3000);
-                                }
-                                setTimeout(() => { window.location.href = data.redirect; }, 1500);
+                                // Badge notifikasi ditampilkan di halaman tujuan lewat session flash.
+                                setTimeout(() => { window.location.href = data.redirect; }, 900);
                             } else {
                                 if (window.hideLoader) window.hideLoader();
                                 const msg = data.message || (data.errors ? Object.values(data.errors).flat().join(', ') : 'Terjadi kesalahan tidak diketahui.');
@@ -2680,22 +2887,45 @@
                         .catch(err => {
                             console.error("Fetch error:", err);
                             if (window.hideLoader) window.hideLoader();
+                            const errMsg = err.message && !err.message.includes('JSON') ? err.message : 'Koneksi gagal atau respons server tidak valid. Silakan periksa jaringan Anda dan coba lagi.';
                             if (typeof Snackbar !== 'undefined' && typeof Snackbar.show === 'function') {
-                                Snackbar.show('Koneksi gagal. Silakan periksa jaringan Anda dan coba lagi.', 'error', 5000);
+                                Snackbar.show(errMsg, 'error', 6000);
                             } else {
-                                alert("Koneksi gagal. Silakan periksa jaringan Anda dan coba lagi.");
+                                alert(errMsg);
                             }
                         });
                 });
+
+                const uploadFormDirect = document.getElementById('uploadForm');
+                if (uploadFormDirect) {
+                    uploadFormDirect.addEventListener('submit', function (e) {
+                        const uploadContainer = document.getElementById('cpmkRows');
+                        const isCpmkValid = window.validateCpmkDuplicates ? window.validateCpmkDuplicates(uploadContainer) : true;
+                        if (!isCpmkValid) {
+                            e.preventDefault();
+                            if (window.Swal) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Kombinasi CPMK Duplikat',
+                                    text: 'Terdapat kombinasi CPL dan Kode CPMK yang sama pada baris CPMK. Mohon bedakan kodenya.',
+                                    confirmButtonColor: '#0B266E'
+                                });
+                            } else {
+                                alert('Terdapat kombinasi CPL dan Kode CPMK yang sama pada baris CPMK. Mohon bedakan kodenya.');
+                            }
+                            return false;
+                        }
+                    });
+                }
             });
             // ─── Card Navigator Pertemuan ─────────────────────────────────────────────────
             let currentPertemuan = 1;
-            const PERTEMUAN_REAL = [1,2,3,4,5,6,7,9,10,11,12,13,14,15]; // skip 8 (UTS) dan 16 (UAS)
+            const PERTEMUAN_REAL = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15]; // skip 8 (UTS) dan 16 (UAS)
             const KKO_OPTIONS = {
-                'C1':'Mengingat','C2':'Memahami','C3':'Menerapkan','C4':'Menganalisis',
-                'C5':'Mengevaluasi','C6':'Mencipta','P1':'Meniru','P2':'Menyesuaikan',
-                'P3':'Membiasakan','P4':'Menguasai','P5':'Mahir','A1':'Menerima',
-                'A2':'Merespon','A3':'Menilai','A4':'Mengorganisasi','A5':'Menghayati',
+                'C1': 'Mengingat', 'C2': 'Memahami', 'C3': 'Menerapkan', 'C4': 'Menganalisis',
+                'C5': 'Mengevaluasi', 'C6': 'Mencipta', 'P1': 'Meniru', 'P2': 'Menyesuaikan',
+                'P3': 'Membiasakan', 'P4': 'Menguasai', 'P5': 'Mahir', 'A1': 'Menerima',
+                'A2': 'Merespon', 'A3': 'Menilai', 'A4': 'Mengorganisasi', 'A5': 'Menghayati',
             };
 
             // Simpan data semua pertemuan di memori (exposed via window for cross-scope access)
@@ -2711,7 +2941,7 @@
             }
 
             function renderPertemuanFields(p) {
-                const data   = pertemuanData[p] || {};
+                const data = pertemuanData[p] || {};
                 const cpmkList = buildCpmkListFromRows();
                 // target_cpmk can be array, comma-string, or undefined — normalize to array
                 const selectedCpmk = Array.isArray(data.target_cpmk)
@@ -2727,87 +2957,88 @@
                     : '';
 
                 document.getElementById('pertemuanFields').innerHTML = `
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
-                        <div>
-                            <label style="font-size:11px; font-weight:600; color:var(--c-fg-muted,#94A3B8); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px;">Kemampuan Akhir *</label>
-                            <textarea id="pf_kemampuan_akhir" name="pertemuan_data[${p}][kemampuan_akhir]" rows="3"
-                                style="width:100%; height:80px; padding:8px 11px; border:1px solid var(--c-border,#DFE1E7); border-radius:8px; font-size:13px; resize:vertical; font-family:inherit; box-sizing:border-box;"
-                                oninput="savePertemuanField(${p},'kemampuan_akhir',this.value)">${data.kemampuan_akhir||''}</textarea>
-                        </div>
-                        <div>
-                            <label style="font-size:11px; font-weight:600; color:var(--c-fg-muted,#94A3B8); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px;">Bahan Kajian *</label>
-                            <textarea id="pf_pokok_bahasan" name="pertemuan_data[${p}][pokok_bahasan]" rows="3"
-                                style="width:100%; height:80px; padding:8px 11px; border:1px solid var(--c-border,#DFE1E7); border-radius:8px; font-size:13px; resize:vertical; font-family:inherit; box-sizing:border-box;"
-                                oninput="savePertemuanField(${p},'pokok_bahasan',this.value)">${data.pokok_bahasan||''}</textarea>
-                        </div>
-                    </div>
-                    <div style="display:grid; grid-template-columns:2fr 1fr 2fr; gap:14px; margin-bottom:14px;">
-                        <div>
-                            <label style="font-size:11px; font-weight:600; color:var(--c-fg-muted,#94A3B8); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px;">Metode *</label>
-                            <input type="text" id="pf_metode" name="pertemuan_data[${p}][metode]"
-                                value="${data.metode||''}"
-                                style="width:100%; height:36px; padding:0 11px; border:1px solid var(--c-border,#DFE1E7); border-radius:8px; font-size:13px; font-family:inherit; box-sizing:border-box;"
-                                oninput="savePertemuanField(${p},'metode',this.value)">
-                        </div>
-                        <div>
-                            <label style="font-size:11px; font-weight:600; color:var(--c-fg-muted,#94A3B8); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px;">Waktu (menit) *</label>
-                            <input type="number" id="pf_waktu" name="pertemuan_data[${p}][waktu]"
-                                value="${data.waktu||150}"
-                                style="width:100%; height:36px; padding:0 11px; border:1px solid var(--c-border,#DFE1E7); border-radius:8px; font-size:13px; font-family:inherit; box-sizing:border-box; text-align:center;"
-                                oninput="savePertemuanField(${p},'waktu',this.value)">
-                        </div>
-                        <div>
-                            <label style="font-size:11px; font-weight:600; color:var(--c-fg-muted,#94A3B8); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px;">Bobot (%)</label>
-                            <input type="number" id="pf_bobot" name="pertemuan_data[${p}][bobot]"
-                                value="${data.bobot||5}" min="0" max="100"
-                                style="width:100%; height:36px; padding:0 11px; border:1px solid var(--c-border,#DFE1E7); border-radius:8px; font-size:13px; font-family:inherit; box-sizing:border-box; text-align:center;"
-                                oninput="savePertemuanField(${p},'bobot',this.value)">
-                        </div>
-                    </div>
-                    <div style="margin-bottom:14px;">
-                        <label style="font-size:11px; font-weight:600; color:var(--c-fg-muted,#94A3B8); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px;">Pengalaman Belajar *</label>
-                        <textarea id="pf_pengalaman_belajar" name="pertemuan_data[${p}][pengalaman_belajar]" rows="2"
-                            style="width:100%; padding:8px 11px; border:1px solid var(--c-border,#DFE1E7); border-radius:8px; font-size:13px; resize:vertical; font-family:inherit; box-sizing:border-box;"
-                            oninput="savePertemuanField(${p},'pengalaman_belajar',this.value)">${data.pengalaman_belajar||''}</textarea>
-                    </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-                        <div>
-                            <label style="font-size:11px; font-weight:600; color:var(--c-fg-muted,#94A3B8); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px;">Target CPMK *</label>
-                            <select id="pf_target_cpmk" name="pertemuan_data[${p}][target_cpmk][]" multiple
-                                style="width:100%; padding:8px 11px; border:1px solid var(--c-border,#DFE1E7); border-radius:8px; font-size:13px; min-height:80px; font-family:inherit; box-sizing:border-box;"
-                                onchange="savePertemuanField(${p},'target_cpmk', Array.from(this.selectedOptions).map(o=>o.value))">
-                                ${cpmkOptions || noOptionsMsg}
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size:11px; font-weight:600; color:var(--c-fg-muted,#94A3B8); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px;">Kriteria & Indikator *</label>
-                            <textarea id="pf_kriteria" name="pertemuan_data[${p}][kriteria_penilaian]" rows="3"
-                                style="width:100%; padding:8px 11px; border:1px solid var(--c-border,#DFE1E7); border-radius:8px; font-size:13px; resize:vertical; font-family:inherit; box-sizing:border-box;"
-                                oninput="savePertemuanField(${p},'kriteria_penilaian',this.value)">${data.kriteria_penilaian||''}</textarea>
-                        </div>
-                    </div>
-                    <input type="hidden" name="pertemuan_data[${p}][pertemuan]" value="${p}">
-                `;
+                                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
+                                                    <div>
+                                                        <label style="font-size:11px; font-weight:600; color:var(--c-fg-muted,#94A3B8); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px;">Kemampuan Akhir *</label>
+                                                        <textarea id="pf_kemampuan_akhir" name="pertemuan_data[${p}][kemampuan_akhir]" rows="3"
+                                                            style="width:100%; height:80px; padding:8px 11px; border:1px solid var(--c-border,#DFE1E7); border-radius:8px; font-size:13px; resize:vertical; font-family:inherit; box-sizing:border-box;"
+                                                            oninput="savePertemuanField(${p},'kemampuan_akhir',this.value)">${data.kemampuan_akhir || ''}</textarea>
+                                                    </div>
+                                                    <div>
+                                                        <label style="font-size:11px; font-weight:600; color:var(--c-fg-muted,#94A3B8); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px;">Bahan Kajian *</label>
+                                                        <textarea id="pf_pokok_bahasan" name="pertemuan_data[${p}][pokok_bahasan]" rows="3"
+                                                            style="width:100%; height:80px; padding:8px 11px; border:1px solid var(--c-border,#DFE1E7); border-radius:8px; font-size:13px; resize:vertical; font-family:inherit; box-sizing:border-box;"
+                                                            oninput="savePertemuanField(${p},'pokok_bahasan',this.value)">${data.pokok_bahasan || ''}</textarea>
+                                                    </div>
+                                                </div>
+                                                <div style="display:grid; grid-template-columns:2fr 1fr 2fr; gap:14px; margin-bottom:14px;">
+                                                    <div>
+                                                        <label style="font-size:11px; font-weight:600; color:var(--c-fg-muted,#94A3B8); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px;">Metode *</label>
+                                                        <input type="text" id="pf_metode" name="pertemuan_data[${p}][metode]"
+                                                            value="${data.metode || ''}"
+                                                            style="width:100%; height:36px; padding:0 11px; border:1px solid var(--c-border,#DFE1E7); border-radius:8px; font-size:13px; font-family:inherit; box-sizing:border-box;"
+                                                            oninput="savePertemuanField(${p},'metode',this.value)">
+                                                    </div>
+                                                    <div>
+                                                        <label style="font-size:11px; font-weight:600; color:var(--c-fg-muted,#94A3B8); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px;">Waktu (menit) *</label>
+                                                        <input type="number" id="pf_waktu" name="pertemuan_data[${p}][waktu]"
+                                                            value="${data.waktu || 150}"
+                                                            style="width:100%; height:36px; padding:0 11px; border:1px solid var(--c-border,#DFE1E7); border-radius:8px; font-size:13px; font-family:inherit; box-sizing:border-box; text-align:center;"
+                                                            oninput="savePertemuanField(${p},'waktu',this.value)">
+                                                    </div>
+                                                    <div>
+                                                        <label style="font-size:11px; font-weight:600; color:var(--c-fg-muted,#94A3B8); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px;">Bobot (%)</label>
+                                                        <input type="number" id="pf_bobot" name="pertemuan_data[${p}][bobot]"
+                                                            value="${data.bobot || 5}" min="0" max="100"
+                                                            style="width:100%; height:36px; padding:0 11px; border:1px solid var(--c-border,#DFE1E7); border-radius:8px; font-size:13px; font-family:inherit; box-sizing:border-box; text-align:center;"
+                                                            oninput="savePertemuanField(${p},'bobot',this.value)">
+                                                    </div>
+                                                </div>
+                                                <div style="margin-bottom:14px;">
+                                                    <label style="font-size:11px; font-weight:600; color:var(--c-fg-muted,#94A3B8); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px;">Pengalaman Belajar *</label>
+                                                    <textarea id="pf_pengalaman_belajar" name="pertemuan_data[${p}][pengalaman_belajar]" rows="2"
+                                                        style="width:100%; padding:8px 11px; border:1px solid var(--c-border,#DFE1E7); border-radius:8px; font-size:13px; resize:vertical; font-family:inherit; box-sizing:border-box;"
+                                                        oninput="savePertemuanField(${p},'pengalaman_belajar',this.value)">${data.pengalaman_belajar || ''}</textarea>
+                                                </div>
+                                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                                                    <div>
+                                                        <label style="font-size:11px; font-weight:600; color:var(--c-fg-muted,#94A3B8); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px;">Target CPMK *</label>
+                                                        <select id="pf_target_cpmk" name="pertemuan_data[${p}][target_cpmk][]" multiple
+                                                            style="width:100%; padding:8px 11px; border:1px solid var(--c-border,#DFE1E7); border-radius:8px; font-size:13px; min-height:80px; font-family:inherit; box-sizing:border-box;"
+                                                            onchange="savePertemuanField(${p},'target_cpmk', Array.from(this.selectedOptions).map(o=>o.value))">
+                                                            ${cpmkOptions || noOptionsMsg}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label style="font-size:11px; font-weight:600; color:var(--c-fg-muted,#94A3B8); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px;">Kriteria & Indikator *</label>
+                                                        <textarea id="pf_kriteria" name="pertemuan_data[${p}][kriteria_penilaian]" rows="3"
+                                                            style="width:100%; padding:8px 11px; border:1px solid var(--c-border,#DFE1E7); border-radius:8px; font-size:13px; resize:vertical; font-family:inherit; box-sizing:border-box;"
+                                                            oninput="savePertemuanField(${p},'kriteria_penilaian',this.value)">${data.kriteria_penilaian || ''}</textarea>
+                                                    </div>
+                                                </div>
+                                                <input type="hidden" name="pertemuan_data[${p}][pertemuan]" value="${p}">
+                                            `;
 
                 if (typeof TomSelect !== 'undefined') {
                     const pfSel = document.getElementById('pf_target_cpmk');
                     if (pfSel) {
                         if (pfSel.tomselect) pfSel.tomselect.destroy();
                         const pfTs = new TomSelect(pfSel, {
-                            plugins: { remove_button: { title: "Hapus CPMK" } },
                             maxOptions: 100,
                             persist: false,
                             create: false,
                             hideSelected: false,
+                            placeholder: 'Pilih CPMK...',
+                            dropdownParent: 'body',
                             render: {
-                                item: function(data, escape) {
-                                    return `<div class="item" style="background:#f1f5f9;color:#0b266e;font-weight:600;border:1px solid #cbd5e1;border-radius:6px;padding:2px 8px;font-size:12px;">${escape(data.text)}</div>`;
+                                item: function (data, escape) {
+                                    return `<div class="item" data-value="${escape(data.value)}" style="display:none !important;"></div>`;
                                 },
-                                option: function(data, escape) {
-                                    return `<div class="option py-2 px-3">${escape(data.text)}</div>`;
+                                option: function (data, escape) {
+                                    return `<div class="option py-2 px-3" data-value="${escape(data.value)}">${escape(data.text)}</div>`;
                                 }
                             },
-                            onChange: function(values) {
+                            onChange: function (values) {
                                 savePertemuanField(p, 'target_cpmk', Array.isArray(values) ? values : (values ? [values] : []));
                             }
                         });
@@ -2886,8 +3117,8 @@
 
             function updatePertemuanNavIndicator(p) {
                 const state = getPertemuanState(p);
-                const dot    = document.querySelector(`[data-filled-${p}]`);
-                const btn    = document.querySelector(`button[data-nav-p="${p}"]`);
+                const dot = document.querySelector(`[data-filled-${p}]`);
+                const btn = document.querySelector(`button[data-nav-p="${p}"]`);
                 if (dot) {
                     const showDot = state !== 'empty';
                     dot.style.display = showDot ? 'block' : 'none';
@@ -2934,7 +3165,7 @@
                 if (title) title.textContent = `Pertemuan ${displayNum}`;
 
                 // Prev/Next button state
-                const idx  = PERTEMUAN_REAL.indexOf(p);
+                const idx = PERTEMUAN_REAL.indexOf(p);
                 const prev = document.getElementById('btnPrevPertemuan');
                 const next = document.getElementById('btnNextPertemuan');
                 if (prev) prev.disabled = idx <= 0;
@@ -2973,13 +3204,13 @@
                 const list = [];
                 const seen = new Set();
                 document.querySelectorAll('#cpmkRowsGenerator [data-cpmk-row]').forEach(row => {
-                    const cplSel  = row.querySelector('.cpl-select-input');
-                    const kodeIn  = row.querySelector('input[name*="[kode]"]');
+                    const cplSel = row.querySelector('.cpl-select-input');
+                    const kodeIn = row.querySelector('input[name*="[kode]"]');
                     if (!cplSel?.value || !kodeIn?.value?.trim()) return;
-                    const opt     = cplSel.options[cplSel.selectedIndex];
+                    const opt = cplSel.options[cplSel.selectedIndex];
                     const cplText = opt?.textContent?.trim() || '';
-                    const cplNum  = (cplText.match(/\d+/) || [cplText])[0];
-                    const val     = `${parseInt(cplNum)||cplNum}.${kodeIn.value.trim()}`;
+                    const cplNum = (cplText.match(/\d+/) || [cplText])[0];
+                    const val = `${parseInt(cplNum) || cplNum}.${kodeIn.value.trim()}`;
                     if (!seen.has(val)) {
                         seen.add(val);
                         list.push({ value: val, label: `CPMK ${val}` });
@@ -2999,25 +3230,13 @@
             setTimeout(() => {
                 const origFn = window.loadWizardStep;
                 if (origFn) {
-                    window.loadWizardStep = function(stepNum) {
+                    window.loadWizardStep = function (stepNum) {
                         origFn(stepNum);
                         if (stepNum === 3) {
-                            const titleEl = document.getElementById('pertemuanTitle');
-                            const currentTitleNum = titleEl ? Number((titleEl.textContent || '').match(/\d+/)?.[0]) : null;
                             const stored = Number(document.body.dataset.currentPertemuan || currentPertemuan || 1);
                             const safeMeeting = Number.isFinite(stored) && stored > 0 && stored !== 8 && stored !== 16 ? stored : 1;
-
-                            if (titleEl && Number.isFinite(currentTitleNum) && currentTitleNum > 1) {
-                                currentPertemuan = currentTitleNum;
-                                document.body.dataset.currentPertemuan = String(currentTitleNum);
-                                updateAllNavIndicators();
-                                updatePertemuanProgress();
-                                return;
-                            }
-
-                            if (safeMeeting !== 1 || !titleEl || !/^Pertemuan \d+$/.test(titleEl.textContent.trim())) {
-                                goToPertemuan(safeMeeting);
-                            }
+                            // Langsung expand form pertemuan (default pertemuan 1)
+                            goToPertemuan(safeMeeting);
                             updateAllNavIndicators();
                             updatePertemuanProgress();
                         }

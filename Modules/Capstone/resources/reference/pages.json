@@ -428,6 +428,19 @@
     ]
   },
   {
+    "route": "/admin/reports/peer-reviews/[studentId]",
+    "source": "frontend/src/app/admin/reports/peer-reviews/[studentId]/page.tsx",
+    "imports": [
+      "next/navigation",
+      "next/link",
+      "@/features/admin/reports/hooks/use-reports",
+      "@/components/ui/card",
+      "@/components/ui/button",
+      "@/components/ui/badge",
+      "lucide-react"
+    ]
+  },
+  {
     "route": "/admin/reports/ta",
     "source": "frontend/src/app/admin/reports/ta/page.tsx",
     "imports": [

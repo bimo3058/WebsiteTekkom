@@ -28,3 +28,14 @@ export const taDefenseSchema = z.object({
 })
 
 export type TaDefenseFormData = z.infer<typeof taDefenseSchema>
+
+export const EXAMINER_SUPERVISOR_ERROR = "Examiner cannot be the same as the supervisor"
+
+export function isExaminerSupervisor(
+  examinerId: string | number | null | undefined,
+  supervisorIds: Array<string | number> = [],
+): boolean {
+  if (examinerId === null || examinerId === undefined || examinerId === "") return false
+  const normalizedSupervisors = supervisorIds.map((id) => String(id))
+  return normalizedSupervisors.includes(String(examinerId))
+}

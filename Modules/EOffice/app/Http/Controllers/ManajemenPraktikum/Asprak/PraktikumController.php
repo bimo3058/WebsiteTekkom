@@ -16,7 +16,7 @@ class PraktikumController extends Controller
         $user = auth()->user();
 
         // Get all Asprak roles for this user that correspond to a active/existing Praktikum
-        $allAsprak = AsistenPraktikum::with(['praktikum.dosens', 'praktikum.modul'])
+        $allAsprak = AsistenPraktikum::with(['praktikum.dosens', 'praktikum.modul', 'praktikum.asistenPraktikum'])
             ->where('user_id', $user->id)
             ->where('role', 'asprak')
             ->whereNull('deleted_at')

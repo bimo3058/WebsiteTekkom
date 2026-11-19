@@ -37,19 +37,21 @@
     justify-content: center;
     width: 32px;
     height: 32px;
+    padding: 0;
+    border: 0;
     border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    background: #fff;
+    background: transparent;
     font-size: 18px;
+    line-height: 1;
     cursor: pointer;
     color: #64748b;
-    transition: all 0.2s;
+    transition: color 0.2s;
 }
 
 .btn-dots:hover {
-    border-color: rgb(11, 38, 110);
+    border: 0;
+    background: transparent;
     color: rgb(11, 38, 110);
-    background: #f8fafc;
 }
 
 .dots-menu {

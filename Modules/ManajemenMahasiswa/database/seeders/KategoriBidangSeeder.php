@@ -22,19 +22,26 @@ class KategoriBidangSeeder extends Seeder
             KategoriKegiatan::firstOrCreate(['nama_kategori' => $kat]);
         }
 
+        // nama resmi => jenis (bidang|unit)
         $bidang = [
-            'Ristek',
-            'Infokom',
-            'Ekobis',
-            'Kesma',
-            'Mikatan',
-            'PMO',
-            'PSDM',
-            'Sosial'
+            'PSDM'    => Bidang::JENIS_BIDANG,
+            'SOSIAL'  => Bidang::JENIS_BIDANG,
+            'EKOBIS'  => Bidang::JENIS_BIDANG,
+            'RISTEK'  => Bidang::JENIS_BIDANG,
+            'KESMA'   => Bidang::JENIS_BIDANG,
+            'MIKATAN' => Bidang::JENIS_BIDANG,
+            'Infokom' => Bidang::JENIS_UNIT,
+            'PMO'     => Bidang::JENIS_UNIT,
         ];
 
-        foreach ($bidang as $bid) {
-            Bidang::firstOrCreate(['nama_bidang' => $bid]);
+        foreach ($bidang as $nama => $jenis) {
+            // Dicocokkan case-insensitive agar baris lama ("Ristek") ikut dinormalkan,
+            // bukan diduplikasi.
+            $row = Bidang::whereRaw('LOWER(nama_bidang) = ?', [strtolower($nama)])->first();
+
+            $row
+                ? $row->update(['nama_bidang' => $nama, 'jenis' => $jenis])
+                : Bidang::create(['nama_bidang' => $nama, 'jenis' => $jenis]);
         }
     }
 }

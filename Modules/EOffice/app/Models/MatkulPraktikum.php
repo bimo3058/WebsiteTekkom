@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class MatkulPraktikum extends Model
 {
-    protected $table = 'eo_matkul_praktikum';
+    protected $table = 'eo_prak_matkul_praktikum';
 
     protected $fillable = [
         'kode',

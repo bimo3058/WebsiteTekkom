@@ -25,15 +25,7 @@
     .admin-stat-card.rejected .stat-icon { background: var(--c-error-subtle); color: var(--c-error); }
     .admin-stat-card.rejected .stat-num { color: var(--c-error); }
 
-    /* ── Status & Buttons ── */
-    .status-verif {
-        display: inline-flex; align-items: center; padding: 3px 9px;
-        border-radius: 50px; font-size: 12px; font-weight: 600;
-    }
-    .status-verif.pending { background: var(--c-warning-subtle); color: var(--c-warning); }
-    .status-verif.approved { background: var(--c-success-subtle); color: var(--c-success); }
-    .status-verif.rejected { background: var(--c-error-subtle); color: var(--c-error); }
-
+    /* ── Buttons ── (bentuk & warna badge status: partials/sitkom-ui) */
     .btn-approve {
         width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--c-success-subtle);
         background: var(--c-success-subtle); color: var(--c-success); cursor: pointer; transition: all .15s;
@@ -51,33 +43,10 @@
     .empty-state { text-align: center; padding: 60px 24px; color: var(--c-fg-muted); }
     .empty-state .empty-icon { display: flex; justify-content: center; margin-bottom: 12px; color: var(--c-border-strong); }
 
-    .modal-content { border-radius: 18px; border: none; box-shadow: 0 24px 60px rgba(0,0,0,.18); }
-    .modal-header { border-bottom: 1px solid var(--c-border); padding: 18px 22px; }
-    .modal-header .modal-title { font-size: 16px; font-weight: 700; color: var(--c-fg); }
-    .modal-body { padding: 22px; }
-    .modal-footer { border-top: 1px solid var(--c-border); padding: 14px 22px; }
-
     /* Kerangka modal Tinjau (.tp-*) tinggal di partials/tinjau-modal-styles.blade.php
        karena dipakai bersama halaman Klaim Reward. */
 
-    .tingkat-badge {
-        display: inline-flex; align-items: center; padding: 2px 8px;
-        border-radius: 50px; font-size: 12px; font-weight: 600; text-transform: uppercase;
-    }
-    /* Navy solid, bukan kuning: kuning sudah jadi warna status "Menunggu Review"
-       di kolom sebelahnya, sehingga keduanya tampak sama. */
-    .tingkat-badge.internasional { background: var(--c-primary); color: #fff; }
-    .tingkat-badge.nasional { background: var(--c-primary-subtle); color: var(--c-primary); }
-    .tingkat-badge.regional { background: var(--c-sky-subtle); color: var(--c-sky); }
-    .tingkat-badge.universitas { background: var(--c-success-subtle); color: var(--c-success); }
-    .tingkat-badge.prodi { background: var(--c-primary-subtle); color: var(--c-primary); }
-
-    /* ── Reward Badge & Aksi ── */
-    .claim-badge { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 50px; display: inline-flex; align-items: center; }
-    .claim-badge.belum     { background: var(--c-bg); color: var(--c-fg-muted); }
-    .claim-badge.diajukan  { background: var(--c-warning-subtle); color: var(--c-warning); }
-    .claim-badge.disetujui { background: var(--c-success-subtle); color: var(--c-success); }
-    .claim-badge.ditolak   { background: var(--c-error-subtle); color: var(--c-error); }
+    /* Badge tingkat & reward: partials/sitkom-ui (satu skema untuk semua halaman) */
 
     .reward-mini { font-size: 11px; color: var(--c-fg-muted); margin-top: 4px; max-width: 200px; line-height: 1.4; }
 
@@ -99,6 +68,7 @@
 
 @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
 @include('manajemenmahasiswa::partials.filter-popover')
+@include('manajemenmahasiswa::partials.sitkom-ui')
 
 <!-- Page Header -->
 <x-manajemenmahasiswa::ui.page-header bordered
@@ -108,42 +78,12 @@
     @else
         Review &amp; verifikasi riwayat keikutsertaan kegiatan yang diajukan mahasiswa
     @endif
-    @unless($canVerify ?? true)
-        <span style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:var(--c-primary-subtle); color:var(--c-primary); font-size:11px; font-weight:700; padding:4px 12px; border-radius:50px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            Mode Pemantauan — hanya melihat (tanpa setujui/tolak)
-        </span>
-    @endunless
 </x-manajemenmahasiswa::ui.page-header>
 
 <!-- Flash Messages -->
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-@if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error); font-weight: 500; font-size: 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-@if($errors->any())
-    <div class="alert alert-danger alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error); font-weight: 500; font-size: 14px;">
-        <ul style="margin: 0; padding-left: 18px;">
-            @foreach($errors->all() as $err)
-                <li>{{ $err }}</li>
-            @endforeach
-        </ul>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
+<x-manajemenmahasiswa::ui.flash type="error" :message="session('error')" class="mb-3" />
+<x-manajemenmahasiswa::ui.flash type="error" :messages="$errors->all()" class="mb-3" />
 
 <!-- Admin Stat Cards — ringkasan angka saja, bukan tombol filter -->
 <div class="admin-stats">
@@ -311,14 +251,14 @@
         <div style="overflow-x:auto;">
             <table style="width:100%; border-collapse:collapse; min-width:780px;">
                 <thead>
-                    <tr style="border-bottom:1px solid var(--c-border); background:var(--c-bg);">
+                    <tr style="border-bottom:1px solid var(--c-border); background:#FAFAFA;">
                         <th style="padding:11px 12px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:48px;">No</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:160px;">Mahasiswa</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">NIM</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:180px;">Nama Kegiatan</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Peran</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Status</th>
-                        <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:120px;">Aksi</th>
+                        <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:72px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -372,17 +312,17 @@
                                 ])->values()->all(),
                             ];
                         @endphp
-                        <tr style="border-bottom:1px solid var(--c-border); transition:background .12s;"
+                        <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s;"
                             onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
                             <td style="padding:14px 12px; font-size:13px; font-weight:400; color:var(--c-fg-muted); width:48px;">{{ ($riwayatData->currentPage() - 1) * $riwayatData->perPage() + $i + 1 }}</td>
                             <td style="padding:14px 16px; min-width:160px;">
-                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">{{ $rw->student->user->name ?? '-' }}</p>
+                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow-wrap:break-word; line-height:1.5; max-width:160px;">{{ $rw->student->user->name ?? '-' }}</p>
                             </td>
                             <td style="padding:14px 16px;">
                                 <span style="font-family:monospace; font-size:12px; font-weight:600; color:var(--c-primary);">{{ $rw->student->student_number ?? '-' }}</span>
                             </td>
                             <td style="padding:14px 16px; min-width:180px;">
-                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; max-width:300px;">{{ $rw->nama_kegiatan_manual ?? 'Kegiatan tidak diketahui' }}</p>
+                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow-wrap:break-word; line-height:1.5; max-width:300px;">{{ $rw->nama_kegiatan_manual ?? 'Kegiatan tidak diketahui' }}</p>
                             </td>
                             <td style="padding:14px 16px; font-size:13px; color:var(--c-fg-sec);">{{ $rw->peran_manual ?? ucfirst($rw->peran ?? '') }}</td>
                             <td style="padding:14px 16px;">
@@ -400,10 +340,9 @@
                                 {{-- Satu pintu masuk untuk semua baris & semua role: bukti hanya dilihat
                                      dari dalam modal. Baris yang sudah diverifikasi dan pengunjung
                                      read-only mendapat modal mode baca-saja. --}}
-                                <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" onclick="openTinjau(@js($tinjauRiwayatPayload))">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    Tinjau
-                                </button>
+                                @include('manajemenmahasiswa::verifikasi.partials.aksi-menu', ['items' => [
+                                    ['label' => 'Tinjau', 'fn' => 'openTinjau', 'payload' => $tinjauRiwayatPayload],
+                                ]])
                             </td>
                         </tr>
                     @endforeach
@@ -433,17 +372,16 @@
     @if($prestasiData->count() > 0)
         <!-- Table -->
         <div style="overflow-x:auto;">
-            <table style="width:100%; border-collapse:collapse; min-width:960px;">
+            <table style="width:100%; border-collapse:collapse; min-width:820px;">
                 <thead>
-                        <tr style="border-bottom:1px solid var(--c-border); background:var(--c-bg);">
+                        <tr style="border-bottom:1px solid var(--c-border); background:#FAFAFA;">
                         <th style="padding:11px 12px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:48px;">No</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:160px;">Mahasiswa</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">NIM</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:180px;">Nama Prestasi</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Tingkat</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Status</th>
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:140px;">Reward</th>
-                        <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:120px;">Aksi</th>
+                        <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:72px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -492,17 +430,17 @@
                                 ])->values()->all(),
                             ];
                         @endphp
-                        <tr style="border-bottom:1px solid var(--c-border); transition:background .12s;"
+                        <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s;"
                             onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
                             <td style="padding:14px 12px; font-size:13px; font-weight:400; color:var(--c-fg-muted); width:48px;">{{ ($prestasiData->currentPage() - 1) * $prestasiData->perPage() + $i + 1 }}</td>
                             <td style="padding:14px 16px; min-width:160px;">
-                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">{{ $p->kemahasiswaan?->nama ?? '-' }}</p>
+                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow-wrap:break-word; line-height:1.5; max-width:160px;">{{ $p->kemahasiswaan?->nama ?? '-' }}</p>
                             </td>
                             <td style="padding:14px 16px;">
                                 <span style="font-family:monospace; font-size:12px; font-weight:600; color:var(--c-primary);">{{ $p->kemahasiswaan?->nim ?? '-' }}</span>
                             </td>
                             <td style="padding:14px 16px; min-width:180px;">
-                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; max-width:300px;">{{ $p->nama_prestasi }}</p>
+                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow-wrap:break-word; line-height:1.5; max-width:300px;">{{ $p->nama_prestasi }}</p>
                             </td>
                             <td style="padding:14px 16px;"><span class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span></td>
                             <td style="padding:14px 16px;">
@@ -514,29 +452,13 @@
                                     @endif
                                 </span>
                             </td>
-                            <td style="padding:14px 16px;">
-                                @if($p->verification_status === 'approved')
-                                    @if($p->reward_status === $P::CLAIM_DIAJUKAN)
-                                        <span class="claim-badge diajukan">Menunggu Review</span>
-                                    @elseif($p->reward_status === $P::CLAIM_DISETUJUI)
-                                        <span class="claim-badge disetujui">Disetujui</span>
-                                    @elseif($p->reward_status === $P::CLAIM_DITOLAK)
-                                        <span class="claim-badge ditolak">Ditolak</span>
-                                    @else
-                                        <span style="font-size:11px; color:var(--c-fg-muted);">Belum diajukan</span>
-                                    @endif
-                                @else
-                                    <span style="color:var(--c-fg-placeholder);">—</span>
-                                @endif
-                            </td>
                             <td style="padding:14px 16px; text-align:center;">
                                 {{-- Satu pintu masuk untuk semua baris & semua role: bukti hanya dilihat
                                      dari dalam modal. Baris yang sudah diverifikasi dan pengunjung
                                      read-only mendapat modal mode baca-saja. --}}
-                                <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" onclick="openTinjau(@js($tinjauPayload))">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    Tinjau
-                                </button>
+                                @include('manajemenmahasiswa::verifikasi.partials.aksi-menu', ['items' => [
+                                    ['label' => 'Tinjau', 'fn' => 'openTinjau', 'payload' => $tinjauPayload],
+                                ]])
                             </td>
                         </tr>
                     @endforeach

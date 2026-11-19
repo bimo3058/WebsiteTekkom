@@ -26,17 +26,14 @@ class DaftarPraktikanController extends Controller
         $search = $request->input('search');
 
         $query = DaftarPraktikan::with(['user', 'user.student'])
-            ->where('praktikum_id', $praktikumId)
+            ->where('praktikum_id', $praktikum?->id)
             ->orderByRaw("CASE WHEN (shift IS NULL OR shift = '') THEN 1 ELSE 0 END, shift ASC")
             ->orderByRaw("CASE WHEN (kelompok IS NULL OR kelompok = '') THEN 1 ELSE 0 END, kelompok ASC")
             ->orderBy('created_at');
 
-        if ($search) {
-            $query->whereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%"));
-        }
+        \Modules\EOffice\Services\ManajemenPraktikum\ParticipantListFilters::apply($query,$request);
 
-        $praktikans = $query->paginate(20)->withQueryString();
+        $praktikans = $query->paginate(max(1, min(100, request()->integer('per_page', 20))))->withQueryString();
 
         return view('eoffice::manajemen-praktikum.dosen.daftar-praktikan', compact(
             'praktikumList',

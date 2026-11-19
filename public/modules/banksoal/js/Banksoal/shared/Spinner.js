@@ -106,3 +106,69 @@ window.Spinner = new SpinnerManager();
 // Backwards compatibility for existing inline calls
 window.showLoader = () => window.Spinner.showGlobal();
 window.hideLoader = () => window.Spinner.hideGlobal();
+
+// Overlay navigasi: tampilkan spinner saat pindah halaman atau submit form biasa.
+(function () {
+    if (window.banksoalNavigationLoaderBound) return;
+    window.banksoalNavigationLoaderBound = true;
+
+    const isPlainLeftClick = (event) =>
+        event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+
+    const isInternalNavigation = (link) => {
+        if (link.dataset.noLoader !== undefined) return false;
+        if (link.hasAttribute('download')) return false;
+        if (link.target && link.target !== '' && link.target !== '_self') return false;
+
+        const rawHref = (link.getAttribute('href') || '').trim();
+        if (rawHref === '' || rawHref.startsWith('#')) return false;
+        if (/^(mailto:|tel:|javascript:|blob:|data:)/i.test(rawHref)) return false;
+
+        try {
+            const url = new URL(link.href, window.location.href);
+            if (url.origin !== window.location.origin) return false;
+            // Link jangkar pada halaman yang sama tidak memuat ulang halaman.
+            if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash !== '') {
+                return false;
+            }
+        } catch (error) {
+            return false;
+        }
+
+        return true;
+    };
+
+    const armLoader = () => {
+        window.showLoader();
+        clearTimeout(window.banksoalLoaderTimeout);
+        // Lepas overlay bila ternyata browser tidak jadi berpindah halaman.
+        window.banksoalLoaderTimeout = setTimeout(window.hideLoader, 15000);
+    };
+
+    document.addEventListener('click', (event) => {
+        if (!isPlainLeftClick(event)) return;
+
+        const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
+        if (!link || !isInternalNavigation(link)) return;
+
+        // Tunggu handler lain selesai: bila navigasi dicegah, overlay tidak dipasang.
+        setTimeout(() => {
+            if (!event.defaultPrevented) armLoader();
+        }, 0);
+    });
+
+    document.addEventListener('submit', (event) => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement) || form.dataset.noLoader !== undefined) return;
+
+        setTimeout(() => {
+            if (!event.defaultPrevented) armLoader();
+        }, 0);
+    });
+
+    window.addEventListener('pageshow', () => {
+        clearTimeout(window.banksoalLoaderTimeout);
+        window.hideLoader();
+    });
+})();
+

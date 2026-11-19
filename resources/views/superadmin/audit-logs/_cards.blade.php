@@ -1,6 +1,6 @@
 {{-- resources/views/superadmin/audit-logs/_cards.blade.php --}}
 @php
-    $allOnline    = \App\Models\User::with('roles')->where('is_online', \Illuminate\Support\Facades\DB::raw('true'))->get();
+    $allOnline    = \App\Models\User::online()->with('roles')->get();
     $allSuspended = \App\Models\User::with('roles')->whereNotNull('suspended_at')->get();
     $onlineUsers    = $allOnline->take(5);
     $suspendedUsers = $allSuspended->take(5);

@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Absensi extends Model
 {
-    protected $table = 'absensi_praktikum';
+    protected $table = 'eo_prak_absensi_praktikum';
 
     protected $fillable = [
         'modul_id',

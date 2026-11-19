@@ -175,19 +175,21 @@
             justify-content: center;
             width: 32px;
             height: 32px;
+            padding: 0;
+            border: 0;
             border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            background: #fff;
+            background: transparent;
             font-size: 18px;
+            line-height: 1;
             cursor: pointer;
             color: #64748b;
-            transition: all 0.2s;
+            transition: color 0.2s;
         }
 
         .btn-dots:hover {
-            border-color: rgb(11, 38, 110);
+            border: 0;
+            background: transparent;
             color: rgb(11, 38, 110);
-            background: #f8fafc;
         }
 
         .dots-menu {
@@ -362,53 +364,60 @@
     <script>
         window.toggleMenu = function (id, event) {
             event.stopPropagation();
+            const trigger = event.currentTarget || event.target;
             const menus = document.querySelectorAll('.dots-menu');
             const menu = document.getElementById(`menu-${id}`);
 
             menus.forEach(m => {
                 if (m.id !== `menu-${id}`) {
                     m.classList.remove('open');
-                    m.style.top = '';
-                    m.style.bottom = '';
-                    m.style.left = '';
-                    m.style.right = '';
+                    m.style.cssText = '';
                 }
             });
 
             if (menu) {
-                menu.classList.toggle('open');
+                const isOpen = menu.classList.toggle('open');
 
-                if (menu.classList.contains('open')) {
-                    const rect = menu.getBoundingClientRect();
-                    const viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+                if (isOpen) {
+                    const triggerRect = trigger.getBoundingClientRect();
+                    
+                    menu.style.position = 'fixed';
+                    menu.style.zIndex = '99999';
+                    menu.style.display = 'block';
 
-                    if (rect.bottom > viewHeight) {
-                        menu.style.top = 'auto';
-                        menu.style.bottom = '100%';
-                        menu.style.marginBottom = '5px';
-                    } else {
-                        menu.style.top = '100%';
-                        menu.style.bottom = 'auto';
-                        menu.style.marginBottom = '0';
-                        menu.style.marginTop = '5px';
+                    const menuRect = menu.getBoundingClientRect();
+                    const viewHeight = window.innerHeight;
+                    const viewWidth = window.innerWidth;
+
+                    let topPos = triggerRect.bottom + 4;
+                    if (triggerRect.bottom + menuRect.height + 10 > viewHeight && triggerRect.top - menuRect.height - 4 > 0) {
+                        topPos = triggerRect.top - menuRect.height - 4;
                     }
 
-                    if (rect.left < 0) {
-                        menu.style.right = 'auto';
-                        menu.style.left = '0';
-                    }
+                    let leftPos = triggerRect.right - menuRect.width;
+                    if (leftPos < 10) leftPos = 10;
+                    if (leftPos + menuRect.width > viewWidth - 10) leftPos = viewWidth - menuRect.width - 10;
+
+                    menu.style.top = `${topPos}px`;
+                    menu.style.left = `${leftPos}px`;
+                    menu.style.right = 'auto';
+                    menu.style.bottom = 'auto';
                 } else {
-                    menu.style.top = '';
-                    menu.style.bottom = '';
-                    menu.style.left = '';
-                    menu.style.right = '';
+                    menu.style.cssText = '';
                 }
             }
         };
 
-        document.addEventListener('click', function () {
-            document.querySelectorAll('.dots-menu').forEach(m => m.classList.remove('open'));
-        });
+        const closeAllActionMenus = function () {
+            document.querySelectorAll('.dots-menu.open').forEach(m => {
+                m.classList.remove('open');
+                m.style.cssText = '';
+            });
+        };
+
+        document.addEventListener('click', closeAllActionMenus);
+        window.addEventListener('scroll', closeAllActionMenus, true);
+        window.addEventListener('resize', closeAllActionMenus);
 
         document.addEventListener('DOMContentLoaded', function () {
             const uploadModal = document.getElementById('rpsUploadModal');

@@ -34,6 +34,22 @@ class Kemahasiswaan extends Model
     // Constants
     // -------------------------------------------------------------------------
 
+    /*
+     * PERINGATAN (S-53, 29 Okt 2026 — bimbingan Bu Eve & Pak Sidik):
+     * Status kemahasiswaan sudah TIDAK dikelola lagi di Direktori Mahasiswa: tidak
+     * tampil, tidak bisa difilter, dan tidak bisa diubah dari UI mana pun (sumber resmi =
+     * SIAP Undip; menyimpannya di sini hanya membuat data tidak sinkron).
+     *
+     * Kolom `status` + konstanta/scope di bawah DIBIARKAN hanya supaya fitur lain tidak
+     * error. Yang masih membaca/menulisnya:
+     *   - Dashboard Analitik (Devarlo / Syahbana): DashboardAnalitikService, DashboardController
+     *     → angka per status kini MEMBEKU (nilai lama tetap, mahasiswa baru selalu 'aktif').
+     *   - Permission (ManajemenPenggunaController::updateRole & checkAlumni) → menulis 'alumni'.
+     *   - Direktori Alumni (syncFromKemahasiswaan) → menjaga 'alumni' ↔ role alumni.
+     *   - Pembuatan baris baru (syncFromSSO, profil, VerifikasiController) → kolom NOT NULL.
+     * Direktori Mahasiswa memisahkan alumni lewat tabel mk_alumni, BUKAN kolom ini.
+     * Jangan drop kolom sebelum fitur-fitur di atas disesuaikan pemiliknya.
+     */
     const STATUS_AKTIF        = 'aktif';
     const STATUS_ALUMNI       = 'alumni';
     const STATUS_CUTI         = 'cuti';

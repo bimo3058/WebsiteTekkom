@@ -1,7 +1,8 @@
 @php
     $pageTitle = ($praktikum->nama ?? 'Praktikum') . ' / Pengumuman';
 @endphp
-<x-eoffice::manajemen-praktikum.layout :pageTitle="$pageTitle">
+<x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" :pageTitle="$pageTitle">
+    <x-eoffice::manajemen-praktikum.ui.datetime-picker-assets />
 
     <div x-data="pengumumanManager()">
         {{-- Flash Messages --}}
@@ -40,74 +41,35 @@
                 @forelse($pengumumans as $p)
                     @php
                         $isMine = $p->user_id === auth()->id();
+                        $editableAttachments=$isMine?collect($p->lampiran??[])->map(function($file){
+                            $path=is_array($file)?($file['path']??''):$file;
+                            $name=is_array($file)?($file['name']??basename($path)):basename($path);
+                            return ['path'=>$path,'name'=>$name,'url'=>app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($path,'eoffice',$name)];
+                        })->values()->all():[];
                     @endphp
-                    <div style="border:1px solid #DFE1E7; background:#fff; border-radius:14px; padding:15px 24px; position:relative; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition:all 0.2s ease;"
+                    <div style="min-width:0;max-width:100%;overflow-wrap:anywhere;border:1px solid #DFE1E7; background:#fff; border-radius:14px; padding:15px 24px; position:relative; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition:all 0.2s ease;"
                         onmouseover="this.style.boxShadow='0 4px 14px rgba(17,24,39,0.05)';"
                         onmouseout="this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)';">
 
                         {{-- Pengarang --}}
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-                            <div style="display:flex; align-items:center; gap:12px;">
-                                {{-- Gray Circle Avatar --}}
-                                <div
-                                    style="width:40px; height:40px; border-radius:50%; background:#D1D5DB; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                                    @if($p->user?->name)
-                                        @php
-                                            $nameParts = explode(' ', $p->user->name);
-                                            $initials = strtoupper(substr($nameParts[0], 0, 1) . substr($nameParts[1] ?? '', 0, 1));
-                                        @endphp
-                                        <span style="font-size:14px; font-weight:700; color:#6B7280;">{{ $initials }}</span>
-                                    @endif
-                                </div>
-                                <div>
-                                    <div style="font-weight:700; font-size:14px; color:#111827;">
-                                        {{ $p->user?->name ?? 'Sistem' }}
-                                    </div>
-                                    <div style="font-size:12px; color:#6B7280;">
-                                        {{ $p->created_at?->format('d M Y, H:i') ?? '-' }}
-                                        @if($p->updated_at && $p->updated_at->gt($p->created_at))
-                                            <span style="font-style:italic; margin-left:4px;">(Diedit
-                                                {{ $p->updated_at->format('d M Y, H:i') }})</span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
+                            <x-eoffice::manajemen-praktikum.ui.announcement-author :announcement="$p" />
 
-                            {{-- Edit / Delete Actions di Kanan Atas --}}
-                            <div style="display:flex; gap:8px;">
-                                @if($isMine)
-                                    <button type="button" data-judul="{{ $p->judul }}" data-konten="{{ $p->konten }}"
-                                        @click="openEditModal({{ $p->id }}, $el.dataset.judul, $el.dataset.konten)"
-                                        title="Edit Pengumuman"
-                                        style="background:#E0E7FF; color:#293C79; border:none; border-radius:6px; padding:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s;"
-                                        onmouseover="this.style.background='#C7D2FE'" onmouseout="this.style.background='#E0E7FF'">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round">
-                                            <path d="M12 20h9"></path>
-                                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                                        </svg>
+                            @if($isMine && $praktikum?->is_active)
+                                <x-eoffice::manajemen-praktikum.ui.action-menu>
+                                    <x-eoffice::manajemen-praktikum.ui.announcement-pin-actions :announcement="$p" role="asprak" />
+                                    <button type="button" class="primary" data-judul="{{ $p->judul }}" data-konten="{{ $p->konten }}" data-files="{{ json_encode($editableAttachments) }}"
+                                        @click="openEditModal({{ $p->id }}, $el.dataset.judul, $el.dataset.konten, JSON.parse($el.dataset.files))">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" /></svg>Edit Pengumuman
                                     </button>
-
                                     <form method="POST" action="{{ route('eoffice.manprak.asprak.pengumuman.destroy', $p->id) }}"
-                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengumuman ini?');"
-                                        style="margin:0;">
+                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengumuman ini?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" title="Hapus Pengumuman"
-                                            style="background:#FFE4E6; color:#DF1C41; border:none; border-radius:6px; padding:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s;"
-                                            onmouseover="this.style.background='#FECDD3'"
-                                            onmouseout="this.style.background='#FFE4E6'">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                stroke-width="2" stroke-linecap="round">
-                                                <polyline points="3 6 5 6 21 6"></polyline>
-                                                <path
-                                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                                                </path>
-                                            </svg>
-                                        </button>
+                                        <button type="submit" class="mp-delete-button destructive" aria-label="Hapus Pengumuman" title="Hapus Pengumuman"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                     </form>
-                                @endif
-                            </div>
+                                </x-eoffice::manajemen-praktikum.ui.action-menu>
+                            @endif
                         </div>
 
                         {{-- Konten --}}
@@ -115,8 +77,9 @@
                             <h3
                                 style="font-size:15px; font-weight:700; color:#111827; margin:0 0 4px 0; line-height:1.4; padding:0;">
                                 {{ $p->judul }}
+                                <x-eoffice::manajemen-praktikum.ui.announcement-pin-badge :announcement="$p" />
                             </h3>
-                            <p style="font-size:13px; color:#374151; margin:0; padding:0; line-height:1.6;">{{ $p->konten }}</p>
+                            <p class="mp-announcement-copy" style="font-size:13px; color:#374151; margin:0; padding:0; line-height:1.6;">{{ $p->konten }}</p>
                         </div>
 
                         {{-- Lampiran if any --}}
@@ -124,7 +87,7 @@
                             <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top: 10px;">
                                 @foreach($p->lampiran as $lamp)
                                     @php $baseName = isset($lamp['name']) ? $lamp['name'] : pathinfo($lamp['path'], PATHINFO_BASENAME); @endphp
-                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($lamp['path'], 'eoffice') }}"
+                                    <a rel="noopener noreferrer" href="{{ app(\Modules\EOffice\Services\ManajemenPraktikum\PracticumAttachments::class)->publicUrl($lamp['path'], 'eoffice', $baseName) }}"
                                         target="_blank" title="{{ $baseName }}"
                                         style="display: flex; flex-direction: column; width: 140px; height: 140px; border: 1px solid #DFE1E7; border-radius: 8px; overflow: hidden; text-decoration: none; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition:transform 0.15s, box-shadow 0.15s;"
                                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"
@@ -138,7 +101,7 @@
                                             </svg>
                                         </div>
                                         <div
-                                            style="background: #293C79; color: #fff; padding: 10px 12px; font-size: 13px; font-weight: 600; text-align: center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                            style="background: #0B266E; color: #fff; padding: 10px 12px; font-size: 13px; font-weight: 600; text-align: center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
                                             {{ $baseName }}
                                         </div>
                                     </a>
@@ -152,13 +115,7 @@
                     <div class="mp-card flex-shrink-0"
                         style="min-height:180px;display:flex;align-items:center;justify-content:center;">
                         <div style="padding:36px;text-align:center;">
-                            <div
-                                style="width:48px;height:48px;border-radius:12px;background:#F4F6F8;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5"
-                                    stroke-linecap="round">
-                                    <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" />
-                                </svg>
-                            </div>
+                            <x-eoffice::manajemen-praktikum.ui.empty-icon name="bell" />
                             <div style="font-size:14px;font-weight:600;color:#0D0D12;margin-bottom:4px;">Belum Ada Pengumuman
                             </div>
                             <div style="font-size:12px;color:#666D80;">Jadilah yang pertama menulis pengumuman untuk praktikum
@@ -170,7 +127,7 @@
 
             {{-- Floating Buat Pengumuman Button --}}
             <button @click="showModal = true" type="button"
-                style="position:fixed; bottom:32px; right:40px; z-index:50; background:#293C79; color:white; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); transition:transform 0.2s, background 0.2s;"
+                style="position:fixed; bottom:32px; right:40px; z-index:50; background:#0B266E; color:white; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); transition:transform 0.2s, background 0.2s;"
                 onmouseover="this.style.transform='translateY(-2px)'; this.style.background='#1F2D59';"
                 onmouseout="this.style.transform='translateY(0)'; this.style.background='#293C79';">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -183,7 +140,7 @@
 
             {{-- Modal Form Buat Pengumuman (Admin-style animation) --}}
             <div x-show="showModal" style="display:none;"
-                class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-all duration-300"
                 x-cloak>
                 <div class="relative bg-white rounded-xl shadow-2xl w-[600px] max-w-[90%] max-h-[90vh] overflow-y-auto"
                     style="border:1px solid #E5E7EB;" @click.away="showModal = false" x-show="showModal"
@@ -197,14 +154,6 @@
                     <div
                         style="padding:20px 24px; border-bottom:1px solid #E5E7EB; display:flex; justify-content:space-between; align-items:center;">
                         <h2 style="font-size:18px; font-weight:700; color:#111827; margin:0;">Tulis Pengumuman Baru</h2>
-                        <button type="button" @click="showModal = false"
-                            style="background:none; border:none; cursor:pointer; color:#6B7280;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round">
-                                <line x1="18" y1="6" x2="6" y2="18" />
-                                <line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
-                        </button>
                     </div>
 
                     <div style="padding:24px;">
@@ -228,7 +177,7 @@
                                     style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#374151;">
                                     Isi Pengumuman <span style="color:#DC2626;">*</span>
                                 </label>
-                                <textarea name="konten" rows="3" maxlength="1000" required
+                                <textarea name="konten" class="mp-announcement-textarea" rows="10" maxlength="1000" required
                                     placeholder="Tulis isi pengumuman... (Maks. 1000 karakter)"
                                     style="width:100%; padding:10px 14px; border:1px solid #D1D5DB; border-radius:8px; font-size:14px; color:#111827; resize:vertical; min-height:80px; max-height:120px;">{{ old('konten') }}</textarea>
                             </div>
@@ -236,7 +185,7 @@
                             <div>
                                 <label
                                     style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#374151;">
-                                    Lampiran (File PDF)
+                                    Lampiran
                                 </label>
 
                                 <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">
@@ -249,7 +198,7 @@
                                             <line x1="12" y1="5" x2="12" y2="19"></line>
                                             <line x1="5" y1="12" x2="19" y2="12"></line>
                                         </svg>
-                                        Tambah File PDF
+                                        Tambah Berkas
                                     </button>
                                     <div
                                         style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#9CA3AF;">
@@ -257,7 +206,7 @@
                                         <span>Maks. 5MB per file</span>
                                     </div>
                                 </div>
-                                <input type="file" x-ref="fileInput" style="display:none" multiple accept=".pdf"
+                                <input type="file" x-ref="fileInput" style="display:none" multiple accept="*/*"
                                     @change="addFiles($event, 'create')">
                                 <input type="file" id="hidden-lampiran" name="lampiran[]" multiple style="display:none">
 
@@ -287,11 +236,9 @@
                                 </div>
                             </div>
 
-                            <div style="display:flex;justify-content:flex-end; gap:12px; margin-top:8px;">
-                                <button type="submit"
-                                    style="padding:10px 20px; font-size:14px; font-weight:600; color:white; background:#293C79; border:none; border-radius:8px; cursor:pointer;"
-                                    onmouseover="this.style.background='#1F2D59'"
-                                    onmouseout="this.style.background='#293C79'">Kirim Pengumuman</button>
+                            <div class="mp-modal-footer mp-modal-footer-bleed" style="display:flex;justify-content:flex-end; gap:12px; margin-top:8px;">
+                                <button type="button" @click="showModal = false" class="mp-btn secondary md" style="color:#353849;">Batal</button>
+                                <button type="submit" class="mp-btn primary md" style="background:#0B266E;color:#FFFFFF;">Kirim Pengumuman</button>
                             </div>
                         </form>
                     </div>
@@ -300,7 +247,7 @@
 
             {{-- Modal Form Edit Pengumuman --}}
             <div x-show="editModal.open" style="display:none;"
-                class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-all duration-300"
                 x-cloak>
                 <div class="relative bg-white rounded-xl shadow-2xl w-[600px] max-w-[90%] max-h-[90vh] overflow-y-auto"
                     style="border:1px solid #E5E7EB;" @click.away="editModal.open = false" x-show="editModal.open"
@@ -314,14 +261,6 @@
                     <div
                         style="padding:20px 24px; border-bottom:1px solid #E5E7EB; display:flex; justify-content:space-between; align-items:center;">
                         <h2 style="font-size:18px; font-weight:700; color:#111827; margin:0;">Edit Pengumuman</h2>
-                        <button type="button" @click="editModal.open = false"
-                            style="background:none; border:none; cursor:pointer; color:#6B7280;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round">
-                                <line x1="18" y1="6" x2="6" y2="18" />
-                                <line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
-                        </button>
                     </div>
 
                     <div style="padding:24px;">
@@ -330,6 +269,7 @@
                             enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:16px;">
                             @csrf
                             @method('PUT')
+                            <input type="hidden" name="attachments_managed" value="1">
                             <input type="hidden" name="praktikum_id" value="{{ $asprak->praktikum_id ?? $praktikum->id }}">
 
                             <div>
@@ -346,7 +286,7 @@
                                     style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#374151;">
                                     Isi Pengumuman <span style="color:#DC2626;">*</span>
                                 </label>
-                                <textarea name="konten" x-model="editModal.konten" rows="3" maxlength="1000" required
+                                <textarea name="konten" class="mp-announcement-textarea" x-model="editModal.konten" rows="10" maxlength="1000" required
                                     placeholder="Tulis isi pengumuman... (Maks. 1000 karakter)"
                                     style="width:100%; padding:10px 14px; border:1px solid #D1D5DB; border-radius:8px; font-size:14px; color:#111827; resize:vertical; min-height:80px; max-height:120px;"></textarea>
                             </div>
@@ -354,10 +294,18 @@
                             <div>
                                 <label
                                     style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#374151;">
-                                    Lampiran Baru (File PDF)
-                                    <br><span style="font-size:11px; font-weight:400; color:#6B7280;">Mengunggah file baru
-                                        akan menimpa semua lampiran lama pengumuman ini.</span>
+                                    Berkas Lampiran
                                 </label>
+                                <div x-show="retainedFiles.length" style="margin-bottom:16px">
+                                    <div style="font-size:13px;font-weight:600;color:#353849;margin-bottom:8px">Berkas Saat Ini:</div>
+                                    <template x-for="(file,index) in retainedFiles" :key="file.path">
+                                        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;border:1px solid #DFE1E7;border-radius:8px;background:#F8F9FB;margin-bottom:6px;min-width:0">
+                                            <input type="hidden" name="retained_files[]" :value="file.path">
+                                            <a :href="file.url" target="_blank" rel="noopener noreferrer" :title="file.name" style="display:flex;align-items:center;gap:8px;min-width:0;color:#0B266E;font-size:13px;text-decoration:none"><x-eoffice::manajemen-praktikum.ui.icon name="file" size="16" /><span x-text="file.name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></span></a>
+                                            <button type="button" @click="retainedFiles.splice(index,1)" aria-label="Hapus lampiran" style="flex-shrink:0;border:0;background:transparent;color:#DF1C41;cursor:pointer;padding:4px" class="mp-delete-button" title="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
+                                        </div>
+                                    </template>
+                                </div>
 
                                 <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">
                                     <button type="button" @click="$refs.fileInputEdit.click()"
@@ -369,15 +317,15 @@
                                             <line x1="12" y1="5" x2="12" y2="19"></line>
                                             <line x1="5" y1="12" x2="19" y2="12"></line>
                                         </svg>
-                                        Tambah File PDF
+                                        Tambah Berkas
                                     </button>
                                     <div
                                         style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#9CA3AF;">
-                                        <span x-text="editFiles.length + ' / 3 file terpilih'"></span>
+                                        <span x-text="(retainedFiles.length + editFiles.length) + ' / 3 berkas terpilih'"></span>
                                         <span>Maks. 5MB per file</span>
                                     </div>
                                 </div>
-                                <input type="file" x-ref="fileInputEdit" style="display:none" multiple accept=".pdf"
+                                <input type="file" x-ref="fileInputEdit" style="display:none" multiple accept="*/*"
                                     @change="addFiles($event, 'edit')">
                                 <input type="file" id="hidden-lampiran-edit" name="lampiran[]" multiple
                                     style="display:none">
@@ -409,11 +357,9 @@
                             </div>
 
 
-                            <div style="display:flex;justify-content:flex-end; gap:12px; margin-top:8px;">
-                                <button type="submit"
-                                    style="padding:10px 20px; font-size:14px; font-weight:600; color:white; background:#293C79; border:none; border-radius:8px; cursor:pointer;"
-                                    onmouseover="this.style.background='#1F2D59'"
-                                    onmouseout="this.style.background='#293C79'">Simpan Perubahan</button>
+                            <div class="mp-modal-footer mp-modal-footer-bleed" style="display:flex;justify-content:flex-end; gap:12px; margin-top:8px;">
+                                <button type="button" @click="editModal.open = false" class="mp-btn secondary md" style="color:#353849;">Batal</button>
+                                <button type="submit" class="mp-btn primary md" style="background:#0B266E;color:#FFFFFF;">Simpan Perubahan</button>
                             </div>
                         </form>
                     </div>
@@ -430,6 +376,7 @@
                 showModal: false,
                 files: [],
                 editFiles: [],
+                retainedFiles: [],
                 editModal: {
                     open: false,
                     id: null,
@@ -438,12 +385,19 @@
                 },
                 addFiles(e, type) {
                     let selectedFiles = Array.from(e.target.files);
+                    const oversizedFile = selectedFiles.find(file => file.size > 5 * 1024 * 1024);
+                    if (oversizedFile) {
+                        alert('File ' + oversizedFile.name + ' melebihi batas 5MB.');
+                        e.target.value = '';
+                        return;
+                    }
                     let currentFiles = type === 'edit' ? this.editFiles : this.files;
-                    let totalFiles = currentFiles.length + selectedFiles.length;
+                    let retainedCount = type === 'edit' ? this.retainedFiles.length : 0;
+                    let totalFiles = currentFiles.length + retainedCount + selectedFiles.length;
 
                     if (totalFiles > 3) {
                         alert('Maksimal 3 file yang dapat diunggah!');
-                        selectedFiles = selectedFiles.slice(0, 3 - currentFiles.length);
+                        selectedFiles = selectedFiles.slice(0, Math.max(0, 3 - currentFiles.length - retainedCount));
                     }
 
                     if (type === 'edit') {
@@ -475,11 +429,12 @@
                         document.getElementById('hidden-lampiran').files = dt.files;
                     }
                 },
-                openEditModal(id, judul, konten) {
+                openEditModal(id, judul, konten, existingFiles = []) {
                     this.editModal.id = id;
                     this.editModal.judul = judul;
                     this.editModal.konten = konten;
                     this.editFiles = [];
+                    this.retainedFiles = existingFiles.map(file => ({...file}));
                     this.syncInput('edit');
                     this.editModal.open = true;
                 }

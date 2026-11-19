@@ -302,9 +302,11 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
         });
 
         // RPS Dosen Delete
+        // Catatan: route penghapusan RPS yang sudah diajukan sudah dihilangkan.
+        // Hanya draft (belum diajukan) yang masih dapat dihapus.
         Route::prefix('rps')->name('banksoal.rps.')->group(function () {
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
-                Route::delete('/{rpsId}', [DosenRpsController::class, 'destroy'])->name('destroy');
+                Route::delete('/draft/{draftId}', [DosenRpsController::class, 'deleteDraft'])->name('delete-draft');
             });
         });
 
@@ -381,6 +383,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
             Route::post('/reset-semua', [AdminCbtController::class, 'resetSemua'])->name('reset-semua');
             Route::post('/syarat-kelulusan', [AdminCbtController::class, 'updatePassingRule'])->name('passing-rule.update');
 
+            Route::get('/import/template-kosong', [ImportController::class, 'templateKosong'])->name('import.template-kosong');
             Route::get('/import/template/{periode}', [ImportController::class, 'template'])->name('import.template');
             Route::post('/import/preview', [ImportController::class, 'preview'])->name('import.preview');
             Route::post('/import/execute/{token}', [ImportController::class, 'execute'])->name('import.execute');
@@ -416,9 +419,6 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
             ->middleware('throttle:cbt-token-validation')  // Max 5 percobaan/menit per user
             ->name('engine.validate');
         Route::get('/engine/run', [CbtEngineController::class, 'run'])->name('engine.run');
-
-        // Waiting room dipertahankan sebagai fallback (tidak digunakan dalam flow normal)
-        Route::get('/engine/waiting-room', [CbtEngineController::class, 'waitingRoom'])->name('engine.waiting');
 
         // CBT Engine API Routes
         Route::get('/engine/status', [CbtEngineController::class, 'status'])->name('engine.status');

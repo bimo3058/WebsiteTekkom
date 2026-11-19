@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class RiwayatPengumpulan extends Model
 {
-    protected $table = 'riwayat_pengumpulan_tugas';
+    protected $table = 'eo_prak_riwayat_pengumpulan_tugas';
 
     protected $fillable = [
         'pengumpulan_tugas_id',

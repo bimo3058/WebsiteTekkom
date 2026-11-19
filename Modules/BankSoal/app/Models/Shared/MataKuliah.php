@@ -3,9 +3,12 @@
 namespace Modules\BankSoal\Models\Shared;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MataKuliah extends Model
 {
+    use SoftDeletes;
+
     protected $table    = 'bs_mata_kuliah';
     protected $fillable = ['kode', 'nama', 'sks', 'semester'];
 

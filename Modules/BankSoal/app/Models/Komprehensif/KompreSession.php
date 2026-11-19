@@ -15,7 +15,7 @@ class KompreSession extends Model
     protected $table = 'bs_kompre_session';
 
     protected $fillable = [
-        'user_id', 'jadwal_id', 'title', 'started_at', 'finished_at', 'score', 'status',
+        'user_id', 'pendaftar_ujian_id', 'jadwal_id', 'title', 'started_at', 'finished_at', 'score', 'status',
         'lulus', 'cpl_scores', 'source', 'import_batch_id', 'passing_rule',
     ];
 
@@ -35,6 +35,21 @@ class KompreSession extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function pendaftar()
+    {
+        return $this->belongsTo(PendaftarUjian::class, 'pendaftar_ujian_id')->withTrashed();
+    }
+
+    public function namaPeserta(): string
+    {
+        return $this->user?->name ?? $this->pendaftar?->nama_lengkap ?? '—';
+    }
+
+    public function nimPeserta(): string
+    {
+        return $this->user?->student?->student_number ?? $this->pendaftar?->nim ?? '—';
     }
 
     public function jadwal()

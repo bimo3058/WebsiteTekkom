@@ -1,32 +1,45 @@
 {{--
     Badan halaman detail kegiatan — dipakai bersama oleh:
-      • Rencana Proker (show)          → $showDokumentasi = false
+      • Rencana Proker (show)          → $showDokumentasi = false, $showDokumen = true
       • Pelaksanaan Kegiatan (show)    → $showDokumentasi = true
+      • Laporan & Arsip (show)         → $showDokumentasi = true ($proker = $kegiatan)
 
-    Galeri foto & daftar dokumen hanya muncul di Pelaksanaan: keduanya
-    dokumentasi acara yang sudah berlangsung, diunggah di subbab tersebut.
+    Galeri foto hanya muncul mulai Pelaksanaan: dokumentasi acara yang sudah
+    berlangsung. Rencana Proker menampilkan Dokumen Rencana (proposal, RAB, surat)
+    sejak S-49; dokumen itu ikut disalin ke Pelaksanaan saat diajukan.
+    NIM/NIP sengaja tidak ditampilkan di kartu meta (keputusan 17 Okt 2026, sama
+    di ketiga subbab); NIM panitia tetap ada di daftar lengkap "+ lainnya".
 
     Variabel wajib: $proker, $canViewRestricted, $showDokumentasi.
-    Hanya saat $showDokumentasi: $images, $documents.
+    Saat $showDokumentasi: $images, $documents. Saat $showDokumen: $documents.
+
+    Opsional (11 Nov 2026 — status tinjau & cek jadwal pindah ke dalam kartu info):
+      $panelTinjauan  array variabel _tinjauan/_tinjauan-dialog (Rencana Proker & Pelaksanaan):
+                      kotak status di bawah judul, tombol Ganti di kartu Ketua Pelaksana.
+      $cekJadwal      hasil ProkerController::cekJadwalUntuk() (Rencana Proker): peringatan
+                      bentrok/ruangan di bawah kartu meta.
 --}}
 @php
     $showDokumentasi = $showDokumentasi ?? false;
+    $showDokumen     = $showDokumen ?? false;
+    $panelTinjauan   = $panelTinjauan ?? null;
+    $cekJadwal       = $cekJadwal ?? null;
+
+    $bisaGantiKetua = (bool) ($panelTinjauan['canGantiKetua'] ?? false);
+    $namaKetuaMeta  = $proker->ketuaPelaksana
+        ? ($proker->ketuaPelaksana->user->name ?? '-')
+        : $proker->penanggung_jawab;
+    $ketuaAnda      = $panelTinjauan && $proker->ketuaPelaksana
+        && (int) $proker->ketuaPelaksana->user_id === (int) auth()->id();
+
+    // Kegiatan satu hari: jam selesai ikut tampil ("pukul 09:00–12:00"), bukan hanya jam mulai.
+    $satuHari = $proker->tanggal_mulai
+        && (!$proker->tanggal_selesai || $proker->tanggal_selesai->isSameDay($proker->tanggal_mulai));
 @endphp
 
-<!-- Banner -->
-@if($proker->banner)
-<div style="position:relative;width:100%;max-height:340px;border-radius:18px;overflow:hidden;margin-bottom:28px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.15);cursor:pointer;transition:transform 0.2s;" 
-     onclick="openBannerLightbox()"
-     onmouseover="this.style.transform='scale(1.005)'"
-     onmouseout="this.style.transform='scale(1)'">
-    <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 45%);z-index:1;transition:background 0.2s;" onmouseover="this.style.background='linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 50%)'" onmouseout="this.style.background='linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 45%)'"></div>
-    <img src="{{ $proker->banner_url }}" alt="{{ $proker->judul }}" style="width:100%;height:340px;object-fit:cover;display:block;">
-    <div style="position:absolute;bottom:24px;left:28px;z-index:2;display:flex;align-items:center;gap:12px;">
-        <span style="background:rgba(255,255,255,0.25);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--c-surface);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.5px;border:1px solid rgba(255,255,255,0.4);text-shadow:0 1px 2px rgba(0,0,0,0.2);">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>Banner Kegiatan &bull; Klik untuk memperbesar
-        </span>
-    </div>
-</div>
+<!-- Banner (Laporan & Arsip bertab memasangnya sendiri di atas deretan tab: $tampilBanner = false) -->
+@if($tampilBanner ?? true)
+    @include('manajemenmahasiswa::partials.kegiatan-detail._banner')
 @endif
 
 <!-- Title & Badges -->
@@ -39,7 +52,8 @@
             @endforeach
         @elseif($proker->bidang)
             <span class="badge-bidang">{{ $proker->bidang->nama_bidang }}</span>
-        @else
+        {{-- Draft Rencana Proker boleh belum berkategori: jangan dikira "Prodi" --}}
+        @elseif(($proker->kategoris && $proker->kategoris->isNotEmpty()) || $proker->kategoriKegiatan)
             <span class="badge-bidang" style="background: var(--c-primary-subtle); color: var(--c-primary);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> Prodi</span>
         @endif
 
@@ -53,25 +67,39 @@
     </div>
 
     <!-- Title -->
-    <h4 class="fw-bold mb-3" style="color:var(--c-fg);">{{ $proker->judul }}</h4>
+    <h4 class="fw-bold mb-3" style="color:var(--c-fg);overflow-wrap:anywhere;">{{ $proker->judul }}</h4>
+
+    {{-- Status tinjauan (S-82): satu kotak, tanpa stepper --}}
+    @if($panelTinjauan)
+        @include('manajemenmahasiswa::partials.kegiatan-detail._tinjauan', $panelTinjauan)
+    @endif
 
     <!-- Meta Grid -->
     <div class="meta-grid">
         <div class="meta-item">
             <div class="meta-item-label">Tanggal Pelaksanaan</div>
             <div class="meta-item-value">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg> 
-                {{ $proker->tanggal_mulai ? $proker->tanggal_mulai->translatedFormat('d F Y') : 'Belum ditentukan' }}
-                @if($proker->jam_mulai)
-                    pukul {{ $proker->jam_mulai_formatted }}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
+                <span>
+                @if(!$proker->tanggal_mulai)
+                    Belum ditentukan
+                @elseif($satuHari)
+                    {{ $proker->tanggal_mulai->locale('id')->translatedFormat('d F Y') }}
+                @else
+                    {{ $proker->tanggal_mulai->locale('id')->translatedFormat('d M Y') }} — {{ $proker->tanggal_selesai->locale('id')->translatedFormat('d M Y') }}
                 @endif
-                @if($proker->tanggal_selesai)
-                    — {{ $proker->tanggal_selesai->translatedFormat('d F Y') }}
-                    @if($proker->jam_selesai)
-                        pukul {{ $proker->jam_selesai_formatted }}
-                    @endif
-                @endif
+                </span>
             </div>
+            {{-- Jam di baris sendiri supaya tanggal tidak terpotong di tengah kalimat --}}
+            @if($proker->tanggal_mulai && $proker->jam_mulai)
+                <div class="meta-item-sub">
+                    @if($satuHari)
+                        Pukul {{ $proker->jam_mulai_formatted }}@if($proker->jam_selesai)–{{ $proker->jam_selesai_formatted }}@endif
+                    @else
+                        Mulai pukul {{ $proker->jam_mulai_formatted }}@if($proker->jam_selesai), selesai pukul {{ $proker->jam_selesai_formatted }}@endif
+                    @endif
+                </div>
+            @endif
         </div>
 
         @if($proker->lokasi)
@@ -81,26 +109,38 @@
         </div>
         @endif
 
-        @if($proker->ketuaPelaksana)
+        {{-- Tombol Ganti (S-82) untuk KABID dkk./KAHIM/admin: membuka dialog _tinjauan-dialog --}}
+        @if($namaKetuaMeta || $bisaGantiKetua)
         <div class="meta-item">
             <div class="meta-item-label">Ketua Pelaksana</div>
-            <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> {{ $proker->ketuaPelaksana->user->name ?? '-' }}
+            <div class="meta-item-value">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span style="min-width:0;">{{ $namaKetuaMeta ?: 'Belum ditunjuk' }}@if($ketuaAnda) <span class="meta-item-anda">(Anda)</span>@endif</span>
+                @if($bisaGantiKetua)
+                    <button type="button" class="meta-item-aksi" @click="$dispatch('mk-buka-ketua')"
+                            aria-label="{{ $proker->ketuaPelaksana ? 'Ganti ketua pelaksana' : 'Tunjuk ketua pelaksana' }}">
+                        {{ $proker->ketuaPelaksana ? 'Ganti' : 'Tunjuk' }}
+                    </button>
+                @endif
             </div>
-        </div>
-        @elseif($proker->penanggung_jawab)
-        <div class="meta-item">
-            <div class="meta-item-label">Ketua Pelaksana</div>
-            <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> {{ $proker->penanggung_jawab }}</div>
         </div>
         @endif
 
         @if($proker->dosenPendampings->isNotEmpty())
         <div class="meta-item">
             <div class="meta-item-label">Dosen Pendamping</div>
+            {{-- Satu dosen = satu blok: nama di atas, peran (pill) di bawahnya, supaya nama
+                 panjang tidak menjepit pill peran jadi satu huruf per baris. --}}
+            <div style="display:flex;flex-direction:column;gap:10px;">
             @foreach($proker->dosenPendampings as $dosenItem)
-            <div class="meta-item-value" @if(!$loop->first) style="margin-top:4px;" @endif><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> {{ $dosenItem->user->name ?? '-' }}
+            <div style="min-width:0;">
+                <div class="meta-item-value" style="align-items:flex-start;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:3px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg><span style="min-width:0;">{{ $dosenItem->user->name ?? '-' }}</span></div>
+                @if(filled($dosenItem->pivot->peran ?? null))
+                    <span style="display:inline-block;margin:4px 0 0 20px;max-width:calc(100% - 20px);font-size:11px;font-weight:600;line-height:1.4;color:var(--c-primary);background:var(--c-primary-subtle);padding:2px 10px;border-radius:20px;overflow-wrap:anywhere;">{{ $dosenItem->pivot->peran }}</span>
+                @endif
             </div>
             @endforeach
+            </div>
         </div>
         @endif
 
@@ -115,9 +155,23 @@
         <div class="meta-item">
             <div class="meta-item-label">Anggaran</div>
             <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Rp {{ number_format($proker->anggaran, 0, ',', '.') }}</div>
+            {{-- Rincian per sumber dana (S-80); kegiatan lama tanpa rincian hanya total. --}}
+            @php $rincianDana = \Modules\ManajemenMahasiswa\Support\SumberDana::rincian($proker); @endphp
+            @if($rincianDana)
+                <div style="margin-top:6px;display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--c-fg-sec);">
+                    @foreach($rincianDana as $label => $nominal)
+                        <div style="display:flex;justify-content:space-between;gap:12px;"><span>{{ $label }}</span><span style="font-weight:600;">Rp {{ number_format($nominal, 0, ',', '.') }}</span></div>
+                    @endforeach
+                </div>
+            @endif
         </div>
         @endif
     </div>
+
+    {{-- Cek jadwal & ruangan (S-81), dekat kartu Tanggal & Lokasi --}}
+    @if($cekJadwal)
+        @include('manajemenmahasiswa::partials.kegiatan-detail._cek-jadwal', ['cekJadwal' => $cekJadwal])
+    @endif
 
     {{-- Panitia Kegiatan --}}
     @if($proker->panitia && $proker->panitia->count() > 0)
@@ -130,11 +184,11 @@
         </div>
         <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
             @foreach($panitiaList->take(2) as $p)
-                <span style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: var(--c-primary-subtle); color: var(--c-primary-hover); border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid var(--c-primary-border);">
+                <span style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: var(--c-primary-subtle); color: var(--c-primary-hover); border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid var(--c-primary-border); max-width: 100%;">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     {{ $p->user->name ?? '-' }}
                     @if($p->pivot->peran)
-                        <span style="font-weight: 700; color: var(--c-primary-hover); margin-left: 2px;">- {{ $p->pivot->peran }}</span>
+                        <span title="{{ $p->pivot->peran }}" style="font-weight: 700; color: var(--c-primary-hover); margin-left: 2px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">- {{ $p->pivot->peran }}</span>
                     @endif
                 </span>
             @endforeach
@@ -170,7 +224,7 @@
                             <div style="font-size:11px;color:var(--c-fg-muted);font-weight:500;margin-top:1px;">{{ $p->student_number ?? '' }}@if($p->pivot->peran) &bull; <span style="color:var(--c-primary);font-weight:600;">{{ $p->pivot->peran }}</span>@endif</div>
                         </div>
                         @if($p->pivot->peran)
-                        <span style="font-size:10px;font-weight:700;padding:3px 10px;background:var(--c-primary-subtle);color:var(--c-primary-hover);border-radius:20px;white-space:nowrap;border:1px solid var(--c-primary-border);">{{ $p->pivot->peran }}</span>
+                        <span title="{{ $p->pivot->peran }}" style="font-size:10px;font-weight:700;padding:3px 10px;background:var(--c-primary-subtle);color:var(--c-primary-hover);border-radius:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40%;flex-shrink:1;border:1px solid var(--c-primary-border);">{{ $p->pivot->peran }}</span>
                         @endif
                     </div>
                     @endforeach
@@ -202,7 +256,12 @@
 <!-- Deskripsi -->
 <div class="detail-card">
     <div class="detail-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Deskripsi & Tujuan Kegiatan</div>
-    <div class="detail-description">{{ $proker->deskripsi }}</div>
+    {{-- Draft Rencana Proker boleh disimpan tanpa deskripsi --}}
+    @if(filled($proker->deskripsi))
+        <div class="detail-description">{{ $proker->deskripsi }}</div>
+    @else
+        <div class="detail-description" style="color:var(--c-fg-muted);font-style:italic;">Belum diisi.</div>
+    @endif
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
@@ -263,51 +322,8 @@
     </div>
     @endif
 
-    {{-- ─── Document Download Section ────────────────────────────────── --}}
-    @if($documents->count() > 0 && isset($canViewRestricted) && $canViewRestricted)
-    <div class="detail-card">
-        <div class="gallery-header">
-            <div class="detail-card-title" style="margin-bottom: 0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen & Laporan</div>
-            <span class="gallery-count">{{ $documents->count() }} dokumen</span>
-        </div>
-        <div class="document-list">
-            @foreach($documents as $doc)
-                @php
-                    $ext = strtolower(pathinfo($doc->nama_file, PATHINFO_EXTENSION));
-                    $iconMap = [
-                        'pdf'  => ['PDF', 'doc-icon-pdf', 'ext-pdf'],
-                        'doc'  => ['DOC', 'doc-icon-word', 'ext-doc'],
-                        'docx' => ['DOC', 'doc-icon-word', 'ext-docx'],
-                        'xls'  => ['XLS', 'doc-icon-excel', 'ext-xls'],
-                        'xlsx' => ['XLS', 'doc-icon-excel', 'ext-xlsx'],
-                        'ppt'  => ['PPT', 'doc-icon-ppt', 'ext-ppt'],
-                        'pptx' => ['PPT', 'doc-icon-ppt', 'ext-pptx'],
-                    ];
-                    $iconInfo = $iconMap[$ext] ?? ['FILE', 'doc-icon-other', 'ext-default'];
-                @endphp
-                <a href="{{ $doc->url }}" target="_blank" class="document-card" download>
-                    <div class="doc-icon-wrapper {{ $iconInfo[1] }}">
-                        {{ $iconInfo[0] }}
-                    </div>
-                    <div class="doc-details">
-                        <div class="doc-title">{{ $doc->judul_file ?: $doc->nama_file }}</div>
-                        <div class="doc-meta">
-                            <span class="doc-ext-badge {{ $iconInfo[2] }}">{{ strtoupper($ext) }}</span>
-                            <span>Klik untuk mengunduh</span>
-                        </div>
-                    </div>
-                    <div class="doc-download-btn">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                    </div>
-                </a>
-            @endforeach
-        </div>
-    </div>
-    @endif
+    {{-- ─── Document Download Section ── (partial bersama, dipakai juga Rencana Proker) --}}
+    @include('manajemenmahasiswa::partials.kegiatan-detail._dokumen')
 
 @else
     {{-- Empty state when no files uploaded --}}
@@ -320,4 +336,14 @@
         </div>
     </div>
 @endif
+@endif
+
+{{-- Dokumen Rencana (S-49): proposal, RAB, surat undangan & peminjaman di detail Rencana Proker --}}
+@if(!$showDokumentasi && $showDokumen)
+    @include('manajemenmahasiswa::partials.kegiatan-detail._dokumen', ['judulKartu' => 'Dokumen Rencana'])
+@endif
+
+{{-- Dialog Tolak dengan catatan & Ganti ketua pelaksana (S-82) --}}
+@if($panelTinjauan)
+    @include('manajemenmahasiswa::partials.kegiatan-detail._tinjauan-dialog', $panelTinjauan)
 @endif

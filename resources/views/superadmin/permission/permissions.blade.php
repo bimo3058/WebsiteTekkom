@@ -51,6 +51,11 @@
     $activeLabel = $roleList[$activeRole]['label'] ?? Str::title(str_replace('_',' ',$activeRole));
 
     $dbModules = \App\Models\SystemModule::orderBy('id')->get();
+    $restrictedModules = \App\Services\PermissionAssigner::restrictedModules([$activeRole]);
+    $rolePermissionNames = \App\Models\Role::where('name', $activeRole)->first()?->permissions->pluck('name')->all() ?? [];
+    if (!$rolePermissionNames && in_array($activeRole, ['dosen', 'mahasiswa'])) {
+        $rolePermissionNames = \App\Services\PermissionAssigner::defaultPermissionNames([$activeRole]);
+    }
 
     // 5. Filter & Paginate Users Berdasarkan Role & Search
     $search        = request('search','');
@@ -176,8 +181,10 @@
                             $pPrefix = $slugToPerm[$mkey] ?? $mkey; // Mapping prefix permission
                             $style   = $moduleStyles[$mkey] ?? $defaultStyle;
                             $perms   = \App\Models\Permission::where('name', 'like', $pPrefix.'.%')->get();
+                            $moduleAllowed = $restrictedModules === null || in_array($pPrefix, $restrictedModules, true);
+                            $allSelected = $perms->isNotEmpty() && $perms->every(fn($perm) => in_array($perm->name, $rolePermissionNames, true));
                         @endphp
-                        <div class="module-box" style="border:1px solid #D4D5D8; border-radius:8px; overflow:hidden; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.04); opacity: {{ $mod->is_active ? '1' : '0.6' }};">
+                        <div class="module-box" style="border:1px solid #D4D5D8; border-radius:8px; overflow:hidden; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.04); opacity: {{ $moduleAllowed ? '1' : '0.5' }};">
                             <div style="display:flex; align-items:center; justify-content:space-between; padding:9px 13px; border-bottom:1px solid #E8E9EB; background:#FAFAFA;">
                                 <div style="display:flex; align-items:center; gap:8px;">
                                     <div style="width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; background:{{ $style['bg'] }}; border:1px solid {{ $style['border'] }};">
@@ -186,17 +193,18 @@
                                         </svg>
                                     </div>
                                     <span style="font-size:12px; font-weight:900; color:#1E293B;">{{ $mod->name }}</span>
+                                    @if(!$mod->is_active)<span style="font-size:10px;color:#94A3B8;">Nonaktif</span>@endif
                                 </div>
-                                <label style="display:flex; align-items:center; gap:5px; cursor:{{ $mod->is_active ? 'pointer' : 'not-allowed' }};">
-                                    <input type="checkbox" class="module-select-all" data-module-target="bulk_{{ $pPrefix }}" {{ !$mod->is_active ? 'disabled' : '' }}
+                                <label style="display:flex; align-items:center; gap:5px; cursor:{{ $moduleAllowed ? 'pointer' : 'not-allowed' }};">
+                                    <input type="checkbox" class="module-select-all" data-module-target="bulk_{{ $pPrefix }}" @disabled(!$moduleAllowed) @checked($moduleAllowed && $allSelected)
                                         style="width:14px; height:14px; border-radius:4px; border:1.5px solid #CBD5E1; cursor:inherit; accent-color:var(--c-primary);">
                                     <span style="font-size:9px; font-weight:700; color:#94A3B8; text-transform:uppercase; letter-spacing:.06em;">Pilih Semua</span>
                                 </label>
                             </div>
                             <div class="perm-options">
                                 @foreach($perms as $perm)
-                                    <label style="display:flex; align-items:center; gap:7px; cursor:{{ $mod->is_active ? 'pointer' : 'not-allowed' }};">
-                                        <input type="checkbox" class="perm-checkbox" data-module-key="bulk_{{ $pPrefix }}" value="{{ $perm->name }}" {{ !$mod->is_active ? 'disabled' : '' }}
+                                    <label style="display:flex; align-items:center; gap:7px; cursor:{{ $moduleAllowed ? 'pointer' : 'not-allowed' }};">
+                                        <input type="checkbox" class="perm-checkbox" data-module-key="bulk_{{ $pPrefix }}" value="{{ $perm->name }}" @disabled(!$moduleAllowed) @checked($moduleAllowed && in_array($perm->name, $rolePermissionNames, true))
                                             style="width:15px; height:15px; border-radius:4px; border:1.5px solid #CBD5E1; cursor:inherit; accent-color:var(--c-primary);">
                                         <span style="font-size:12px; font-weight:600; color:#64748B;">{{ $perm->display_name ?? Str::title(Str::after($perm->name,'.')) }}</span>
                                     </label>
