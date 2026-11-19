@@ -21,12 +21,13 @@
 
         <div class="mp-card" style="margin-top: 15px;">
             @if($riwayats->count() > 0)
-                <div class="mp-table-wrap">
+                <div class="mp-table-wrap rounded-t-[14px]" @scroll.passive="$dispatch('close-action-dropdowns')">
                     <table class="mp-table">
                         <thead>
                             <tr style="border-bottom:1px solid #E2E8F0; background:#FAFAFA;">
                                 <th
-                                    style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">
+                                    style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;"
+                                    class="rounded-tl-[14px]">
                                     RUANGAN & KEGIATAN</th>
                                 <th
                                     style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">
@@ -38,7 +39,8 @@
                                     style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">
                                     STATUS</th>
                                 <th
-                                    style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap; width: 80px;">
+                                    style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap; width: 80px;"
+                                    class="rounded-tr-[14px]">
                                     AKSI</th>
                             </tr>
                         </thead>
@@ -106,10 +108,28 @@
                                                     </td>
                                                     <td style="padding:11px 16px; text-align: center;">
                                                         <div class="relative inline-flex flex-col items-center justify-center w-full"
-                                                            x-data="{ showDropdown: false }"
+                                                            x-data="{ 
+                                                                showDropdown: false,
+                                                                dropdownStyles: '',
+                                                                checkScroll() {
+                                                                    if(this.showDropdown) this.showDropdown = false;
+                                                                }
+                                                            }"
                                                             :class="{'z-50': showDropdown, 'z-[1]': !showDropdown}">
 
-                                                            <button type="button" @click="showDropdown = !showDropdown"
+                                                            <button type="button" 
+                                                                @click="
+                                                                    const rect = $el.getBoundingClientRect();
+                                                                    const viewportHeight = window.innerHeight;
+                                                                    let style = `position: fixed; right: ${window.innerWidth - rect.right}px; `;
+                                                                    if (rect.bottom + 150 > viewportHeight) {
+                                                                        style += `bottom: ${viewportHeight - rect.top + 8}px; transform-origin: bottom right;`;
+                                                                    } else {
+                                                                        style += `top: ${rect.bottom + 8}px; transform-origin: top right;`;
+                                                                    }
+                                                                    dropdownStyles = style;
+                                                                    showDropdown = !showDropdown;
+                                                                "
                                                                 @click.away="showDropdown = false"
                                                                 class="inline-flex items-center justify-center w-[32px] h-[32px] rounded-lg border border-[#E2E8F0] bg-white text-[#64748B] hover:bg-[#F8FAFC] transition-colors cursor-pointer">
                                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -119,17 +139,17 @@
                                                                 </svg>
                                                             </button>
 
-                                                            @php
-                                                                $isBottomRow = $loop->count > 2 && $loop->iteration >= $loop->count - 1;
-                                                            @endphp
-                                                            <div x-show="showDropdown" x-cloak
+                                                            <div x-show="showDropdown" style="display:none;"
                                                                 x-transition:enter="transition ease-out duration-100"
-                                                                x-transition:enter-start="opacity-0 scale-95"
-                                                                x-transition:enter-end="opacity-100 scale-100"
+                                                                x-transition:enter-start="transform opacity-0 scale-95"
+                                                                x-transition:enter-end="transform opacity-100 scale-100"
                                                                 x-transition:leave="transition ease-in duration-75"
-                                                                x-transition:leave-start="opacity-100 scale-100"
-                                                                x-transition:leave-end="opacity-0 scale-95"
-                                                                class="absolute right-0 bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-1.5 w-[140px] {{ $isBottomRow ? 'bottom-full mb-2 origin-bottom-right' : 'top-full mt-2 origin-top-right' }}">
+                                                                x-transition:leave-start="transform opacity-100 scale-100"
+                                                                x-transition:leave-end="transform opacity-0 scale-95"
+                                                                class="bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-1.5 w-[140px] z-[60]"
+                                                                :style="dropdownStyles"
+                                                                @scroll.window.capture="checkScroll()"
+                                                                @close-action-dropdowns.window="checkScroll()">
                                                                 <button type="button" @click='showDropdown = false; $dispatch("open-detail", {{ json_encode([
                                     "ruangan" => $riwayat->ruangan?->nama ?? 'Ruangan Dihapus',
                                     "tujuan" => $riwayat->tujuan,
@@ -173,9 +193,9 @@
 
                 {{-- PAGINATION CONTAINER --}}
                 <div
-                    class="border-t border-slate-200 bg-white px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 rounded-b-[12px]">
+                    class="border-t border-slate-200 bg-white px-4 sm:px-5 py-3 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 rounded-b-[14px]">
                     {{-- Left: Per page selector + Showing text --}}
-                    <div class="flex items-center gap-2.5 sm:gap-3 text-xs text-slate-500 flex-wrap shrink-0">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-xs text-slate-500 shrink-0">
                         <div class="flex items-center gap-1.5">
                             <span class="font-medium text-slate-500">Per halaman</span>
                             <div x-data="{ 
@@ -223,7 +243,7 @@
                             </div>
                         </div>
 
-                        <div class="w-px h-3.5 bg-slate-200"></div>
+                        <div class="hidden sm:block w-px h-3.5 bg-slate-200"></div>
 
                         <span class="text-xs text-slate-500 whitespace-nowrap">
                             Menampilkan <strong class="font-bold text-slate-800">{{ $riwayats->firstItem() ?? 0 }}</strong>
@@ -233,7 +253,7 @@
                     </div>
 
                     {{-- Right: Page buttons --}}
-                    <div class="flex items-center gap-1 sm:gap-1.5">
+                    <div class="flex items-center gap-1 sm:gap-1.5 flex-nowrap justify-start lg:justify-end">
                         @if ($riwayats->onFirstPage())
                             <span
                                 class="text-slate-300 cursor-not-allowed w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg border border-slate-200 bg-white shadow-sm">

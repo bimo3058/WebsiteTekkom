@@ -87,7 +87,7 @@ class UserPeminjamanController extends Controller
             'tanggal_pinjam' => 'required|date',
             'jam_mulai' => 'required|date_format:H:i',
             'jam_selesai' => 'required|date_format:H:i|after:jam_mulai',
-            'file_berkas' => 'nullable|file|mimes:pdf|max:2048'
+            'file_berkas' => 'required|file|mimes:pdf|max:2048'
         ], [
             'ruangan_id.required' => 'Ruangan wajib dipilih.',
             'ruangan_id.exists' => 'Ruangan yang dipilih sedang dinonaktifkan atau tidak tersedia untuk peminjaman umum.',
@@ -205,9 +205,19 @@ class UserPeminjamanController extends Controller
                 }
 
                 // 2. Pengecekan Bentrok Jadwal Peminjaman (Global Checks) di dalam transaksi terkunci
+                // Mengunci jika sudah disetujui, atau masih menunggu milik user sendiri (cegah double-submit) / agenda akademik
                 $isConflict = Peminjaman::where('ruangan_id', $request->ruangan_id)
                     ->where('tanggal_pinjam', $request->tanggal_pinjam)
-                    ->whereIn('status', ['menunggu', 'disetujui'])
+                    ->where(function ($statusQ) {
+                        $statusQ->where('status', 'disetujui')
+                            ->orWhere(function ($pendingQ) {
+                                $pendingQ->where('status', 'menunggu')
+                                    ->where(function ($subQ) {
+                                        $subQ->where('user_id', auth()->id())
+                                            ->orWhereNotNull('source');
+                                    });
+                            });
+                    })
                     ->where(function ($query) use ($request) {
                         $query->where('jam_mulai', '<', $request->jam_selesai)
                             ->where('jam_selesai', '>', $request->jam_mulai);
@@ -215,7 +225,7 @@ class UserPeminjamanController extends Controller
                     ->exists();
 
                 if ($isConflict) {
-                    throw new \Exception('Mohon maaf, Ruangan tersebut telah lebih dulu dipesan atau sedang dalam proses antrean (menunggu persetujuan) pada rentang jam tersebut.');
+                    throw new \Exception('Mohon maaf, Ruangan tersebut telah lebih dulu disetujui, sedang diajukan untuk agenda akademik, atau Anda sudah memiliki pengajuan menunggu pada rentang jam tersebut.');
                 }
 
                 // 3. Pengecekan Bentrok Jadwal Internal (Akademik, Kuliah, Rapat)
@@ -329,7 +339,7 @@ class UserPeminjamanController extends Controller
 
         $user = auth()->user();
         $nim = $user->student?->student_number ?? $user->lecturer?->employee_number ?? $user->external_id ?? '-';
-        
+
         // Ambil nomor kontak dari profil pengguna jika tersedia
         $phone = '';
         if (!empty($user->whatsapp)) {
@@ -474,17 +484,17 @@ class UserPeminjamanController extends Controller
         $isOwner = (int) $booking->user_id === (int) $user->id;
         $isAdmin = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['superadmin', 'admin_eoffice']);
 
-        if (! $isOwner && ! $isAdmin) {
+        if (!$isOwner && !$isAdmin) {
             abort(403, 'Akses Ditolak: Anda tidak memiliki izin untuk melihat dokumen ini.');
         }
 
-        if (! $booking->berkas_pendukung) {
+        if (!$booking->berkas_pendukung) {
             abort(404, 'Berkas pendukung tidak ditemukan.');
         }
 
         $file = $storage->download($booking->berkas_pendukung, 'eoffice');
 
-        if (! $file || empty($file['content'])) {
+        if (!$file || empty($file['content'])) {
             abort(404, 'File tidak ditemukan di server penyimpanan.');
         }
 
@@ -498,9 +508,9 @@ class UserPeminjamanController extends Controller
         $mimeType = $file['mime_type'] ?? 'application/pdf';
 
         return response($file['content'], 200, [
-            'Content-Type'        => $mimeType,
+            'Content-Type' => $mimeType,
             'Content-Disposition' => "inline; filename=\"{$fileName}\"",
-            'Cache-Control'       => 'private, max-age=3600',
+            'Cache-Control' => 'private, max-age=3600',
         ]);
     }
 
