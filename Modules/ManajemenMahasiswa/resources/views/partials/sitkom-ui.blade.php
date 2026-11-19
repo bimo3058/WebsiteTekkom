@@ -1,30 +1,27 @@
 {{--
-    Kit tampilan SITKOM untuk bab Direktori Mahasiswa, Manajemen Kegiatan, dan
-    Verifikasi Data. Satu sumber untuk token warna, badge, kotak isian form,
-    header modal, dan tabel — supaya status yang sama tidak lagi tampil dengan
-    warna berbeda antar halaman.
+    Kit tampilan SITKOM untuk bab Direktori Mahasiswa & Alumni, Manajemen
+    Kegiatan, Verifikasi Data, dan CV Builder. Satu sumber untuk token warna,
+    badge, kotak isian form, header modal, dan tabel — supaya status yang sama
+    tidak lagi tampil dengan warna berbeda antar halaman.
 
     Acuan (tiap komponen meniru padanannya di SITKOM):
       token        resources/views/components/sidebar.blade.php (blok :root)
       badge status resources/views/components/ui/status-badge.blade.php
       badge tingkat resources/views/components/ui/role-badge.blade.php
-      form         resources/views/superadmin/users/edit.blade.php (.input-field)
+      form         resources/views/superadmin/users/_edit-style.blade.php (.input-field)
       modal        resources/views/superadmin/users/_modal_add.blade.php
       tabel        resources/views/superadmin/users/_table.blade.php
 
-    Dua penyimpangan yang disengaja:
-      - Warna teks badge & label form memakai token SITKOM, bukan nilai Tailwind
-        di komponen aslinya (#059669, #94A3B8): nilai aslinya di bawah kontras
-        4.5:1 WCAG AA untuk huruf 10–11px. Bentuknya tetap sama persis.
-      - Cincin fokus form navy, bukan biru #3B82F6 milik Edit User — halaman
-        SITKOM lain (pencarian User Management) sudah memakai navy.
+    Penyimpangan yang disengaja: warna teks badge memakai token SITKOM, bukan
+    nilai Tailwind di komponen aslinya (#059669) — nilai aslinya di bawah
+    kontras 4.5:1 WCAG AA untuk huruf 11px. Bentuknya tetap sama persis.
 
     Layout mahasiswa & dosen tidak mendeklarasikan token, jadi blok :root di sini
     juga yang membuat halaman Verifikasi tampil benar untuk akun mahasiswa/alumni.
 
     Dipasang SETELAH partial palet/tema bab (palette, kegiatan-theme) supaya
-    menang atas aturan badge lama yang masih ada di sana. Bab lain (Alumni,
-    Pengumuman, Forum, Pengaduan) tidak memuat partial ini.
+    menang atas aturan badge lama yang masih ada di sana. Bab lain (Pengumuman,
+    Forum, Pengaduan) tidak memuat partial ini.
 --}}
 @once
 <style>
@@ -77,12 +74,15 @@
        digambar JavaScript (modal Tinjau) dengan nama kelas yang sama.
 
        Satu status = satu warna di semua halaman:
-         hijau  Aktif, Disetujui
-         kuning Menunggu Review, Diajukan, Mangkir
-         merah  Ditolak, DO
-         langit Cuti, Berlangsung
-         navy   Pindah Studi
-         abu    Draft, Belum diklaim, Selesai, Wafat                            */
+         hijau  Disetujui, Bekerja
+         kuning Menunggu Review, Diajukan
+         merah  Ditolak
+         langit Berlangsung, Studi Lanjut
+         navy   Wirausaha
+         abu    Draft, Belum diklaim, Selesai, Belum Terdata
+
+       Status karir alumni ikut di sini. Wirausaha sengaja navy, bukan kuning,
+       karena kuning berarti "menunggu tindakan".                              */
     .mm-status,
     .status-badge,
     .status-verif,
@@ -123,43 +123,50 @@
     /* Aturan warna ditulis ulang lengkap (latar, bayangan, garis) supaya menang
        atas aturan bertingkat sama di partial palet Direktori. */
     .mm-status--success,
-    .status-badge.aktif, .status-badge.status-disetujui,
+    .status-badge.status-disetujui, .status-badge.bekerja,
     .status-verif.approved, .claim-badge.disetujui, .detail-status-pill.disetujui {
         --st-fg: var(--c-success); --st-border: var(--c-success-50); --st-dot: var(--c-success-100);
         background: #ffffff; box-shadow: none; color: var(--st-fg); border-color: var(--st-border);
     }
     .mm-status--warning,
-    .status-badge.mangkir, .status-badge.status-diajukan,
+    .status-badge.status-diajukan,
     .status-verif.pending, .claim-badge.diajukan, .detail-status-pill.diajukan {
         --st-fg: var(--c-warning); --st-border: var(--c-warning-50); --st-dot: var(--c-warning-100);
         background: #ffffff; box-shadow: none; color: var(--st-fg); border-color: var(--st-border);
     }
     .mm-status--error,
-    .status-badge.drop_out, .status-badge.status-ditolak,
+    .status-badge.status-ditolak,
     .status-verif.rejected, .claim-badge.ditolak, .detail-status-pill.ditolak {
         --st-fg: var(--c-error); --st-border: var(--c-error-50); --st-dot: var(--c-error);
         background: #ffffff; box-shadow: none; color: var(--st-fg); border-color: var(--st-border);
     }
     .mm-status--sky,
-    .status-badge.cuti, .status-badge.alumni, .status-badge.status-berlangsung {
+    .status-badge.status-berlangsung,
+    .status-badge.studi_lanjut {
         --st-fg: var(--c-sky); --st-border: var(--c-sky-50); --st-dot: var(--c-sky-100);
         background: #ffffff; box-shadow: none; color: var(--st-fg); border-color: var(--st-border);
     }
     .mm-status--primary,
-    .status-badge.pindah_studi {
+    .status-badge.wirausaha {
         --st-fg: var(--c-primary); --st-border: rgba(11, 38, 110, 0.25); --st-dot: var(--c-primary);
         background: #ffffff; box-shadow: none; color: var(--st-fg); border-color: var(--st-border);
     }
     .mm-status--neutral,
-    .status-badge.wafat, .status-badge.status-draft, .status-badge.status-selesai,
+    .status-badge.status-draft, .status-badge.status-selesai,
+    .status-badge.belum_bekerja, .status-badge.belum_terdata,
     .claim-badge.belum {
         --st-fg: var(--c-fg-muted); --st-border: var(--c-border); --st-dot: var(--c-grey-300);
         background: #ffffff; box-shadow: none; color: var(--st-fg); border-color: var(--st-border);
     }
 
     /* ── Badge tingkat prestasi ───────────────────────────────────────────────
-       Bentuk badge Role SITKOM (terisi tipis + garis, huruf kapital). Tingkat
-       memakai keluarga navy supaya tidak bentrok dengan kuning "Menunggu". */
+       Bentuk badge Role SITKOM (terisi tipis + garis, huruf kapital). Tiap
+       tingkat satu warna berbeda, diambil dari palet badge Role SITKOM: ungu,
+       biru, langit, merah muda, abu. Gradasi satu keluarga (navy → abu) sempat
+       dicoba dan ditolak karena kelima tingkat tampak sama. Hijau/kuning/merah
+       sengaja dihindari supaya tidak terbaca sebagai status Disetujui/
+       Menunggu/Ditolak di baris yang sama.
+       Skema yang sama ada di direktori/partials/palette untuk halaman Alumni. */
     .tingkat-badge {
         display: inline-block;
         padding: 3px 12px;
@@ -174,41 +181,42 @@
         text-transform: uppercase;
         white-space: nowrap;
     }
-    .tingkat-badge.internasional { background: var(--c-primary);        color: #ffffff;           border-color: var(--c-primary); }
-    .tingkat-badge.nasional      { background: var(--c-primary-subtle); color: var(--c-primary);  border-color: rgba(11, 38, 110, 0.18); }
-    .tingkat-badge.regional      { background: var(--c-sky-subtle);     color: var(--c-sky);      border-color: #BAE6FD; }
-    /* Teks hijau tingkat lebih gelap: --c-success di atas latar hijau muda hanya 4.1:1 */
-    .tingkat-badge.universitas   { background: var(--c-success-subtle); color: var(--c-success-300); border-color: var(--c-success-50); }
-    .tingkat-badge.prodi         { background: var(--c-grey-50);        color: var(--c-fg-sec);   border-color: var(--c-border); }
+    .tingkat-badge.internasional { background: #EDE9FE;             color: #5B21B6;         border-color: #C4B5FD; }
+    .tingkat-badge.nasional      { background: #EFF6FF;             color: #1D4ED8;         border-color: #BFDBFE; }
+    .tingkat-badge.regional      { background: var(--c-sky-subtle); color: var(--c-sky);    border-color: #BAE6FD; }
+    .tingkat-badge.universitas   { background: #FCE7F3;             color: #9D174D;         border-color: #FBCFE8; }
+    .tingkat-badge.prodi         { background: var(--c-grey-50);    color: var(--c-fg-sec); border-color: var(--c-border); }
 
     /* ── Kotak isian form ─────────────────────────────────────────────────────
-       Edit User SITKOM: label kecil huruf kapital, kotak putih 13px sudut 8px.
+       Edit User SITKOM (redesign 25 Sep 2026, superadmin/users/_edit-style):
+       label 12px huruf biasa, kotak putih 13px tinggi 38px sudut 7px.
        Nama kelas lama dipertahankan; aturannya menimpa .form-control Bootstrap
        yang ikut terpasang di elemen yang sama. */
     .form-label-custom {
         display: block;
         margin-bottom: 6px;
-        color: var(--c-fg-muted);
-        font-size: 10px;
-        font-weight: 700;
+        color: var(--c-fg-sec);
+        font-size: 12px;
+        font-weight: 500;
         line-height: 1.4;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
+        letter-spacing: normal;
+        text-transform: none;
     }
     .form-label-custom .required { color: var(--c-error); }
 
     .form-control-custom,
     .form-select-custom {
         width: 100%;
+        min-height: 38px;
         box-sizing: border-box;
-        padding: 8px 12px;
-        border: 1px solid var(--c-border-strong);
-        border-radius: 8px;
+        padding: 8px 11px;
+        border: 1px solid var(--c-border);
+        border-radius: 7px;
         background-color: #ffffff;
-        color: var(--c-fg-sec);
+        color: var(--c-fg);
         font-family: inherit;
         font-size: 13px;
-        font-weight: 600;
+        font-weight: 400;
         line-height: 1.5;
         outline: none;
         transition: border-color 0.2s, box-shadow 0.2s;
@@ -221,9 +229,9 @@
     .form-control-custom:focus,
     .form-select-custom:focus {
         border-color: var(--c-primary);
-        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.10);
+        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.08);
         background-color: #ffffff;
-        color: var(--c-fg-sec);
+        color: var(--c-fg);
         outline: none;
     }
     .form-control-custom:disabled,
@@ -242,9 +250,9 @@
        (panel Filter, Per page) sengaja tidak diubah. Selektor dua kelas supaya
        menang atas gaya komponen yang dicetak belakangan. */
     .mk-select.mk-select--md,
-    .mk-select.mk-select--lg { --mks-h: 38px; --mks-radius: 8px; --mks-font: 13px; --mks-pad: 12px; }
+    .mk-select.mk-select--lg { --mks-h: 38px; --mks-radius: 7px; --mks-font: 13px; --mks-pad: 11px; }
     .mk-select--md .mk-select-btn,
-    .mk-select--lg .mk-select-btn { border-color: var(--c-border-strong); color: var(--c-fg-sec); font-weight: 600; }
+    .mk-select--lg .mk-select-btn { border-color: var(--c-border); color: var(--c-fg); font-weight: 400; }
 
     /* ── Modal ────────────────────────────────────────────────────────────────
        Tambah User SITKOM: sudut 16px, pita judul navy muda, ikon kotak navy,
@@ -355,5 +363,31 @@
     .mm-table tbody tr { transition: background 0.12s; }
     .mm-table tbody tr:hover td { background: #FAFAFA; }
     .mm-table tbody tr:last-child td { border-bottom: none; }
+
+    /* ── Menu aksi "⋯" per baris ──────────────────────────────────────────────
+       User Management SITKOM (redesign 25 Sep 2026): panel berposisi fixed supaya
+       tidak terpotong pembungkus tabel yang overflow, dan membuka ke atas bila
+       ruang di bawah tombol tidak cukup. Dipakai bersama x-data="mmAksiMenu". */
+    .mk-menu.mm-menu-fixed { position: fixed; z-index: 1050; }
 </style>
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('mmAksiMenu', () => ({
+            open: false,
+            posisi: {},
+            toggle(tombol) {
+                this.open = !this.open;
+                if (!this.open) return;
+                const r = tombol.getBoundingClientRect();
+                const layar = document.documentElement;
+                const keAtas = layar.clientHeight - r.bottom < 150 && r.top > 150;
+                this.posisi = {
+                    right: (layar.clientWidth - r.right) + 'px',
+                    top: keAtas ? 'auto' : (r.bottom + 5) + 'px',
+                    bottom: keAtas ? (layar.clientHeight - r.top + 5) + 'px' : 'auto',
+                };
+            },
+        }));
+    });
+</script>
 @endonce

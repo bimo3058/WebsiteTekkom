@@ -246,8 +246,8 @@
                                                 action="{{ route('eoffice.manprak.dosen.periode-pendaftaran.destroy', $p->id) }}"
                                                 onsubmit="return confirm('Hapus periode ini? Data tidak dapat dikembalikan.')">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" class="mp-btn secondary sm"
-                                                    style="padding:5px 10px; font-size:11px;">Hapus</button>
+                                                <button type="submit" class="mp-delete-button mp-btn secondary sm"
+                                                    style="padding:5px 10px; font-size:11px;" aria-label="Hapus" title="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                                             </form>
                                         </div>
                                     </td>

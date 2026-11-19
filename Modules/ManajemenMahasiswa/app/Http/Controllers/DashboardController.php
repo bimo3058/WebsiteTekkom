@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Modules\ManajemenMahasiswa\Services\DashboardAnalitikService;
-use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Models\Alumni;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\Pengumuman;
@@ -26,7 +25,7 @@ class DashboardController extends Controller
         $user = Auth::user();
         $roles = $user->roles->pluck('name')->toArray();
 
-        $pengurusRoles = ['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
+        $pengurusRoles = ['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'wakil_ketua_bidang', 'ketua_unit', 'wakil_ketua_unit', 'staff_himpunan'];
         if (!empty(array_intersect($roles, $pengurusRoles))) {
             return redirect()->route('manajemenmahasiswa.pengumuman.index');
         }
@@ -76,19 +75,20 @@ class DashboardController extends Controller
         switch ($type) {
 
             case 'mahasiswa':
-                $status = $request->query('status', Kemahasiswaan::STATUS_AKTIF);
-                $rows = Kemahasiswaan::where('status', $status)
-                    ->with('user:id,email')
-                    ->whereNotNull('angkatan')
-                    ->orderBy('angkatan')
-                    ->orderBy('nama')
+                // Daftar mahasiswa aktif dari role (DashboardAnalitikService::queryMahasiswaAktif).
+                // Filter per status kemahasiswaan sudah tidak ada: statusnya dibekukan sejak
+                // S-53 dan kartu per status sudah dicabut dari dashboard (15 Nov 2026).
+                $rows = $this->analitikService->queryMahasiswaAktif()
+                    ->with('user:id,name,email')
                     ->get()
-                    ->map(fn ($m) => [
-                        'nama'     => $m->nama ?? $m->user?->name ?? '-',
-                        'nim'      => $m->nim ?? '-',
-                        'angkatan' => (int) $m->angkatan,
-                        'email'    => $m->user?->email ?? '-',
-                        'status'   => $m->status,
+                    ->sortBy(fn ($s) => sprintf('%04d|%s', $s->cohort_year, mb_strtolower((string) $s->user?->name)))
+                    ->values()
+                    ->map(fn ($s) => [
+                        'nama'     => $s->user?->name ?? '-',
+                        'nim'      => $s->student_number ?? '-',
+                        'angkatan' => (int) $s->cohort_year,
+                        'email'    => $s->user?->email ?? '-',
+                        'status'   => 'aktif',
                     ]);
 
                 $angkatanList = $rows->pluck('angkatan')->unique()->sort()->values();
@@ -122,7 +122,10 @@ class DashboardController extends Controller
                 return response()->json(['data' => $rows, 'total' => $rows->count()]);
 
             case 'kegiatan':
-                $rows = Kegiatan::whereYear('created_at', now()->year)
+                // Sinkron dengan kartu "Kegiatan Bulan Ini": salinan hasil Ajukan Proker
+                // (rencana_id terisi) bukan kegiatan baru, jadi tidak ikut.
+                $rows = Kegiatan::whereNull('rencana_id')
+                    ->whereYear('created_at', now()->year)
                     ->whereMonth('created_at', now()->month)
                     ->orderByDesc('created_at')
                     ->get()
@@ -206,29 +209,24 @@ class DashboardController extends Controller
                 ]);
 
             case 'calon-do':
-                // Deteksi dini bertingkat (FASE 3B): semester >= 9 (pemantauan) & >= 12 (kritis)
-                $currentYear  = now()->year;
-                $currentMonth = now()->month;
-                $yPantau = $currentMonth >= 8 ? 4 : 5;      // semester >= 9
-                $thresholdPantau = $currentYear - $yPantau;
-
-                $rows = Kemahasiswaan::aktif()
-                    ->whereNotNull('angkatan')
-                    ->where('angkatan', '<=', $thresholdPantau)
-                    ->with('user:id,email')
-                    ->orderBy('angkatan')
-                    ->orderBy('nama')
+                // Deteksi dini bertingkat (FASE 3B): semester >= 9 (pemantauan) & >= 12 (kritis).
+                // Sumber & ambang sama persis dengan kartu (DashboardAnalitikService::getCalonDO).
+                $ambang = $this->analitikService->ambangCalonDO();
+                $rows = $this->analitikService->queryMahasiswaAktif()
+                    ->where('cohort_year', '<=', $ambang['pantau'])
+                    ->with('user:id,name,email')
                     ->get()
-                    ->map(function ($m) use ($currentYear, $currentMonth) {
-                        $yearsElapsed = $currentYear - $m->angkatan;
-                        $semester = $currentMonth >= 8 ? ($yearsElapsed * 2 + 1) : ($yearsElapsed * 2);
+                    ->sortBy(fn ($s) => sprintf('%04d|%s', $s->cohort_year, mb_strtolower((string) $s->user?->name)))
+                    ->values()
+                    ->map(function ($s) {
+                        $semester = $this->analitikService->semesterAngkatan((int) $s->cohort_year);
                         return [
-                            'nama'     => $m->nama ?? $m->user?->name ?? '-',
-                            'nim'      => $m->nim ?? '-',
-                            'angkatan' => (int) $m->angkatan,
+                            'nama'     => $s->user?->name ?? '-',
+                            'nim'      => $s->student_number ?? '-',
+                            'angkatan' => (int) $s->cohort_year,
                             'semester' => $semester,
                             'tier'     => $semester >= 12 ? 'Kritis' : 'Perlu Pemantauan',
-                            'email'    => $m->user?->email ?? '-',
+                            'email'    => $s->user?->email ?? '-',
                         ];
                     });
 
@@ -241,21 +239,22 @@ class DashboardController extends Controller
                 ]);
 
             case 'lulusan-periode':
-                // Mahasiswa berstatus alumni — dipantau per tahun lulus + status sinkron
-                $alumniUserIds = Alumni::whereNotNull('user_id')->pluck('user_id')->all();
-
-                $rows = Kemahasiswaan::alumni()
-                    ->whereNotNull('tahun_lulus')
-                    ->with('user:id,email')
+                // Lulusan per tahun lulus dari direktori alumni (mk_alumni) — sumber yang sama
+                // dengan kartu (DashboardAnalitikService::getLulusanPerPeriode). "Tersinkron" =
+                // akunnya juga sudah ber-role alumni.
+                $idRoleAlumni = \App\Models\User::role('alumni')->pluck('id')->map(fn ($id) => (int) $id)->all();
+                $rows = Alumni::whereNotNull('tahun_lulus')
+                    ->with('user:id,name')
                     ->orderByDesc('tahun_lulus')
-                    ->orderBy('nama')
                     ->get()
-                    ->map(fn ($m) => [
-                        'nama'        => $m->nama ?? $m->user?->name ?? '-',
-                        'nim'         => $m->nim ?? '-',
-                        'angkatan'    => (int) $m->angkatan,
-                        'tahun_lulus' => (int) $m->tahun_lulus,
-                        'tersinkron'  => in_array($m->user_id, $alumniUserIds, true),
+                    ->sortBy(fn ($a) => sprintf('%04d|%s', 9999 - (int) $a->tahun_lulus, mb_strtolower((string) $a->user?->name)))
+                    ->values()
+                    ->map(fn ($a) => [
+                        'nama'        => $a->user?->name ?? '-',
+                        'nim'         => $a->nim ?? '-',
+                        'angkatan'    => (int) $a->angkatan,
+                        'tahun_lulus' => (int) $a->tahun_lulus,
+                        'tersinkron'  => in_array((int) $a->user_id, $idRoleAlumni, true),
                     ]);
 
                 $tahunList = $rows->pluck('tahun_lulus')->unique()->sort()->values();

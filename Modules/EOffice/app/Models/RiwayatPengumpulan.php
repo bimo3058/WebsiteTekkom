@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Riwayat pengumpulan tugas oleh mahasiswa (menyimpan riwayat file & revisi).
  *
- * Tabel: eo_prak_riwayat_pengumpulan_tugas
+ * Tabel: riwayat_pengumpulan_tugas
  */
 class RiwayatPengumpulan extends Model
 {

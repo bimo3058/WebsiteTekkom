@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\LocalPasswordSession;
 use App\Services\SsoAccountResolver;
 use App\Services\MicrosoftSsoSession;
 use App\Services\SupabaseStorage;
@@ -82,6 +83,7 @@ class MicrosoftController extends Controller
                 $ssoData['id'],
                 $email,
                 $ssoSession->tenant(),
+                $ssoData['name'],
             );
 
             if ($resolution['ambiguous'] || ! $resolution['user']) {
@@ -92,11 +94,15 @@ class MicrosoftController extends Controller
                     userId: null
                 );
                 return redirect()->route('login')->withErrors([
-                    'email' => 'Akun Anda belum terdaftar di WebsiteTekkom. Silakan hubungi administrator.',
+                    'email' => 'Email tidak dikenali.',
                 ]);
             }
 
             $user = $resolution['user'];
+
+            if ($user->hasAdministrativeRole()) {
+                return redirect()->route('login')->withErrors(['email' => 'Email tidak dikenali.']);
+            }
 
             if (! $user->sso_enabled) {
                 try {
@@ -155,7 +161,7 @@ class MicrosoftController extends Controller
                 );
             }
 
-            // Roles and permissions remain managed by User Management.
+            // Initial academic roles are provisioned once; existing roles remain admin-managed.
             $user->unsetRelation('roles');
             $userRoles = $user->getCachedRoleData();
             $roleNames = $userRoles->pluck('name')->map(fn ($role) => strtolower($role));
@@ -175,7 +181,7 @@ class MicrosoftController extends Controller
             // 6. Create the Redis-backed Laravel session.
             Auth::login($user, remember: false);
             request()->session()->regenerate();
-            request()->session()->forget(['auth.local_password', 'sso_pending_user_id', 'sso_verified']);
+            request()->session()->forget([LocalPasswordSession::KEY, 'sso_pending_user_id', 'sso_verified']);
             request()->session()->put(MicrosoftSsoSession::KEY, $sessionMetadata);
 
             $user->cacheUserData();
@@ -188,24 +194,6 @@ class MicrosoftController extends Controller
                 description: "Login via Microsoft SSO sebagai {$roleNames->implode(', ')}",
                 userId: $user->id,
             );
-
-            // 7. Redirect according to the cached role list.
-            if ($roleNames->contains('superadmin')) {
-                return redirect()->intended(route('superadmin.dashboard'));
-            }
-
-            $adminRedirects = [
-                'admin_banksoal' => 'banksoal.dashboard',
-                'admin_capstone' => 'capstone.dashboard',
-                'admin_eoffice' => 'eoffice.dashboard',
-                'admin_kemahasiswaan' => 'manajemenmahasiswa.mahasiswa.dashboard',
-            ];
-
-            foreach ($adminRedirects as $role => $routeName) {
-                if ($roleNames->contains($role)) {
-                    return redirect()->intended(route($routeName));
-                }
-            }
 
             if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm', 'pengurus_himpunan', 'alumni', 'dosen_koor'])->isNotEmpty()) {
                 return redirect()->intended(route('dashboard'));

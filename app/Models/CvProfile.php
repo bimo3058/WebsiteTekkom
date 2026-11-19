@@ -43,6 +43,7 @@ class CvProfile extends Model
         'kegiatan_organisasi',
         'proyek',
         'bahasa',
+        'langkah_tersimpan',
     ];
 
     protected $casts = [

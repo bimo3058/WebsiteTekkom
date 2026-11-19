@@ -8,6 +8,7 @@
 namespace App\Livewire\Pulse;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
 use Laravel\Pulse\Livewire\Card;
 use Livewire\Attributes\Lazy;
@@ -27,9 +28,11 @@ class RequestMonitor extends Card
     protected function getRequests(): \Illuminate\Support\Collection
     {
         try {
-            return DB::table('pulse_entries')
+            return DB::connection(config('pulse.storage.database.connection'))->table('pulse_entries')
                 ->where('type', 'request_monitor')
+                ->where('timestamp', '>=', now()->sub($this->periodAsInterval())->timestamp)
                 ->orderByDesc('timestamp')
+                ->orderByDesc('id')
                 ->limit(50)
                 ->get()
                 ->map(function ($entry) {
@@ -45,6 +48,7 @@ class RequestMonitor extends Card
                     ];
                 });
         } catch (\Exception $e) {
+            Log::warning('Pulse request monitor could not load entries.', ['exception' => $e->getMessage()]);
             return collect();
         }
     }

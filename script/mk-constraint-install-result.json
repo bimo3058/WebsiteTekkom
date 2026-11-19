@@ -1,0 +1,179 @@
+{
+    "before_non_mk": "302820f60d3298d573289051cfe1e6e9",
+    "validated": [],
+    "not_valid": [
+        "mk_audit_logs_user_id_foreign",
+        "mk_comments_user_id_foreign",
+        "mk_forum_notifications_actor_id_foreign",
+        "mk_forum_notifications_user_id_foreign",
+        "mk_forum_reports_user_id_foreign",
+        "mk_kegiatan_user_id_foreign",
+        "mk_kemahasiswaan_user_id_foreign",
+        "mk_pengaduan_answered_by_foreign",
+        "mk_pengaduan_closed_by_foreign",
+        "mk_pengaduan_read_by_foreign",
+        "mk_pengaduan_user_id_foreign",
+        "lg_mk_pengaduan_delegasi_delegated_by_foreign",
+        "lg_mk_pengaduan_delegasi_delegated_to_foreign",
+        "lg_mk_pengaduan_log_actor_user_id_foreign",
+        "mk_pengumuman_user_id_foreign",
+        "lg_mk_pengumuman_approval_requests_requester_id_foreign",
+        "lg_mk_pengumuman_approval_requests_verifier_id_foreign",
+        "lg_mk_pengumuman_drafts_user_id_foreign",
+        "lg_mk_pengumuman_personal_pins_user_id_foreign",
+        "mk_prestasi_claimed_by_foreign",
+        "mk_prestasi_reward_reviewed_by_foreign",
+        "mk_prestasi_verified_by_foreign",
+        "mk_reward_aturan_uploaded_by_foreign",
+        "mk_riwayat_kegiatan_verified_by_foreign",
+        "mk_streaks_user_id_foreign",
+        "mk_thread_drafts_user_id_foreign",
+        "mk_thread_personal_pins_user_id_foreign",
+        "mk_thread_poll_votes_user_id_foreign",
+        "mk_threads_user_id_foreign",
+        "mk_votes_user_id_foreign",
+        "mk_xp_logs_user_id_foreign"
+    ],
+    "blocked": [
+        {
+            "table": "mk_kemahasiswaan",
+            "name": "mk_kemahasiswaan_pkey",
+            "error": "SQLSTATE[23505]: Unique violation: 7 ERROR:  could not create unique index \"mk_kemahasiswaan_pkey\"\nDETAIL:  Key (id)=(17) is duplicated. (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_kemahasiswaan\" ADD CONSTRAINT \"mk_kemahasiswaan_pkey\" PRIMARY KEY (id))"
+        },
+        {
+            "table": "mk_streaks",
+            "name": "mk_streaks_pkey",
+            "error": "SQLSTATE[23505]: Unique violation: 7 ERROR:  could not create unique index \"mk_streaks_pkey\"\nDETAIL:  Key (id)=(1) is duplicated. (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_streaks\" ADD CONSTRAINT \"mk_streaks_pkey\" PRIMARY KEY (id))"
+        },
+        {
+            "table": "mk_xp_logs",
+            "name": "mk_xp_logs_pkey",
+            "error": "SQLSTATE[23505]: Unique violation: 7 ERROR:  could not create unique index \"mk_xp_logs_pkey\"\nDETAIL:  Key (id)=(1) is duplicated. (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_xp_logs\" ADD CONSTRAINT \"mk_xp_logs_pkey\" PRIMARY KEY (id))"
+        },
+        {
+            "table": "mk_prestasi",
+            "name": "mk_prestasi_kemahasiswaan_id_foreign",
+            "error": "SQLSTATE[42830]: Invalid foreign key: 7 ERROR:  there is no unique constraint matching given keys for referenced table \"mk_kemahasiswaan\" (Connection: pgsql, Host: aws-0-ap-southeast-1.pooler.supabase.com, Port: 6543, Database: postgres, SQL: ALTER TABLE public.\"mk_prestasi\" ADD CONSTRAINT \"mk_prestasi_kemahasiswaan_id_foreign\" FOREIGN KEY (kemahasiswaan_id) REFERENCES public.mk_kemahasiswaan(id))"
+        }
+    ],
+    "existing": [],
+    "after_non_mk": "302820f60d3298d573289051cfe1e6e9",
+    "rows_unchanged": true,
+    "row_fingerprints": [
+        {
+            "table_name": "mk_kemahasiswaan",
+            "rows": 253,
+            "hash": "4eb62662dfe8d1e541047c4dc4713b35"
+        },
+        {
+            "table_name": "mk_streaks",
+            "rows": 12,
+            "hash": "f18c4a061d27db7ce63b1a31b6486ed4"
+        },
+        {
+            "table_name": "mk_xp_logs",
+            "rows": 75,
+            "hash": "7a16ce1ad32dd0ed817374c6e8b107d7"
+        },
+        {
+            "table_name": "mk_audit_logs",
+            "rows": 66,
+            "hash": "5ff61c14e56d9e74774cba419e9fda5c"
+        },
+        {
+            "table_name": "mk_comments",
+            "rows": 12,
+            "hash": "a09be7d45e3f618e1f57934701c8c817"
+        },
+        {
+            "table_name": "mk_forum_notifications",
+            "rows": 14,
+            "hash": "8f5882b1def4a53295a883f9f6a86011"
+        },
+        {
+            "table_name": "mk_forum_reports",
+            "rows": 5,
+            "hash": "6780e3c74f96869fbbc7deef7cd3b1ff"
+        },
+        {
+            "table_name": "mk_kegiatan",
+            "rows": 20,
+            "hash": "1079e4657f0fb68f37ffe96a457b069d"
+        },
+        {
+            "table_name": "mk_pengaduan",
+            "rows": 35,
+            "hash": "6a49b672257ca4ebbe36cef5ecd5f98e"
+        },
+        {
+            "table_name": "mk_pengaduan_delegasi",
+            "rows": 10,
+            "hash": "505bb78cedfd0e386dd3dbeb49ce806e"
+        },
+        {
+            "table_name": "mk_pengaduan_log",
+            "rows": 70,
+            "hash": "51ee926eb85395452e04eae3b9efbbc7"
+        },
+        {
+            "table_name": "mk_pengumuman",
+            "rows": 20,
+            "hash": "e41c2deaa6539017bf07db2f6dd27b70"
+        },
+        {
+            "table_name": "mk_pengumuman_approval_requests",
+            "rows": 10,
+            "hash": "1a85b420b019721e8fd38c17484547bf"
+        },
+        {
+            "table_name": "mk_pengumuman_drafts",
+            "rows": 2,
+            "hash": "280ce52ee83c6a766c669178cea727d4"
+        },
+        {
+            "table_name": "mk_pengumuman_personal_pins",
+            "rows": 3,
+            "hash": "1805bb53882081f78472110f76415778"
+        },
+        {
+            "table_name": "mk_prestasi",
+            "rows": 22,
+            "hash": "ce6f61e6b2827e4b6cc218899876c29d"
+        },
+        {
+            "table_name": "mk_reward_aturan",
+            "rows": 1,
+            "hash": "64154f9f95983ead09a5414e04a2b495"
+        },
+        {
+            "table_name": "mk_riwayat_kegiatan",
+            "rows": 14,
+            "hash": "403bc4a9e2a6165bf9db42900e17e9bd"
+        },
+        {
+            "table_name": "mk_thread_drafts",
+            "rows": 2,
+            "hash": "7242c9b696033554ee837a3eb01557e5"
+        },
+        {
+            "table_name": "mk_thread_personal_pins",
+            "rows": 1,
+            "hash": "bda6a022abec23c48c614202a5b79f6b"
+        },
+        {
+            "table_name": "mk_thread_poll_votes",
+            "rows": 5,
+            "hash": "338bf98e186809ecb925ff6df9ade041"
+        },
+        {
+            "table_name": "mk_threads",
+            "rows": 21,
+            "hash": "9c2dcb423d277499c0014faf7e4a1aec"
+        },
+        {
+            "table_name": "mk_votes",
+            "rows": 14,
+            "hash": "0949eecc0955a46464a3275f462ecbf8"
+        }
+    ]
+}

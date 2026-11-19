@@ -35,6 +35,25 @@
             top: 50%;
             margin-top: -6px;
         }
+        .mk-pilih .search-select-wrapper.ada-pilihan input[type="text"] { padding-right: 62px; }
+        .mk-pilih-kosongkan {
+            position: absolute;
+            right: 34px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: transparent;
+            color: var(--c-fg-muted);
+            cursor: pointer;
+        }
+        .mk-pilih-kosongkan:hover { background: var(--c-primary-subtle); color: var(--c-primary); }
         .mk-pilih .search-select-option.is-active { background: var(--c-primary-subtle); color: var(--c-primary); }
         .mk-pilih .search-select-option.is-selected { font-weight: 700; color: var(--c-primary); }
     </style>
@@ -48,20 +67,57 @@
             }
 
             /**
+             * Ketua Pelaksana yang sedang dipilih di bagian Personel, dibaca Akses Kelola
+             * untuk baris terkunci "Ketua Pelaksana". Diisi lewat x-effect di _personel,
+             * jadi urutan inisialisasi kedua kartu tidak berpengaruh.
+             *   userId — id akun (Akses Kelola memakai id akun, bukan id mahasiswa)
+             *   akses  — lolos KegiatanPolicy::bisaJadiPengelola, yakni benar-benar ikut mengelola
+             */
+            Alpine.store('mkKetua', { userId: '', nama: '', akses: false });
+
+            /**
              * Pilih satu dengan pencarian (Ketua Pelaksana).
              * Kotak teks menampilkan nama terpilih; saat diketik ia menjadi kolom cari.
              * Begitu panel ditutup tanpa memilih, teksnya dikembalikan ke nama yang
              * benar-benar tersimpan — atau pilihan dilepas bila teksnya sengaja dikosongkan —
              * supaya yang terlihat selalu sama dengan yang akan dikirim.
+             *
+             * `sebidang` (opsional, S-72): { bidangAsal } membuat daftar mengikuti radio di
+             * #bidangGroup. Pilihan yang bukan dari bidang terpilih dilepas, karena server
+             * akan menolaknya (KegiatanPolicy::aturanKetuaSebidang).
              */
-            Alpine.data('mkPilihSatu', (opsi, terpilihAwal) => ({
+            Alpine.data('mkPilihSatu', (opsi, terpilihAwal, sebidang = null) => ({
                 opsi: opsi,
                 terpilih: terpilihAwal ? String(terpilihAwal) : '',
                 query: '',
                 open: false,
+                bidangId: '',
 
                 init() {
+                    if (sebidang) {
+                        const grup = document.getElementById('bidangGroup');
+                        const bacaBidang = () => {
+                            this.bidangId = grup.querySelector('input:checked')?.value || '';
+                            if (this.terpilih && !this.opsiAktif.some(o => String(o.id) === this.terpilih)) {
+                                this.kosongkan();
+                            }
+                        };
+
+                        bacaBidang();
+                        grup.addEventListener('change', bacaBidang);
+                    }
+
                     this.query = this.namaTerpilih;
+                },
+
+                get opsiAktif() {
+                    if (!sebidang) return this.opsi;
+
+                    // Ketua tersimpan tetap ada selama bidang kegiatannya tidak diganti, termasuk
+                    // draft Prodi yang memang belum berbidang (aturanKetuaSebidang).
+                    return this.opsi.filter(o => this.bidangId === ''
+                        ? o.tersimpan && sebidang.bidangAsal.length === 0
+                        : o.bidangId === this.bidangId || (o.tersimpan && sebidang.bidangAsal.includes(this.bidangId)));
                 },
 
                 get namaTerpilih() {
@@ -72,7 +128,7 @@
 
                 get hasil() {
                     // Selama teksnya masih nama terpilih, tampilkan seluruh daftar.
-                    return this.query === this.namaTerpilih ? this.opsi : saring(this.opsi, this.query);
+                    return this.query === this.namaTerpilih ? this.opsiAktif : saring(this.opsiAktif, this.query);
                 },
 
                 buka() {
@@ -93,7 +149,20 @@
                     this.query = this.namaTerpilih;
                 },
 
+                // Tombol × : kosongkan pilihan.
+                kosongkan() {
+                    this.terpilih = '';
+                    this.query = '';
+                    this.open = false;
+                },
+
+                // Nilai yang dikirim: teks dihapus habis = kosong, walau dropdown belum ditutup.
+                get nilaiKirim() {
+                    return this.query.trim() === '' ? '' : this.terpilih;
+                },
+
                 pilihPertama() {
+                    if (this.query.trim() === '') return this.kosongkan();
                     if (this.open && this.hasil.length) this.pilih(this.hasil[0]);
                 },
             }));
@@ -101,20 +170,50 @@
             /**
              * Pilih banyak dengan pencarian + chip (Dosen Pendamping, Panitia, Akses Kelola).
              * `terpilih` menyimpan id sesuai urutan dipilih.
+             *
+             * `kunci` (opsional): fungsi yang mengembalikan satu id yang sedang dipegang
+             * kotak lain (Akses Kelola: akun Ketua Pelaksana). Id itu disembunyikan dari
+             * daftar dan dari chip, sehingga tidak ikut terkirim dua kali. Ia tetap ada di
+             * `terpilih`, jadi chipnya kembali bila ketuanya diganti.
+             *
+             * `sebidang` (opsional, S-73, Akses Kelola): daftar & chip mengikuti Bidang/Unit
+             * yang terpilih di form. Chip bidang lain disembunyikan dan tidak ikut terkirim.
              */
-            Alpine.data('mkPilihBanyak', (opsi, terpilihAwal) => ({
+            Alpine.data('mkPilihBanyak', (opsi, terpilihAwal, kunci = null, sebidang = false) => ({
                 opsi: opsi,
                 terpilih: (terpilihAwal || []).map(String).filter(id => opsi.some(o => String(o.id) === id)),
                 query: '',
                 open: false,
+                bidangId: '',
+
+                init() {
+                    if (!sebidang) return;
+
+                    const grup = document.getElementById('bidangGroup');
+                    const baca = () => { this.bidangId = grup?.querySelector('input:checked')?.value || ''; };
+
+                    baca();
+                    grup?.addEventListener('change', baca);
+                    // Form Arsip melepas bidang lewat skrip saat kategorinya hanya Prodi.
+                    document.getElementById('kategoriGroup')?.addEventListener('change', baca);
+                },
+
+                get opsiAktif() {
+                    return sebidang ? this.opsi.filter(o => this.bidangId !== '' && o.bidangId === this.bidangId) : this.opsi;
+                },
+
+                get idKunci() {
+                    return kunci ? String(kunci() || '') : '';
+                },
 
                 get hasil() {
-                    return saring(this.opsi, this.query);
+                    return saring(this.opsiAktif, this.query).filter(o => String(o.id) !== this.idKunci);
                 },
 
                 get daftarTerpilih() {
                     return this.terpilih
-                        .map(id => this.opsi.find(o => String(o.id) === id))
+                        .filter(id => id !== this.idKunci)
+                        .map(id => this.opsiAktif.find(o => String(o.id) === id))
                         .filter(Boolean);
                 },
 

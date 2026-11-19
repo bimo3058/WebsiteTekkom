@@ -13,6 +13,8 @@
         color: var(--c-fg);
         margin-bottom: 20px;
         display: flex;
+        /* Judul + keterangan "(maks 10 dokumen)" turun baris di layar sempit, tidak dijepit jadi kolom. */
+        flex-wrap: wrap;
         align-items: center;
         gap: 8px;
         padding-bottom: 14px;
@@ -105,7 +107,8 @@
         border-color: var(--c-primary-border);
         background: var(--c-primary-subtle);
     }
-    .checkbox-card input[type="checkbox"] {
+    .checkbox-card input[type="checkbox"],
+    .checkbox-card input[type="radio"] {
         width: 16px;
         height: 16px;
         accent-color: var(--c-primary);
@@ -122,6 +125,13 @@
         opacity: 0.45;
         cursor: not-allowed;
         pointer-events: none;
+    }
+    /* Terpilih otomatis dan tidak bisa diubah (bidang/unit sendiri, Kegiatan Himpunan). */
+    .checkbox-card.terkunci,
+    .checkbox-card.terkunci input { cursor: not-allowed; }
+    .checkbox-card.terkunci:hover {
+        border-color: var(--c-primary);
+        background: var(--c-primary-subtle);
     }
     .checkbox-hint {
         font-size: 11px;
@@ -232,21 +242,6 @@
     .lightbox-close:hover {
         background: rgba(255,255,255,0.2);
         transform: scale(1.05);
-    }
-    .banner-current {
-        position: relative;
-        margin-bottom: 12px;
-    }
-    .banner-current .badge-current {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background: rgba(0,0,0,0.6);
-        color: var(--c-surface);
-        font-size: 11px;
-        font-weight: 600;
-        padding: 4px 10px;
-        border-radius: 6px;
     }
 
     /* ── Multi File Upload ── */

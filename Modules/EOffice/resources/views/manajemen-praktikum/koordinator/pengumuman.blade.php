@@ -1,4 +1,5 @@
 <x-eoffice::manajemen-praktikum.layout :breadcrumbPraktikum="$praktikum ?? null" pageTitle="{{ $praktikum ? $praktikum->nama : 'Belum Ada Praktikum' }} / Pengumuman">
+    <x-eoffice::manajemen-praktikum.ui.datetime-picker-assets />
     @if(isset($praktikum) && $praktikum)
         <x-eoffice::manajemen-praktikum.koor-header :praktikum="$praktikum" />
     @endif
@@ -32,6 +33,7 @@
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-1">
                     <div style="font-size:14px;font-weight:700;color:#0D0D12;">{{ $p->judul }}</div>
+                    <x-eoffice::manajemen-praktikum.ui.announcement-pin-badge :announcement="$p" />
                     @if($p->is_published)
                     <span class="mp-badge success sm"><span class="dot"></span>Dipublikasikan</span>
                     @else
@@ -39,15 +41,18 @@
                     @endif
                 </div>
                 <div style="font-size:12px;color:#666D80;">{{ $p->created_at?->format('d M Y, H:i') }}</div>
-                <div style="font-size:13px;color:#353849;margin-top:8px;line-height:1.6;">{{ $p->konten }}</div>
+                <div class="mp-announcement-copy" style="font-size:13px;color:#353849;margin-top:8px;line-height:1.6;">{{ $p->konten }}</div>
             </div>
             <div class="flex gap-2 flex-shrink-0">
                 @if($praktikum->is_active)
+                <x-eoffice::manajemen-praktikum.ui.action-menu>
+                @if((string)$p->user_id===(string)auth()->id())<x-eoffice::manajemen-praktikum.ui.announcement-pin-actions :announcement="$p" role="koor" />@endif
                 <form method="POST" action="{{ route('eoffice.manprak.koor.pengumuman.destroy', $p->id) }}"
                       onsubmit="return confirm('Hapus pengumuman ini?')">
                     @csrf @method('DELETE')
-                    <button type="submit" class="mp-btn destructive sm">Hapus</button>
+                    <button type="submit" class="mp-delete-button mp-btn destructive sm" aria-label="Hapus" title="Hapus"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                 </form>
+                </x-eoffice::manajemen-praktikum.ui.action-menu>
                 @endif
             </div>
         </div>
@@ -70,6 +75,7 @@
         </div>
         <form method="POST" action="{{ route('eoffice.manprak.koor.pengumuman.store') }}" class="p-6">
             @csrf
+            <input type="hidden" name="praktikum_id" value="{{ $praktikum?->id }}">
             <div class="flex flex-col gap-4">
                 <div>
                     <label class="block text-[12px] font-semibold text-[#353849] mb-1">Judul <span class="text-red-500">*</span></label>

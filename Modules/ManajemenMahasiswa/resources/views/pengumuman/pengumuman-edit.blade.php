@@ -385,6 +385,16 @@
 
         $maxGambar = $maxGambar ?? 5;
         $sisaSlot  = max(0, $maxGambar - $existingGambar->count());
+
+        // Tujuan tombol Kembali/Batal: halaman Status Verifikasi (tab yang sama) bila
+        // edit dibuka dari sana, selain itu detail pengumuman. Nilai query dibatasi
+        // daftar putih supaya tidak bisa dipakai untuk mengarahkan ke URL lain.
+        $statusRiwayat = in_array(request('status'), ['all', 'pending', 'approved', 'rejected', 'cancelled'], true)
+            ? request('status')
+            : 'all';
+        $urlKembali = request('dari') === 'riwayat-verifikasi'
+            ? route('manajemenmahasiswa.pengumuman.riwayat.verifikasi', ['status' => $statusRiwayat])
+            : route('manajemenmahasiswa.pengumuman.show', $pengumuman->id);
     @endphp
 
     <div class="dash-wrap">
@@ -397,7 +407,7 @@
                     badge="Modul Mahasiswa"
                     subtitle="Perbarui isi pengumuman yang telah dibuat">
                     <x-slot:actions>
-                        <a href="{{ route('manajemenmahasiswa.pengumuman.show', $pengumuman->id) }}" class="mk-btn mk-btn--secondary">
+                        <a href="{{ $urlKembali }}" class="mk-btn mk-btn--secondary">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                 stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -430,6 +440,15 @@
                         </ul>
                     </div>
                 @endif
+
+                {{-- Error konten dari validasi browser (sebelum submit) — tampilannya sama
+                     dengan kotak error dari server di atas. --}}
+                <div class="alert-danger" id="kontenClientAlert" style="display:none;">
+                    <strong>Terdapat kesalahan pada input:</strong>
+                    <ul style="margin: 6px 0 0; padding-left: 18px;">
+                        <li id="kontenClientAlertText"></li>
+                    </ul>
+                </div>
 
                 <form action="{{ route('manajemenmahasiswa.pengumuman.update', $pengumuman->id) }}" method="POST"
                     enctype="multipart/form-data" id="editForm">
@@ -552,7 +571,8 @@
                                 </div>
                                 <textarea name="konten" id="kontenHidden"
                                     style="display:none;">{{ old('konten', $pengumuman->konten) }}</textarea>
-                                @error('konten') <span class="form-error">{{ $message }}</span> @enderror
+                                @error('konten') <span class="form-error" id="kontenServerError">{{ $message }}</span> @enderror
+                                <span class="form-error" id="kontenClientError" style="display:none;"></span>
                             </div>
 
                         </div>
@@ -681,7 +701,7 @@
 
                     {{-- ── Actions ───────────────────────────────── --}}
                     <div class="form-actions">
-                        <a href="{{ route('manajemenmahasiswa.pengumuman.show', $pengumuman->id) }}" class="mk-btn mk-btn--secondary">Batal</a>
+                        <a href="{{ $urlKembali }}" class="mk-btn mk-btn--secondary">Batal</a>
 
                         <div class="fa-spacer"></div>
 
@@ -1006,19 +1026,48 @@
             editor.addEventListener('keyup', updateToolbarState);
             editor.addEventListener('mouseup', updateToolbarState);
 
+            // ── Validasi panjang konten (sama dengan server: min 50 karakter) ──
+            const MIN_KONTEN = 50;
+
+            function panjangKonten() {
+                return editor.textContent.replace(/ /g, ' ').trim().length;
+            }
+
+            function tandaiKonten(pesan) {
+                const wrapper = document.getElementById('editorWrapper');
+                const alertBox = document.getElementById('kontenClientAlert');
+                const inline = document.getElementById('kontenClientError');
+                const serverErr = document.getElementById('kontenServerError');
+
+                wrapper.style.borderColor = pesan ? '#DF1C41' : '';
+                wrapper.style.boxShadow = pesan ? '0 0 0 3px rgba(223,28,65,0.12)' : '';
+                document.getElementById('kontenClientAlertText').textContent = pesan || '';
+                inline.textContent = pesan || '';
+                alertBox.style.display = pesan ? '' : 'none';
+                inline.style.display = pesan ? '' : 'none';
+                if (serverErr && pesan) serverErr.style.display = 'none';
+            }
+
+            // Pesan error hilang sendiri begitu konten sudah cukup panjang.
+            editor.addEventListener('input', function () {
+                if (document.getElementById('kontenClientAlert').style.display !== 'none'
+                    && panjangKonten() >= MIN_KONTEN) {
+                    tandaiKonten(null);
+                }
+            });
+
             // Validate before submit
             document.getElementById('editForm').addEventListener('submit', function (e) {
                 syncEditorContent();
-                const content = kontenHidden.value.replace(/<[^>]*>/g, '').trim();
-                if (content.length < 10) {
+                const panjang = panjangKonten();
+                if (panjang < MIN_KONTEN) {
                     e.preventDefault();
+                    tandaiKonten('Konten pengumuman minimal ' + MIN_KONTEN + ' karakter (saat ini ' + panjang + ' karakter).');
+                    document.getElementById('kontenClientAlert').scrollIntoView({ behavior: 'smooth', block: 'center' });
                     editor.focus();
-                    document.getElementById('editorWrapper').style.borderColor = '#DF1C41';
-                    document.getElementById('editorWrapper').style.boxShadow = '0 0 0 3px rgba(223,28,65,0.12)';
                     return;
                 }
-                document.getElementById('editorWrapper').style.borderColor = '';
-                document.getElementById('editorWrapper').style.boxShadow = '';
+                tandaiKonten(null);
             });
 
             syncEditorContent();

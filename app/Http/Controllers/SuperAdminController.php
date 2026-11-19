@@ -9,6 +9,7 @@ use App\Models\Role;
 use App\Models\Student;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\PermissionAssigner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -541,32 +542,29 @@ class SuperAdminController extends Controller
             return back()->with('error', 'Tidak dapat mengubah permission superadmin.');
         }
 
+        $request->validate([
+            'roles' => ['nullable', 'array'],
+            'roles.*' => ['exists:roles,id'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string'],
+        ]);
+
         DB::beginTransaction();
         try {
             // ── 1. Update Roles ──────────────────────────────────────────────
+            $oldRoleNames = $user->roles->pluck('name')->all();
             $roleIds = $request->input('roles', []);
             $user->roles()->sync($roleIds);
 
             // ── 2. Full Sync Direct Permissions ─────────────────────────────
             // Ambil semua nama permission yang valid dari DB
-            $allPermByName = \App\Models\Permission::pluck('id', 'name'); // ['banksoal.view' => 1, ...]
-
-            // Hanya ambil permission yang benar-benar ada di DB (sanitasi input)
-            $checkedNames = collect($request->input('permissions', []));
-            
-            $grantIds = $checkedNames
-                ->filter(fn($name) => $allPermByName->has($name))
-                ->map(fn($name) => $allPermByName[$name])
-                ->values()
-                ->toArray();
-
-            // SYNC: hapus semua yang lama, pasang yang baru
-            // Ini otomatis handle grant + revoke sekaligus
-            $user->permissions()->sync($grantIds);
-
-            // ── 3. Bersihkan cache ────────────────────────────────────────────
-            $user->clearUserCache();
-            \Illuminate\Support\Facades\Cache::forget("user_permissions_{$user->id}");
+            $roleNames = Role::whereIn('id', $roleIds)->pluck('name')->all();
+            $newAcademicRoles = array_intersect(array_diff($roleNames, $oldRoleNames), ['dosen', 'mahasiswa']);
+            $permissionNames = $newAcademicRoles && ! $request->hasAny(['permissions', 'permissions_present'])
+                && PermissionAssigner::restrictedModules($roleNames) === null
+                ? PermissionAssigner::defaultPermissionNames($roleNames)
+                : $request->input('permissions', []);
+            $checkedNames = collect(PermissionAssigner::syncSelection($user, $roleNames, $permissionNames));
 
             // ── 4. Audit log ──────────────────────────────────────────────────
             \App\Services\AuditLogger::update(
@@ -683,6 +681,7 @@ class SuperAdminController extends Controller
             $newRoleIds   = $validated['roles'] ?? [];
             $user->roles()->sync($newRoleIds);
             $newRoleNames = Role::whereIn('id', $newRoleIds)->pluck('name');
+            PermissionAssigner::assignByRoles($user, $newRoleNames->all());
 
             if ($newRoleNames->contains('dosen') && !$user->lecturer && !empty($validated['employee_number'])) {
                 Lecturer::create(['user_id' => $user->id, 'employee_number' => $validated['employee_number']]);
@@ -790,9 +789,6 @@ class SuperAdminController extends Controller
             $userIds          = collect($request->input('user_ids', []))->filter()->toArray();
             $roleName         = $request->input('role');
 
-            // Ambil ID dari permissions berdasarkan namanya
-            $permIds = \App\Models\Permission::whereIn('name', $permissionsNames)->pluck('id')->toArray();
-
             $updatedUsersCount = 0;
 
             // Jika ada user_ids yang dikirimkan, update secara massal permissions mereka
@@ -802,8 +798,7 @@ class SuperAdminController extends Controller
                 foreach ($users as $user) {
                     // Proteksi agar permission Superadmin tidak ter-override
                     if (!$user->hasRole('superadmin')) {
-                        $user->permissions()->sync($permIds);
-                        $user->clearUserCache();
+                        PermissionAssigner::syncSelection($user, $user->roles->pluck('name')->all(), $permissionsNames);
                         $updatedUsersCount++;
                     }
                 }
@@ -824,7 +819,9 @@ class SuperAdminController extends Controller
             if (empty($userIds) && !empty($roleName)) {
                 $role = Role::where('name', $roleName)->first();
                 if ($role && $role->name !== 'superadmin') {
-                    $role->permissions()->sync($permIds);
+                    $role->syncPermissions(\App\Models\Permission::query()
+                        ->whereIn('name', PermissionAssigner::filterPermissionNames([$role->name], $permissionsNames))
+                        ->get());
 
                     \App\Services\AuditLogger::update(
                         module:  'user_management',
@@ -1019,20 +1016,12 @@ class SuperAdminController extends Controller
             }
 
             // 5. Sync Permissions
-            $allPermByName = \App\Models\Permission::pluck('id', 'name');
-            $checkedNames  = collect($request->input('permissions', []));
-            
-            $grantIds = $checkedNames
-                ->filter(fn($name) => $allPermByName->has($name))
-                ->map(fn($name) => $allPermByName[$name])
-                ->values()
-                ->toArray();
-
-            $user->permissions()->sync($grantIds);
-
-            // Bersihkan Cache
-            $user->clearUserCache();
-            \Illuminate\Support\Facades\Cache::forget("user_permissions_{$user->id}");
+            $newAcademicRoles = array_intersect(array_diff($roleNames, $oldData['roles']), ['dosen', 'mahasiswa']);
+            $permissionNames = $newAcademicRoles && ! $request->hasAny(['permissions', 'permissions_present'])
+                && PermissionAssigner::restrictedModules($roleNames) === null
+                ? PermissionAssigner::defaultPermissionNames($roleNames)
+                : $request->input('permissions', []);
+            $checkedNames = collect(PermissionAssigner::syncSelection($user, $roleNames, $permissionNames));
 
             // Catat ke Log
             AuditLogger::update(

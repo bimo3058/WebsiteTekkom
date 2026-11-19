@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Periode pendaftaran koor/asprak per praktikum.
- * Tabel: eo_prak_periode_pendaftaran
+ * Tabel: manprak_periode_pendaftaran
  * jenis: koor | asprak | praktikan
  */
 class PeriodePendaftaran extends Model

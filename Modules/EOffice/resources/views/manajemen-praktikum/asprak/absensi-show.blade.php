@@ -56,7 +56,7 @@
         style="margin-top:24px;margin-bottom:24px;padding:14px 20px;background:#EFF6FF;border-left:3px solid #3B82F6;">
         <p style="font-size:12px;color:#1E3A8A;margin:0;line-height:1.6;">
             <strong>Informasi:</strong> Kehadiran dan Nilai kini digabung dalam satu tabel untuk mempermudah monitoring.
-            Kolom Nilai (Tugas Pendahuluan, Praktikum, Laporan, Responsi) akan otomatis aktif jika mahasiswa ditandai
+            Kolom Nilai (Tugas Pendahuluan, Praktikum, {{ $praktikum->laporanLabel() }}, Responsi) akan otomatis aktif jika mahasiswa ditandai
             <strong>Hadir</strong>.
             Nilai yang diinput di sini akan tersinkronisasi dua arah dengan form tugas di menu <em>Lihat
                 Pengumpulan</em>.
@@ -338,7 +338,7 @@ extras: {{ json_encode(collect($praktikum->komponen_modul ?? [])->mapWithKeys(fn
                                     x-bind:disabled="status !== 'hadir'" :placeholder="status === 'hadir' ? '0–100' : '—'"
                                     class="mp-input" style="width:80px;text-align:center;font-size:13px;font-weight:600;color:#0D0D12;"
                                     :style="status === 'hadir' ? 'border-color:#FEF08A;background:#FFF;' : 'border-color:#E2E8F0;background:#F8FAFC;'">
-                            <x-eoffice::manajemen-praktikum.ui.module-score-history :module-id="$modul->id" :student-id="$p->id" score-key="laporan" score-label="Laporan" :student-name="$p->user?->name ?? 'Mahasiswa'" /></td>
+                                                <x-eoffice::manajemen-praktikum.ui.module-score-history :module-id="$modul->id" :student-id="$p->id" score-key="laporan" :score-label="$praktikum->laporanLabel()" :student-name="$p->user?->name ?? 'Mahasiswa'" /></td>
 
                             {{-- Responsi --}}
                             <td class="mp-grade-history-cell group-hover:brightness-95 transition-all" style="position:relative;padding-right:32px!important;padding:8px 12px;text-align:center;vertical-align:middle;"

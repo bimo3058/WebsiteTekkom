@@ -11,6 +11,7 @@ use App\Services\AuditLogger;
 use Modules\ManajemenMahasiswa\Models\Pengumuman;
 use Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest;
 use Modules\ManajemenMahasiswa\Models\PengumumanPersonalPin;
+use Modules\ManajemenMahasiswa\Support\RoleHimpunan;
 
 class PengumumanService
 {
@@ -278,38 +279,49 @@ class PengumumanService
 
         // Staff himpunan wajib verifikasi, KECUALI jika juga punya role senior
         $seniorRoles = ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen',
-                        'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+                        'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'wakil_ketua_bidang', 'ketua_unit', 'wakil_ketua_unit',
                         'dosen', 'dosen_koordinator'];
 
         return $roles->contains('staff_himpunan')
             && $roles->intersect($seniorRoles)->isEmpty();
     }
 
-    /**
-     * Ambil daftar user yang dapat dijadikan verifikator.
-     * Hanya ketua-ketua himpunan — admin tidak dipilih langsung,
-     * tapi tetap bisa memproses semua request via dashboard verifikasi.
-     */
-    public function getAvailableVerifiers(): Collection
-    {
-        $verifierRoleNames = [
-            'ketua_himpunan',
-            'ketua_bidang',
-            'ketua_unit',
-            'dpm',
-        ];
+    public const PESAN_STAFF_TANPA_BIDANG = 'Bidang/unit Anda belum diatur. Minta KABID/KANIT, KAHIM/WAKAHIM, atau admin mengaturnya di halaman Permission sebelum mengajukan verifikasi.';
 
-        // Filter berdasarkan role saja — filter PengurusHimaskom.status_keaktifan
-        // dihapus karena tidak semua ketua punya record di tabel tersebut,
-        // yang menyebabkan dropdown kosong.
-        return User::whereHas('roles', function ($q) use ($verifierRoleNames) {
-            $q->whereIn('name', $verifierRoleNames);
-        })
-        ->with(['roles' => function ($q) use ($verifierRoleNames) {
-            $q->whereIn('name', $verifierRoleNames);
-        }])
-        ->orderBy('name')
-        ->get();
+    /**
+     * Daftar verifikator yang boleh dipilih seorang staff himpunan (2 Nov 2026):
+     * KABID/WAKABID/KANIT/WAKANIT dari bidang/unit staff itu sendiri, ditambah DPM.
+     * KAHIM/WAKAHIM tidak dipilih — mereka hanya memantau di dashboard verifikasi.
+     * Admin juga tidak dipilih langsung, tapi tetap bisa memproses semua request.
+     *
+     * Kosong bila staff belum diatur bidang/unitnya (lihat staffBelumPunyaBidang()).
+     */
+    public function verifikatorUntuk(User $staff): Collection
+    {
+        $bidangId = RoleHimpunan::bidangId($staff);
+        if (!$bidangId) {
+            return collect();
+        }
+
+        return User::query()
+            ->whereKeyNot($staff->getKey())
+            ->where(fn ($q) => $q
+                ->whereHas('roles', fn ($r) => $r->where('name', 'dpm'))
+                ->orWhere(fn ($pimpinan) => $pimpinan
+                    ->whereHas('roles', fn ($r) => $r->whereIn('name', RoleHimpunan::PIMPINAN_BIDANG))
+                    ->whereHas('pengurusBidang', fn ($pb) => $pb->where('bidang_id', $bidangId))))
+            ->with(['roles', 'pengurusBidang.bidang'])
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Staff yang wajib verifikasi tapi belum diatur bidang/unitnya — tidak bisa
+     * mengajukan verifikasi sama sekali (tidak punya verifikator yang sah).
+     */
+    public function staffBelumPunyaBidang(User $user): bool
+    {
+        return $this->requiresApproval($user) && !RoleHimpunan::bidangId($user);
     }
 
     /**

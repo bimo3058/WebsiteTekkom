@@ -56,7 +56,7 @@
                         @if($praktikum->started_at)
                             Struktur dikunci sejak absensi pertama pada {{ $praktikum->started_at->locale('id')->translatedFormat('d M Y, H:i') }}.
                         @elseif($moduls->total() > 0)
-                            {{ $moduls->total() }} modul aktif telah disetujui. Revisi masih dapat diajukan sebelum absensi pertama.
+                            {{ $moduls->total() }} modul aktif siap digunakan. Revisi masih dapat diajukan sebelum absensi pertama.
                         @else
                             Susunan modul harus disetujui dosen sebelum digunakan untuk pembagian asisten dan penjadwalan.
                         @endif
@@ -102,6 +102,18 @@
                         </div>
                     </div>
                     @if(!$praktikum->started_at)
+                        @if($pengajuanAktif->status==='draft' && $pengajuanAktif->praktikum_sumber_id && $pengajuanAktif->praktikum_sumber_id!==$praktikum->id && $moduls->total()===0 && $pengajuanAktif->items->isNotEmpty() && $pengajuanAktif->items->every(fn($item)=>$item->aksi==='tetap'))
+                        <form method="POST" action="{{ route('eoffice.manprak.koor.pengajuan-modul.use-previous',$pengajuanAktif) }}"
+                            x-data="{confirmOpen:false,confirmed:false,submitting:false}" x-ref="actionForm"
+                            @submit="if(submitting){$event.preventDefault();return}if(!confirmed){$event.preventDefault();confirmOpen=true}else{submitting=true}">
+                            @csrf
+                            <input type="hidden" name="external_approval_confirmed" :value="confirmed?'1':'0'">
+                            <button type="submit" class="mp-btn primary proposal-action" :disabled="submitting">Gunakan Modul Lama</button>
+                            <x-eoffice::manajemen-praktikum.ui.schedule-confirmation title="Gunakan Modul Lama?"
+                                message="Pastikan dosen telah menyetujui penggunaan modul lama di luar sistem. Seluruh modul digunakan tanpa perubahan dan langsung aktif. Konfirmasi ini dicatat atas nama koordinator."
+                                buttonLabel="Ya, Gunakan" />
+                        </form>
+                        @endif
                         <form method="POST" action="{{ route('eoffice.manprak.koor.pengajuan-modul.cancel', $pengajuanAktif) }}" onsubmit="return confirm('{{ $pengajuanAktif->status === 'diajukan' ? 'Tarik pengajuan dari dosen?' : 'Batalkan draft ini?' }}')">
                             @csrf
                             <button type="submit" class="mp-btn proposal-action" style="color:#DF1C41;background:#FFF1F2;border:1px solid #FECDD3;">{{ $pengajuanAktif->status === 'diajukan' ? 'Tarik Pengajuan' : 'Batalkan Draft' }}</button>
@@ -155,7 +167,7 @@
                                                 <div style="display:flex;justify-content:flex-end;gap:6px;">
                                                     <x-eoffice::manajemen-praktikum.ui.action-menu>
                                                     <button form="item-form-{{ $item->id }}" type="submit" class="mp-btn secondary" style="padding:8px 11px;font-size:12px;display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12l4 4v12a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8V3"/></svg>Simpan</button>
-                                                    <form method="POST" action="{{ route('eoffice.manprak.koor.pengajuan-modul.item.destroy', $item) }}" onsubmit="return confirm('Hapus modul ini dari rancangan?')">@csrf @method('DELETE')<button type="submit" class="mp-btn" style="padding:8px 10px;color:#DF1C41;background:#FFF1F2;border:1px solid #FECDD3;" aria-label="Hapus modul"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5"/></svg>Hapus Modul</button></form>
+                                                    <form method="POST" action="{{ route('eoffice.manprak.koor.pengajuan-modul.item.destroy', $item) }}" onsubmit="return confirm('Hapus modul ini dari rancangan?')">@csrf @method('DELETE')<button type="submit" class="mp-delete-button mp-btn" style="padding:8px 10px;color:#DF1C41;background:#FFF1F2;border:1px solid #FECDD3;" aria-label="Hapus modul" title="Hapus Modul"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button></form>
                                                     </x-eoffice::manajemen-praktikum.ui.action-menu>
                                                 </div>
                                             @endif

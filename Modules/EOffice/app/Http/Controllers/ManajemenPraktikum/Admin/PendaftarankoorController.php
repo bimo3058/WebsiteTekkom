@@ -31,6 +31,7 @@ class PendaftaranKoorController extends Controller
         $query = PendaftaranKoordinator::with(['user.student', 'praktikum', 'direviewOleh'])
             ->orderByDesc('created_at');
 
+        if ($request->routeIs('eoffice.manprak.cerc.*')) $query->whereHas('praktikum',fn($q)=>$q->where('is_active',true));
         if ($status = $request->input('status')) {
             $query->where('status', $status);
         }
@@ -74,7 +75,7 @@ class PendaftaranKoorController extends Controller
      */
     public function approve(Request $request, int $id)
     {
-        abort_unless($request->user()?->hasAnyRole(['superadmin', 'admin_eoffice']), 403);
+        abort_unless($request->user()?->hasAnyRole(['superadmin', 'admin_praktikum']), 403);
         $data = $request->validate([
             'override_dosen' => 'sometimes|boolean',
             'override_reason' => 'required_if:override_dosen,1|nullable|string|min:10|max:1000',
@@ -122,7 +123,7 @@ class PendaftaranKoorController extends Controller
 
     public function reject(Request $request, int $id)
     {
-        abort_unless($request->user()?->hasAnyRole(['superadmin', 'admin_eoffice']), 403);
+        abort_unless($request->user()?->hasAnyRole(['superadmin', 'admin_praktikum']), 403);
         $pendaftaran = PendaftaranKoordinator::with('user')->findOrFail($id);
 
         if ($pendaftaran->status !== 'pending') {

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use App\Services\LocalPasswordSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +28,7 @@ class CachedUserPasswordTest extends TestCase
         ]);
         $paths = array_values(array_filter(
             glob(database_path('migrations/*.php')),
-            fn ($path) => preg_match('/(?:users|roles|permissions|spatie_permission|students|lecturers|system_modules)_table/', basename($path))
+            fn ($path) => preg_match('/(?:users|roles|permissions|spatie_permission|students|lecturers|system_modules|import_statuses)_table/', basename($path))
                 && ! str_contains(basename($path), 'optimize_users'),
         ));
         sort($paths);
@@ -73,7 +74,7 @@ class CachedUserPasswordTest extends TestCase
     {
         $user = $this->cachedUser();
 
-        $this->actingAs($user)->from('/profile')->put('/password', [
+        $this->actingAs($user)->withSession([LocalPasswordSession::KEY => true])->from('/profile')->put('/password', [
             'current_password' => 'password',
             'password' => 'replacement-secret-123!',
             'password_confirmation' => 'replacement-secret-123!',
@@ -113,7 +114,7 @@ class CachedUserPasswordTest extends TestCase
     {
         $user = $this->cachedUser();
 
-        $this->actingAs($user)->from('/profile')->put('/password', [
+        $this->actingAs($user)->withSession([LocalPasswordSession::KEY => true])->from('/profile')->put('/password', [
             'current_password' => 'wrong-password',
             'password' => 'replacement-secret-123!',
             'password_confirmation' => 'replacement-secret-123!',

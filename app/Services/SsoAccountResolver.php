@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Role;
 use App\Models\User;
 use App\Models\UserSsoIdentity;
 use Illuminate\Support\Facades\DB;
@@ -10,14 +11,21 @@ use Illuminate\Support\Str;
 class SsoAccountResolver
 {
     /**
-     * Resolve a Microsoft principal to an existing and explicitly provisioned application account.
+     * Resolve a verified Microsoft principal, provisioning an enabled account on first login.
      * The configured Azure authority is tenant-specific; its tenant ID is persisted with the identity.
      *
      * @return array{user:?User, linked:bool, ambiguous:bool, match_type:string}
      */
-    public function resolve(string $objectId, string $email, string $tenantId): array
+    public function resolve(string $objectId, string $email, string $tenantId, string $name = ''): array
     {
-        return DB::transaction(function () use ($objectId, $email, $tenantId) {
+        $email = Str::lower(trim($email));
+        if (trim($objectId) === '' || trim($tenantId) === ''
+            || ! filter_var($email, FILTER_VALIDATE_EMAIL)
+            || ! in_array(Str::afterLast($email, '@'), ['students.undip.ac.id', 'lecturer.undip.ac.id', 'undip.ac.id'], true)) {
+            return $this->result(null);
+        }
+
+        return DB::transaction(function () use ($objectId, $email, $tenantId, $name) {
             $identity = UserSsoIdentity::query()
                 ->where('provider', 'microsoft')
                 ->where('tenant_id', $tenantId)
@@ -27,14 +35,14 @@ class SsoAccountResolver
 
             if ($identity) {
                 $user = User::query()->whereKey($identity->user_id)->lockForUpdate()->first();
-                if ($user && $identity->email !== Str::lower(trim($email))) {
-                    $identity->forceFill(['email' => Str::lower(trim($email))])->save();
+                if ($user && $identity->email !== $email && ! $user->hasAdministrativeRole()) {
+                    $identity->forceFill(['email' => $email])->save();
                 }
 
                 return $this->result($user, matchType: 'identity');
             }
 
-            $matches = User::query()
+            $matches = User::withTrashed()
                 ->whereRaw('LOWER(email) = ?', [Str::lower(trim($email))])
                 ->lockForUpdate()
                 ->limit(2)
@@ -45,13 +53,38 @@ class SsoAccountResolver
             }
 
             $user = $matches->first();
-            if (! $user) {
+            if ($user?->trashed()) {
                 return $this->result(null, matchType: 'email');
             }
 
-            // Until cutover, existing users can complete the legacy login path,
-            // but never bind a Microsoft principal before the roster grants access.
-            if (! $user->sso_enabled || $user->isSuspended()) {
+            if (! $user) {
+                $user = User::create([
+                    'external_id' => 'microsoft:'.hash('sha256', $tenantId.':'.$objectId),
+                    'name' => trim($name) !== '' ? trim($name) : $email,
+                    'email' => $email,
+                    'password' => null,
+                    'sso_enabled' => true,
+                    'sso_enabled_at' => now(),
+                    'sso_enabled_by' => null,
+                ]);
+
+                $roleName = match (Str::afterLast($email, '@')) {
+                    'students.undip.ac.id' => 'mahasiswa',
+                    'lecturer.undip.ac.id' => 'dosen',
+                    default => null,
+                };
+                if ($roleName !== null) {
+                    $role = Role::firstOrCreate(
+                        ['name' => $roleName, 'module' => 'global'],
+                        ['guard_name' => 'web', 'is_academic' => true],
+                    );
+                    $user->assignRole($role);
+                    $user->syncPermissionsFromRoles();
+                }
+            }
+
+            // An existing account's access decision must survive subsequent logins.
+            if (! $user->sso_enabled || $user->isSuspended() || $user->hasAdministrativeRole()) {
                 return $this->result($user, matchType: 'email');
             }
 

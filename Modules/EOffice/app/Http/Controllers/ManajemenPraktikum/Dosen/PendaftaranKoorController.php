@@ -111,7 +111,7 @@ class PendaftaranKoorController extends Controller
         $adminIds = \App\Models\User::whereHas(
             'roles',
             fn($q) =>
-            $q->whereIn('name', ['superadmin', 'admin_eoffice'])
+            $q->whereIn('name', ['superadmin', 'koordinator_cerc'])
         )->pluck('id');
 
         $this->notif->kirimBulk(

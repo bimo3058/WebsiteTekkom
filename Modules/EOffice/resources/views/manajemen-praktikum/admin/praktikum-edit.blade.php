@@ -152,7 +152,7 @@
                                 @endforeach
                             </select>
                             <button type="button" x-show="dosens.length > 1" @click="dosens.splice(index, 1)"
-                                class="mp-btn destructive sm" style="padding:0 12px;flex-shrink:0;" aria-label="Hapus dosen dari pilihan" title="Hapus dosen dari pilihan"><x-eoffice::manajemen-praktikum.ui.icon name="close" /></button>
+                                class="mp-delete-button mp-btn destructive sm" style="padding:0 12px;flex-shrink:0;" aria-label="Hapus dosen dari pilihan" title="Hapus dosen dari pilihan"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
                         </div>
                     </template>
 
@@ -218,16 +218,7 @@
                 onsubmit="return confirm('Hapus praktikum \'{{ addslashes($praktikum->nama) }}\'? (Data akan diarsipkan)')"
                 style="flex-shrink:0;">
                 @csrf @method('DELETE')
-                <button type="submit" class="mp-btn destructive md" style="white-space:nowrap;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                        <path d="M10 11v6M14 11v6" />
-                        <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
-                    </svg>
-                    Hapus Praktikum
-                </button>
+                <button type="submit" class="mp-delete-button mp-btn destructive md" style="white-space:nowrap;" aria-label="Hapus Praktikum" title="Hapus Praktikum"><x-eoffice::manajemen-praktikum.ui.icon name="trash" :size="14" /></button>
             </form>
         </div>
     </div>

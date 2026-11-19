@@ -6,6 +6,7 @@ use App\Database\CachedPostgresConnection;
 use App\Livewire\Pulse\RequestMonitor;
 use App\Models\ImportStatus;
 use App\Models\User;
+use App\Services\WindowsPulseServerMetrics;
 use Illuminate\Auth\EloquentUserProvider;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
@@ -23,12 +24,14 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use Laravel\Pulse\Recorders\Servers;
 use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->singleton(WindowsPulseServerMetrics::class);
         Connection::resolverFor('pgsql', function ($connection, $database, $prefix, $config) {
             return new CachedPostgresConnection($connection, $database, $prefix, $config);
         });
@@ -93,6 +96,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if (PHP_OS_FAMILY === 'Windows' && config('pulse.enabled')) {
+            Servers::detectCpuUsing(fn () => app(WindowsPulseServerMetrics::class)->cpu());
+            Servers::detectMemoryUsing(fn () => app(WindowsPulseServerMetrics::class)->memory());
+        }
         // =====================================================================
         // 1. SETUP PAGINATION & AUTO-STATUS ONLINE/OFFLINE
         // =====================================================================

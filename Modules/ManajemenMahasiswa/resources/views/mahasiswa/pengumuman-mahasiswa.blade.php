@@ -1,4 +1,5 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
+    @include('manajemenmahasiswa::pengumuman._pin-notif')
 
     @push('styles')
     <style>
@@ -342,7 +343,7 @@
                                         <span class="pg-author-name">{{ $authorName }}</span>
                                     </div>
                                     <span class="pg-date">
-                                        {{ ($item->published_at ?? $item->created_at)->translatedFormat('d M Y') }}
+                                        {{ ($item->published_at ?? $item->created_at)->locale('id')->translatedFormat('d M Y') }}
                                     </span>
                                 </div>
                             </div>

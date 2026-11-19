@@ -115,17 +115,18 @@ class AcademicRoleSsoTest extends TestCase
         $this->assertFalse($user->fresh()->hasRole('dosen'));
     }
 
-    public function test_sso_rejects_unknown_account_without_creating_it(): void
+    public function test_sso_creates_enabled_student_on_first_login(): void
     {
         $response = $this->signInWithMicrosoft([
             'id' => 'microsoft-unknown-1', 'name' => 'Unknown',
             'email' => 'unknown@students.undip.ac.id',
         ]);
 
-        $response->assertRedirect(route('login'));
-        $response->assertSessionHasErrors('email');
-        $this->assertDatabaseMissing('users', ['email' => 'unknown@students.undip.ac.id']);
-        $this->assertGuest();
+        $response->assertRedirect(route('dashboard'));
+        $user = User::where('email', 'unknown@students.undip.ac.id')->firstOrFail();
+        $this->assertTrue($user->sso_enabled);
+        $this->assertTrue($user->hasRole('mahasiswa'));
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_sso_requires_enabled_account_and_rejects_suspended_user(): void
@@ -147,8 +148,8 @@ class AcademicRoleSsoTest extends TestCase
         $response = $this->signInWithMicrosoft([
             'id' => 'microsoft-suspended-1', 'name' => 'Suspended', 'email' => $user->email,
         ]);
-        $response->assertRedirect(route('login'));
-        $response->assertSessionHasErrors('email');
+        $response->assertRedirect(route('login', ['sso_error' => 'suspended']));
+        $response->assertSessionHas('sso_access_error', 'Akun Anda telah ditangguhkan.');
         $this->assertGuest();
     }
 
@@ -175,6 +176,27 @@ class AcademicRoleSsoTest extends TestCase
         $this->assertSame($password, $user->fresh()->getRawOriginal('password'));
         $this->assertTrue($user->fresh()->hasRole('mahasiswa'));
         $this->assertSame(1, User::count());
+    }
+
+    public function test_public_sso_does_not_log_in_or_link_an_administrator(): void
+    {
+        $user = $this->newUser('administrator@lecturer.undip.ac.id');
+        $user->forceFill(['sso_enabled' => true])->save();
+        $user->assignRole(
+            Role::create([
+                'name' => 'dosen', 'guard_name' => 'web', 'module' => 'global', 'is_academic' => true,
+            ]),
+            Role::create([
+                'name' => 'admin_capstone', 'guard_name' => 'web', 'module' => 'capstone', 'is_academic' => false,
+            ]),
+        );
+
+        $this->signInWithMicrosoft([
+            'id' => 'microsoft-admin', 'name' => 'Admin', 'email' => $user->email,
+        ])->assertRedirect(route('login'))->assertSessionHasErrors(['email' => 'Email tidak dikenali.']);
+
+        $this->assertGuest();
+        $this->assertDatabaseMissing('user_sso_identities', ['user_id' => $user->id]);
     }
 
     public function test_linked_identity_survives_microsoft_email_change(): void

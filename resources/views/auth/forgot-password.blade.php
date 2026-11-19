@@ -184,7 +184,7 @@
         </form>
 
         <div class="sk-back-link">
-            <a href="{{ route('login') }}">Kembali ke login</a>
+            <a href="{{ route('admin.login') }}">Kembali ke login admin</a>
         </div>
     </div>
 

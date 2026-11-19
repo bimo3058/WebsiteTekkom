@@ -110,10 +110,10 @@ class NilaiController extends Controller
             "Expires" => "0",
         ];
 
-        $callback = function () use ($daftarPraktikan, $moduls, $nilaiJenisMap) {
+        $callback = function () use ($daftarPraktikan, $moduls, $nilaiJenisMap, $praktikum) {
             $file = fopen('php://output', 'w');
 
-            fputcsv($file, ['No', 'Nama Praktikan', 'NIM', 'Kelompok', 'Shift', 'Modul', 'Kehadiran', 'Tugas Pendahuluan', 'Laporan', 'Responsi', 'Tugas Pengganti', 'Keterangan']);
+            fputcsv($file, ['No', 'Nama Praktikan', 'NIM', 'Kelompok', 'Shift', 'Modul', 'Kehadiran', 'Tugas Pendahuluan', $praktikum->laporanLabel(), 'Responsi', 'Tugas Pengganti', 'Keterangan']);
 
             $no = 1;
             foreach ($daftarPraktikan as $dp) {

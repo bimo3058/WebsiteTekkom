@@ -19,10 +19,17 @@ class RepoMulmed extends Model
         'nama_file',
         'path_file',
         'tipe_file',
+        'jenis_dokumen',
+        'dari_rencana',
         'judul_file',
         'deskripsi_meta',
         'visibility_status',
         'status_arsip',
+    ];
+
+    protected $casts = [
+        // Salinan dokumen Rencana Proker saat Ajukan; terkunci di Pelaksanaan (S-59).
+        'dari_rencana' => 'boolean',
     ];
 
     // -------------------------------------------------------------------------
@@ -86,6 +93,18 @@ class RepoMulmed extends Model
     public function getUrlAttribute(): string
     {
         return app(\App\Services\SupabaseStorage::class)->getPublicUrl($this->path_file);
+    }
+
+    /**
+     * URL unduh dengan nama asli file. Objek di Supabase bernama UUID, dan atribut HTML
+     * `download` diabaikan browser untuk link lintas domain, jadi nama dikirim lewat
+     * parameter `?download=` (Supabase membalas Content-Disposition dengan nama ini).
+     */
+    public function getUrlUnduhAttribute(): string
+    {
+        $nama = $this->nama_file ?: basename($this->path_file);
+
+        return $this->url . '?download=' . rawurlencode($nama);
     }
 
     // -------------------------------------------------------------------------

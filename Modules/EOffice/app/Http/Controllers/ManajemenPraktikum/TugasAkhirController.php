@@ -67,10 +67,13 @@ class TugasAkhirController extends Controller
 
     private function notify(Praktikum $praktikum, string $message): void
     {
-        $ids = $praktikum->daftarPraktikan()->pluck('user_id')
-            ->merge($praktikum->asistenPraktikum()->pluck('user_id'))
-            ->merge($praktikum->dosens()->pluck('users.id'))->push($praktikum->koor_id)->filter()->unique();
-        app(NotifikasiService::class)->kirimBulk($ids, 'Tugas Akhir — '.$praktikum->nama, $message);
+        $audiences = [
+            'mahasiswa' => $praktikum->daftarPraktikan()->pluck('user_id'),
+            'asprak' => $praktikum->asistenPraktikum()->pluck('user_id'),
+            'dosen' => $praktikum->dosens()->pluck('users.id'),
+            'koor' => collect([$praktikum->koor_id])->filter(),
+        ];
+        foreach ($audiences as $role => $ids) app(NotifikasiService::class)->kirimBulk($ids->unique(), 'Tugas Akhir — '.$praktikum->nama, $message, $role);
     }
 
     private function invalidateGrade(TugasAkhir $ta, string $studentId, string $event, ?string $stageId = null): void
@@ -299,8 +302,9 @@ class TugasAkhirController extends Controller
             $history[] = ['jenis' => 'pengumpulan', 'kategori'=>($submission && !$resubmit) ? 'revisi' : ($late ? 'terlambat' : 'awal'), 'waktu' => now()->toIso8601String(), 'oleh' => auth()->user()->name, 'files' => $files, 'link' => $data['link'] ?? null];
             TaPengumpulan::updateOrCreate(['tugas_akhir_id' => $ta->id, 'praktikan_id' => $student->id, 'tahap_id' => $stage['id']], ['status' => 'dikumpulkan', 'riwayat' => $history, 'catatan' => null, 'deadline_revisi' => null]);
             $this->invalidateGrade($ta, $student->id, 'pengumpulan_baru', $stage['id']);
-            $recipients = $praktikum->asistenPraktikum()->pluck('user_id')->push($praktikum->koor_id)->filter()->unique();
-            app(NotifikasiService::class)->kirimBulk($recipients, 'Pengumpulan Tugas Akhir', auth()->user()->name.' mengumpulkan tahap '.$stage['nama'].' pada '.$praktikum->nama.'.');
+            $message = auth()->user()->name.' mengumpulkan tahap '.$stage['nama'].' pada '.$praktikum->nama.'.';
+            app(NotifikasiService::class)->kirimBulk($praktikum->asistenPraktikum()->pluck('user_id')->unique(), 'Pengumpulan Tugas Akhir', $message, 'asprak');
+            if ($praktikum->koor_id) app(NotifikasiService::class)->kirim($praktikum->koor_id, 'Pengumpulan Tugas Akhir', $message, null, 'koor');
         });
         return back()->with('success', 'Tugas berhasil dikumpulkan.');
     }

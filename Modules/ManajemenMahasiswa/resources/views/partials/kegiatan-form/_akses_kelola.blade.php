@@ -1,10 +1,10 @@
 {{--
     Bagian "Akses Kelola" — siapa saja, selain pemilik, yang boleh mengubah
-    kegiatan ini. Dipakai bersama:
-      • Rencana Proker (create & edit) dan Pelaksanaan (edit), lewat _fields.blade.php
-      • Laporan & Arsip (create & edit), yang punya form sendiri
+    kegiatan ini. Dipakai Rencana Proker (create & edit) dan Pelaksanaan (edit), lewat
+    _fields.blade.php. Tidak ada di Laporan & Arsip (form arsip terpisah); pengelola
+    yang sudah tercatat tetap terbawa saat diarsipkan.
 
-    Hanya dirender untuk pemilik kegiatan & override (KegiatanPolicy::aturAkses).
+    Hanya dirender untuk ketua pelaksana & admin (KegiatanPolicy::aturAkses, S-82).
     Pengelola biasa tidak melihatnya, dan server mengabaikan input ini darinya
     (PengelolaKegiatanService::sync).
 
@@ -21,22 +21,23 @@
     // Pengelola yang sudah tidak memegang role pengurus tidak ada di daftar calon,
     // jadi ikut terlepas saat form ini disimpan — route pun sudah menolaknya.
     $opsiPengelola = $calonPengelola->map(fn ($calon) => [
-        'id'         => $calon['id'],
-        'nama'       => $calon['nama'],
-        'sub'        => $calon['role'],
-        'bisa_hapus' => (bool) $calon['bisa_hapus'],
-        'cari'       => \Illuminate\Support\Str::lower($calon['nama']),
+        'id'   => $calon['id'],
+        'nama' => $calon['nama'],
+        'sub'  => $calon['role'],
+        'cari' => \Illuminate\Support\Str::lower($calon['nama']),
+        'bidangId' => (string) ($calon['bidangId'] ?? ''),
     ])->values();
 @endphp
-<div class="form-card mk-pilih" x-data="mkPilihBanyak(@js($opsiPengelola), @js(array_values($pengelolaTerpilih)))">
+<div class="form-card mk-pilih"
+     x-data="mkPilihBanyak(@js($opsiPengelola), @js(array_values($pengelolaTerpilih)), () => $store.mkKetua.akses ? $store.mkKetua.userId : '', true)">
     <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Akses Kelola</div>
 
     <input type="hidden" name="akses_kelola_dikirim" value="1">
 
     <p style="font-size: 13px; color: var(--c-fg-muted); margin-bottom: 14px;">
-        Pembuat: <strong style="color: var(--c-fg-sec);">{{ $namaPembuat }}</strong>.
-        Admin dan Ketua Himpunan otomatis bisa mengelola semua kegiatan.
-        Tambahkan pengurus lain yang boleh ikut mengubah kegiatan ini.
+        Dibuat oleh <strong style="color: var(--c-fg-sec);">{{ $namaPembuat }}</strong>, yang memantau dan meninjau proker ini.
+        Ketua Pelaksana mengisi data dan mengirimnya untuk ditinjau; admin juga bisa mengedit.
+        Tambahkan staff himpunan lain dari bidang/unit yang sama yang boleh membantu mengisi.
     </p>
 
     <label class="form-label-custom" for="pengelolaSearchInput">
@@ -55,7 +56,7 @@
                 </span>
             </template>
             <input type="text" class="panitia-search-input" id="pengelolaSearchInput" x-ref="cari"
-                   :placeholder="terpilih.length ? 'Tambah pengurus lain...' : 'Cari pengurus...'"
+                   :placeholder="terpilih.length ? 'Tambah staff lain...' : 'Cari staff himpunan...'"
                    autocomplete="off"
                    x-model="query"
                    @focus="open = true" @click="open = true" @input="open = true"
@@ -82,29 +83,38 @@
                     <span class="check-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 </div>
             </template>
-            <div class="panitia-empty" x-show="hasil.length === 0">Tidak ada pengurus yang cocok</div>
+            <div class="panitia-empty" x-show="hasil.length === 0"
+                 x-text="!bidangId ? 'Pilih Bidang / Unit terlebih dahulu' : (query ? 'Tidak ada staff himpunan yang cocok' : 'Belum ada staff lain di bidang/unit ini. Atur bidangnya di halaman Permission.')"></div>
         </div>
     </div>
-    <div class="checkbox-hint">Haknya mengikuti jabatan: Ketua Bidang/Unit yang ditambahkan langsung bisa mengedit sekaligus menghapus, Staff Himpunan hanya bisa mengedit.</div>
+    <div class="checkbox-hint">Hanya staff himpunan sebidang. Mereka hanya bisa mengedit, tidak bisa menghapus. Ketua Bidang/Unit lain tidak bisa ditambahkan karena satu proker dipegang satu bidang.</div>
 
     {{-- Baris hak per pengelola + hidden input pengelola_ids[] --}}
     <div id="pengelolaRolesContainer" class="mt-3 d-flex flex-column gap-2">
+        {{-- Ketua Pelaksana: terkunci, tanpa hidden input. Haknya dihitung dari
+             ketua_pelaksana_id (KegiatanPolicy::update), bukan dari daftar pengelola,
+             jadi menggantinya hanya lewat bagian Personel. --}}
+        <template x-if="idKunci">
+            <div class="d-flex align-items-center gap-3 p-2 border rounded bg-light">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; color: var(--c-fg-muted);" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <div style="flex: 1; font-size: 13px; font-weight: 600; color: var(--c-fg-sec);">
+                    <span x-text="$store.mkKetua.nama"></span>
+                    <div style="font-size: 11px; font-weight: 500; color: var(--c-fg-muted);">Staff Himpunan · ubah lewat bagian Personel</div>
+                </div>
+                <span style="flex: none; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--c-border); background: var(--c-bg); color: var(--c-fg-sec); white-space: nowrap;"
+                      title="Ketua Pelaksana otomatis bisa mengedit, tidak bisa menghapus">Ketua Pelaksana</span>
+            </div>
+        </template>
         <template x-for="p in daftarTerpilih" :key="'hak-' + p.id">
             <div class="d-flex align-items-center gap-3 p-2 border rounded bg-light">
                 <div style="flex: 1; font-size: 13px; font-weight: 600; color: var(--c-fg-sec);">
                     <span x-text="p.nama"></span>
                     <div style="font-size: 11px; font-weight: 500; color: var(--c-fg-muted);" x-text="p.sub"></div>
                 </div>
-                {{-- Bukan pilihan, melainkan keterangan: hak hapus melekat pada jabatan.
-                     Yang menegakkannya KegiatanPolicy::delete, bukan kiriman form ini. --}}
-                <span style="flex: none; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid; white-space: nowrap;"
-                      :style="p.bisa_hapus
-                          ? { background: 'var(--c-error-subtle)', color: 'var(--c-error)', borderColor: 'var(--c-error-subtle)' }
-                          : { background: 'var(--c-bg)', color: 'var(--c-fg-sec)', borderColor: 'var(--c-border)' }"
-                      :title="p.bisa_hapus
-                          ? 'Ketua Bidang/Unit yang ditambahkan otomatis bisa mengedit sekaligus menghapus kegiatan ini'
-                          : 'Staff Himpunan hanya bisa mengedit, tidak bisa menghapus'"
-                      x-text="p.bisa_hapus ? 'Edit & hapus' : 'Boleh edit'"></span>
+                {{-- Keterangan, bukan pilihan: pengelola tambahan selalu hanya boleh
+                     mengedit. Yang menegakkannya KegiatanPolicy::delete. --}}
+                <span style="flex: none; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--c-border); background: var(--c-bg); color: var(--c-fg-sec); white-space: nowrap;"
+                      title="Staff Himpunan hanya bisa mengedit, tidak bisa menghapus">Boleh edit</span>
                 <input type="hidden" name="pengelola_ids[]" :value="p.id">
             </div>
         </template>

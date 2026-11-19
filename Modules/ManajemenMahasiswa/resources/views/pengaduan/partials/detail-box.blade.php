@@ -5,8 +5,9 @@
 
     Param:
       $pengaduan      Pengaduan
-      $title          judul bilah atas ("Detail Pengaduan" / "Status Pengaduan")
-      $isStaff        bool — tampilkan Pelapor, Riwayat Tiket, tombol Tandai Tercatat
+      $title          judul bilah atas
+      $isStaff        bool — tampilkan Pelapor dan tombol Tandai Tercatat; pelapor
+                      melihat status versi pelapor (Pengaduan::statusPelapor)
       $canDelete      bool — tombol Hapus (bawaan false)
       $backUrl        tujuan tombol kembali; null = tanpa tombol
       $kategoriLabel  label kategori (opsional; bawaan dari key kategori)
@@ -19,66 +20,41 @@
 
     $tpl = fn (string $key) => data_get($pengaduan, 'data_template.' . $key);
     $judul = $tpl('judul') ?: '-';
-    $badge = $pengaduan->statusBadge();
 
-    $kategoriLabel = $kategoriLabel ?? ucwords(str_replace('_', ' ',
-        \Modules\ManajemenMahasiswa\Models\Pengaduan::normalizeKategori((string) $pengaduan->kategori)));
+    $kategoriLabel = $kategoriLabel ?? \Modules\ManajemenMahasiswa\Models\Pengaduan::kategoriLabel((string) $pengaduan->kategori);
 
-    $waktu = $tpl('waktu_kejadian') ?? $tpl('tanggal_kejadian');
-    if ($waktu) {
-        try {
-            $waktu = \Carbon\Carbon::parse($waktu)->translatedFormat('d F Y, H:i');
-        } catch (\Throwable $e) {
-            // tampilkan apa adanya
-        }
-    }
+    $adaBukti = !empty(data_get($pengaduan, 'data_template.bukti')) || $tpl('link_bukti');
 
     $infoItems = [];
     if ($isStaff) {
         $infoItems[] = ['label' => 'Pelapor', 'value' => $pengaduan->is_anonim
-            ? 'Konfidensial'
+            ? 'Anonim'
             : (optional($pengaduan->pelapor)->name ?? null)];
     }
-    // Angkatan tiket konfidensial sudah dibuang controller; barisnya tidak ditampilkan.
+    // Angkatan tiket anonim hanya untuk statistik: tidak pernah ditampilkan per tiket.
     if (!$pengaduan->is_anonim) {
         $infoItems[] = ['label' => 'Angkatan', 'value' => $tpl('angkatan')];
     }
-    $infoItems = array_merge($infoItems, [
-        ['label' => 'Lokasi Kejadian', 'value' => $tpl('lokasi')],
-        ['label' => 'Waktu Kejadian',  'value' => $waktu],
-        ['label' => 'Mata Kuliah',     'value' => $tpl('mata_kuliah')],
-        ['label' => 'Dosen Terkait',   'value' => $tpl('nama_dosen')],
-        ['label' => 'Tendik Terkait',  'value' => $tpl('nama_tendik')],
-        ['label' => 'Frekuensi',       'value' => $tpl('frekuensi')],
-    ]);
-
-    // Keterangan untuk pelapor, menggantikan banner status lama.
-    $catatanPelapor = [
-        'baru'     => 'Belum dibuka admin.',
-        'dibaca'   => 'Sudah dibaca admin.',
-        'tercatat' => 'Sudah dicatat admin.',
-    ][$badge['tone']];
+    // Email kontak isian pelapor. Tiket biasa sebelum Oktober 2026 belum menanyakannya,
+    // jadi staf diberi email akun pelapor sebagai gantinya. Tiket anonim tidak punya
+    // kontak (R-43); baris hanya muncul untuk tiket anonim lama yang sempat mengisinya.
+    $emailKontak = $tpl('email_kontak')
+        ?: (!$pengaduan->is_anonim ? optional($pengaduan->pelapor)->email : null);
+    if (!$pengaduan->is_anonim || $emailKontak) {
+        $infoItems[] = [
+            'label' => 'Email Kontak',
+            'value' => $emailKontak,
+            'href'  => $isStaff && $emailKontak ? 'mailto:' . $emailKontak : null,
+        ];
+    }
+    // Pertanyaan Detail Kejadian sesuai kategori tiket; jawaban tiket lama di luar
+    // set kategorinya tetap ditampilkan bila berisi.
+    $infoItems = array_merge($infoItems, \Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan::barisInfo(
+        (string) $pengaduan->kategori,
+        (array) ($pengaduan->data_template ?? [])
+    ));
 
     $adaFlash = session('success') || session('info') || session('error') || $errors->any();
-
-    $logs = $isStaff && $pengaduan->relationLoaded('logs') ? $pengaduan->logs : collect();
-    $actionLabels = [
-        'dibuat'            => 'Tiket Dibuat',
-        'dibaca'            => 'Dibaca Admin',
-        'diproses'          => 'Diterima Admin',
-        'dijawab'           => 'Tercatat',
-        'ditutup_admin'     => 'Ditutup Admin',
-        'ditutup_mahasiswa' => 'Ditutup',
-        'ditutup_otomatis'  => 'Ditutup Otomatis',
-        'selesai'           => 'Tercatat',
-        'tercatat'          => 'Ditandai Tercatat',
-        'batal_tercatat'    => 'Tanda Tercatat Dicabut',
-        // Label lama — tetap ditampilkan dengan istilah netral
-        'didelegasikan'     => 'Diteruskan',
-        'ditanggapi_dosen'  => 'Ditanggapi',
-        'ditolak_dosen'     => 'Dikembalikan',
-        'diajukan_ulang'    => 'Diajukan Ulang',
-    ];
 @endphp
 
 @include('manajemenmahasiswa::pengaduan.partials.box-styles')
@@ -143,17 +119,18 @@
             <div class="kf-heading">
                 <h2 class="kf-subject">{{ $judul }}</h2>
                 <span class="pgd-pill kategori">{{ $kategoriLabel }}</span>
-                @include('manajemenmahasiswa::pengaduan.partials.status-badge', ['pengaduan' => $pengaduan])
+                {{-- Staff: Baru/Tercatat. Pelapor (biasa & anonim): Terkirim/Dibaca/Tercatat. --}}
+                @include('manajemenmahasiswa::pengaduan.partials.status-badge', ['pengaduan' => $pengaduan, 'pelapor' => !$isStaff])
                 @if ($pengaduan->is_anonim)
                     <span class="pgd-pill konfidensial">
-                        <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
+                        <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Anonim
                     </span>
                 @endif
             </div>
             <p class="kf-sub">
                 Diajukan {{ optional($pengaduan->created_at)->translatedFormat('d F Y, H:i') }} WIB
                 @unless ($isStaff)
-                    <span class="kf-sub-note">{{ $catatanPelapor }}</span>
+                    · {{ $pengaduan->statusPelapor()['keterangan'] }}
                 @endunless
             </p>
 
@@ -161,7 +138,11 @@
                 @foreach ($infoItems as $info)
                     <div class="kf-row">
                         <span class="kf-label">{{ $info['label'] }}</span>
-                        <span class="kf-value {{ empty($info['value']) ? 'is-empty' : '' }}">{{ $info['value'] ?: '—' }}</span>
+                        @if (!empty($info['href']))
+                            <a class="kf-value kf-link" href="{{ $info['href'] }}">{{ $info['value'] }}</a>
+                        @else
+                            <span class="kf-value {{ empty($info['value']) ? 'is-empty' : '' }}">{{ $info['value'] ?: '—' }}</span>
+                        @endif
                     </div>
                 @endforeach
             </div>
@@ -190,37 +171,11 @@
     <div class="kf-split">
         <div class="kf-side">
             <h3>Bukti Dukung</h3>
-            <p>Berkas yang dilampirkan pelapor. Klik untuk melihat isinya.</p>
+            <p>{{ $adaBukti ? 'Berkas yang dilampirkan pelapor. Klik untuk melihat isinya.' : 'Pelapor tidak melampirkan berkas.' }}</p>
         </div>
         <div class="kf-main is-fields">
             @php $buktiParams = ['pengaduan' => $pengaduan] + (!empty($buktiToken) ? ['token' => $buktiToken] : []); @endphp
             @include('manajemenmahasiswa::pengaduan.partials.bukti-list', $buktiParams)
         </div>
     </div>
-
-    @if ($logs->count())
-        <div class="kf-split">
-            <div class="kf-side">
-                <h3>Riwayat Tiket</h3>
-                <p>{{ $logs->count() }} aktivitas tercatat, terbaru di atas.</p>
-            </div>
-            <div class="kf-main is-fields">
-                <div class="kf-timeline">
-                    @foreach ($logs as $log)
-                        <div class="kf-tl-item">
-                            <span class="kf-tl-dot"></span>
-                            <div class="kf-tl-date">{{ $log->created_at->translatedFormat('d M Y, H:i') }}</div>
-                            <div class="kf-tl-title">{{ $actionLabels[$log->action] ?? ucwords(str_replace('_', ' ', $log->action)) }}</div>
-                            @if ($log->actor)
-                                <div class="kf-tl-actor">Oleh: {{ $log->actor->name }}</div>
-                            @endif
-                            @if ($log->notes)
-                                <div class="kf-tl-note">"{{ \Illuminate\Support\Str::limit($log->notes, 100) }}"</div>
-                            @endif
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    @endif
 </div>

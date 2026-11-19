@@ -30,6 +30,7 @@
     {{-- Vite JS --}}
     {{-- {{ module_vite('build-manajemenmahasiswa', 'resources/assets/js/app.js') }} --}}
 
+    <x-manajemenmahasiswa::ui.progress />
     @stack('scripts')
     <x-mobile-navigation />
 </body>

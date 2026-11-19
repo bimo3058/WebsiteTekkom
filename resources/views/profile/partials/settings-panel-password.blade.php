@@ -1,6 +1,13 @@
 {{-- profile/partials/settings-panel-password.blade.php --}}
 <p class="panel-title">Password</p>
+@if ($canChangePassword)
 <p class="panel-sub">Perbarui atau ubah password Anda</p>
+
+@if ($passwordChangeRequired)
+    <div role="alert" style="margin-bottom:16px;padding:10px 14px;border:1px solid #fcd34d;border-radius:8px;background:#fffbeb;color:#92400e;">
+        {{ session('password_change_required', \App\Services\LocalPasswordSession::CHANGE_REQUIRED) }}
+    </div>
+@endif
 
 <form method="POST" action="{{ route('password.update') }}" id="form-password">
     @csrf @method('PUT')
@@ -130,3 +137,6 @@ function checkStrength(val) {
     pct.textContent = val.length ? percents[score] : '';
 }
 </script>
+@else
+    <p class="panel-sub">{{ \App\Services\LocalPasswordSession::CHANGE_LOCKED }}</p>
+@endif

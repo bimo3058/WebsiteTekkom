@@ -1,7 +1,9 @@
 {{--
     Input bukti dukung (khusus PDF). Pilihan berkas ditampilkan sebagai daftar ikon
     berikut tombol hapus dan pratinjau pop-up, seperti "Ajukan Riwayat Kegiatan" di Verifikasi Kegiatan.
-    Param: $buktiPendingItems (bukti yang sudah terunggah, opsional), $confidential (jalur konfidensial, opsional).
+    Bukti opsional di semua kategori. Bukti yang sudah terunggah (saat kembali dari
+    Konfirmasi) bisa diganti dengan memilih berkas baru, atau dibuang lewat centang bukti_hapus.
+    Param: $buktiPendingItems (bukti yang sudah terunggah, opsional).
 --}}
 @include('manajemenmahasiswa::pengaduan.partials.bukti-styles')
 @php
@@ -10,7 +12,7 @@
     $maxKb = \Modules\ManajemenMahasiswa\Support\PengaduanBukti::MAX_KB;
     $maxMb = $maxKb / 1024;
 @endphp
-<label class="pgd-label" for="buktiInput">Berkas PDF <span class="is-opt">(Opsional)</span></label>
+<label class="pgd-label" for="buktiInput">Berkas PDF <span class="is-opt">(opsional)</span></label>
 {{-- Input bawaan disembunyikan (tetap bisa difokus keyboard): tampilannya selalu
      menulis "Tidak ada file yang dipilih", padahal berkas terpilih sudah didaftar di bawah. --}}
 <input type="file" class="bk-file-native" name="bukti[]" id="buktiInput" accept="application/pdf,.pdf" multiple>
@@ -19,23 +21,26 @@
     Pilih Berkas PDF
 </label>
 <div class="pgd-help">
-    Hanya berkas PDF, maks. {{ $maxFiles }} berkas &times; {{ $maxMb }} MB.
-    Gabungkan foto/screenshot ke dalam PDF terlebih dahulu.
+    PDF saja, maks. {{ $maxFiles }} berkas &times; {{ $maxMb }} MB. Foto/screenshot gabungkan ke PDF.
 </div>
-{{-- Hanya jalur konfidensial: di jalur reguler identitas pelapor memang sudah
-     diketahui pengelola, jadi peringatan ini cuma menambah teks. --}}
-@if (!empty($confidential))
-    <div class="pgd-help" style="color: var(--c-warning); font-weight: 600;">
-        Pastikan nama atau NIM Anda tidak tertulis di dalam isi PDF.
-    </div>
-@endif
+{{-- Hanya saat identitas disembunyikan (form-fields menyalakannya lewat data-pgd-anon-only):
+     tanpa centang itu identitas pelapor memang sudah diketahui pengelola. --}}
+<div class="pgd-help" data-pgd-anon-only @unless (old('is_anonim')) hidden @endunless style="color: var(--c-warning); font-weight: 600;">
+    Pastikan isi PDF tidak memuat nama atau NIM Anda.
+</div>
 <div class="bk-list" id="buktiPreview"></div>
 <div class="bk-error" id="buktiError" role="alert"></div>
+@error('bukti') <div class="pgd-error">{{ $message }}</div> @enderror
+@error('bukti.*') <div class="pgd-error">{{ $message }}</div> @enderror
 @if ($pendingCount > 0)
     <div class="pgd-help" style="margin-top: 12px; color: var(--c-primary); font-weight: 600;">
-        {{ $pendingCount }} berkas sudah terunggah. Pilih berkas baru hanya bila ingin menggantinya.
+        {{ $pendingCount }} berkas sudah terunggah. Pilih berkas baru untuk menggantinya.
     </div>
     @include('manajemenmahasiswa::pengaduan.partials.bukti-items', ['items' => $buktiPendingItems])
+    <label class="pgd-help" style="display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; cursor: pointer;">
+        <input type="checkbox" name="bukti_hapus" value="1" style="width: 15px; height: 15px; margin: 0; accent-color: var(--c-primary);">
+        Jangan lampirkan berkas ini
+    </label>
 @endif
 <script>
     (function () {
