@@ -3,10 +3,12 @@
 namespace Modules\ManajemenMahasiswa\Providers;
 
 use App\Database\CachedPostgresConnection;
+use App\Models\User;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Modules\ManajemenMahasiswa\Console\Commands\CheckAlumniStatus;
+use Modules\ManajemenMahasiswa\Models\PengurusBidang;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -29,7 +31,19 @@ class ManajemenMahasiswaServiceProvider extends ServiceProvider
         $this->registerTranslations();
         $this->registerConfig();
         $this->registerViews();
+        $this->registerRelasiUser();
         $this->loadMigrationsFrom(module_path($this->name, 'database/migrations'));
+    }
+
+    /**
+     * Relasi User -> bidang/unit pengurus himpunan (Support/RoleHimpunan).
+     * Didaftarkan dari modul agar App\Models\User tidak perlu diubah.
+     */
+    protected function registerRelasiUser(): void
+    {
+        User::resolveRelationUsing('pengurusBidang', function (User $user) {
+            return $user->hasOne(PengurusBidang::class, 'user_id');
+        });
     }
 
     /**

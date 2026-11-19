@@ -60,16 +60,9 @@ class ForumController extends Controller
         $authorIds   = collect($threads->items())->pluck('user_id')->unique()->toArray();
         $authorTiers = $this->gamificationService->getBatchTierInfo($authorIds);
 
-        // Load reports for admin
-        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
-        $forumReports = $isAdmin
-            ? \Modules\ManajemenMahasiswa\Models\ForumReport::with(['reporter', 'thread.author'])
-                ->where('status', 'pending')
-                ->latest()
-                ->get()
-            : collect();
-
-        $viewData = compact('threads', 'userStats', 'categories', 'user', 'userVotes', 'authorTiers', 'forumReports', 'showRulesOverlay');
+        // Laporan forum tidak dimuat di sini: forum.index tidak menampilkannya —
+        // inbox laporan punya halaman sendiri (forumReports()) yang terpaginasi.
+        $viewData = compact('threads', 'userStats', 'categories', 'user', 'userVotes', 'authorTiers', 'showRulesOverlay');
 
         return view('manajemenmahasiswa::forum.index', $viewData);
     }

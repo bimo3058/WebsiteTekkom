@@ -52,6 +52,12 @@ class Pengumuman extends Model
         self::STATUS_PENDING_REVIEW,
     ];
 
+    /**
+     * Boleh mengedit & menghapus pengumuman milik siapa pun. Admin kemahasiswaan
+     * disetarakan dengan superadmin (15 Nov 2026).
+     */
+    const ROLE_PENGELOLA_SEMUA = ['superadmin', 'admin', 'admin_kemahasiswaan', 'dosen_koordinator'];
+
     const AUDIENCE_ALL = 'all';
     const AUDIENCE_MAHASISWA = 'mahasiswa';
     const AUDIENCE_ALUMNI = 'alumni';

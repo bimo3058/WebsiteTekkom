@@ -6,7 +6,7 @@
         .kf-toolbar    bilah atas: tombol kembali + judul huruf besar | aksi
         .kf-profile    ikon 56px + judul + badge + grid label–nilai dua kolom
         .kf-split      bagian terbelah: kolom keterangan 240px | isi
-        .kf-footer     kaki kotak berlatar abu tipis
+        .kf-footer     kaki kotak (tombol aksi), latar putih
 
     Dipakai halaman Detail, Lacak (magic link), Konfirmasi, dan form Buat Pengaduan.
     Gaya field form (.pgd-field / .pgd-input) mengikuti .input-group/.input-field
@@ -19,6 +19,9 @@
         .kf-box {
             background: #ffffff; border: 1px solid var(--c-border); border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden; font-family: 'Inter Tight', sans-serif;
+            /* Anak langsung .main-wrapper (flex kolom ber-scroll): tanpa ini kotak ikut
+               menyusut setinggi layar dan isi bawahnya terpotong oleh overflow:hidden. */
+            flex-shrink: 0;
         }
 
         /* ── Bilah atas ── */
@@ -62,13 +65,15 @@
         .kf-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; margin-bottom: 4px; }
         .kf-subject { font-size: 20px; font-weight: 800; color: var(--c-fg); margin: 0; letter-spacing: -.02em; overflow-wrap: anywhere; }
         .kf-sub { font-size: 13px; font-weight: 500; color: var(--c-fg-muted); margin: 0 0 16px; }
-        .kf-sub-note { display: block; font-size: 12px; margin-top: 2px; }
 
         .kf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 40px; max-width: 900px; }
-        .kf-row { display: flex; align-items: center; min-width: 0; }
-        .kf-label { width: 140px; font-size: 13px; color: var(--c-fg-placeholder); flex-shrink: 0; font-weight: 500; }
+        .kf-row { display: flex; align-items: baseline; min-width: 0; }
+        /* Lebar cukup untuk label pertanyaan terpanjang ("Nama Kegiatan / Organisasi"). */
+        .kf-label { width: 180px; padding-right: 12px; box-sizing: border-box; font-size: 13px; line-height: 1.4; color: var(--c-fg-placeholder); flex-shrink: 0; font-weight: 500; }
         .kf-value { font-size: 13px; font-weight: 600; color: var(--c-fg-sec); min-width: 0; overflow-wrap: anywhere; }
         .kf-value.is-empty { color: var(--c-border-strong); }
+        .kf-value.kf-link { color: var(--c-primary); text-decoration: none; }
+        .kf-value.kf-link:hover { text-decoration: underline; }
 
         /* ── Bagian terbelah ── */
         .kf-split { display: flex; border-bottom: 1px solid var(--c-border); }
@@ -83,55 +88,56 @@
         .kf-main.is-fields { white-space: normal; line-height: normal; }
         .kf-empty { color: var(--c-border-strong); }
 
+        /* Latar putih seperti bagian lain di kotak. Garis atas hanya bila bagian
+           sebelumnya tidak sudah bergaris bawah (kf-split), supaya tidak dobel. */
         .kf-footer {
             display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px;
-            background: #FAFAFA; border-top: 1px solid var(--c-border);
+            background: #ffffff; border-top: 1px solid var(--c-border);
         }
+        .kf-split + .kf-footer { border-top: none; }
 
-        /* ── Riwayat tiket (timeline) ── */
-        .kf-timeline { position: relative; padding-left: 24px; max-height: 420px; overflow-y: auto; white-space: normal; }
-        .kf-tl-item { position: relative; padding-bottom: 16px; }
-        .kf-tl-item:last-child { padding-bottom: 0; }
-        .kf-tl-item::before {
-            content: ''; position: absolute; left: -19px; top: 14px; bottom: -2px;
-            width: 2px; background: var(--c-border);
-        }
-        .kf-tl-item:last-child::before { display: none; }
-        .kf-tl-dot {
-            position: absolute; left: -24px; top: 4px; width: 12px; height: 12px; border-radius: 50%;
-            background: #ffffff; border: 3px solid var(--c-primary);
-        }
-        .kf-tl-date { font-size: 11px; font-weight: 600; color: var(--c-fg-placeholder); }
-        .kf-tl-title { font-size: 13px; font-weight: 700; color: var(--c-fg); line-height: 1.4; }
-        .kf-tl-actor { font-size: 12px; color: var(--c-fg-muted); }
-        .kf-tl-note {
-            margin-top: 6px; padding: 6px 10px; font-size: 12px; font-style: italic;
-            color: var(--c-fg-muted); border: 1px dashed var(--c-border-strong); border-radius: 6px;
-        }
-
-        /* ── Field form, meniru .input-group/.input-field Edit User SITKOM ── */
+        /* ── Field form, meniru redesign Edit User SITKOM (superadmin/users/_edit-style):
+              label 12px huruf biasa, kotak 38px radius 7px ── */
         .pgd-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; }
         .pgd-fields.is-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         .pgd-fields + .pgd-fields { margin-top: 16px; }
         .pgd-field.is-wide { grid-column: 1 / -1; }
         .pgd-label {
-            display: block; margin-bottom: 6px; font-size: 10px; font-weight: 700;
-            color: var(--c-fg-muted); text-transform: uppercase; letter-spacing: .08em;
+            display: block; margin-bottom: 6px; font-size: 12px; font-weight: 500; line-height: 1.4;
+            color: var(--c-fg-sec); text-transform: none; letter-spacing: normal;
         }
         .pgd-label .is-req { color: var(--c-error); }
-        .pgd-label .is-opt { font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--c-fg-placeholder); }
+        .pgd-label .is-opt { font-weight: 400; color: var(--c-fg-placeholder); }
         .pgd-input {
-            display: block; width: 100%; box-sizing: border-box; min-height: 36px; padding: 8px 12px;
-            font-family: inherit; font-size: 13px; font-weight: 500; color: var(--c-fg);
-            background: #ffffff; border: 1px solid var(--c-border); border-radius: 8px;
+            display: block; width: 100%; box-sizing: border-box; min-height: 38px; padding: 8px 11px;
+            font-family: inherit; font-size: 13px; font-weight: 400; color: var(--c-fg);
+            background: #ffffff; border: 1px solid var(--c-border); border-radius: 7px;
             outline: none; transition: border-color .15s, box-shadow .15s;
         }
         .pgd-input::placeholder { color: var(--c-fg-placeholder); font-weight: 400; }
-        .pgd-input:focus { border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-subtle); }
+        .pgd-input:focus { border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(11, 38, 110, .08); }
+        /* Dropdown Alpine di form disamakan tinggi & sudutnya dengan kotak isian. */
+        .kf-box .mk-select.mk-select--md { --mks-h: 38px; --mks-radius: 7px; --mks-font: 13px; --mks-pad: 11px; }
         .pgd-input:disabled { background: var(--c-bg); color: var(--c-fg-muted); }
         .pgd-input.is-invalid { border-color: var(--c-error); }
         textarea.pgd-input { resize: vertical; line-height: 1.6; }
         .pgd-help { margin-top: 5px; font-size: 11px; color: var(--c-fg-muted); }
+        .pgd-help-row { display: flex; justify-content: space-between; gap: 12px; }
+        .pgd-help-row [data-pgd-count] { font-variant-numeric: tabular-nums; flex-shrink: 0; }
+
+        /* Set pertanyaan per kategori (Detail Kejadian) */
+        .pgd-set { border: 0; margin: 0; padding: 0; min-width: 0; }
+        .pgd-set[hidden] { display: none; }
+        .pgd-set-empty {
+            display: flex; align-items: center; gap: 8px; padding: 14px 16px;
+            border: 1px dashed var(--c-border-strong); border-radius: 10px;
+            background: var(--c-bg); color: var(--c-fg-muted); font-size: 13px; font-weight: 500;
+        }
+        .pgd-set-empty[hidden] { display: none; }
+        .pgd-sr-only {
+            position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+        }
         .pgd-error { margin-top: 5px; font-size: 11px; font-weight: 600; color: var(--c-error); }
 
         /* Kartu pilihan kategori */
@@ -147,17 +153,17 @@
         .pgd-kategori-title { display: block; font-size: 13px; font-weight: 700; color: var(--c-fg); }
         .pgd-kategori-desc { display: block; margin-top: 2px; font-size: 11px; line-height: 1.45; color: var(--c-fg-muted); }
 
-        /* Keterangan jalur pelaporan */
-        .pgd-jalur { display: flex; align-items: center; gap: 12px; }
-        .pgd-jalur-icon {
-            width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center;
-            background: var(--c-primary-subtle); color: var(--c-primary);
+        /* Kotak centang "Sembunyikan identitas saya" — bentuk sama dengan kartu kategori. */
+        .pgd-anon {
+            display: flex; align-items: flex-start; gap: 10px; margin: 16px 0 0; padding: 12px 14px;
+            border: 1px solid var(--c-border); border-radius: 10px; background: #ffffff;
+            cursor: pointer; transition: border-color .15s, background .15s;
         }
-        .pgd-jalur-icon.is-konfidensial { background: var(--c-grey-50); color: var(--c-fg-sec); }
-        .pgd-jalur-title { font-size: 14px; font-weight: 700; color: var(--c-fg); }
-        .pgd-jalur-desc { font-size: 12px; color: var(--c-fg-muted); }
-        .pgd-jalur-desc a { color: var(--c-primary); font-weight: 600; }
+        .pgd-anon:hover { border-color: var(--c-border-strong); }
+        .pgd-anon:has(:checked) { border-color: var(--c-primary); background: var(--c-primary-subtle); }
+        .pgd-anon input { margin-top: 2px; width: 16px; height: 16px; flex-shrink: 0; accent-color: var(--c-primary); cursor: pointer; }
+        .pgd-anon-title { display: block; font-size: 13px; font-weight: 700; color: var(--c-fg); }
+        .pgd-anon-desc { display: block; margin-top: 3px; font-size: 12px; line-height: 1.55; color: var(--c-fg-muted); }
 
         @media (max-width: 768px) {
             .kf-profile { flex-direction: column; }

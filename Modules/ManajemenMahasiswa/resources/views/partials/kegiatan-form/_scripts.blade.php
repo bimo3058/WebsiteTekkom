@@ -1,5 +1,5 @@
 <script>
-// ── Char counter (judul & deskripsi) ──
+// ── Char counter (judul, lokasi & deskripsi) ──
 function updateCharCount(inputId, countId, max) {
     const el  = document.getElementById(inputId);
     const cnt = document.getElementById(countId);
@@ -9,24 +9,11 @@ function updateCharCount(inputId, countId, max) {
     cnt.style.color = len >= max ? 'var(--c-error)' : (len > max * 0.9 ? 'var(--c-warning)' : 'var(--c-fg-muted)');
 }
 document.addEventListener('DOMContentLoaded', () => {
-    ['judulInput','deskripsiInput'].forEach(id => {
+    ['judulInput','lokasiInput','deskripsiInput'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.dispatchEvent(new Event('input'));
     });
 });
-
-// ── Banner Preview ──
-function previewBanner(input) {
-    const preview = document.getElementById('bannerPreview');
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
 
 // ── Lightbox ──
 function openLightbox(src) {
@@ -47,7 +34,7 @@ function closeLightbox(e) {
     document.body.style.overflow = 'auto';
 }
 
-@if($showDokumentasi)
+@if($showDokumentasi || ($showDokumen ?? false))
 // ── File Deletion (existing files) ──
 function markFileForDeletion(fileId) {
     const el = document.getElementById('existingFile' + fileId);
@@ -107,51 +94,7 @@ function syncFotoInput() {
     document.getElementById('fotoInput').files = dt.files;
 }
 
-// ── Multi-File Upload: Dokumen ──
-let dokumenFiles = [];
-
-function handleDokumenSelect(input) {
-    const newFiles = Array.from(input.files);
-    newFiles.forEach(file => {
-        if (dokumenFiles.length >= 2) return;
-        dokumenFiles.push(file);
-    });
-    renderDokumenPreviews();
-    syncDokumenInput();
-}
-
-function removeDokumen(index) {
-    dokumenFiles.splice(index, 1);
-    renderDokumenPreviews();
-    syncDokumenInput();
-}
-
-function renderDokumenPreviews() {
-    const list = document.getElementById('dokumenPreviewList');
-    list.innerHTML = '';
-    dokumenFiles.forEach((file, i) => {
-        const ext = file.name.split('.').pop().toLowerCase();
-        const icons = { pdf: 'PDF', doc: 'DOC', docx: 'DOC', xls: 'XLS', xlsx: 'XLS', ppt: 'PPT', pptx: 'PPT' };
-        const icon = icons[ext] || '\u25A1';
-        const item = document.createElement('div');
-        item.className = 'doc-preview-item';
-        item.innerHTML = `
-            <span class="doc-icon">${icon}</span>
-            <div class="doc-info">
-                <div class="doc-name">${file.name}</div>
-                <div class="doc-size">${formatFileSize(file.size)} • ${ext.toUpperCase()}</div>
-            </div>
-            <button type="button" class="btn-remove-doc mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="removeDokumen(${i})" title="Hapus dokumen" aria-label="Hapus dokumen ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-        `;
-        list.appendChild(item);
-    });
-}
-
-function syncDokumenInput() {
-    const dt = new DataTransfer();
-    dokumenFiles.forEach(f => dt.items.add(f));
-    document.getElementById('dokumenInput').files = dt.files;
-}
+// Dokumen (unggah, dropdown jenis, drag & drop) diurus partial _dokumen.
 
 // ── Helper ──
 function formatFileSize(bytes) {
@@ -160,9 +103,9 @@ function formatFileSize(bytes) {
     return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
-// ── Drag & Drop ──
-['fotoUploadArea', 'dokumenUploadArea'].forEach(id => {
-    const area = document.getElementById(id);
+// ── Drag & Drop: Foto ──
+(function () {
+    const area = document.getElementById('fotoUploadArea');
     if (!area) return;
     ['dragenter', 'dragover'].forEach(evt => {
         area.addEventListener(evt, e => { e.preventDefault(); area.classList.add('dragover'); });
@@ -171,18 +114,11 @@ function formatFileSize(bytes) {
         area.addEventListener(evt, e => { e.preventDefault(); area.classList.remove('dragover'); });
     });
     area.addEventListener('drop', e => {
-        const files = e.dataTransfer.files;
-        if (id === 'fotoUploadArea') {
-            Array.from(files).forEach(f => { if (fotoFiles.length < 10 && f.type.startsWith('image/')) fotoFiles.push(f); });
-            renderFotoPreviews();
-            syncFotoInput();
-        } else {
-            Array.from(files).forEach(f => { if (dokumenFiles.length < 2) dokumenFiles.push(f); });
-            renderDokumenPreviews();
-            syncDokumenInput();
-        }
+        Array.from(e.dataTransfer.files).forEach(f => { if (fotoFiles.length < 10 && f.type.startsWith('image/')) fotoFiles.push(f); });
+        renderFotoPreviews();
+        syncFotoInput();
     });
-});
+})();
 @endif
 
 // ── Toggle Bidang Field based on Kategori (checkbox version) ──
@@ -217,55 +153,38 @@ function handleKategoriChange() {
     toggleBidangField();
 }
 
+// Draft Rencana Proker boleh disimpan tanpa bidang bila kategorinya hanya Kegiatan
+// Prodi (S-73, ditegakkan juga di ProkerController::validateProker). Tanda * tetap ada
+// karena bidang wajib sebelum diajukan.
 function toggleBidangField() {
-    const checked = document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked');
-    const bidangRequired = document.getElementById('bidangRequired');
-    const bidangWrapper  = document.getElementById('bidangFieldWrapper');
+    const grup = document.getElementById('bidangGroup');
+    if (!grup || !grup.dataset.kosongProdi) return;
 
-    // "Hanya Prodi" = ada kategori dicentang DAN semuanya berflag prodi
-    let allProdi = checked.length > 0;
-    checked.forEach(cb => {
-        if (cb.getAttribute('data-is-prodi') !== '1') {
-            allProdi = false;
-        }
-    });
-    const isOnlyProdi = allProdi && checked.length > 0;
+    const checked   = [...document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked')];
+    const hanyaProdi = checked.length > 0 && checked.every(cb => cb.dataset.isProdi === '1');
 
-    if (bidangRequired) bidangRequired.style.display = isOnlyProdi ? 'none' : '';
-
-    // Sembunyikan SELURUH kolom Bidang saat hanya Kegiatan Prodi yang dipilih.
-    // Saat disembunyikan, lepas centang bidang agar tidak ikut tersimpan.
-    if (bidangWrapper) {
-        if (isOnlyProdi) {
-            bidangWrapper.style.display = 'none';
-            document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(inp => {
-                if (inp.checked) {
-                    inp.checked = false;
-                    inp.closest('.checkbox-card').classList.remove('checked');
-                }
-            });
-        } else {
-            bidangWrapper.style.display = '';
-        }
-    }
+    grup.querySelectorAll('input[type="radio"]').forEach(rb => { rb.required = !hanyaProdi; });
 }
 
 // ── Initialize on page load ──
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.checkbox-card input[type="checkbox"]:checked').forEach(cb => {
+    document.querySelectorAll('.checkbox-card input:checked').forEach(cb => {
         cb.closest('.checkbox-card').classList.add('checked');
     });
 
-    document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', function() {
-            if (this.checked) {
-                this.closest('.checkbox-card').classList.add('checked');
-            } else {
-                this.closest('.checkbox-card').classList.remove('checked');
-            }
+    // Bidang berupa radio (satu proker = satu bidang). Radio yang ikut terlepas
+    // tidak memicu `change`, jadi sorotan kartu disegarkan untuk seluruh grup.
+    const bidangInputs = document.querySelectorAll('#bidangGroup input[type="radio"]');
+    bidangInputs.forEach(rb => {
+        rb.addEventListener('change', function() {
+            bidangInputs.forEach(other => {
+                other.closest('.checkbox-card').classList.toggle('checked', other.checked);
+            });
         });
     });
 
     handleKategoriChange();
 });
 </script>
+
+@include('manajemenmahasiswa::partials.kegiatan-form._batas-kirim')

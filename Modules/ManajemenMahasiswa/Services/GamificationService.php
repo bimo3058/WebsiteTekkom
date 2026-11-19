@@ -230,26 +230,33 @@ class GamificationService
 
     /**
      * Top users berdasarkan total XP.
+     *
+     * Nama user & badge dimuat sekaligus untuk semua baris (2 query tetap),
+     * bukan per baris — sebelumnya 2 query × $limit.
      */
     public function getLeaderboard(int $limit = 10): \Illuminate\Support\Collection
     {
-        return XpLog::select('user_id', DB::raw('SUM(xp_amount) as total_xp'))
+        $rows = XpLog::select('user_id', DB::raw('SUM(xp_amount) as total_xp'))
             ->groupBy('user_id')
             ->orderByDesc('total_xp')
             ->limit($limit)
+            ->get();
+
+        $userIds = $rows->pluck('user_id')->all();
+        $names = \App\Models\User::whereIn('id', $userIds)->pluck('name', 'id');
+        $badgesByUser = UserBadge::with('badge')
+            ->whereIn('user_id', $userIds)
             ->get()
-            ->map(function ($row) {
-                $user = \App\Models\User::find($row->user_id);
+            ->groupBy('user_id');
+
+        return $rows->map(function ($row) use ($names, $badgesByUser) {
                 $level = $this->calculateLevel($row->total_xp);
                 $tier = $this->getTierInfo($level);
-                $badges = UserBadge::with('badge')
-                    ->where('user_id', $row->user_id)
-                    ->get()
-                    ->pluck('badge');
+                $badges = ($badgesByUser[$row->user_id] ?? collect())->pluck('badge');
 
                 return (object) [
                     'user_id' => $row->user_id,
-                    'name' => $user?->name ?? 'Unknown',
+                    'name' => $names[$row->user_id] ?? 'Unknown',
                     'total_xp' => (int) $row->total_xp,
                     'level' => $level,
                     'tier_name' => $tier['name'],

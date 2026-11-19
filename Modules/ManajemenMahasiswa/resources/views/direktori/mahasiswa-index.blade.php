@@ -144,55 +144,10 @@
         height: 100%;
         object-fit: cover;
     }
-    /* Bentuk & warna badge status ada di partials/sitkom-ui */
 
     /* Kolom Aksi memakai tombol .mk-btn--icon + panel .mk-menu milik modul
        (resources/views/partials/button-theme.blade.php). */
 
-    /* ── Stat Cards ── */
-    /* Grid yang menyesuaikan jumlah kartu (7 buah) — menghindari baris terakhir
-       yang hanya berisi 2 kartu nyangkut di kiri seperti pada grid 5 kolom. */
-    .stat-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
-        gap: 12px;
-    }
-    /* Border, bayangan, dan efek hover sama dengan kartu statistik dashboard global */
-    .stat-card {
-        background: #ffffff;
-        border: 1px solid var(--c-border);
-        border-radius: 12px;
-        padding: 18px 20px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        box-shadow: var(--shadow-card);
-        transition: all 0.2s;
-    }
-    .stat-card:hover {
-        border-color: var(--c-primary-border);
-        box-shadow: 0 4px 14px rgba(11, 38, 110, 0.07);
-    }
-    .stat-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-    .stat-value {
-        font-size: 22px;
-        font-weight: 800;
-        color: var(--c-fg);
-        line-height: 1;
-    }
-    .stat-label {
-        font-size: 12px;
-        color: var(--c-fg-muted);
-        font-weight: 500;
-    }
 </style>
 
 @php
@@ -208,116 +163,6 @@
 <!-- Flash Messages -->
 <x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
 <x-manajemenmahasiswa::ui.flash type="error" :message="$pesanGangguan" class="mb-3" />
-
-    <!-- Stat Cards -->
-<div class="stat-grid mb-4">
-    <div class="col">
-        <div class="stat-card p-3">
-            <div class="stat-icon tone-primary">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-            </div>
-            <div>
-                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->sum() }}</div>
-                <div class="stat-label" style="font-size: 11px;">Total Mahasiswa</div>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="stat-card p-3">
-            <div class="stat-icon tone-success">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-            </div>
-            <div>
-                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('aktif', 0) }}</div>
-                <div class="stat-label" style="font-size: 11px;">Aktif</div>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="stat-card p-3">
-            <div class="stat-icon tone-sky">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-            </div>
-            <div>
-                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('cuti', 0) }}</div>
-                <div class="stat-label" style="font-size: 11px;">Cuti</div>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="stat-card p-3">
-            <div class="stat-icon tone-error">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                </svg>
-            </div>
-            <div>
-                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('drop_out', 0) }}</div>
-                <div class="stat-label" style="font-size: 11px;">DO</div>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="stat-card p-3">
-            <div class="stat-icon tone-primary">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="16 16 12 20 8 16"></polyline>
-                    <line x1="12" y1="12" x2="12" y2="20"></line>
-                    <polyline points="8 8 12 4 16 8"></polyline>
-                    <line x1="12" y1="4" x2="12" y2="12"></line>
-                </svg>
-            </div>
-            <div>
-                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('pindah_studi', 0) }}</div>
-                <div class="stat-label" style="font-size: 11px;">Pindah Studi</div>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="stat-card p-3">
-            <div class="stat-icon tone-outline">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <line x1="17" y1="11" x2="23" y2="11"></line>
-                </svg>
-            </div>
-            <div>
-                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('wafat', 0) }}</div>
-                <div class="stat-label" style="font-size: 11px;">Wafat</div>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="stat-card p-3">
-            <div class="stat-icon tone-warning">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-            </div>
-            <div>
-                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('mangkir', 0) }}</div>
-                <div class="stat-label" style="font-size: 11px;">Mangkir</div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Mahasiswa Table -->
 <div class="table-card filter-pop-host">
@@ -339,12 +184,11 @@
                        placeholder="Cari nama atau NIM..." value="{{ request('search') }}">
             </div>
 
-            {{-- Filter Angkatan & Status dikumpulkan dalam satu panel, sama dengan panel
+            {{-- Filter Angkatan dikumpulkan dalam satu panel, sama dengan panel
                  "Advanced Filters" tabel Audit Log global. Backdrop (bukan @click.outside)
                  dipakai supaya klik pada <select> di dalam panel tidak menutupnya. --}}
             @php
                 $filterAngkatanAktif = request()->filled('angkatan') && request('angkatan') !== 'semua';
-                $filterStatusAktif   = request()->filled('status') && request('status') !== 'semua';
             @endphp
             <div class="filter-pop" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
                 <button type="button" class="filter-pop-btn"
@@ -354,7 +198,7 @@
                         <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
                     </svg>
                     <span style="line-height: 1;">Filter</span>
-                    @if($filterAngkatanAktif || $filterStatusAktif)
+                    @if($filterAngkatanAktif)
                         <span class="filter-pop-dot"></span>
                     @endif
                 </button>
@@ -385,19 +229,6 @@
                             </x-manajemenmahasiswa::ui.select>
                         </div>
 
-                        <div>
-                            <label class="filter-pop-label" for="filterStatus">Status</label>
-                            <x-manajemenmahasiswa::ui.select name="status" id="filterStatus">
-                                <option value="semua">Semua Status</option>
-                                <option value="aktif" {{ request('status') == 'aktif' ? 'selected' : '' }}>Aktif</option>
-                                <option value="cuti" {{ request('status') == 'cuti' ? 'selected' : '' }}>Cuti</option>
-                                <option value="drop_out" {{ request('status') == 'drop_out' ? 'selected' : '' }}>DO</option>
-                                <option value="pindah_studi" {{ request('status') == 'pindah_studi' ? 'selected' : '' }}>Pindah Studi</option>
-                                <option value="wafat" {{ request('status') == 'wafat' ? 'selected' : '' }}>Wafat</option>
-                                <option value="mangkir" {{ request('status') == 'mangkir' ? 'selected' : '' }}>Mangkir</option>
-                            </x-manajemenmahasiswa::ui.select>
-                        </div>
-
                         <div class="filter-pop-actions">
                             <button type="submit" class="filter-pop-submit">Terapkan</button>
                             @if($isFiltered ?? false)
@@ -418,7 +249,6 @@
                     <th>Mahasiswa</th>
                     <th>NIM</th>
                     <th>Angkatan</th>
-                    <th>Status</th>
                     <th style="width: 72px; text-align: center;">Aksi</th>
                 </tr>
             </thead>
@@ -449,48 +279,30 @@
                         </td>
                         <td style="font-weight: 600; font-family: monospace; color: var(--c-primary);">{{ $mhs->nim }}</td>
                         <td><span style="font-weight: 600;">{{ $mhs->angkatan }}</span></td>
-                        <td>
-                            <span class="status-badge {{ $mhs->status }}">
-                                @switch($mhs->status)
-                                    @case('aktif') Aktif @break
-                                    @case('cuti') Cuti @break
-                                    @case('drop_out') DO @break
-                                    @case('pindah_studi') Pindah Studi @break
-                                    @case('wafat') Wafat @break
-                                    @case('mangkir') Mangkir @break
-                                    @default {{ ucfirst($mhs->status) }}
-                                @endswitch
-                            </span>
-                        </td>
                         {{-- Aksi: tombol "..." + dropdown, mengikuti pola kolom Action
                              User Management global (Alpine.js sudah dimuat di layout admin/dosen/mahasiswa) --}}
                         <td style="text-align: center;">
-                            <div style="position: relative; display: inline-block;" x-data="{ open: false }">
-                                <button type="button" @click="open = !open" @click.outside="open = false" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm">
+                            <div style="position: relative; display: inline-block;" x-data="mmAksiMenu"
+                                 @scroll.window.capture="open = false" @resize.window="open = false">
+                                <button type="button" @click="toggle($el)" @click.outside="open = false" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" aria-label="Aksi">
                                     <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                                 </button>
-                                <div x-show="open" x-cloak
+                                <div x-show="open" x-cloak :style="posisi"
                                      x-transition:enter="transition ease-out duration-100"
                                      x-transition:enter-start="opacity-0 scale-95"
                                      x-transition:enter-end="opacity-100 scale-100"
-                                     class="mk-menu" style="display: none;">
+                                     class="mk-menu mm-menu-fixed" style="display: none;">
                                     <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id) }}" class="mk-menu-item">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                         Detail
                                     </a>
-                                    @if($isAdmin)
-                                        <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.edit', $mhs->id) }}" class="mk-menu-item">
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                            Edit
-                                        </a>
-                                    @endif
                                 </div>
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" style="padding: 60px 24px; text-align: center;">
+                        <td colspan="5" style="padding: 60px 24px; text-align: center;">
                             <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
                                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--c-border);">
                                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
@@ -512,9 +324,6 @@
                                         }
                                         if (request('angkatan') && request('angkatan') !== 'semua') {
                                             $kriteria[] = 'angkatan ' . request('angkatan');
-                                        }
-                                        if (request('status') && request('status') !== 'semua') {
-                                            $kriteria[] = 'status ' . str_replace('_', ' ', request('status'));
                                         }
                                     @endphp
                                     <p style="font-size: 13px; font-weight: 600; color: var(--c-fg-muted);">Tidak ada mahasiswa yang cocok</p>

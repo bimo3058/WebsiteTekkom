@@ -143,12 +143,6 @@
             box-shadow: 0 4px 14px rgba(11, 38, 110, 0.07);
         }
 
-        /* Garis kiri berwarna sesuai status */
-        .request-card.status-pending   { border-left: 3px solid var(--c-warning, #956321); }
-        .request-card.status-approved  { border-left: 3px solid var(--c-success, #287F6E); }
-        .request-card.status-rejected  { border-left: 3px solid var(--c-error, #DF1C41); }
-        .request-card.status-cancelled { border-left: 3px solid var(--c-border-strong, #C1C7CF); }
-
         .request-header {
             display: flex; align-items: flex-start; justify-content: space-between;
             gap: 14px; margin-bottom: 10px;
@@ -350,12 +344,13 @@
                 {{-- ── Request List ─────────────────────────── --}}
                 @forelse($requests as $req)
                     @php
-                        $statusClass = 'status-' . $req->status;
                         // Deteksi request yang baru diproses dalam 24 jam terakhir
                         $recentlyProcessed = in_array($req->status, ['approved','rejected'])
                             && $req->verified_at?->gt(now()->subHours(24));
                     @endphp
-                    <div class="request-card {{ $statusClass }}">
+                    {{-- Kartu netral untuk semua status — sama dengan dashboard Verifikasi
+                         (superadmin/admin). Status cukup ditunjukkan oleh badge di kanan atas. --}}
+                    <div class="request-card">
                         <div class="request-header">
                             <div style="min-width:0; flex:1;">
                                 <div class="request-title">
@@ -383,7 +378,7 @@
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                                         </svg>
-                                        Diajukan {{ $req->created_at->diffForHumans() }}
+                                        Diajukan {{ $req->created_at->locale('id')->diffForHumans() }}
                                     </span>
                                     @if($req->verified_at)
                                         <span class="request-meta-item">
@@ -391,7 +386,7 @@
                                                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                                                 <polyline points="22 4 12 14.01 9 11.01"/>
                                             </svg>
-                                            Diproses {{ $req->verified_at->diffForHumans() }}
+                                            Diproses {{ $req->verified_at->locale('id')->diffForHumans() }}
                                         </span>
                                     @endif
                                 </div>
@@ -464,8 +459,9 @@
                                         Pengumuman telah dihapus — tidak dapat diajukan ulang
                                     </span>
                                 @elseif(in_array($req->status, ['rejected', 'cancelled']) && $req->pengumuman)
-                                    {{-- Edit dulu, lalu ajukan ulang dari halaman ini --}}
-                                    <a href="{{ route('manajemenmahasiswa.pengumuman.edit', $req->pengumuman_id) }}"
+                                    {{-- Edit dulu, lalu ajukan ulang dari halaman ini. `dari` membuat
+                                         tombol Kembali/Batal di halaman edit kembali ke tab ini. --}}
+                                    <a href="{{ route('manajemenmahasiswa.pengumuman.edit', ['pengumuman' => $req->pengumuman_id, 'dari' => 'riwayat-verifikasi', 'status' => $statusFilter]) }}"
                                         class="mk-btn mk-btn--secondary mk-btn--sm">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>

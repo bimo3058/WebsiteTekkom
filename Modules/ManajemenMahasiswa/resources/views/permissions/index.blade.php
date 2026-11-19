@@ -9,13 +9,12 @@
                 display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
                 gap: 12px; margin-bottom: 10px;
             }
+            /* Kartu status saja (bukan tombol/filter) — tanpa efek hover & kursor tangan */
             .mp-stat-card {
                 background: #fff; border: 1px solid var(--c-border); border-radius: 12px;
-                padding: 12px 14px; text-decoration: none; display: block;
+                padding: 12px 14px; display: block;
                 box-shadow: var(--shadow-card);
-                transition: border-color .15s, box-shadow .15s;
             }
-            .mp-stat-card:hover { border-color: var(--c-primary-border); box-shadow: 0 4px 14px rgba(11,38,110,.07); }
             .mp-stat-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
             .mp-stat-icon {
                 width: 28px; height: 28px; border-radius: 8px;
@@ -28,36 +27,30 @@
                 line-height: 1; letter-spacing: -.02em; margin: 0;
             }
 
-            /* ── Section per kategori ────────────────────────────────── */
-            .mp-section { margin-bottom: 10px; }
-            .mp-section-header { display: flex; align-items: center; gap: 8px; margin-bottom:8px; }
-            .mp-section-header::before {
+            .mp-table-head {
+                display: flex; align-items: center; gap: 8px; margin: 4px 0 8px;
+            }
+            .mp-table-head::before {
                 content: ''; display: inline-block; width: 3px; height: 14px;
                 border-radius: 2px; background: var(--c-primary);
             }
-            .mp-section-header h2 { font-size: 14px; font-weight: 700; color: var(--c-fg); margin: 0; }
-            .mp-view-all {
-                margin-left: auto; font-size: 12px; font-weight: 600;
-                color: var(--c-primary); text-decoration: none;
-                display: inline-flex; align-items: center; gap: 4px;
-            }
-            .mp-view-all:hover { text-decoration: underline; color: var(--c-primary); }
+            .mp-table-head h2 { font-size: 14px; font-weight: 700; color: var(--c-fg); margin: 0; }
+            .mp-table-head span { font-size: 12px; color: var(--c-fg-muted); }
         </style>
     @endpush
 
     @php
-        $categoryRoutes = [
-            'Mahasiswa Aktif'   => route('manajemenmahasiswa.pengguna.category', 'Mahasiswa Aktif'),
-            'Pengurus Himpunan' => route('manajemenmahasiswa.pengguna.category', 'Pengurus Himpunan'),
-            'Alumni'            => route('manajemenmahasiswa.pengguna.category', 'Alumni'),
-        ];
+        // Kartu status: jumlah pengguna per kategori (mengikuti filter), bukan filter.
+        $kartuKategori = ['semua' => 'Semua Pengguna'] + $kategoriLabels;
         $categorySvg = [
-            'Mahasiswa Aktif'   => '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>',
-            'Pengurus Himpunan' => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
-            'Alumni'            => '<path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path>',
+            'semua'     => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
+            'mahasiswa' => '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>',
+            'pengurus'  => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
+            'alumni'    => '<path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path>',
         ];
-        $totalUsers = collect($categories)->sum(fn ($list) => count($list));
+        $totalUsers = $categoryTotals['semua'] ?? 0;
         $isAdmin    = auth()->user()->hasAnyRole(['admin_kemahasiswaan','admin','superadmin']);
+        $filterPanelAktif = filled($angkatan) || $himpunanFilter !== 'semua' || $alumniFilter !== 'semua';
     @endphp
 
     <div class="user-wrap">
@@ -106,8 +99,12 @@
                     </div>
                 @endif
 
-                {{-- ── Search ───────────────────────────────── --}}
+                {{-- ── Search + Filter ──────────────────────── --}}
                 <form action="{{ route('manajemenmahasiswa.pengguna.index') }}" method="GET" class="mp-filter-bar">
+                    {{-- Jumlah baris yang sedang dipilih ikut terkirim --}}
+                    @if(request()->filled('per_page'))
+                        <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+                    @endif
                     <div class="mp-filter-row">
                         <div class="mp-field mp-field-grow">
                             <label class="mp-label">Cari</label>
@@ -131,7 +128,7 @@
                                         <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
                                     </svg>
                                     <span style="line-height:1;">Filter</span>
-                                    @if($angkatan)
+                                    @if($filterPanelAktif)
                                         <span class="filter-pop-dot"></span>
                                     @endif
                                 </button>
@@ -162,6 +159,27 @@
                                             </x-manajemenmahasiswa::ui.select>
                                         </div>
 
+                                        <div>
+                                            <label class="filter-pop-label" for="filterHimpunan">Himpunan</label>
+                                            <x-manajemenmahasiswa::ui.select name="himpunan" id="filterHimpunan">
+                                                <option value="semua">Semua</option>
+                                                <option value="pengurus" @selected($himpunanFilter === 'pengurus')>Pengurus Himpunan</option>
+                                                <option value="bukan" @selected($himpunanFilter === 'bukan')>Bukan Pengurus</option>
+                                            </x-manajemenmahasiswa::ui.select>
+                                        </div>
+
+                                        {{-- Hanya admin — role himpunan tidak mengelola alumni --}}
+                                        @if(isset($kategoriLabels['alumni']))
+                                            <div>
+                                                <label class="filter-pop-label" for="filterAlumni">Alumni</label>
+                                                <x-manajemenmahasiswa::ui.select name="alumni" id="filterAlumni">
+                                                    <option value="semua">Semua</option>
+                                                    <option value="alumni" @selected($alumniFilter === 'alumni')>Alumni</option>
+                                                    <option value="bukan" @selected($alumniFilter === 'bukan')>Bukan Alumni</option>
+                                                </x-manajemenmahasiswa::ui.select>
+                                            </div>
+                                        @endif
+
                                         <div class="filter-pop-actions">
                                             <button type="submit" class="filter-pop-submit">Terapkan</button>
                                         </div>
@@ -178,43 +196,41 @@
                     </div>
                 </form>
 
-                {{-- ── Stat Cards ───────────────────────────── --}}
+                {{-- ── Kartu Status (informasi saja, bukan filter) ──── --}}
                 <div class="mp-stat-row">
-                    @foreach($categories as $title => $sectionUsers)
-                        <a href="{{ $categoryRoutes[$title] }}" class="mp-stat-card">
+                    @foreach($kartuKategori as $key => $title)
+                        <div class="mp-stat-card">
                             <div class="mp-stat-top">
                                 <div class="mp-stat-icon">
                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                        {!! $categorySvg[$title] !!}
+                                        {!! $categorySvg[$key] !!}
                                     </svg>
                                 </div>
                                 <p class="mp-stat-label">{{ $title }}</p>
                             </div>
-                            <p class="mp-stat-count">{{ number_format(count($sectionUsers)) }}</p>
-                        </a>
+                            <p class="mp-stat-count">{{ number_format($categoryTotals[$key] ?? 0) }}</p>
+                        </div>
                     @endforeach
                 </div>
 
-                {{-- ── Category Sections ────────────────────── --}}
-                @foreach($categories as $title => $sectionUsers)
-                    <section class="mp-section">
-                        <div class="mp-section-header">
-                            <h2>{{ $title }}</h2>
-                            <a href="{{ $categoryRoutes[$title] }}" class="mp-view-all">
-                                Lihat Semua
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                            </a>
-                        </div>
-
-                        <div class="mp-table-card">
-                            @include('manajemenmahasiswa::permissions._table', [
-                                'users'           => collect($sectionUsers)->values(),
-                                'assignableRoles' => $assignableRoles,
-                                'emptyText'       => 'Tidak ada pengguna',
-                            ])
-                        </div>
-                    </section>
-                @endforeach
+                {{-- ── Tabel Pengguna (satu tabel untuk semua kategori) ── --}}
+                <div class="mp-table-head">
+                    <h2>Daftar Pengguna</h2>
+                    <span>{{ number_format($users->total()) }} pengguna</span>
+                </div>
+                <div class="mp-table-card">
+                    @include('manajemenmahasiswa::permissions._table', [
+                        'users'           => $users->values(),
+                        'assignableRoles' => $assignableRoles,
+                        'startIndex'      => ($users->currentPage() - 1) * $users->perPage(),
+                        'emptyText'       => 'Tidak ada pengguna yang cocok',
+                    ])
+                </div>
+                {{-- Footer bersama: Per page + Showing X to Y of Z results + nomor halaman --}}
+                @include('manajemenmahasiswa::partials.table-footer', [
+                    'paginator'  => $users,
+                    'standalone' => true,
+                ])
 
             </div> <!-- end user-box-body -->
         </div> <!-- end user-box -->
@@ -263,7 +279,7 @@
             <div class="mp-modal-body">
                 <div class="mp-warning-box">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    <span>Aksi ini akan menghapus role Ketua Himpunan, Ketua Bidang, Ketua Unit, Staff Himpunan, dan Pengurus Himpunan dari seluruh anggota. Gunakan setiap pergantian periode kepengurusan.</span>
+                    <span>Aksi ini akan menghapus role KAHIM, WAKAHIM, KABID, WAKABID, KANIT, WAKANIT, Staff Himpunan, dan Pengurus Himpunan dari seluruh anggota, sekaligus melepas penempatan bidang/unitnya. Gunakan setiap pergantian periode kepengurusan.</span>
                 </div>
 
                 <div id="resetPengurusPreview" class="mp-preview-box">
@@ -339,8 +355,14 @@
             btn.classList.remove('mp-btn-primary');
             btn.classList.add('mp-btn-danger');
         })
-        .catch(() => {
-            preview.innerHTML = '<span style="color:var(--c-error);">Gagal mengambil data.</span>';
+        .catch((err) => {
+            // Tampilkan penyebab sebenarnya — sebelumnya semua error (termasuk bug di
+            // pengolahan data) tampil sebagai "Gagal mengambil data." yang menyesatkan.
+            console.error('Preview gagal:', err);
+            const span = document.createElement('span');
+            span.style.color = 'var(--c-error)';
+            span.textContent = 'Gagal memuat preview: ' + (err && err.message ? err.message : 'kesalahan tidak diketahui') + '.';
+            preview.replaceChildren(span);
         });
     }
     /** Menghapus seluruh role pengurus himpunan. Tidak dapat dibatalkan. */
@@ -403,24 +425,45 @@
                 preview.innerHTML = `<span style="color:var(--c-error);">${data.error}</span>`;
                 return;
             }
-            const names = data.preview.map(p =>
-                `<div style="font-size:12px;color:var(--c-fg-sec);padding:3px 0;">${p.name} <span style="color:var(--c-fg-muted);">(${p.nim}, angkatan ${p.cohort_year})</span></div>`
-            ).join('');
-            const more  = data.count > 10
-                ? `<div style="font-size:11px;color:var(--c-fg-placeholder);padding-top:6px;">...dan ${data.count - 10} lainnya</div>`
-                : '';
-            preview.innerHTML = `
-                <div style="width:100%;">
-                    <p style="font-size:12px;font-weight:700;color:var(--c-fg);margin:0 0 8px;">${data.message}</p>
-                    <div>${names}${more}</div>
-                </div>`;
+            // Seluruh calon alumni ditampilkan (bernomor) dalam daftar yang bisa di-scroll,
+            // supaya modal tidak memanjang melebihi layar. Disusun lewat textContent —
+            // nama berasal dari data pengguna, jadi tidak disisipkan sebagai HTML.
+            const wrap = document.createElement('div');
+            wrap.style.width = '100%';
+
+            const judul = document.createElement('p');
+            judul.style.cssText = 'font-size:12px;font-weight:700;color:var(--c-fg);margin:0 0 8px;';
+            judul.textContent = data.message;
+            wrap.appendChild(judul);
+
+            const daftar = document.createElement('ol');
+            daftar.style.cssText = 'margin:0;padding:0 4px 0 22px;max-height:300px;overflow-y:auto;';
+            data.preview.forEach(p => {
+                const li = document.createElement('li');
+                li.style.cssText = 'font-size:12px;color:var(--c-fg-sec);padding:3px 0;';
+                li.append(p.name + ' ');
+                const info = document.createElement('span');
+                info.style.color = 'var(--c-fg-muted)';
+                info.textContent = `(${p.nim}, angkatan ${p.cohort_year})`;
+                li.appendChild(info);
+                daftar.appendChild(li);
+            });
+            wrap.appendChild(daftar);
+
+            preview.replaceChildren(wrap);
 
             if (data.count > 0) {
                 document.getElementById('btnExecAlumni').disabled = false;
             }
         })
-        .catch(() => {
-            preview.innerHTML = '<span style="color:var(--c-error);">Gagal mengambil data.</span>';
+        .catch((err) => {
+            // Tampilkan penyebab sebenarnya — sebelumnya semua error (termasuk bug di
+            // pengolahan data) tampil sebagai "Gagal mengambil data." yang menyesatkan.
+            console.error('Preview gagal:', err);
+            const span = document.createElement('span');
+            span.style.color = 'var(--c-error)';
+            span.textContent = 'Gagal memuat preview: ' + (err && err.message ? err.message : 'kesalahan tidak diketahui') + '.';
+            preview.replaceChildren(span);
         });
     }
     /** Mengubah seluruh mahasiswa yang terdeteksi lulus menjadi alumni. */

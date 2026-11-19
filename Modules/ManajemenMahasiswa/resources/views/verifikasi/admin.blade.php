@@ -258,7 +258,7 @@
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:180px;">Nama Kegiatan</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Peran</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Status</th>
-                        <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:120px;">Aksi</th>
+                        <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:72px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -316,13 +316,13 @@
                             onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
                             <td style="padding:14px 12px; font-size:13px; font-weight:400; color:var(--c-fg-muted); width:48px;">{{ ($riwayatData->currentPage() - 1) * $riwayatData->perPage() + $i + 1 }}</td>
                             <td style="padding:14px 16px; min-width:160px;">
-                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">{{ $rw->student->user->name ?? '-' }}</p>
+                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow-wrap:break-word; line-height:1.5; max-width:160px;">{{ $rw->student->user->name ?? '-' }}</p>
                             </td>
                             <td style="padding:14px 16px;">
                                 <span style="font-family:monospace; font-size:12px; font-weight:600; color:var(--c-primary);">{{ $rw->student->student_number ?? '-' }}</span>
                             </td>
                             <td style="padding:14px 16px; min-width:180px;">
-                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; max-width:300px;">{{ $rw->nama_kegiatan_manual ?? 'Kegiatan tidak diketahui' }}</p>
+                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow-wrap:break-word; line-height:1.5; max-width:300px;">{{ $rw->nama_kegiatan_manual ?? 'Kegiatan tidak diketahui' }}</p>
                             </td>
                             <td style="padding:14px 16px; font-size:13px; color:var(--c-fg-sec);">{{ $rw->peran_manual ?? ucfirst($rw->peran ?? '') }}</td>
                             <td style="padding:14px 16px;">
@@ -340,10 +340,9 @@
                                 {{-- Satu pintu masuk untuk semua baris & semua role: bukti hanya dilihat
                                      dari dalam modal. Baris yang sudah diverifikasi dan pengunjung
                                      read-only mendapat modal mode baca-saja. --}}
-                                <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" onclick="openTinjau(@js($tinjauRiwayatPayload))">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    Tinjau
-                                </button>
+                                @include('manajemenmahasiswa::verifikasi.partials.aksi-menu', ['items' => [
+                                    ['label' => 'Tinjau', 'fn' => 'openTinjau', 'payload' => $tinjauRiwayatPayload],
+                                ]])
                             </td>
                         </tr>
                     @endforeach
@@ -373,7 +372,7 @@
     @if($prestasiData->count() > 0)
         <!-- Table -->
         <div style="overflow-x:auto;">
-            <table style="width:100%; border-collapse:collapse; min-width:960px;">
+            <table style="width:100%; border-collapse:collapse; min-width:820px;">
                 <thead>
                         <tr style="border-bottom:1px solid var(--c-border); background:#FAFAFA;">
                         <th style="padding:11px 12px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:48px;">No</th>
@@ -382,8 +381,7 @@
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:180px;">Nama Prestasi</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Tingkat</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Status</th>
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:140px;">Reward</th>
-                        <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:120px;">Aksi</th>
+                        <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:72px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -436,13 +434,13 @@
                             onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
                             <td style="padding:14px 12px; font-size:13px; font-weight:400; color:var(--c-fg-muted); width:48px;">{{ ($prestasiData->currentPage() - 1) * $prestasiData->perPage() + $i + 1 }}</td>
                             <td style="padding:14px 16px; min-width:160px;">
-                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">{{ $p->kemahasiswaan?->nama ?? '-' }}</p>
+                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow-wrap:break-word; line-height:1.5; max-width:160px;">{{ $p->kemahasiswaan?->nama ?? '-' }}</p>
                             </td>
                             <td style="padding:14px 16px;">
                                 <span style="font-family:monospace; font-size:12px; font-weight:600; color:var(--c-primary);">{{ $p->kemahasiswaan?->nim ?? '-' }}</span>
                             </td>
                             <td style="padding:14px 16px; min-width:180px;">
-                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; max-width:300px;">{{ $p->nama_prestasi }}</p>
+                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow-wrap:break-word; line-height:1.5; max-width:300px;">{{ $p->nama_prestasi }}</p>
                             </td>
                             <td style="padding:14px 16px;"><span class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span></td>
                             <td style="padding:14px 16px;">
@@ -454,29 +452,13 @@
                                     @endif
                                 </span>
                             </td>
-                            <td style="padding:14px 16px;">
-                                @if($p->verification_status === 'approved')
-                                    @if($p->reward_status === $P::CLAIM_DIAJUKAN)
-                                        <span class="claim-badge diajukan">Menunggu Review</span>
-                                    @elseif($p->reward_status === $P::CLAIM_DISETUJUI)
-                                        <span class="claim-badge disetujui">Disetujui</span>
-                                    @elseif($p->reward_status === $P::CLAIM_DITOLAK)
-                                        <span class="claim-badge ditolak">Ditolak</span>
-                                    @else
-                                        <span style="font-size:11px; color:var(--c-fg-muted);">Belum diajukan</span>
-                                    @endif
-                                @else
-                                    <span style="color:var(--c-fg-placeholder);">—</span>
-                                @endif
-                            </td>
                             <td style="padding:14px 16px; text-align:center;">
                                 {{-- Satu pintu masuk untuk semua baris & semua role: bukti hanya dilihat
                                      dari dalam modal. Baris yang sudah diverifikasi dan pengunjung
                                      read-only mendapat modal mode baca-saja. --}}
-                                <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" onclick="openTinjau(@js($tinjauPayload))">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    Tinjau
-                                </button>
+                                @include('manajemenmahasiswa::verifikasi.partials.aksi-menu', ['items' => [
+                                    ['label' => 'Tinjau', 'fn' => 'openTinjau', 'payload' => $tinjauPayload],
+                                ]])
                             </td>
                         </tr>
                     @endforeach

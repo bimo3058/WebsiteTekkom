@@ -1,5 +1,4 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
-@include('manajemenmahasiswa::partials.card-frame')
 
 @include('manajemenmahasiswa::partials.kegiatan-theme')
 
@@ -18,6 +17,8 @@
         color: var(--c-fg);
         margin-bottom: 20px;
         display: flex;
+        /* Judul + keterangan "(maks 10 dokumen)" turun baris di layar sempit, tidak dijepit jadi kolom. */
+        flex-wrap: wrap;
         align-items: center;
         gap: 8px;
         padding-bottom: 14px;
@@ -110,7 +111,8 @@
         border-color: var(--c-primary-border);
         background: var(--c-primary-subtle);
     }
-    .checkbox-card input[type="checkbox"] {
+    .checkbox-card input[type="checkbox"],
+    .checkbox-card input[type="radio"] {
         width: 16px;
         height: 16px;
         accent-color: var(--c-primary);
@@ -127,6 +129,12 @@
         opacity: 0.45;
         cursor: not-allowed;
         pointer-events: none;
+    }
+    .checkbox-card.terkunci,
+    .checkbox-card.terkunci input { cursor: not-allowed; }
+    .checkbox-card.terkunci:hover {
+        border-color: var(--c-primary);
+        background: var(--c-primary-subtle);
     }
     .checkbox-hint {
         font-size: 11px;
@@ -238,22 +246,6 @@
         background: rgba(255,255,255,0.2);
         transform: scale(1.05);
     }
-    .banner-current {
-        position: relative;
-        margin-bottom: 12px;
-    }
-    .banner-current .badge-current {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background: rgba(0,0,0,0.6);
-        color: var(--c-surface);
-        font-size: 11px;
-        font-weight: 600;
-        padding: 4px 10px;
-        border-radius: 6px;
-    }
-
     /* ── Multi File Upload ── */
     .file-upload-area {
         border: 2px dashed var(--c-border-strong);
@@ -583,6 +575,20 @@
     $existingDokumen = $kegiatan->repoMulmed->where('tipe_file', 'document');
     $selectedKategoriIds = old('kategori_kegiatan_id', $kegiatan->kategoris->pluck('id')->toArray());
     $selectedBidangIds = old('bidang_id', $kegiatan->bidangs->pluck('id')->toArray());
+    // Satu kegiatan dipegang SATU bidang himpunan, jadi pilihannya radio. Data lama
+    // bisa tercatat di beberapa bidang: yang dipilih otomatis bidang utamanya
+    // (kolom `bidang_id`), sisanya dilepas saat disimpan.
+    $idsBidangTersimpan = array_map('intval', (array) $selectedBidangIds);
+    $bidangTerpilih = in_array((int) $kegiatan->bidang_id, $idsBidangTersimpan, true)
+        ? (int) $kegiatan->bidang_id
+        : ($idsBidangTersimpan[0] ?? null);
+    // Pemegang role berbidang: bidang/unitnya terpilih, yang lain tampil nonaktif (S-74).
+    if ($bidangTerkunci) {
+        $bidangTerpilih = $bidangMilikId;
+    }
+    $bidangLamaGanda = count($idsBidangTersimpan) > 1
+        ? $bidangList->whereIn('id', $idsBidangTersimpan)->pluck('nama_bidang')->implode(', ')
+        : null;
     // Panitia untuk pre-populate chips.
     // Saat form dikembalikan karena validasi gagal, dipulihkan dari isian terakhir
     // user (old()) dan BUKAN dari database — kalau tidak, panitia yang barusan
@@ -618,9 +624,9 @@
         <div class="mb-3">
             <label class="form-label-custom">Judul Kegiatan <span class="required">*</span></label>
             <input type="text" name="judul" id="judulInput" class="form-control form-control-custom"
-                   value="{{ old('judul', $kegiatan->judul) }}" required maxlength="255"
-                   oninput="updateCharCount('judulInput','judulCount',255)">
-            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="judulCount">0</span>/255 karakter</div>
+                   value="{{ old('judul', $kegiatan->judul) }}" required maxlength="{{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_JUDUL }}"
+                   oninput="updateCharCount('judulInput','judulCount',{{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_JUDUL }})">
+            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="judulCount">0</span>/{{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_JUDUL }} karakter</div>
         </div>
 
         <div class="row g-3 mb-3">
@@ -628,31 +634,45 @@
                 <label class="form-label-custom">Kategori <span class="required">*</span></label>
                 <div class="checkbox-card-group" id="kategoriGroup">
                     @foreach($kategoriList as $kategori)
-                        <label class="checkbox-card" id="kategoriCard{{ $kategori->id }}">
+                        @php
+                            // Pemegang role berbidang: Kegiatan Himpunan selalu terpilih
+                            // (RoleHimpunan::kunciIsianKegiatan), Kegiatan Prodi tetap pilihan.
+                            $kategoriTerkunci = $bidangTerkunci && $kategori->nama_kategori === \Modules\ManajemenMahasiswa\Models\KategoriKegiatan::NAMA_HIMPUNAN;
+                        @endphp
+                        <label class="checkbox-card {{ $kategoriTerkunci ? 'terkunci' : '' }}" id="kategoriCard{{ $kategori->id }}">
                             <input type="checkbox" name="kategori_kegiatan_id[]"
                                    value="{{ $kategori->id }}"
                                    data-is-prodi="{{ stripos($kategori->nama_kategori, 'prodi') !== false ? '1' : '0' }}"
+                                   @if($kategoriTerkunci) onclick="return false" aria-disabled="true" @endif
                                    onchange="handleKategoriChange()"
-                                   {{ in_array($kategori->id, $selectedKategoriIds) ? 'checked' : '' }}>
+                                   {{ $kategoriTerkunci || in_array($kategori->id, $selectedKategoriIds) ? 'checked' : '' }}>
                             {{ $kategori->nama_kategori }}
                         </label>
                     @endforeach
                 </div>
-                <div class="checkbox-hint">Pilih maksimal 2 kategori</div>
+                <div class="checkbox-hint">{{ $bidangTerkunci ? 'Centang Kegiatan Prodi bila kegiatan ini bekerja sama dengan prodi.' : 'Pilih maksimal 2 kategori' }}</div>
             </div>
             <div class="col-md-6" id="bidangFieldWrapper">
                 <label class="form-label-custom">Bidang <span class="required" id="bidangRequired">*</span></label>
-                <div class="checkbox-card-group" id="bidangGroup">
+                <div class="checkbox-card-group" id="bidangGroup" role="radiogroup" aria-label="Bidang pemegang kegiatan">
                     @foreach($bidangList as $bidang)
-                        <label class="checkbox-card" id="bidangCard{{ $bidang->id }}">
-                            <input type="checkbox" name="bidang_id[]"
+                        @php $bidangMilik = $bidangTerkunci && (int) $bidang->id === $bidangMilikId; @endphp
+                        <label @class(['checkbox-card', 'terkunci' => $bidangMilik, 'disabled' => $bidangTerkunci && !$bidangMilik]) id="bidangCard{{ $bidang->id }}">
+                            <input type="radio" name="bidang_id[]"
                                    value="{{ $bidang->id }}"
-                                   {{ in_array($bidang->id, $selectedBidangIds) ? 'checked' : '' }}>
+                                   @disabled($bidangTerkunci && !$bidangMilik)
+                                   {{ (int) $bidang->id === $bidangTerpilih ? 'checked' : '' }}>
                             {{ $bidang->nama_bidang }}
                         </label>
                     @endforeach
                 </div>
-                <div class="checkbox-hint">Pilih satu atau lebih bidang</div>
+                <div class="checkbox-hint">{{ $bidangTerkunci ? 'Terisi otomatis dari bidang/unit Anda dan tidak bisa diubah.' : 'Pilih satu bidang yang memegang kegiatan ini' }}</div>
+                @if($bidangLamaGanda)
+                    <div class="checkbox-hint" style="color: var(--c-warning, #b45309);">
+                        Sebelumnya tercatat di beberapa bidang ({{ $bidangLamaGanda }}). Pastikan bidang yang terpilih
+                        sudah benar — bidang lain dilepas saat disimpan.
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -699,7 +719,9 @@
         <div class="mb-3">
             <label class="form-label-custom">Lokasi</label>
             <input type="text" name="lokasi" class="form-control form-control-custom"
-                   value="{{ old('lokasi', $kegiatan->lokasi) }}">
+                   value="{{ old('lokasi', $kegiatan->lokasi) }}" id="lokasiInput" maxlength="150"
+                   oninput="updateCharCount('lokasiInput','lokasiCount',150)">
+            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="lokasiCount">0</span>/150 karakter</div>
         </div>
     </div>
 
@@ -709,14 +731,13 @@
 
         @include('manajemenmahasiswa::partials.kegiatan-form._personel', [
             'ketuaId'          => old('ketua_pelaksana_id', $kegiatan->ketua_pelaksana_id),
+            'ketuaTersimpan'   => $kegiatan->ketua_pelaksana_id,
+            'ketuaTerkunci'    => $ketuaTerkunci ?? false,
             'dosenTerpilih'    => $existingDosen,
             'panitiaTerpilih'  => $existingPanitia,
             'panitiaPeranLama' => $panitiaPeranLama,
         ])
     </div>
-
-    {{-- Akses Kelola — hanya dirender untuk pemilik kegiatan & override --}}
-    @include('manajemenmahasiswa::partials.kegiatan-form._akses_kelola')
 
     <!-- Detail Tambahan -->
     <div class="form-card">
@@ -728,44 +749,20 @@
                 <input type="number" name="target_peserta" class="form-control form-control-custom"
                        value="{{ old('target_peserta', $kegiatan->target_peserta) }}" min="1">
             </div>
-            <div class="col-md-6">
-                <label class="form-label-custom">Anggaran (Rp)</label>
-                @php
-                    // Cast `decimal:2` membuat anggaran keluar sebagai "2000000.00"; ekor
-                    // desimalnya dibuang supaya kolom angka tidak menampilkan ".00".
-                    $anggaranValue = old('anggaran', $kegiatan->anggaran);
-                    if (is_string($anggaranValue) && str_contains($anggaranValue, '.')) {
-                        $anggaranValue = rtrim(rtrim($anggaranValue, '0'), '.');
-                    }
-                @endphp
-                {{-- step="any": step="1000" membuat browser diam-diam menolak angka yang
-                     bukan kelipatan seribu (mis. 750500) tanpa keterangan apa pun di form. --}}
-                <input type="number" name="anggaran" class="form-control form-control-custom"
-                       value="{{ $anggaranValue }}" min="0" max="9999999999999" step="any">
-            </div>
         </div>
+        {{-- Anggaran per sumber dana (S-80); anggaran lama tanpa rincian tetap tersimpan
+             bila semua sumber dikosongkan. --}}
+        @include('manajemenmahasiswa::partials.kegiatan-form._sumber-dana', ['kegiatan' => $kegiatan, 'realisasi' => true])
     </div>
 
     <!-- Banner -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg> Banner Kegiatan *</div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg> Banner Kegiatan <span style="color: var(--c-error);">*</span></div>
 
-        @if($kegiatan->banner)
-            <div class="banner-current">
-                <span class="badge-current">Banner Saat Ini</span>
-                <img src="{{ $kegiatan->banner_url }}" alt="Banner saat ini" class="banner-preview" style="display: block;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
-            </div>
-            <p style="font-size: 13px; color: var(--c-fg-muted); margin-bottom: 12px;">Upload gambar baru untuk mengganti banner saat ini.</p>
-        @endif
-
-        <div class="banner-upload-area" onclick="document.getElementById('bannerInput').click()">
-            <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
-            <p>Klik untuk upload banner {{ $kegiatan->banner ? 'baru' : 'kegiatan' }}</p>
-            <small>Format: JPG, PNG, WebP • Maks: 5MB<br><span style="color: var(--c-primary); font-weight: 500;">Rekomendasi: Resolusi 1280 x 720 (Rasio 16:9)</span></small>
-        </div>
-        <input type="file" name="banner" id="bannerInput" accept="image/jpeg,image/png,image/webp"
-               style="display: none;" onchange="previewBanner(this)">
-        <img id="bannerPreview" class="banner-preview" alt="Preview Banner" style="display: none;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
+        @include('manajemenmahasiswa::partials.kegiatan-form._banner', [
+            'bannerUrl'      => $kegiatan->banner ? $kegiatan->banner_url : null,
+            'bannerTerkunci' => $kegiatan->bannerDariRencana(),
+        ])
     </div>
 
     <!-- Foto Kegiatan -->
@@ -797,38 +794,9 @@
 
     <!-- Dokumen Kegiatan -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen Kegiatan <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks 2 dokumen)</span></div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen Kegiatan <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks {{ \Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController::MAKS_DOKUMEN }} dokumen)</span></div>
 
-        @if($existingDokumen->count() > 0)
-            <div class="existing-file-label">Dokumen yang sudah diupload</div>
-            @foreach($existingDokumen as $doc)
-                @php
-                    $ext = pathinfo($doc->nama_file, PATHINFO_EXTENSION);
-                    $iconMap = ['pdf' => 'PDF', 'doc' => 'DOC', 'docx' => 'DOC', 'xls' => 'XLS', 'xlsx' => 'XLS', 'ppt' => 'PPT', 'pptx' => 'PPT'];
-                    $icon = $iconMap[strtolower($ext)] ?? 'FILE';
-                @endphp
-                <div class="doc-preview-item" id="existingFile{{ $doc->id }}">
-                    <span class="doc-icon">{{ $icon }}</span>
-                    <div class="doc-info">
-                        <div class="doc-name">{{ $doc->nama_file }}</div>
-                        <div class="doc-size">{{ strtoupper($ext) }}</div>
-                    </div>
-                    <a href="{{ $doc->url }}" target="_blank" class="mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" title="Unduh dokumen" aria-label="Unduh dokumen {{ $doc->nama_file }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>
-                    <button type="button" class="btn-remove-doc mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="markFileForDeletion({{ $doc->id }})" title="Hapus dokumen" aria-label="Hapus dokumen {{ $doc->nama_file }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-                </div>
-            @endforeach
-            <div style="margin-bottom: 16px;"></div>
-        @endif
-
-        <div class="file-upload-area" id="dokumenUploadArea" onclick="document.getElementById('dokumenInput').click()">
-            <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></div>
-            <p>Klik atau drag & drop dokumen baru ke sini</p>
-            <small>Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX • Maks: 5MB per file</small>
-        </div>
-        <input type="file" name="dokumen_kegiatan[]" id="dokumenInput"
-               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-               multiple style="display: none;" onchange="handleDokumenSelect(this)">
-        <div id="dokumenPreviewList"></div>
+        @include('manajemenmahasiswa::partials.kegiatan-form._dokumen', ['existingDokumen' => $existingDokumen, 'tahapRencana' => false, 'kunciDariRencana' => true])
     </div>
 
     <!-- Hidden inputs for file deletion -->
@@ -852,7 +820,7 @@
 </div>
 
 <script>
-// ── Char counter (judul & deskripsi) ──
+// ── Char counter (judul, lokasi & deskripsi) ──
 function updateCharCount(inputId, countId, max) {
     const el  = document.getElementById(inputId);
     const cnt = document.getElementById(countId);
@@ -862,24 +830,11 @@ function updateCharCount(inputId, countId, max) {
     cnt.style.color = len >= max ? 'var(--c-error)' : (len > max * 0.9 ? 'var(--c-warning)' : 'var(--c-fg-muted)');
 }
 document.addEventListener('DOMContentLoaded', () => {
-    ['judulInput','deskripsiInput'].forEach(id => {
+    ['judulInput','lokasiInput','deskripsiInput'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.dispatchEvent(new Event('input'));
     });
 });
-
-// ── Banner Preview ──
-function previewBanner(input) {
-    const preview = document.getElementById('bannerPreview');
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
 
 // ── Lightbox ──
 function openLightbox(src) {
@@ -959,51 +914,7 @@ function syncFotoInput() {
     document.getElementById('fotoInput').files = dt.files;
 }
 
-// ── Multi-File Upload: Dokumen ──
-let dokumenFiles = [];
-
-function handleDokumenSelect(input) {
-    const newFiles = Array.from(input.files);
-    newFiles.forEach(file => {
-        if (dokumenFiles.length >= 2) return;
-        dokumenFiles.push(file);
-    });
-    renderDokumenPreviews();
-    syncDokumenInput();
-}
-
-function removeDokumen(index) {
-    dokumenFiles.splice(index, 1);
-    renderDokumenPreviews();
-    syncDokumenInput();
-}
-
-function renderDokumenPreviews() {
-    const list = document.getElementById('dokumenPreviewList');
-    list.innerHTML = '';
-    dokumenFiles.forEach((file, i) => {
-        const ext = file.name.split('.').pop().toLowerCase();
-        const icons = { pdf: 'PDF', doc: 'DOC', docx: 'DOC', xls: 'XLS', xlsx: 'XLS', ppt: 'PPT', pptx: 'PPT' };
-        const icon = icons[ext] || '\u25A1';
-        const item = document.createElement('div');
-        item.className = 'doc-preview-item';
-        item.innerHTML = `
-            <span class="doc-icon">${icon}</span>
-            <div class="doc-info">
-                <div class="doc-name">${file.name}</div>
-                <div class="doc-size">${formatFileSize(file.size)} • ${ext.toUpperCase()}</div>
-            </div>
-            <button type="button" class="btn-remove-doc mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="removeDokumen(${i})" title="Hapus dokumen" aria-label="Hapus dokumen ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-        `;
-        list.appendChild(item);
-    });
-}
-
-function syncDokumenInput() {
-    const dt = new DataTransfer();
-    dokumenFiles.forEach(f => dt.items.add(f));
-    document.getElementById('dokumenInput').files = dt.files;
-}
+// Dokumen (unggah, dropdown jenis, drag & drop) diurus partial _dokumen.
 
 // ── Helper ──
 function formatFileSize(bytes) {
@@ -1012,9 +923,9 @@ function formatFileSize(bytes) {
     return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
-// ── Drag & Drop ──
-['fotoUploadArea', 'dokumenUploadArea'].forEach(id => {
-    const area = document.getElementById(id);
+// ── Drag & Drop: Foto ──
+(function () {
+    const area = document.getElementById('fotoUploadArea');
     if (!area) return;
     ['dragenter', 'dragover'].forEach(evt => {
         area.addEventListener(evt, e => { e.preventDefault(); area.classList.add('dragover'); });
@@ -1023,18 +934,11 @@ function formatFileSize(bytes) {
         area.addEventListener(evt, e => { e.preventDefault(); area.classList.remove('dragover'); });
     });
     area.addEventListener('drop', e => {
-        const files = e.dataTransfer.files;
-        if (id === 'fotoUploadArea') {
-            Array.from(files).forEach(f => { if (fotoFiles.length < 10 && f.type.startsWith('image/')) fotoFiles.push(f); });
-            renderFotoPreviews();
-            syncFotoInput();
-        } else {
-            Array.from(files).forEach(f => { if (dokumenFiles.length < 2) dokumenFiles.push(f); });
-            renderDokumenPreviews();
-            syncDokumenInput();
-        }
+        Array.from(e.dataTransfer.files).forEach(f => { if (fotoFiles.length < 10 && f.type.startsWith('image/')) fotoFiles.push(f); });
+        renderFotoPreviews();
+        syncFotoInput();
     });
-});
+})();
 
 // ── Toggle Bidang Field based on Kategori (checkbox version) ──
 function handleKategoriChange() {
@@ -1087,7 +991,7 @@ function toggleBidangField() {
         // Hanya Kegiatan Prodi → sembunyikan kolom Bidang & kosongkan pilihannya
         if (bidangWrapper) bidangWrapper.style.display = 'none';
         if (bidangRequired) bidangRequired.style.display = 'none';
-        document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(cb => {
+        document.querySelectorAll('#bidangGroup input').forEach(cb => {
             if (cb.checked) {
                 cb.checked = false;
                 cb.dispatchEvent(new Event('change'));
@@ -1102,23 +1006,26 @@ function toggleBidangField() {
 
 // ── Initialize on page load ──
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.checkbox-card input[type="checkbox"]:checked').forEach(cb => {
+    document.querySelectorAll('.checkbox-card input:checked').forEach(cb => {
         cb.closest('.checkbox-card').classList.add('checked');
     });
 
-    document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', function() {
-            if (this.checked) {
-                this.closest('.checkbox-card').classList.add('checked');
-            } else {
-                this.closest('.checkbox-card').classList.remove('checked');
-            }
+    // Bidang berupa radio: radio yang ikut terlepas tidak memicu `change`,
+    // jadi sorotan kartu disegarkan untuk seluruh grup.
+    const bidangInputs = document.querySelectorAll('#bidangGroup input[type="radio"]');
+    bidangInputs.forEach(rb => {
+        rb.addEventListener('change', function() {
+            bidangInputs.forEach(other => {
+                other.closest('.checkbox-card').classList.toggle('checked', other.checked);
+            });
         });
     });
 
     handleKategoriChange();
 });
 </script>
+
+@include('manajemenmahasiswa::partials.kegiatan-form._batas-kirim')
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </x-manajemenmahasiswa::layouts.mahasiswa>

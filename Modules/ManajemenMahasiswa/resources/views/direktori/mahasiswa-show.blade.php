@@ -1,7 +1,6 @@
 <x-dynamic-component :component="$layout">
 
 @include('manajemenmahasiswa::direktori.partials.palette')
-@include('manajemenmahasiswa::partials.card-frame')
 @include('manajemenmahasiswa::partials.sitkom-ui')
 
 <style>
@@ -14,6 +13,9 @@
         box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         overflow: hidden;
         margin-bottom: 20px;
+        /* .main-wrapper adalah kolom flex; tanpa ini kartu ber-overflow:hidden
+           menyusut sampai tinggal garis saat bagian riwayat di bawahnya panjang. */
+        flex-shrink: 0;
     }
     .detail-toolbar {
         display: flex;
@@ -140,19 +142,6 @@
 <!-- Flash Messages -->
 <x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
 
-@php
-    $statusLabel = match ($mhs->status) {
-        'aktif'        => 'Aktif',
-        'alumni'       => 'Lulus',
-        'cuti'         => 'Cuti',
-        'drop_out'     => 'Drop Out',
-        'pindah_studi' => 'Pindah Studi',
-        'wafat'        => 'Wafat',
-        'mangkir'      => 'Mangkir',
-        default        => ucfirst($mhs->status),
-    };
-@endphp
-
 <!-- Card Profil (susunan mengikuti Detail User di User Management global) -->
 <div class="detail-box">
     {{-- ── Toolbar ── --}}
@@ -175,9 +164,8 @@
                     Download CV
                 </a>
             @endif
-            {{-- Admin boleh mengedit siapa pun; mahasiswa hanya barisnya sendiri. Dua-duanya
-                 membuka form yang sama, bedanya field Status tidak dirender untuk pemilik. --}}
-            @if($isAdmin || ($isSelf ?? false))
+            {{-- Hanya pemilik baris yang mengedit data pribadinya (S-71). --}}
+            @if($isSelf ?? false)
                 <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.edit', $mhs->id) }}" class="mk-btn mk-btn--primary mk-btn--sm">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                     Edit
@@ -199,7 +187,6 @@
         <div style="flex: 1; min-width: 0;">
             <div class="detail-name-row">
                 <h2 class="detail-name">{{ $mhs->nama }}</h2>
-                <span class="status-badge {{ $mhs->status }}">{{ $statusLabel }}</span>
             </div>
             <p class="detail-sub">NIM: {{ $mhs->nim }}</p>
 
@@ -210,13 +197,14 @@
                     <span class="detail-value">{{ $mhs->user->email }}</span>
                 </div>
                 @endif
-                @if($mhs->user && $mhs->user->personal_email)
+                {{-- Kontak pribadi hanya untuk pengelola dan pemilik profil --}}
+                @if($mhs->user && $mhs->user->personal_email && ($bisaLihatKontakPribadi || ($isSelf ?? false)))
                 <div class="detail-row">
                     <span class="detail-label">Email Pribadi</span>
                     <span class="detail-value">{{ $mhs->user->personal_email }}</span>
                 </div>
                 @endif
-                @if($mhs->kontak)
+                @if($mhs->kontak && ($bisaLihatKontakPribadi || ($isSelf ?? false)))
                 <div class="detail-row">
                     <span class="detail-label">Nomor WhatsApp/Telepon</span>
                     <span class="detail-value">{{ $mhs->kontak }}</span>
@@ -225,10 +213,6 @@
                 <div class="detail-row">
                     <span class="detail-label">Angkatan</span>
                     <span class="detail-value">{{ $mhs->angkatan }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Status Saat Ini</span>
-                    <span class="status-badge {{ $mhs->status }}">{{ $statusLabel }}</span>
                 </div>
             </div>
         </div>
@@ -241,6 +225,7 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: var(--c-primary);" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
         Prestasi / Lomba
     </div>
+    <p style="font-size: 12px; color: var(--c-fg-muted); margin: -8px 0 14px 0;">Prestasi &amp; lomba yang diajukan mahasiswa dan sudah disetujui melalui verifikasi data</p>
     @if($mhs->prestasi->count() > 0)
         <div class="d-flex flex-column gap-2">
             @foreach($mhs->prestasi as $p)
