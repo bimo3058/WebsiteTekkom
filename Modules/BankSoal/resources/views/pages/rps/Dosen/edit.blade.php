@@ -672,12 +672,12 @@
                                     <div>
                                         <input type="text" name="cpmk_rows[{{ $index }}][objek]"
                                             value="{{ $row['objek'] ?? '' }}" class="field-control objek-input"
-                                            style="font-size:13px;" placeholder="merancang sistem IoT" required {{ !$isUploadOpen ? 'disabled' : '' }}>
+                                            style="font-size:13px;" placeholder="Contoh: konsep dasar pemrograman" required {{ !$isUploadOpen ? 'disabled' : '' }}>
                                     </div>
                                     <div>
                                         <input type="text" name="cpmk_rows[{{ $index }}][konteks]"
                                             value="{{ $row['konteks'] ?? '' }}" class="field-control"
-                                            style="font-size:13px;" placeholder="sesuai kebutuhan" {{ !$isUploadOpen ? 'disabled' : '' }}>
+                                            style="font-size:13px;" placeholder="Contoh: dalam studi kasus aplikasi web" {{ !$isUploadOpen ? 'disabled' : '' }}>
                                     </div>
                                     <div style="display:flex;align-items:flex-end;">
                                         <button type="button" class="btn-danger-sm" data-remove-cpmk-row
@@ -807,12 +807,12 @@
                                         <div>
                                             <input type="text" name="cpmk_rows[{{ $index }}][objek]"
                                                 value="{{ $row['objek'] ?? '' }}" class="field-control objek-input"
-                                                style="font-size:13px;" placeholder="merancang sistem IoT" required {{ !$isUploadOpen ? 'disabled' : '' }}>
+                                                style="font-size:13px;" placeholder="Contoh: konsep dasar pemrograman" required {{ !$isUploadOpen ? 'disabled' : '' }}>
                                         </div>
                                         <div>
                                             <input type="text" name="cpmk_rows[{{ $index }}][konteks]"
                                                 value="{{ $row['konteks'] ?? '' }}" class="field-control"
-                                                style="font-size:13px;" placeholder="sesuai kebutuhan" {{ !$isUploadOpen ? 'disabled' : '' }}>
+                                                style="font-size:13px;" placeholder="Contoh: dalam studi kasus aplikasi web" {{ !$isUploadOpen ? 'disabled' : '' }}>
                                         </div>
                                         <div style="display:flex;align-items:flex-end;">
                                             <button type="button" class="btn-danger-sm" data-remove-cpmk-row
@@ -1134,11 +1134,11 @@
                 </div>
                 <div>
                     <input type="text" name="cpmk_rows[__INDEX__][objek]" class="field-control objek-input"
-                        style="font-size:13px;" placeholder="merancang sistem IoT" required>
+                        style="font-size:13px;" placeholder="Contoh: konsep dasar pemrograman" required>
                 </div>
                 <div>
                     <input type="text" name="cpmk_rows[__INDEX__][konteks]" class="field-control"
-                        style="font-size:13px;" placeholder="sesuai kebutuhan">
+                        style="font-size:13px;" placeholder="Contoh: dalam studi kasus aplikasi web">
                 </div>
                 <div style="display:flex;align-items:flex-end;">
                     <button type="button" class="btn-danger-sm" data-remove-cpmk-row aria-label="Hapus baris CPMK"

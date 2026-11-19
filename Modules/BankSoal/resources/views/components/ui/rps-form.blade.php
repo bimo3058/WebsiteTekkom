@@ -151,7 +151,7 @@
                             <div class="mt-3 grid gap-3 grid-cols-1 md:grid-cols-2">
                                 <div>
                                     <label class="text-xs font-semibold text-slate-500">Objek</label>
-                                    <input type="text" name="cpmk_rows[{{ $index }}][objek]" value="{{ $row['objek'] }}" class="form-control compact-control" placeholder="contoh: merancang sistem IoT" required {{ !$isUploadOpen ? 'disabled' : '' }}>
+                                    <input type="text" name="cpmk_rows[{{ $index }}][objek]" value="{{ $row['objek'] }}" class="form-control compact-control" placeholder="Contoh: konsep dasar pemrograman" required {{ !$isUploadOpen ? 'disabled' : '' }}>
                                     @error('cpmk_rows.' . $index . '.objek')
                                         <p class="text-xs text-red-600">{{ $message }}</p>
                                     @enderror
@@ -159,7 +159,7 @@
 
                                 <div>
                                     <label class="text-xs font-semibold text-slate-500">Konteks</label>
-                                    <input type="text" name="cpmk_rows[{{ $index }}][konteks]" value="{{ $row['konteks'] }}" class="form-control compact-control" placeholder="contoh: sesuai kebutuhan pengguna" {{ !$isUploadOpen ? 'disabled' : '' }}>
+                                    <input type="text" name="cpmk_rows[{{ $index }}][konteks]" value="{{ $row['konteks'] }}" class="form-control compact-control" placeholder="Contoh: dalam studi kasus aplikasi web" {{ !$isUploadOpen ? 'disabled' : '' }}>
                                     @error('cpmk_rows.' . $index . '.konteks')
                                         <p class="text-xs text-red-600">{{ $message }}</p>
                                     @enderror
@@ -217,12 +217,12 @@
                     <div class="mt-3 grid gap-3 grid-cols-1 md:grid-cols-2">
                         <div>
                             <label class="text-xs font-semibold text-slate-500">Objek</label>
-                            <input type="text" name="cpmk_rows[__INDEX__][objek]" class="form-control compact-control" placeholder="contoh: merancang sistem IoT" required>
+                            <input type="text" name="cpmk_rows[__INDEX__][objek]" class="form-control compact-control" placeholder="Contoh: konsep dasar pemrograman" required>
                         </div>
 
                         <div>
                             <label class="text-xs font-semibold text-slate-500">Konteks</label>
-                            <input type="text" name="cpmk_rows[__INDEX__][konteks]" class="form-control compact-control" placeholder="contoh: sesuai kebutuhan pengguna">
+                            <input type="text" name="cpmk_rows[__INDEX__][konteks]" class="form-control compact-control" placeholder="Contoh: dalam studi kasus aplikasi web">
                         </div>
                     </div>
 

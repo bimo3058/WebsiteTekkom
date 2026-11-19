@@ -63,35 +63,23 @@ class SnackbarManager {
         snackbar.setAttribute("data-type", type);
         snackbar.setAttribute("data-message", message);
 
-        // Pemetaan judul, ikon, kelas warna berdasarkan tipe pesan.
+        // Pemetaan ikon gaya SICATA (lingkaran muted dengan glyph warna).
         const typeConfig = {
             success: {
-                title: "BERHASIL",
-                icon: "fas fa-check",
-                iconBg: "bg-emerald-50",
-                iconColor: "text-emerald-600",
-                titleColor: "text-emerald-600"
+                icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#E8F7EC"/><path d="M8.5 12.4l2.4 2.4 4.6-5" stroke="#16A34A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+                iconClass: "snackbar-icon"
             },
             error: {
-                title: "GAGAL",
-                icon: "fas fa-times",
-                iconBg: "bg-rose-50",
-                iconColor: "text-rose-600",
-                titleColor: "text-rose-600"
+                icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#FDECEC"/><path d="M9.3 9.3l5.4 5.4m0-5.4l-5.4 5.4" stroke="#DC2626" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+                iconClass: "snackbar-icon"
             },
             warning: {
-                title: "PERINGATAN",
-                icon: "fas fa-exclamation-triangle",
-                iconBg: "bg-amber-50",
-                iconColor: "text-amber-600",
-                titleColor: "text-amber-600"
+                icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#FEF6E0"/><path d="M12 8v5m0 2.6h.01" stroke="#D97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+                iconClass: "snackbar-icon"
             },
             info: {
-                title: "INFORMASI",
-                icon: "fas fa-info",
-                iconBg: "bg-blue-50",
-                iconColor: "text-blue-600",
-                titleColor: "text-blue-600"
+                icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#EAF2FE"/><path d="M12 11h.01M11.5 14.4H12a.6.6 0 0 0 .6-.6V10.6" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+                iconClass: "snackbar-icon"
             }
         };
 
@@ -99,30 +87,21 @@ class SnackbarManager {
 
         // Menyusun konten HTML snackbar.
         snackbar.innerHTML = `
-            <div class="flex items-start gap-3 w-full">
-                <!-- Icon Container -->
-                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${config.iconBg} ${config.iconColor}">
-                    <i class="${config.icon} text-sm"></i>
-                </div>
-                <!-- Content -->
-                <div class="flex-1 min-w-0 pr-2">
-                    <p class="text-[11px] font-bold ${config.titleColor} tracking-wider uppercase">${config.title}</p>
-                    <div class="text-xs text-slate-600 font-semibold mt-1 leading-relaxed">${message}</div>
-                </div>
-                <!-- Close Button -->
-                <button type="button" class="snackbar-close text-slate-400 hover:text-slate-600 shrink-0 transition-colors" title="Tutup">
-                    <i class="fas fa-times text-xs"></i>
-                </button>
-            </div>
+            <span class="${config.iconClass}" aria-hidden="true">${config.icon}</span>
+            <div class="snackbar-content">${message}</div>
+            <button type="button" class="snackbar-close" title="Tutup" aria-label="Tutup notifikasi">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
         `;
 
-        // Menghitung offset top jika sudah ada snackbar lain di layar.
+        // Menghitung offset bottom jika sudah ada snackbar lain di layar.
+        snackbar.style.top = "auto";
         const existing = document.querySelectorAll(".snackbar");
-        let topOffset = 24;
+        let bottomOffset = 24;
         existing.forEach((el) => {
-            topOffset += el.offsetHeight + 12; // 12px gap
+            bottomOffset += el.offsetHeight + 12; // 12px gap
         });
-        snackbar.style.top = `${topOffset}px`;
+        snackbar.style.bottom = `${bottomOffset}px`;
 
         // Menambahkan elemen snackbar ke DOM.
         document.body.appendChild(snackbar);
@@ -143,7 +122,7 @@ class SnackbarManager {
 
         // Memicu animasi keluar.
         element.style.animation =
-            "slideOutRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards";
+            "slideOutBottom 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards";
 
         // Hapus elemen setelah animasi selesai.
         setTimeout(() => {

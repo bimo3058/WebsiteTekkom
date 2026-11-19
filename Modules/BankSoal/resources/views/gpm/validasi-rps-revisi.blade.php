@@ -211,14 +211,14 @@
                         <span class="text-lg font-bold text-primary" id="nilaiAkhir">{{ isset($existingReview) ? $existingReview->nilai_akhir : '0' }}/{{ $totalBobot }}</span>
                     </div>
 
-                    <div class="mt-4">
-                        <label for="catatan" class="text-xs font-semibold text-slate-600">Catatan Revisi</label>
+                    <div id="catatanContainer" class="mt-4 hidden">
+                        <label for="catatan" class="text-xs font-semibold text-slate-600">Catatan Revisi <span class="text-rose-600">*</span></label>
                         <textarea id="catatan" name="catatan" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" rows="4" placeholder="Masukkan detail perbaikan jika diperlukan...">{{ isset($existingReview) ? $existingReview->catatan : '' }}</textarea>
                     </div>
 
                     <div class="mt-4 flex gap-3">
-                        <button type="button" class="flex-1 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-100 hover:text-rose-800 hover:border-rose-300 cursor-pointer transition-all shadow-sm hover:shadow-md disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed disabled:shadow-none" id="btnKembalikan">Kembalikan</button>
-                        <button type="button" class="flex-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary/90 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed cursor-pointer transition-all shadow-sm hover:shadow-md" id="btnSetujui">Setujui RPS</button>
+                        <button type="button" disabled class="flex-1 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-100 hover:text-rose-800 hover:border-rose-300 cursor-pointer transition-all shadow-sm hover:shadow-md disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed disabled:shadow-none" id="btnKembalikan">Revisi</button>
+                        <button type="button" disabled class="flex-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary/90 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed cursor-pointer transition-all shadow-sm hover:shadow-md" id="btnSetujui">Setujui RPS</button>
                     </div>
                 </form>
             </div>
@@ -270,46 +270,74 @@
                 }
             }, 3000);
 
-            window.hitungSkor = function () {
+            function getParameterState() {
                 const form = document.getElementById('validasiForm');
-                const nilaiAkhirEl = document.getElementById('nilaiAkhir');
+                const radios = form.querySelectorAll('input[type="radio"][name^="parameter_"]');
+                const groups = {};
+                radios.forEach(r => { groups[r.name] = groups[r.name] || false; if (r.checked) groups[r.name] = true; });
+                const names = Object.keys(groups);
+                const answeredCount = names.filter(n => groups[n]).length;
+                const allAnswered = names.length > 0 && answeredCount === names.length;
                 let totalNilai = 0;
-
-                const inputs = form.querySelectorAll('input[type="radio"]:checked');
-                inputs.forEach(input => {
-                    if (input.value === '1') {
-                        totalNilai += parseInt(input.getAttribute('data-bobot')) || 0;
-                    }
+                form.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+                    if (input.value === '1') totalNilai += parseInt(input.getAttribute('data-bobot')) || 0;
                 });
+                return { allAnswered, totalNilai };
+            }
+
+            window.hitungSkor = function () {
+                const nilaiAkhirEl = document.getElementById('nilaiAkhir');
+                const MIN_SCORE = {{ $skorMinimum }};
+                const { allAnswered, totalNilai } = getParameterState();
+
+                if (!allAnswered) {
+                    nilaiAkhirEl.textContent = '-/{{ $totalBobot }}';
+                    nilaiAkhirEl.classList.remove('text-emerald-600', 'text-rose-600');
+                    nilaiAkhirEl.classList.add('text-slate-300');
+                    updateButtonState({ allAnswered: false, score: totalNilai });
+                    return;
+                }
 
                 nilaiAkhirEl.textContent = totalNilai + '/{{ $totalBobot }}';
-                
-                const MIN_SCORE = {{ $skorMinimum }};
                 if (totalNilai >= MIN_SCORE) {
                     nilaiAkhirEl.classList.remove('text-slate-300', 'text-rose-600');
                     nilaiAkhirEl.classList.add('text-emerald-600');
-                } else if (totalNilai > 0) {
+                } else {
                     nilaiAkhirEl.classList.remove('text-slate-300', 'text-emerald-600');
                     nilaiAkhirEl.classList.add('text-rose-600');
-                } else {
-                    nilaiAkhirEl.classList.remove('text-emerald-600', 'text-rose-600');
-                    nilaiAkhirEl.classList.add('text-slate-300');
                 }
 
-                updateButtonState(totalNilai);
+                updateButtonState({ allAnswered: true, score: totalNilai });
             };
 
-            window.updateButtonState = function (score) {
+            window.updateButtonState = function (state) {
                 const MIN_SCORE = {{ $skorMinimum }};
                 const btnSetujui = document.getElementById('btnSetujui');
-                if (!btnSetujui) return;
+                const btnKembalikan = document.getElementById('btnKembalikan');
+                const catatanContainer = document.getElementById('catatanContainer');
+                if (!btnSetujui || !btnKembalikan) return;
 
-                if (score < MIN_SCORE) {
+                if (!state || !state.allAnswered) {
+                    btnSetujui.disabled = true;
+                    btnKembalikan.disabled = true;
+                    btnSetujui.setAttribute('title', 'Lengkapi seluruh parameter penilaian terlebih dahulu');
+                    btnKembalikan.setAttribute('title', 'Lengkapi seluruh parameter penilaian terlebih dahulu');
+                    if (catatanContainer) catatanContainer.classList.add('hidden');
+                    return;
+                }
+
+                if (state.score < MIN_SCORE) {
                     btnSetujui.disabled = true;
                     btnSetujui.setAttribute('title', 'Nilai di bawah standar, ajukan revisi terlebih dahulu');
+                    btnKembalikan.disabled = false;
+                    btnKembalikan.setAttribute('title', '');
+                    if (catatanContainer) catatanContainer.classList.remove('hidden');
                 } else {
                     btnSetujui.disabled = false;
                     btnSetujui.setAttribute('title', '');
+                    btnKembalikan.disabled = true;
+                    btnKembalikan.setAttribute('title', 'Nilai memenuhi standar, RPS dapat disetujui');
+                    if (catatanContainer) catatanContainer.classList.add('hidden');
                 }
             };
 
@@ -341,7 +369,6 @@
             const actionInput = document.getElementById('actionInput');
             const catatanTextarea = document.getElementById('catatan');
 
-            updateButtonState(0);
             if (typeof hitungSkor === 'function') {
                 hitungSkor();
             }
@@ -351,6 +378,12 @@
                     e.preventDefault();
 
                     if (!validateParametersNotEmpty()) {
+                        return;
+                    }
+
+                    const { allAnswered, totalNilai } = getParameterState();
+                    if (!allAnswered || totalNilai >= {{ $skorMinimum }}) {
+                        showToast('Revisi hanya dapat diajukan jika semua parameter dinilai dan skor di bawah standar.', 'error');
                         return;
                     }
 
@@ -392,6 +425,12 @@
                         return;
                     }
 
+                    const { allAnswered, totalNilai } = getParameterState();
+                    if (!allAnswered || totalNilai < {{ $skorMinimum }}) {
+                        showToast('Persetujuan hanya dapat dilakukan jika semua parameter dinilai dan skor memenuhi standar.', 'error');
+                        return;
+                    }
+
                     const confirm = await Swal.fire({
                         title: 'Setujui RPS?',
                         text: "RPS yang disetujui dapat digunakan dosen untuk mengelola bank soal.",
@@ -417,7 +456,10 @@
                 btnSetujui.addEventListener('mousedown', function (e) {
                     if (this.disabled) {
                         e.preventDefault();
-                        showToast('Nilai di bawah standar, ajukan revisi terlebih dahulu', 'error');
+                        const { allAnswered } = getParameterState();
+                        showToast(allAnswered
+                            ? 'Nilai di bawah standar, ajukan revisi terlebih dahulu'
+                            : 'Lengkapi seluruh parameter penilaian terlebih dahulu', 'error');
                     }
                 });
             }
@@ -457,14 +499,8 @@
                     if (activeBtn && originalText) {
                         activeBtn.disabled = false;
                         activeBtn.innerHTML = originalText;
-
-                        if (activeBtn.id === 'btnKembalikan') {
-                            const total = form.querySelectorAll('input[type="radio"]:checked');
-                            let val = 0;
-                            total.forEach(i => { if(i.value === '1') val += parseInt(i.getAttribute('data-bobot')) || 0; });
-                            updateButtonState(val);
-                        } else {
-                            if (btnKembalikan) btnKembalikan.disabled = false;
+                        if (typeof hitungSkor === 'function') {
+                            hitungSkor();
                         }
                     }
                 });

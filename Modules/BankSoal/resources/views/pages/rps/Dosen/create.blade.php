@@ -793,11 +793,11 @@
                             </div>
                             <div>
                                 <input type="text" name="cpmk_rows[0][objek]" class="field-control objek-input"
-                                    style="font-size:13px;" placeholder="merancang sistem IoT" required>
+                                    style="font-size:13px;" placeholder="Contoh: konsep dasar pemrograman" required>
                             </div>
                             <div>
                                 <input type="text" name="cpmk_rows[0][konteks]" class="field-control"
-                                    style="font-size:13px;" placeholder="sesuai kebutuhan">
+                                    style="font-size:13px;" placeholder="Contoh: dalam studi kasus aplikasi web">
                             </div>
                             <div style="display:flex;align-items:flex-end;">
                                 <button type="button" class="btn-danger-sm" data-remove-cpmk-row
@@ -827,7 +827,7 @@
             </div>
 
             <div class="form-card">
-                <div class="form-card-title"><i class="fas fa-comment"></i> Catatan Pengajuan</div>
+                <div class="form-card-title"><i class="fas fa-comment"></i> Catatan perubahan</div>
                 <div class="form-group">
                     <textarea name="catatan" class="field-control" rows="3"
                         placeholder="Opsional. Tambahkan catatan untuk validator GPM."></textarea>
@@ -1213,7 +1213,7 @@
                     </div>
 
                     <div class="form-card">
-                        <div class="form-card-title"><i class="fas fa-comment"></i> Catatan Pengajuan</div>
+                        <div class="form-card-title"><i class="fas fa-comment"></i> Catatan perubahan</div>
                         <div class="form-group">
                             <textarea name="catatan" class="field-control" rows="3"
                                 placeholder="Opsional. Tambahkan catatan untuk validator GPM."></textarea>
@@ -1291,11 +1291,11 @@
                 </div>
                 <div>
                     <input type="text" name="cpmk_rows[__INDEX__][objek]" class="field-control objek-input"
-                        style="font-size:13px;" placeholder="merancang sistem IoT" required>
+                        style="font-size:13px;" placeholder="Contoh: konsep dasar pemrograman" required>
                 </div>
                 <div>
                     <input type="text" name="cpmk_rows[__INDEX__][konteks]" class="field-control"
-                        style="font-size:13px;" placeholder="sesuai kebutuhan">
+                        style="font-size:13px;" placeholder="Contoh: dalam studi kasus aplikasi web">
                 </div>
                 <div style="display:flex;align-items:flex-end;">
                     <button type="button" class="btn-danger-sm" data-remove-cpmk-row aria-label="Hapus baris CPMK"

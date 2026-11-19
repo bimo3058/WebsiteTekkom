@@ -721,11 +721,14 @@
         el.id = id;
         el.className = 'snackbar ' + (variant === 'error' ? 'snackbar-error' : 'snackbar-success');
         el.innerHTML = `
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 flex items-center justify-center rounded-full text-white" style="background:${variant === 'error' ? '#ef4444' : '#10b981'}">
-                    <i class="fas ${variant === 'error' ? 'fa-times' : 'fa-check'}"></i>
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-[1px]">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="${variant === 'error' ? '#FDECEC' : '#E8F7EC'}"/><path d="${variant === 'error' ? 'M9.3 9.3l5.4 5.4m0-5.4l-5.4 5.4' : 'M8.5 12.4l2.4 2.4 4.6-5'}" stroke="${variant === 'error' ? '#DC2626' : '#16A34A'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </div>
-                <div class="text-sm leading-snug text-slate-800">${message}</div>
+                <div class="text-[13px] leading-snug text-slate-700 pt-[2px]">${message}</div>
+                <button type="button" class="ml-1 mt-[2px] text-slate-400 hover:text-slate-600" aria-label="Tutup" onclick="this.closest('.snackbar')?.remove()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </button>
             </div>
         `;
 
