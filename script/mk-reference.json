@@ -1,0 +1,234 @@
+﻿[
+    {
+        "table":  "mk_alumni",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_alumni_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  nim character varying NOT NULL,\r\n  angkatan integer NOT NULL,\r\n  program_studi character varying NOT NULL,\r\n  tahun_lulus integer NOT NULL,\r\n  perusahaan character varying,\r\n  jabatan character varying,\r\n  linkedin character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  bidang_industri character varying,\r\n  tahun_mulai_bekerja integer,\r\n  status_karir character varying,\r\n  CONSTRAINT mk_alumni_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_alumni_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_audit_logs",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_audit_logs_id_seq\u0027::regclass),\r\n  user_id bigint,\r\n  action character varying NOT NULL,\r\n  subject_type character varying,\r\n  subject_id bigint,\r\n  description character varying NOT NULL,\r\n  old_data json,\r\n  new_data json,\r\n  created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n  CONSTRAINT mk_audit_logs_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_audit_logs_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_badges",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_badges_id_seq\u0027::regclass),\r\n  name character varying NOT NULL,\r\n  slug character varying NOT NULL UNIQUE,\r\n  icon character varying NOT NULL,\r\n  description text NOT NULL,\r\n  criteria_type character varying NOT NULL,\r\n  criteria_value integer NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  image character varying,\r\n  CONSTRAINT mk_badges_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "mk_bidang",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_bidang_id_seq\u0027::regclass),\r\n  nama_bidang character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  jenis character varying NOT NULL DEFAULT \u0027bidang\u0027::character varying,\r\n  CONSTRAINT mk_bidang_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "mk_comment_forum",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_comment_forum_id_seq\u0027::regclass),\r\n  discussion_id bigint NOT NULL,\r\n  user_id bigint NOT NULL,\r\n  isi_comment text NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_comment_forum_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_comment_forum_discussion_id_foreign FOREIGN KEY (discussion_id) REFERENCES public.mk_discussion(id),\r\n  CONSTRAINT mk_comment_forum_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_comments",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_comments_id_seq\u0027::regclass),\r\n  thread_id bigint NOT NULL,\r\n  user_id bigint NOT NULL,\r\n  parent_id bigint,\r\n  konten text NOT NULL,\r\n  is_best_answer boolean NOT NULL DEFAULT false,\r\n  vote_count integer NOT NULL DEFAULT 0,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_comments_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_comments_parent_id_foreign FOREIGN KEY (parent_id) REFERENCES public.mk_comments(id),\r\n  CONSTRAINT mk_comments_thread_id_foreign FOREIGN KEY (thread_id) REFERENCES public.mk_threads(id),\r\n  CONSTRAINT mk_comments_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_dashboard_analitik",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_dashboard_analitik_id_seq\u0027::regclass),\r\n  lecturer_id bigint,\r\n  generated_by_user_id bigint,\r\n  tanggal_generate timestamp without time zone NOT NULL,\r\n  total_mahasiswa_aktif integer NOT NULL,\r\n  total_alumni integer NOT NULL,\r\n  total_kegiatan integer NOT NULL,\r\n  total_pengumuman integer NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_dashboard_analitik_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_dashboard_analitik_generated_by_user_id_foreign FOREIGN KEY (generated_by_user_id) REFERENCES public.users(id),\r\n  CONSTRAINT mk_dashboard_analitik_lecturer_id_foreign FOREIGN KEY (lecturer_id) REFERENCES public.lecturers(id)\r\n"
+    },
+    {
+        "table":  "mk_discussion",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_discussion_id_seq\u0027::regclass),\r\n  forum_id bigint NOT NULL,\r\n  user_id bigint NOT NULL,\r\n  judul_discussion character varying NOT NULL,\r\n  isi_discussion text NOT NULL,\r\n  status character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_discussion_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_discussion_forum_id_foreign FOREIGN KEY (forum_id) REFERENCES public.mk_forum_mahasiswa(id),\r\n  CONSTRAINT mk_discussion_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_dosen",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_dosen_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  nip character varying NOT NULL UNIQUE,\r\n  program_studi character varying NOT NULL,\r\n  bidang_keahlian character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_dosen_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_dosen_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_forum_mahasiswa",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_forum_mahasiswa_id_seq\u0027::regclass),\r\n  nama_forum character varying NOT NULL,\r\n  deskripsi text,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_forum_mahasiswa_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "mk_forum_notifications",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_forum_notifications_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  actor_id bigint NOT NULL,\r\n  type character varying NOT NULL,\r\n  thread_id bigint NOT NULL,\r\n  comment_id bigint,\r\n  message text NOT NULL,\r\n  read_at timestamp without time zone,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_forum_notifications_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_forum_notifications_actor_id_foreign FOREIGN KEY (actor_id) REFERENCES public.users(id),\r\n  CONSTRAINT mk_forum_notifications_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES public.mk_comments(id),\r\n  CONSTRAINT mk_forum_notifications_thread_id_foreign FOREIGN KEY (thread_id) REFERENCES public.mk_threads(id),\r\n  CONSTRAINT mk_forum_notifications_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_forum_reports",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_forum_reports_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  thread_id bigint NOT NULL,\r\n  alasan text NOT NULL,\r\n  status character varying NOT NULL DEFAULT \u0027pending\u0027::character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_forum_reports_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_forum_reports_thread_id_foreign FOREIGN KEY (thread_id) REFERENCES public.mk_threads(id),\r\n  CONSTRAINT mk_forum_reports_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_kategori_kegiatan",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_kategori_kegiatan_id_seq\u0027::regclass),\r\n  nama_kategori character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_kategori_kegiatan_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "mk_kegiatan",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_kegiatan_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  kategori_kegiatan_id bigint,\r\n  bidang_id bigint,\r\n  judul character varying NOT NULL,\r\n  deskripsi text NOT NULL,\r\n  tanggal_mulai date,\r\n  tanggal_selesai date,\r\n  lokasi character varying,\r\n  banner character varying,\r\n  anggaran numeric,\r\n  penanggung_jawab character varying,\r\n  target_peserta integer,\r\n  status character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  jam_mulai time without time zone,\r\n  jam_selesai time without time zone,\r\n  ketua_pelaksana_id bigint,\r\n  tahun integer,\r\n  realisasi_tanggal_mulai date,\r\n  realisasi_tanggal_selesai date,\r\n  realisasi_lokasi character varying,\r\n  realisasi_peserta integer,\r\n  realisasi_anggaran numeric,\r\n  catatan_pelaksanaan text,\r\n  surat_proker character varying,\r\n  surat_proker_original character varying,\r\n  is_pelaksanaan_updated boolean NOT NULL DEFAULT false,\r\n  rencana_id bigint,\r\n  disetujui_oleh bigint,\r\n  disetujui_at timestamp without time zone,\r\n  catatan_penolakan text,\r\n  dosen_pendamping_id bigint,\r\n  dana_departemen numeric,\r\n  kas_himpunan numeric,\r\n  kas_bidang numeric,\r\n  ruangan_id bigint,\r\n  status_tinjauan character varying,\r\n  dikirim_tinjau_at timestamp without time zone,\r\n  CONSTRAINT mk_kegiatan_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_kegiatan_ketua_pelaksana_id_foreign FOREIGN KEY (ketua_pelaksana_id) REFERENCES public.students(id),\r\n  CONSTRAINT mk_kegiatan_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id),\r\n  CONSTRAINT lg_mk_kegiatan_bidang_id_foreign FOREIGN KEY (bidang_id) REFERENCES public.mk_bidang(id),\r\n  CONSTRAINT lg_mk_kegiatan_kategori_kegiatan_id_foreign FOREIGN KEY (kategori_kegiatan_id) REFERENCES public.mk_kategori_kegiatan(id),\r\n  CONSTRAINT mk_kegiatan_rencana_id_foreign FOREIGN KEY (rencana_id) REFERENCES public.mk_kegiatan(id),\r\n  CONSTRAINT mk_kegiatan_disetujui_oleh_foreign FOREIGN KEY (disetujui_oleh) REFERENCES public.users(id),\r\n  CONSTRAINT mk_kegiatan_dosen_pendamping_id_foreign FOREIGN KEY (dosen_pendamping_id) REFERENCES public.lecturers(id)\r\n"
+    },
+    {
+        "table":  "mk_kegiatan_attachments",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_kegiatan_attachments_id_seq\u0027::regclass),\r\n  kegiatan_id bigint NOT NULL,\r\n  file_path character varying NOT NULL,\r\n  file_name character varying NOT NULL,\r\n  file_size integer NOT NULL,\r\n  tipe character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_kegiatan_attachments_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_mk_kegiatan_attachments_kegiatan_id_foreign FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id)\r\n"
+    },
+    {
+        "table":  "mk_kegiatan_bidang",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_kegiatan_bidang_id_seq\u0027::regclass),\r\n  kegiatan_id bigint NOT NULL,\r\n  bidang_id bigint NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_kegiatan_bidang_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_mk_kegiatan_bidang_bidang_id_foreign FOREIGN KEY (bidang_id) REFERENCES public.mk_bidang(id),\r\n  CONSTRAINT lg_mk_kegiatan_bidang_kegiatan_id_foreign FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id)\r\n"
+    },
+    {
+        "table":  "mk_kegiatan_kategori",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_kegiatan_kategori_id_seq\u0027::regclass),\r\n  kegiatan_id bigint NOT NULL,\r\n  kategori_kegiatan_id bigint NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_kegiatan_kategori_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_mk_kegiatan_kategori_kategori_kegiatan_id_foreign FOREIGN KEY (kategori_kegiatan_id) REFERENCES public.mk_kategori_kegiatan(id),\r\n  CONSTRAINT lg_mk_kegiatan_kategori_kegiatan_id_foreign FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id)\r\n"
+    },
+    {
+        "table":  "mk_kegiatan_panitia",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_kegiatan_panitia_id_seq\u0027::regclass),\r\n  kegiatan_id bigint NOT NULL,\r\n  student_id bigint NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  peran character varying,\r\n  CONSTRAINT mk_kegiatan_panitia_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_mk_kegiatan_panitia_kegiatan_id_foreign FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id),\r\n  CONSTRAINT lg_mk_kegiatan_panitia_student_id_foreign FOREIGN KEY (student_id) REFERENCES public.students(id)\r\n"
+    },
+    {
+        "table":  "mk_kegiatan_peserta",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_kegiatan_peserta_id_seq\u0027::regclass),\r\n  kegiatan_id bigint NOT NULL,\r\n  user_id bigint NOT NULL,\r\n  status_kehadiran character varying NOT NULL DEFAULT \u0027terdaftar\u0027::character varying,\r\n  registered_at timestamp without time zone,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_kegiatan_peserta_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_mk_kegiatan_peserta_kegiatan_id_foreign FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id),\r\n  CONSTRAINT lg_mk_kegiatan_peserta_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_kemahasiswaan",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_kemahasiswaan_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  nama character varying NOT NULL,\r\n  nim character varying NOT NULL,\r\n  angkatan integer NOT NULL,\r\n  status character varying NOT NULL,\r\n  tahun_lulus integer,\r\n  profesi character varying,\r\n  kontak character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_kemahasiswaan_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_kemahasiswaan_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_kepengurusan",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_kepengurusan_id_seq\u0027::regclass),\r\n  tahun_periode character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_kepengurusan_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "mk_mahasiswa",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_mahasiswa_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  nim character varying NOT NULL UNIQUE,\r\n  angkatan integer NOT NULL,\r\n  program_studi character varying NOT NULL,\r\n  status character varying NOT NULL,\r\n  dosen_wali_id bigint,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_mahasiswa_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_mahasiswa_dosen_wali_id_foreign FOREIGN KEY (dosen_wali_id) REFERENCES public.mk_dosen(id),\r\n  CONSTRAINT mk_mahasiswa_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_model_has_permissions",
+        "body":  "\r\n  permission_id bigint NOT NULL,\r\n  model_type character varying NOT NULL,\r\n  model_id bigint NOT NULL,\r\n  CONSTRAINT mk_model_has_permissions_pkey PRIMARY KEY (permission_id, model_type, model_id),\r\n  CONSTRAINT mk_model_has_permissions_permission_id_foreign FOREIGN KEY (permission_id) REFERENCES public.mk_permissions(id)\r\n"
+    },
+    {
+        "table":  "mk_model_has_roles",
+        "body":  "\r\n  role_id bigint NOT NULL,\r\n  model_type character varying NOT NULL,\r\n  model_id bigint NOT NULL,\r\n  CONSTRAINT mk_model_has_roles_pkey PRIMARY KEY (role_id, model_type, model_id),\r\n  CONSTRAINT mk_model_has_roles_role_id_foreign FOREIGN KEY (role_id) REFERENCES public.mk_roles(id)\r\n"
+    },
+    {
+        "table":  "mk_pengaduan",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_pengaduan_id_seq\u0027::regclass),\r\n  user_id bigint,\r\n  kategori character varying NOT NULL,\r\n  is_anonim boolean NOT NULL DEFAULT false,\r\n  data_template jsonb,\r\n  status character varying NOT NULL DEFAULT \u0027baru\u0027::character varying,\r\n  read_at timestamp without time zone,\r\n  read_by bigint,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  jawaban text,\r\n  answered_at timestamp without time zone,\r\n  answered_by bigint,\r\n  reopen_count smallint NOT NULL DEFAULT \u00270\u0027::smallint,\r\n  reopen_reason text,\r\n  auto_close_at timestamp without time zone,\r\n  closed_at timestamp without time zone,\r\n  closed_by bigint,\r\n  anon_token character varying UNIQUE,\r\n  deleted_at timestamp without time zone,\r\n  pelapor_tersimpan_id bigint,\r\n  CONSTRAINT mk_pengaduan_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_pengaduan_answered_by_foreign FOREIGN KEY (answered_by) REFERENCES public.users(id),\r\n  CONSTRAINT mk_pengaduan_closed_by_foreign FOREIGN KEY (closed_by) REFERENCES public.users(id),\r\n  CONSTRAINT mk_pengaduan_read_by_foreign FOREIGN KEY (read_by) REFERENCES public.users(id),\r\n  CONSTRAINT mk_pengaduan_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id),\r\n  CONSTRAINT mk_pengaduan_pelapor_tersimpan_id_foreign FOREIGN KEY (pelapor_tersimpan_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_pengaduan_delegasi",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_pengaduan_delegasi_id_seq\u0027::regclass),\r\n  pengaduan_id bigint NOT NULL,\r\n  delegated_by bigint NOT NULL,\r\n  delegated_to bigint NOT NULL,\r\n  notes_admin text NOT NULL,\r\n  status character varying NOT NULL DEFAULT \u0027aktif\u0027::character varying,\r\n  tanggapan text,\r\n  notes_balik text,\r\n  alasan_tolak text,\r\n  delegated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n  responded_at timestamp without time zone,\r\n  CONSTRAINT mk_pengaduan_delegasi_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_mk_pengaduan_delegasi_delegated_by_foreign FOREIGN KEY (delegated_by) REFERENCES public.users(id),\r\n  CONSTRAINT lg_mk_pengaduan_delegasi_delegated_to_foreign FOREIGN KEY (delegated_to) REFERENCES public.users(id),\r\n  CONSTRAINT lg_mk_pengaduan_delegasi_pengaduan_id_foreign FOREIGN KEY (pengaduan_id) REFERENCES public.mk_pengaduan(id)\r\n"
+    },
+    {
+        "table":  "mk_pengaduan_log",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_pengaduan_log_id_seq\u0027::regclass),\r\n  pengaduan_id bigint NOT NULL,\r\n  actor_user_id bigint,\r\n  action character varying NOT NULL,\r\n  notes text,\r\n  created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n  CONSTRAINT mk_pengaduan_log_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_mk_pengaduan_log_actor_user_id_foreign FOREIGN KEY (actor_user_id) REFERENCES public.users(id),\r\n  CONSTRAINT lg_mk_pengaduan_log_pengaduan_id_foreign FOREIGN KEY (pengaduan_id) REFERENCES public.mk_pengaduan(id)\r\n"
+    },
+    {
+        "table":  "mk_pengumuman",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_pengumuman_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  judul character varying NOT NULL,\r\n  konten text NOT NULL,\r\n  target_audience character varying NOT NULL,\r\n  kategori character varying,\r\n  status_publish character varying NOT NULL,\r\n  is_draft boolean NOT NULL DEFAULT false,\r\n  published_at timestamp without time zone,\r\n  scheduled_at timestamp without time zone,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  is_pinned boolean NOT NULL DEFAULT false,\r\n  CONSTRAINT mk_pengumuman_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_pengumuman_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_pengumuman_approval_requests",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_pengumuman_approval_requests_id_seq\u0027::regclass),\r\n  pengumuman_id bigint NOT NULL,\r\n  requester_id bigint NOT NULL,\r\n  verifier_id bigint NOT NULL,\r\n  status character varying NOT NULL DEFAULT \u0027pending\u0027::character varying,\r\n  pesan_pengaju text,\r\n  catatan_verifikator text,\r\n  verified_at timestamp without time zone,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_pengumuman_approval_requests_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_mk_pengumuman_approval_requests_pengumuman_id_foreign FOREIGN KEY (pengumuman_id) REFERENCES public.mk_pengumuman(id),\r\n  CONSTRAINT lg_mk_pengumuman_approval_requests_requester_id_foreign FOREIGN KEY (requester_id) REFERENCES public.users(id),\r\n  CONSTRAINT lg_mk_pengumuman_approval_requests_verifier_id_foreign FOREIGN KEY (verifier_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_pengumuman_attachments",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_pengumuman_attachments_id_seq\u0027::regclass),\r\n  pengumuman_id bigint NOT NULL,\r\n  file_path character varying NOT NULL,\r\n  file_name character varying NOT NULL,\r\n  file_size integer NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_pengumuman_attachments_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_mk_pengumuman_attachments_pengumuman_id_foreign FOREIGN KEY (pengumuman_id) REFERENCES public.mk_pengumuman(id)\r\n"
+    },
+    {
+        "table":  "mk_pengumuman_drafts",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_pengumuman_drafts_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  judul character varying,\r\n  kategori character varying,\r\n  target_audience character varying,\r\n  konten text,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  poster_repo_id bigint,\r\n  lampiran_repo_ids json,\r\n  poster_repo_ids json,\r\n  CONSTRAINT mk_pengumuman_drafts_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_mk_pengumuman_drafts_poster_repo_id_foreign FOREIGN KEY (poster_repo_id) REFERENCES public.mk_repo_mulmed(id),\r\n  CONSTRAINT lg_mk_pengumuman_drafts_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_pengumuman_personal_pins",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_pengumuman_personal_pins_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  pengumuman_id bigint NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_pengumuman_personal_pins_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_mk_pengumuman_personal_pins_pengumuman_id_foreign FOREIGN KEY (pengumuman_id) REFERENCES public.mk_pengumuman(id),\r\n  CONSTRAINT lg_mk_pengumuman_personal_pins_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_pengurus_himaskom",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_pengurus_himaskom_id_seq\u0027::regclass),\r\n  student_id bigint NOT NULL,\r\n  kepengurusan_id bigint NOT NULL,\r\n  divisi character varying NOT NULL,\r\n  jabatan character varying NOT NULL,\r\n  status_keaktifan character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_pengurus_himaskom_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_pengurus_himaskom_kepengurusan_id_foreign FOREIGN KEY (kepengurusan_id) REFERENCES public.mk_kepengurusan(id),\r\n  CONSTRAINT mk_pengurus_himaskom_student_id_foreign FOREIGN KEY (student_id) REFERENCES public.students(id)\r\n"
+    },
+    {
+        "table":  "mk_pengurus_himpunan",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_pengurus_himpunan_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  organisasi character varying NOT NULL,\r\n  jabatan_organisasi character varying NOT NULL,\r\n  periode character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_pengurus_himpunan_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_pengurus_himpunan_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_permissions",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_permissions_id_seq\u0027::regclass),\r\n  name character varying NOT NULL,\r\n  guard_name character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_permissions_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "mk_prestasi",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_prestasi_id_seq\u0027::regclass),\r\n  kemahasiswaan_id bigint NOT NULL,\r\n  nama_prestasi character varying NOT NULL,\r\n  tingkat character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  verification_status character varying NOT NULL DEFAULT \u0027pending\u0027::character varying,\r\n  verified_by bigint,\r\n  verified_at timestamp without time zone,\r\n  verification_note text,\r\n  tanggal date,\r\n  claim_status character varying NOT NULL DEFAULT \u0027belum_claim\u0027::character varying,\r\n  claimed_at timestamp without time zone,\r\n  claimed_by bigint,\r\n  reward_penyelenggara character varying,\r\n  reward_capaian character varying,\r\n  reward_is_invention boolean NOT NULL DEFAULT false,\r\n  reward_jml_mk_max smallint,\r\n  reward_sks_max smallint,\r\n  reward_mk_disetujui text,\r\n  reward_reviewed_by bigint,\r\n  reward_reviewed_at timestamp without time zone,\r\n  reward_note text,\r\n  reward_mk_diajukan text,\r\n  reward_kuota_grup character varying,\r\n  reward_sk_ref character varying,\r\n  reward_tahun_ajaran character varying,\r\n  reward_sks_diajukan smallint,\r\n  reward_mk_ta json,\r\n  CONSTRAINT mk_prestasi_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_prestasi_claimed_by_foreign FOREIGN KEY (claimed_by) REFERENCES public.users(id),\r\n  CONSTRAINT mk_prestasi_kemahasiswaan_id_foreign FOREIGN KEY (kemahasiswaan_id) REFERENCES public.mk_kemahasiswaan(id),\r\n  CONSTRAINT mk_prestasi_reward_reviewed_by_foreign FOREIGN KEY (reward_reviewed_by) REFERENCES public.users(id),\r\n  CONSTRAINT mk_prestasi_verified_by_foreign FOREIGN KEY (verified_by) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_proker_ttd",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_proker_ttd_id_seq\u0027::regclass),\r\n  kegiatan_id bigint NOT NULL,\r\n  role character varying NOT NULL,\r\n  signed_by bigint,\r\n  signature_image_path character varying,\r\n  page_number smallint NOT NULL DEFAULT \u00271\u0027::smallint,\r\n  pos_x_percent numeric NOT NULL DEFAULT \u00270\u0027::numeric,\r\n  pos_y_percent numeric NOT NULL DEFAULT \u00270\u0027::numeric,\r\n  width_percent numeric NOT NULL DEFAULT \u002715\u0027::numeric,\r\n  height_percent numeric NOT NULL DEFAULT \u00278\u0027::numeric,\r\n  signed_at timestamp without time zone,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_proker_ttd_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_proker_ttd_kegiatan_id_foreign FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id),\r\n  CONSTRAINT mk_proker_ttd_signed_by_foreign FOREIGN KEY (signed_by) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_repo_mulmed",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_repo_mulmed_id_seq\u0027::regclass),\r\n  kegiatan_id bigint,\r\n  pengumuman_id bigint,\r\n  nama_file character varying NOT NULL,\r\n  path_file character varying NOT NULL,\r\n  tipe_file character varying NOT NULL,\r\n  judul_file character varying NOT NULL,\r\n  deskripsi_meta text,\r\n  visibility_status character varying NOT NULL,\r\n  status_arsip character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  jenis_dokumen character varying,\r\n  dari_rencana boolean NOT NULL DEFAULT false,\r\n  CONSTRAINT mk_repo_mulmed_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_repo_mulmed_kegiatan_id_foreign FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id),\r\n  CONSTRAINT mk_repo_mulmed_pengumuman_id_foreign FOREIGN KEY (pengumuman_id) REFERENCES public.mk_pengumuman(id)\r\n"
+    },
+    {
+        "table":  "mk_reward_aturan",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_reward_aturan_id_seq\u0027::regclass),\r\n  judul character varying NOT NULL,\r\n  nama_file character varying NOT NULL,\r\n  path_file character varying NOT NULL,\r\n  tipe_file character varying NOT NULL DEFAULT \u0027document\u0027::character varying,\r\n  uploaded_by bigint,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_reward_aturan_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_reward_aturan_uploaded_by_foreign FOREIGN KEY (uploaded_by) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_riwayat_kegiatan",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_riwayat_kegiatan_id_seq\u0027::regclass),\r\n  student_id bigint NOT NULL,\r\n  kegiatan_id bigint,\r\n  peran character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  nama_kegiatan_manual character varying,\r\n  peran_manual character varying,\r\n  tanggal_kegiatan date,\r\n  verification_status character varying NOT NULL DEFAULT \u0027pending\u0027::character varying,\r\n  verified_by bigint,\r\n  verified_at timestamp without time zone,\r\n  verification_note text,\r\n  CONSTRAINT mk_riwayat_kegiatan_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_riwayat_kegiatan_kegiatan_id_foreign FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id),\r\n  CONSTRAINT mk_riwayat_kegiatan_student_id_foreign FOREIGN KEY (student_id) REFERENCES public.students(id),\r\n  CONSTRAINT mk_riwayat_kegiatan_verified_by_foreign FOREIGN KEY (verified_by) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_role_has_permissions",
+        "body":  "\r\n  permission_id bigint NOT NULL,\r\n  role_id bigint NOT NULL,\r\n  CONSTRAINT mk_role_has_permissions_pkey PRIMARY KEY (permission_id, role_id),\r\n  CONSTRAINT mk_role_has_permissions_permission_id_foreign FOREIGN KEY (permission_id) REFERENCES public.mk_permissions(id),\r\n  CONSTRAINT mk_role_has_permissions_role_id_foreign FOREIGN KEY (role_id) REFERENCES public.mk_roles(id)\r\n"
+    },
+    {
+        "table":  "mk_roles",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_roles_id_seq\u0027::regclass),\r\n  name character varying NOT NULL,\r\n  guard_name character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_roles_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "mk_streaks",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_streaks_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL UNIQUE,\r\n  current_streak integer NOT NULL DEFAULT 0,\r\n  longest_streak integer NOT NULL DEFAULT 0,\r\n  last_activity_date date,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_streaks_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_streaks_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_thread_drafts",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_thread_drafts_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  judul character varying,\r\n  kategori jsonb,\r\n  konten text,\r\n  media_files jsonb,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  link_url character varying,\r\n  poll_data jsonb,\r\n  CONSTRAINT mk_thread_drafts_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_thread_drafts_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_thread_personal_pins",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_thread_personal_pins_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  thread_id bigint NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_thread_personal_pins_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_thread_personal_pins_thread_id_foreign FOREIGN KEY (thread_id) REFERENCES public.mk_threads(id),\r\n  CONSTRAINT mk_thread_personal_pins_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_thread_poll_options",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_thread_poll_options_id_seq\u0027::regclass),\r\n  poll_id bigint NOT NULL,\r\n  text character varying NOT NULL,\r\n  votes_count integer NOT NULL DEFAULT 0,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_thread_poll_options_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_thread_poll_options_poll_id_foreign FOREIGN KEY (poll_id) REFERENCES public.mk_thread_polls(id)\r\n"
+    },
+    {
+        "table":  "mk_thread_poll_votes",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_thread_poll_votes_id_seq\u0027::regclass),\r\n  poll_id bigint NOT NULL,\r\n  option_id bigint NOT NULL,\r\n  user_id bigint NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_thread_poll_votes_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_thread_poll_votes_option_id_foreign FOREIGN KEY (option_id) REFERENCES public.mk_thread_poll_options(id),\r\n  CONSTRAINT mk_thread_poll_votes_poll_id_foreign FOREIGN KEY (poll_id) REFERENCES public.mk_thread_polls(id),\r\n  CONSTRAINT mk_thread_poll_votes_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_thread_polls",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_thread_polls_id_seq\u0027::regclass),\r\n  thread_id bigint NOT NULL,\r\n  expires_at timestamp without time zone,\r\n  is_closed boolean NOT NULL DEFAULT false,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_thread_polls_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_thread_polls_thread_id_foreign FOREIGN KEY (thread_id) REFERENCES public.mk_threads(id)\r\n"
+    },
+    {
+        "table":  "mk_threads",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_threads_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  kategori jsonb NOT NULL,\r\n  judul character varying NOT NULL,\r\n  konten text NOT NULL,\r\n  is_pinned boolean NOT NULL DEFAULT false,\r\n  is_locked boolean NOT NULL DEFAULT false,\r\n  best_answer_id bigint,\r\n  vote_count integer NOT NULL DEFAULT 0,\r\n  comment_count integer NOT NULL DEFAULT 0,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_threads_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_threads_best_answer_id_foreign FOREIGN KEY (best_answer_id) REFERENCES public.mk_comments(id),\r\n  CONSTRAINT mk_threads_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_user_badges",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_user_badges_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  badge_id bigint NOT NULL,\r\n  earned_at timestamp without time zone NOT NULL,\r\n  CONSTRAINT mk_user_badges_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_user_badges_badge_id_foreign FOREIGN KEY (badge_id) REFERENCES public.mk_badges(id),\r\n  CONSTRAINT mk_user_badges_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_verifikasi_bukti",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_verifikasi_bukti_id_seq\u0027::regclass),\r\n  bukti_type character varying NOT NULL,\r\n  bukti_id bigint NOT NULL,\r\n  nama_file character varying NOT NULL,\r\n  path_file character varying NOT NULL,\r\n  tipe_file character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_verifikasi_bukti_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "mk_votes",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_votes_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  voteable_type character varying NOT NULL,\r\n  voteable_id bigint NOT NULL,\r\n  value smallint NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_votes_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_votes_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_xp_logs",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_xp_logs_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  action character varying NOT NULL,\r\n  xp_amount integer NOT NULL,\r\n  reference_type character varying,\r\n  reference_id bigint,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_xp_logs_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_xp_logs_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_kegiatan_dosen_pendamping",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_kegiatan_dosen_pendamping_id_seq\u0027::regclass),\r\n  kegiatan_id bigint NOT NULL,\r\n  lecturer_id bigint NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  peran character varying,\r\n  CONSTRAINT mk_kegiatan_dosen_pendamping_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_mk_kegiatan_dosen_pendamping_kegiatan_id_foreign FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id),\r\n  CONSTRAINT lg_mk_kegiatan_dosen_pendamping_lecturer_id_foreign FOREIGN KEY (lecturer_id) REFERENCES public.lecturers(id)\r\n"
+    },
+    {
+        "table":  "mk_kegiatan_pengelola",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_kegiatan_pengelola_id_seq\u0027::regclass),\r\n  kegiatan_id bigint NOT NULL,\r\n  user_id bigint NOT NULL,\r\n  boleh_hapus boolean NOT NULL DEFAULT false,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_kegiatan_pengelola_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_mk_kegiatan_pengelola_kegiatan_id_foreign FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id),\r\n  CONSTRAINT lg_mk_kegiatan_pengelola_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_catatan_konseling",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_catatan_konseling_id_seq\u0027::regclass),\r\n  nama_mahasiswa character varying NOT NULL,\r\n  nim character varying,\r\n  angkatan smallint,\r\n  tanggal date NOT NULL,\r\n  dicatat_oleh bigint,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  deleted_at timestamp without time zone,\r\n  kategori_kasus character varying,\r\n  kronologi text,\r\n  keinginan_pelapor text,\r\n  tindak_lanjut text,\r\n  status_kasus character varying NOT NULL DEFAULT \u0027baru\u0027::character varying,\r\n  CONSTRAINT mk_catatan_konseling_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_catatan_konseling_dicatat_oleh_foreign FOREIGN KEY (dicatat_oleh) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "mk_pengurus_bidang",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_pengurus_bidang_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL UNIQUE,\r\n  bidang_id bigint NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_pengurus_bidang_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_pengurus_bidang_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id),\r\n  CONSTRAINT mk_pengurus_bidang_bidang_id_foreign FOREIGN KEY (bidang_id) REFERENCES public.mk_bidang(id)\r\n"
+    },
+    {
+        "table":  "mk_kegiatan_catatan",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027mk_kegiatan_catatan_id_seq\u0027::regclass),\r\n  kegiatan_id bigint NOT NULL,\r\n  user_id bigint,\r\n  isi text NOT NULL,\r\n  diperbaiki_at timestamp without time zone,\r\n  diperbaiki_oleh bigint,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT mk_kegiatan_catatan_pkey PRIMARY KEY (id),\r\n  CONSTRAINT mk_kegiatan_catatan_kegiatan_id_foreign FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id),\r\n  CONSTRAINT mk_kegiatan_catatan_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id),\r\n  CONSTRAINT mk_kegiatan_catatan_diperbaiki_oleh_foreign FOREIGN KEY (diperbaiki_oleh) REFERENCES public.users(id)\r\n"
+    }
+]

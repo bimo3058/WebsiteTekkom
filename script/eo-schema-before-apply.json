@@ -1,0 +1,3080 @@
+{
+    "columns": [
+        {
+            "table_name": "eo_approval",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_approval",
+            "column_name": "surat_id"
+        },
+        {
+            "table_name": "eo_approval",
+            "column_name": "approver_id"
+        },
+        {
+            "table_name": "eo_approval",
+            "column_name": "urutan"
+        },
+        {
+            "table_name": "eo_approval",
+            "column_name": "status"
+        },
+        {
+            "table_name": "eo_approval",
+            "column_name": "file_ttd"
+        },
+        {
+            "table_name": "eo_approval",
+            "column_name": "role_approver"
+        },
+        {
+            "table_name": "eo_approval",
+            "column_name": "catatan"
+        },
+        {
+            "table_name": "eo_approval",
+            "column_name": "tanggal"
+        },
+        {
+            "table_name": "eo_approval",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_approval",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_approval_config",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_approval_config",
+            "column_name": "jenis_id"
+        },
+        {
+            "table_name": "eo_approval_config",
+            "column_name": "urutan"
+        },
+        {
+            "table_name": "eo_approval_config",
+            "column_name": "role"
+        },
+        {
+            "table_name": "eo_approval_config",
+            "column_name": "is_required"
+        },
+        {
+            "table_name": "eo_approval_config",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_approval_config",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_arsip_surat",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_arsip_surat",
+            "column_name": "surat_id"
+        },
+        {
+            "table_name": "eo_arsip_surat",
+            "column_name": "kategori"
+        },
+        {
+            "table_name": "eo_arsip_surat",
+            "column_name": "tanggal_arsip"
+        },
+        {
+            "table_name": "eo_arsip_surat",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_arsip_surat",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_aturan_peminjaman",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_aturan_peminjaman",
+            "column_name": "kode_aturan"
+        },
+        {
+            "table_name": "eo_aturan_peminjaman",
+            "column_name": "nama"
+        },
+        {
+            "table_name": "eo_aturan_peminjaman",
+            "column_name": "nilai"
+        },
+        {
+            "table_name": "eo_aturan_peminjaman",
+            "column_name": "satuan"
+        },
+        {
+            "table_name": "eo_aturan_peminjaman",
+            "column_name": "deskripsi"
+        },
+        {
+            "table_name": "eo_aturan_peminjaman",
+            "column_name": "is_active"
+        },
+        {
+            "table_name": "eo_aturan_peminjaman",
+            "column_name": "updated_by"
+        },
+        {
+            "table_name": "eo_aturan_peminjaman",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_aturan_peminjaman",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_audit_logs",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_audit_logs",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_audit_logs",
+            "column_name": "action"
+        },
+        {
+            "table_name": "eo_audit_logs",
+            "column_name": "subject_type"
+        },
+        {
+            "table_name": "eo_audit_logs",
+            "column_name": "subject_id"
+        },
+        {
+            "table_name": "eo_audit_logs",
+            "column_name": "description"
+        },
+        {
+            "table_name": "eo_audit_logs",
+            "column_name": "old_data"
+        },
+        {
+            "table_name": "eo_audit_logs",
+            "column_name": "new_data"
+        },
+        {
+            "table_name": "eo_audit_logs",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_berkas_pendukung",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_berkas_pendukung",
+            "column_name": "peminjaman_id"
+        },
+        {
+            "table_name": "eo_berkas_pendukung",
+            "column_name": "nama_file"
+        },
+        {
+            "table_name": "eo_berkas_pendukung",
+            "column_name": "path_file"
+        },
+        {
+            "table_name": "eo_berkas_pendukung",
+            "column_name": "tipe_file"
+        },
+        {
+            "table_name": "eo_berkas_pendukung",
+            "column_name": "ukuran_file"
+        },
+        {
+            "table_name": "eo_berkas_pendukung",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_disposisi_surat_masuk",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_disposisi_surat_masuk",
+            "column_name": "surat_masuk_id"
+        },
+        {
+            "table_name": "eo_disposisi_surat_masuk",
+            "column_name": "penerima_id"
+        },
+        {
+            "table_name": "eo_disposisi_surat_masuk",
+            "column_name": "status_baca"
+        },
+        {
+            "table_name": "eo_disposisi_surat_masuk",
+            "column_name": "catatan"
+        },
+        {
+            "table_name": "eo_disposisi_surat_masuk",
+            "column_name": "tanggal_disposisi"
+        },
+        {
+            "table_name": "eo_disposisi_surat_masuk",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_disposisi_surat_masuk",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_field_template",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_field_template",
+            "column_name": "template_id"
+        },
+        {
+            "table_name": "eo_field_template",
+            "column_name": "nama_field"
+        },
+        {
+            "table_name": "eo_field_template",
+            "column_name": "tipe_input"
+        },
+        {
+            "table_name": "eo_field_template",
+            "column_name": "is_required"
+        },
+        {
+            "table_name": "eo_field_template",
+            "column_name": "urutan"
+        },
+        {
+            "table_name": "eo_field_template",
+            "column_name": "options"
+        },
+        {
+            "table_name": "eo_field_template",
+            "column_name": "default_value"
+        },
+        {
+            "table_name": "eo_field_template",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_field_template",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_import_log",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_import_log",
+            "column_name": "admin_id"
+        },
+        {
+            "table_name": "eo_import_log",
+            "column_name": "nama_file"
+        },
+        {
+            "table_name": "eo_import_log",
+            "column_name": "jumlah_record"
+        },
+        {
+            "table_name": "eo_import_log",
+            "column_name": "status"
+        },
+        {
+            "table_name": "eo_import_log",
+            "column_name": "catatan"
+        },
+        {
+            "table_name": "eo_import_log",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_import_log",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_isi_surat",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_isi_surat",
+            "column_name": "surat_id"
+        },
+        {
+            "table_name": "eo_isi_surat",
+            "column_name": "field_id"
+        },
+        {
+            "table_name": "eo_isi_surat",
+            "column_name": "value"
+        },
+        {
+            "table_name": "eo_isi_surat",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_isi_surat",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_jadwal_kuliah",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_jadwal_kuliah",
+            "column_name": "ruangan_id"
+        },
+        {
+            "table_name": "eo_jadwal_kuliah",
+            "column_name": "import_log_id"
+        },
+        {
+            "table_name": "eo_jadwal_kuliah",
+            "column_name": "hari"
+        },
+        {
+            "table_name": "eo_jadwal_kuliah",
+            "column_name": "jam_mulai"
+        },
+        {
+            "table_name": "eo_jadwal_kuliah",
+            "column_name": "jam_selesai"
+        },
+        {
+            "table_name": "eo_jadwal_kuliah",
+            "column_name": "mata_kuliah"
+        },
+        {
+            "table_name": "eo_jadwal_kuliah",
+            "column_name": "dosen"
+        },
+        {
+            "table_name": "eo_jadwal_kuliah",
+            "column_name": "kelas"
+        },
+        {
+            "table_name": "eo_jadwal_kuliah",
+            "column_name": "semester"
+        },
+        {
+            "table_name": "eo_jadwal_kuliah",
+            "column_name": "tahun_ajaran"
+        },
+        {
+            "table_name": "eo_jadwal_kuliah",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_jadwal_kuliah",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_jenis_surat",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_jenis_surat",
+            "column_name": "nama_jenis"
+        },
+        {
+            "table_name": "eo_jenis_surat",
+            "column_name": "kode_surat"
+        },
+        {
+            "table_name": "eo_jenis_surat",
+            "column_name": "deskripsi"
+        },
+        {
+            "table_name": "eo_jenis_surat",
+            "column_name": "is_active"
+        },
+        {
+            "table_name": "eo_jenis_surat",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_jenis_surat",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_jenis_surat",
+            "column_name": "klasifikasi_id"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "nim"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "mahasiswa_id"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "dosen_pembimbing_id"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "judul_kp"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "instansi_kp"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "tanggal_mulai"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "tanggal_selesai"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "status_kp"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "is_acc_admin"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "deleted_at"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "ipk"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "sks_diambil"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "kelas"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "periode_id"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "is_data_instansi_locked"
+        },
+        {
+            "table_name": "eo_kerja_praktik",
+            "column_name": "keterangan_status"
+        },
+        {
+            "table_name": "eo_kp_balancing",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_kp_balancing",
+            "column_name": "kp_id"
+        },
+        {
+            "table_name": "eo_kp_balancing",
+            "column_name": "mahasiswa_id"
+        },
+        {
+            "table_name": "eo_kp_balancing",
+            "column_name": "dosen_id"
+        },
+        {
+            "table_name": "eo_kp_balancing",
+            "column_name": "status"
+        },
+        {
+            "table_name": "eo_kp_balancing",
+            "column_name": "assigned_by"
+        },
+        {
+            "table_name": "eo_kp_balancing",
+            "column_name": "assigned_at"
+        },
+        {
+            "table_name": "eo_kp_balancing",
+            "column_name": "finalized_at"
+        },
+        {
+            "table_name": "eo_kp_balancing",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_kp_balancing",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "kp_id"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "jenis_dokumen"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "file_path"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "status_validasi"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "tanggal_upload"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "is_published"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "file_name"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "phase"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "approval_status"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "approved_by"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "approved_at"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "revision_note"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "nilai_input_mahasiswa"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "nilai_validasi_koordinator"
+        },
+        {
+            "table_name": "eo_kp_dokumen",
+            "column_name": "nilai_status"
+        },
+        {
+            "table_name": "eo_kp_dosen",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_kp_dosen",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_kp_dosen",
+            "column_name": "nip"
+        },
+        {
+            "table_name": "eo_kp_dosen",
+            "column_name": "nama_lengkap"
+        },
+        {
+            "table_name": "eo_kp_dosen",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_kp_dosen",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_kp_dosen",
+            "column_name": "kuota_maksimal"
+        },
+        {
+            "table_name": "eo_kp_komponen_nilai",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_kp_komponen_nilai",
+            "column_name": "periode_id"
+        },
+        {
+            "table_name": "eo_kp_komponen_nilai",
+            "column_name": "nama_komponen"
+        },
+        {
+            "table_name": "eo_kp_komponen_nilai",
+            "column_name": "bobot"
+        },
+        {
+            "table_name": "eo_kp_komponen_nilai",
+            "column_name": "role_penilai"
+        },
+        {
+            "table_name": "eo_kp_komponen_nilai",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_kp_komponen_nilai",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_kp_komponen_nilai",
+            "column_name": "master_rubrik_id"
+        },
+        {
+            "table_name": "eo_kp_komponen_nilai",
+            "column_name": "kode"
+        },
+        {
+            "table_name": "eo_kp_mahasiswa",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_kp_mahasiswa",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_kp_mahasiswa",
+            "column_name": "nim"
+        },
+        {
+            "table_name": "eo_kp_mahasiswa",
+            "column_name": "nama_lengkap"
+        },
+        {
+            "table_name": "eo_kp_mahasiswa",
+            "column_name": "prodi"
+        },
+        {
+            "table_name": "eo_kp_mahasiswa",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_kp_mahasiswa",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_kp_master_rubrik",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_kp_master_rubrik",
+            "column_name": "kode"
+        },
+        {
+            "table_name": "eo_kp_master_rubrik",
+            "column_name": "deskripsi"
+        },
+        {
+            "table_name": "eo_kp_master_rubrik",
+            "column_name": "bobot"
+        },
+        {
+            "table_name": "eo_kp_master_rubrik",
+            "column_name": "role_penilai"
+        },
+        {
+            "table_name": "eo_kp_master_rubrik",
+            "column_name": "is_active"
+        },
+        {
+            "table_name": "eo_kp_master_rubrik",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_kp_master_rubrik",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_kp_nilai_detail",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_kp_nilai_detail",
+            "column_name": "kp_id"
+        },
+        {
+            "table_name": "eo_kp_nilai_detail",
+            "column_name": "komponen_id"
+        },
+        {
+            "table_name": "eo_kp_nilai_detail",
+            "column_name": "nilai_angka"
+        },
+        {
+            "table_name": "eo_kp_nilai_detail",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_kp_nilai_detail",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_kp_pengumuman",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_kp_pengumuman",
+            "column_name": "judul"
+        },
+        {
+            "table_name": "eo_kp_pengumuman",
+            "column_name": "konten"
+        },
+        {
+            "table_name": "eo_kp_pengumuman",
+            "column_name": "tipe"
+        },
+        {
+            "table_name": "eo_kp_pengumuman",
+            "column_name": "is_active"
+        },
+        {
+            "table_name": "eo_kp_pengumuman",
+            "column_name": "created_by"
+        },
+        {
+            "table_name": "eo_kp_pengumuman",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_kp_pengumuman",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_kp_pengumuman",
+            "column_name": "is_published"
+        },
+        {
+            "table_name": "eo_kp_pengumuman",
+            "column_name": "lampiran"
+        },
+        {
+            "table_name": "eo_kp_penilaian",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_kp_penilaian",
+            "column_name": "kp_id"
+        },
+        {
+            "table_name": "eo_kp_penilaian",
+            "column_name": "nilai_akhir"
+        },
+        {
+            "table_name": "eo_kp_penilaian",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_kp_penilaian",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "tahun_ajaran"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "semester"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "is_active"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "tanggal_buka"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "tanggal_tutup"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "pra_kp_mulai"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "pra_kp_akhir"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "pra_kp_pengingat"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "saat_kp_mulai"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "saat_kp_akhir"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "saat_kp_pengingat"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "pasca_kp_mulai"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "pasca_kp_akhir"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "pasca_kp_pengingat"
+        },
+        {
+            "table_name": "eo_kp_periode",
+            "column_name": "kelas_dibuka"
+        },
+        {
+            "table_name": "eo_kp_seminar",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_kp_seminar",
+            "column_name": "kp_id"
+        },
+        {
+            "table_name": "eo_kp_seminar",
+            "column_name": "tanggal_seminar"
+        },
+        {
+            "table_name": "eo_kp_seminar",
+            "column_name": "waktu_seminar"
+        },
+        {
+            "table_name": "eo_kp_seminar",
+            "column_name": "ruangan"
+        },
+        {
+            "table_name": "eo_kp_seminar",
+            "column_name": "status_validasi_syarat"
+        },
+        {
+            "table_name": "eo_kp_seminar",
+            "column_name": "path_undangan"
+        },
+        {
+            "table_name": "eo_kp_seminar",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_kp_seminar",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_kp_seminar",
+            "column_name": "status_validasi_dosen"
+        },
+        {
+            "table_name": "eo_kp_seminar",
+            "column_name": "catatan_dosen"
+        },
+        {
+            "table_name": "eo_kp_settings",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_kp_settings",
+            "column_name": "key"
+        },
+        {
+            "table_name": "eo_kp_settings",
+            "column_name": "value"
+        },
+        {
+            "table_name": "eo_kp_settings",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_kp_settings",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_kp_template",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_kp_template",
+            "column_name": "title"
+        },
+        {
+            "table_name": "eo_kp_template",
+            "column_name": "description"
+        },
+        {
+            "table_name": "eo_kp_template",
+            "column_name": "phase"
+        },
+        {
+            "table_name": "eo_kp_template",
+            "column_name": "file_name"
+        },
+        {
+            "table_name": "eo_kp_template",
+            "column_name": "file_path"
+        },
+        {
+            "table_name": "eo_kp_template",
+            "column_name": "file_type"
+        },
+        {
+            "table_name": "eo_kp_template",
+            "column_name": "is_required"
+        },
+        {
+            "table_name": "eo_kp_template",
+            "column_name": "uploaded_by"
+        },
+        {
+            "table_name": "eo_kp_template",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_kp_template",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_kp_template",
+            "column_name": "periode_id"
+        },
+        {
+            "table_name": "eo_kp_template",
+            "column_name": "is_downloadable"
+        },
+        {
+            "table_name": "eo_kp_template",
+            "column_name": "is_uploadable"
+        },
+        {
+            "table_name": "eo_kp_template",
+            "column_name": "approver_role"
+        },
+        {
+            "table_name": "eo_lampiran",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_lampiran",
+            "column_name": "surat_id"
+        },
+        {
+            "table_name": "eo_lampiran",
+            "column_name": "nama_file"
+        },
+        {
+            "table_name": "eo_lampiran",
+            "column_name": "path_file"
+        },
+        {
+            "table_name": "eo_lampiran",
+            "column_name": "tipe_file"
+        },
+        {
+            "table_name": "eo_lampiran",
+            "column_name": "uploaded_at"
+        },
+        {
+            "table_name": "eo_lampiran",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_lampiran",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_log_aktivitas",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_log_aktivitas",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_log_aktivitas",
+            "column_name": "aksi"
+        },
+        {
+            "table_name": "eo_log_aktivitas",
+            "column_name": "modul"
+        },
+        {
+            "table_name": "eo_log_aktivitas",
+            "column_name": "detail"
+        },
+        {
+            "table_name": "eo_log_aktivitas",
+            "column_name": "ip_address"
+        },
+        {
+            "table_name": "eo_log_aktivitas",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_log_aktivitas",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_mi_barang",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_mi_barang",
+            "column_name": "kategori_id"
+        },
+        {
+            "table_name": "eo_mi_barang",
+            "column_name": "satuan_id"
+        },
+        {
+            "table_name": "eo_mi_barang",
+            "column_name": "nama_barang"
+        },
+        {
+            "table_name": "eo_mi_barang",
+            "column_name": "foto"
+        },
+        {
+            "table_name": "eo_mi_barang",
+            "column_name": "asal_lab"
+        },
+        {
+            "table_name": "eo_mi_barang",
+            "column_name": "jumlah_stok"
+        },
+        {
+            "table_name": "eo_mi_barang",
+            "column_name": "is_active"
+        },
+        {
+            "table_name": "eo_mi_barang",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_mi_barang",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_mi_kategori",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_mi_kategori",
+            "column_name": "nama_kategori"
+        },
+        {
+            "table_name": "eo_mi_kategori",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_mi_kategori",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_mi_satuan",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_mi_satuan",
+            "column_name": "nama_satuan"
+        },
+        {
+            "table_name": "eo_mi_satuan",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_mi_satuan",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_mr_blacklists",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_mr_blacklists",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_mr_blacklists",
+            "column_name": "alasan"
+        },
+        {
+            "table_name": "eo_mr_blacklists",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_mr_blacklists",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_mr_fasilitas",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_mr_fasilitas",
+            "column_name": "nama_fasilitas"
+        },
+        {
+            "table_name": "eo_mr_fasilitas",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_mr_fasilitas",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "ruangan_id"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "tipe_jadwal"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "kategori"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "hari"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "tanggal_spesifik"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "jam_mulai"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "jam_selesai"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "tgl_mulai_efektif"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "tgl_selesai_efektif"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "mata_kuliah"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "kode_mk"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "kelas"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "sks"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "kuota"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "pengampu"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "keterangan"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_mr_jadwal_internal",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "column_name": "ruangan_id"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "column_name": "nomor_telepon"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "column_name": "tujuan"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "column_name": "tanggal_pinjam"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "column_name": "jam_mulai"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "column_name": "jam_selesai"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "column_name": "berkas_pendukung"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "column_name": "status"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "column_name": "alasan_penolakan"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "column_name": "waktu_approval"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "column_name": "created_by"
+        },
+        {
+            "table_name": "eo_mr_peminjamans",
+            "column_name": "deleted_at"
+        },
+        {
+            "table_name": "eo_mr_pengaturan",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_mr_pengaturan",
+            "column_name": "key"
+        },
+        {
+            "table_name": "eo_mr_pengaturan",
+            "column_name": "value"
+        },
+        {
+            "table_name": "eo_mr_pengaturan",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_mr_pengaturan",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_mr_ruangan_fasilitas",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_mr_ruangan_fasilitas",
+            "column_name": "ruangan_id"
+        },
+        {
+            "table_name": "eo_mr_ruangan_fasilitas",
+            "column_name": "fasilitas_id"
+        },
+        {
+            "table_name": "eo_mr_ruangan_fasilitas",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_mr_ruangan_fasilitas",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_mr_ruangan_fotos",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_mr_ruangan_fotos",
+            "column_name": "ruangan_id"
+        },
+        {
+            "table_name": "eo_mr_ruangan_fotos",
+            "column_name": "path_foto"
+        },
+        {
+            "table_name": "eo_mr_ruangan_fotos",
+            "column_name": "urutan"
+        },
+        {
+            "table_name": "eo_mr_ruangan_fotos",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_mr_ruangan_fotos",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_mr_ruangans",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_mr_ruangans",
+            "column_name": "nama"
+        },
+        {
+            "table_name": "eo_mr_ruangans",
+            "column_name": "lokasi"
+        },
+        {
+            "table_name": "eo_mr_ruangans",
+            "column_name": "lantai"
+        },
+        {
+            "table_name": "eo_mr_ruangans",
+            "column_name": "kapasitas"
+        },
+        {
+            "table_name": "eo_mr_ruangans",
+            "column_name": "fasilitas"
+        },
+        {
+            "table_name": "eo_mr_ruangans",
+            "column_name": "is_active"
+        },
+        {
+            "table_name": "eo_mr_ruangans",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_mr_ruangans",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_mr_ruangans",
+            "column_name": "deleted_at"
+        },
+        {
+            "table_name": "eo_mr_tanggal_libur",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_mr_tanggal_libur",
+            "column_name": "tanggal"
+        },
+        {
+            "table_name": "eo_mr_tanggal_libur",
+            "column_name": "keterangan"
+        },
+        {
+            "table_name": "eo_mr_tanggal_libur",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_mr_tanggal_libur",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_ms_audit_log",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_ms_audit_log",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_ms_audit_log",
+            "column_name": "aksi"
+        },
+        {
+            "table_name": "eo_ms_audit_log",
+            "column_name": "target_type"
+        },
+        {
+            "table_name": "eo_ms_audit_log",
+            "column_name": "target_id"
+        },
+        {
+            "table_name": "eo_ms_audit_log",
+            "column_name": "deskripsi"
+        },
+        {
+            "table_name": "eo_ms_audit_log",
+            "column_name": "ip_address"
+        },
+        {
+            "table_name": "eo_ms_audit_log",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_ms_hak_akses",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_ms_hak_akses",
+            "column_name": "jenis_surat_id"
+        },
+        {
+            "table_name": "eo_ms_hak_akses",
+            "column_name": "role_name"
+        },
+        {
+            "table_name": "eo_ms_hak_akses",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_ms_hak_akses",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_ms_jawaban_field",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_ms_jawaban_field",
+            "column_name": "pengajuan_id"
+        },
+        {
+            "table_name": "eo_ms_jawaban_field",
+            "column_name": "field_id"
+        },
+        {
+            "table_name": "eo_ms_jawaban_field",
+            "column_name": "nilai"
+        },
+        {
+            "table_name": "eo_ms_jawaban_field",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_ms_jawaban_field",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_ms_klasifikasi",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_ms_klasifikasi",
+            "column_name": "kode"
+        },
+        {
+            "table_name": "eo_ms_klasifikasi",
+            "column_name": "deskripsi"
+        },
+        {
+            "table_name": "eo_ms_klasifikasi",
+            "column_name": "is_active"
+        },
+        {
+            "table_name": "eo_ms_klasifikasi",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_ms_klasifikasi",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_ms_penandatangan",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_ms_penandatangan",
+            "column_name": "nama"
+        },
+        {
+            "table_name": "eo_ms_penandatangan",
+            "column_name": "jabatan"
+        },
+        {
+            "table_name": "eo_ms_penandatangan",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_ms_penandatangan",
+            "column_name": "tanda_tangan_path"
+        },
+        {
+            "table_name": "eo_ms_penandatangan",
+            "column_name": "is_active"
+        },
+        {
+            "table_name": "eo_ms_penandatangan",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_ms_penandatangan",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_ms_penandatangan",
+            "column_name": "nip"
+        },
+        {
+            "table_name": "eo_ms_pengajuan",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_ms_pengajuan",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_ms_pengajuan",
+            "column_name": "jenis_surat_id"
+        },
+        {
+            "table_name": "eo_ms_pengajuan",
+            "column_name": "nomor_surat"
+        },
+        {
+            "table_name": "eo_ms_pengajuan",
+            "column_name": "status"
+        },
+        {
+            "table_name": "eo_ms_pengajuan",
+            "column_name": "catatan_admin"
+        },
+        {
+            "table_name": "eo_ms_pengajuan",
+            "column_name": "file_output"
+        },
+        {
+            "table_name": "eo_ms_pengajuan",
+            "column_name": "penandatangan_id"
+        },
+        {
+            "table_name": "eo_ms_pengajuan",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_ms_pengajuan",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_ms_pengaturan",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_ms_pengaturan",
+            "column_name": "kunci"
+        },
+        {
+            "table_name": "eo_ms_pengaturan",
+            "column_name": "nilai"
+        },
+        {
+            "table_name": "eo_ms_pengaturan",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_ms_pengaturan",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_ms_unit_kerja",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_ms_unit_kerja",
+            "column_name": "kode_unit"
+        },
+        {
+            "table_name": "eo_ms_unit_kerja",
+            "column_name": "nama_unit"
+        },
+        {
+            "table_name": "eo_ms_unit_kerja",
+            "column_name": "is_active"
+        },
+        {
+            "table_name": "eo_ms_unit_kerja",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_ms_unit_kerja",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_notifikasi",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_notifikasi",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_notifikasi",
+            "column_name": "peminjaman_id"
+        },
+        {
+            "table_name": "eo_notifikasi",
+            "column_name": "judul"
+        },
+        {
+            "table_name": "eo_notifikasi",
+            "column_name": "pesan"
+        },
+        {
+            "table_name": "eo_notifikasi",
+            "column_name": "is_read"
+        },
+        {
+            "table_name": "eo_notifikasi",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_notifikasi",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_peminjaman",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_peminjaman",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_peminjaman",
+            "column_name": "ruangan_id"
+        },
+        {
+            "table_name": "eo_peminjaman",
+            "column_name": "approved_by"
+        },
+        {
+            "table_name": "eo_peminjaman",
+            "column_name": "tanggal"
+        },
+        {
+            "table_name": "eo_peminjaman",
+            "column_name": "jam_mulai"
+        },
+        {
+            "table_name": "eo_peminjaman",
+            "column_name": "jam_selesai"
+        },
+        {
+            "table_name": "eo_peminjaman",
+            "column_name": "keperluan"
+        },
+        {
+            "table_name": "eo_peminjaman",
+            "column_name": "status"
+        },
+        {
+            "table_name": "eo_peminjaman",
+            "column_name": "alasan_penolakan"
+        },
+        {
+            "table_name": "eo_peminjaman",
+            "column_name": "is_auto_approved"
+        },
+        {
+            "table_name": "eo_peminjaman",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_peminjaman",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_penomoran_counter",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_penomoran_counter",
+            "column_name": "bulan_tahun"
+        },
+        {
+            "table_name": "eo_penomoran_counter",
+            "column_name": "last_number"
+        },
+        {
+            "table_name": "eo_penomoran_counter",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_penomoran_counter",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_absensi_praktikum",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_absensi_praktikum",
+            "column_name": "modul_id"
+        },
+        {
+            "table_name": "eo_prak_absensi_praktikum",
+            "column_name": "daftar_praktikan_id"
+        },
+        {
+            "table_name": "eo_prak_absensi_praktikum",
+            "column_name": "tanggal"
+        },
+        {
+            "table_name": "eo_prak_absensi_praktikum",
+            "column_name": "status"
+        },
+        {
+            "table_name": "eo_prak_absensi_praktikum",
+            "column_name": "keterangan"
+        },
+        {
+            "table_name": "eo_prak_absensi_praktikum",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_absensi_praktikum",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_asprak_praktikum",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_asprak_praktikum",
+            "column_name": "praktikum_id"
+        },
+        {
+            "table_name": "eo_prak_asprak_praktikum",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_prak_asprak_praktikum",
+            "column_name": "role"
+        },
+        {
+            "table_name": "eo_prak_asprak_praktikum",
+            "column_name": "deskripsi"
+        },
+        {
+            "table_name": "eo_prak_asprak_praktikum",
+            "column_name": "deleted_at"
+        },
+        {
+            "table_name": "eo_prak_asprak_praktikum",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_asprak_praktikum",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_daftar_praktikan",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_daftar_praktikan",
+            "column_name": "praktikum_id"
+        },
+        {
+            "table_name": "eo_prak_daftar_praktikan",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_prak_daftar_praktikan",
+            "column_name": "status"
+        },
+        {
+            "table_name": "eo_prak_daftar_praktikan",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_daftar_praktikan",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_daftar_praktikan",
+            "column_name": "kelompok"
+        },
+        {
+            "table_name": "eo_prak_daftar_praktikan",
+            "column_name": "shift"
+        },
+        {
+            "table_name": "eo_prak_materi_modul",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_materi_modul",
+            "column_name": "modul_id"
+        },
+        {
+            "table_name": "eo_prak_materi_modul",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_prak_materi_modul",
+            "column_name": "judul"
+        },
+        {
+            "table_name": "eo_prak_materi_modul",
+            "column_name": "deskripsi"
+        },
+        {
+            "table_name": "eo_prak_materi_modul",
+            "column_name": "file_path"
+        },
+        {
+            "table_name": "eo_prak_materi_modul",
+            "column_name": "tipe_file"
+        },
+        {
+            "table_name": "eo_prak_materi_modul",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_materi_modul",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_matkul_praktikum",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_matkul_praktikum",
+            "column_name": "kode"
+        },
+        {
+            "table_name": "eo_prak_matkul_praktikum",
+            "column_name": "nama"
+        },
+        {
+            "table_name": "eo_prak_matkul_praktikum",
+            "column_name": "sks"
+        },
+        {
+            "table_name": "eo_prak_matkul_praktikum",
+            "column_name": "semester"
+        },
+        {
+            "table_name": "eo_prak_matkul_praktikum",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_matkul_praktikum",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_modul_asprak",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_modul_asprak",
+            "column_name": "modul_id"
+        },
+        {
+            "table_name": "eo_prak_modul_asprak",
+            "column_name": "asprak_id"
+        },
+        {
+            "table_name": "eo_prak_modul_asprak",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_modul_asprak",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_modul_praktikum",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_modul_praktikum",
+            "column_name": "praktikum_id"
+        },
+        {
+            "table_name": "eo_prak_modul_praktikum",
+            "column_name": "nama"
+        },
+        {
+            "table_name": "eo_prak_modul_praktikum",
+            "column_name": "deskripsi"
+        },
+        {
+            "table_name": "eo_prak_modul_praktikum",
+            "column_name": "urutan"
+        },
+        {
+            "table_name": "eo_prak_modul_praktikum",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_modul_praktikum",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_modul_praktikum",
+            "column_name": "kode_modul"
+        },
+        {
+            "table_name": "eo_prak_modul_praktikum",
+            "column_name": "jadwal_minggu"
+        },
+        {
+            "table_name": "eo_prak_modul_praktikum",
+            "column_name": "status_sesi"
+        },
+        {
+            "table_name": "eo_prak_modul_praktikum",
+            "column_name": "dimulai_pada"
+        },
+        {
+            "table_name": "eo_prak_modul_praktikum",
+            "column_name": "selesai_pada"
+        },
+        {
+            "table_name": "eo_prak_modul_praktikum",
+            "column_name": "dimulai_oleh"
+        },
+        {
+            "table_name": "eo_prak_nilai_jenis_tugas",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_nilai_jenis_tugas",
+            "column_name": "daftar_praktikan_id"
+        },
+        {
+            "table_name": "eo_prak_nilai_jenis_tugas",
+            "column_name": "modul_id"
+        },
+        {
+            "table_name": "eo_prak_nilai_jenis_tugas",
+            "column_name": "jenis_tugas"
+        },
+        {
+            "table_name": "eo_prak_nilai_jenis_tugas",
+            "column_name": "nilai"
+        },
+        {
+            "table_name": "eo_prak_nilai_jenis_tugas",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_nilai_jenis_tugas",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_nilai_praktikum",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_nilai_praktikum",
+            "column_name": "daftar_praktikan_id"
+        },
+        {
+            "table_name": "eo_prak_nilai_praktikum",
+            "column_name": "modul"
+        },
+        {
+            "table_name": "eo_prak_nilai_praktikum",
+            "column_name": "nilai_tugas"
+        },
+        {
+            "table_name": "eo_prak_nilai_praktikum",
+            "column_name": "nilai_absensi"
+        },
+        {
+            "table_name": "eo_prak_nilai_praktikum",
+            "column_name": "nilai_akhir"
+        },
+        {
+            "table_name": "eo_prak_nilai_praktikum",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_nilai_praktikum",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_nilai_praktikum",
+            "column_name": "disetujui_koor"
+        },
+        {
+            "table_name": "eo_prak_nilai_praktikum",
+            "column_name": "disetujui_dosen"
+        },
+        {
+            "table_name": "eo_prak_nilai_praktikum",
+            "column_name": "dipublikasikan"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "praktikum_id"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "ipk"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "motivasi"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "cv_path"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "jadwal"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "status"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "alasan_penolakan"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "transkrip_path"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "direview_oleh"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "direview_pada"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "catatan_koor"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "status_koor"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "berkas_cerc_path"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "jawaban_kuis"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_asprak",
+            "column_name": "skor_kuis"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "praktikum_id"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "ipk"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "motivasi"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "status"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "alasan_penolakan"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "direview_oleh"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "direview_pada"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "status_dosen"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "catatan_dosen"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "transkrip_path"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "berkas_cerc_path"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "berkas_tambahan_path"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "jawaban_kuis"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_koordinator",
+            "column_name": "skor_kuis"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_praktikan",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_praktikan",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_praktikan",
+            "column_name": "praktikum_id"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_praktikan",
+            "column_name": "periode_id"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_praktikan",
+            "column_name": "irs_path"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_praktikan",
+            "column_name": "status"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_praktikan",
+            "column_name": "alasan_penolakan"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_praktikan",
+            "column_name": "direview_oleh"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_praktikan",
+            "column_name": "direview_pada"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_praktikan",
+            "column_name": "catatan_koor"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_praktikan",
+            "column_name": "validasi_mode"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_praktikan",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_pendaftaran_praktikan",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_pengumpulan_tugas",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_pengumpulan_tugas",
+            "column_name": "tugas_id"
+        },
+        {
+            "table_name": "eo_prak_pengumpulan_tugas",
+            "column_name": "daftar_praktikan_id"
+        },
+        {
+            "table_name": "eo_prak_pengumpulan_tugas",
+            "column_name": "file_path"
+        },
+        {
+            "table_name": "eo_prak_pengumpulan_tugas",
+            "column_name": "catatan"
+        },
+        {
+            "table_name": "eo_prak_pengumpulan_tugas",
+            "column_name": "nilai"
+        },
+        {
+            "table_name": "eo_prak_pengumpulan_tugas",
+            "column_name": "catatan_revisi"
+        },
+        {
+            "table_name": "eo_prak_pengumpulan_tugas",
+            "column_name": "is_revision"
+        },
+        {
+            "table_name": "eo_prak_pengumpulan_tugas",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_pengumpulan_tugas",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_pengumpulan_tugas",
+            "column_name": "status_pengumpulan"
+        },
+        {
+            "table_name": "eo_prak_pengumpulan_tugas",
+            "column_name": "file_revisi_asprak"
+        },
+        {
+            "table_name": "eo_prak_pengumuman_praktikum",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_pengumuman_praktikum",
+            "column_name": "praktikum_id"
+        },
+        {
+            "table_name": "eo_prak_pengumuman_praktikum",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_prak_pengumuman_praktikum",
+            "column_name": "judul"
+        },
+        {
+            "table_name": "eo_prak_pengumuman_praktikum",
+            "column_name": "konten"
+        },
+        {
+            "table_name": "eo_prak_pengumuman_praktikum",
+            "column_name": "is_published"
+        },
+        {
+            "table_name": "eo_prak_pengumuman_praktikum",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_pengumuman_praktikum",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_pengumuman_praktikum",
+            "column_name": "tipe_sistem"
+        },
+        {
+            "table_name": "eo_prak_pengumuman_praktikum",
+            "column_name": "periode_id"
+        },
+        {
+            "table_name": "eo_prak_pengumuman_praktikum",
+            "column_name": "deleted_at"
+        },
+        {
+            "table_name": "eo_prak_pengumuman_praktikum",
+            "column_name": "lampiran"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "column_name": "praktikum_id"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "column_name": "jenis"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "column_name": "nama"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "column_name": "dibuka_pada"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "column_name": "ditutup_pada"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "column_name": "is_aktif"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "column_name": "dibuka_oleh"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "column_name": "judul"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "column_name": "deskripsi"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "column_name": "nama_berkas_tambahan"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "column_name": "konfigurasi_kuis"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "column_name": "jenis_berkas_tambahan"
+        },
+        {
+            "table_name": "eo_prak_periode_pendaftaran",
+            "column_name": "keterangan_berkas_tambahan"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "nama"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "kode"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "deskripsi"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "koor_id"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "semester"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "status"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "deleted_at"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "matkul_id"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "tahun_ajaran"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "jumlah_kelompok"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "jumlah_shift"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "is_active"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "cover_path"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "bobot_tp"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "bobot_praktikum"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "bobot_laporan"
+        },
+        {
+            "table_name": "eo_prak_praktikum",
+            "column_name": "bobot_responsi"
+        },
+        {
+            "table_name": "eo_prak_praktikum_dosen",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_praktikum_dosen",
+            "column_name": "praktikum_id"
+        },
+        {
+            "table_name": "eo_prak_praktikum_dosen",
+            "column_name": "dosen_id"
+        },
+        {
+            "table_name": "eo_prak_praktikum_dosen",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_praktikum_dosen",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_praktikum_legacy",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_praktikum_legacy",
+            "column_name": "nama"
+        },
+        {
+            "table_name": "eo_prak_praktikum_legacy",
+            "column_name": "kode"
+        },
+        {
+            "table_name": "eo_prak_praktikum_legacy",
+            "column_name": "deskripsi"
+        },
+        {
+            "table_name": "eo_prak_praktikum_legacy",
+            "column_name": "dosen_id"
+        },
+        {
+            "table_name": "eo_prak_praktikum_legacy",
+            "column_name": "koor_id"
+        },
+        {
+            "table_name": "eo_prak_praktikum_legacy",
+            "column_name": "tahun_ajaran"
+        },
+        {
+            "table_name": "eo_prak_praktikum_legacy",
+            "column_name": "semester"
+        },
+        {
+            "table_name": "eo_prak_praktikum_legacy",
+            "column_name": "status"
+        },
+        {
+            "table_name": "eo_prak_praktikum_legacy",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_praktikum_legacy",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_praktikum_legacy",
+            "column_name": "deleted_at"
+        },
+        {
+            "table_name": "eo_prak_riwayat_pengumpulan_tugas",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_riwayat_pengumpulan_tugas",
+            "column_name": "pengumpulan_tugas_id"
+        },
+        {
+            "table_name": "eo_prak_riwayat_pengumpulan_tugas",
+            "column_name": "file_path"
+        },
+        {
+            "table_name": "eo_prak_riwayat_pengumpulan_tugas",
+            "column_name": "catatan"
+        },
+        {
+            "table_name": "eo_prak_riwayat_pengumpulan_tugas",
+            "column_name": "is_revision"
+        },
+        {
+            "table_name": "eo_prak_riwayat_pengumpulan_tugas",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_riwayat_pengumpulan_tugas",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_tugas_praktikum",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_prak_tugas_praktikum",
+            "column_name": "modul_id"
+        },
+        {
+            "table_name": "eo_prak_tugas_praktikum",
+            "column_name": "judul"
+        },
+        {
+            "table_name": "eo_prak_tugas_praktikum",
+            "column_name": "deskripsi"
+        },
+        {
+            "table_name": "eo_prak_tugas_praktikum",
+            "column_name": "deadline"
+        },
+        {
+            "table_name": "eo_prak_tugas_praktikum",
+            "column_name": "is_published"
+        },
+        {
+            "table_name": "eo_prak_tugas_praktikum",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_prak_tugas_praktikum",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_prak_tugas_praktikum",
+            "column_name": "file_path"
+        },
+        {
+            "table_name": "eo_prak_tugas_praktikum",
+            "column_name": "deadline_acc"
+        },
+        {
+            "table_name": "eo_prak_tugas_praktikum",
+            "column_name": "jenis_tugas"
+        },
+        {
+            "table_name": "eo_riwayat_status_surat",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_riwayat_status_surat",
+            "column_name": "surat_id"
+        },
+        {
+            "table_name": "eo_riwayat_status_surat",
+            "column_name": "aktor_id"
+        },
+        {
+            "table_name": "eo_riwayat_status_surat",
+            "column_name": "status_baru"
+        },
+        {
+            "table_name": "eo_riwayat_status_surat",
+            "column_name": "catatan"
+        },
+        {
+            "table_name": "eo_riwayat_status_surat",
+            "column_name": "waktu"
+        },
+        {
+            "table_name": "eo_riwayat_status_surat",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_riwayat_status_surat",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_roles",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_roles",
+            "column_name": "name"
+        },
+        {
+            "table_name": "eo_roles",
+            "column_name": "prioritas"
+        },
+        {
+            "table_name": "eo_roles",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_roles",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_ruangan",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_ruangan",
+            "column_name": "kode"
+        },
+        {
+            "table_name": "eo_ruangan",
+            "column_name": "nama"
+        },
+        {
+            "table_name": "eo_ruangan",
+            "column_name": "gedung"
+        },
+        {
+            "table_name": "eo_ruangan",
+            "column_name": "lantai"
+        },
+        {
+            "table_name": "eo_ruangan",
+            "column_name": "kapasitas"
+        },
+        {
+            "table_name": "eo_ruangan",
+            "column_name": "fasilitas"
+        },
+        {
+            "table_name": "eo_ruangan",
+            "column_name": "status"
+        },
+        {
+            "table_name": "eo_ruangan",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_ruangan",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_surat",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_surat",
+            "column_name": "jenis_id"
+        },
+        {
+            "table_name": "eo_surat",
+            "column_name": "pemohon_id"
+        },
+        {
+            "table_name": "eo_surat",
+            "column_name": "dibuat_oleh_admin"
+        },
+        {
+            "table_name": "eo_surat",
+            "column_name": "nomor_urut"
+        },
+        {
+            "table_name": "eo_surat",
+            "column_name": "bulan_tahun"
+        },
+        {
+            "table_name": "eo_surat",
+            "column_name": "nomor_surat"
+        },
+        {
+            "table_name": "eo_surat",
+            "column_name": "tanggal_pengajuan"
+        },
+        {
+            "table_name": "eo_surat",
+            "column_name": "status"
+        },
+        {
+            "table_name": "eo_surat",
+            "column_name": "file_hasil"
+        },
+        {
+            "table_name": "eo_surat",
+            "column_name": "tipe_pengajuan"
+        },
+        {
+            "table_name": "eo_surat",
+            "column_name": "catatan_pemohon"
+        },
+        {
+            "table_name": "eo_surat",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_surat",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_surat_masuk",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_surat_masuk",
+            "column_name": "nomor_surat_luar"
+        },
+        {
+            "table_name": "eo_surat_masuk",
+            "column_name": "pengirim"
+        },
+        {
+            "table_name": "eo_surat_masuk",
+            "column_name": "perihal"
+        },
+        {
+            "table_name": "eo_surat_masuk",
+            "column_name": "kategori"
+        },
+        {
+            "table_name": "eo_surat_masuk",
+            "column_name": "tanggal_surat"
+        },
+        {
+            "table_name": "eo_surat_masuk",
+            "column_name": "tanggal_terima"
+        },
+        {
+            "table_name": "eo_surat_masuk",
+            "column_name": "file_scan"
+        },
+        {
+            "table_name": "eo_surat_masuk",
+            "column_name": "dicatat_oleh"
+        },
+        {
+            "table_name": "eo_surat_masuk",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_template_surat",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_template_surat",
+            "column_name": "jenis_id"
+        },
+        {
+            "table_name": "eo_template_surat",
+            "column_name": "isi_template"
+        },
+        {
+            "table_name": "eo_template_surat",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_template_surat",
+            "column_name": "updated_at"
+        },
+        {
+            "table_name": "eo_user_profiles",
+            "column_name": "id"
+        },
+        {
+            "table_name": "eo_user_profiles",
+            "column_name": "user_id"
+        },
+        {
+            "table_name": "eo_user_profiles",
+            "column_name": "no_wa"
+        },
+        {
+            "table_name": "eo_user_profiles",
+            "column_name": "foto"
+        },
+        {
+            "table_name": "eo_user_profiles",
+            "column_name": "identitas"
+        },
+        {
+            "table_name": "eo_user_profiles",
+            "column_name": "is_active"
+        },
+        {
+            "table_name": "eo_user_profiles",
+            "column_name": "created_at"
+        },
+        {
+            "table_name": "eo_user_profiles",
+            "column_name": "updated_at"
+        }
+    ],
+    "constraints": [
+        {
+            "relname": "eo_prak_absensi_praktikum",
+            "conname": "absensi_praktikum_pkey",
+            "convalidated": true,
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "relname": "eo_prak_asprak_praktikum",
+            "conname": "asprak_praktikum_pkey",
+            "convalidated": true,
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "relname": "eo_prak_daftar_praktikan",
+            "conname": "daftar_praktikan_pkey",
+            "convalidated": true,
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "relname": "eo_approval",
+            "conname": "eo_approval_pkey",
+            "convalidated": true,
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "relname": "eo_aturan_peminjaman",
+            "conname": "eo_aturan_peminjaman_pkey",
+            "convalidated": true,
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "relname": "eo_audit_logs",
+            "conname": "eo_audit_logs_pkey",
+            "convalidated": true,
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "relname": "eo_berkas_pendukung",
+            "conname": "eo_berkas_pendukung_pkey",
+            "convalidated": true,
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "relname": "eo_field_template",
+            "conname": "eo_field_template_pkey",
+            "convalidated": true,
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "relname": "eo_kp_balancing",
+            "conname": "eo_kp_balancing_status_check",
+            "convalidated": true,
+            "definition": "CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('finalized'::character varying)::text])))"
+        },
+        {
+            "relname": "eo_kerja_praktik",
+            "conname": "eo_kerja_praktik_periode_id_foreign",
+            "convalidated": true,
+            "definition": "FOREIGN KEY (periode_id) REFERENCES eo_kp_periode(id) ON DELETE SET NULL"
+        },
+        {
+            "relname": "eo_kp_komponen_nilai",
+            "conname": "eo_kp_komponen_nilai_master_rubrik_id_foreign",
+            "convalidated": true,
+            "definition": "FOREIGN KEY (master_rubrik_id) REFERENCES eo_kp_master_rubrik(id) ON DELETE SET NULL"
+        },
+        {
+            "relname": "eo_kp_komponen_nilai",
+            "conname": "eo_kp_komponen_nilai_role_penilai_check",
+            "convalidated": true,
+            "definition": "CHECK (((role_penilai)::text = ANY (ARRAY[('dosen_pembimbing'::character varying)::text, ('koordinator'::character varying)::text])))"
+        },
+        {
+            "relname": "eo_kp_master_rubrik",
+            "conname": "eo_kp_master_rubrik_pkey",
+            "convalidated": true,
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "relname": "eo_kp_master_rubrik",
+            "conname": "eo_kp_master_rubrik_role_penilai_check",
+            "convalidated": true,
+            "definition": "CHECK (((role_penilai)::text = ANY (ARRAY[('dosen_pembimbing'::character varying)::text, ('koordinator'::character varying)::text])))"
+        },
+        {
+            "relname": "eo_kp_periode",
+            "conname": "eo_kp_periode_pkey",
+            "convalidated": true,
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "relname": "eo_kp_periode",
+            "conname": "eo_kp_periode_semester_check",
+            "convalidated": true,
+            "definition": "CHECK (((semester)::text = ANY (ARRAY[('Ganjil'::character varying)::text, ('Genap'::character varying)::text])))"
+        },
+        {
+            "relname": "eo_kp_template",
+            "conname": "eo_kp_template_phase_check",
+            "convalidated": true,
+            "definition": "CHECK (((phase)::text = ANY (ARRAY[('pra_kp'::character varying)::text, ('saat_kp'::character varying)::text, ('pasca_kp'::character varying)::text])))"
+        },
+        {
+            "relname": "eo_mr_fasilitas",
+            "conname": "eo_mr_fasilitas_pkey",
+            "convalidated": true,
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "relname": "eo_mr_peminjamans",
+            "conname": "eo_mr_peminjamans_created_by_foreign",
+            "convalidated": true,
+            "definition": "FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL"
+        },
+        {
+            "relname": "eo_mr_peminjamans",
+            "conname": "eo_mr_peminjamans_status_check",
+            "convalidated": true,
+            "definition": "CHECK (((status)::text = ANY (ARRAY[('menunggu'::character varying)::text, ('disetujui'::character varying)::text, ('ditolak'::character varying)::text, ('dibatalkan'::character varying)::text])))"
+        },
+        {
+            "relname": "eo_mr_ruangan_fasilitas",
+            "conname": "eo_mr_ruangan_fasilitas_fasilitas_id_foreign",
+            "convalidated": true,
+            "definition": "FOREIGN KEY (fasilitas_id) REFERENCES eo_mr_fasilitas(id) ON DELETE CASCADE"
+        },
+        {
+            "relname": "eo_mr_ruangan_fasilitas",
+            "conname": "eo_mr_ruangan_fasilitas_pkey",
+            "convalidated": true,
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "relname": "eo_mr_ruangan_fasilitas",
+            "conname": "eo_mr_ruangan_fasilitas_ruangan_id_foreign",
+            "convalidated": true,
+            "definition": "FOREIGN KEY (ruangan_id) REFERENCES eo_mr_ruangans(id) ON DELETE CASCADE"
+        },
+        {
+            "relname": "eo_approval_config",
+            "conname": "eo_approval_config_pkey",
+            "convalidated": true,
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "relname": "eo_arsip_surat",
+            "conname": "eo_arsip_surat_pkey",
+            "convalidated": true,
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "relname": "eo_disposisi_surat_masuk",
+            "conname": "eo_disposisi_surat_masuk_pkey",
+            "convalidated": true,
+            "definition": "PRIMARY KEY (id)"
+        },
+        {
+            "relname": "eo_kp_dokumen",
+            "conname": "eo_kp_dokumen_approval_status_check",
+            "convalidated": true,
+            "definition": "CHECK (((approval_status)::text = ANY (ARRAY[('pending'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text, ('revision'::character varying)::text])))"
+        },
+        {
+            "relname": "eo_kp_dokumen",
+            "conname": "eo_kp_dokumen_nilai_status_check",
+            "convalidated": true,
+            "definition": "CHECK (((nilai_status)::text = ANY (ARRAY[('pending'::character varying)::text, ('valid'::character varying)::text, ('rejected'::character varying)::text])))"
+        },
+        {
+            "relname": "eo_kp_dokumen",
+            "conname": "eo_kp_dokumen_phase_check",
+            "convalidated": true,
+            "definition": "CHECK (((phase)::text = ANY (ARRAY[('pra_kp'::character varying)::text, ('saat_kp'::character varying)::text, ('pasca_kp'::character varying)::text])))"
+        },
+        {
+            "relname": "eo_kp_seminar",
+            "conname": "eo_kp_seminar_status_validasi_dosen_check",
+            "convalidated": true,
+            "definition": "CHECK (((status_validasi_dosen)::text = ANY (ARRAY[('pending'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text])))"
+        },
+        {
+            "relname": "eo_mr_ruangans",
+            "conname": "eo_mr_ruangans_pkey",
+            "convalidated": true,
+            "definition": "PRIMARY KEY (id)"
+        }
+    ]
+}

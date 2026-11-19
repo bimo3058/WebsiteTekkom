@@ -94,7 +94,7 @@ class PasswordResetTest extends TestCase
 
         $this->post('/forgot-password', $this->passwordInput($user))
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('login'))
+            ->assertRedirect(route('admin.login'))
             ->assertSessionHas('status', 'Password berhasil diubah. Silakan login dengan password baru.');
 
         $user->refresh();

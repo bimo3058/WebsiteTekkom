@@ -1,0 +1,26 @@
+{
+    "reference_tables": 58,
+    "operations": [
+        {
+            "table": "mk_kemahasiswaan",
+            "sql": "ALTER TABLE public.\"mk_kemahasiswaan\" ADD CONSTRAINT \"mk_kemahasiswaan_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_streaks",
+            "sql": "ALTER TABLE public.\"mk_streaks\" ADD CONSTRAINT \"mk_streaks_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_xp_logs",
+            "sql": "ALTER TABLE public.\"mk_xp_logs\" ADD CONSTRAINT \"mk_xp_logs_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ADD CONSTRAINT \"mk_prestasi_kemahasiswaan_id_foreign\" FOREIGN KEY (kemahasiswaan_id) REFERENCES public.mk_kemahasiswaan(id)",
+            "kind": "constraint"
+        }
+    ],
+    "column_differences": []
+}

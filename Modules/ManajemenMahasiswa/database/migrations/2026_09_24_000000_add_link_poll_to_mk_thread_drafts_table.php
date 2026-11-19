@@ -9,8 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('mk_thread_drafts', function (Blueprint $table) {
-            $table->string('link_url', 2000)->nullable()->after('media_files');
-            $table->jsonb('poll_data')->nullable()->after('link_url');
+            if (! Schema::hasColumn('mk_thread_drafts', 'link_url')) {
+                $table->string('link_url', 2000)->nullable()->after('media_files');
+            }
+            if (! Schema::hasColumn('mk_thread_drafts', 'poll_data')) {
+                $table->jsonb('poll_data')->nullable()->after('link_url');
+            }
         });
     }
 

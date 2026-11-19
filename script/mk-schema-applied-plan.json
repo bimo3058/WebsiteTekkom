@@ -1,0 +1,3494 @@
+{
+    "reference_tables": 58,
+    "operations": [
+        {
+            "table": "mk_alumni",
+            "sql": "ALTER TABLE public.\"mk_alumni\" ALTER COLUMN \"nim\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_alumni",
+            "sql": "ALTER TABLE public.\"mk_alumni\" ALTER COLUMN \"program_studi\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_alumni",
+            "sql": "ALTER TABLE public.\"mk_alumni\" ALTER COLUMN \"perusahaan\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_alumni",
+            "sql": "ALTER TABLE public.\"mk_alumni\" ALTER COLUMN \"jabatan\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_alumni",
+            "sql": "ALTER TABLE public.\"mk_alumni\" ALTER COLUMN \"linkedin\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_alumni",
+            "sql": "ALTER TABLE public.\"mk_alumni\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_alumni",
+            "sql": "ALTER TABLE public.\"mk_alumni\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_alumni",
+            "sql": "ALTER TABLE public.\"mk_alumni\" ALTER COLUMN \"bidang_industri\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_alumni",
+            "sql": "ALTER TABLE public.\"mk_alumni\" ALTER COLUMN \"status_karir\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_audit_logs",
+            "sql": "ALTER TABLE public.\"mk_audit_logs\" ALTER COLUMN \"action\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_audit_logs",
+            "sql": "ALTER TABLE public.\"mk_audit_logs\" ALTER COLUMN \"subject_type\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_audit_logs",
+            "sql": "ALTER TABLE public.\"mk_audit_logs\" ALTER COLUMN \"description\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_audit_logs",
+            "sql": "ALTER TABLE public.\"mk_audit_logs\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_badges",
+            "sql": "ALTER TABLE public.\"mk_badges\" ALTER COLUMN \"name\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_badges",
+            "sql": "ALTER TABLE public.\"mk_badges\" ALTER COLUMN \"slug\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_badges",
+            "sql": "ALTER TABLE public.\"mk_badges\" ALTER COLUMN \"icon\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_badges",
+            "sql": "ALTER TABLE public.\"mk_badges\" ALTER COLUMN \"criteria_type\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_badges",
+            "sql": "ALTER TABLE public.\"mk_badges\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_badges",
+            "sql": "ALTER TABLE public.\"mk_badges\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_badges",
+            "sql": "ALTER TABLE public.\"mk_badges\" ALTER COLUMN \"image\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_bidang",
+            "sql": "ALTER TABLE public.\"mk_bidang\" ALTER COLUMN \"nama_bidang\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_bidang",
+            "sql": "ALTER TABLE public.\"mk_bidang\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_bidang",
+            "sql": "ALTER TABLE public.\"mk_bidang\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_bidang",
+            "sql": "ALTER TABLE public.\"mk_bidang\" ADD COLUMN \"jenis\" character varying NOT NULL DEFAULT 'bidang'::character varying",
+            "kind": "column"
+        },
+        {
+            "table": "mk_comment_forum",
+            "sql": "ALTER TABLE public.\"mk_comment_forum\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_comment_forum",
+            "sql": "ALTER TABLE public.\"mk_comment_forum\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_comments",
+            "sql": "ALTER TABLE public.\"mk_comments\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_comments",
+            "sql": "ALTER TABLE public.\"mk_comments\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_dashboard_analitik",
+            "sql": "ALTER TABLE public.\"mk_dashboard_analitik\" ALTER COLUMN \"tanggal_generate\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_dashboard_analitik",
+            "sql": "ALTER TABLE public.\"mk_dashboard_analitik\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_dashboard_analitik",
+            "sql": "ALTER TABLE public.\"mk_dashboard_analitik\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_discussion",
+            "sql": "ALTER TABLE public.\"mk_discussion\" ALTER COLUMN \"judul_discussion\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_discussion",
+            "sql": "ALTER TABLE public.\"mk_discussion\" ALTER COLUMN \"status\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_discussion",
+            "sql": "ALTER TABLE public.\"mk_discussion\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_discussion",
+            "sql": "ALTER TABLE public.\"mk_discussion\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_dosen",
+            "sql": "ALTER TABLE public.\"mk_dosen\" ALTER COLUMN \"nip\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_dosen",
+            "sql": "ALTER TABLE public.\"mk_dosen\" ALTER COLUMN \"program_studi\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_dosen",
+            "sql": "ALTER TABLE public.\"mk_dosen\" ALTER COLUMN \"bidang_keahlian\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_dosen",
+            "sql": "ALTER TABLE public.\"mk_dosen\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_dosen",
+            "sql": "ALTER TABLE public.\"mk_dosen\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_forum_mahasiswa",
+            "sql": "ALTER TABLE public.\"mk_forum_mahasiswa\" ALTER COLUMN \"nama_forum\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_forum_mahasiswa",
+            "sql": "ALTER TABLE public.\"mk_forum_mahasiswa\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_forum_mahasiswa",
+            "sql": "ALTER TABLE public.\"mk_forum_mahasiswa\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_forum_notifications",
+            "sql": "ALTER TABLE public.\"mk_forum_notifications\" ALTER COLUMN \"type\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_forum_notifications",
+            "sql": "ALTER TABLE public.\"mk_forum_notifications\" ALTER COLUMN \"read_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_forum_notifications",
+            "sql": "ALTER TABLE public.\"mk_forum_notifications\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_forum_notifications",
+            "sql": "ALTER TABLE public.\"mk_forum_notifications\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_forum_reports",
+            "sql": "ALTER TABLE public.\"mk_forum_reports\" ALTER COLUMN \"status\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_forum_reports",
+            "sql": "ALTER TABLE public.\"mk_forum_reports\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_forum_reports",
+            "sql": "ALTER TABLE public.\"mk_forum_reports\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kategori_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kategori_kegiatan\" ALTER COLUMN \"nama_kategori\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kategori_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kategori_kegiatan\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kategori_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kategori_kegiatan\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ALTER COLUMN \"kategori_kegiatan_id\" DROP NOT NULL",
+            "kind": "nullable"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ALTER COLUMN \"judul\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ALTER COLUMN \"lokasi\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ALTER COLUMN \"banner\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ALTER COLUMN \"anggaran\" TYPE numeric",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ALTER COLUMN \"penanggung_jawab\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ALTER COLUMN \"status\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ALTER COLUMN \"jam_mulai\" TYPE time without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ALTER COLUMN \"jam_selesai\" TYPE time without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ALTER COLUMN \"realisasi_lokasi\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ALTER COLUMN \"realisasi_anggaran\" TYPE numeric",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ALTER COLUMN \"surat_proker\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ALTER COLUMN \"surat_proker_original\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ADD COLUMN \"rencana_id\" bigint",
+            "kind": "column"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ALTER COLUMN \"disetujui_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ADD COLUMN \"dosen_pendamping_id\" bigint",
+            "kind": "column"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ADD COLUMN \"dana_departemen\" numeric",
+            "kind": "column"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ADD COLUMN \"kas_himpunan\" numeric",
+            "kind": "column"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ADD COLUMN \"kas_bidang\" numeric",
+            "kind": "column"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ADD COLUMN \"ruangan_id\" bigint",
+            "kind": "column"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ADD COLUMN \"status_tinjauan\" character varying",
+            "kind": "column"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ADD COLUMN \"dikirim_tinjau_at\" timestamp without time zone",
+            "kind": "column"
+        },
+        {
+            "table": "mk_kegiatan_attachments",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_attachments\" ALTER COLUMN \"file_path\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_attachments",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_attachments\" ALTER COLUMN \"file_name\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_attachments",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_attachments\" ALTER COLUMN \"tipe\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_attachments",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_attachments\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_attachments",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_attachments\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_bidang",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_bidang\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_bidang",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_bidang\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_kategori",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_kategori\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_kategori",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_kategori\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_panitia",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_panitia\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_panitia",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_panitia\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_panitia",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_panitia\" ALTER COLUMN \"peran\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_peserta",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_peserta\" ALTER COLUMN \"status_kehadiran\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_peserta",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_peserta\" ALTER COLUMN \"registered_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_peserta",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_peserta\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_peserta",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_peserta\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kemahasiswaan",
+            "sql": "ALTER TABLE public.\"mk_kemahasiswaan\" ALTER COLUMN \"nama\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kemahasiswaan",
+            "sql": "ALTER TABLE public.\"mk_kemahasiswaan\" ALTER COLUMN \"nim\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kemahasiswaan",
+            "sql": "ALTER TABLE public.\"mk_kemahasiswaan\" ALTER COLUMN \"status\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kemahasiswaan",
+            "sql": "ALTER TABLE public.\"mk_kemahasiswaan\" ALTER COLUMN \"profesi\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kemahasiswaan",
+            "sql": "ALTER TABLE public.\"mk_kemahasiswaan\" ALTER COLUMN \"kontak\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kemahasiswaan",
+            "sql": "ALTER TABLE public.\"mk_kemahasiswaan\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kemahasiswaan",
+            "sql": "ALTER TABLE public.\"mk_kemahasiswaan\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kepengurusan",
+            "sql": "ALTER TABLE public.\"mk_kepengurusan\" ALTER COLUMN \"tahun_periode\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kepengurusan",
+            "sql": "ALTER TABLE public.\"mk_kepengurusan\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kepengurusan",
+            "sql": "ALTER TABLE public.\"mk_kepengurusan\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_mahasiswa",
+            "sql": "ALTER TABLE public.\"mk_mahasiswa\" ALTER COLUMN \"nim\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_mahasiswa",
+            "sql": "ALTER TABLE public.\"mk_mahasiswa\" ALTER COLUMN \"program_studi\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_mahasiswa",
+            "sql": "ALTER TABLE public.\"mk_mahasiswa\" ALTER COLUMN \"status\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_mahasiswa",
+            "sql": "ALTER TABLE public.\"mk_mahasiswa\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_mahasiswa",
+            "sql": "ALTER TABLE public.\"mk_mahasiswa\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_model_has_permissions",
+            "sql": "ALTER TABLE public.\"mk_model_has_permissions\" ALTER COLUMN \"model_type\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_model_has_roles",
+            "sql": "ALTER TABLE public.\"mk_model_has_roles\" ALTER COLUMN \"model_type\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ALTER COLUMN \"user_id\" DROP NOT NULL",
+            "kind": "nullable"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ALTER COLUMN \"kategori\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ALTER COLUMN \"status\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ALTER COLUMN \"read_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ALTER COLUMN \"answered_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ALTER COLUMN \"auto_close_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ALTER COLUMN \"closed_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ALTER COLUMN \"anon_token\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ALTER COLUMN \"deleted_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ADD COLUMN \"pelapor_tersimpan_id\" bigint",
+            "kind": "column"
+        },
+        {
+            "table": "mk_pengaduan_delegasi",
+            "sql": "ALTER TABLE public.\"mk_pengaduan_delegasi\" ALTER COLUMN \"status\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengaduan_delegasi",
+            "sql": "ALTER TABLE public.\"mk_pengaduan_delegasi\" ALTER COLUMN \"delegated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengaduan_delegasi",
+            "sql": "ALTER TABLE public.\"mk_pengaduan_delegasi\" ALTER COLUMN \"responded_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengaduan_log",
+            "sql": "ALTER TABLE public.\"mk_pengaduan_log\" ALTER COLUMN \"action\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengaduan_log",
+            "sql": "ALTER TABLE public.\"mk_pengaduan_log\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman",
+            "sql": "ALTER TABLE public.\"mk_pengumuman\" ALTER COLUMN \"judul\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman",
+            "sql": "ALTER TABLE public.\"mk_pengumuman\" ALTER COLUMN \"target_audience\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman",
+            "sql": "ALTER TABLE public.\"mk_pengumuman\" ALTER COLUMN \"kategori\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman",
+            "sql": "ALTER TABLE public.\"mk_pengumuman\" ALTER COLUMN \"status_publish\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman",
+            "sql": "ALTER TABLE public.\"mk_pengumuman\" ALTER COLUMN \"published_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman",
+            "sql": "ALTER TABLE public.\"mk_pengumuman\" ALTER COLUMN \"scheduled_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman",
+            "sql": "ALTER TABLE public.\"mk_pengumuman\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman",
+            "sql": "ALTER TABLE public.\"mk_pengumuman\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman_approval_requests",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_approval_requests\" ALTER COLUMN \"status\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman_approval_requests",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_approval_requests\" ALTER COLUMN \"verified_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman_approval_requests",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_approval_requests\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman_approval_requests",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_approval_requests\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman_attachments",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_attachments\" ALTER COLUMN \"file_path\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman_attachments",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_attachments\" ALTER COLUMN \"file_name\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman_attachments",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_attachments\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman_attachments",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_attachments\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman_drafts",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_drafts\" ALTER COLUMN \"judul\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman_drafts",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_drafts\" ALTER COLUMN \"kategori\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman_drafts",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_drafts\" ALTER COLUMN \"target_audience\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman_drafts",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_drafts\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman_drafts",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_drafts\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman_personal_pins",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_personal_pins\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengumuman_personal_pins",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_personal_pins\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengurus_himaskom",
+            "sql": "ALTER TABLE public.\"mk_pengurus_himaskom\" ALTER COLUMN \"divisi\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengurus_himaskom",
+            "sql": "ALTER TABLE public.\"mk_pengurus_himaskom\" ALTER COLUMN \"jabatan\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengurus_himaskom",
+            "sql": "ALTER TABLE public.\"mk_pengurus_himaskom\" ALTER COLUMN \"status_keaktifan\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengurus_himaskom",
+            "sql": "ALTER TABLE public.\"mk_pengurus_himaskom\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengurus_himaskom",
+            "sql": "ALTER TABLE public.\"mk_pengurus_himaskom\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengurus_himpunan",
+            "sql": "ALTER TABLE public.\"mk_pengurus_himpunan\" ALTER COLUMN \"organisasi\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengurus_himpunan",
+            "sql": "ALTER TABLE public.\"mk_pengurus_himpunan\" ALTER COLUMN \"jabatan_organisasi\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengurus_himpunan",
+            "sql": "ALTER TABLE public.\"mk_pengurus_himpunan\" ALTER COLUMN \"periode\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengurus_himpunan",
+            "sql": "ALTER TABLE public.\"mk_pengurus_himpunan\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_pengurus_himpunan",
+            "sql": "ALTER TABLE public.\"mk_pengurus_himpunan\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_permissions",
+            "sql": "ALTER TABLE public.\"mk_permissions\" ALTER COLUMN \"name\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_permissions",
+            "sql": "ALTER TABLE public.\"mk_permissions\" ALTER COLUMN \"guard_name\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_permissions",
+            "sql": "ALTER TABLE public.\"mk_permissions\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_permissions",
+            "sql": "ALTER TABLE public.\"mk_permissions\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ALTER COLUMN \"nama_prestasi\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ALTER COLUMN \"tingkat\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ALTER COLUMN \"verification_status\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ALTER COLUMN \"verified_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ALTER COLUMN \"claim_status\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ALTER COLUMN \"claimed_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ALTER COLUMN \"reward_penyelenggara\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ALTER COLUMN \"reward_capaian\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ALTER COLUMN \"reward_reviewed_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ALTER COLUMN \"reward_kuota_grup\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ALTER COLUMN \"reward_sk_ref\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ADD COLUMN \"reward_tahun_ajaran\" character varying",
+            "kind": "column"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ADD COLUMN \"reward_sks_diajukan\" smallint",
+            "kind": "column"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ADD COLUMN \"reward_mk_ta\" json",
+            "kind": "column"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "sql": "ALTER TABLE public.\"mk_proker_ttd\" ALTER COLUMN \"role\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "sql": "ALTER TABLE public.\"mk_proker_ttd\" ALTER COLUMN \"signature_image_path\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "sql": "ALTER TABLE public.\"mk_proker_ttd\" ALTER COLUMN \"pos_x_percent\" TYPE numeric",
+            "kind": "type"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "sql": "ALTER TABLE public.\"mk_proker_ttd\" ALTER COLUMN \"pos_y_percent\" TYPE numeric",
+            "kind": "type"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "sql": "ALTER TABLE public.\"mk_proker_ttd\" ALTER COLUMN \"width_percent\" TYPE numeric",
+            "kind": "type"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "sql": "ALTER TABLE public.\"mk_proker_ttd\" ALTER COLUMN \"height_percent\" TYPE numeric",
+            "kind": "type"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "sql": "ALTER TABLE public.\"mk_proker_ttd\" ALTER COLUMN \"signed_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "sql": "ALTER TABLE public.\"mk_proker_ttd\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "sql": "ALTER TABLE public.\"mk_proker_ttd\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "sql": "ALTER TABLE public.\"mk_repo_mulmed\" ALTER COLUMN \"nama_file\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "sql": "ALTER TABLE public.\"mk_repo_mulmed\" ALTER COLUMN \"path_file\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "sql": "ALTER TABLE public.\"mk_repo_mulmed\" ALTER COLUMN \"tipe_file\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "sql": "ALTER TABLE public.\"mk_repo_mulmed\" ALTER COLUMN \"judul_file\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "sql": "ALTER TABLE public.\"mk_repo_mulmed\" ALTER COLUMN \"visibility_status\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "sql": "ALTER TABLE public.\"mk_repo_mulmed\" ALTER COLUMN \"status_arsip\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "sql": "ALTER TABLE public.\"mk_repo_mulmed\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "sql": "ALTER TABLE public.\"mk_repo_mulmed\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "sql": "ALTER TABLE public.\"mk_repo_mulmed\" ADD COLUMN \"jenis_dokumen\" character varying",
+            "kind": "column"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "sql": "ALTER TABLE public.\"mk_repo_mulmed\" ADD COLUMN \"dari_rencana\" boolean NOT NULL DEFAULT false",
+            "kind": "column"
+        },
+        {
+            "table": "mk_reward_aturan",
+            "sql": "ALTER TABLE public.\"mk_reward_aturan\" ALTER COLUMN \"judul\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_reward_aturan",
+            "sql": "ALTER TABLE public.\"mk_reward_aturan\" ALTER COLUMN \"nama_file\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_reward_aturan",
+            "sql": "ALTER TABLE public.\"mk_reward_aturan\" ALTER COLUMN \"path_file\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_reward_aturan",
+            "sql": "ALTER TABLE public.\"mk_reward_aturan\" ALTER COLUMN \"tipe_file\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_reward_aturan",
+            "sql": "ALTER TABLE public.\"mk_reward_aturan\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_reward_aturan",
+            "sql": "ALTER TABLE public.\"mk_reward_aturan\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_riwayat_kegiatan\" ALTER COLUMN \"peran\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_riwayat_kegiatan\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_riwayat_kegiatan\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_riwayat_kegiatan\" ALTER COLUMN \"nama_kegiatan_manual\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_riwayat_kegiatan\" ALTER COLUMN \"peran_manual\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_riwayat_kegiatan\" ALTER COLUMN \"verification_status\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_riwayat_kegiatan\" ALTER COLUMN \"verified_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_roles",
+            "sql": "ALTER TABLE public.\"mk_roles\" ALTER COLUMN \"name\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_roles",
+            "sql": "ALTER TABLE public.\"mk_roles\" ALTER COLUMN \"guard_name\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_roles",
+            "sql": "ALTER TABLE public.\"mk_roles\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_roles",
+            "sql": "ALTER TABLE public.\"mk_roles\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_streaks",
+            "sql": "ALTER TABLE public.\"mk_streaks\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_streaks",
+            "sql": "ALTER TABLE public.\"mk_streaks\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_thread_drafts",
+            "sql": "ALTER TABLE public.\"mk_thread_drafts\" ALTER COLUMN \"judul\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_thread_drafts",
+            "sql": "ALTER TABLE public.\"mk_thread_drafts\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_thread_drafts",
+            "sql": "ALTER TABLE public.\"mk_thread_drafts\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_thread_drafts",
+            "sql": "ALTER TABLE public.\"mk_thread_drafts\" ADD COLUMN \"link_url\" character varying",
+            "kind": "column"
+        },
+        {
+            "table": "mk_thread_drafts",
+            "sql": "ALTER TABLE public.\"mk_thread_drafts\" ADD COLUMN \"poll_data\" jsonb",
+            "kind": "column"
+        },
+        {
+            "table": "mk_thread_personal_pins",
+            "sql": "ALTER TABLE public.\"mk_thread_personal_pins\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_thread_personal_pins",
+            "sql": "ALTER TABLE public.\"mk_thread_personal_pins\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_thread_poll_options",
+            "sql": "ALTER TABLE public.\"mk_thread_poll_options\" ALTER COLUMN \"text\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_thread_poll_options",
+            "sql": "ALTER TABLE public.\"mk_thread_poll_options\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_thread_poll_options",
+            "sql": "ALTER TABLE public.\"mk_thread_poll_options\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_thread_poll_votes",
+            "sql": "ALTER TABLE public.\"mk_thread_poll_votes\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_thread_poll_votes",
+            "sql": "ALTER TABLE public.\"mk_thread_poll_votes\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_thread_polls",
+            "sql": "ALTER TABLE public.\"mk_thread_polls\" ALTER COLUMN \"expires_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_thread_polls",
+            "sql": "ALTER TABLE public.\"mk_thread_polls\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_thread_polls",
+            "sql": "ALTER TABLE public.\"mk_thread_polls\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_threads",
+            "sql": "ALTER TABLE public.\"mk_threads\" ALTER COLUMN \"judul\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_threads",
+            "sql": "ALTER TABLE public.\"mk_threads\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_threads",
+            "sql": "ALTER TABLE public.\"mk_threads\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_user_badges",
+            "sql": "ALTER TABLE public.\"mk_user_badges\" ALTER COLUMN \"earned_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_verifikasi_bukti",
+            "sql": "ALTER TABLE public.\"mk_verifikasi_bukti\" ALTER COLUMN \"bukti_type\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_verifikasi_bukti",
+            "sql": "ALTER TABLE public.\"mk_verifikasi_bukti\" ALTER COLUMN \"nama_file\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_verifikasi_bukti",
+            "sql": "ALTER TABLE public.\"mk_verifikasi_bukti\" ALTER COLUMN \"path_file\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_verifikasi_bukti",
+            "sql": "ALTER TABLE public.\"mk_verifikasi_bukti\" ALTER COLUMN \"tipe_file\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_verifikasi_bukti",
+            "sql": "ALTER TABLE public.\"mk_verifikasi_bukti\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_verifikasi_bukti",
+            "sql": "ALTER TABLE public.\"mk_verifikasi_bukti\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_votes",
+            "sql": "ALTER TABLE public.\"mk_votes\" ALTER COLUMN \"voteable_type\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_votes",
+            "sql": "ALTER TABLE public.\"mk_votes\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_votes",
+            "sql": "ALTER TABLE public.\"mk_votes\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_xp_logs",
+            "sql": "ALTER TABLE public.\"mk_xp_logs\" ALTER COLUMN \"action\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_xp_logs",
+            "sql": "ALTER TABLE public.\"mk_xp_logs\" ALTER COLUMN \"reference_type\" TYPE character varying",
+            "kind": "type"
+        },
+        {
+            "table": "mk_xp_logs",
+            "sql": "ALTER TABLE public.\"mk_xp_logs\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_xp_logs",
+            "sql": "ALTER TABLE public.\"mk_xp_logs\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_dosen_pendamping",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_dosen_pendamping\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_dosen_pendamping",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_dosen_pendamping\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_dosen_pendamping",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_dosen_pendamping\" ADD COLUMN \"peran\" character varying",
+            "kind": "column"
+        },
+        {
+            "table": "mk_kegiatan_pengelola",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_pengelola\" ALTER COLUMN \"created_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_kegiatan_pengelola",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_pengelola\" ALTER COLUMN \"updated_at\" TYPE timestamp without time zone",
+            "kind": "type"
+        },
+        {
+            "table": "mk_catatan_konseling",
+            "sql": "CREATE TABLE public.\"mk_catatan_konseling\" (\"id\" bigint NOT NULL GENERATED BY DEFAULT AS IDENTITY, \"nama_mahasiswa\" character varying NOT NULL, \"nim\" character varying, \"angkatan\" smallint, \"tanggal\" date NOT NULL, \"dicatat_oleh\" bigint, \"created_at\" timestamp without time zone, \"updated_at\" timestamp without time zone, \"deleted_at\" timestamp without time zone, \"kategori_kasus\" character varying, \"kronologi\" text, \"keinginan_pelapor\" text, \"tindak_lanjut\" text, \"status_kasus\" character varying NOT NULL DEFAULT 'baru'::character varying)",
+            "kind": "table"
+        },
+        {
+            "table": "mk_pengurus_bidang",
+            "sql": "CREATE TABLE public.\"mk_pengurus_bidang\" (\"id\" bigint NOT NULL GENERATED BY DEFAULT AS IDENTITY, \"user_id\" bigint NOT NULL, \"bidang_id\" bigint NOT NULL, \"created_at\" timestamp without time zone, \"updated_at\" timestamp without time zone)",
+            "kind": "table"
+        },
+        {
+            "table": "mk_kegiatan_catatan",
+            "sql": "CREATE TABLE public.\"mk_kegiatan_catatan\" (\"id\" bigint NOT NULL GENERATED BY DEFAULT AS IDENTITY, \"kegiatan_id\" bigint NOT NULL, \"user_id\" bigint, \"isi\" text NOT NULL, \"diperbaiki_at\" timestamp without time zone, \"diperbaiki_oleh\" bigint, \"created_at\" timestamp without time zone, \"updated_at\" timestamp without time zone)",
+            "kind": "table"
+        },
+        {
+            "table": "mk_alumni",
+            "sql": "ALTER TABLE public.\"mk_alumni\" ADD CONSTRAINT \"mk_alumni_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_audit_logs",
+            "sql": "ALTER TABLE public.\"mk_audit_logs\" ADD CONSTRAINT \"mk_audit_logs_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_badges",
+            "sql": "ALTER TABLE public.\"mk_badges\" ADD CONSTRAINT \"mk_badges_slug_key\" UNIQUE (\"slug\")",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_badges",
+            "sql": "ALTER TABLE public.\"mk_badges\" ADD CONSTRAINT \"mk_badges_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_bidang",
+            "sql": "ALTER TABLE public.\"mk_bidang\" ADD CONSTRAINT \"mk_bidang_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_comment_forum",
+            "sql": "ALTER TABLE public.\"mk_comment_forum\" ADD CONSTRAINT \"mk_comment_forum_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_comments",
+            "sql": "ALTER TABLE public.\"mk_comments\" ADD CONSTRAINT \"mk_comments_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_dashboard_analitik",
+            "sql": "ALTER TABLE public.\"mk_dashboard_analitik\" ADD CONSTRAINT \"mk_dashboard_analitik_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_discussion",
+            "sql": "ALTER TABLE public.\"mk_discussion\" ADD CONSTRAINT \"mk_discussion_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_dosen",
+            "sql": "ALTER TABLE public.\"mk_dosen\" ADD CONSTRAINT \"mk_dosen_nip_key\" UNIQUE (\"nip\")",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_dosen",
+            "sql": "ALTER TABLE public.\"mk_dosen\" ADD CONSTRAINT \"mk_dosen_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_forum_mahasiswa",
+            "sql": "ALTER TABLE public.\"mk_forum_mahasiswa\" ADD CONSTRAINT \"mk_forum_mahasiswa_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_forum_notifications",
+            "sql": "ALTER TABLE public.\"mk_forum_notifications\" ADD CONSTRAINT \"mk_forum_notifications_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_forum_reports",
+            "sql": "ALTER TABLE public.\"mk_forum_reports\" ADD CONSTRAINT \"mk_forum_reports_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kategori_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kategori_kegiatan\" ADD CONSTRAINT \"mk_kategori_kegiatan_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_attachments",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_attachments\" ADD CONSTRAINT \"mk_kegiatan_attachments_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_bidang",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_bidang\" ADD CONSTRAINT \"mk_kegiatan_bidang_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_kategori",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_kategori\" ADD CONSTRAINT \"mk_kegiatan_kategori_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_panitia",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_panitia\" ADD CONSTRAINT \"mk_kegiatan_panitia_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_peserta",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_peserta\" ADD CONSTRAINT \"mk_kegiatan_peserta_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kemahasiswaan",
+            "sql": "ALTER TABLE public.\"mk_kemahasiswaan\" ADD CONSTRAINT \"mk_kemahasiswaan_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kepengurusan",
+            "sql": "ALTER TABLE public.\"mk_kepengurusan\" ADD CONSTRAINT \"mk_kepengurusan_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_mahasiswa",
+            "sql": "ALTER TABLE public.\"mk_mahasiswa\" ADD CONSTRAINT \"mk_mahasiswa_nim_key\" UNIQUE (\"nim\")",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_mahasiswa",
+            "sql": "ALTER TABLE public.\"mk_mahasiswa\" ADD CONSTRAINT \"mk_mahasiswa_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_model_has_permissions",
+            "sql": "ALTER TABLE public.\"mk_model_has_permissions\" ADD CONSTRAINT \"mk_model_has_permissions_pkey\" PRIMARY KEY (permission_id, model_type, model_id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_model_has_roles",
+            "sql": "ALTER TABLE public.\"mk_model_has_roles\" ADD CONSTRAINT \"mk_model_has_roles_pkey\" PRIMARY KEY (role_id, model_type, model_id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ADD CONSTRAINT \"mk_pengaduan_anon_token_key\" UNIQUE (\"anon_token\")",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ADD CONSTRAINT \"mk_pengaduan_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengaduan_delegasi",
+            "sql": "ALTER TABLE public.\"mk_pengaduan_delegasi\" ADD CONSTRAINT \"mk_pengaduan_delegasi_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengaduan_log",
+            "sql": "ALTER TABLE public.\"mk_pengaduan_log\" ADD CONSTRAINT \"mk_pengaduan_log_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengumuman",
+            "sql": "ALTER TABLE public.\"mk_pengumuman\" ADD CONSTRAINT \"mk_pengumuman_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengumuman_approval_requests",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_approval_requests\" ADD CONSTRAINT \"mk_pengumuman_approval_requests_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengumuman_attachments",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_attachments\" ADD CONSTRAINT \"mk_pengumuman_attachments_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengumuman_drafts",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_drafts\" ADD CONSTRAINT \"mk_pengumuman_drafts_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengumuman_personal_pins",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_personal_pins\" ADD CONSTRAINT \"mk_pengumuman_personal_pins_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengurus_himaskom",
+            "sql": "ALTER TABLE public.\"mk_pengurus_himaskom\" ADD CONSTRAINT \"mk_pengurus_himaskom_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengurus_himpunan",
+            "sql": "ALTER TABLE public.\"mk_pengurus_himpunan\" ADD CONSTRAINT \"mk_pengurus_himpunan_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_permissions",
+            "sql": "ALTER TABLE public.\"mk_permissions\" ADD CONSTRAINT \"mk_permissions_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ADD CONSTRAINT \"mk_prestasi_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "sql": "ALTER TABLE public.\"mk_proker_ttd\" ADD CONSTRAINT \"mk_proker_ttd_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_reward_aturan",
+            "sql": "ALTER TABLE public.\"mk_reward_aturan\" ADD CONSTRAINT \"mk_reward_aturan_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_riwayat_kegiatan\" ADD CONSTRAINT \"mk_riwayat_kegiatan_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_role_has_permissions",
+            "sql": "ALTER TABLE public.\"mk_role_has_permissions\" ADD CONSTRAINT \"mk_role_has_permissions_pkey\" PRIMARY KEY (permission_id, role_id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_roles",
+            "sql": "ALTER TABLE public.\"mk_roles\" ADD CONSTRAINT \"mk_roles_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_streaks",
+            "sql": "ALTER TABLE public.\"mk_streaks\" ADD CONSTRAINT \"mk_streaks_user_id_key\" UNIQUE (\"user_id\")",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_streaks",
+            "sql": "ALTER TABLE public.\"mk_streaks\" ADD CONSTRAINT \"mk_streaks_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_thread_drafts",
+            "sql": "ALTER TABLE public.\"mk_thread_drafts\" ADD CONSTRAINT \"mk_thread_drafts_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_thread_personal_pins",
+            "sql": "ALTER TABLE public.\"mk_thread_personal_pins\" ADD CONSTRAINT \"mk_thread_personal_pins_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_thread_poll_options",
+            "sql": "ALTER TABLE public.\"mk_thread_poll_options\" ADD CONSTRAINT \"mk_thread_poll_options_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_thread_poll_votes",
+            "sql": "ALTER TABLE public.\"mk_thread_poll_votes\" ADD CONSTRAINT \"mk_thread_poll_votes_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_thread_polls",
+            "sql": "ALTER TABLE public.\"mk_thread_polls\" ADD CONSTRAINT \"mk_thread_polls_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_threads",
+            "sql": "ALTER TABLE public.\"mk_threads\" ADD CONSTRAINT \"mk_threads_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_user_badges",
+            "sql": "ALTER TABLE public.\"mk_user_badges\" ADD CONSTRAINT \"mk_user_badges_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_verifikasi_bukti",
+            "sql": "ALTER TABLE public.\"mk_verifikasi_bukti\" ADD CONSTRAINT \"mk_verifikasi_bukti_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_votes",
+            "sql": "ALTER TABLE public.\"mk_votes\" ADD CONSTRAINT \"mk_votes_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_xp_logs",
+            "sql": "ALTER TABLE public.\"mk_xp_logs\" ADD CONSTRAINT \"mk_xp_logs_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_catatan_konseling",
+            "sql": "ALTER TABLE public.\"mk_catatan_konseling\" ADD CONSTRAINT \"mk_catatan_konseling_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengurus_bidang",
+            "sql": "ALTER TABLE public.\"mk_pengurus_bidang\" ADD CONSTRAINT \"mk_pengurus_bidang_user_id_key\" UNIQUE (\"user_id\")",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengurus_bidang",
+            "sql": "ALTER TABLE public.\"mk_pengurus_bidang\" ADD CONSTRAINT \"mk_pengurus_bidang_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_catatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_catatan\" ADD CONSTRAINT \"mk_kegiatan_catatan_pkey\" PRIMARY KEY (id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_alumni",
+            "sql": "ALTER TABLE public.\"mk_alumni\" ADD CONSTRAINT \"mk_alumni_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_audit_logs",
+            "sql": "ALTER TABLE public.\"mk_audit_logs\" ADD CONSTRAINT \"mk_audit_logs_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_comment_forum",
+            "sql": "ALTER TABLE public.\"mk_comment_forum\" ADD CONSTRAINT \"mk_comment_forum_discussion_id_foreign\" FOREIGN KEY (discussion_id) REFERENCES public.mk_discussion(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_comment_forum",
+            "sql": "ALTER TABLE public.\"mk_comment_forum\" ADD CONSTRAINT \"mk_comment_forum_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_comments",
+            "sql": "ALTER TABLE public.\"mk_comments\" ADD CONSTRAINT \"mk_comments_parent_id_foreign\" FOREIGN KEY (parent_id) REFERENCES public.mk_comments(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_comments",
+            "sql": "ALTER TABLE public.\"mk_comments\" ADD CONSTRAINT \"mk_comments_thread_id_foreign\" FOREIGN KEY (thread_id) REFERENCES public.mk_threads(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_comments",
+            "sql": "ALTER TABLE public.\"mk_comments\" ADD CONSTRAINT \"mk_comments_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_dashboard_analitik",
+            "sql": "ALTER TABLE public.\"mk_dashboard_analitik\" ADD CONSTRAINT \"mk_dashboard_analitik_generated_by_user_id_foreign\" FOREIGN KEY (generated_by_user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_dashboard_analitik",
+            "sql": "ALTER TABLE public.\"mk_dashboard_analitik\" ADD CONSTRAINT \"mk_dashboard_analitik_lecturer_id_foreign\" FOREIGN KEY (lecturer_id) REFERENCES public.lecturers(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_discussion",
+            "sql": "ALTER TABLE public.\"mk_discussion\" ADD CONSTRAINT \"mk_discussion_forum_id_foreign\" FOREIGN KEY (forum_id) REFERENCES public.mk_forum_mahasiswa(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_discussion",
+            "sql": "ALTER TABLE public.\"mk_discussion\" ADD CONSTRAINT \"mk_discussion_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_dosen",
+            "sql": "ALTER TABLE public.\"mk_dosen\" ADD CONSTRAINT \"mk_dosen_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_forum_notifications",
+            "sql": "ALTER TABLE public.\"mk_forum_notifications\" ADD CONSTRAINT \"mk_forum_notifications_actor_id_foreign\" FOREIGN KEY (actor_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_forum_notifications",
+            "sql": "ALTER TABLE public.\"mk_forum_notifications\" ADD CONSTRAINT \"mk_forum_notifications_comment_id_foreign\" FOREIGN KEY (comment_id) REFERENCES public.mk_comments(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_forum_notifications",
+            "sql": "ALTER TABLE public.\"mk_forum_notifications\" ADD CONSTRAINT \"mk_forum_notifications_thread_id_foreign\" FOREIGN KEY (thread_id) REFERENCES public.mk_threads(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_forum_notifications",
+            "sql": "ALTER TABLE public.\"mk_forum_notifications\" ADD CONSTRAINT \"mk_forum_notifications_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_forum_reports",
+            "sql": "ALTER TABLE public.\"mk_forum_reports\" ADD CONSTRAINT \"mk_forum_reports_thread_id_foreign\" FOREIGN KEY (thread_id) REFERENCES public.mk_threads(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_forum_reports",
+            "sql": "ALTER TABLE public.\"mk_forum_reports\" ADD CONSTRAINT \"mk_forum_reports_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ADD CONSTRAINT \"mk_kegiatan_ketua_pelaksana_id_foreign\" FOREIGN KEY (ketua_pelaksana_id) REFERENCES public.students(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ADD CONSTRAINT \"mk_kegiatan_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ADD CONSTRAINT \"lg_mk_kegiatan_bidang_id_foreign\" FOREIGN KEY (bidang_id) REFERENCES public.mk_bidang(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ADD CONSTRAINT \"lg_mk_kegiatan_kategori_kegiatan_id_foreign\" FOREIGN KEY (kategori_kegiatan_id) REFERENCES public.mk_kategori_kegiatan(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ADD CONSTRAINT \"mk_kegiatan_rencana_id_foreign\" FOREIGN KEY (rencana_id) REFERENCES public.mk_kegiatan(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ADD CONSTRAINT \"mk_kegiatan_disetujui_oleh_foreign\" FOREIGN KEY (disetujui_oleh) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan\" ADD CONSTRAINT \"mk_kegiatan_dosen_pendamping_id_foreign\" FOREIGN KEY (dosen_pendamping_id) REFERENCES public.lecturers(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_attachments",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_attachments\" ADD CONSTRAINT \"lg_mk_kegiatan_attachments_kegiatan_id_foreign\" FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_bidang",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_bidang\" ADD CONSTRAINT \"lg_mk_kegiatan_bidang_bidang_id_foreign\" FOREIGN KEY (bidang_id) REFERENCES public.mk_bidang(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_bidang",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_bidang\" ADD CONSTRAINT \"lg_mk_kegiatan_bidang_kegiatan_id_foreign\" FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_kategori",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_kategori\" ADD CONSTRAINT \"lg_mk_kegiatan_kategori_kategori_kegiatan_id_foreign\" FOREIGN KEY (kategori_kegiatan_id) REFERENCES public.mk_kategori_kegiatan(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_kategori",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_kategori\" ADD CONSTRAINT \"lg_mk_kegiatan_kategori_kegiatan_id_foreign\" FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_panitia",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_panitia\" ADD CONSTRAINT \"lg_mk_kegiatan_panitia_kegiatan_id_foreign\" FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_panitia",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_panitia\" ADD CONSTRAINT \"lg_mk_kegiatan_panitia_student_id_foreign\" FOREIGN KEY (student_id) REFERENCES public.students(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_peserta",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_peserta\" ADD CONSTRAINT \"lg_mk_kegiatan_peserta_kegiatan_id_foreign\" FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_peserta",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_peserta\" ADD CONSTRAINT \"lg_mk_kegiatan_peserta_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kemahasiswaan",
+            "sql": "ALTER TABLE public.\"mk_kemahasiswaan\" ADD CONSTRAINT \"mk_kemahasiswaan_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_mahasiswa",
+            "sql": "ALTER TABLE public.\"mk_mahasiswa\" ADD CONSTRAINT \"mk_mahasiswa_dosen_wali_id_foreign\" FOREIGN KEY (dosen_wali_id) REFERENCES public.mk_dosen(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_mahasiswa",
+            "sql": "ALTER TABLE public.\"mk_mahasiswa\" ADD CONSTRAINT \"mk_mahasiswa_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_model_has_permissions",
+            "sql": "ALTER TABLE public.\"mk_model_has_permissions\" ADD CONSTRAINT \"mk_model_has_permissions_permission_id_foreign\" FOREIGN KEY (permission_id) REFERENCES public.mk_permissions(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_model_has_roles",
+            "sql": "ALTER TABLE public.\"mk_model_has_roles\" ADD CONSTRAINT \"mk_model_has_roles_role_id_foreign\" FOREIGN KEY (role_id) REFERENCES public.mk_roles(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ADD CONSTRAINT \"mk_pengaduan_answered_by_foreign\" FOREIGN KEY (answered_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ADD CONSTRAINT \"mk_pengaduan_closed_by_foreign\" FOREIGN KEY (closed_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ADD CONSTRAINT \"mk_pengaduan_read_by_foreign\" FOREIGN KEY (read_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ADD CONSTRAINT \"mk_pengaduan_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengaduan",
+            "sql": "ALTER TABLE public.\"mk_pengaduan\" ADD CONSTRAINT \"mk_pengaduan_pelapor_tersimpan_id_foreign\" FOREIGN KEY (pelapor_tersimpan_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengaduan_delegasi",
+            "sql": "ALTER TABLE public.\"mk_pengaduan_delegasi\" ADD CONSTRAINT \"lg_mk_pengaduan_delegasi_delegated_by_foreign\" FOREIGN KEY (delegated_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengaduan_delegasi",
+            "sql": "ALTER TABLE public.\"mk_pengaduan_delegasi\" ADD CONSTRAINT \"lg_mk_pengaduan_delegasi_delegated_to_foreign\" FOREIGN KEY (delegated_to) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengaduan_delegasi",
+            "sql": "ALTER TABLE public.\"mk_pengaduan_delegasi\" ADD CONSTRAINT \"lg_mk_pengaduan_delegasi_pengaduan_id_foreign\" FOREIGN KEY (pengaduan_id) REFERENCES public.mk_pengaduan(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengaduan_log",
+            "sql": "ALTER TABLE public.\"mk_pengaduan_log\" ADD CONSTRAINT \"lg_mk_pengaduan_log_actor_user_id_foreign\" FOREIGN KEY (actor_user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengaduan_log",
+            "sql": "ALTER TABLE public.\"mk_pengaduan_log\" ADD CONSTRAINT \"lg_mk_pengaduan_log_pengaduan_id_foreign\" FOREIGN KEY (pengaduan_id) REFERENCES public.mk_pengaduan(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengumuman",
+            "sql": "ALTER TABLE public.\"mk_pengumuman\" ADD CONSTRAINT \"mk_pengumuman_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengumuman_approval_requests",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_approval_requests\" ADD CONSTRAINT \"lg_mk_pengumuman_approval_requests_pengumuman_id_foreign\" FOREIGN KEY (pengumuman_id) REFERENCES public.mk_pengumuman(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengumuman_approval_requests",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_approval_requests\" ADD CONSTRAINT \"lg_mk_pengumuman_approval_requests_requester_id_foreign\" FOREIGN KEY (requester_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengumuman_approval_requests",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_approval_requests\" ADD CONSTRAINT \"lg_mk_pengumuman_approval_requests_verifier_id_foreign\" FOREIGN KEY (verifier_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengumuman_attachments",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_attachments\" ADD CONSTRAINT \"lg_mk_pengumuman_attachments_pengumuman_id_foreign\" FOREIGN KEY (pengumuman_id) REFERENCES public.mk_pengumuman(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengumuman_drafts",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_drafts\" ADD CONSTRAINT \"lg_mk_pengumuman_drafts_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengumuman_personal_pins",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_personal_pins\" ADD CONSTRAINT \"lg_mk_pengumuman_personal_pins_pengumuman_id_foreign\" FOREIGN KEY (pengumuman_id) REFERENCES public.mk_pengumuman(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengumuman_personal_pins",
+            "sql": "ALTER TABLE public.\"mk_pengumuman_personal_pins\" ADD CONSTRAINT \"lg_mk_pengumuman_personal_pins_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengurus_himaskom",
+            "sql": "ALTER TABLE public.\"mk_pengurus_himaskom\" ADD CONSTRAINT \"mk_pengurus_himaskom_kepengurusan_id_foreign\" FOREIGN KEY (kepengurusan_id) REFERENCES public.mk_kepengurusan(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengurus_himaskom",
+            "sql": "ALTER TABLE public.\"mk_pengurus_himaskom\" ADD CONSTRAINT \"mk_pengurus_himaskom_student_id_foreign\" FOREIGN KEY (student_id) REFERENCES public.students(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengurus_himpunan",
+            "sql": "ALTER TABLE public.\"mk_pengurus_himpunan\" ADD CONSTRAINT \"mk_pengurus_himpunan_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ADD CONSTRAINT \"mk_prestasi_claimed_by_foreign\" FOREIGN KEY (claimed_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ADD CONSTRAINT \"mk_prestasi_kemahasiswaan_id_foreign\" FOREIGN KEY (kemahasiswaan_id) REFERENCES public.mk_kemahasiswaan(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ADD CONSTRAINT \"mk_prestasi_reward_reviewed_by_foreign\" FOREIGN KEY (reward_reviewed_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_prestasi",
+            "sql": "ALTER TABLE public.\"mk_prestasi\" ADD CONSTRAINT \"mk_prestasi_verified_by_foreign\" FOREIGN KEY (verified_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "sql": "ALTER TABLE public.\"mk_proker_ttd\" ADD CONSTRAINT \"mk_proker_ttd_kegiatan_id_foreign\" FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "sql": "ALTER TABLE public.\"mk_proker_ttd\" ADD CONSTRAINT \"mk_proker_ttd_signed_by_foreign\" FOREIGN KEY (signed_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "sql": "ALTER TABLE public.\"mk_repo_mulmed\" ADD CONSTRAINT \"mk_repo_mulmed_kegiatan_id_foreign\" FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "sql": "ALTER TABLE public.\"mk_repo_mulmed\" ADD CONSTRAINT \"mk_repo_mulmed_pengumuman_id_foreign\" FOREIGN KEY (pengumuman_id) REFERENCES public.mk_pengumuman(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_reward_aturan",
+            "sql": "ALTER TABLE public.\"mk_reward_aturan\" ADD CONSTRAINT \"mk_reward_aturan_uploaded_by_foreign\" FOREIGN KEY (uploaded_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_riwayat_kegiatan\" ADD CONSTRAINT \"mk_riwayat_kegiatan_kegiatan_id_foreign\" FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_riwayat_kegiatan\" ADD CONSTRAINT \"mk_riwayat_kegiatan_student_id_foreign\" FOREIGN KEY (student_id) REFERENCES public.students(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "sql": "ALTER TABLE public.\"mk_riwayat_kegiatan\" ADD CONSTRAINT \"mk_riwayat_kegiatan_verified_by_foreign\" FOREIGN KEY (verified_by) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_role_has_permissions",
+            "sql": "ALTER TABLE public.\"mk_role_has_permissions\" ADD CONSTRAINT \"mk_role_has_permissions_permission_id_foreign\" FOREIGN KEY (permission_id) REFERENCES public.mk_permissions(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_role_has_permissions",
+            "sql": "ALTER TABLE public.\"mk_role_has_permissions\" ADD CONSTRAINT \"mk_role_has_permissions_role_id_foreign\" FOREIGN KEY (role_id) REFERENCES public.mk_roles(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_streaks",
+            "sql": "ALTER TABLE public.\"mk_streaks\" ADD CONSTRAINT \"mk_streaks_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_thread_drafts",
+            "sql": "ALTER TABLE public.\"mk_thread_drafts\" ADD CONSTRAINT \"mk_thread_drafts_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_thread_personal_pins",
+            "sql": "ALTER TABLE public.\"mk_thread_personal_pins\" ADD CONSTRAINT \"mk_thread_personal_pins_thread_id_foreign\" FOREIGN KEY (thread_id) REFERENCES public.mk_threads(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_thread_personal_pins",
+            "sql": "ALTER TABLE public.\"mk_thread_personal_pins\" ADD CONSTRAINT \"mk_thread_personal_pins_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_thread_poll_options",
+            "sql": "ALTER TABLE public.\"mk_thread_poll_options\" ADD CONSTRAINT \"mk_thread_poll_options_poll_id_foreign\" FOREIGN KEY (poll_id) REFERENCES public.mk_thread_polls(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_thread_poll_votes",
+            "sql": "ALTER TABLE public.\"mk_thread_poll_votes\" ADD CONSTRAINT \"mk_thread_poll_votes_option_id_foreign\" FOREIGN KEY (option_id) REFERENCES public.mk_thread_poll_options(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_thread_poll_votes",
+            "sql": "ALTER TABLE public.\"mk_thread_poll_votes\" ADD CONSTRAINT \"mk_thread_poll_votes_poll_id_foreign\" FOREIGN KEY (poll_id) REFERENCES public.mk_thread_polls(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_thread_poll_votes",
+            "sql": "ALTER TABLE public.\"mk_thread_poll_votes\" ADD CONSTRAINT \"mk_thread_poll_votes_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_thread_polls",
+            "sql": "ALTER TABLE public.\"mk_thread_polls\" ADD CONSTRAINT \"mk_thread_polls_thread_id_foreign\" FOREIGN KEY (thread_id) REFERENCES public.mk_threads(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_threads",
+            "sql": "ALTER TABLE public.\"mk_threads\" ADD CONSTRAINT \"mk_threads_best_answer_id_foreign\" FOREIGN KEY (best_answer_id) REFERENCES public.mk_comments(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_threads",
+            "sql": "ALTER TABLE public.\"mk_threads\" ADD CONSTRAINT \"mk_threads_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_user_badges",
+            "sql": "ALTER TABLE public.\"mk_user_badges\" ADD CONSTRAINT \"mk_user_badges_badge_id_foreign\" FOREIGN KEY (badge_id) REFERENCES public.mk_badges(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_user_badges",
+            "sql": "ALTER TABLE public.\"mk_user_badges\" ADD CONSTRAINT \"mk_user_badges_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_votes",
+            "sql": "ALTER TABLE public.\"mk_votes\" ADD CONSTRAINT \"mk_votes_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_xp_logs",
+            "sql": "ALTER TABLE public.\"mk_xp_logs\" ADD CONSTRAINT \"mk_xp_logs_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_catatan_konseling",
+            "sql": "ALTER TABLE public.\"mk_catatan_konseling\" ADD CONSTRAINT \"mk_catatan_konseling_dicatat_oleh_foreign\" FOREIGN KEY (dicatat_oleh) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengurus_bidang",
+            "sql": "ALTER TABLE public.\"mk_pengurus_bidang\" ADD CONSTRAINT \"mk_pengurus_bidang_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_pengurus_bidang",
+            "sql": "ALTER TABLE public.\"mk_pengurus_bidang\" ADD CONSTRAINT \"mk_pengurus_bidang_bidang_id_foreign\" FOREIGN KEY (bidang_id) REFERENCES public.mk_bidang(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_catatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_catatan\" ADD CONSTRAINT \"mk_kegiatan_catatan_kegiatan_id_foreign\" FOREIGN KEY (kegiatan_id) REFERENCES public.mk_kegiatan(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_catatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_catatan\" ADD CONSTRAINT \"mk_kegiatan_catatan_user_id_foreign\" FOREIGN KEY (user_id) REFERENCES public.users(id)",
+            "kind": "constraint"
+        },
+        {
+            "table": "mk_kegiatan_catatan",
+            "sql": "ALTER TABLE public.\"mk_kegiatan_catatan\" ADD CONSTRAINT \"mk_kegiatan_catatan_diperbaiki_oleh_foreign\" FOREIGN KEY (diperbaiki_oleh) REFERENCES public.users(id)",
+            "kind": "constraint"
+        }
+    ],
+    "column_differences": [
+        {
+            "table": "mk_alumni",
+            "column": "nim",
+            "type_current": "character varying(20)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_alumni",
+            "column": "program_studi",
+            "type_current": "character varying(100)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_alumni",
+            "column": "perusahaan",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_alumni",
+            "column": "jabatan",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_alumni",
+            "column": "linkedin",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_alumni",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_alumni",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_alumni",
+            "column": "bidang_industri",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_alumni",
+            "column": "status_karir",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_audit_logs",
+            "column": "action",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_audit_logs",
+            "column": "subject_type",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_audit_logs",
+            "column": "description",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_audit_logs",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_badges",
+            "column": "name",
+            "type_current": "character varying(100)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_badges",
+            "column": "slug",
+            "type_current": "character varying(100)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_badges",
+            "column": "icon",
+            "type_current": "character varying(10)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_badges",
+            "column": "criteria_type",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_badges",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_badges",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_badges",
+            "column": "image",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_bidang",
+            "column": "nama_bidang",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_bidang",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_bidang",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_comment_forum",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_comment_forum",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_comments",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_comments",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_dashboard_analitik",
+            "column": "tanggal_generate",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_dashboard_analitik",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_dashboard_analitik",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_discussion",
+            "column": "judul_discussion",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_discussion",
+            "column": "status",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_discussion",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_discussion",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_dosen",
+            "column": "nip",
+            "type_current": "character varying(30)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_dosen",
+            "column": "program_studi",
+            "type_current": "character varying(100)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_dosen",
+            "column": "bidang_keahlian",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_dosen",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_dosen",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_forum_mahasiswa",
+            "column": "nama_forum",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_forum_mahasiswa",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_forum_mahasiswa",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_forum_notifications",
+            "column": "type",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_forum_notifications",
+            "column": "read_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_forum_notifications",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_forum_notifications",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_forum_reports",
+            "column": "status",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_forum_reports",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_forum_reports",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kategori_kegiatan",
+            "column": "nama_kategori",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kategori_kegiatan",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kategori_kegiatan",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan",
+            "column": "kategori_kegiatan_id",
+            "nullable_current": false,
+            "nullable_reference": true
+        },
+        {
+            "table": "mk_kegiatan",
+            "column": "judul",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kegiatan",
+            "column": "lokasi",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kegiatan",
+            "column": "banner",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kegiatan",
+            "column": "anggaran",
+            "type_current": "numeric(15,2)",
+            "type_reference": "numeric"
+        },
+        {
+            "table": "mk_kegiatan",
+            "column": "penanggung_jawab",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kegiatan",
+            "column": "status",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kegiatan",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan",
+            "column": "jam_mulai",
+            "type_current": "time(0) without time zone",
+            "type_reference": "time without time zone"
+        },
+        {
+            "table": "mk_kegiatan",
+            "column": "jam_selesai",
+            "type_current": "time(0) without time zone",
+            "type_reference": "time without time zone"
+        },
+        {
+            "table": "mk_kegiatan",
+            "column": "realisasi_lokasi",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kegiatan",
+            "column": "realisasi_anggaran",
+            "type_current": "numeric(15,2)",
+            "type_reference": "numeric"
+        },
+        {
+            "table": "mk_kegiatan",
+            "column": "surat_proker",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kegiatan",
+            "column": "surat_proker_original",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kegiatan",
+            "column": "disetujui_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan_attachments",
+            "column": "file_path",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kegiatan_attachments",
+            "column": "file_name",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kegiatan_attachments",
+            "column": "tipe",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kegiatan_attachments",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan_attachments",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan_bidang",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan_bidang",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan_kategori",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan_kategori",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan_panitia",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan_panitia",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan_panitia",
+            "column": "peran",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kegiatan_peserta",
+            "column": "status_kehadiran",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kegiatan_peserta",
+            "column": "registered_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan_peserta",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan_peserta",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kemahasiswaan",
+            "column": "nama",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kemahasiswaan",
+            "column": "nim",
+            "type_current": "character varying(30)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kemahasiswaan",
+            "column": "status",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kemahasiswaan",
+            "column": "profesi",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kemahasiswaan",
+            "column": "kontak",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kemahasiswaan",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kemahasiswaan",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kepengurusan",
+            "column": "tahun_periode",
+            "type_current": "character varying(20)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_kepengurusan",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kepengurusan",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_mahasiswa",
+            "column": "nim",
+            "type_current": "character varying(20)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_mahasiswa",
+            "column": "program_studi",
+            "type_current": "character varying(100)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_mahasiswa",
+            "column": "status",
+            "type_current": "character varying(20)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_mahasiswa",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_mahasiswa",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_model_has_permissions",
+            "column": "model_type",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_model_has_roles",
+            "column": "model_type",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengaduan",
+            "column": "user_id",
+            "nullable_current": false,
+            "nullable_reference": true
+        },
+        {
+            "table": "mk_pengaduan",
+            "column": "kategori",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengaduan",
+            "column": "status",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengaduan",
+            "column": "read_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengaduan",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengaduan",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengaduan",
+            "column": "answered_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengaduan",
+            "column": "auto_close_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengaduan",
+            "column": "closed_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengaduan",
+            "column": "anon_token",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengaduan",
+            "column": "deleted_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengaduan_delegasi",
+            "column": "status",
+            "type_current": "character varying(20)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengaduan_delegasi",
+            "column": "delegated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengaduan_delegasi",
+            "column": "responded_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengaduan_log",
+            "column": "action",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengaduan_log",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengumuman",
+            "column": "judul",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengumuman",
+            "column": "target_audience",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengumuman",
+            "column": "kategori",
+            "type_current": "character varying(100)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengumuman",
+            "column": "status_publish",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengumuman",
+            "column": "published_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengumuman",
+            "column": "scheduled_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengumuman",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengumuman",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengumuman_approval_requests",
+            "column": "status",
+            "type_current": "character varying(20)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengumuman_approval_requests",
+            "column": "verified_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengumuman_approval_requests",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengumuman_approval_requests",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengumuman_attachments",
+            "column": "file_path",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengumuman_attachments",
+            "column": "file_name",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengumuman_attachments",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengumuman_attachments",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengumuman_drafts",
+            "column": "judul",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengumuman_drafts",
+            "column": "kategori",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengumuman_drafts",
+            "column": "target_audience",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengumuman_drafts",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengumuman_drafts",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengumuman_personal_pins",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengumuman_personal_pins",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengurus_himaskom",
+            "column": "divisi",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengurus_himaskom",
+            "column": "jabatan",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengurus_himaskom",
+            "column": "status_keaktifan",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengurus_himaskom",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengurus_himaskom",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengurus_himpunan",
+            "column": "organisasi",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengurus_himpunan",
+            "column": "jabatan_organisasi",
+            "type_current": "character varying(100)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengurus_himpunan",
+            "column": "periode",
+            "type_current": "character varying(20)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_pengurus_himpunan",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_pengurus_himpunan",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_permissions",
+            "column": "name",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_permissions",
+            "column": "guard_name",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_permissions",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_permissions",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_prestasi",
+            "column": "nama_prestasi",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_prestasi",
+            "column": "tingkat",
+            "type_current": "character varying(100)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_prestasi",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_prestasi",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_prestasi",
+            "column": "verification_status",
+            "type_current": "character varying(20)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_prestasi",
+            "column": "verified_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_prestasi",
+            "column": "claim_status",
+            "type_current": "character varying(20)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_prestasi",
+            "column": "claimed_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_prestasi",
+            "column": "reward_penyelenggara",
+            "type_current": "character varying(20)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_prestasi",
+            "column": "reward_capaian",
+            "type_current": "character varying(40)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_prestasi",
+            "column": "reward_reviewed_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_prestasi",
+            "column": "reward_kuota_grup",
+            "type_current": "character varying(20)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_prestasi",
+            "column": "reward_sk_ref",
+            "type_current": "character varying(60)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "column": "role",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "column": "signature_image_path",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "column": "pos_x_percent",
+            "type_current": "numeric(6,2)",
+            "type_reference": "numeric"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "column": "pos_y_percent",
+            "type_current": "numeric(6,2)",
+            "type_reference": "numeric"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "column": "width_percent",
+            "type_current": "numeric(6,2)",
+            "type_reference": "numeric"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "column": "height_percent",
+            "type_current": "numeric(6,2)",
+            "type_reference": "numeric"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "column": "signed_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_proker_ttd",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "column": "nama_file",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "column": "path_file",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "column": "tipe_file",
+            "type_current": "character varying(100)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "column": "judul_file",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "column": "visibility_status",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "column": "status_arsip",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_repo_mulmed",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_reward_aturan",
+            "column": "judul",
+            "type_current": "character varying(150)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_reward_aturan",
+            "column": "nama_file",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_reward_aturan",
+            "column": "path_file",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_reward_aturan",
+            "column": "tipe_file",
+            "type_current": "character varying(20)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_reward_aturan",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_reward_aturan",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "column": "peran",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "column": "nama_kegiatan_manual",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "column": "peran_manual",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "column": "verification_status",
+            "type_current": "character varying(20)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_riwayat_kegiatan",
+            "column": "verified_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_roles",
+            "column": "name",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_roles",
+            "column": "guard_name",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_roles",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_roles",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_streaks",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_streaks",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_thread_drafts",
+            "column": "judul",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_thread_drafts",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_thread_drafts",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_thread_personal_pins",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_thread_personal_pins",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_thread_poll_options",
+            "column": "text",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_thread_poll_options",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_thread_poll_options",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_thread_poll_votes",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_thread_poll_votes",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_thread_polls",
+            "column": "expires_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_thread_polls",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_thread_polls",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_threads",
+            "column": "judul",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_threads",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_threads",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_user_badges",
+            "column": "earned_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_verifikasi_bukti",
+            "column": "bukti_type",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_verifikasi_bukti",
+            "column": "nama_file",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_verifikasi_bukti",
+            "column": "path_file",
+            "type_current": "character varying(500)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_verifikasi_bukti",
+            "column": "tipe_file",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_verifikasi_bukti",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_verifikasi_bukti",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_votes",
+            "column": "voteable_type",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_votes",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_votes",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_xp_logs",
+            "column": "action",
+            "type_current": "character varying(50)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_xp_logs",
+            "column": "reference_type",
+            "type_current": "character varying(255)",
+            "type_reference": "character varying"
+        },
+        {
+            "table": "mk_xp_logs",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_xp_logs",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan_dosen_pendamping",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan_dosen_pendamping",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan_pengelola",
+            "column": "created_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        },
+        {
+            "table": "mk_kegiatan_pengelola",
+            "column": "updated_at",
+            "type_current": "timestamp(0) without time zone",
+            "type_reference": "timestamp without time zone"
+        }
+    ]
+}

@@ -1,0 +1,386 @@
+﻿[
+    {
+        "table":  "eo_prak_absensi_praktikum",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027absensi_praktikum_id_seq\u0027::regclass),\r\n  modul_id bigint NOT NULL,\r\n  daftar_praktikan_id uuid NOT NULL,\r\n  tanggal date NOT NULL,\r\n  status character varying NOT NULL DEFAULT \u0027hadir\u0027::character varying,\r\n  keterangan text,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_absensi_praktikum_pkey PRIMARY KEY (id),\r\n  CONSTRAINT absensi_praktikum_daftar_praktikan_id_foreign FOREIGN KEY (daftar_praktikan_id) REFERENCES public.eo_prak_daftar_praktikan(id),\r\n  CONSTRAINT absensi_praktikum_modul_id_foreign FOREIGN KEY (modul_id) REFERENCES public.eo_prak_modul_praktikum(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_asprak_praktikum",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027asprak_praktikum_id_seq\u0027::regclass),\r\n  praktikum_id uuid NOT NULL,\r\n  user_id bigint NOT NULL,\r\n  role character varying NOT NULL DEFAULT \u0027asprak\u0027::character varying,\r\n  deskripsi text,\r\n  deleted_at timestamp without time zone,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_asprak_praktikum_pkey PRIMARY KEY (id),\r\n  CONSTRAINT asprak_praktikum_praktikum_id_foreign FOREIGN KEY (praktikum_id) REFERENCES public.eo_prak_praktikum(id),\r\n  CONSTRAINT asprak_praktikum_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_daftar_praktikan",
+        "body":  "\r\n  id uuid NOT NULL,\r\n  praktikum_id uuid NOT NULL,\r\n  user_id bigint NOT NULL,\r\n  status character varying NOT NULL DEFAULT \u0027terdaftar\u0027::character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  kelompok character varying,\r\n  shift character varying,\r\n  CONSTRAINT eo_prak_daftar_praktikan_pkey PRIMARY KEY (id),\r\n  CONSTRAINT daftar_praktikan_praktikum_id_foreign FOREIGN KEY (praktikum_id) REFERENCES public.eo_prak_praktikum(id),\r\n  CONSTRAINT daftar_praktikan_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_approval",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_approval_id_seq\u0027::regclass),\r\n  surat_id bigint NOT NULL,\r\n  approver_id bigint NOT NULL,\r\n  urutan integer NOT NULL,\r\n  status character varying NOT NULL,\r\n  file_ttd character varying,\r\n  role_approver character varying NOT NULL,\r\n  catatan text,\r\n  tanggal timestamp without time zone,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_approval_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_approval_approver_id_foreign FOREIGN KEY (approver_id) REFERENCES public.users(id),\r\n  CONSTRAINT eo_approval_surat_id_foreign FOREIGN KEY (surat_id) REFERENCES public.eo_surat(id)\r\n"
+    },
+    {
+        "table":  "eo_approval_config",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_approval_config_id_seq\u0027::regclass),\r\n  jenis_id bigint NOT NULL,\r\n  urutan integer NOT NULL,\r\n  role character varying NOT NULL,\r\n  is_required boolean NOT NULL DEFAULT true,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_approval_config_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_eo_approval_config_jenis_id_foreign FOREIGN KEY (jenis_id) REFERENCES public.eo_jenis_surat(id)\r\n"
+    },
+    {
+        "table":  "eo_arsip_surat",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_arsip_surat_id_seq\u0027::regclass),\r\n  surat_id bigint NOT NULL,\r\n  kategori character varying NOT NULL,\r\n  tanggal_arsip date NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_arsip_surat_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_arsip_surat_surat_id_foreign FOREIGN KEY (surat_id) REFERENCES public.eo_surat(id)\r\n"
+    },
+    {
+        "table":  "eo_aturan_peminjaman",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_aturan_peminjaman_id_seq\u0027::regclass),\r\n  kode_aturan character varying NOT NULL UNIQUE,\r\n  nama character varying NOT NULL,\r\n  nilai integer NOT NULL,\r\n  satuan character varying NOT NULL,\r\n  deskripsi text,\r\n  is_active boolean NOT NULL DEFAULT true,\r\n  updated_by bigint,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_aturan_peminjaman_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_aturan_peminjaman_updated_by_foreign FOREIGN KEY (updated_by) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_audit_logs",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_audit_logs_id_seq\u0027::regclass),\r\n  user_id bigint,\r\n  action character varying NOT NULL,\r\n  subject_type character varying,\r\n  subject_id character varying,\r\n  description character varying NOT NULL,\r\n  old_data json,\r\n  new_data json,\r\n  created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n  cerc_deleted_at timestamp without time zone,\r\n  cerc_deleted_by bigint,\r\n  CONSTRAINT eo_audit_logs_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_audit_logs_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_berkas_pendukung",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_berkas_pendukung_id_seq\u0027::regclass),\r\n  peminjaman_id bigint NOT NULL,\r\n  nama_file character varying NOT NULL,\r\n  path_file character varying NOT NULL,\r\n  tipe_file character varying NOT NULL,\r\n  ukuran_file integer NOT NULL,\r\n  created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n  CONSTRAINT eo_berkas_pendukung_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_berkas_pendukung_peminjaman_id_foreign FOREIGN KEY (peminjaman_id) REFERENCES public.eo_peminjaman(id)\r\n"
+    },
+    {
+        "table":  "eo_disposisi_surat_masuk",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_disposisi_surat_masuk_id_seq\u0027::regclass),\r\n  surat_masuk_id bigint NOT NULL,\r\n  penerima_id bigint NOT NULL,\r\n  status_baca boolean NOT NULL DEFAULT false,\r\n  catatan text,\r\n  tanggal_disposisi timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_disposisi_surat_masuk_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_disposisi_surat_masuk_penerima_id_foreign FOREIGN KEY (penerima_id) REFERENCES public.users(id),\r\n  CONSTRAINT eo_disposisi_surat_masuk_surat_masuk_id_foreign FOREIGN KEY (surat_masuk_id) REFERENCES public.eo_surat_masuk(id)\r\n"
+    },
+    {
+        "table":  "eo_field_template",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_field_template_id_seq\u0027::regclass),\r\n  template_id bigint NOT NULL,\r\n  nama_field character varying NOT NULL,\r\n  tipe_input character varying NOT NULL,\r\n  is_required boolean NOT NULL DEFAULT false,\r\n  urutan integer NOT NULL,\r\n  options text,\r\n  default_value character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_field_template_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_field_template_template_id_foreign FOREIGN KEY (template_id) REFERENCES public.eo_template_surat(id)\r\n"
+    },
+    {
+        "table":  "eo_import_log",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_import_log_id_seq\u0027::regclass),\r\n  admin_id bigint NOT NULL,\r\n  nama_file character varying NOT NULL,\r\n  jumlah_record integer NOT NULL,\r\n  status character varying NOT NULL,\r\n  catatan text,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_import_log_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_import_log_admin_id_foreign FOREIGN KEY (admin_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_isi_surat",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_isi_surat_id_seq\u0027::regclass),\r\n  surat_id bigint NOT NULL,\r\n  field_id bigint NOT NULL,\r\n  value text,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_isi_surat_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_isi_surat_field_id_foreign FOREIGN KEY (field_id) REFERENCES public.eo_field_template(id),\r\n  CONSTRAINT eo_isi_surat_surat_id_foreign FOREIGN KEY (surat_id) REFERENCES public.eo_surat(id)\r\n"
+    },
+    {
+        "table":  "eo_jadwal_kuliah",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_jadwal_kuliah_id_seq\u0027::regclass),\r\n  ruangan_id bigint NOT NULL,\r\n  import_log_id bigint,\r\n  hari character varying NOT NULL,\r\n  jam_mulai time without time zone NOT NULL,\r\n  jam_selesai time without time zone NOT NULL,\r\n  mata_kuliah character varying NOT NULL,\r\n  dosen character varying NOT NULL,\r\n  kelas character varying NOT NULL,\r\n  semester character varying NOT NULL,\r\n  tahun_ajaran character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_jadwal_kuliah_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_jadwal_kuliah_import_log_id_foreign FOREIGN KEY (import_log_id) REFERENCES public.eo_import_log(id),\r\n  CONSTRAINT eo_jadwal_kuliah_ruangan_id_foreign FOREIGN KEY (ruangan_id) REFERENCES public.eo_ruangan(id)\r\n"
+    },
+    {
+        "table":  "eo_jenis_surat",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_jenis_surat_id_seq\u0027::regclass),\r\n  nama_jenis character varying NOT NULL,\r\n  kode_surat character varying NOT NULL,\r\n  deskripsi text,\r\n  is_active boolean NOT NULL DEFAULT true,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  klasifikasi_id bigint,\r\n  CONSTRAINT eo_jenis_surat_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_jenis_surat_klasifikasi_id_foreign FOREIGN KEY (klasifikasi_id) REFERENCES public.eo_ms_klasifikasi(id)\r\n"
+    },
+    {
+        "table":  "eo_kerja_praktik",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_kerja_praktik_id_seq\u0027::regclass),\r\n  nim character varying NOT NULL,\r\n  mahasiswa_id bigint NOT NULL,\r\n  dosen_pembimbing_id bigint,\r\n  judul_kp character varying,\r\n  instansi_kp character varying,\r\n  tanggal_mulai date,\r\n  tanggal_selesai date,\r\n  status_kp character varying NOT NULL DEFAULT \u0027Pra-KP\u0027::character varying,\r\n  is_acc_admin boolean NOT NULL DEFAULT false,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  deleted_at timestamp without time zone,\r\n  ipk numeric,\r\n  sks_diambil smallint,\r\n  kelas character varying,\r\n  periode_id bigint,\r\n  keterangan_status character varying,\r\n  is_data_instansi_locked boolean NOT NULL DEFAULT false,\r\n  CONSTRAINT eo_kerja_praktik_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_kerja_praktik_dosen_pembimbing_id_foreign FOREIGN KEY (dosen_pembimbing_id) REFERENCES public.eo_kp_dosen(id),\r\n  CONSTRAINT eo_kerja_praktik_mahasiswa_id_foreign FOREIGN KEY (mahasiswa_id) REFERENCES public.eo_kp_mahasiswa(id),\r\n  CONSTRAINT eo_kerja_praktik_periode_id_foreign FOREIGN KEY (periode_id) REFERENCES public.eo_kp_periode(id)\r\n"
+    },
+    {
+        "table":  "eo_kp_balancing",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_kp_balancing_id_seq\u0027::regclass),\r\n  kp_id bigint NOT NULL,\r\n  mahasiswa_id bigint NOT NULL,\r\n  dosen_id bigint,\r\n  status character varying NOT NULL DEFAULT \u0027draft\u0027::character varying CHECK (status::text = ANY (ARRAY[\u0027draft\u0027::character varying::text, \u0027finalized\u0027::character varying::text])),\r\n  assigned_by bigint,\r\n  assigned_at timestamp without time zone,\r\n  finalized_at timestamp without time zone,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_kp_balancing_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_kp_balancing_assigned_by_foreign FOREIGN KEY (assigned_by) REFERENCES public.users(id),\r\n  CONSTRAINT eo_kp_balancing_dosen_id_foreign FOREIGN KEY (dosen_id) REFERENCES public.eo_kp_dosen(id),\r\n  CONSTRAINT eo_kp_balancing_kp_id_foreign FOREIGN KEY (kp_id) REFERENCES public.eo_kerja_praktik(id),\r\n  CONSTRAINT eo_kp_balancing_mahasiswa_id_foreign FOREIGN KEY (mahasiswa_id) REFERENCES public.eo_kp_mahasiswa(id)\r\n"
+    },
+    {
+        "table":  "eo_kp_dokumen",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_kp_dokumen_id_seq\u0027::regclass),\r\n  kp_id bigint NOT NULL,\r\n  jenis_dokumen character varying NOT NULL,\r\n  file_path character varying NOT NULL,\r\n  status_validasi character varying NOT NULL DEFAULT \u0027menunggu\u0027::character varying,\r\n  tanggal_upload timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  is_published boolean NOT NULL DEFAULT false,\r\n  file_name character varying,\r\n  phase character varying CHECK (phase::text = ANY (ARRAY[\u0027pra_kp\u0027::character varying::text, \u0027saat_kp\u0027::character varying::text, \u0027pasca_kp\u0027::character varying::text])),\r\n  approval_status character varying NOT NULL DEFAULT \u0027pending\u0027::character varying CHECK (approval_status::text = ANY (ARRAY[\u0027pending\u0027::character varying::text, \u0027approved\u0027::character varying::text, \u0027rejected\u0027::character varying::text, \u0027revision\u0027::character varying::text])),\r\n  approved_by bigint,\r\n  approved_at timestamp without time zone,\r\n  revision_note text,\r\n  nilai_input_mahasiswa double precision,\r\n  nilai_validasi_koordinator double precision,\r\n  nilai_status character varying NOT NULL DEFAULT \u0027pending\u0027::character varying CHECK (nilai_status::text = ANY (ARRAY[\u0027pending\u0027::character varying::text, \u0027valid\u0027::character varying::text, \u0027rejected\u0027::character varying::text])),\r\n  deleted_at timestamp without time zone,\r\n  CONSTRAINT eo_kp_dokumen_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_kp_dokumen_kp_id_foreign FOREIGN KEY (kp_id) REFERENCES public.eo_kerja_praktik(id)\r\n"
+    },
+    {
+        "table":  "eo_kp_dosen",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_kp_dosen_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL UNIQUE,\r\n  nip character varying NOT NULL,\r\n  nama_lengkap character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  kuota_maksimal integer DEFAULT 10,\r\n  CONSTRAINT eo_kp_dosen_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_kp_dosen_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_kp_komponen_nilai",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_kp_komponen_nilai_id_seq\u0027::regclass),\r\n  periode_id bigint NOT NULL,\r\n  nama_komponen character varying NOT NULL,\r\n  bobot integer NOT NULL DEFAULT 0,\r\n  role_penilai character varying NOT NULL DEFAULT \u0027dosen_pembimbing\u0027::character varying CHECK (role_penilai::text = ANY (ARRAY[\u0027dosen_pembimbing\u0027::character varying::text, \u0027koordinator\u0027::character varying::text])),\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  master_rubrik_id bigint,\r\n  kode character varying,\r\n  CONSTRAINT eo_kp_komponen_nilai_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_kp_komponen_nilai_master_rubrik_id_foreign FOREIGN KEY (master_rubrik_id) REFERENCES public.eo_kp_master_rubrik(id),\r\n  CONSTRAINT eo_kp_komponen_nilai_periode_id_foreign FOREIGN KEY (periode_id) REFERENCES public.eo_kp_periode(id)\r\n"
+    },
+    {
+        "table":  "eo_kp_mahasiswa",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_kp_mahasiswa_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL UNIQUE,\r\n  nim character varying NOT NULL,\r\n  nama_lengkap character varying NOT NULL,\r\n  prodi character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_kp_mahasiswa_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_kp_mahasiswa_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_kp_nilai_detail",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_kp_nilai_detail_id_seq\u0027::regclass),\r\n  kp_id bigint NOT NULL,\r\n  komponen_id bigint NOT NULL,\r\n  nilai_angka numeric,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  deleted_at timestamp without time zone,\r\n  CONSTRAINT eo_kp_nilai_detail_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_kp_nilai_detail_komponen_id_foreign FOREIGN KEY (komponen_id) REFERENCES public.eo_kp_komponen_nilai(id),\r\n  CONSTRAINT eo_kp_nilai_detail_kp_id_foreign FOREIGN KEY (kp_id) REFERENCES public.eo_kerja_praktik(id)\r\n"
+    },
+    {
+        "table":  "eo_kp_pengumuman",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_kp_pengumuman_id_seq\u0027::regclass),\r\n  judul character varying NOT NULL,\r\n  konten text NOT NULL,\r\n  tipe character varying NOT NULL,\r\n  is_active boolean NOT NULL DEFAULT true,\r\n  created_by bigint,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  is_published boolean NOT NULL DEFAULT false,\r\n  lampiran character varying,\r\n  deleted_at timestamp without time zone,\r\n  CONSTRAINT eo_kp_pengumuman_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_kp_penilaian",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_kp_penilaian_id_seq\u0027::regclass),\r\n  kp_id bigint NOT NULL,\r\n  nilai_akhir double precision,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  deleted_at timestamp without time zone,\r\n  CONSTRAINT eo_kp_penilaian_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_kp_penilaian_kp_id_foreign FOREIGN KEY (kp_id) REFERENCES public.eo_kerja_praktik(id)\r\n"
+    },
+    {
+        "table":  "eo_kp_periode",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_kp_periode_id_seq\u0027::regclass),\r\n  tahun_ajaran character varying NOT NULL,\r\n  semester character varying NOT NULL CHECK (semester::text = ANY (ARRAY[\u0027Ganjil\u0027::character varying::text, \u0027Genap\u0027::character varying::text])),\r\n  is_active boolean NOT NULL DEFAULT false,\r\n  tanggal_buka date,\r\n  tanggal_tutup date,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  pra_kp_mulai date,\r\n  pra_kp_akhir date,\r\n  pra_kp_pengingat date,\r\n  saat_kp_mulai date,\r\n  saat_kp_akhir date,\r\n  saat_kp_pengingat date,\r\n  pasca_kp_mulai date,\r\n  pasca_kp_akhir date,\r\n  pasca_kp_pengingat date,\r\n  kelas_dibuka text,\r\n  deleted_at timestamp without time zone,\r\n  CONSTRAINT eo_kp_periode_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_kp_seminar",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_kp_seminar_id_seq\u0027::regclass),\r\n  kp_id bigint NOT NULL,\r\n  tanggal_seminar date NOT NULL,\r\n  waktu_seminar time without time zone NOT NULL,\r\n  ruangan character varying,\r\n  status_validasi_syarat character varying NOT NULL DEFAULT \u0027belum\u0027::character varying,\r\n  path_undangan character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  status_validasi_dosen character varying NOT NULL DEFAULT \u0027pending\u0027::character varying CHECK (status_validasi_dosen::text = ANY (ARRAY[\u0027pending\u0027::character varying::text, \u0027approved\u0027::character varying::text, \u0027rejected\u0027::character varying::text])),\r\n  catatan_dosen text,\r\n  deleted_at timestamp without time zone,\r\n  CONSTRAINT eo_kp_seminar_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_kp_seminar_kp_id_foreign FOREIGN KEY (kp_id) REFERENCES public.eo_kerja_praktik(id)\r\n"
+    },
+    {
+        "table":  "eo_kp_settings",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_kp_settings_id_seq\u0027::regclass),\r\n  key character varying NOT NULL UNIQUE,\r\n  value text,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_kp_settings_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_kp_template",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_kp_template_id_seq\u0027::regclass),\r\n  title character varying NOT NULL,\r\n  description text,\r\n  phase character varying NOT NULL CHECK (phase::text = ANY (ARRAY[\u0027pra_kp\u0027::character varying::text, \u0027saat_kp\u0027::character varying::text, \u0027pasca_kp\u0027::character varying::text])),\r\n  file_name character varying,\r\n  file_path character varying,\r\n  file_type character varying,\r\n  is_required boolean NOT NULL DEFAULT false,\r\n  uploaded_by bigint,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  periode_id bigint,\r\n  is_downloadable boolean NOT NULL DEFAULT true,\r\n  is_uploadable boolean NOT NULL DEFAULT false,\r\n  approver_role character varying NOT NULL DEFAULT \u0027koordinator\u0027::character varying,\r\n  deleted_at timestamp without time zone,\r\n  CONSTRAINT eo_kp_template_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_kp_template_periode_id_foreign FOREIGN KEY (periode_id) REFERENCES public.eo_kp_periode(id)\r\n"
+    },
+    {
+        "table":  "eo_lampiran",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_lampiran_id_seq\u0027::regclass),\r\n  surat_id bigint NOT NULL,\r\n  nama_file character varying NOT NULL,\r\n  path_file character varying NOT NULL,\r\n  tipe_file character varying NOT NULL,\r\n  uploaded_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_lampiran_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_lampiran_surat_id_foreign FOREIGN KEY (surat_id) REFERENCES public.eo_surat(id)\r\n"
+    },
+    {
+        "table":  "eo_log_aktivitas",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_log_aktivitas_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  aksi character varying NOT NULL,\r\n  modul character varying NOT NULL,\r\n  detail text,\r\n  ip_address character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_log_aktivitas_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_log_aktivitas_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_matkul_praktikum",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_matkul_praktikum_id_seq\u0027::regclass),\r\n  kode character varying NOT NULL UNIQUE,\r\n  nama character varying NOT NULL,\r\n  sks integer NOT NULL,\r\n  semester bigint,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_matkul_praktikum_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_mi_barang",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_mi_barang_id_seq\u0027::regclass),\r\n  kategori_id bigint NOT NULL,\r\n  satuan_id bigint NOT NULL,\r\n  nama_barang character varying NOT NULL,\r\n  foto character varying,\r\n  asal_lab character varying,\r\n  jumlah_stok integer NOT NULL DEFAULT 0,\r\n  is_active boolean NOT NULL DEFAULT true,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_mi_barang_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_mi_barang_kategori_id_foreign FOREIGN KEY (kategori_id) REFERENCES public.eo_mi_kategori(id),\r\n  CONSTRAINT eo_mi_barang_satuan_id_foreign FOREIGN KEY (satuan_id) REFERENCES public.eo_mi_satuan(id)\r\n"
+    },
+    {
+        "table":  "eo_mi_kategori",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_mi_kategori_id_seq\u0027::regclass),\r\n  nama_kategori character varying NOT NULL UNIQUE,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_mi_kategori_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_mi_satuan",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_mi_satuan_id_seq\u0027::regclass),\r\n  nama_satuan character varying NOT NULL UNIQUE,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_mi_satuan_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_mr_blacklists",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_mr_blacklists_id_seq\u0027::regclass),\r\n  user_id bigint,\r\n  alasan text,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_mr_blacklists_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_mr_blacklists_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_mr_jadwal_internal",
+        "body":  "\r\n  id uuid NOT NULL,\r\n  ruangan_id bigint NOT NULL,\r\n  tipe_jadwal character varying NOT NULL DEFAULT \u0027spesifik\u0027::character varying,\r\n  kategori character varying NOT NULL,\r\n  hari smallint,\r\n  tanggal_spesifik date,\r\n  jam_mulai time without time zone NOT NULL,\r\n  jam_selesai time without time zone NOT NULL,\r\n  tgl_mulai_efektif date,\r\n  tgl_selesai_efektif date,\r\n  mata_kuliah character varying,\r\n  kode_mk character varying,\r\n  kelas character varying,\r\n  sks integer,\r\n  kuota integer,\r\n  pengampu text,\r\n  keterangan character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_mr_jadwal_internal_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_mr_jadwal_internal_ruangan_id_foreign FOREIGN KEY (ruangan_id) REFERENCES public.eo_mr_ruangans(id)\r\n"
+    },
+    {
+        "table":  "eo_mr_peminjamans",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_mr_peminjamans_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  ruangan_id bigint NOT NULL,\r\n  nomor_telepon character varying,\r\n  tujuan text NOT NULL,\r\n  tanggal_pinjam date NOT NULL,\r\n  jam_mulai time without time zone NOT NULL,\r\n  jam_selesai time without time zone NOT NULL,\r\n  berkas_pendukung character varying,\r\n  status character varying NOT NULL DEFAULT \u0027menunggu\u0027::character varying CHECK (status::text = ANY (ARRAY[\u0027menunggu\u0027::character varying::text, \u0027disetujui\u0027::character varying::text, \u0027ditolak\u0027::character varying::text, \u0027dibatalkan\u0027::character varying::text])),\r\n  alasan_penolakan text,\r\n  waktu_approval timestamp without time zone,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  created_by bigint,\r\n  deleted_at timestamp without time zone,\r\n  is_hidden_by_user boolean NOT NULL DEFAULT false,\r\n  source character varying,\r\n  source_id character varying,\r\n  replaces_peminjaman_id bigint,\r\n  CONSTRAINT eo_mr_peminjamans_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_mr_peminjamans_created_by_foreign FOREIGN KEY (created_by) REFERENCES public.users(id),\r\n  CONSTRAINT eo_mr_peminjamans_ruangan_id_foreign FOREIGN KEY (ruangan_id) REFERENCES public.eo_mr_ruangans(id),\r\n  CONSTRAINT eo_mr_peminjamans_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id),\r\n  CONSTRAINT eo_mr_peminjamans_replaces_peminjaman_id_foreign FOREIGN KEY (replaces_peminjaman_id) REFERENCES public.eo_mr_peminjamans(id)\r\n"
+    },
+    {
+        "table":  "eo_mr_pengaturan",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_mr_pengaturan_id_seq\u0027::regclass),\r\n  key character varying NOT NULL UNIQUE,\r\n  value text,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_mr_pengaturan_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_mr_ruangan_fotos",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_mr_ruangan_fotos_id_seq\u0027::regclass),\r\n  ruangan_id bigint NOT NULL,\r\n  path_foto character varying NOT NULL,\r\n  urutan integer NOT NULL DEFAULT 0,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_mr_ruangan_fotos_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_mr_ruangan_fotos_ruangan_id_foreign FOREIGN KEY (ruangan_id) REFERENCES public.eo_mr_ruangans(id)\r\n"
+    },
+    {
+        "table":  "eo_mr_ruangans",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_mr_ruangans_id_seq\u0027::regclass),\r\n  nama character varying NOT NULL,\r\n  lokasi character varying NOT NULL,\r\n  lantai integer,\r\n  kapasitas integer NOT NULL DEFAULT 0,\r\n  fasilitas json,\r\n  is_active boolean NOT NULL DEFAULT true,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  deleted_at timestamp without time zone,\r\n  kategori character varying NOT NULL DEFAULT \u0027Kelas\u0027::character varying CHECK (kategori::text = ANY (ARRAY[\u0027Kelas\u0027::character varying, \u0027Laboratorium\u0027::character varying, \u0027Sidang\u0027::character varying]::text[])),\r\n  CONSTRAINT eo_mr_ruangans_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_mr_tanggal_libur",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_mr_tanggal_libur_id_seq\u0027::regclass),\r\n  tanggal date NOT NULL UNIQUE,\r\n  keterangan character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_mr_tanggal_libur_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_ms_audit_log",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_ms_audit_log_id_seq\u0027::regclass),\r\n  user_id bigint,\r\n  aksi character varying NOT NULL,\r\n  target_type character varying,\r\n  target_id bigint,\r\n  deskripsi text,\r\n  ip_address character varying,\r\n  created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n  CONSTRAINT eo_ms_audit_log_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_ms_audit_log_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_ms_hak_akses",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_ms_hak_akses_id_seq\u0027::regclass),\r\n  jenis_surat_id bigint NOT NULL,\r\n  role_name character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_ms_hak_akses_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_ms_hak_akses_jenis_surat_id_foreign FOREIGN KEY (jenis_surat_id) REFERENCES public.eo_jenis_surat(id)\r\n"
+    },
+    {
+        "table":  "eo_ms_jawaban_field",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_ms_jawaban_field_id_seq\u0027::regclass),\r\n  pengajuan_id bigint NOT NULL,\r\n  field_id bigint NOT NULL,\r\n  nilai text,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_ms_jawaban_field_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_ms_jawaban_field_field_id_foreign FOREIGN KEY (field_id) REFERENCES public.eo_field_template(id),\r\n  CONSTRAINT eo_ms_jawaban_field_pengajuan_id_foreign FOREIGN KEY (pengajuan_id) REFERENCES public.eo_ms_pengajuan(id)\r\n"
+    },
+    {
+        "table":  "eo_ms_klasifikasi",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_ms_klasifikasi_id_seq\u0027::regclass),\r\n  kode character varying NOT NULL UNIQUE,\r\n  deskripsi character varying,\r\n  is_active boolean NOT NULL DEFAULT true,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_ms_klasifikasi_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_ms_penandatangan",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_ms_penandatangan_id_seq\u0027::regclass),\r\n  nama character varying NOT NULL,\r\n  jabatan character varying NOT NULL,\r\n  user_id bigint,\r\n  tanda_tangan_path character varying,\r\n  is_active boolean NOT NULL DEFAULT true,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  nip character varying,\r\n  CONSTRAINT eo_ms_penandatangan_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_ms_penandatangan_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_ms_pengajuan",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_ms_pengajuan_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  jenis_surat_id bigint NOT NULL,\r\n  nomor_surat character varying,\r\n  status character varying NOT NULL DEFAULT \u0027pending\u0027::character varying,\r\n  catatan_admin text,\r\n  file_output character varying,\r\n  penandatangan_id bigint,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_ms_pengajuan_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_ms_pengajuan_jenis_surat_id_foreign FOREIGN KEY (jenis_surat_id) REFERENCES public.eo_jenis_surat(id),\r\n  CONSTRAINT eo_ms_pengajuan_penandatangan_id_foreign FOREIGN KEY (penandatangan_id) REFERENCES public.eo_ms_penandatangan(id),\r\n  CONSTRAINT eo_ms_pengajuan_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_ms_pengaturan",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_ms_pengaturan_id_seq\u0027::regclass),\r\n  kunci character varying NOT NULL UNIQUE,\r\n  nilai text,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_ms_pengaturan_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_ms_unit_kerja",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_ms_unit_kerja_id_seq\u0027::regclass),\r\n  kode_unit character varying NOT NULL UNIQUE,\r\n  nama_unit character varying NOT NULL,\r\n  is_active boolean NOT NULL DEFAULT true,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_ms_unit_kerja_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_notifikasi",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_notifikasi_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  peminjaman_id bigint,\r\n  judul character varying NOT NULL,\r\n  pesan text NOT NULL,\r\n  is_read boolean NOT NULL DEFAULT false,\r\n  created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n  updated_at timestamp without time zone,\r\n  practicum_role character varying,\r\n  practicum_target json,\r\n  CONSTRAINT eo_notifikasi_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_notifikasi_peminjaman_id_foreign FOREIGN KEY (peminjaman_id) REFERENCES public.eo_peminjaman(id),\r\n  CONSTRAINT eo_notifikasi_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_peminjaman",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_peminjaman_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  ruangan_id bigint NOT NULL,\r\n  approved_by bigint,\r\n  tanggal date NOT NULL,\r\n  jam_mulai time without time zone NOT NULL,\r\n  jam_selesai time without time zone NOT NULL,\r\n  keperluan text NOT NULL,\r\n  status character varying NOT NULL,\r\n  alasan_penolakan text,\r\n  is_auto_approved boolean NOT NULL DEFAULT false,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_peminjaman_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_peminjaman_approved_by_foreign FOREIGN KEY (approved_by) REFERENCES public.users(id),\r\n  CONSTRAINT eo_peminjaman_ruangan_id_foreign FOREIGN KEY (ruangan_id) REFERENCES public.eo_ruangan(id),\r\n  CONSTRAINT eo_peminjaman_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_penomoran_counter",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_penomoran_counter_id_seq\u0027::regclass),\r\n  bulan_tahun character varying NOT NULL,\r\n  last_number integer NOT NULL DEFAULT 0,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_penomoran_counter_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_prak_praktikum",
+        "body":  "\r\n  id uuid NOT NULL,\r\n  nama character varying NOT NULL,\r\n  kode character varying,\r\n  deskripsi text,\r\n  koor_id bigint,\r\n  semester character varying NOT NULL,\r\n  status character varying NOT NULL DEFAULT \u0027aktif\u0027::character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  deleted_at timestamp without time zone,\r\n  matkul_id bigint,\r\n  tahun_ajaran character varying,\r\n  jumlah_kelompok integer,\r\n  jumlah_shift integer,\r\n  is_active boolean NOT NULL DEFAULT true,\r\n  cover_path character varying,\r\n  bobot_tp integer NOT NULL DEFAULT 10,\r\n  bobot_praktikum integer NOT NULL DEFAULT 30,\r\n  bobot_laporan integer NOT NULL DEFAULT 30,\r\n  bobot_responsi integer NOT NULL DEFAULT 30,\r\n  metode_pembagian character varying,\r\n  draft_pembagian json,\r\n  status_pelaksanaan character varying NOT NULL DEFAULT \u0027persiapan\u0027::character varying,\r\n  started_at timestamp without time zone,\r\n  komponen_modul json,\r\n  komponen_modul_locked_at timestamp without time zone,\r\n  komponen_modul_version integer NOT NULL DEFAULT 0,\r\n  bobot_gabungan_modul smallint,\r\n  bobot_gabungan_ta smallint,\r\n  bobot_gabungan_version integer NOT NULL DEFAULT 0,\r\n  final_grade_batch_id uuid,\r\n  final_components json,\r\n  CONSTRAINT eo_prak_praktikum_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_eo_praktikum_koor_id_foreign FOREIGN KEY (koor_id) REFERENCES public.users(id),\r\n  CONSTRAINT lg_eo_praktikum_matkul_id_foreign FOREIGN KEY (matkul_id) REFERENCES public.eo_prak_matkul_praktikum(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_praktikum_dosen",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_praktikum_dosen_id_seq\u0027::regclass),\r\n  praktikum_id uuid NOT NULL,\r\n  dosen_id bigint NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_praktikum_dosen_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_eo_praktikum_dosen_praktikum_id_foreign FOREIGN KEY (praktikum_id) REFERENCES public.eo_prak_praktikum(id),\r\n  CONSTRAINT lg_eo_praktikum_dosen_dosen_id_foreign FOREIGN KEY (dosen_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_riwayat_status_surat",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_riwayat_status_surat_id_seq\u0027::regclass),\r\n  surat_id bigint NOT NULL,\r\n  aktor_id bigint NOT NULL,\r\n  status_baru character varying NOT NULL,\r\n  catatan text,\r\n  waktu timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_riwayat_status_surat_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_riwayat_status_surat_aktor_id_foreign FOREIGN KEY (aktor_id) REFERENCES public.users(id),\r\n  CONSTRAINT eo_riwayat_status_surat_surat_id_foreign FOREIGN KEY (surat_id) REFERENCES public.eo_surat(id)\r\n"
+    },
+    {
+        "table":  "eo_roles",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_roles_id_seq\u0027::regclass),\r\n  name character varying NOT NULL,\r\n  prioritas integer NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_roles_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_ruangan",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_ruangan_id_seq\u0027::regclass),\r\n  kode character varying NOT NULL UNIQUE,\r\n  nama character varying NOT NULL,\r\n  gedung character varying NOT NULL,\r\n  lantai integer NOT NULL,\r\n  kapasitas integer NOT NULL,\r\n  fasilitas text,\r\n  status character varying NOT NULL DEFAULT \u0027aktif\u0027::character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_ruangan_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_surat",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_surat_id_seq\u0027::regclass),\r\n  jenis_id bigint NOT NULL,\r\n  pemohon_id bigint NOT NULL,\r\n  dibuat_oleh_admin bigint,\r\n  nomor_urut integer,\r\n  bulan_tahun character varying,\r\n  nomor_surat character varying UNIQUE,\r\n  tanggal_pengajuan date NOT NULL,\r\n  status character varying NOT NULL,\r\n  file_hasil character varying,\r\n  tipe_pengajuan character varying NOT NULL,\r\n  catatan_pemohon text,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_surat_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_surat_dibuat_oleh_admin_foreign FOREIGN KEY (dibuat_oleh_admin) REFERENCES public.users(id),\r\n  CONSTRAINT eo_surat_jenis_id_foreign FOREIGN KEY (jenis_id) REFERENCES public.eo_jenis_surat(id),\r\n  CONSTRAINT eo_surat_pemohon_id_foreign FOREIGN KEY (pemohon_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_surat_masuk",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_surat_masuk_id_seq\u0027::regclass),\r\n  nomor_surat_luar character varying,\r\n  pengirim character varying NOT NULL,\r\n  perihal character varying NOT NULL,\r\n  kategori character varying,\r\n  tanggal_surat date NOT NULL,\r\n  tanggal_terima date NOT NULL,\r\n  file_scan character varying,\r\n  dicatat_oleh bigint NOT NULL,\r\n  created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,\r\n  CONSTRAINT eo_surat_masuk_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_eo_surat_masuk_dicatat_oleh_foreign FOREIGN KEY (dicatat_oleh) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_template_surat",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_template_surat_id_seq\u0027::regclass),\r\n  jenis_id bigint NOT NULL,\r\n  isi_template text NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_template_surat_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_template_surat_jenis_id_foreign FOREIGN KEY (jenis_id) REFERENCES public.eo_jenis_surat(id)\r\n"
+    },
+    {
+        "table":  "eo_user_profiles",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_user_profiles_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL UNIQUE,\r\n  no_wa character varying,\r\n  foto character varying,\r\n  identitas character varying,\r\n  is_active boolean NOT NULL DEFAULT true,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_user_profiles_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_user_profiles_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_periode_pendaftaran",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027manprak_periode_pendaftaran_id_seq\u0027::regclass),\r\n  praktikum_id uuid NOT NULL,\r\n  jenis character varying NOT NULL DEFAULT \u0027koor\u0027::character varying,\r\n  nama character varying,\r\n  dibuka_pada timestamp without time zone,\r\n  ditutup_pada timestamp without time zone,\r\n  is_aktif boolean NOT NULL DEFAULT false,\r\n  dibuka_oleh bigint,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  judul character varying,\r\n  deskripsi text,\r\n  nama_berkas_tambahan character varying,\r\n  konfigurasi_kuis json,\r\n  jenis_berkas_tambahan character varying,\r\n  keterangan_berkas_tambahan text,\r\n  CONSTRAINT eo_prak_periode_pendaftaran_pkey PRIMARY KEY (id),\r\n  CONSTRAINT manprak_periode_pendaftaran_dibuka_oleh_foreign FOREIGN KEY (dibuka_oleh) REFERENCES public.users(id),\r\n  CONSTRAINT manprak_periode_pendaftaran_praktikum_id_foreign FOREIGN KEY (praktikum_id) REFERENCES public.eo_prak_praktikum(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_materi_modul",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027materi_modul_id_seq\u0027::regclass),\r\n  modul_id bigint NOT NULL,\r\n  user_id bigint NOT NULL,\r\n  judul character varying NOT NULL,\r\n  deskripsi text,\r\n  file_path character varying,\r\n  tipe_file character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  materi_sumber_id bigint,\r\n  CONSTRAINT eo_prak_materi_modul_pkey PRIMARY KEY (id),\r\n  CONSTRAINT materi_modul_modul_id_foreign FOREIGN KEY (modul_id) REFERENCES public.eo_prak_modul_praktikum(id),\r\n  CONSTRAINT materi_modul_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id),\r\n  CONSTRAINT materi_modul_materi_sumber_id_foreign FOREIGN KEY (materi_sumber_id) REFERENCES public.eo_prak_materi_modul(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_modul_asprak",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027modul_asprak_id_seq\u0027::regclass),\r\n  modul_id bigint NOT NULL,\r\n  asprak_id bigint NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_modul_asprak_pkey PRIMARY KEY (id),\r\n  CONSTRAINT modul_asprak_asprak_id_foreign FOREIGN KEY (asprak_id) REFERENCES public.eo_prak_asprak_praktikum(id),\r\n  CONSTRAINT modul_asprak_modul_id_foreign FOREIGN KEY (modul_id) REFERENCES public.eo_prak_modul_praktikum(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_modul_praktikum",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027modul_praktikum_id_seq\u0027::regclass),\r\n  praktikum_id uuid NOT NULL,\r\n  nama character varying NOT NULL,\r\n  deskripsi text,\r\n  urutan integer NOT NULL DEFAULT 1,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  kode_modul character varying UNIQUE,\r\n  jadwal_minggu character varying,\r\n  status_sesi character varying NOT NULL DEFAULT \u0027belum_dimulai\u0027::character varying,\r\n  dimulai_pada timestamp without time zone,\r\n  selesai_pada timestamp without time zone,\r\n  dimulai_oleh bigint,\r\n  modul_sumber_id bigint,\r\n  pengajuan_modul_id bigint,\r\n  CONSTRAINT eo_prak_modul_praktikum_pkey PRIMARY KEY (id),\r\n  CONSTRAINT modul_praktikum_dimulai_oleh_foreign FOREIGN KEY (dimulai_oleh) REFERENCES public.users(id),\r\n  CONSTRAINT modul_praktikum_praktikum_id_foreign FOREIGN KEY (praktikum_id) REFERENCES public.eo_prak_praktikum(id),\r\n  CONSTRAINT modul_praktikum_modul_sumber_id_foreign FOREIGN KEY (modul_sumber_id) REFERENCES public.eo_prak_modul_praktikum(id),\r\n  CONSTRAINT modul_praktikum_pengajuan_modul_id_foreign FOREIGN KEY (pengajuan_modul_id) REFERENCES public.eo_prak_pengajuan_modul(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_nilai_jenis_tugas",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027nilai_jenis_tugas_id_seq\u0027::regclass),\r\n  daftar_praktikan_id uuid NOT NULL,\r\n  modul_id bigint NOT NULL,\r\n  jenis_tugas character varying NOT NULL,\r\n  nilai double precision,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_nilai_jenis_tugas_pkey PRIMARY KEY (id),\r\n  CONSTRAINT nilai_jenis_tugas_daftar_praktikan_id_foreign FOREIGN KEY (daftar_praktikan_id) REFERENCES public.eo_prak_daftar_praktikan(id),\r\n  CONSTRAINT nilai_jenis_tugas_modul_id_foreign FOREIGN KEY (modul_id) REFERENCES public.eo_prak_modul_praktikum(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_nilai_praktikum",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027nilai_praktikum_id_seq\u0027::regclass),\r\n  daftar_praktikan_id uuid NOT NULL,\r\n  modul character varying,\r\n  nilai_tugas double precision,\r\n  nilai_absensi double precision,\r\n  nilai_akhir double precision,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  disetujui_koor boolean NOT NULL DEFAULT false,\r\n  disetujui_dosen boolean NOT NULL DEFAULT false,\r\n  dipublikasikan boolean NOT NULL DEFAULT false,\r\n  CONSTRAINT eo_prak_nilai_praktikum_pkey PRIMARY KEY (id),\r\n  CONSTRAINT nilai_praktikum_daftar_praktikan_id_foreign FOREIGN KEY (daftar_praktikan_id) REFERENCES public.eo_prak_daftar_praktikan(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_pendaftaran_asprak",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027pendaftaran_asprak_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  praktikum_id uuid NOT NULL,\r\n  ipk double precision,\r\n  motivasi text,\r\n  cv_path character varying,\r\n  jadwal json,\r\n  status character varying NOT NULL DEFAULT \u0027pending\u0027::character varying,\r\n  alasan_penolakan text,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  transkrip_path character varying,\r\n  direview_oleh bigint,\r\n  direview_pada timestamp without time zone,\r\n  catatan_koor text,\r\n  status_koor character varying NOT NULL DEFAULT \u0027menunggu\u0027::character varying,\r\n  berkas_cerc_path character varying,\r\n  jawaban_kuis json,\r\n  skor_kuis integer,\r\n  berkas_tambahan_path character varying,\r\n  CONSTRAINT eo_prak_pendaftaran_asprak_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_pendaftaran_asprak_praktikum_id_foreign FOREIGN KEY (praktikum_id) REFERENCES public.eo_prak_praktikum(id),\r\n  CONSTRAINT lg_pendaftaran_asprak_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id),\r\n  CONSTRAINT lg_pendaftaran_asprak_direview_oleh_foreign FOREIGN KEY (direview_oleh) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_pendaftaran_koordinator",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027pendaftaran_koordinator_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  praktikum_id uuid NOT NULL,\r\n  ipk double precision,\r\n  motivasi text,\r\n  status character varying NOT NULL DEFAULT \u0027pending\u0027::character varying,\r\n  alasan_penolakan text,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  direview_oleh bigint,\r\n  direview_pada timestamp without time zone,\r\n  status_dosen character varying NOT NULL DEFAULT \u0027menunggu\u0027::character varying,\r\n  catatan_dosen text,\r\n  transkrip_path character varying,\r\n  berkas_cerc_path character varying,\r\n  berkas_tambahan_path character varying,\r\n  jawaban_kuis json,\r\n  skor_kuis integer,\r\n  CONSTRAINT eo_prak_pendaftaran_koordinator_pkey PRIMARY KEY (id),\r\n  CONSTRAINT lg_pendaftaran_koordinator_direview_oleh_foreign FOREIGN KEY (direview_oleh) REFERENCES public.users(id),\r\n  CONSTRAINT lg_pendaftaran_koordinator_praktikum_id_foreign FOREIGN KEY (praktikum_id) REFERENCES public.eo_prak_praktikum(id),\r\n  CONSTRAINT lg_pendaftaran_koordinator_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_pendaftaran_praktikan",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027pendaftaran_praktikan_id_seq\u0027::regclass),\r\n  user_id bigint NOT NULL,\r\n  praktikum_id uuid NOT NULL,\r\n  periode_id bigint,\r\n  irs_path character varying NOT NULL,\r\n  status character varying NOT NULL DEFAULT \u0027pending\u0027::character varying,\r\n  alasan_penolakan text,\r\n  direview_oleh bigint,\r\n  direview_pada timestamp without time zone,\r\n  catatan_koor text,\r\n  validasi_mode character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_pendaftaran_praktikan_pkey PRIMARY KEY (id),\r\n  CONSTRAINT pendaftaran_praktikan_direview_oleh_foreign FOREIGN KEY (direview_oleh) REFERENCES public.users(id),\r\n  CONSTRAINT pendaftaran_praktikan_periode_id_foreign FOREIGN KEY (periode_id) REFERENCES public.eo_prak_periode_pendaftaran(id),\r\n  CONSTRAINT pendaftaran_praktikan_praktikum_id_foreign FOREIGN KEY (praktikum_id) REFERENCES public.eo_prak_praktikum(id),\r\n  CONSTRAINT pendaftaran_praktikan_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_pengumpulan_tugas",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027pengumpulan_tugas_id_seq\u0027::regclass),\r\n  tugas_id bigint NOT NULL,\r\n  daftar_praktikan_id uuid NOT NULL,\r\n  file_path text,\r\n  catatan text,\r\n  nilai double precision,\r\n  catatan_revisi text,\r\n  is_revision boolean NOT NULL DEFAULT false,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  status_pengumpulan character varying NOT NULL DEFAULT \u0027belum_dicek\u0027::character varying,\r\n  file_revisi_asprak text,\r\n  CONSTRAINT eo_prak_pengumpulan_tugas_pkey PRIMARY KEY (id),\r\n  CONSTRAINT pengumpulan_tugas_daftar_praktikan_id_foreign FOREIGN KEY (daftar_praktikan_id) REFERENCES public.eo_prak_daftar_praktikan(id),\r\n  CONSTRAINT pengumpulan_tugas_tugas_id_foreign FOREIGN KEY (tugas_id) REFERENCES public.eo_prak_tugas_praktikum(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_pengumuman_praktikum",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027pengumuman_praktikum_id_seq\u0027::regclass),\r\n  praktikum_id uuid NOT NULL,\r\n  user_id bigint NOT NULL,\r\n  judul character varying NOT NULL,\r\n  konten text NOT NULL,\r\n  is_published boolean NOT NULL DEFAULT false,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  tipe_sistem character varying,\r\n  periode_id bigint,\r\n  deleted_at timestamp without time zone,\r\n  lampiran jsonb,\r\n  pinned_until timestamp without time zone,\r\n  CONSTRAINT eo_prak_pengumuman_praktikum_pkey PRIMARY KEY (id),\r\n  CONSTRAINT pengumuman_praktikum_periode_id_foreign FOREIGN KEY (periode_id) REFERENCES public.eo_prak_periode_pendaftaran(id),\r\n  CONSTRAINT pengumuman_praktikum_praktikum_id_foreign FOREIGN KEY (praktikum_id) REFERENCES public.eo_prak_praktikum(id),\r\n  CONSTRAINT pengumuman_praktikum_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_praktikum_legacy",
+        "body":  "\r\n  id uuid NOT NULL,\r\n  nama character varying NOT NULL,\r\n  kode character varying,\r\n  deskripsi text,\r\n  dosen_id uuid NOT NULL,\r\n  koor_id uuid,\r\n  tahun_ajaran integer NOT NULL,\r\n  semester character varying NOT NULL,\r\n  status character varying NOT NULL DEFAULT \u0027aktif\u0027::character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  deleted_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_praktikum_legacy_pkey PRIMARY KEY (id),\r\n  CONSTRAINT praktikum_dosen_id_foreign FOREIGN KEY (dosen_id) REFERENCES public.pengguna(id),\r\n  CONSTRAINT praktikum_koor_id_foreign FOREIGN KEY (koor_id) REFERENCES public.pengguna(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_riwayat_pengumpulan_tugas",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027riwayat_pengumpulan_tugas_id_seq\u0027::regclass),\r\n  pengumpulan_tugas_id bigint NOT NULL,\r\n  file_path text NOT NULL,\r\n  catatan text,\r\n  is_revision boolean NOT NULL DEFAULT false,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_riwayat_pengumpulan_tugas_pkey PRIMARY KEY (id),\r\n  CONSTRAINT riwayat_pengumpulan_tugas_pengumpulan_tugas_id_foreign FOREIGN KEY (pengumpulan_tugas_id) REFERENCES public.eo_prak_pengumpulan_tugas(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_tugas_praktikum",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027tugas_praktikum_id_seq\u0027::regclass),\r\n  modul_id bigint NOT NULL,\r\n  judul character varying NOT NULL,\r\n  deskripsi text,\r\n  deadline timestamp without time zone,\r\n  is_published boolean NOT NULL DEFAULT false,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  file_path text,\r\n  deadline_acc timestamp without time zone,\r\n  jenis_tugas character varying,\r\n  CONSTRAINT eo_prak_tugas_praktikum_pkey PRIMARY KEY (id),\r\n  CONSTRAINT tugas_praktikum_modul_id_foreign FOREIGN KEY (modul_id) REFERENCES public.eo_prak_modul_praktikum(id)\r\n"
+    },
+    {
+        "table":  "eo_kp_master_rubrik",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_kp_master_rubrik_id_seq\u0027::regclass),\r\n  kode character varying NOT NULL,\r\n  deskripsi text,\r\n  bobot integer NOT NULL DEFAULT 0,\r\n  role_penilai character varying NOT NULL DEFAULT \u0027dosen_pembimbing\u0027::character varying CHECK (role_penilai::text = ANY (ARRAY[\u0027dosen_pembimbing\u0027::character varying::text, \u0027koordinator\u0027::character varying::text])),\r\n  is_active boolean NOT NULL DEFAULT true,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_kp_master_rubrik_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_mr_fasilitas",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_mr_fasilitas_id_seq\u0027::regclass),\r\n  nama_fasilitas character varying NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_mr_fasilitas_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_mr_ruangan_fasilitas",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_mr_ruangan_fasilitas_id_seq\u0027::regclass),\r\n  ruangan_id bigint NOT NULL,\r\n  fasilitas_id bigint NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_mr_ruangan_fasilitas_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_mr_ruangan_fasilitas_fasilitas_id_foreign FOREIGN KEY (fasilitas_id) REFERENCES public.eo_mr_fasilitas(id),\r\n  CONSTRAINT eo_mr_ruangan_fasilitas_ruangan_id_foreign FOREIGN KEY (ruangan_id) REFERENCES public.eo_mr_ruangans(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_pengajuan_modul",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027pengajuan_modul_id_seq\u0027::regclass),\r\n  praktikum_id uuid NOT NULL,\r\n  praktikum_sumber_id uuid,\r\n  versi integer NOT NULL,\r\n  status character varying NOT NULL DEFAULT \u0027draft\u0027::character varying,\r\n  diajukan_oleh bigint NOT NULL,\r\n  direview_oleh bigint,\r\n  catatan_pengajuan text,\r\n  catatan_reviewer text,\r\n  diajukan_at timestamp without time zone,\r\n  direview_at timestamp without time zone,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_pengajuan_modul_pkey PRIMARY KEY (id),\r\n  CONSTRAINT pengajuan_modul_diajukan_oleh_foreign FOREIGN KEY (diajukan_oleh) REFERENCES public.users(id),\r\n  CONSTRAINT pengajuan_modul_direview_oleh_foreign FOREIGN KEY (direview_oleh) REFERENCES public.users(id),\r\n  CONSTRAINT pengajuan_modul_praktikum_id_foreign FOREIGN KEY (praktikum_id) REFERENCES public.eo_prak_praktikum(id),\r\n  CONSTRAINT pengajuan_modul_praktikum_sumber_id_foreign FOREIGN KEY (praktikum_sumber_id) REFERENCES public.eo_prak_praktikum(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_pengajuan_modul_item",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027pengajuan_modul_item_id_seq\u0027::regclass),\r\n  pengajuan_modul_id bigint NOT NULL,\r\n  modul_sumber_id bigint,\r\n  aksi character varying NOT NULL DEFAULT \u0027tambah\u0027::character varying,\r\n  nama_lama character varying,\r\n  urutan_lama integer,\r\n  nama_baru character varying,\r\n  urutan_baru integer,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_pengajuan_modul_item_pkey PRIMARY KEY (id),\r\n  CONSTRAINT pengajuan_modul_item_pengajuan_modul_id_foreign FOREIGN KEY (pengajuan_modul_id) REFERENCES public.eo_prak_pengajuan_modul(id),\r\n  CONSTRAINT pengajuan_modul_item_modul_sumber_id_foreign FOREIGN KEY (modul_sumber_id) REFERENCES public.eo_prak_modul_praktikum(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_tugas_akhir",
+        "body":  "\r\n  id uuid NOT NULL,\r\n  praktikum_id uuid NOT NULL UNIQUE,\r\n  ketentuan text NOT NULL,\r\n  tahap json NOT NULL,\r\n  komponen json NOT NULL,\r\n  lampiran json,\r\n  riwayat json,\r\n  published boolean NOT NULL DEFAULT false,\r\n  version integer NOT NULL DEFAULT 1,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  tipe character varying,\r\n  CONSTRAINT eo_prak_tugas_akhir_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_tugas_akhir_praktikum_id_foreign FOREIGN KEY (praktikum_id) REFERENCES public.eo_prak_praktikum(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_ta_pengumpulan",
+        "body":  "\r\n  id uuid NOT NULL,\r\n  tugas_akhir_id uuid NOT NULL,\r\n  praktikan_id uuid NOT NULL,\r\n  tahap_id uuid NOT NULL,\r\n  status character varying NOT NULL DEFAULT \u0027dikumpulkan\u0027::character varying,\r\n  catatan text,\r\n  deadline_revisi timestamp without time zone,\r\n  riwayat json NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_ta_pengumpulan_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_ta_pengumpulan_tugas_akhir_id_foreign FOREIGN KEY (tugas_akhir_id) REFERENCES public.eo_prak_tugas_akhir(id),\r\n  CONSTRAINT eo_ta_pengumpulan_praktikan_id_foreign FOREIGN KEY (praktikan_id) REFERENCES public.eo_prak_daftar_praktikan(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_ta_nilai",
+        "body":  "\r\n  id uuid NOT NULL,\r\n  tugas_akhir_id uuid NOT NULL,\r\n  praktikan_id uuid NOT NULL,\r\n  skor json NOT NULL,\r\n  riwayat json NOT NULL,\r\n  version integer NOT NULL DEFAULT 1,\r\n  disetujui_koor boolean NOT NULL DEFAULT false,\r\n  disetujui_dosen boolean NOT NULL DEFAULT false,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_ta_nilai_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_ta_nilai_tugas_akhir_id_foreign FOREIGN KEY (tugas_akhir_id) REFERENCES public.eo_prak_tugas_akhir(id),\r\n  CONSTRAINT eo_ta_nilai_praktikan_id_foreign FOREIGN KEY (praktikan_id) REFERENCES public.eo_prak_daftar_praktikan(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_ta_absensi",
+        "body":  "\r\n  id uuid NOT NULL,\r\n  tugas_akhir_id uuid NOT NULL,\r\n  praktikan_id uuid NOT NULL,\r\n  status character varying NOT NULL,\r\n  keterangan text,\r\n  version integer NOT NULL DEFAULT 1,\r\n  riwayat json NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_ta_absensi_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_ta_absensi_tugas_akhir_id_foreign FOREIGN KEY (tugas_akhir_id) REFERENCES public.eo_prak_tugas_akhir(id),\r\n  CONSTRAINT eo_ta_absensi_praktikan_id_foreign FOREIGN KEY (praktikan_id) REFERENCES public.eo_prak_daftar_praktikan(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_grade_policies",
+        "body":  "\r\n  id uuid NOT NULL,\r\n  version integer NOT NULL UNIQUE,\r\n  nama character varying NOT NULL,\r\n  rules json NOT NULL,\r\n  created_by bigint,\r\n  created_at timestamp without time zone NOT NULL,\r\n  CONSTRAINT eo_prak_grade_policies_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_prak_grade_settings",
+        "body":  "\r\n  id integer NOT NULL,\r\n  active_policy_id uuid NOT NULL,\r\n  CONSTRAINT eo_prak_grade_settings_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_prak_grade_batches",
+        "body":  "\r\n  id uuid NOT NULL,\r\n  praktikum_id uuid NOT NULL,\r\n  policy_id uuid NOT NULL,\r\n  fingerprint character NOT NULL,\r\n  status character varying NOT NULL DEFAULT \u0027pending\u0027::character varying,\r\n  weights json NOT NULL,\r\n  created_by bigint,\r\n  created_at timestamp without time zone NOT NULL,\r\n  published_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_grade_batches_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_prak_final_results",
+        "body":  "\r\n  id uuid NOT NULL,\r\n  batch_id uuid NOT NULL,\r\n  praktikan_id uuid NOT NULL,\r\n  cohort_year smallint NOT NULL,\r\n  module_value numeric NOT NULL,\r\n  ta_value numeric NOT NULL,\r\n  final_value numeric NOT NULL,\r\n  letter character varying NOT NULL,\r\n  points numeric NOT NULL,\r\n  calculation json NOT NULL,\r\n  CONSTRAINT eo_prak_final_results_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_prak_extra_scores",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_prak_extra_scores_id_seq\u0027::regclass),\r\n  praktikum_id uuid NOT NULL,\r\n  praktikan_id uuid NOT NULL,\r\n  scores json NOT NULL,\r\n  version integer NOT NULL DEFAULT 0,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_extra_scores_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_prak_score_histories",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_prak_score_histories_id_seq\u0027::regclass),\r\n  praktikum_id uuid NOT NULL,\r\n  scope character varying NOT NULL,\r\n  module_id character varying,\r\n  praktikan_id uuid NOT NULL,\r\n  score_key character varying NOT NULL,\r\n  editor_id bigint,\r\n  editor_name character varying NOT NULL,\r\n  before_value numeric,\r\n  after_value numeric,\r\n  created_at timestamp without time zone NOT NULL,\r\n  CONSTRAINT eo_prak_score_histories_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_prak_schedule_periods",
+        "body":  "\r\n  id uuid NOT NULL,\r\n  tahun_ajaran character varying NOT NULL,\r\n  semester character varying NOT NULL,\r\n  starts_on date NOT NULL,\r\n  ends_on date NOT NULL,\r\n  version integer NOT NULL DEFAULT 0,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_schedule_periods_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_prak_booking_requests",
+        "body":  "\r\n  id uuid NOT NULL,\r\n  code character varying NOT NULL UNIQUE,\r\n  period_id uuid NOT NULL,\r\n  kind character varying NOT NULL DEFAULT \u0027new\u0027::character varying,\r\n  status character varying NOT NULL DEFAULT \u0027draft\u0027::character varying,\r\n  requested_by bigint NOT NULL,\r\n  decided_by bigint,\r\n  reason text,\r\n  decision_reason text,\r\n  plan json,\r\n  history json,\r\n  fingerprint character varying,\r\n  version integer NOT NULL DEFAULT 0,\r\n  submitted_at timestamp without time zone,\r\n  decided_at timestamp without time zone,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_prak_booking_requests_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_prak_booking_requests_period_id_foreign FOREIGN KEY (period_id) REFERENCES public.eo_prak_schedule_periods(id)\r\n"
+    },
+    {
+        "table":  "eo_prak_booking_meetings",
+        "body":  "\r\n  id uuid NOT NULL,\r\n  request_id uuid NOT NULL,\r\n  praktikum_id uuid NOT NULL,\r\n  module_id character varying NOT NULL,\r\n  module_name character varying NOT NULL,\r\n  module_order integer NOT NULL,\r\n  shift character varying NOT NULL,\r\n  date date NOT NULL,\r\n  starts_at time without time zone NOT NULL,\r\n  ends_at time without time zone NOT NULL,\r\n  room_id bigint NOT NULL,\r\n  participants integer NOT NULL DEFAULT 0,\r\n  replaces_id uuid,\r\n  booking_id bigint UNIQUE,\r\n  state character varying NOT NULL DEFAULT \u0027draft\u0027::character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  note character varying,\r\n  CONSTRAINT eo_prak_booking_meetings_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_prak_booking_meetings_request_id_foreign FOREIGN KEY (request_id) REFERENCES public.eo_prak_booking_requests(id)\r\n"
+    },
+    {
+        "table":  "eo_praktikum",
+        "body":  "\r\n  id uuid NOT NULL,\r\n  nama character varying NOT NULL,\r\n  kode character varying,\r\n  deskripsi text,\r\n  koor_id bigint,\r\n  semester character varying NOT NULL,\r\n  status character varying NOT NULL DEFAULT \u0027aktif\u0027::character varying,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  deleted_at timestamp without time zone,\r\n  matkul_id bigint,\r\n  tahun_ajaran character varying,\r\n  jumlah_kelompok integer,\r\n  jumlah_shift integer,\r\n  is_active boolean NOT NULL DEFAULT true,\r\n  cover_path character varying,\r\n  bobot_tp integer NOT NULL DEFAULT 10,\r\n  bobot_praktikum integer NOT NULL DEFAULT 30,\r\n  bobot_laporan integer NOT NULL DEFAULT 30,\r\n  bobot_responsi integer NOT NULL DEFAULT 30,\r\n  CONSTRAINT eo_praktikum_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_praktikum_koor_id_foreign FOREIGN KEY (koor_id) REFERENCES public.users(id),\r\n  CONSTRAINT eo_praktikum_matkul_id_foreign FOREIGN KEY (matkul_id) REFERENCES public.eo_matkul_praktikum(id)\r\n"
+    },
+    {
+        "table":  "eo_matkul_praktikum",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_matkul_praktikum_id_seq1\u0027::regclass),\r\n  kode character varying NOT NULL UNIQUE,\r\n  nama character varying NOT NULL,\r\n  sks integer NOT NULL,\r\n  semester bigint,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_matkul_praktikum_pkey PRIMARY KEY (id)\r\n"
+    },
+    {
+        "table":  "eo_praktikum_dosen",
+        "body":  "\r\n  id bigint NOT NULL DEFAULT nextval(\u0027eo_praktikum_dosen_id_seq1\u0027::regclass),\r\n  praktikum_id uuid NOT NULL,\r\n  dosen_id bigint NOT NULL,\r\n  created_at timestamp without time zone,\r\n  updated_at timestamp without time zone,\r\n  CONSTRAINT eo_praktikum_dosen_pkey PRIMARY KEY (id),\r\n  CONSTRAINT eo_praktikum_dosen_praktikum_id_foreign FOREIGN KEY (praktikum_id) REFERENCES public.eo_praktikum(id),\r\n  CONSTRAINT eo_praktikum_dosen_dosen_id_foreign FOREIGN KEY (dosen_id) REFERENCES public.users(id)\r\n"
+    }
+]

@@ -22,9 +22,75 @@ class PermissionAssigner
         'pengurus_himpunan' => ['kemahasiswaan'],
         'alumni' => ['kemahasiswaan'],
         'superadmin' => ['all'],
+        'admin' => ['all'],
     ];
 
     private const ACTIONS = ['view', 'edit', 'delete'];
+
+    public static function roleModuleMapping(): array
+    {
+        return self::ROLE_MODULE_MAPPING;
+    }
+
+    /** A module administrator's scope takes priority over academic roles; null means unrestricted. */
+    public static function restrictedModules(array $roleNames): ?array
+    {
+        if (array_intersect($roleNames, ['superadmin', 'admin'])) {
+            return null;
+        }
+
+        $modules = [];
+        foreach ($roleNames as $roleName) {
+            if (str_starts_with($roleName, 'admin_')) {
+                $modules = array_merge($modules, self::ROLE_MODULE_MAPPING[$roleName] ?? []);
+            }
+        }
+
+        return array_filter($roleNames, fn ($name) => str_starts_with($name, 'admin_'))
+            ? array_values(array_unique($modules))
+            : null;
+    }
+
+    public static function filterPermissionNames(array $roleNames, array $permissionNames): array
+    {
+        $modules = self::restrictedModules($roleNames);
+
+        return array_values(array_unique(array_filter(
+            $permissionNames,
+            fn ($name) => is_string($name) && ($modules === null || in_array(explode('.', $name)[0], $modules, true))
+        )));
+    }
+
+    public static function defaultPermissionNames(array $roleNames): array
+    {
+        $modules = [];
+        foreach ($roleNames as $roleName) {
+            $modules = array_merge($modules, self::ROLE_MODULE_MAPPING[$roleName] ?? []);
+        }
+
+        $names = in_array('all', $modules, true)
+            ? Permission::query()->pluck('name')->all()
+            : array_merge([], ...array_map(
+                fn ($module) => array_map(fn ($action) => "{$module}.{$action}", self::ACTIONS),
+                array_unique($modules)
+            ));
+
+        return self::filterPermissionNames($roleNames, $names);
+    }
+
+    /** Synchronize the full selection so stale permissions are also revoked. */
+    public static function syncSelection(User $user, array $roleNames, array $permissionNames): array
+    {
+        $permissions = Permission::query()
+            ->whereIn('name', self::filterPermissionNames($roleNames, $permissionNames))
+            ->get();
+
+        $user->syncPermissions($permissions);
+        $user->unsetRelation('roles');
+        $user->clearUserCache();
+
+        return $permissions->pluck('name')->all();
+    }
 
     public static function assignByRoles(User $user, array $roleNames): void
     {
@@ -37,46 +103,7 @@ class PermissionAssigner
                 'roles' => $roleNames,
             ]);
 
-            $permissionNames = [];
-            $assignAllPermissions = false;
-
-            foreach ($roleNames as $roleName) {
-                if (in_array($roleName, ['admin_praktikum', 'koordinator_cerc'], true)) {
-                    $permissionNames[] = 'eoffice.view';
-
-                    continue;
-                }
-                $modules = self::ROLE_MODULE_MAPPING[$roleName] ?? [];
-
-                if (empty($modules)) {
-                    Log::warning('No module mapping for role', ['role' => $roleName]);
-
-                    continue;
-                }
-
-                if (in_array('all', $modules)) {
-                    $assignAllPermissions = true;
-                    break;
-                }
-
-                foreach ($modules as $module) {
-                    foreach (self::ACTIONS as $action) {
-                        $permissionNames[] = "{$module}.{$action}";
-                    }
-                }
-            }
-
-            $permissionIds = $assignAllPermissions
-                ? Permission::query()->pluck('id')->all()
-                : Permission::query()
-                    ->whereIn('name', array_values(array_unique($permissionNames)))
-                    ->pluck('id')
-                    ->all();
-
-            // Spatie direct permissions via model_has_permissions table
-            $user->permissions()->sync($permissionIds);
-
-            $user->clearUserCache();
+            self::syncSelection($user, $roleNames, self::defaultPermissionNames($roleNames));
             DB::commit();
 
         } catch (\Exception $e) {
@@ -92,33 +119,7 @@ class PermissionAssigner
     public static function verifyPermissions(User $user): array
     {
         $roleNames = $user->roles()->pluck('name')->toArray();
-        $modules = [];
-        $restrictedPermissions = [];
-
-        foreach ($roleNames as $roleName) {
-            if (in_array($roleName, ['admin_praktikum', 'koordinator_cerc'], true)) {
-                $restrictedPermissions[] = 'eoffice.view';
-
-                continue;
-            }
-            $mapped = self::ROLE_MODULE_MAPPING[$roleName] ?? [];
-            if (in_array('all', $mapped)) {
-                $modules = ['all'];
-                break;
-            }
-            $modules = array_merge($modules, $mapped);
-        }
-
-        if (in_array('all', $modules)) {
-            $expected = Permission::all()->pluck('name')->toArray();
-        } else {
-            $expected = $restrictedPermissions;
-            foreach (array_unique($modules) as $module) {
-                foreach (self::ACTIONS as $action) {
-                    $expected[] = "{$module}.{$action}";
-                }
-            }
-        }
+        $expected = self::defaultPermissionNames($roleNames);
 
         $current = $user->permissions()->pluck('name')->toArray();
         $missing = array_diff($expected, $current);
