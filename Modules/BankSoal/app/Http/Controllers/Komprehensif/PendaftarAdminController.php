@@ -13,6 +13,7 @@ use Illuminate\Validation\ValidationException;
 use Modules\BankSoal\Enums\PendaftaranStatus;
 use Modules\BankSoal\Http\Requests\Komprehensif\BulkPendaftarRequest;
 use Modules\BankSoal\Http\Requests\Komprehensif\StoreAdminPendaftarRequest;
+use Modules\BankSoal\Models\Komprehensif\KompreSession;
 use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
 use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
 use Modules\BankSoal\Services\Komprehensif\PendaftaranService;
@@ -69,10 +70,11 @@ class PendaftarAdminController extends Controller
                 : 5;
             $pendaftars = $query
                 ->with(['mahasiswa', 'dosenPembimbing1', 'dosenPembimbing2', 'ditambahkanOleh'])
-                ->withCount('sesiSelesai')
                 ->latest()
                 ->paginate($perPage)
                 ->withQueryString();
+
+            $this->attachUjianKe($pendaftars, $selectedPeriode);
         }
 
         // Ambil semua dosen untuk dropdown
@@ -87,6 +89,80 @@ class PendaftarAdminController extends Controller
             'totalCount',
             'dosenList',
         ));
+    }
+
+    /**
+     * Hitung nomor ujian berdasarkan NIM, termasuk riwayat historis.
+     */
+    private function attachUjianKe($pendaftars, ?PeriodeUjian $periode): void
+    {
+        $setZero = function () use ($pendaftars): void {
+            foreach ($pendaftars as $pendaftar) {
+                $pendaftar->setAttribute('ujian_ke', 0);
+            }
+        };
+
+        if (! $periode || $pendaftars->isEmpty()) {
+            $setZero();
+
+            return;
+        }
+
+        $nims = $pendaftars->getCollection()
+            ->pluck('nim')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($nims->isEmpty()) {
+            $setZero();
+
+            return;
+        }
+
+        $sessions = KompreSession::query()
+            ->where('status', 'finished')
+            ->where(function (Builder $query) use ($nims) {
+                $query->whereHas('pendaftar', fn (Builder $pendaftarQuery) => $pendaftarQuery->whereIn('nim', $nims))
+                    ->orWhereHas('user.student', fn (Builder $studentQuery) => $studentQuery->whereIn('student_number', $nims));
+            })
+            ->with([
+                'pendaftar:id,nim',
+                'user.student:id,user_id,student_number',
+                'jadwal:id,tanggal_ujian',
+            ])
+            ->get();
+
+        $cutoff = $periode->tanggal_selesai_ujian
+            ?? $periode->tanggal_selesai
+            ?? now();
+        $cutoffDate = $cutoff->format('Y-m-d');
+        $counts = [];
+        $seen = [];
+
+        foreach ($sessions as $session) {
+            if (isset($seen[$session->id])) {
+                continue;
+            }
+
+            $seen[$session->id] = true;
+            $nim = $session->pendaftar?->nim ?? $session->user?->student?->student_number;
+
+            if (! $nim) {
+                continue;
+            }
+
+            $examDate = $session->jadwal?->tanggal_ujian?->format('Y-m-d')
+                ?? $session->finished_at?->format('Y-m-d');
+
+            if ($examDate && $examDate <= $cutoffDate) {
+                $counts[$nim] = ($counts[$nim] ?? 0) + 1;
+            }
+        }
+
+        foreach ($pendaftars as $pendaftar) {
+            $pendaftar->setAttribute('ujian_ke', $counts[$pendaftar->nim] ?? 0);
+        }
     }
 
     /**

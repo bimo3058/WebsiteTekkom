@@ -187,16 +187,22 @@ class DashboardController extends Controller
             };
 
             // ── Zona D: Analitik CBT ──────────────────────────────────────────────
-            // Subquery untuk mendapatkan nilai tertinggi per user
+            // Subquery nilai tertinggi per mahasiswa (identitas NIM, termasuk peserta historis)
+            $participantIdentity = 'COALESCE(bs_pendaftar_ujians.nim, students.student_number)';
+
             $userScoresSubquery = $withPeriode(
-                DB::table('bs_kompre_session')->where('bs_kompre_session.status', 'finished')
+                DB::table('bs_kompre_session')
+                    ->leftJoin('bs_pendaftar_ujians', 'bs_pendaftar_ujians.id', '=', 'bs_kompre_session.pendaftar_ujian_id')
+                    ->leftJoin('students', 'students.user_id', '=', 'bs_kompre_session.user_id')
+                    ->where('bs_kompre_session.status', 'finished')
+                    ->whereRaw("{$participantIdentity} IS NOT NULL")
             )
-                ->select(
-                    'bs_kompre_session.user_id',
-                    DB::raw('MAX(score) as max_score'),
-                    DB::raw('MAX(CASE WHEN lulus THEN 1 ELSE 0 END) as pernah_lulus')
-                )
-                ->groupBy('bs_kompre_session.user_id');
+                ->selectRaw("
+                    {$participantIdentity} as participant_key,
+                    MAX(bs_kompre_session.score) as max_score,
+                    MAX(CASE WHEN bs_kompre_session.lulus THEN 1 ELSE 0 END) as pernah_lulus
+                ")
+                ->groupByRaw($participantIdentity);
 
             $cbtStats = DB::query()->fromSub($userScoresSubquery, 'user_scores')
                 ->selectRaw('
@@ -226,8 +232,72 @@ class DashboardController extends Controller
                 ->map(fn ($r) => [
                     'cpl_kode' => preg_replace('/^CPL-0*/', 'CPL ', $r->cpl_kode),
                     'deskripsi' => $r->deskripsi,
+                    'total' => (int) $r->total,
+                    'benar' => (int) $r->benar,
                     'persentase' => $r->total > 0 ? round(($r->benar / $r->total) * 100, 1) : 0,
                 ]);
+
+            // Hasil import tidak memiliki baris jawaban; ambil agregat CPL dari cpl_scores.
+            $importCplStats = $withPeriode(
+                DB::table('bs_kompre_session')
+                    ->where('bs_kompre_session.status', 'finished')
+                    ->whereIn('bs_kompre_session.source', ['import_legacy', 'import_template'])
+                    ->whereNotNull('bs_kompre_session.cpl_scores')
+                    ->whereNotExists(function ($query) {
+                        $query->select(DB::raw(1))
+                            ->from('bs_kompre_jawaban')
+                            ->whereColumn('bs_kompre_jawaban.kompre_session_id', 'bs_kompre_session.id');
+                    })
+            )
+                ->select('bs_kompre_session.cpl_scores')
+                ->get()
+                ->flatMap(function ($row) {
+                    $scores = json_decode((string) $row->cpl_scores, true);
+
+                    return collect(is_array($scores) ? $scores : [])->map(fn ($cpl) => [
+                        'kode' => $cpl['kode'] ?? null,
+                        'deskripsi' => $cpl['deskripsi'] ?? '',
+                        'benar' => (int) ($cpl['benar'] ?? 0),
+                        'total' => (int) ($cpl['total'] ?? 0),
+                    ]);
+                })
+                ->filter(fn ($cpl) => ! empty($cpl['kode']) && $cpl['total'] > 0)
+                ->groupBy('kode')
+                ->map(fn ($items, $kode) => [
+                    'kode' => $kode,
+                    'deskripsi' => $items->first()['deskripsi'] ?? '',
+                    'benar' => $items->sum('benar'),
+                    'total' => $items->sum('total'),
+                ]);
+
+            if ($importCplStats->isNotEmpty()) {
+                $mergedCplStats = collect($cplStats)->keyBy('cpl_kode');
+
+                foreach ($importCplStats as $kode => $stat) {
+                    $label = preg_replace('/^CPL-0*/', 'CPL ', $kode);
+                    $existing = $mergedCplStats->get($label, [
+                        'cpl_kode' => $label,
+                        'deskripsi' => $stat['deskripsi'] ?? '',
+                        'total' => 0,
+                        'benar' => 0,
+                    ]);
+
+                    $total = (int) $existing['total'] + (int) $stat['total'];
+                    $benar = (int) $existing['benar'] + (int) $stat['benar'];
+
+                    $mergedCplStats->put($label, [
+                        'cpl_kode' => $label,
+                        'deskripsi' => $existing['deskripsi'] ?: ($stat['deskripsi'] ?? ''),
+                        'total' => $total,
+                        'benar' => $benar,
+                        'persentase' => $total > 0 ? round($benar / $total * 100, 1) : 0,
+                    ]);
+                }
+
+                $cplStats = $mergedCplStats
+                    ->sortBy(fn ($stat) => (int) preg_replace('/\D/', '', $stat['cpl_kode']))
+                    ->values();
+            }
 
             $kesalahanPerSoal = $withPeriode(
                 DB::table('bs_kompre_jawaban')

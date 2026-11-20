@@ -40,12 +40,16 @@ class AdminCbtController extends Controller
         // Subquery correlated untuk menghitung "Ujian Ke-" per mahasiswa
         // Compatible dengan MySQL 5.7+ (tanpa window function)
         $ujianKeSubquery = "
-            (SELECT COUNT(*) FROM bs_kompre_session s2
+            (SELECT COUNT(DISTINCT s2.id)
+             FROM bs_kompre_session s2
+             LEFT JOIN bs_pendaftar_ujians p2 ON p2.id = s2.pendaftar_ujian_id
+             LEFT JOIN students st2 ON st2.user_id = s2.user_id
              WHERE s2.status = 'finished'
-               AND (
-                    (bs_kompre_session.user_id IS NOT NULL AND s2.user_id = bs_kompre_session.user_id)
-                    OR (bs_kompre_session.user_id IS NULL AND s2.user_id IS NULL
-                        AND s2.pendaftar_ujian_id = bs_kompre_session.pendaftar_ujian_id)
+               AND COALESCE(p2.nim, st2.student_number) = COALESCE(
+                    (SELECT pcur.nim FROM bs_pendaftar_ujians pcur
+                     WHERE pcur.id = bs_kompre_session.pendaftar_ujian_id),
+                    (SELECT stcur.student_number FROM students stcur
+                     WHERE stcur.user_id = bs_kompre_session.user_id)
                )
                AND (s2.finished_at < bs_kompre_session.finished_at
                     OR (s2.finished_at = bs_kompre_session.finished_at AND s2.id <= bs_kompre_session.id))

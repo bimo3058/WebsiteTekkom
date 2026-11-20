@@ -352,7 +352,7 @@
                             <th class="px-6 py-4 whitespace-nowrap">NIM</th>
                             <th class="px-6 py-4 whitespace-nowrap">Nama Mahasiswa</th>
                             <th class="px-6 py-4 whitespace-nowrap">Periode Ujian</th>
-                            <th class="px-6 py-4 whitespace-nowrap text-center">Ujian Ke-</th>
+                            <th class="px-6 py-4 whitespace-nowrap text-center">Ujian ke-</th>
                             <th class="px-6 py-4 whitespace-nowrap text-center">Nilai</th>
                             <th class="px-6 py-4 whitespace-nowrap text-center">Keterangan</th>
                             <th class="px-6 py-4 whitespace-nowrap text-center">Aksi</th>

@@ -110,7 +110,7 @@
                         <th scope="col" class="px-6 py-4 whitespace-nowrap">NIM</th>
                         <th scope="col" class="px-6 py-4 whitespace-nowrap">Nama Mahasiswa</th>
                         <th scope="col" class="px-6 py-4 whitespace-nowrap">Semester</th>
-                        <th scope="col" class="px-6 py-4 whitespace-nowrap">Riwayat Ujian</th>
+                        <th scope="col" class="px-6 py-4 whitespace-nowrap">Ujian ke-</th>
                         <th scope="col" class="px-6 py-4 whitespace-nowrap">Status</th>
                         <th scope="col" class="px-6 py-4 text-center whitespace-nowrap">Aksi</th>
                     </tr>
@@ -150,8 +150,8 @@
                             <td class="px-6 py-4 text-gray-500 whitespace-nowrap">Semester {{ $item->semester_aktif }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-gray-500 text-sm">
-                                @php $n = $item->sesi_selesai_count ?? 0; @endphp
-                                {{ $n === 0 ? 'Belum pernah' : $n . '× ujian' }}
+                                @php $n = $item->ujian_ke ?? 0; @endphp
+                                {{ $n === 0 ? 'Belum pernah' : $n }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if ($item->status_pendaftaran->value === 'approved')
@@ -217,7 +217,7 @@
                                                             tanggal: '{{ $item->created_at->translatedFormat('d F Y, H:i') }}',
                                                             dosen1: '{{ addslashes($item->dosenPembimbing1->name ?? '-') }}',
                                                             dosen2: '{{ addslashes($item->dosenPembimbing2->name ?? '-') }}',
-                                                            ujian_count: {{ $item->sesi_selesai_count ?? 0 }}
+                                                            ujian_count: {{ $item->ujian_ke ?? 0 }}
                                                         }); actionOpen = false"
                                         class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors text-left">
                                         <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
