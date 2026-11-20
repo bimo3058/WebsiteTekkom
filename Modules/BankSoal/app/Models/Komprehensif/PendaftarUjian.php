@@ -6,7 +6,6 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\BankSoal\Enums\PendaftaranStatus;
-use Modules\BankSoal\Models\Komprehensif\KompreSession;
 
 class PendaftarUjian extends Model
 {
@@ -70,6 +69,11 @@ class PendaftarUjian extends Model
     public function sesiSelesai()
     {
         return $this->hasMany(KompreSession::class, 'user_id', 'mahasiswa_id')
-                    ->where('status', 'finished');
+            ->where('status', 'finished');
+    }
+
+    public function sesi()
+    {
+        return $this->hasMany(KompreSession::class, 'pendaftar_ujian_id');
     }
 }

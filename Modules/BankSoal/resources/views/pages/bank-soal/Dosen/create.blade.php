@@ -296,6 +296,74 @@
             };
             const container = document.getElementById('optionsContainer');
             const addBtn = document.getElementById('addOptionBtn');
+            const mkSelect = document.getElementById('mk_id');
+            const cplSelect = document.getElementById('cpl_id');
+            const cpmkSelect = document.getElementById('cpmk_id');
+            const cplPlaceholder = '<option value="">Pilih CPL...</option>';
+            const cpmkPlaceholder = '<option value="">Pilih CPMK...</option>';
+            const initialCplId = @json(old('cpl_id', ''));
+            const initialCpmkId = @json(old('cpmk_id', ''));
+
+            const resetSelect = (select, placeholder) => {
+                select.innerHTML = placeholder;
+                select.value = '';
+            };
+
+            const loadCpmk = (cplId, mkId, selectedId = '') => {
+                resetSelect(cpmkSelect, cpmkPlaceholder);
+                if (!cplId || !mkId) return Promise.resolve();
+
+                return fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${encodeURIComponent(cplId)}&mk_id=${encodeURIComponent(mkId)}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Gagal memuat CPMK.');
+                        return response.json();
+                    })
+                    .then(data => {
+                        data.forEach(cpmk => {
+                            cpmkSelect.add(new Option(
+                                `${cpmk.kode} - ${(cpmk.deskripsi || '').substring(0, 60)}...`,
+                                cpmk.id
+                            ));
+                        });
+                        cpmkSelect.value = selectedId;
+                        cpmkSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    });
+            };
+
+            const loadCpl = (mkId, selectedId = '', selectedCpmkId = '') => {
+                resetSelect(cplSelect, cplPlaceholder);
+                resetSelect(cpmkSelect, cpmkPlaceholder);
+                if (!mkId) return Promise.resolve();
+
+                return fetch(`{{ route('banksoal.rps.dosen.cpl', '') }}/${encodeURIComponent(mkId)}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Gagal memuat CPL.');
+                        return response.json();
+                    })
+                    .then(data => {
+                        data.forEach(cpl => {
+                            cplSelect.add(new Option(
+                                `${cpl.kode} - ${(cpl.deskripsi || '').substring(0, 60)}...`,
+                                cpl.id
+                            ));
+                        });
+                        cplSelect.value = selectedId;
+                        cplSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                        return loadCpmk(selectedId, mkId, selectedCpmkId);
+                    });
+            };
+
+            mkSelect.addEventListener('change', () => {
+                loadCpl(mkSelect.value).catch(error => console.error(error));
+            });
+            cplSelect.addEventListener('change', () => {
+                loadCpmk(cplSelect.value, mkSelect.value).catch(error => console.error(error));
+            });
+
+            if (mkSelect.value) {
+                loadCpl(mkSelect.value, initialCplId, initialCpmkId).catch(error => console.error(error));
+            }
+
             function updateStyles() {
                 const boxes = container.querySelectorAll('.option-item');
                 boxes.forEach((box, index) => {

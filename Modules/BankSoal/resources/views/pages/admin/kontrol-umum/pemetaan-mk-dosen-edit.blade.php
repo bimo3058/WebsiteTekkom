@@ -402,7 +402,7 @@
                 if (s.p > tp) s.p = 1; const paged = all.slice((s.p - 1) * RS, s.p * RS);
                 const el = document.getElementById('rightItems'), em = document.getElementById('rightEmpty');
                 if (!paged.length) { el.innerHTML = ''; em.style.display = 'block'; }
-                else { em.style.display = 'none'; el.innerHTML = paged.map(c => `<label class="check-item ${s.sel.has(c.id) ? 'checked' : ''}" onclick="event.preventDefault();tog(${c.id},this)"><input type="checkbox" ${s.sel.has(c.id) ? 'checked' : ''} onchange="tog(${c.id},this.closest('.check-item'))"><span style="font-size:13px;font-weight:600;color:#334155">${c.name}</span></label>`).join('') + '<div class="check-item" style="visibility:hidden;pointer-events:none"><input type="checkbox" disabled><span>&nbsp;</span></div>'.repeat(Math.max(0, RS - paged.length)); }
+                else { em.style.display = 'none'; el.innerHTML = paged.map(c => `<label class="check-item ${s.sel.has(c.id) ? 'checked' : ''}"><input type="checkbox" ${s.sel.has(c.id) ? 'checked' : ''} onchange="tog(${c.id},this.closest('.check-item'))"><span style="font-size:13px;font-weight:600;color:#334155">${c.name}</span></label>`).join('') + '<div class="check-item" style="visibility:hidden;pointer-events:none"><input type="checkbox" disabled><span>&nbsp;</span></div>'.repeat(Math.max(0, RS - paged.length)); }
                 document.getElementById('rightFooter').style.display = total > RS ? 'flex' : 'none';
                 document.getElementById('rightPageInfo').textContent = `${Math.min((s.p - 1) * RS + 1, total)}–${Math.min(s.p * RS, total)} dari ${total}`;
                 let b = `<button class="pg-btn" onclick="setP(${s.p - 1})" ${s.p <= 1 ? 'disabled' : ''}>‹</button>`;
@@ -412,7 +412,16 @@
                 const saEl = document.getElementById('selectAllRight'), cc = paged.filter(c => s.sel.has(c.id)).length;
                 saEl.checked = paged.length > 0 && cc === paged.length; saEl.indeterminate = cc > 0 && cc < paged.length;
             }
-            function tog(id, row) { s.sel.has(id) ? s.sel.delete(id) : s.sel.add(id); row.classList.toggle('checked', s.sel.has(id)); const cb = row.querySelector('input[type=checkbox]'); if (cb) cb.checked = s.sel.has(id); render(); }
+            function tog(id, row) {
+                const cb = row ? row.querySelector('input[type=checkbox]') : null;
+                const isChecked = cb ? cb.checked : !s.sel.has(id);
+                if (isChecked) {
+                    s.sel.add(id);
+                } else {
+                    s.sel.delete(id);
+                }
+                render();
+            }
             function toggleSelectAll(chk) { const paged = filt().slice((s.p - 1) * RS, s.p * RS); paged.forEach(c => chk ? s.sel.add(c.id) : s.sel.delete(c.id)); render(); }
             function setP(p) { s.p = p; render(); }
             async function submitMapping() {

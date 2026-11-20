@@ -77,14 +77,11 @@
 
                 <div class="h-px bg-slate-100"></div>
 
-                <!-- Riwayat Ujian -->
+                <!-- Ujian ke- -->
                 <div class="flex items-start justify-between gap-4">
-                    <span class="text-sm font-medium text-slate-500 shrink-0">Riwayat Ujian</span>
+                    <span class="text-sm font-medium text-slate-500 shrink-0">Ujian ke-</span>
                     <span id="detail-ujian-count" class="text-sm font-semibold text-slate-800 text-right"></span>
                 </div>
-            </div>
-
-        </div>
 
         <!-- Footer -->
         <div class="px-6 py-4 flex items-center justify-end bg-gray-50 border-t border-gray-200 rounded-b-lg">
@@ -112,7 +109,7 @@ function openDetailModal(data) {
     document.getElementById('detail-ujian-count').textContent =
         (data.ujian_count === 0 || data.ujian_count == null)
             ? 'Belum pernah ujian'
-            : data.ujian_count + '× sudah mengikuti ujian';
+            : 'Ujian ke-' + data.ujian_count;
 
     // Status badge
     const statusEl = document.getElementById('detail-status');

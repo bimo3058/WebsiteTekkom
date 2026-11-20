@@ -10,7 +10,7 @@
 --}}
 
 {{-- Snackbar Notification System --}}
-<script src="{{ asset('modules/banksoal/js/Banksoal/shared/Snackbar.js') }}"></script>
+<script src="{{ asset('modules/banksoal/js/Banksoal/shared/Snackbar.js') }}?v={{ @filemtime(public_path('modules/banksoal/js/Banksoal/shared/Snackbar.js')) ?: time() }}"></script>
 
 <script>
 // ═══ Profile Dropdown ═══

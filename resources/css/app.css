@@ -464,37 +464,37 @@
     /* ── Snackbar ────────────────────────────────────────────── */
     .snackbar {
         position: fixed;
-        top: 24px;
+        bottom: 24px;
         right: 24px;
-        width: 380px;
+        width: 340px;
         max-width: calc(100vw - 48px);
-        padding: 16px;
+        padding: 12px 14px;
         background-color: #ffffff;
-        border: 1px solid #DFE1E7;
-        border-radius: 16px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+        border: 1px solid #ECEEF2;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
         z-index: 9999;
         display: flex;
         align-items: flex-start;
         gap: 12px;
         font-family: "Inter Tight", system-ui, sans-serif;
-        animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        animation: slideInBottom 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     .snackbar-success {
-        border-top: 4px solid #10b981;
+        border-top: none;
     }
 
     .snackbar-error {
-        border-top: 4px solid #ef4444;
+        border-top: none;
     }
 
     .snackbar-warning {
-        border-top: 4px solid #f59e0b;
+        border-top: none;
     }
 
     .snackbar-info {
-        border-top: 4px solid #3b82f6;
+        border-top: none;
     }
 
     .snackbar ul {
@@ -509,50 +509,78 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: opacity 0.2s;
+        margin-left: auto;
+        margin-top: 2px;
+        padding: 2px;
+        border-radius: 0.5rem;
+        color: #94A3B8;
+        font-size: 18px;
+        line-height: 1;
+        transition: color 0.2s;
     }
 
     .snackbar-close:hover {
-        opacity: 0.8;
+        color: #475569;
+        opacity: 1;
     }
 
-    @keyframes slideInRight {
+    .snackbar-icon {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        margin-top: 1px;
+    }
+
+    .snackbar-content {
+        flex: 1;
+        min-width: 0;
+        font-size: 13px;
+        line-height: 1.45;
+        color: #334155;
+        font-weight: 500;
+        padding-top: 2px;
+    }
+
+    @keyframes slideInBottom {
         from {
             opacity: 0;
-            transform: translateX(100%);
+            transform: translateY(16px);
         }
 
         to {
             opacity: 1;
-            transform: translateX(0);
+            transform: translateY(0);
         }
     }
 
-    @keyframes slideOutRight {
+    @keyframes slideOutBottom {
         from {
             opacity: 1;
-            transform: translateX(0);
+            transform: translateY(0);
         }
 
         to {
             opacity: 0;
-            transform: translateX(100%);
+            transform: translateY(12px);
         }
     }
 
     @media (max-width: 600px) {
         .snackbar {
-            top: 16px;
+            bottom: 16px;
             left: 16px;
             right: 16px;
             width: auto;
             max-width: none;
         }
 
-        @keyframes slideInRight {
+        @keyframes slideInBottom {
             from {
                 opacity: 0;
-                transform: translateY(-20px);
+                transform: translateY(20px);
             }
 
             to {
@@ -561,7 +589,7 @@
             }
         }
 
-        @keyframes slideOutRight {
+        @keyframes slideOutBottom {
             from {
                 opacity: 1;
                 transform: translateY(0);
@@ -569,7 +597,7 @@
 
             to {
                 opacity: 0;
-                transform: translateY(-20px);
+                transform: translateY(20px);
             }
         }
     }
@@ -1005,4 +1033,33 @@
     .focus-ring {
         @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
     }
+}
+
+/* Halaman Ujian Komprehensif mengikuti tipografi SICATA. */
+body.font-sitkom,
+body.font-sitkom.font-sans,
+body.font-sitkom .font-sans,
+body.font-sitkom .dash-wrap,
+body.font-sitkom .dash-box {
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+body.font-sitkom :where(
+    input,
+    button,
+    select,
+    textarea,
+    .form-control,
+    .ts-wrapper,
+    .ts-control,
+    .ts-dropdown,
+    .ts-dropdown-content,
+    .ts-dropdown-content .option
+) {
+    font-family: inherit;
+}
+
+body.font-sitkom .ts-control input,
+body.font-sitkom .ts-dropdown-content .option {
+    font-family: inherit;
 }

@@ -29,6 +29,8 @@ class BankSoalReadPerformanceTest extends TestCase
                 foreach ($columns as $column) {
                     $table->string($column)->nullable();
                 }
+                // Tabel data master (MK & CPL) kini memakai soft delete.
+                $table->timestamp('deleted_at')->nullable();
             });
         }
         $user = \Mockery::mock(User::class)->makePartial();

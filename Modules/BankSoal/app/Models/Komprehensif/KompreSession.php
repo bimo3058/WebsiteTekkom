@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\BankSoal\Enums\KompreSessionStatus;
+use Modules\BankSoal\Services\Komprehensif\KompreSettingService;
 
 class KompreSession extends Model
 {
@@ -14,13 +15,16 @@ class KompreSession extends Model
     protected $table = 'bs_kompre_session';
 
     protected $fillable = [
-        'user_id', 'jadwal_id', 'title', 'started_at', 'finished_at', 'score', 'status',
+        'user_id', 'pendaftar_ujian_id', 'jadwal_id', 'title', 'started_at', 'finished_at', 'score', 'status',
+        'lulus', 'cpl_scores', 'source', 'import_batch_id', 'passing_rule',
     ];
 
     protected $casts = [
-        'started_at'  => 'datetime',
+        'started_at' => 'datetime',
         'finished_at' => 'datetime',
-        'status'      => KompreSessionStatus::class,
+        'status' => KompreSessionStatus::class,
+        'lulus' => 'boolean',
+        'cpl_scores' => 'array',
     ];
 
     public function jawabans()
@@ -33,6 +37,21 @@ class KompreSession extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function pendaftar()
+    {
+        return $this->belongsTo(PendaftarUjian::class, 'pendaftar_ujian_id')->withTrashed();
+    }
+
+    public function namaPeserta(): string
+    {
+        return $this->user?->name ?? $this->pendaftar?->nama_lengkap ?? '—';
+    }
+
+    public function nimPeserta(): string
+    {
+        return $this->user?->student?->student_number ?? $this->pendaftar?->nim ?? '—';
+    }
+
     public function jadwal()
     {
         return $this->belongsTo(JadwalUjian::class, 'jadwal_id');
@@ -41,5 +60,20 @@ class KompreSession extends Model
     public function cheatLogs()
     {
         return $this->hasMany(CheatLog::class, 'kompre_session_id');
+    }
+
+    public function importBatch()
+    {
+        return $this->belongsTo(ImportBatch::class, 'import_batch_id');
+    }
+
+    public function isImport(): bool
+    {
+        return str_starts_with((string) $this->source, 'import');
+    }
+
+    public function passingRuleLabel(): string
+    {
+        return app(KompreSettingService::class)->labelFor($this->passing_rule);
     }
 }

@@ -34,9 +34,12 @@ class PeriodeController extends Controller
             $query->where('status', $statusFilter);
         }
 
-        $periodes = $query->orderBy('created_at', 'desc')
-                          ->paginate($perPage)
-                          ->withQueryString();
+        $periodes = $query
+            ->orderByRaw("CASE WHEN status = 'aktif' THEN 0 ELSE 1 END")
+            ->orderByRaw('COALESCE(tanggal_mulai_ujian, tanggal_mulai) DESC NULLS LAST')
+            ->orderByDesc('id')
+            ->paginate($perPage)
+            ->withQueryString();
 
         return view('banksoal::periode.index', compact('periodes', 'search', 'perPage', 'statusFilter'));
     }

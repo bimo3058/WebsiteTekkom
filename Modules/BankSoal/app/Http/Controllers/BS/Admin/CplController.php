@@ -9,6 +9,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Models\Cpl;
 use Modules\BankSoal\Models\Cpmk;
+use Modules\BankSoal\Support\MasterDataUpsert;
 use Maatwebsite\Excel\Facades\Excel;
 use Modules\BankSoal\Exports\CplTemplateExport;
 use Modules\BankSoal\Exports\CpmkTemplateExport;
@@ -105,27 +106,46 @@ class CplController extends Controller
         ]);
     }
 
+    /**
+     * Simpan CPL baru.
+     *
+     * Identitas CPL = seluruh field (kode + deskripsi). Kalau sudah ada baris dengan
+     * isi yang sama persis, baris itu yang ditampilkan (dipulihkan bila sebelumnya
+     * dihapus); kalau ada satu field berbeda, baris baru ditulis.
+     */
     public function storeCpl(Request $request): JsonResponse
     {
         $this->authorize('banksoal.edit');
 
         $validated = $request->validate([
-            'kode' => ['nullable', 'string', 'regex:/^CPL-\\d+$/', 'max:50', 'unique:bs_cpl,kode'],
+            'kode' => ['nullable', 'string', 'regex:/^CPL-\\d+$/', 'max:50'],
             'deskripsi' => ['required', 'string'],
         ]);
 
         try {
-            $created = DB::transaction(function () use ($validated) {
-                $payload = ['deskripsi' => $validated['deskripsi']];
-                $payload['kode'] = $validated['kode'] ?? $this->nextKode('bs_cpl', 'CPL');
+            $kode = isset($validated['kode']) && $validated['kode'] !== ''
+                ? $validated['kode']
+                : $this->nextKode('bs_cpl', 'CPL');
 
-                return Cpl::create($payload);
-            });
+            $result = DB::transaction(fn() => MasterDataUpsert::firstOrCreateIdentical(
+                Cpl::class,
+                ['kode' => $kode, 'deskripsi' => $validated['deskripsi']]
+            ));
+
+            if (!$result['created']) {
+                return response()->json([
+                    'success' => true,
+                    'created' => false,
+                    'message' => MasterDataUpsert::existingMessage('CPL', $result['restored']),
+                    'data' => $result['record'],
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
+                'created' => true,
                 'message' => 'CPL berhasil ditambahkan',
-                'data' => $created,
+                'data' => $result['record'],
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -145,7 +165,7 @@ class CplController extends Controller
         }
 
         $validated = $request->validate([
-            'kode' => ['required', 'string', 'regex:/^CPL-\\d+$/', 'max:50', 'unique:bs_cpl,kode,' . $id],
+            'kode' => ['required', 'string', 'regex:/^CPL-\\d+$/', 'max:50'],
             'deskripsi' => ['required', 'string'],
         ]);
 
@@ -185,8 +205,11 @@ class CplController extends Controller
 
     private function nextKode(string $table, string $prefix): string
     {
+        // Baris yang sudah di-soft delete diabaikan supaya kode baru tidak
+        // menabrak data yang sedang disembunyikan.
         $codes = DB::table($table)
             ->where('kode', 'like', $prefix . '-%')
+            ->whereNull('deleted_at')
             ->pluck('kode');
 
         $max = 0;

@@ -4,37 +4,30 @@ namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Modules\BankSoal\Enums\KompreSessionStatus;
 use Modules\BankSoal\Models\Komprehensif\KompreJawaban;
 use Modules\BankSoal\Models\Komprehensif\KompreSession;
 use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
 use Modules\BankSoal\Services\CbtSessionService;
+use Modules\BankSoal\Services\Komprehensif\KompreSettingService;
 
 class AdminCbtController extends Controller
 {
-    public function __construct(private CbtSessionService $cbtService) {}
+    public function __construct(
+        private CbtSessionService $cbtService,
+        private KompreSettingService $settings,
+    ) {}
+
     /**
-     * Fitur Live Proctoring untuk memantau mahasiswa yang sedang ujian.
+     * Live proctoring kini digabung ke halaman Monitoring Ujian.
      */
     public function liveProctoring()
     {
-        $this->authorize('viewAny', KompreSession::class);
-
-        $sessions = KompreSession::with(['user.student', 'jadwal'])
-            ->withCount([
-                // Total soal dalam sesi
-                'jawabans',
-                // Soal yang sudah dijawab (tidak null)
-                'jawabans as terjawab_count' => fn($q) => $q->whereNotNull('jawaban_dipilih'),
-                // Jumlah pelanggaran
-                'cheatLogs',
-            ])
-            ->where('status', 'ongoing')
-            ->orderBy('started_at', 'desc')
-            ->get();
-
-        return view('banksoal::admin.cbt.live-proctoring', compact('sessions'));
+        return redirect()->route('banksoal.aktivasi.index');
     }
 
     /**
@@ -47,38 +40,51 @@ class AdminCbtController extends Controller
         // Subquery correlated untuk menghitung "Ujian Ke-" per mahasiswa
         // Compatible dengan MySQL 5.7+ (tanpa window function)
         $ujianKeSubquery = "
-            (SELECT COUNT(*) FROM bs_kompre_session s2
-             WHERE s2.user_id = bs_kompre_session.user_id
-               AND s2.status = 'finished'
+            (SELECT COUNT(DISTINCT s2.id)
+             FROM bs_kompre_session s2
+             LEFT JOIN bs_pendaftar_ujians p2 ON p2.id = s2.pendaftar_ujian_id
+             LEFT JOIN students st2 ON st2.user_id = s2.user_id
+             WHERE s2.status = 'finished'
+               AND COALESCE(p2.nim, st2.student_number) = COALESCE(
+                    (SELECT pcur.nim FROM bs_pendaftar_ujians pcur
+                     WHERE pcur.id = bs_kompre_session.pendaftar_ujian_id),
+                    (SELECT stcur.student_number FROM students stcur
+                     WHERE stcur.user_id = bs_kompre_session.user_id)
+               )
                AND (s2.finished_at < bs_kompre_session.finished_at
                     OR (s2.finished_at = bs_kompre_session.finished_at AND s2.id <= bs_kompre_session.id))
             ) AS ujian_ke
         ";
 
-        $query = KompreSession::with(['user.student', 'jadwal.periode'])
+        $query = KompreSession::with(['user.student', 'pendaftar', 'jadwal.periode'])
             ->selectRaw("bs_kompre_session.*, {$ujianKeSubquery}")
             ->where('bs_kompre_session.status', 'finished');
 
         // Filter periode
         if ($request->filled('periode_id')) {
-            $query->whereHas('jadwal', fn($q) => $q->where('periode_ujian_id', $request->periode_id));
+            $query->whereHas('jadwal', fn ($q) => $q->where('periode_ujian_id', $request->periode_id));
         }
 
         // Filter keterangan (LULUS / TIDAK LULUS)
         if ($request->filled('keterangan')) {
             if ($request->keterangan === 'lulus') {
-                $query->where('bs_kompre_session.score', '>=', 60);
+                $query->where('bs_kompre_session.lulus', true);
             } elseif ($request->keterangan === 'tidak_lulus') {
-                $query->where('bs_kompre_session.score', '<', 60);
+                $query->where('bs_kompre_session.lulus', false);
             }
         }
 
         // Pencarian NIM atau Nama Mahasiswa
         if ($request->filled('q')) {
             $q = $request->q;
-            $query->whereHas('user', function ($subQ) use ($q) {
-                $subQ->where('name', 'ilike', "%{$q}%")
-                    ->orWhereHas('student', fn($sq) => $sq->where('student_number', 'ilike', "%{$q}%"));
+            $query->where(function ($subQ) use ($q) {
+                $subQ->whereHas('user', function ($userQuery) use ($q) {
+                    $userQuery->where('name', 'ilike', "%{$q}%")
+                        ->orWhereHas('student', fn ($studentQuery) => $studentQuery->where('student_number', 'ilike', "%{$q}%"));
+                })->orWhereHas('pendaftar', function ($pendaftarQuery) use ($q) {
+                    $pendaftarQuery->where('nama_lengkap', 'ilike', "%{$q}%")
+                        ->orWhere('nim', 'ilike', "%{$q}%");
+                });
             });
         }
 
@@ -86,18 +92,22 @@ class AdminCbtController extends Controller
             ? (int) $request->input('per_page', 5)
             : 5;
         $sessions = $query->orderBy('bs_kompre_session.finished_at', 'desc')->paginate($perPage)->withQueryString();
-        $periodes  = PeriodeUjian::orderBy('created_at', 'desc')->get();
+        $periodes = PeriodeUjian::withCount('pendaftars')->orderBy('created_at', 'desc')->get();
+        $passingSettings = $this->settings->all();
 
-        return view('banksoal::admin.cbt.riwayat', compact('sessions', 'periodes'));
+        return view('banksoal::admin.cbt.riwayat', compact(
+            'sessions', 'periodes', 'passingSettings'
+        ));
     }
 
     /**
      * Detail hasil jawaban per sesi mahasiswa.
      */
-    public function detailHasil($id)
+    public function detailHasil(int $id)
     {
         $session = KompreSession::with([
             'user.student',
+            'pendaftar',
             'jadwal.periode',
             'jawabans.pertanyaan.jawaban',
             'jawabans.pertanyaan.cpl',
@@ -109,47 +119,79 @@ class AdminCbtController extends Controller
         // Kelompokkan jawaban per CPL, urutkan berdasarkan kode CPL
         $jawabansPerCpl = $session->jawabans
             ->sortBy('urutan_soal')
-            ->groupBy(fn($j) => optional($j->pertanyaan?->cpl)->kode ?? 'Tanpa CPL')
+            ->groupBy(fn ($j) => optional($j->pertanyaan?->cpl)->kode ?? 'Tanpa CPL')
             ->sortKeys();
 
-        // Hitung statistik per CPL untuk analitik strip
-        $cplStats = $jawabansPerCpl->map(function ($jawabans, $kode) {
-            $total  = $jawabans->count();
-            $benar  = $jawabans->filter(fn($j) => $j->opsiTerpilih?->is_benar)->count();
-            $salah  = $jawabans->filter(fn($j) => $j->jawaban_dipilih && !$j->opsiTerpilih?->is_benar)->count();
+        $isImport = $session->isImport();
 
-            return [
-                'kode'      => $kode,
-                'deskripsi' => $jawabans->first()->pertanyaan?->cpl?->deskripsi ?? '',
-                'total'     => $total,
-                'benar'     => $benar,
-                'salah'     => $salah,
-                'kosong'    => $total - $benar - $salah,
-                'pct_benar' => $total > 0 ? round($benar / $total * 100) : 0,
-            ];
-        })->values();
+        // Aturan kelulusan yang dipakai sesi ini (snapshot) atau setting aktif
+        // untuk sesi lama yang belum menyimpan aturan.
+        $passingRule = $session->passing_rule;
+        $cplMinScore = $this->settings->cplMinScore();
+        $totalMinScore = $this->settings->totalMinScore();
 
-        return view('banksoal::admin.cbt.detail-hasil', compact('session', 'jawabansPerCpl', 'cplStats'));
+        if ($session->jawabans->isEmpty() && ! empty($session->cpl_scores)) {
+            $cplStats = collect($session->cpl_scores)->map(function ($cpl) {
+                $total = (int) ($cpl['total'] ?? 0);
+                $benar = (int) ($cpl['benar'] ?? 0);
+
+                return [
+                    'kode' => $cpl['kode'] ?? '-',
+                    'deskripsi' => $cpl['deskripsi'] ?? '',
+                    'total' => $total,
+                    'benar' => $benar,
+                    'salah' => max(0, $total - $benar),
+                    'kosong' => 0,
+                    'pct_benar' => $total > 0 ? round($benar / $total * 100) : 0,
+                    'nilai' => (float) ($cpl['nilai'] ?? 0),
+                    'lulus' => true,
+                ];
+            })->values();
+        } else {
+            // Hitung statistik per CPL untuk analitik strip
+            $cplStats = $jawabansPerCpl->map(function ($jawabans, $kode) use ($cplMinScore) {
+                $total = $jawabans->count();
+                $benar = $jawabans->filter(fn ($j) => $j->opsiTerpilih?->is_benar)->count();
+                $salah = $jawabans->filter(fn ($j) => $j->jawaban_dipilih && ! $j->opsiTerpilih?->is_benar)->count();
+                $nilai = $total > 0 ? round($benar / $total * 10, 2) : 0.0;
+
+                return [
+                    'kode' => $kode,
+                    'deskripsi' => $jawabans->first()->pertanyaan?->cpl?->deskripsi ?? '',
+                    'total' => $total,
+                    'benar' => $benar,
+                    'salah' => $salah,
+                    'kosong' => $total - $benar - $salah,
+                    'pct_benar' => $total > 0 ? round($benar / $total * 100) : 0,
+                    'nilai' => $nilai,
+                    'lulus' => $total > 0 && $nilai >= $cplMinScore,
+                ];
+            })->values();
+        }
+
+        return view('banksoal::admin.cbt.detail-hasil', compact(
+            'session', 'jawabansPerCpl', 'cplStats', 'isImport', 'passingRule', 'cplMinScore', 'totalMinScore'
+        ));
     }
 
     /**
      * Aksi untuk Force Submit secara sepihak oleh admin jika perlu.
      */
-    public function forceSubmit($id)
+    public function forceSubmit(int $id)
     {
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+        return DB::transaction(function () use ($id) {
             $session = KompreSession::lockForUpdate()->findOrFail($id);
 
             $this->authorize('forceSubmit', $session);
 
             // Double-check status inside lock — cegah race 2 tab
-            if ($session->status !== \Modules\BankSoal\Enums\KompreSessionStatus::Ongoing) {
+            if ($session->status !== KompreSessionStatus::Ongoing) {
                 return back()->with('error', 'Sesi sudah selesai, tidak dapat di-force submit lagi.');
             }
 
             $this->cbtService->finishSession($session);
 
-            return back()->with('success', 'Sesi ujian berhasil diakhiri paksa. Skor: ' . $session->fresh()->score);
+            return back()->with('success', 'Sesi ujian berhasil diakhiri paksa. Skor: '.$session->fresh()->score);
         });
     }
 
@@ -159,32 +201,39 @@ class AdminCbtController extends Controller
 
         // 1. Matriks Umum — query agregasi langsung dari DB, tidak memuat ke RAM
         $stats = KompreSession::where('status', 'finished')
-            ->selectRaw('COUNT(*) as total, AVG(score) as rata_rata, MAX(score) as tertinggi, MIN(score) as terendah, SUM(CASE WHEN score >= 60 THEN 1 ELSE 0 END) as lulus')
+            ->selectRaw('COUNT(*) as total, AVG(score) as rata_rata, MAX(score) as tertinggi, MIN(score) as terendah, SUM(CASE WHEN lulus THEN 1 ELSE 0 END) as jumlah_lulus, SUM(CASE WHEN lulus = false AND score >= 60 THEN 1 ELSE 0 END) as gagal_cpl')
             ->first();
 
         $totalPeserta = (int) $stats->total;
-        $rataRata     = $totalPeserta > 0 ? round($stats->rata_rata, 2) : 0;
-        $tertinggi    = $totalPeserta > 0 ? $stats->tertinggi : 0;
-        $terendah     = $totalPeserta > 0 ? $stats->terendah : 0;
-        $lulus        = (int) $stats->lulus;
-        $tidakLulus   = $totalPeserta - $lulus;
+        $rataRata = $totalPeserta > 0 ? round($stats->rata_rata, 2) : 0;
+        $tertinggi = $totalPeserta > 0 ? $stats->tertinggi : 0;
+        $terendah = $totalPeserta > 0 ? $stats->terendah : 0;
+        $lulus = (int) $stats->jumlah_lulus;
+        $tidakLulus = $totalPeserta - $lulus;
+        $passingRule = $this->settings->passingRule();
+        // Metrik "gagal CPL" (nilai CPL < 6 tapi total >= 60) hanya relevan
+        // pada mode cpl_all_min; pada mode total_min seluruh kegagalan
+        // murni karena total di bawah ambang.
+        $gagalCpl = $passingRule === KompreSettingService::RULE_CPL ? (int) $stats->gagal_cpl : 0;
+        $cplMinScore = $this->settings->cplMinScore();
+        $totalMinScore = $this->settings->totalMinScore();
 
         // 2. Soal Tersulit — agregasi di DB, bukan di PHP collection
-        $kesalahanPerSoal = KompreJawaban::whereHas('session', fn($q) => $q->where('status', 'finished'))
-            ->whereDoesntHave('opsiTerpilih', fn($q) => $q->where('is_benar', true))
+        $kesalahanPerSoal = KompreJawaban::whereHas('session', fn ($q) => $q->where('status', 'finished'))
+            ->whereDoesntHave('opsiTerpilih', fn ($q) => $q->where('is_benar', true))
             ->with('pertanyaan.cpl')  // eager-load cpl agar view tidak lazy-load
             ->selectRaw('pertanyaan_id, COUNT(*) as salah_count')
             ->groupBy('pertanyaan_id')
             ->orderByDesc('salah_count')
             ->limit(10)
             ->get()
-            ->map(fn($row) => [
-                'pertanyaan'  => $row->pertanyaan,
+            ->map(fn ($row) => [
+                'pertanyaan' => $row->pertanyaan,
                 'salah_count' => $row->salah_count,
             ]);
 
         // 3. Pemetaan Capaian CPL — agregasi di DB
-        $cplStats = KompreJawaban::whereHas('session', fn($q) => $q->where('status', 'finished'))
+        $cplStats = KompreJawaban::whereHas('session', fn ($q) => $q->where('status', 'finished'))
             ->join('bs_pertanyaan', 'bs_kompre_jawaban.pertanyaan_id', '=', 'bs_pertanyaan.id')
             ->join('bs_cpl', 'bs_pertanyaan.cpl_id', '=', 'bs_cpl.id')
             ->leftJoin('bs_jawaban', 'bs_kompre_jawaban.jawaban_dipilih', '=', 'bs_jawaban.id')
@@ -192,16 +241,80 @@ class AdminCbtController extends Controller
             ->groupBy('bs_cpl.id', 'bs_cpl.kode', 'bs_cpl.deskripsi')
             ->orderBy('bs_cpl.kode')
             ->get()
-            ->map(fn($row) => [
-                'cpl_kode'   => $row->cpl_kode,
-                'deskripsi'  => $row->deskripsi,
+            ->map(fn ($row) => [
+                'cpl_kode' => $row->cpl_kode,
+                'deskripsi' => $row->deskripsi,
+                'total' => (int) $row->total,
+                'benar' => (int) $row->benar,
                 'persentase' => $row->total > 0 ? round(($row->benar / $row->total) * 100, 2) : 0,
             ]);
 
+        $importCplStats = KompreSession::where('status', 'finished')
+            ->whereIn('source', ['import_legacy', 'import_template'])
+            ->whereNotNull('cpl_scores')
+            ->get(['cpl_scores'])
+            ->flatMap(fn ($session) => collect($session->cpl_scores ?? [])->map(fn ($cpl) => [
+                'kode' => $cpl['kode'] ?? null,
+                'benar' => (int) ($cpl['benar'] ?? 0),
+                'total' => (int) ($cpl['total'] ?? 0),
+            ]))
+            ->filter(fn ($cpl) => ! empty($cpl['kode']))
+            ->groupBy('kode')
+            ->map(fn ($items, $kode) => [
+                'kode' => $kode,
+                'benar' => $items->sum('benar'),
+                'total' => $items->sum('total'),
+            ]);
+
+        if ($importCplStats->isNotEmpty()) {
+            $merged = collect($cplStats)->keyBy('cpl_kode');
+
+            foreach ($importCplStats as $kode => $stat) {
+                $existing = $merged->get($kode, ['cpl_kode' => $kode, 'deskripsi' => '', 'total' => 0, 'benar' => 0]);
+                $total = (int) $existing['total'] + (int) $stat['total'];
+                $benar = (int) $existing['benar'] + (int) $stat['benar'];
+
+                $merged->put($kode, [
+                    'cpl_kode' => $kode,
+                    'deskripsi' => $existing['deskripsi'] ?? '',
+                    'total' => $total,
+                    'benar' => $benar,
+                    'persentase' => $total > 0 ? round($benar / $total * 100, 2) : 0,
+                ]);
+            }
+
+            $cplStats = $merged->sortBy('cpl_kode')->values();
+        }
+
         return view('banksoal::admin.cbt.analitik', compact(
             'totalPeserta', 'rataRata', 'tertinggi', 'terendah',
-            'lulus', 'tidakLulus', 'kesalahanPerSoal', 'cplStats'
+            'lulus', 'tidakLulus', 'gagalCpl', 'kesalahanPerSoal', 'cplStats',
+            'passingRule', 'cplMinScore', 'totalMinScore'
         ));
+    }
+
+    /**
+     * Perbarui syarat kelulusan ujian komprehensif dari modal Riwayat.
+     *
+     * Hanya mode yang boleh dipilih; ambang 6 dan 60 tetap (fixed).
+     * Perubahan berlaku untuk ujian berikutnya — hasil lama tidak dihitung ulang.
+     */
+    public function updatePassingRule(Request $request)
+    {
+        $this->authorize('manageSettings', KompreSession::class);
+
+        $validated = $request->validate([
+            'passing_rule' => ['required', Rule::in([
+                KompreSettingService::RULE_CPL,
+                KompreSettingService::RULE_TOTAL,
+            ])],
+        ]);
+
+        $this->settings->updatePassingRule($validated['passing_rule']);
+
+        return redirect()
+            ->route('banksoal.admin.cbt.riwayat')
+            ->with('success', 'Syarat kelulusan berhasil diperbarui. Berlaku untuk ujian berikutnya.');
     }
 
     /**
@@ -219,7 +332,7 @@ class AdminCbtController extends Controller
         ]);
 
         // Verifikasi password admin yang sedang login
-        if (! Hash::check($request->konfirmasi_password, auth()->user()->password)) {
+        if (! Hash::check($request->konfirmasi_password, Auth::user()?->getAuthPassword() ?? '')) {
             return redirect()->back()->withErrors([
                 'konfirmasi_password' => 'Password yang Anda masukkan salah. Reset dibatalkan.',
             ])->withFragment('reset-section');
@@ -238,6 +351,7 @@ class AdminCbtController extends Controller
         DB::table('bs_cheat_logs')->delete();
         DB::table('bs_kompre_jawaban')->delete();
         DB::table('bs_kompre_session')->delete();
+        DB::table('bs_import_batches')->delete();
         DB::table('bs_pendaftar_ujians')->delete();
         DB::table('bs_jadwal_ujians')->delete();
         DB::table('bs_periode_ujians')->delete();

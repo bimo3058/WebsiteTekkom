@@ -77,9 +77,8 @@ class BankSoalController extends Controller
             ->paginate(5, ['*'], 'pkg_page');
         
         $packages->through(function($pkg) {
-            $mkCpls = $pkg->cpl->pluck('kode')->filter();
             $soalCpls = $pkg->pertanyaan->pluck('cpl.kode')->filter();
-            $allCpls = $mkCpls->merge($soalCpls)->unique()->sort()->values();
+            $allCpls = $soalCpls->unique()->sort()->values();
             
             $pkg->str_cpls = $allCpls->isNotEmpty() ? $allCpls->implode(', ') : '-';
             

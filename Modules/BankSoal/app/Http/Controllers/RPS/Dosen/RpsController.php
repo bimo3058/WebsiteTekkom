@@ -90,8 +90,11 @@ class RpsController extends Controller
                 $konteks = '';
             }
 
-            // Strip prefix "CPMK " dari kode
-            $kodeRaw = preg_replace('/^CPMK\s*/i', '', $cpmk->kode ?? '') ?? '';
+            // Strip prefix "CPMK " dan nomor CPL dari kode
+            // ("CPMK 3.1" pada data baru, "CPMK 1" pada data lama) agar form hanya
+            // menampilkan suffix yang diisi dosen.
+            $kodeRaw = preg_replace('/^CPMK[\s\-_]*/i', '', $cpmk->kode ?? '') ?? '';
+            $kodeRaw = preg_replace('/^\d+\./', '', $kodeRaw) ?? $kodeRaw;
 
             $cplId = $cpmkCplMap->get($cpmk->id)?->cpl_id ?? null;
 
@@ -303,6 +306,7 @@ class RpsController extends Controller
                         ->where('bs_dosen_pengampu_mk.user_id', $user->id)
                         ->whereNotIn('bs_mata_kuliah.id', $mkIdsWithActiveRps)
                         ->where('bs_mata_kuliah.is_active', true)
+                        ->whereNull('bs_mata_kuliah.deleted_at')
                         ->pluck('bs_mata_kuliah.nama')
                         ->toArray();
                 }
@@ -425,9 +429,14 @@ class RpsController extends Controller
             'referensi_data.required' => 'Data referensi wajib diisi',
         ]);
 
+        $isAjax = $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
+
         // Cek apakah Periode RPS Aktif dan Valid
         $activePeriode = PeriodeRps::where('is_active', 'true')->first();
         if (!$activePeriode) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Sesi unggah RPS sedang ditutup atau belum ada jadwal yang aktif.'], 422);
+            }
             return back()->withInput()->with('error', 'Sesi unggah RPS sedang ditutup atau belum ada jadwal yang aktif.');
         }
 
@@ -436,6 +445,9 @@ class RpsController extends Controller
         $end = $activePeriode->tanggal_selesai->timezone('Asia/Jakarta')->endOfDay();
 
         if (!$now->between($start, $end)) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Di luar jadwal unggah RPS. Tenggat waktu sudah terlewati atau jadwal belum dimulai.'], 422);
+            }
             return back()->withInput()->with('error', 'Di luar jadwal unggah RPS. Tenggat waktu sudah terlewati atau jadwal belum dimulai.');
         }
 
@@ -450,16 +462,37 @@ class RpsController extends Controller
             ->exists();
 
         if ($existingRps) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'RPS untuk mata kuliah, semester, dan tahun ajaran ini sudah pernah diunggah. Tidak boleh upload RPS ganda untuk kurikulum yang sama.'], 422);
+            }
             return back()->withInput()->with('error', 'RPS untuk mata kuliah, semester, dan tahun ajaran ini sudah pernah diunggah. Tidak boleh upload RPS ganda untuk kurikulum yang sama.');
         }
 
-        $duplicateCpmkCodes = collect($validated['cpmk_rows'])
-            ->map(fn(array $row) => $this->normalizeCpmkKode((string) ($row['kode'] ?? '')))
-            ->filter()
+        $duplicateCpmkPairs = collect($validated['cpmk_rows'])
+            ->map(function (array $row) {
+                $cpl = (string) ($row['cpl_id'] ?? '');
+                $kode = $this->normalizeCpmkKode((string) ($row['kode'] ?? ''));
+                return $cpl . '___' . $kode;
+            })
+            ->filter(fn($val) => !str_ends_with($val, '___'))
             ->duplicates();
 
-        if ($duplicateCpmkCodes->isNotEmpty()) {
-            return back()->withInput()->with('error', 'Kode CPMK tidak boleh sama dalam satu RPS. Silakan periksa kembali baris CPMK yang diisi.');
+        if ($duplicateCpmkPairs->isNotEmpty()) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Kombinasi CPL dan Kode CPMK tidak boleh sama (duplikat). Silakan periksa kembali baris CPMK yang diisi.'], 422);
+            }
+            return back()->withInput()->with('error', 'Kombinasi CPL dan Kode CPMK tidak boleh sama (duplikat). Silakan periksa kembali baris CPMK yang diisi.');
+        }
+
+        $duplicateCpmkCodes = $this->duplicateCpmkCodes($validated['cpmk_rows']);
+
+        if (!empty($duplicateCpmkCodes)) {
+            $message = 'Kode CPMK tidak boleh sama dalam satu RPS (' . implode(', ', $duplicateCpmkCodes) . '). Silakan periksa kembali baris CPMK yang diisi.';
+
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return back()->withInput()->with('error', $message);
         }
 
         DB::beginTransaction();
@@ -486,14 +519,7 @@ class RpsController extends Controller
                     $deskripsi = $this->buildCpmkDeskripsi($kkoLabel, $row['objek'], $row['konteks']);
                     $cplObj = Cpl::find($row['cpl_id']);
                     $cplKode = $cplObj ? $cplObj->kode : '';
-
-                    $cplNum = '';
-                    if (preg_match('/\d+/', $cplKode, $matches)) {
-                        $cplNum = $matches[0];
-                    } else {
-                        $cplNum = $cplKode;
-                    }
-                    $cpmkKode = "CPMK " . intval($cplNum) . "." . trim($row['kode']);
+                    $cpmkKode = $this->buildCpmkKode($cplKode, (string) $row['kode']);
 
                     $createdCpmkRowsTemp[] = [
                         'cpl_kode' => $cplKode,
@@ -726,16 +752,21 @@ class RpsController extends Controller
             DB::commit();
 
             $isAjax = $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
+            $successMessage = 'RPS berhasil disimpan dan sedang menunggu verifikasi GPM.';
+
             if ($isAjax) {
+                // Flash tetap disimpan: halaman tujuan (index) menampilkannya sebagai badge notifikasi.
+                session()->flash('success', $successMessage);
+
                 return response()->json([
                     'success' => true,
                     'redirect' => route('banksoal.rps.dosen.index'),
-                    'message' => 'RPS berhasil disimpan dan sedang menunggu verifikasi GPM.'
+                    'message' => $successMessage
                 ]);
             }
 
             return redirect()->route('banksoal.rps.dosen.index')
-                ->with('success', 'RPS berhasil disimpan dan sedang menunggu verifikasi GPM.');
+                ->with('success', $successMessage);
 
         } catch (\Exception $e) {
             // Rollback jika error
@@ -939,8 +970,12 @@ class RpsController extends Controller
 
         $kkoService = new KkoService();
 
+        // Nomor CPL dipakai untuk menyusun kode CPMK lengkap (CPMK {cpl}.{kode})
+        $cplKodes = Cpl::whereIn('id', $rows->pluck('cpl_id')->unique()->values()->all())
+            ->pluck('kode', 'id');
+
         foreach ($rows as $row) {
-            $kode = 'CPMK ' . $row['kode'];
+            $kode = $this->buildCpmkKode($cplKodes[$row['cpl_id']] ?? '', $row['kode']);
             // Map KKO code to descriptive label for storage
             $kkoLabel = $kkoService->label($row['kko']);
             $deskripsi = $this->buildCpmkDeskripsi($kkoLabel, $row['objek'], $row['konteks']);
@@ -966,9 +1001,71 @@ class RpsController extends Controller
     private function normalizeCpmkKode(string $kode): string
     {
         $kode = trim($kode);
-        $kode = preg_replace('/^CPMK\s*/i', '', $kode) ?? $kode;
+        $kode = preg_replace('/^CPMK[\s\-_]*/i', '', $kode) ?? $kode;
 
         return preg_replace('/\s+/', '', $kode) ?? $kode;
+    }
+
+    /**
+     * Ambil nomor CPL dari kode CPL (contoh: "CPL-003" => "3", "CPL A" => "A").
+     */
+    private function cplNumberFromKode(?string $cplKode): string
+    {
+        $cplKode = trim((string) $cplKode);
+
+        if (preg_match('/\d+/', $cplKode, $matches)) {
+            return (string) intval($matches[0]);
+        }
+
+        return $cplKode;
+    }
+
+    /**
+     * Susun kode CPMK lengkap: "CPMK {nomor CPL}.{kode baris}".
+     *
+     * Satu baris form hanya menyimpan suffix (contoh: "1"), sedangkan identitas
+     * lengkap CPMK mengikuti nomor CPL-nya. Karena itu setiap CPL boleh memakai
+     * penomoran sendiri (CPMK 3.1, CPMK 4.1, CPMK 6.1, ...).
+     */
+    private function buildCpmkKode(?string $cplKode, string $kode): string
+    {
+        $suffix = $this->normalizeCpmkKode($kode);
+        $cplNumber = $this->cplNumberFromKode($cplKode);
+
+        if ($cplNumber === '') {
+            return 'CPMK ' . $suffix;
+        }
+
+        return 'CPMK ' . $cplNumber . '.' . $suffix;
+    }
+
+    /**
+     * Cari kode CPMK lengkap yang duplikat pada baris-baris form.
+     *
+     * @param  array<int, array<string, mixed>>  $cpmkRows
+     * @return array<int, string>
+     */
+    private function duplicateCpmkCodes(array $cpmkRows): array
+    {
+        $cplKodes = Cpl::whereIn(
+            'id',
+            collect($cpmkRows)->pluck('cpl_id')->filter()->unique()->values()->all()
+        )->pluck('kode', 'id');
+
+        return collect($cpmkRows)
+            ->map(function (array $row) use ($cplKodes) {
+                $suffix = $this->normalizeCpmkKode((string) ($row['kode'] ?? ''));
+
+                if ($suffix === '') {
+                    return null;
+                }
+
+                return $this->buildCpmkKode($cplKodes[(int) ($row['cpl_id'] ?? 0)] ?? '', $suffix);
+            })
+            ->filter()
+            ->duplicates()
+            ->values()
+            ->all();
     }
 
     private function buildCpmkDeskripsi(string $kkoLabel, string $objek, string $konteks = ''): string
@@ -1154,9 +1251,9 @@ class RpsController extends Controller
         $isAuthorized = $rps->dosens->contains('id', $user->id);
         abort_if(!$isAuthorized, 403, 'Anda tidak memiliki akses untuk mengedit RPS ini.');
 
-        // Cek apakah status memungkinkan edit (DIAJUKAN atau REVISI)
-        $editableStatuses = [RpsStatus::DIAJUKAN->value, RpsStatus::REVISI->value];
-        abort_if(!in_array($rps->status->value, $editableStatuses), 403, 'RPS dengan status ' . $rps->status->label() . ' tidak dapat diedit.');
+        // Cek apakah status memungkinkan edit (hanya REVISI)
+        $editableStatuses = [RpsStatus::REVISI->value];
+        abort_if(!in_array($rps->status->value, $editableStatuses), 403, 'RPS dengan status ' . $rps->status->label() . ' tidak dapat diedit. Hanya RPS berstatus Revisi yang dapat diedit.');
 
         // Fetch dosen yang sudah terpilih (exclude current user)
         $selectedDosenIds = $rps->dosens->pluck('id')->toArray();
@@ -1273,8 +1370,9 @@ class RpsController extends Controller
         abort_if(!$isAuthorized, 403, 'Anda tidak memiliki akses untuk mengedit RPS ini.');
 
         // Cek status
-        $editableStatuses = [RpsStatus::DIAJUKAN->value, RpsStatus::REVISI->value];
-        abort_if(!in_array($rps->status->value, $editableStatuses), 403, 'RPS dengan status ' . $rps->status->label() . ' tidak dapat diedit.');
+        // Cek status - hanya RPS berstatus Revisi yang dapat diedit
+        $editableStatuses = [RpsStatus::REVISI->value];
+        abort_if(!in_array($rps->status->value, $editableStatuses), 403, 'RPS dengan status ' . $rps->status->label() . ' tidak dapat diedit. Hanya RPS berstatus Revisi yang dapat diedit.');
 
         $creationMethod = $request->input('creation_method', $rps->creation_method ?? 'upload');
 
@@ -1315,9 +1413,14 @@ class RpsController extends Controller
             'referensi_data.required' => 'Data referensi wajib diisi',
         ]);
 
+        $isAjax = $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
+
         // Cek apakah Periode RPS Aktif
         $activePeriode = PeriodeRps::where('is_active', 'true')->first();
         if (!$activePeriode) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Sesi unggah RPS sedang ditutup atau belum ada jadwal yang aktif.'], 422);
+            }
             return back()->withInput()->with('error', 'Sesi unggah RPS sedang ditutup atau belum ada jadwal yang aktif.');
         }
 
@@ -1326,6 +1429,9 @@ class RpsController extends Controller
         $end = $activePeriode->tanggal_selesai->timezone('Asia/Jakarta')->endOfDay();
 
         if (!$now->between($start, $end)) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Di luar jadwal unggah RPS. Tenggat waktu sudah terlewati atau jadwal belum dimulai.'], 422);
+            }
             return back()->withInput()->with('error', 'Di luar jadwal unggah RPS. Tenggat waktu sudah terlewati atau jadwal belum dimulai.');
         }
 
@@ -1339,9 +1445,11 @@ class RpsController extends Controller
                 'status' => $rps->status->value,
                 'dokumen' => $rps->dokumen,
                 'catatan' => $rps->catatan,
-                'cpl_ids' => $rps->cpls()->pluck('id')->toArray(),
-                'cpmk_ids' => $rps->cpmks()->pluck('id')->toArray(),
-                'dosen_ids' => $rps->dosens()->pluck('id')->toArray(),
+                // Kolom wajib dikualifikasi: query relasi many-to-many melakukan join,
+                // jadi "id" tanpa prefix dianggap ambigu oleh PostgreSQL.
+                'cpl_ids' => $rps->cpls()->pluck('bs_cpl.id')->toArray(),
+                'cpmk_ids' => $rps->cpmks()->pluck('bs_cpmk.id')->toArray(),
+                'dosen_ids' => $rps->dosens()->pluck('users.id')->toArray(),
             ];
 
             // Naming components
@@ -1375,14 +1483,7 @@ class RpsController extends Controller
                     $deskripsi = $this->buildCpmkDeskripsi($kkoLabel, $row['objek'], $row['konteks']);
                     $cplObj = Cpl::find($row['cpl_id']);
                     $cplKode = $cplObj ? $cplObj->kode : '';
-
-                    $cplNum = '';
-                    if (preg_match('/\d+/', $cplKode, $matches)) {
-                        $cplNum = $matches[0];
-                    } else {
-                        $cplNum = $cplKode;
-                    }
-                    $cpmkKode = "CPMK " . intval($cplNum) . "." . trim($row['kode']);
+                    $cpmkKode = $this->buildCpmkKode($cplKode, (string) $row['kode']);
 
                     $createdCpmkRowsTemp[] = [
                         'cpl_kode' => $cplKode,
@@ -1507,13 +1608,23 @@ class RpsController extends Controller
             $rps->save();
 
             # Buat CPMK baru dari baris form (format sama dengan store)
-            $duplicateCpmkCodes = collect($validated['cpmk_rows'])
-                ->map(fn(array $row) => $this->normalizeCpmkKode((string) ($row['kode'] ?? '')))
-                ->filter()
+            $duplicateCpmkPairs = collect($validated['cpmk_rows'])
+                ->map(function (array $row) {
+                    $cpl = (string) ($row['cpl_id'] ?? '');
+                    $kode = $this->normalizeCpmkKode((string) ($row['kode'] ?? ''));
+                    return $cpl . '___' . $kode;
+                })
+                ->filter(fn($val) => !str_ends_with($val, '___'))
                 ->duplicates();
 
-            if ($duplicateCpmkCodes->isNotEmpty()) {
-                throw new \Exception('Kode CPMK tidak boleh sama dalam satu RPS. Silakan periksa kembali baris CPMK yang diisi.');
+            if ($duplicateCpmkPairs->isNotEmpty()) {
+                throw new \Exception('Kombinasi CPL dan Kode CPMK tidak boleh sama (duplikat). Silakan periksa kembali baris CPMK yang diisi.');
+            }
+
+            $duplicateCpmkCodes = $this->duplicateCpmkCodes($validated['cpmk_rows']);
+
+            if (!empty($duplicateCpmkCodes)) {
+                throw new \Exception('Kode CPMK tidak boleh sama dalam satu RPS (' . implode(', ', $duplicateCpmkCodes) . '). Silakan periksa kembali baris CPMK yang diisi.');
             }
 
             $createdCpmkRows = $this->createCpmksFromRows($validated['cpmk_rows'], (int) $validated['mata_kuliah_id']);
@@ -1578,9 +1689,11 @@ class RpsController extends Controller
                     'tahun_ajaran' => $rps->tahun_ajaran,
                     'status' => $rps->status->value,
                     'catatan' => $rps->catatan,
-                    'cpl_ids' => $rps->cpls()->pluck('id')->toArray(),
-                    'cpmk_ids' => $rps->cpmks()->pluck('id')->toArray(),
-                    'dosen_ids' => $rps->dosens()->pluck('id')->toArray(),
+                    // Kolom wajib dikualifikasi: query relasi many-to-many melakukan join,
+                    // jadi "id" tanpa prefix dianggap ambigu oleh PostgreSQL.
+                    'cpl_ids' => $rps->cpls()->pluck('bs_cpl.id')->toArray(),
+                    'cpmk_ids' => $rps->cpmks()->pluck('bs_cpmk.id')->toArray(),
+                    'dosen_ids' => $rps->dosens()->pluck('users.id')->toArray(),
                 ],
                 'created_at' => now(),
             ]);
@@ -1588,16 +1701,23 @@ class RpsController extends Controller
             DB::commit();
 
             $isAjax = $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
+            $successMessage = $isRevisionResubmit
+                ? 'Perubahan RPS berhasil diajukan ulang untuk divalidasi GPM.'
+                : 'RPS berhasil diperbarui.';
+
             if ($isAjax) {
+                // Flash tetap disimpan: halaman tujuan (index) menampilkannya sebagai badge notifikasi.
+                session()->flash('success', $successMessage);
+
                 return response()->json([
                     'success' => true,
                     'redirect' => route('banksoal.rps.dosen.index'),
-                    'message' => 'RPS berhasil diperbarui.'
+                    'message' => $successMessage
                 ]);
             }
 
             return redirect()->route('banksoal.rps.dosen.index')
-                ->with('success', 'RPS berhasil diperbarui.');
+                ->with('success', $successMessage);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1620,91 +1740,6 @@ class RpsController extends Controller
             return back()->withInput()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
         }
     }
-    public function destroy(int $rpsId, Request $request): RedirectResponse|JsonResponse
-    {
-        $user = Auth::user()->load('lecturer');
-        $rps = RpsDetail::with('dosens')->findOrFail($rpsId);
-
-        // Cek autorisasi
-        $isAuthorized = $rps->dosens->contains('id', $user->id);
-        abort_if(!$isAuthorized, 403, 'Anda tidak memiliki akses untuk menghapus RPS ini.');
-
-        // Cek status - hanya DIAJUKAN dan REVISI yang bisa dihapus
-        $deletableStatuses = [RpsStatus::DIAJUKAN->value, RpsStatus::REVISI->value];
-        abort_if(!in_array($rps->status->value, $deletableStatuses), 403, 'RPS dengan status ' . $rps->status->label() . ' tidak dapat dihapus.');
-
-        DB::beginTransaction();
-
-        try {
-            // Hapus file dari Supabase
-            if ($rps->dokumen) {
-                $supabaseStorage = new SupabaseStorage();
-                $supabaseStorage->delete($rps->dokumen);
-            }
-
-            // Dapatkan ID CPMK sebelum detach
-            $cpmkIds = $rps->cpmks()->pluck('bs_cpmk.id')->toArray();
-
-            // Hapus relasi di junction table
-            $rps->cpls()->detach();
-            $rps->cpmks()->detach();
-            $rps->dosens()->detach();
-
-            // Hapus CPMK master record
-            if (!empty($cpmkIds)) {
-                DB::table('bs_cpmk')->whereIn('id', $cpmkIds)->delete();
-            }
-
-            // Hapus RPS record (hard delete)
-            $rps->forceDelete();
-
-            // Log audit
-            DB::table('bs_audit_logs')->insert([
-                'user_id' => Auth::id(),
-                'action' => 'deleted',
-                'subject_type' => 'rps',
-                'subject_id' => $rpsId,
-                'description' => 'RPS telah dihapus oleh dosen',
-                'old_data' => null,
-                'new_data' => null,
-                'created_at' => now(),
-            ]);
-
-            DB::commit();
-
-            // Cek apakah request dari AJAX
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'RPS berhasil dihapus.'
-                ]);
-            }
-
-            return redirect()->route('banksoal.rps.dosen.index')
-                ->with('success', 'RPS berhasil dihapus.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            \Log::error('RPS Delete Error', [
-                'rps_id' => $rpsId,
-                'user_id' => Auth::id(),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            // Cek apakah request dari AJAX
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Terjadi kesalahan saat menghapus RPS: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return back()->with('error', 'Terjadi kesalahan saat menghapus RPS: ' . $e->getMessage());
-        }
-    }
-
     /**
      * Return form edit RPS untuk modal (partial view)
      */
@@ -1717,9 +1752,9 @@ class RpsController extends Controller
         $isAuthorized = $rps->dosens->contains('id', $user->id);
         abort_if(!$isAuthorized, 403, 'Anda tidak memiliki akses untuk mengedit RPS ini.');
 
-        // Cek status
-        $editableStatuses = [RpsStatus::DIAJUKAN->value, RpsStatus::REVISI->value];
-        abort_if(!in_array($rps->status->value, $editableStatuses), 403, 'RPS dengan status ' . $rps->status->label() . ' tidak dapat diedit.');
+        // Cek status - hanya RPS berstatus Revisi yang dapat diedit
+        $editableStatuses = [RpsStatus::REVISI->value];
+        abort_if(!in_array($rps->status->value, $editableStatuses), 403, 'RPS dengan status ' . $rps->status->label() . ' tidak dapat diedit. Hanya RPS berstatus Revisi yang dapat diedit.');
 
         // Fetch data yang sama dengan edit method
         $mataKuliahs = MataKuliah::where('is_active', true)->orderBy('nama')->get();

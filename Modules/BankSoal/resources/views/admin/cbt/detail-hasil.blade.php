@@ -1,4 +1,4 @@
-<x-banksoal::layouts.admin>
+<x-banksoal::layouts.admin kompre-font>
     @section('breadcrumbs')
         <a href="#" class="text-gray-500 hover:text-primary transition-colors">Ujian Komprehensif</a>
         <span class="mx-2 text-gray-300">/</span>
@@ -82,14 +82,14 @@
 
     @php
         $isNoShow = $session->title === 'Tidak Mengerjakan';
-        $totalSoal = $session->jawabans->count();
-        $benar = $session->jawabans->filter(fn($j) => $j->opsiTerpilih && $j->opsiTerpilih->is_benar)->count();
-        $salah = $session->jawabans->filter(fn($j) => $j->jawaban_dipilih && (!$j->opsiTerpilih || !$j->opsiTerpilih->is_benar))->count();
-        $tidakDijawab = $totalSoal - ($benar + $salah);
+        $totalSoal = (int) $cplStats->sum('total');
+        $benar = (int) $cplStats->sum('benar');
+        $salah = (int) $cplStats->sum('salah');
+        $tidakDijawab = (int) $cplStats->sum('kosong');
         $skor = (int) ($session->score ?? 0);
-        $lulus = $skor >= 60;
+        $lulus = (bool) ($session->lulus ?? false);
         $pct = min(100, $skor);
-        $initial = strtoupper(substr($session->user->name ?? 'M', 0, 1));
+        $initial = strtoupper(substr($session->namaPeserta(), 0, 1));
 
         $durasiText = '—';
         if (!$isNoShow && $session->started_at && $session->finished_at) {
@@ -111,10 +111,10 @@
                         Detail Hasil Ujian</h1>
                 </div>
                 <p style="font-size:12px; color:var(--c-fg-muted);">
-                    <span style="color:var(--c-fg); font-weight:600;">{{ $session->user->name }}</span>
+                    <span style="color:var(--c-fg); font-weight:600;">{{ $session->namaPeserta() }}</span>
                     <span style="margin-left:4px; color:var(--c-fg-placeholder);">·</span>
                     <span style="margin-left:4px; color:var(--c-fg-muted);">NIM:
-                        {{ optional($session->user->student)->student_number ?? '—' }}</span>
+                        {{ $session->nimPeserta() }}</span>
                 </p>
             </div>
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
@@ -268,6 +268,15 @@
                     style="min-width: 0; background:#fff; border:1px solid var(--c-border); border-radius:14px; box-shadow:var(--shadow-card); overflow:hidden;">
                     <div style="padding:16px 20px 14px; border-bottom:1px solid var(--c-border);">
                         <h3 style="font-size:13px; font-weight:700; color:var(--c-fg); margin-bottom:0;">Nilai per CPL</h3>
+                        @if(! $isImport)
+                            <p style="font-size:11px; color:var(--c-fg-muted); margin-top:2px;">
+                                @if($passingRule === 'total_min')
+                                    Lulus jika nilai total minimal {{ (int) $totalMinScore }} — nilai CPL hanya informasi.
+                                @else
+                                    Ambang lulus per CPL: {{ rtrim(rtrim(number_format($cplMinScore, 2, '.', ''), '0'), '.') }}/10
+                                @endif
+                            </p>
+                        @endif
                     </div>
                     <div style="overflow-x:auto;">
                         <table style="width:100%; min-width:680px; text-align:left; border-collapse:collapse;">
@@ -288,6 +297,9 @@
                                     <th
                                         style="padding:10px 20px; font-size:11px; font-weight:600; color:var(--c-fg-muted); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--c-border); background:var(--c-bg);">
                                         Nilai</th>
+                                    <th
+                                        style="padding:10px 20px; font-size:11px; font-weight:600; color:var(--c-fg-muted); text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--c-border); background:var(--c-bg);">
+                                        Status</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -306,8 +318,16 @@
                                             style="padding:12px 20px; font-size:12px; color:var(--c-fg-muted); white-space:nowrap;">
                                             {{ $waktuSelesaiLabel }}</td>
                                         <td
-                                            style="padding:12px 20px; font-size:12px; font-weight:700; color:var(--c-fg);">
-                                            {{ number_format($stat['benar'], 2) }}</td>
+                                            style="padding:12px 20px; font-size:12px; font-weight:700; color:{{ ($isImport ?? false) || $stat['lulus'] ? 'var(--c-fg)' : '#DF1C41' }};">
+                                            {{ number_format($stat['nilai'], 2) }}</td>
+                                        <td
+                                            style="padding:12px 20px; font-size:11px; font-weight:600; color:{{ ($isImport ?? false) || $stat['lulus'] ? '#287F6E' : '#DF1C41' }}; white-space:nowrap;">
+                                            @if($isImport ?? false)
+                                                -
+                                            @else
+                                                {{ $stat['lulus'] ? 'Lulus' : 'Tidak Lulus' }}
+                                            @endif
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>

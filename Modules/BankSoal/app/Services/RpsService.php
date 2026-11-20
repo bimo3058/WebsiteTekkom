@@ -167,7 +167,11 @@ class RpsService
             ->get();
 
         // Fetch parameters and existing review results
-        $parameters = DB::table('bs_parameter')->where('jenis', 'rps')->get();
+        // Parameter yang sudah dihapus (soft delete) disembunyikan dari form validasi.
+        $parameters = DB::table('bs_parameter')
+            ->where('jenis', 'rps')
+            ->whereNull('deleted_at')
+            ->get();
         $existingReview = DB::table('bs_rps_review')
             ->where('rps_id', $rpsId)
             ->first();

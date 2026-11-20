@@ -33,8 +33,8 @@ class SupabaseStorage
         $targetBucket = $bucket ?? $this->bucket; // Gunakan parameter jika ada, jika tidak pakai default
         $extension = $file->getClientOriginalExtension();
         // Jika $fileName diberikan, gunakan itu; jika tidak, gunakan UUID
-        $filename = $fileName ? $fileName.'.'.$extension : Str::uuid().'.'.$extension;
-        $path = $folder.'/'.$filename;
+        $filename = $fileName ? $fileName . '.' . $extension : Str::uuid() . '.' . $extension;
+        $path = $folder . '/' . $filename;
         $mimeType = $file->getMimeType();
 
         Log::info('Supabase Upload Started', [
@@ -48,7 +48,7 @@ class SupabaseStorage
         try {
             $response = Http::timeout(30)
                 ->withHeaders([
-                    'Authorization' => 'Bearer '.$this->key,
+                    'Authorization' => 'Bearer ' . $this->key,
                     'Content-Type' => $mimeType,
                     'x-upsert' => 'true',
                 ])
@@ -56,7 +56,7 @@ class SupabaseStorage
                     file_get_contents($file->getRealPath()),
                     $mimeType
                 )
-                ->post($this->url.'/storage/v1/object/'.$targetBucket.'/'.$path);
+                ->post($this->url . '/storage/v1/object/' . $targetBucket . '/' . $path);
 
             Log::info('Supabase Response', [
                 'status' => $response->status(),
@@ -101,7 +101,7 @@ class SupabaseStorage
         try {
             return Http::timeout(30)
                 ->withHeaders([
-                    'Authorization' => 'Bearer '.$this->key,
+                    'Authorization' => 'Bearer ' . $this->key,
                     'Content-Type' => $mimeType,
                     'x-upsert' => 'true',
                 ])
@@ -133,7 +133,7 @@ class SupabaseStorage
                 ->withToken($this->key)
                 ->get($this->objectUrl($targetBucket, $path));
 
-            if (! $response->successful()) {
+            if (!$response->successful()) {
                 return null;
             }
 
@@ -164,7 +164,7 @@ class SupabaseStorage
         try {
             $response = Http::timeout(30)
                 ->withToken($this->key)
-                ->post($this->url.'/storage/v1/object/list/'.rawurlencode($targetBucket), [
+                ->post($this->url . '/storage/v1/object/list/' . rawurlencode($targetBucket), [
                     'prefix' => trim($prefix, '/'),
                     'limit' => 1000,
                     'offset' => 0,
@@ -190,9 +190,9 @@ class SupabaseStorage
     public function getPublicUrl(string $path, ?string $bucket = null, ?string $downloadName = null): string
     {
         $targetBucket = $bucket ?? $this->bucket;
-        $url = $this->url.'/storage/v1/object/public/'.$targetBucket.'/'.ltrim($path, '/');
+        $url = $this->url . '/storage/v1/object/public/' . $targetBucket . '/' . ltrim($path, '/');
         if ($downloadName) {
-            $url .= '?download='.rawurlencode($downloadName);
+            $url .= '?download=' . rawurlencode($downloadName);
         }
 
         return $url;
@@ -206,13 +206,46 @@ class SupabaseStorage
         $targetBucket = $bucket ?? $this->bucket;
 
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer '.$this->key,
+            'Authorization' => 'Bearer ' . $this->key,
             'Content-Type' => 'application/json',
-        ])->delete($this->url.'/storage/v1/object/'.$targetBucket, [
-            'prefixes' => [$path],
-        ]);
+        ])->delete($this->url . '/storage/v1/object/' . $targetBucket, [
+                    'prefixes' => [$path],
+                ]);
 
         return $response->successful();
+    }
+
+    /**
+     * Cek keberadaan object tanpa mengunduh isinya.
+     */
+    public function exists(string $path, ?string $bucket = null): bool
+    {
+        $targetBucket = $bucket ?? $this->bucket;
+
+        try {
+            $response = Http::timeout(15)
+                ->withToken($this->key)
+                ->head($this->objectUrl($targetBucket, $path));
+
+            // Sebagian proxy menolak HEAD; ulangi dengan GET satu byte.
+            if (in_array($response->status(), [405, 501], true)) {
+                return Http::timeout(15)
+                    ->withToken($this->key)
+                    ->withHeaders(['Range' => 'bytes=0-0'])
+                    ->get($this->objectUrl($targetBucket, $path))
+                    ->successful();
+            }
+
+            return $response->successful();
+        } catch (\Throwable $exception) {
+            Log::error('Supabase exists exception', [
+                'bucket' => $targetBucket,
+                'path' => $path,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 
     /**
@@ -222,16 +255,16 @@ class SupabaseStorage
     {
         $targetBucket = $bucket ?? $this->bucket;
 
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer '.$this->key,
+        $response = Http::timeout(30)->withHeaders([
+            'Authorization' => 'Bearer ' . $this->key,
             'Content-Type' => 'application/json',
-        ])->post($this->url.'/storage/v1/object/move', [
-            'bucketId' => $targetBucket,
-            'sourceKey' => $fromPath,
-            'destinationKey' => $toPath,
-        ]);
+        ])->post($this->url . '/storage/v1/object/move', [
+                    'bucketId' => $targetBucket,
+                    'sourceKey' => $fromPath,
+                    'destinationKey' => $toPath,
+                ]);
 
-        if (! $response->successful()) {
+        if (!$response->successful()) {
             Log::error('Supabase move failed', [
                 'bucket' => $targetBucket,
                 'from' => $fromPath,
@@ -260,14 +293,14 @@ class SupabaseStorage
         $targetBucket = $bucket ?? $this->bucket;
 
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer '.$this->key,
+            'Authorization' => 'Bearer ' . $this->key,
             'Content-Type' => 'application/json',
-        ])->post($this->url.'/storage/v1/object/sign/'.$targetBucket.'/'.$path, [
-            'expiresIn' => $expiresIn,
-        ]);
+        ])->post($this->url . '/storage/v1/object/sign/' . $targetBucket . '/' . $path, [
+                    'expiresIn' => $expiresIn,
+                ]);
 
         if ($response->successful()) {
-            return $this->url.'/storage/v1'.$response->json('signedURL');
+            return $this->url . '/storage/v1' . $response->json('signedURL');
         }
 
         return null;
@@ -277,12 +310,12 @@ class SupabaseStorage
     {
         $encodedPath = implode('/', array_map('rawurlencode', explode('/', ltrim($path, '/'))));
 
-        return $this->url.'/storage/v1/object/'.rawurlencode($bucket).'/'.$encodedPath;
+        return $this->url . '/storage/v1/object/' . rawurlencode($bucket) . '/' . $encodedPath;
     }
 
     // Helper internal tidak perlu diubah, biarkan mereferensi ke $this->bucket default
     private function storageUrl(string $path): string
     {
-        return $this->url.'/storage/v1/object/'.$this->bucket.'/'.$path;
+        return $this->url . '/storage/v1/object/' . $this->bucket . '/' . $path;
     }
 }

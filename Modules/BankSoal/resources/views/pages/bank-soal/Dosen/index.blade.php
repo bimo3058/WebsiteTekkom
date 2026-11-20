@@ -136,9 +136,9 @@
                 <div class="mb-5 rounded-xl border border-slate-200 p-4 bg-slate-50/60">
                     <label class="inline-flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" id="requireBlindReview" name="require_blind_review" value="1" class="w-4 h-4 border-slate-300 rounded">
-                        <span class="text-sm font-semibold text-slate-700">Aktifkan Blind Review Antar Dosen</span>
+                        <span class="text-sm font-semibold text-slate-700">Aktifkan Review Antar Dosen Pengampu</span>
                     </label>
-                    <p class="text-xs text-slate-500 mt-1">Saat aktif, soal hasil tarik otomatis dikirim ke dosen pengampu lain untuk review anonim.</p>
+                    <p class="text-xs text-slate-500 mt-1">Saat aktif, soal hasil tarik otomatis dikirim ke dosen pengampu lain pada mata kuliah yang sama untuk ditinjau secara anonim.</p>
 
                     <div id="blindReviewerCountWrap" class="mt-3 hidden">
                         <label for="requiredReviewers" class="block text-xs font-semibold text-slate-600 mb-1">Jumlah Reviewer per Soal</label>
@@ -260,7 +260,17 @@
     }
 
     function filterCplCpmk() {
-        if (!window.currentTarikMkId || window.tarikSoalsData.length === 0) {
+        if (!window.currentTarikMkId) {
+            return;
+        }
+
+        const selectedMk = mkData.find(mk => mk.id == window.currentTarikMkId);
+        if (!selectedMk) {
+            return;
+        }
+
+        if (window.tarikSoalsData.length === 0) {
+            renderCplCpmk(selectedMk, [], []);
             return;
         }
 
@@ -273,12 +283,6 @@
             if (cb.value === 'Take-Home') return 'take_home';
             return 'essay';
         });
-
-        const selectedMk = mkData.find(mk => mk.id == window.currentTarikMkId);
-        if (!selectedMk) {
-            isUpdatingFilter = false;
-            return;
-        }
 
         const cplSelect = document.getElementById('cplSelectElement');
         const cpmkSelect = document.getElementById('cpmkSelectElement');
@@ -310,7 +314,7 @@
         const uniqueCplIds = [...new Set(availableCplsFromSoal)];
         const uniqueCpmkIds = [...new Set(availableCpmksFromSoal)];
 
-        renderCplCpmk(selectedMk, typesChecked.length === 0 && selectedCpmkIds.length === 0 ? null : uniqueCplIds, typesChecked.length === 0 && selectedCplIds.length === 0 ? null : uniqueCpmkIds);
+        renderCplCpmk(selectedMk, uniqueCplIds, uniqueCpmkIds);
         isUpdatingFilter = false;
     }
 
@@ -325,7 +329,9 @@
             cb.checked = false;
         });
 
-        renderCplCpmk(selectedMk, null, null);
+        // Wait for the question list before showing CPL/CPMK options.
+        // This prevents curriculum mappings with no actual questions from being selectable.
+        renderCplCpmk(selectedMk, [], []);
 
         // Fetch questions exactly for this MK to drive the filtering
         fetch(@json(route('banksoal.soal.dosen.get-available-soals', ['mk_id' => '__MK_ID__'])).replace('__MK_ID__', mk_id), {
@@ -346,7 +352,7 @@
         })
         .catch(() => {
             window.tarikSoalsData = [];
-            renderCplCpmk(selectedMk, null, null);
+            renderCplCpmk(selectedMk, [], []);
         });
     }
 

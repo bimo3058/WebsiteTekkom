@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Mockery;
+use Mockery\MockInterface;
 use Modules\BankSoal\Enums\KompreSessionStatus;
 use Modules\BankSoal\Models\Komprehensif\JadwalUjian;
 use Modules\BankSoal\Models\Komprehensif\KompreSession;
@@ -32,6 +33,8 @@ class KompreSessionUniquenessTest extends TestCase
         $this->runMigration('Modules/BankSoal/database/migrations/2026_03_27_102724_add_tanggal_ujian_to_bs_jadwal_ujians_table.php');
         $this->runMigration('Modules/BankSoal/database/migrations/2026_02_24_032833_create_bs_kompre_session_table.php');
         $this->runMigration('Modules/BankSoal/database/migrations/2026_04_23_225401_add_jadwal_id_to_bs_kompre_session_table.php');
+        $this->runMigration('Modules/BankSoal/database/migrations/2026_11_10_000001_add_result_columns_to_bs_kompre_session_table.php');
+        $this->runMigration('Modules/BankSoal/database/migrations/2026_11_11_000004_add_passing_rule_to_bs_kompre_session_table.php');
     }
 
     public function test_start_session_hanya_membuat_satu_sesi_ongoing_per_user(): void
@@ -55,6 +58,7 @@ class KompreSessionUniquenessTest extends TestCase
             'waktu_selesai' => '12:00',
         ]);
 
+        /** @var CbtSessionService&MockInterface $service */
         $service = Mockery::mock(CbtSessionService::class)->makePartial();
         $service->shouldReceive('generateSoal')->once()->andReturnNull();
 
@@ -80,6 +84,7 @@ class KompreSessionUniquenessTest extends TestCase
         $jadwal = new JadwalUjian(['nama_sesi' => 'Sesi Baru']);
         $jadwal->id = 999;
 
+        /** @var CbtSessionService&MockInterface $service */
         $service = Mockery::mock(CbtSessionService::class)->makePartial();
         $service->shouldNotReceive('generateSoal');
 
@@ -87,6 +92,27 @@ class KompreSessionUniquenessTest extends TestCase
 
         $this->assertSame($session->id, $result->id);
         $this->assertSame(1, KompreSession::where('user_id', $user->id)->count());
+    }
+
+    public function test_start_session_ditolak_jika_mahasiswa_sudah_lulus(): void
+    {
+        $user = User::factory()->create();
+
+        KompreSession::create([
+            'user_id' => $user->id,
+            'title' => 'Ujian Komprehensif Lulus',
+            'status' => KompreSessionStatus::Finished,
+            'lulus' => true,
+            'score' => 80,
+            'cpl_scores' => [],
+        ]);
+
+        $jadwal = new JadwalUjian(['nama_sesi' => 'Sesi Baru']);
+        $jadwal->id = 999;
+
+        $this->expectException(\RuntimeException::class);
+
+        (new CbtSessionService)->startSession($jadwal, $user->id);
     }
 
     private function runMigration(string $relativePath): void

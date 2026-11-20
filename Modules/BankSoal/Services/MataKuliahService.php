@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Modules\BankSoal\Models\MataKuliah;
 use Modules\BankSoal\Models\DosenPengampuMk;
+use Modules\BankSoal\Support\MasterDataUpsert;
 
 class MataKuliahService
 {
@@ -58,6 +59,53 @@ class MataKuliahService
         });
     }
 
+    /**
+     * Nilai identitas MK = seluruh field yang diisi pada form.
+     *
+     * is_active tidak ikut dibandingkan karena statusnya diturunkan otomatis dari
+     * semester (bisa berubah sendiri saat sinkronisasi semester).
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public function identity(array $data): array
+    {
+        return [
+            'kode'     => (string) ($data['kode'] ?? ''),
+            'nama'     => (string) ($data['nama'] ?? ''),
+            'sks'      => (int) ($data['sks'] ?? 0),
+            'semester' => (string) ($data['semester'] ?? ''),
+        ];
+    }
+
+    /**
+     * Simpan MK dengan aturan identitas whole-row:
+     * - semua field sama persis dengan baris yang sudah ada (termasuk yang sudah
+     *   di-soft delete) -> baris itu dipakai/dipulihkan, tidak ada baris baru;
+     * - ada satu field berbeda -> baris baru ditulis.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{mata_kuliah: MataKuliah, created: bool, restored: bool}
+     */
+    public function storeIdentical(array $data): array
+    {
+        $result = MasterDataUpsert::firstOrCreateIdentical(
+            MataKuliah::class,
+            $this->identity($data),
+            ['is_active' => $data['is_active'] ?? $this->getActiveStatusForSemester((int) $data['semester'])]
+        );
+
+        if ($result['created'] || $result['restored']) {
+            $this->flushCache();
+        }
+
+        return [
+            'mata_kuliah' => $result['record']->load('cpl'),
+            'created'     => $result['created'],
+            'restored'    => $result['restored'],
+        ];
+    }
+
     public function update(int $id, array $data, array $cplIds = []): MataKuliah
     {
         return DB::transaction(function () use ($id, $data, $cplIds) {
@@ -93,39 +141,15 @@ class MataKuliahService
     {
         $updatedCount = 0;
 
-        // Prefer using an explicit active PeriodeRps if present (admin-controlled).
-        $activePeriode = null;
-        try {
-            $activePeriode = \Modules\BankSoal\Models\PeriodeRps::where('is_active', true)->first();
-        } catch (\Throwable $e) {
-            // If model/table not available for some reason, fallback to month parity.
-            $activePeriode = null;
-        }
-
-        if ($activePeriode) {
-            $targetSemester = (int) $activePeriode->semester;
-
-            MataKuliah::chunk(100, function ($mks) use (&$updatedCount, $targetSemester) {
-                foreach ($mks as $mk) {
-                    $shouldBeActive = ((int) $mk->semester === $targetSemester);
-                    if ($mk->is_active !== $shouldBeActive) {
-                        $mk->update(['is_active' => $shouldBeActive]);
-                        $updatedCount++;
-                    }
+        MataKuliah::chunk(100, function ($mks) use (&$updatedCount) {
+            foreach ($mks as $mk) {
+                $shouldBeActive = $this->getActiveStatusForSemester((int) $mk->semester);
+                if ((bool) $mk->is_active !== $shouldBeActive) {
+                    $mk->update(['is_active' => $shouldBeActive]);
+                    $updatedCount++;
                 }
-            });
-        } else {
-            // Fallback: determine active semester parity using current month
-            MataKuliah::chunk(100, function ($mks) use (&$updatedCount) {
-                foreach ($mks as $mk) {
-                    $shouldBeActive = $this->getActiveStatusForSemester((int) $mk->semester);
-                    if ($mk->is_active !== $shouldBeActive) {
-                        $mk->update(['is_active' => $shouldBeActive]);
-                        $updatedCount++;
-                    }
-                }
-            });
-        }
+            }
+        });
 
         if ($updatedCount > 0) {
             $this->flushCache();
@@ -136,16 +160,32 @@ class MataKuliahService
 
     public function getActiveStatusForSemester(int $semester): bool
     {
-        $month = now()->month;
-        // Ganjil: August (8) to January (1)
-        // Genap: February (2) to July (7)
-        $isGanjil = $month >= 8 || $month == 1;
-        
-        if ($isGanjil) {
-            return $semester % 2 != 0;
-        } else {
-            return $semester % 2 == 0;
+        // 1. Cek apakah ada PeriodeRps aktif yang ditentukan admin
+        try {
+            $activePeriode = \Modules\BankSoal\Models\PeriodeRps::where('is_active', true)->first();
+            if ($activePeriode && !empty($activePeriode->semester)) {
+                $semesterStr = strtolower(trim($activePeriode->semester));
+                if (str_contains($semesterStr, 'ganjil')) {
+                    return $semester % 2 !== 0;
+                }
+                if (str_contains($semesterStr, 'genap')) {
+                    return $semester % 2 === 0;
+                }
+                if (is_numeric($activePeriode->semester)) {
+                    return $semester % 2 === ((int) $activePeriode->semester) % 2;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Abaikan jika tabel/model belum siap
         }
+
+        // 2. Fallback: deteksi otomatis berdasarkan bulan kalender berjalan
+        // Ganjil: Juli-Desember (bulan 7-12) atau Januari (bulan 1)
+        // Genap: Februari-Juni (bulan 2-6)
+        $month = now()->month;
+        $isGanjil = ($month >= 7 || $month == 1);
+
+        return $isGanjil ? ($semester % 2 !== 0) : ($semester % 2 === 0);
     }
 
     // -------------------------------------------------------------------------

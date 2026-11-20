@@ -4,6 +4,7 @@ namespace Modules\BankSoal\Services;
 
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Enums\KompreSessionStatus;
 use Modules\BankSoal\Jobs\AutoFinishExamJob;
@@ -12,6 +13,8 @@ use Modules\BankSoal\Models\Komprehensif\KompreJawaban;
 use Modules\BankSoal\Models\Komprehensif\KompreSession;
 use Modules\BankSoal\Models\Pertanyaan;
 use Modules\BankSoal\Models\Shared\Cpl;
+use Modules\BankSoal\Services\Komprehensif\KompreResultService;
+use Modules\BankSoal\Services\Komprehensif\KompreSettingService;
 
 class CbtSessionService
 {
@@ -40,6 +43,13 @@ class CbtSessionService
      */
     public function startSession(JadwalUjian $jadwal, int $userId): KompreSession
     {
+        if (KompreSession::where('user_id', $userId)
+            ->where('status', KompreSessionStatus::Finished)
+            ->where('lulus', true)
+            ->exists()) {
+            throw new \RuntimeException('Anda sudah dinyatakan lulus ujian komprehensif.');
+        }
+
         try {
             return DB::transaction(function () use ($jadwal, $userId) {
                 if (DB::connection()->getDriverName() === 'pgsql') {
@@ -55,11 +65,14 @@ class CbtSessionService
                 }
 
                 $session = KompreSession::create([
-                    'user_id'    => $userId,
-                    'jadwal_id'  => $jadwal->id,
-                    'title'      => 'Ujian Komprehensif ' . $jadwal->nama_sesi,
+                    'user_id' => $userId,
+                    'jadwal_id' => $jadwal->id,
+                    'title' => 'Ujian Komprehensif '.$jadwal->nama_sesi,
                     'started_at' => now(),
-                    'status'     => KompreSessionStatus::Ongoing,
+                    'status' => KompreSessionStatus::Ongoing,
+                    // Snapshot aturan kelulusan saat ujian dimulai agar
+                    // perubahan setting tidak memengaruhi sesi berjalan.
+                    'passing_rule' => app(KompreSettingService::class)->passingRule(),
                 ]);
 
                 $this->generateSoal($session);
@@ -67,10 +80,10 @@ class CbtSessionService
                 // ✅ Ketat: end_time = min(started_at + 100 menit, waktu_selesai jadwal)
                 // Mahasiswa yang terlambat masuk mendapat sisa waktu gate, bukan penuh 100 menit.
                 $gateClose = Carbon::parse(
-                    $jadwal->tanggal_ujian->format('Y-m-d') . ' ' . $jadwal->waktu_selesai
+                    $jadwal->tanggal_ujian->format('Y-m-d').' '.$jadwal->waktu_selesai
                 );
                 $endByDuration = $session->started_at->copy()->addMinutes(self::EXAM_DURATION_MINUTES);
-                $endTime       = $endByDuration->lt($gateClose) ? $endByDuration : $gateClose;
+                $endTime = $endByDuration->lt($gateClose) ? $endByDuration : $gateClose;
 
                 // Dispatch auto-finish job dari server sebagai perlindungan
                 // terhadap manipulasi timer client-side.
@@ -140,7 +153,7 @@ class CbtSessionService
             $pool = $allPertanyaans->where('cpl_id', $cplId);
 
             // Tentukan distribusi target berdasarkan weakness map
-            $kategori     = $cplWeakness[$cplId] ?? 'default';
+            $kategori = $cplWeakness[$cplId] ?? 'default';
             $distribution = $this->getDifficultyDistribution($kategori);
 
             // Balance pool: promosikan soal surplus ke level defisit
@@ -149,7 +162,9 @@ class CbtSessionService
             // Pilih soal sesuai distribusi dari pool yang sudah balanced
             $picked = collect();
             foreach ($distribution as $level => $count) {
-                if ($count <= 0) continue;
+                if ($count <= 0) {
+                    continue;
+                }
                 $picked = $picked->merge(
                     $balancedPool[$level]->take($count)
                 );
@@ -183,18 +198,18 @@ class CbtSessionService
         }
 
         // ── Step 6: Satu bulk INSERT (tidak berubah) ──
-        $now  = now();
+        $now = now();
         $rows = $soals->map(function ($soal, $idx) use ($session, $now) {
             $opsiIds = $soal->jawaban->pluck('id')->shuffle()->toArray();
 
             return [
                 'kompre_session_id' => $session->id,
-                'pertanyaan_id'     => $soal->id,
-                'urutan_soal'       => $idx + 1,
-                'urutan_opsi'       => json_encode($opsiIds),
-                'kesulitan_now'     => $soal->kesulitan, // tetap simpan kesulitan ASLI
-                'created_at'        => $now,
-                'updated_at'        => $now,
+                'pertanyaan_id' => $soal->id,
+                'urutan_soal' => $idx + 1,
+                'urutan_opsi' => json_encode($opsiIds),
+                'kesulitan_now' => $soal->kesulitan, // tetap simpan kesulitan ASLI
+                'created_at' => $now,
+                'updated_at' => $now,
             ];
         })->toArray();
 
@@ -221,7 +236,7 @@ class CbtSessionService
         }
 
         $benar = $jawabans->filter(
-            fn($j) => $j->opsiTerpilih && $j->opsiTerpilih->is_benar
+            fn ($j) => $j->opsiTerpilih && $j->opsiTerpilih->is_benar
         )->count();
 
         return round(($benar / $total) * 100, 2);
@@ -232,10 +247,15 @@ class CbtSessionService
      */
     public function finishSession(KompreSession $session): void
     {
+        $result = (new KompreResultService)->evaluate($session);
+
         $session->update([
-            'status'      => KompreSessionStatus::Finished,
+            'status' => KompreSessionStatus::Finished,
             'finished_at' => now(),
-            'score'       => $this->calculateScore($session),
+            'score' => $result['score'],
+            'lulus' => $result['lulus'],
+            'cpl_scores' => $result['cpl_scores'],
+            'passing_rule' => $result['passing_rule'],
         ]);
     }
 
@@ -254,8 +274,9 @@ class CbtSessionService
         // Jika jadwal tersedia, cap di waktu_selesai gate
         if ($session->relationLoaded('jadwal') && $session->jadwal) {
             $gateClose = Carbon::parse(
-                $session->jadwal->tanggal_ujian->format('Y-m-d') . ' ' . $session->jadwal->waktu_selesai
+                $session->jadwal->tanggal_ujian->format('Y-m-d').' '.$session->jadwal->waktu_selesai
             );
+
             return $endByDuration->lt($gateClose) ? $endByDuration : $gateClose;
         }
 
@@ -270,7 +291,7 @@ class CbtSessionService
     /**
      * Analisis kelemahan CPL dari sesi terakhir yang gagal.
      *
-     * Selalu mengambil sesi TERAKHIR yang gagal (score < 60).
+     * Selalu mengambil sesi TERAKHIR yang gagal (lulus = false).
      * Bersifat iteratif: jika gagal 3x, yang dianalisis adalah kegagalan ke-3.
      * Jika tidak ada riwayat gagal (ujian pertama), return array kosong
      * sehingga distribusi default diterapkan.
@@ -284,33 +305,32 @@ class CbtSessionService
     {
         $lastFailedSession = KompreSession::where('user_id', $userId)
             ->where('status', KompreSessionStatus::Finished)
-            ->where('score', '<', 60)
+            ->where('source', 'cbt')
+            ->where('lulus', false)
             ->orderByDesc('finished_at')
             ->first();
 
         // Ujian pertama kali atau tidak ada riwayat gagal
-        if (!$lastFailedSession) {
+        if (! $lastFailedSession) {
             return [];
         }
 
-        $jawabans = KompreJawaban::where('kompre_session_id', $lastFailedSession->id)
-            ->with(['pertanyaan:id,cpl_id', 'opsiTerpilih:id,is_benar'])
-            ->get();
+        $cplScores = $lastFailedSession->cpl_scores;
+
+        if (empty($cplScores)) {
+            $cplScores = (new KompreResultService)->calculateCplScores($lastFailedSession);
+        }
 
         $cplMap = [];
 
-        foreach ($jawabans->groupBy(fn($j) => $j->pertanyaan?->cpl_id) as $cplId => $items) {
-            if (!$cplId) continue;
+        foreach ($cplScores as $cpl) {
+            $nilai = (float) ($cpl['nilai'] ?? 0);
 
-            $total = $items->count();
-            $benar = $items->filter(fn($j) => $j->jawaban_dipilih && $j->opsiTerpilih?->is_benar)->count();
-            $pct   = $total > 0 ? ($benar / $total) * 100 : 0;
-
-            $cplMap[$cplId] = match (true) {
-                $pct <= 30 => 'sangat_lemah',
-                $pct <= 50 => 'lemah',
-                $pct <= 70 => 'cukup',
-                default    => 'baik',
+            $cplMap[$cpl['cpl_id']] = match (true) {
+                $nilai <= 3.0 => 'sangat_lemah',
+                $nilai <= 5.0 => 'lemah',
+                $nilai <= 7.0 => 'cukup',
+                default => 'baik',
             };
         }
 
@@ -326,10 +346,10 @@ class CbtSessionService
     {
         return match ($kategori) {
             'sangat_lemah' => ['easy' => 7, 'intermediate' => 3, 'advanced' => 0],
-            'lemah'        => ['easy' => 4, 'intermediate' => 4, 'advanced' => 2],
-            'cukup'        => ['easy' => 2, 'intermediate' => 5, 'advanced' => 3],
-            'baik'         => ['easy' => 1, 'intermediate' => 4, 'advanced' => 5],
-            default        => ['easy' => 3, 'intermediate' => 4, 'advanced' => 3],
+            'lemah' => ['easy' => 4, 'intermediate' => 4, 'advanced' => 2],
+            'cukup' => ['easy' => 2, 'intermediate' => 5, 'advanced' => 3],
+            'baik' => ['easy' => 1, 'intermediate' => 4, 'advanced' => 5],
+            default => ['easy' => 3, 'intermediate' => 4, 'advanced' => 3],
         };
     }
 
@@ -346,9 +366,9 @@ class CbtSessionService
      *   - Defisit advanced     → isi dari intermediate dulu, baru easy
      *   - Defisit easy         → isi dari intermediate dulu, baru advanced
      *
-     * @param  \Illuminate\Support\Collection  $pool         Semua soal untuk 1 CPL
-     * @param  array{easy: int, intermediate: int, advanced: int} $distribution Target distribusi
-     * @return array{easy: \Illuminate\Support\Collection, intermediate: \Illuminate\Support\Collection, advanced: \Illuminate\Support\Collection}
+     * @param  Collection  $pool  Semua soal untuk 1 CPL
+     * @param  array{easy: int, intermediate: int, advanced: int}  $distribution  Target distribusi
+     * @return array{easy: Collection, intermediate: Collection, advanced: Collection}
      */
     private function balancePool($pool, array $distribution): array
     {
@@ -375,9 +395,9 @@ class CbtSessionService
 
         // 3. Urutan promosi: ambil dari level TERDEKAT dulu
         $promotionOrder = [
-            'easy'         => ['intermediate', 'advanced'],
+            'easy' => ['intermediate', 'advanced'],
             'intermediate' => ['easy', 'advanced'],
-            'advanced'     => ['intermediate', 'easy'],
+            'advanced' => ['intermediate', 'easy'],
         ];
 
         // 4. Promosikan soal surplus ke level defisit
@@ -385,14 +405,18 @@ class CbtSessionService
             $donors = $promotionOrder[$deficitLevel] ?? [];
 
             foreach ($donors as $donorLevel) {
-                if ($deficitCount <= 0) break;
-                if (($surplus[$donorLevel] ?? 0) <= 0) continue;
+                if ($deficitCount <= 0) {
+                    break;
+                }
+                if (($surplus[$donorLevel] ?? 0) <= 0) {
+                    continue;
+                }
 
                 // Soal yang bisa didonasikan = sisanya setelah slot asli terpenuhi
-                $donorPool   = $grouped[$donorLevel];
+                $donorPool = $grouped[$donorLevel];
                 $donorNeeded = $distribution[$donorLevel];
-                $available   = $donorPool->slice($donorNeeded)->values();
-                $toMove      = min($deficitCount, $available->count(), $surplus[$donorLevel]);
+                $available = $donorPool->slice($donorNeeded)->values();
+                $toMove = min($deficitCount, $available->count(), $surplus[$donorLevel]);
 
                 if ($toMove > 0) {
                     // Pindahkan ke pool level defisit
@@ -401,7 +425,7 @@ class CbtSessionService
 
                     // Kurangi surplus dan defisit
                     $surplus[$donorLevel] -= $toMove;
-                    $deficitCount         -= $toMove;
+                    $deficitCount -= $toMove;
                 }
             }
         }

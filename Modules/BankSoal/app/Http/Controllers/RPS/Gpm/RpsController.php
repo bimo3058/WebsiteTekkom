@@ -6,6 +6,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Services\SupabaseStorage;
@@ -97,57 +98,7 @@ class RpsController extends Controller
     public function validasiRpsReview($rpsId)
     {
         $data = $this->getRpsReviewData($rpsId);
-        $rps = $data['rps'];
-
-        $fileUrl = null;
-        $downloadUrl = null;
-        $errorMessage = null;
-
-        if ($rps->dokumen) {
-            $supabaseStorage = new SupabaseStorage();
-            $fileUrl = $supabaseStorage->getPublicUrl($rps->dokumen, 'rps');
-            
-            try {
-                $response = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(2)->get($fileUrl);
-                if ($response->status() === 404) {
-                    // Self-healing: Coba cari file yang mungkin di-rename/di-move saat disetujui
-                    $mkName = trim($rps->mk_nama ?? 'MataKuliah');
-                    $mkName = preg_replace('/\s+/', ' ', $mkName);
-                    $tahunAjaranSafe = str_replace('/', '-', (string) $rps->tahun_ajaran);
-                    $semesterSafe = ucfirst(strtolower((string) $rps->semester));
-                    
-                    $baseFileName = sprintf('RPS_%s_%s_%s', $mkName, $tahunAjaranSafe, $semesterSafe);
-                    $baseFileName = preg_replace('/[\\\\:*?"<>|]+/', '', $baseFileName);
-                    $baseFileName = trim((string) $baseFileName, " \t\n\r\0\x0B._");
-                    
-                    $healedPath = 'rps/' . $baseFileName . '.pdf';
-                    $healedUrl = $supabaseStorage->getPublicUrl($healedPath, 'rps');
-                    
-                    $healedResponse = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(2)->get($healedUrl);
-                    if ($healedResponse->status() === 200) {
-                        DB::table('bs_rps_detail')->where('id', $rpsId)->update(['dokumen' => $healedPath]);
-                        $rps->dokumen = $healedPath;
-                        $fileUrl = $healedUrl;
-                    } else {
-                        // Coba check tanpa folder rps/ di prefix, atau biarkan null
-                        $fileUrl = null;
-                        $errorMessage = 'Berkas PDF tidak ditemukan di server penyimpanan (Supabase Storage).';
-                    }
-                }
-            } catch (\Exception $ex) {
-                // Fallback jika pengecekan HTTP timeout/gagal
-            }
-
-            if ($fileUrl) {
-                $downloadUrl = route('banksoal.rps.gpm.validasi-rps.preview', ['rpsId' => $rpsId]);
-            }
-        } else {
-            $errorMessage = 'Dokumen RPS belum diunggah atau tidak ditemukan.';
-        }
-
-        $data['fileUrl'] = $fileUrl;
-        $data['downloadUrl'] = $downloadUrl;
-        $data['errorMessage'] = $errorMessage;
+        $data = array_merge($data, $this->resolveDokumenPreview($data['rps'], $rpsId));
 
         return view('banksoal::gpm.validasi-rps-review', $data);
     }
@@ -155,13 +106,81 @@ class RpsController extends Controller
     public function revisiRps($rpsId)
     {
         $data = $this->getRpsReviewData($rpsId);
+        $data = array_merge($data, $this->resolveDokumenPreview($data['rps'], $rpsId));
+
         return view('banksoal::gpm.validasi-rps-revisi', $data);
     }
 
     public function setujuRps($rpsId)
     {
         $data = $this->getRpsReviewData($rpsId);
+        $data = array_merge($data, $this->resolveDokumenPreview($data['rps'], $rpsId));
+
         return view('banksoal::gpm.validasi-rps-setuju', $data);
+    }
+
+    /**
+     * URL preview dan unduh dokumen RPS untuk halaman GPM.
+     *
+     * Sekaligus self-healing: bila berkas sudah di-rename saat disetujui,
+     * path di database disamakan dengan berkas yang benar-benar ada.
+     *
+     * @return array{fileUrl: ?string, downloadUrl: ?string, errorMessage: ?string}
+     */
+    private function resolveDokumenPreview(object $rps, int $rpsId): array
+    {
+        if (empty($rps->dokumen)) {
+            return [
+                'fileUrl' => null,
+                'downloadUrl' => null,
+                'errorMessage' => 'Dokumen RPS belum diunggah atau tidak ditemukan.',
+            ];
+        }
+
+        $supabaseStorage = new SupabaseStorage();
+        $fileUrl = $supabaseStorage->getPublicUrl($rps->dokumen, 'rps');
+        $errorMessage = null;
+
+        try {
+            $response = Http::withoutVerifying()->timeout(5)->get($fileUrl);
+
+            if ($response->status() === 404) {
+                $originalUrl = $fileUrl;
+                $fileUrl = null;
+
+                // Self-healing: coba nama berkas hasil persetujuan GPM.
+                $mkName = preg_replace('/\s+/', ' ', trim((string) ($rps->mk_nama ?? 'MataKuliah')));
+                $baseFileName = sprintf(
+                    'RPS_%s_%s_%s',
+                    $mkName,
+                    str_replace('/', '-', (string) $rps->tahun_ajaran),
+                    ucfirst(strtolower((string) $rps->semester))
+                );
+                $baseFileName = preg_replace('/[\\\\:*?"<>|]+/', '', $baseFileName);
+                $baseFileName = trim((string) $baseFileName, " \t\n\r\0\x0B._");
+
+                $healedPath = 'rps/'.$baseFileName.'.pdf';
+                $healedUrl = $supabaseStorage->getPublicUrl($healedPath, 'rps');
+
+                if ($healedUrl !== $originalUrl && Http::withoutVerifying()->timeout(5)->get($healedUrl)->status() === 200) {
+                    DB::table('bs_rps_detail')->where('id', $rpsId)->update(['dokumen' => $healedPath]);
+                    $rps->dokumen = $healedPath;
+                    $fileUrl = $healedUrl;
+                } else {
+                    $errorMessage = 'Berkas PDF tidak ditemukan di server penyimpanan (Supabase Storage).';
+                }
+            }
+        } catch (\Exception $ex) {
+            // Biarkan browser mencoba memuat sendiri bila pengecekan HTTP gagal.
+        }
+
+        return [
+            'fileUrl' => $fileUrl,
+            'downloadUrl' => $fileUrl
+                ? route('banksoal.rps.gpm.validasi-rps.preview', ['rpsId' => $rpsId])
+                : null,
+            'errorMessage' => $errorMessage,
+        ];
     }
 
     private function getRpsReviewData($rpsId)
@@ -266,7 +285,11 @@ class RpsController extends Controller
             ->get();
 
         // Fetch parameters and existing review results
-        $parameters = DB::table('bs_parameter')->where('jenis', 'rps')->get();
+        // Parameter yang sudah dihapus (soft delete) disembunyikan dari form validasi.
+        $parameters = DB::table('bs_parameter')
+            ->where('jenis', 'rps')
+            ->whereNull('deleted_at')
+            ->get();
         $existingReview = DB::table('bs_rps_review')
             ->where('rps_id', $rpsId)
             ->first();
@@ -335,7 +358,13 @@ class RpsController extends Controller
             $oldStatus = $rps->status->value;
 
             // Fetch semua parameter dengan bobot
-            $parameters = DB::table('bs_parameter')->where('jenis', 'rps')->get();
+            // Parameter yang sudah dihapus (soft delete) tidak ikut dihitung.
+            $parameters = DB::table('bs_parameter')
+                ->where('jenis', 'rps')
+                ->whereNull('deleted_at')
+                ->get();
+
+            $totalBobot = (int) $parameters->sum('bobot');
 
             // Hitung nilai_akhir berdasarkan penilaian user (di backend)
             $nilaiAkhir = 0;
@@ -408,13 +437,30 @@ class RpsController extends Controller
 
                 if ($newPath !== $oldPath) {
                     $supabaseStorage = new SupabaseStorage();
-                    $moved = $supabaseStorage->move($oldPath, $newPath, 'rps');
+                    $sourceExists = $supabaseStorage->exists($oldPath, 'rps');
 
-                    if (!$moved) {
-                        throw new \Exception('Gagal mengganti nama file RPS di storage Supabase');
+                    if (!$sourceExists && $supabaseStorage->exists($newPath, 'rps')) {
+                        // Rename sudah pernah terjadi (mis. percobaan sebelumnya gagal
+                        // setelah file dipindah), cukup samakan path di database.
+                        $rps->dokumen = $newPath;
+                    } elseif ($sourceExists) {
+                        $moved = $supabaseStorage->move($oldPath, $newPath, 'rps');
+
+                        if ($moved || $supabaseStorage->exists($newPath, 'rps')) {
+                            $rps->dokumen = $newPath;
+                        } else {
+                            Log::warning('Rename dokumen RPS gagal, dokumen tetap memakai path lama', [
+                                'rps_id' => $rps->id,
+                                'from' => $oldPath,
+                                'to' => $newPath,
+                            ]);
+                        }
+                    } else {
+                        Log::warning('Dokumen RPS tidak ditemukan di storage, rename dilewati', [
+                            'rps_id' => $rps->id,
+                            'path' => $oldPath,
+                        ]);
                     }
-
-                    $rps->dokumen = $newPath;
                 }
             }
 
